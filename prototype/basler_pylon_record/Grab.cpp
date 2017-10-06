@@ -25,7 +25,9 @@
 #include <iostream>
 #include <chrono>
 #include <iomanip>
-
+#include <pylon/usb/BaslerUsbInstantCamera.h>
+typedef Pylon::CBaslerUsbInstantCamera Camera_t;
+using namespace Basler_UsbCameraParams;
 
 // Namespace for using pylon objects.
 using namespace Pylon;
@@ -46,8 +48,16 @@ int main(int argc, char* argv[])
 
     try
     {
-        // Create an instant camera object with the camera device found first.
-        CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
+        CDeviceInfo info;
+        info.SetDeviceClass( Camera_t::DeviceClass());
+        Camera_t camera( CTlFactory::GetInstance().CreateFirstDevice( info));
+
+        camera.Open();
+
+        camera.GainAuto.SetValue(GainAuto_Off);
+        camera.Gain.SetValue(camera.Gain.GetMax());
+        camera.ExposureAuto.SetValue(ExposureAuto_Off);
+        camera.ExposureTime.SetValue(500);
 
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
