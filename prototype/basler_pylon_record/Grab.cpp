@@ -54,8 +54,9 @@ int main(int argc, char* argv[])
 
         camera.Open();
 
+
         camera.GainAuto.SetValue(GainAuto_Off);
-        camera.Gain.SetValue(camera.Gain.GetMax());
+        camera.Gain.SetValue(15);
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
         camera.ExposureTime.SetValue(500);
 
