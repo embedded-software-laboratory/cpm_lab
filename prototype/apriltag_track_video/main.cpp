@@ -86,56 +86,93 @@ int main(int argc, char *argv[])
     td->refine_pose = getopt_get_bool(getopt, "refine-pose");
 
     Mat frame, gray;
+    std::vector<cv::Rect> ROIs;
     while (true) {
+        std::vector<cv::Rect> ROIs_new;
         cap >> frame;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
 
-        // Make an image_u8_t header for the Mat data
-        image_u8_t im = { .width = gray.cols,
-            .height = gray.rows,
-            .stride = gray.cols,
-            .buf = gray.data
-        };
-
-        tic();
-        zarray_t *detections = apriltag_detector_detect(td, &im);
-        cout << zarray_size(detections) << " tags detected" << endl;
-        cout << toc() << " usec" << endl;
-
-        // Draw detection outlines
-        for (int i = 0; i < zarray_size(detections); i++) {
-            apriltag_detection_t *det;
-            zarray_get(detections, i, &det);
-            line(frame, Point(det->p[0][0], det->p[0][1]),
-                     Point(det->p[1][0], det->p[1][1]),
-                     Scalar(0, 0xff, 0), 2);
-            line(frame, Point(det->p[0][0], det->p[0][1]),
-                     Point(det->p[3][0], det->p[3][1]),
-                     Scalar(0, 0, 0xff), 2);
-            line(frame, Point(det->p[1][0], det->p[1][1]),
-                     Point(det->p[2][0], det->p[2][1]),
-                     Scalar(0xff, 0, 0), 2);
-            line(frame, Point(det->p[2][0], det->p[2][1]),
-                     Point(det->p[3][0], det->p[3][1]),
-                     Scalar(0xff, 0, 0), 2);
-
-            stringstream ss;
-            ss << det->id;
-            String text = ss.str();
-            int fontface = FONT_HERSHEY_SCRIPT_SIMPLEX;
-            double fontscale = 1.0;
-            int baseline;
-            Size textsize = getTextSize(text, fontface, fontscale, 2,
-                                            &baseline);
-            putText(frame, text, Point(det->c[0]-textsize.width/2,
-                                       det->c[1]+textsize.height/2),
-                    fontface, fontscale, Scalar(0xff, 0x99, 0), 2);
+        if(ROIs.empty()) {
+            ROIs.push_back(cv::Rect(0, 0, frame.cols, frame.rows));
         }
-        zarray_destroy(detections);
+
+        for(int idx_roi = 0; idx_roi < ROIs.size(); idx_roi++) {
+            auto ROI = ROIs[idx_roi];
+            cout << "ROI: (" << ROI.x << ", " << ROI.y << ", " << ROI.width << ", " << ROI.height << ")" << endl;
+            Mat gray_cropped = gray(ROI);
+            //imshow("Tag Detections", gray_cropped);
+            //waitKey(0);
+
+            // Make an image_u8_t header for the Mat data
+            image_u8_t im = {.width = gray_cropped.cols,
+                    .height = gray_cropped.rows,
+                    .stride = gray_cropped.step.buf[0],
+                    .buf = gray_cropped.data
+            };
+
+            tic();
+            zarray_t *detections = apriltag_detector_detect(td, &im);
+            cout << zarray_size(detections) << " tags detected" << endl;
+            cout << toc() << " usec" << endl;
+
+            // Draw detection outlines
+            for (int i = 0; i < zarray_size(detections); i++) {
+                apriltag_detection_t *det;
+                zarray_get(detections, i, &det);
+                line(frame, Point(ROI.x + det->p[0][0], ROI.y + det->p[0][1]),
+                     Point(ROI.x + det->p[1][0], ROI.y + det->p[1][1]),
+                     Scalar(0, 0xff, 0), 2);
+                line(frame, Point(ROI.x + det->p[0][0], ROI.y + det->p[0][1]),
+                     Point(ROI.x + det->p[3][0], ROI.y + det->p[3][1]),
+                     Scalar(0, 0, 0xff), 2);
+                line(frame, Point(ROI.x + det->p[1][0], ROI.y + det->p[1][1]),
+                     Point(ROI.x + det->p[2][0], ROI.y + det->p[2][1]),
+                     Scalar(0xff, 0, 0), 2);
+                line(frame, Point(ROI.x + det->p[2][0], ROI.y + det->p[2][1]),
+                     Point(ROI.x + det->p[3][0], ROI.y + det->p[3][1]),
+                     Scalar(0xff, 0, 0), 2);
+
+                stringstream ss;
+                ss << "#" << det->id;
+                String text = ss.str();
+                int fontface = FONT_HERSHEY_SCRIPT_SIMPLEX;
+                double fontscale = 1.0;
+                int baseline;
+                Size textsize = getTextSize(text, fontface, fontscale, 2,
+                                            &baseline);
+                putText(frame, text, Point(ROI.x + det->c[0] - textsize.width / 2,
+                                           ROI.y + det->c[1] + textsize.height / 2),
+                        fontface, fontscale, Scalar(0xff, 0x99, 0), 2);
+
+                // new ROI
+                {
+                    int roi_size = 200;
+                    int new_roi_x = ROI.x + det->c[0] - roi_size/2;
+                    int new_roi_y = ROI.y + det->c[1] - roi_size/2;
+                    int new_roi_width = roi_size;
+                    int new_roi_height = roi_size;
+
+                    if(new_roi_x < 0) new_roi_x = 0;
+                    if(new_roi_y < 0) new_roi_y = 0;
+                    if(new_roi_x + new_roi_width > frame.cols) new_roi_width = frame.cols - new_roi_x;
+                    if(new_roi_y + new_roi_height > frame.rows) new_roi_height = frame.rows - new_roi_y;
+
+                    if(new_roi_width > 10 && new_roi_height > 10) {
+                        ROIs_new.push_back(Rect(new_roi_x, new_roi_y, new_roi_width, new_roi_height));
+                    }
+                    else {
+                        cerr << "ROI too small (" << new_roi_x << ", " << new_roi_y << ", " << new_roi_width << ", " << new_roi_height << ")"  << endl;
+                    }
+                }
+            }
+            zarray_destroy(detections);
+        }
 
         imshow("Tag Detections", frame);
-        if (waitKey(1) >= 0)
-            break;
+        //waitKey(0);
+        if (waitKey(1) >= 0) break;
+
+        ROIs = ROIs_new;
     }
 
     apriltag_detector_destroy(td);
