@@ -1,5 +1,11 @@
 
 #include <iostream>
+#include <cstdio>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
+
 
 #include "opencv2/opencv.hpp"
 
@@ -15,6 +21,20 @@
 using namespace std;
 using namespace cv;
 
+
+
+
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+        result += buffer.data();
+    }
+    return result;
+}
 
 
 chrono::system_clock::time_point start;
@@ -50,11 +70,11 @@ int main(int argc, char *argv[])
     }
 
     // Initialize camera
-    VideoCapture cap("/home/janis/Downloads/VID_20171005_105051.mp4");
+    /*VideoCapture cap("/home/janis/Downloads/VID_20171005_105051.mp4");
     if (!cap.isOpened()) {
         cerr << "Couldn't open video capture device" << endl;
         return -1;
-    }
+    }*/
 
     // Initialize tag detector with options
     apriltag_family_t *tf = NULL;
@@ -85,11 +105,29 @@ int main(int argc, char *argv[])
     td->refine_decode = getopt_get_bool(getopt, "refine-decode");
     td->refine_pose = getopt_get_bool(getopt, "refine-pose");
 
+
+    string files_str = exec("find /home/janis/sciebo/CPM-Lab/04_Measurement/AprilTag_MotionBlurTest/Light_Floodlight__Exposure_500us__MotorCurrent_2A__Gain_15__Distanz_140cm -type f | sort -r");
+
+    vector<string> files;
+    {
+        std::string delimiter = "\n";
+        size_t pos = 0;
+        while ((pos = files_str.find(delimiter)) != std::string::npos) {
+            std::string token = files_str.substr(0, pos);
+            std::cout << token << endl << "======" << std::endl;
+            files.push_back(token);
+            files_str.erase(0, pos + delimiter.length());
+        }
+    }
+
     Mat frame, gray;
     std::vector<cv::Rect> ROIs;
     while (true) {
         std::vector<cv::Rect> ROIs_new;
-        cap >> frame;
+        //cap >> frame;
+        if(files.empty()) return 0;
+        frame = imread(files.back());
+        files.pop_back();
         cvtColor(frame, gray, COLOR_BGR2GRAY);
 
         if(ROIs.empty()) {
