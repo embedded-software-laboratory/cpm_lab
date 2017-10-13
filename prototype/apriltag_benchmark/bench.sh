@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-for i in {1..3}
+for i in {1..2}
 do
     nohup ./apriltag_track_video >logout_$i.txt >>logerr_$i.txt &
 done
