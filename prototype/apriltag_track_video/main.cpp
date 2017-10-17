@@ -207,8 +207,8 @@ int main(int argc, char *argv[])
         }
 
         imshow("Tag Detections", frame);
-        //waitKey(0);
-        if (waitKey(1) >= 0) break;
+        waitKey(0);
+        //if (waitKey(1) >= 0) break;
 
         ROIs = ROIs_new;
     }
