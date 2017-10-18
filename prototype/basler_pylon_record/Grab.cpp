@@ -56,9 +56,9 @@ int main(int argc, char* argv[])
 
 
         camera.GainAuto.SetValue(GainAuto_Off);
-        camera.Gain.SetValue(15);
+        camera.Gain.SetValue(0);
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(500);
+        camera.ExposureTime.SetValue(200);
 
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
 
         // Camera.StopGrabbing() is called automatically by the RetrieveResult() method
         // when c_countOfImagesToGrab images have been retrieved.
+        int i = 4;
         while (camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -109,7 +110,7 @@ int main(int argc, char* argv[])
 
                 //cout << ss.str();
 
-                CImagePersistence::Save(ImageFileFormat_Tiff, ("img/" + ss.str() + ".tif").c_str(), ptrGrabResult);
+                if((i++)%60==0)CImagePersistence::Save(ImageFileFormat_Tiff, ("img/" + ss.str() + ".tif").c_str(), ptrGrabResult);
 
             }
             else
