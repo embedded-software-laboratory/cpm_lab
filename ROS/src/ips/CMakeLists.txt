@@ -150,6 +150,12 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+
+add_executable(unittest 
+    src/tools/unittest/main.cpp
+)
+target_link_libraries(unittest ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
