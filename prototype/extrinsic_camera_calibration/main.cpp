@@ -10,9 +10,33 @@
 
 
 
+cv::Point2d reproject(cv::Point3d point, cv::Matx33d CameraR, cv::Vec3d CameraT, double fx, double fy, double px, double py, double k1, double k2, double p1, double p2) {
 
 
-void getRelativeTransform(std::vector<AprilTagDetection> detections, double fx, double fy, double px, double py, double k1, double k2, double p1, double p2) {
+    cv::Matx31d p = CameraR * cv::Matx31d(point.x, point.y, point.z) + CameraT;
+
+
+    double x = p(0, 0);
+    double y = p(1, 0);
+    double z = p(2, 0);
+    assert(z > 0);
+    x /= z;
+    y /= z;
+    double r2 = x * x + y * y;
+    double r4 = r2 * r2;
+    double x2 = x * (1 + k1 * r2 + k2 * r4) + 2 * p1 * x * y + p2 * (r2 + 2 * x * x);
+    double y2 = y * (1 + k1 * r2 + k2 * r4) + p1 * (r2 + 2 * y * y) + 2 * p2 * x * y;
+    double u = fx * x2 + px;
+    double v = fy * y2 + py;
+
+    return cv::Point2d(u,v);
+}
+
+
+
+
+
+void getRelativeTransform(cv::Mat cv_img, std::vector<AprilTagDetection> detections, double fx, double fy, double px, double py, double k1, double k2, double p1, double p2) {
     std::vector<cv::Point3d> objPts;
     std::vector<cv::Point2d> imgPts;
 
@@ -27,8 +51,25 @@ void getRelativeTransform(std::vector<AprilTagDetection> detections, double fx, 
     }
 
 
+    objPts.push_back(cv::Point3d(3,3,0));
+    imgPts.push_back(cv::Point2d(993,223));
 
-    cv::Mat rvec, tvec;
+    objPts.push_back(cv::Point3d(0,3,0));
+    imgPts.push_back(cv::Point2d(348,158));
+
+    objPts.push_back(cv::Point3d(3,0,0));
+    imgPts.push_back(cv::Point2d(1482,638));
+
+    /*objPts.push_back(cv::Point3d(0,0,0));
+    imgPts.push_back(cv::Point2d(229,930));
+
+    objPts.push_back(cv::Point3d(1,1,0));
+    imgPts.push_back(cv::Point2d(781,422));*/
+
+
+
+
+    cv::Vec3d rvec, tvec;
     cv::Matx33d cameraMatrix(
             fx, 0, px,
             0, fy, py,
@@ -38,19 +79,35 @@ void getRelativeTransform(std::vector<AprilTagDetection> detections, double fx, 
     cv::Matx33d r;
     cv::Rodrigues(rvec, r);
 
+    std::cout << "r" << std::endl;
+    std::cout << r << std::endl;
+    std::cout << "t" << std::endl;
     std::cout << tvec << std::endl;
-    /*Eigen::Matrix3d wRo;
-    wRo << r(0,0), r(0,1), r(0,2), r(1,0), r(1,1), r(1,2), r(2,0), r(2,1), r(2,2);
 
-    Eigen::Matrix4d T;
-    T.topLeftCorner(3,3) = wRo;
-    T.col(3).head(3) << tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
-    T.row(3) << 0,0,0,1;
+    cvtColor(cv_img, cv_img, cv::COLOR_GRAY2BGR);
 
-    return T;*/
+
+    {
+        // Reprojection
+        std::cout << "Reprojection" << std::endl;
+        for (int x = 0; x < 4; ++x) {
+            for (int y = 0; y < 4; ++y) {
+                auto pt1 = reproject(cv::Point3d(x,y,0), r, tvec, fx, fy, px, py, k1, k2, p1, p2);
+                auto pt2 = reproject(cv::Point3d(x,y,0.4), r, tvec, fx, fy, px, py, k1, k2, p1, p2);
+
+                //cv::circle(cv_img, pt_2d, 20, cv::Scalar(255), 3);
+                cv::line(cv_img, pt1, pt2, cv::Scalar(0,0,255),4);
+            }
+        }
+        cv::namedWindow("a");
+        cv::imwrite("CameraCalibrationDemo.png", cv_img);
+        cv::imshow("a",cv_img);
+        cv::waitKey(0);
+
+    }
+
+
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +115,7 @@ int main(int argc, char *argv[])
 
     for (int input = 0; input < 1; input++) {
 
-        auto cv_img = cv::imread( "/home/janis/sciebo/CPM-Lab/04_Measurement/CameraCalibration/2017-10-18-Basler-dart-daA1600-60um/extrinsic/2017-10-18_16-26-55.242950.tif");
+        cv::Mat cv_img = cv::imread( "/home/janis/sciebo/CPM-Lab/04_Measurement/CameraCalibration/2017-10-18-Basler-dart-daA1600-60um/extrinsic/2017-10-18_16-26-55.242950.tif");
         cvtColor(cv_img, cv_img, cv::COLOR_BGR2GRAY);
 
         image_u8_t im = {.width = cv_img.cols,
@@ -76,17 +133,17 @@ int main(int argc, char *argv[])
             );
         }
 
-        double fx = 945.6139;
-        double fy = 898.9172;
-        double px = 770.7659;
-        double py = 538.2835;
-        double k1 = -0.2550;
-        double k2 = 0.0593;
-        double p1 = 0.0176;
-        double p2 = 2.1927e-05;
+        double fx = 945.444618;
+        double fy = 898.791897;
+        double px = 776.656112;
+        double py = 533.951952;
+        double k1 = -0.253795;
+        double k2 = 0.041498;
+        double p1 = 0.019698;
+        double p2 = 0.001308;
 
 
-        getRelativeTransform(detections, fx, fy, px, py, k1, k2, p1, p2);
+        getRelativeTransform(cv_img, detections, fx, fy, px, py, k1, k2, p1, p2);
     }
 
     return 0;
