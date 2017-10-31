@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
         for ( size_t i = 0; i < cameras.GetSize(); ++i)
         {
-            cout << "Using device " << cameras[ i ].GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[0].GetDeviceInfo().GetSerialNumber() << endl;
+            cout << "Using device " << cameras[ i ].GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[i].GetDeviceInfo().GetSerialNumber() << endl;
 
             cameras[ i ].RegisterImageEventHandler( new CMyImageEventPrinter, RegistrationMode_Append, Cleanup_Delete);
             cameras[ i ].RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
@@ -70,19 +70,24 @@ int main(int argc, char* argv[])
             expauto->FromString("Off");
 
             CFloatPtr gain( nodemap.GetNode( "Gain"));
-            gain->SetValue(0);
+            gain->SetValue(18);
 
             CFloatPtr exp( nodemap.GetNode( "ExposureTime"));
-            exp->SetValue(500);
+            exp->SetValue(50);
         }
 
-        for (int j = 0; j < 10; ++j)
+        for (int j = 0; j < 30; ++j)
         {
             usleep(1000000/50);
 
-            for ( size_t i = 0; i < cameras.GetSize(); ++i) {
+            /*for ( size_t i = 0; i < cameras.GetSize(); ++i) {
                 cameras[ i ].ExecuteSoftwareTrigger();
-            }
+            }*/
+
+            
+            cameras[ 0 ].ExecuteSoftwareTrigger();
+            usleep(1050);
+            cameras[ 1 ].ExecuteSoftwareTrigger();
 
             usleep(500);
             
