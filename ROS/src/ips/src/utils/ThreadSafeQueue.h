@@ -1,9 +1,12 @@
+#pragma once
+
 #include <mutex>
 #include <condition_variable>
 
 
 /*!
-    Hello
+    A thread-safe first in first out queue with a maximum capacity.
+    Implemented with a mutex and a simple ring buffer.
 */
 template<typename Item, size_t capacity>
 class ThreadSafeQueue
@@ -18,6 +21,12 @@ class ThreadSafeQueue
 
 public:
 
+    /*!
+        Blocks until an item is available or the queue is closed.
+        Removes the first item from the front of the queue and assigns it to \p item.
+        \param[out] item The first queue item, if the queue is open.
+        \return True if \p item contains a new value and the queue is open.
+    */
     bool read(Item &item) {
         std::unique_lock<std::mutex> lock(m_mutex);
         while (count == 0 && !closed) cond_var_read.wait(lock);
@@ -29,6 +38,11 @@ public:
         return true;
     }
 
+    /*!
+        Blocks while the queue is full and open.
+        Inserts \p item to the back of the queue.
+        \return True if \p item was inserted and the queue is open.
+    */
     bool write(Item item) {
         std::unique_lock<std::mutex> lock(m_mutex);
         while (count >= capacity && !closed) cond_var_write.wait(lock);
@@ -39,11 +53,19 @@ public:
         return true;
     }
 
+    /*!
+        Closes the queue. All present and future calls to read() and write() will return false.
+    */
     void close() {
         std::unique_lock<std::mutex> lock(m_mutex);
         closed = true;
         cond_var_read.notify_all();
         cond_var_write.notify_all();
     }
+
+
+    ThreadSafeQueue() = default;
+    ThreadSafeQueue(const ThreadSafeQueue&) = delete;
+    ThreadSafeQueue& operator=(const ThreadSafeQueue&) = delete;
 
 };
