@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 
+using namespace std::chrono_literals;
 
 TEST_CASE("ThreadSafeQueue_PreservesDataOrder") {
 
@@ -23,8 +24,6 @@ TEST_CASE("ThreadSafeQueue_PreservesDataOrder") {
 
 TEST_CASE("ThreadSafeQueue_CloseWhileReading") {
 
-    using namespace std::chrono_literals;
-
     ThreadSafeQueue<int, 1> Q;
 
     std::thread t([&](){
@@ -43,8 +42,6 @@ TEST_CASE("ThreadSafeQueue_CloseWhileReading") {
 
 TEST_CASE("ThreadSafeQueue_CloseWhileWriting") {
 
-    using namespace std::chrono_literals;
-
     ThreadSafeQueue<int, 2> Q;
 
     std::thread t([&](){
@@ -55,6 +52,23 @@ TEST_CASE("ThreadSafeQueue_CloseWhileWriting") {
     CHECK( Q.write(1) == true );
     CHECK( Q.write(1) == true );
     CHECK( Q.write(1) == false );
+
+    t.join();
+}
+
+
+TEST_CASE("ThreadSafeQueue_ConcurrentReadWrite") {
+
+    ThreadSafeQueue<int, 2> Q;
+
+    std::thread t([&](){
+        std::this_thread::sleep_for(5ms);
+        Q.write(42);
+    });
+    
+    int d;
+    CHECK( Q.read(d) == true );
+    CHECK( d == 42 );
 
     t.join();
 }
