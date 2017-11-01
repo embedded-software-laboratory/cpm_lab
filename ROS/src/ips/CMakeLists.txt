@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ips)
+set (CMAKE_CXX_STANDARD 14)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -120,6 +121,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+include_directories(src)
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/ips.cpp
@@ -153,6 +156,7 @@ include_directories(
 
 add_executable(unittest 
     src/tools/unittest/main.cpp
+    src/utils/ThreadSafeQueue_unittest.cpp
 )
 target_link_libraries(unittest ${catkin_LIBRARIES})
 
