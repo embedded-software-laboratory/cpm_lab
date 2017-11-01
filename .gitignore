@@ -6,3 +6,5 @@ devel/
 img/
 cmake-build-debug/
 .idea/
+html/
+latex/
