@@ -46,8 +46,8 @@ public:
         \return True if \p item was inserted and the queue is open.
     */
     bool write(Item item) {
-        std::unique_lock<std::mutex> lock(m_mutex);
         {
+            std::unique_lock<std::mutex> lock(m_mutex);
             while (count >= capacity && !closed) cond_var_write.wait(lock);
             if (closed) return false;
             data[(start + count) % capacity] = item;
