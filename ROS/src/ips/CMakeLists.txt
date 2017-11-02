@@ -156,7 +156,8 @@ include_directories(src)
 
 add_executable(unittest 
     src/tools/unittest/main.cpp
-    src/utils/ThreadSafeQueue_unittest.cpp
+        src/utils/ThreadSafeQueue.h
+        src/utils/ThreadSafeQueue_unittest.cpp
 )
 target_link_libraries(unittest ${catkin_LIBRARIES})
 

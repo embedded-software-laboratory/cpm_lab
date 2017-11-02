@@ -28,12 +28,14 @@ public:
         \return True if \p item contains a new value and the queue is open.
     */
     bool read(Item &item) {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        while (count == 0 && !closed) cond_var_read.wait(lock);
-        if(closed) return false;
-        item = data[start];
-        start = (start + 1) % capacity;
-        count--;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            while (count == 0 && !closed) cond_var_read.wait(lock);
+            if (closed) return false;
+            item = data[start];
+            start = (start + 1) % capacity;
+            count--;
+        }
         cond_var_write.notify_one();
         return true;
     }
@@ -45,10 +47,12 @@ public:
     */
     bool write(Item item) {
         std::unique_lock<std::mutex> lock(m_mutex);
-        while (count >= capacity && !closed) cond_var_write.wait(lock);
-        if(closed) return false;
-        data[(start + count) % capacity] = item;
-        count++;
+        {
+            while (count >= capacity && !closed) cond_var_write.wait(lock);
+            if (closed) return false;
+            data[(start + count) % capacity] = item;
+            count++;
+        }
         cond_var_read.notify_one();
         return true;
     }
@@ -57,8 +61,10 @@ public:
         Closes the queue. All present and future calls to read() and write() will return false.
     */
     void close() {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        closed = true;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            closed = true;
+        }
         cond_var_read.notify_all();
         cond_var_write.notify_all();
     }
