@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ips)
 set (CMAKE_CXX_STANDARD 14)
+add_compile_options(-Werror=return-type -Wall)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -14,6 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   cpm_msgs
 )
+find_package(PkgConfig)
+find_package( OpenCV REQUIRED )
+find_package (Threads)
+pkg_search_module(apriltag REQUIRED apriltag)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -107,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ips
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -155,12 +158,26 @@ include_directories(src)
 # )
 
 
+
+
+
+SET(IPS_LIB_SOURCES
+    src/algorithms/AprilTagDetector/AprilTagDetector.cpp
+    src/algorithms/AprilTagDetector/AprilTagDetector.h
+)
+
+add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
+target_link_libraries(ips_lib apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+
 add_executable(unittest 
     src/tools/unittest/main.cpp
-        src/utils/ThreadSafeQueue.h
-        src/utils/ThreadSafeQueue_unittest.cpp
+    src/utils/ThreadSafeQueue.h
+    src/utils/ThreadSafeQueue_unittest.cpp
+    src/algorithms/AprilTagDetector/AprilTagDetector_unittest.cpp
 )
-target_link_libraries(unittest ${catkin_LIBRARIES})
+target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##
