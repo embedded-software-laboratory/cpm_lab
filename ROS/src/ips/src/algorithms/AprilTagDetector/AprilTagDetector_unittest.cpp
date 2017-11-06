@@ -19,9 +19,8 @@ TEST_CASE("AprilTagDetector_simple_examples") {
         auto detections = detector.detect(loadImg("test_img_tag25h9_ids_0_4.jpg"));
 
         REQUIRE(detections.size() == 2);
-        for(auto detection:detections) {
-            CHECK((detection.id == 0 || detection.id == 4));
-        }
+        CHECK(((detections[0].id == 0 && detections[1].id == 4)
+            ||(detections[0].id == 4 && detections[1].id == 0)));
     }
 
     SECTION( "Image test_img_tag36h11_id_0" ) {
