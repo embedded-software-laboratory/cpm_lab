@@ -31,7 +31,13 @@ AprilTagDetector::~AprilTagDetector() {
     else tag36h11_destroy(tf);
 }
 
-std::vector<AprilTagDetection> AprilTagDetector::detect(image_u8_t im) {
+std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image) {
+    image_u8_t im = {
+        .width = image.cols,
+        .height = image.rows,
+        .stride = int32_t(image.step.buf[0]),
+        .buf = image.data
+    };
     zarray_t *detections = apriltag_detector_detect(td, &im);
     std::vector<AprilTagDetection> my_detections;
 

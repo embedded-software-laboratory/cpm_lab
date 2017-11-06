@@ -9,6 +9,7 @@
 
 #include <array>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 /*!
     Represents the detection of a tag.
@@ -53,5 +54,5 @@ public:
     ~AprilTagDetector();
 
     /*! Find apriltags in a black and white image. */
-    std::vector<AprilTagDetection> detect(image_u8_t im);
+    std::vector<AprilTagDetection> detect(cv::Mat1b image);
 };

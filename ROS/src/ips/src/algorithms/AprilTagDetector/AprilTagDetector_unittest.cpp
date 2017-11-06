@@ -4,28 +4,32 @@
 #include <ros/package.h>
 
 
-
-TEST_CASE("AprilTagDetector_simple_example") {
-
-    /***** Arrange *****/
-    auto filename = ros::package::getPath("ips") + "/src/algorithms/AprilTagDetector/test_img_tag25h9_ids_0_4.jpg";
-    cv::Mat cv_img = cv::imread( filename );
-    cvtColor(cv_img, cv_img, cv::COLOR_BGR2GRAY);
-    image_u8_t im = {.width = cv_img.cols,
-        .height = cv_img.rows,
-        .stride = int32_t(cv_img.step.buf[0]),
-        .buf = cv_img.data
-    };
-    AprilTagDetector detector(AprilTagFamily::Tag25h9);
+cv::Mat1b loadImg(std::string file) {
+    auto filename = ros::package::getPath("ips") + "/src/algorithms/AprilTagDetector/" + file;
+    cv::Mat img = cv::imread( filename );
+    cv::Mat1b img_bw;
+    cvtColor(img, img_bw, cv::COLOR_BGR2GRAY);
+    return img_bw;
+}
 
 
-    /***** Act *****/
-    auto detections = detector.detect(im);
+TEST_CASE("AprilTagDetector_simple_examples") {
+    SECTION( "Image test_img_tag25h9_ids_0_4" ) {
+        AprilTagDetector detector(AprilTagFamily::Tag25h9);
+        auto detections = detector.detect(loadImg("test_img_tag25h9_ids_0_4.jpg"));
 
-    /***** Assert *****/
-    REQUIRE(detections.size() == 2);
-    for(auto detection:detections) {
-        CHECK((detection.id == 0 || detection.id == 4));
+        REQUIRE(detections.size() == 2);
+        for(auto detection:detections) {
+            CHECK((detection.id == 0 || detection.id == 4));
+        }
+    }
+
+    SECTION( "Image test_img_tag36h11_id_0" ) {
+        AprilTagDetector detector(AprilTagFamily::Tag36h11);
+        auto detections = detector.detect(loadImg("test_img_tag36h11_id_0.jpg"));
+
+        REQUIRE(detections.size() == 1);
+        CHECK(detections[0].id == 0);
     }
 }
 
