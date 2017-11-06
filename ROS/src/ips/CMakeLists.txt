@@ -8,6 +8,7 @@ add_compile_options(-Werror=return-type -Wall)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  roslib
   roscpp
   rospy
   std_msgs
@@ -17,6 +18,7 @@ find_package(PkgConfig)
 find_package( OpenCV REQUIRED )
 find_package (Threads)
 pkg_search_module(apriltag REQUIRED apriltag)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -110,7 +112,7 @@ pkg_search_module(apriltag REQUIRED apriltag)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ips
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roslib roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
