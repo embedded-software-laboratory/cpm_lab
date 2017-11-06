@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ips)
-set (CMAKE_CXX_STANDARD 14)
+project(cpm_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -12,7 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  cpm_msgs
+  geometry_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -49,11 +49,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+add_message_files(
+  FILES
+  VehicleState.msg
+  VehicleStates.msg
 #   Message2.msg
-# )
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -70,10 +71,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -106,8 +108,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ips
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  LIBRARIES cpm_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -122,11 +124,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-include_directories(src)
-
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/ips.cpp
+#   src/${PROJECT_NAME}/cpm_msgs.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -137,7 +137,7 @@ include_directories(src)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/ips_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/cpm_msgs_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,14 +153,6 @@ include_directories(src)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
-
-add_executable(unittest 
-    src/tools/unittest/main.cpp
-        src/utils/ThreadSafeQueue.h
-        src/utils/ThreadSafeQueue_unittest.cpp
-)
-target_link_libraries(unittest ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -202,7 +194,7 @@ target_link_libraries(unittest ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ips.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_cpm_msgs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
