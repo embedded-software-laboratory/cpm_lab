@@ -40,6 +40,7 @@ std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image) {
     };
     zarray_t *detections = apriltag_detector_detect(td, &im);
     std::vector<AprilTagDetection> my_detections;
+    my_detections.reserve(zarray_size(detections));
 
     for (int i = 0; i < zarray_size(detections); i++) {
         apriltag_detection_t *det;
