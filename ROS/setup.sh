@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 clear
 source /opt/ros/kinetic/setup.bash
