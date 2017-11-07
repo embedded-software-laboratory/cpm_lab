@@ -13,9 +13,9 @@ struct CameraParameters {
     //@}
 
     /*! Simulate the projection of the camera from 3D world coordinates to 2D pixel coordinates. */
-    cv::Point2d project(cv::Point3d point);
+    cv::Mat2d project(const cv::Mat3d &objectPoints);
 
-    cv::Point3d ray(cv::Point2d);
+    std::tuple<cv::Vec3d, cv::Mat3d> pixelRays(cv::Mat2d imagePoints);
 
     /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world an image points. */
     void setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts);

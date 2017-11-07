@@ -1,8 +1,6 @@
 #include "CameraParameters.h"
 
-cv::Point2d CameraParameters::project(cv::Point3d point) {
-    cv::Matx31d p = cv::Matx31d(point.x, point.y, point.z);
-
+cv::Mat2d CameraParameters::project(const cv::Mat3d &objectPoints) {
     cv::Matx33d cameraMatrix(
         fx(), 0, cx(),
         0, fy(), cy(),
@@ -10,30 +8,67 @@ cv::Point2d CameraParameters::project(cv::Point3d point) {
     cv::Vec<double, 5> distCoeffs(k1(), k2(), p1(), p2(), k3());
     cv::Vec3d rvec;
     cv::Rodrigues(R(), rvec);
-    cv::Mat objectPoints(1, 1, CV_64FC3, cv::Scalar(p(0), p(1), p(2)));
     cv::Mat imagePoints;
     cv::projectPoints(objectPoints, rvec, T(), cameraMatrix, distCoeffs, imagePoints);
     assert(imagePoints.type() == CV_64FC2);
-    auto p2 = imagePoints.at<cv::Vec2d>(0,0);
-    return cv::Point2d(p2[0],p2[1]);
+    return cv::Mat2d(imagePoints);
 }
 
-cv::Point3d CameraParameters::ray(cv::Point2d pt) {
+std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoints) {
 
-    cv::Mat pt_mat(1, 1, CV_64FC2, cv::Scalar(pt.x, pt.y));
-    cv::Mat undistored;
     cv::Matx33d cameraMatrix(
             fx(), 0, cx(),
             0, fy(), cy(),
             0,  0,  1);
     cv::Vec<double, 5> distCoeffs(k1(), k2(), p1(), p2(), k3());
-    cv::undistortPoints(pt_mat, undistored, cameraMatrix, distCoeffs);
-    assert(undistored.type() == CV_64FC2);
-    cv::Vec2d undistored_vec = undistored.at<cv::Vec2d>(0,0);
-    cv::Matx31d undistored_vec3 (undistored_vec[0], undistored_vec[1], 1);
 
-    cv::Matx31d p = R().t() * (undistored_vec3 - T());
-    return cv::Point3d(p(0), p(1), p(2));
+
+    cv::Mat undistored;
+    cv::undistortPoints(imagePoints, undistored, cameraMatrix, distCoeffs);
+
+    assert(undistored.type() == CV_64FC2);
+
+    const int rows = undistored.rows;
+    const int cols = undistored.cols;
+
+    // unpack channels: each row = (xi,yi)
+    undistored = undistored.reshape(1, rows*cols);
+
+    assert(undistored.rows == rows*cols);
+    assert(undistored.cols == 2);
+    assert(undistored.type() == CV_64FC1);
+
+    // add homogeneous z=1, each row = (xi,yi,zi)
+    cv::hconcat(undistored, cv::Mat::ones(rows*cols, 1, CV_64FC1), undistored);
+
+    assert(undistored.rows == rows*cols);
+    assert(undistored.cols == 3);
+    assert(undistored.type() == CV_64FC1);
+
+    // subtract offset T
+    cv::subtract(undistored, cv::Mat(rows*cols, 1, CV_64FC3, cv::Scalar(T()[0], T()[1], T()[2])).reshape(1, rows*cols), undistored);
+
+    assert(undistored.rows == rows*cols);
+    assert(undistored.cols == 3);
+    assert(undistored.type() == CV_64FC1);
+
+    // apply inverse rotation
+    undistored = undistored * cv::Mat(R());
+
+    assert(undistored.rows == rows*cols);
+    assert(undistored.cols == 3);
+    assert(undistored.type() == CV_64FC1);
+
+    undistored = undistored.reshape(3, rows);
+
+    assert(undistored.rows == rows);
+    assert(undistored.cols == cols);
+    assert(undistored.type() == CV_64FC3);
+
+    cv::Vec3d origin = R().t() * (-T());
+    cv::Mat3d directions = cv::Mat3d(undistored) - origin;
+
+    return std::make_tuple(origin, directions);
 }
 
 void CameraParameters::setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts) {
