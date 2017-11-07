@@ -32,6 +32,7 @@ AprilTagDetector::~AprilTagDetector() {
 }
 
 std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image) {
+    assert(image.type() == CV_8UC1);
     image_u8_t im = {
         .width = image.cols,
         .height = image.rows,
