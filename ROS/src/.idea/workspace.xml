@@ -3,28 +3,47 @@
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
       <config projectName="Project" targetName="download_extra_data" />
-      <config projectName="Project" targetName="gtest_main" />
-      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_py" />
+      <config projectName="Project" targetName="_cpm_msgs_generate_messages_check_deps_VehicleStates" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages_py" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages" />
       <config projectName="Project" targetName="roscpp_generate_messages_py" />
-      <config projectName="Project" targetName="std_msgs_generate_messages_py" />
       <config projectName="Project" targetName="run_tests" />
-      <config projectName="Project" targetName="roscpp_generate_messages_eus" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages_lisp" />
+      <config projectName="Project" targetName="cpm_msgs_gencpp" />
+      <config projectName="Project" targetName="geometry_msgs_generate_messages_py" />
+      <config projectName="Project" targetName="geometry_msgs_generate_messages_nodejs" />
       <config projectName="Project" targetName="roscpp_generate_messages_cpp" />
-      <config projectName="Project" targetName="doxygen" />
-      <config projectName="Project" targetName="tests" />
       <config projectName="Project" targetName="unittest" />
-      <config projectName="Project" targetName="std_msgs_generate_messages_eus" />
       <config projectName="Project" targetName="std_msgs_generate_messages_cpp" />
-      <config projectName="Project" targetName="roscpp_generate_messages_lisp" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages_nodejs" />
       <config projectName="Project" targetName="clean_test_results" />
       <config projectName="Project" targetName="std_msgs_generate_messages_lisp" />
       <config projectName="Project" targetName="gtest" />
       <config projectName="Project" targetName="std_msgs_generate_messages_nodejs" />
-      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_nodejs" />
+      <config projectName="Project" targetName="geometry_msgs_generate_messages_cpp" />
       <config projectName="Project" targetName="rosgraph_msgs_generate_messages_cpp" />
+      <config projectName="Project" targetName="cpm_msgs_genlisp" />
+      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_lisp" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages_cpp" />
+      <config projectName="Project" targetName="gtest_main" />
+      <config projectName="Project" targetName="geometry_msgs_generate_messages_lisp" />
+      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_py" />
+      <config projectName="Project" targetName="std_msgs_generate_messages_py" />
+      <config projectName="Project" targetName="cpm_msgs_geneus" />
+      <config projectName="Project" targetName="roscpp_generate_messages_eus" />
+      <config projectName="Project" targetName="doxygen" />
+      <config projectName="Project" targetName="_cpm_msgs_generate_messages_check_deps_VehicleState" />
+      <config projectName="Project" targetName="tests" />
+      <config projectName="Project" targetName="std_msgs_generate_messages_eus" />
+      <config projectName="Project" targetName="roscpp_generate_messages_lisp" />
+      <config projectName="Project" targetName="cpm_msgs_gennodejs" />
+      <config projectName="Project" targetName="ips_lib" />
+      <config projectName="Project" targetName="geometry_msgs_generate_messages_eus" />
+      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_nodejs" />
       <config projectName="Project" targetName="roscpp_generate_messages_nodejs" />
       <config projectName="Project" targetName="rosgraph_msgs_generate_messages_eus" />
-      <config projectName="Project" targetName="rosgraph_msgs_generate_messages_lisp" />
+      <config projectName="Project" targetName="cpm_msgs_generate_messages_eus" />
+      <config projectName="Project" targetName="cpm_msgs_genpy" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -44,22 +63,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ThreadSafeQueue_unittest.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue_unittest.cpp">
+      <file leaf-file-name="CameraParameters.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="504">
-              <caret line="28" column="37" lean-forward="false" selection-start-line="28" selection-start-column="37" selection-end-line="28" selection-end-column="37" />
+            <state relative-caret-position="276">
+              <caret line="30" column="70" lean-forward="false" selection-start-line="30" selection-start-column="70" selection-end-line="30" selection-end-column="70" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ThreadSafeQueue.h" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue.h">
+      <file leaf-file-name="CameraParameters_unittest.cpp" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters_unittest.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="716">
-              <caret line="66" column="9" lean-forward="false" selection-start-line="66" selection-start-column="9" selection-end-line="66" selection-end-column="9" />
-              <folding />
+            <state relative-caret-position="330">
+              <caret line="15" column="25" lean-forward="true" selection-start-line="15" selection-start-column="25" selection-end-line="15" selection-end-column="25" />
+              <folding>
+                <element signature="e#0#29#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -72,6 +93,8 @@
         <option value="$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue_unittest.cpp" />
         <option value="$PROJECT_DIR$/ips/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue.h" />
+        <option value="$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters_unittest.cpp" />
+        <option value="$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters.cpp" />
       </list>
     </option>
   </component>
@@ -127,6 +150,23 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="ips" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="algorithms" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="src" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="src" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="ips" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="algorithms" type="462c0819:PsiDirectoryNode" />
+              <item name="CameraParameters" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="src" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="src" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="ips" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="utils" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -155,7 +195,46 @@
     <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
       <envs />
     </configuration>
+    <configuration name="_cpm_msgs_generate_messages_check_deps_VehicleState" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="_cpm_msgs_generate_messages_check_deps_VehicleState" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="_cpm_msgs_generate_messages_check_deps_VehicleStates" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="_cpm_msgs_generate_messages_check_deps_VehicleStates" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
     <configuration name="clean_test_results" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="clean_test_results" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_gencpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_gencpp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages_cpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages_cpp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages_eus" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages_eus" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages_lisp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages_lisp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages_nodejs" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages_nodejs" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_generate_messages_py" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_generate_messages_py" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_geneus" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_geneus" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_genlisp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_genlisp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_gennodejs" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_gennodejs" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="cpm_msgs_genpy" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="cpm_msgs_genpy" CONFIG_NAME="Debug">
       <envs />
     </configuration>
     <configuration name="download_extra_data" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="download_extra_data" CONFIG_NAME="Debug">
@@ -164,10 +243,28 @@
     <configuration name="doxygen" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="doxygen" CONFIG_NAME="Debug">
       <envs />
     </configuration>
+    <configuration name="geometry_msgs_generate_messages_cpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="geometry_msgs_generate_messages_cpp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="geometry_msgs_generate_messages_eus" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="geometry_msgs_generate_messages_eus" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="geometry_msgs_generate_messages_lisp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="geometry_msgs_generate_messages_lisp" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="geometry_msgs_generate_messages_nodejs" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="geometry_msgs_generate_messages_nodejs" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="geometry_msgs_generate_messages_py" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="geometry_msgs_generate_messages_py" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
     <configuration name="gtest" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="gtest" CONFIG_NAME="Debug">
       <envs />
     </configuration>
     <configuration name="gtest_main" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="gtest_main" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="ips_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="ips_lib" CONFIG_NAME="Debug">
       <envs />
     </configuration>
     <configuration name="roscpp_generate_messages_cpp" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="roscpp_generate_messages_cpp" CONFIG_NAME="Debug">
@@ -224,47 +321,80 @@
     <configuration name="unittest" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="unittest" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="unittest">
       <envs />
     </configuration>
-    <list size="24">
+    <list size="43">
       <item index="0" class="java.lang.String" itemvalue="Application.Build All" />
       <item index="1" class="java.lang.String" itemvalue="Application.clean_test_results" />
       <item index="2" class="java.lang.String" itemvalue="Application.download_extra_data" />
       <item index="3" class="java.lang.String" itemvalue="Application.doxygen" />
       <item index="4" class="java.lang.String" itemvalue="Application.run_tests" />
       <item index="5" class="java.lang.String" itemvalue="Application.tests" />
-      <item index="6" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_cpp" />
-      <item index="7" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_eus" />
-      <item index="8" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_lisp" />
-      <item index="9" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_nodejs" />
-      <item index="10" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_py" />
-      <item index="11" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_cpp" />
-      <item index="12" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_eus" />
-      <item index="13" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_lisp" />
-      <item index="14" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_nodejs" />
-      <item index="15" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_py" />
-      <item index="16" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_cpp" />
-      <item index="17" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_eus" />
-      <item index="18" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_lisp" />
-      <item index="19" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_nodejs" />
-      <item index="20" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_py" />
-      <item index="21" class="java.lang.String" itemvalue="Application.unittest" />
-      <item index="22" class="java.lang.String" itemvalue="Application.gtest" />
-      <item index="23" class="java.lang.String" itemvalue="Application.gtest_main" />
+      <item index="6" class="java.lang.String" itemvalue="Application._cpm_msgs_generate_messages_check_deps_VehicleState" />
+      <item index="7" class="java.lang.String" itemvalue="Application._cpm_msgs_generate_messages_check_deps_VehicleStates" />
+      <item index="8" class="java.lang.String" itemvalue="Application.cpm_msgs_gencpp" />
+      <item index="9" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages" />
+      <item index="10" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages_cpp" />
+      <item index="11" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages_eus" />
+      <item index="12" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages_lisp" />
+      <item index="13" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages_nodejs" />
+      <item index="14" class="java.lang.String" itemvalue="Application.cpm_msgs_generate_messages_py" />
+      <item index="15" class="java.lang.String" itemvalue="Application.cpm_msgs_geneus" />
+      <item index="16" class="java.lang.String" itemvalue="Application.cpm_msgs_genlisp" />
+      <item index="17" class="java.lang.String" itemvalue="Application.cpm_msgs_gennodejs" />
+      <item index="18" class="java.lang.String" itemvalue="Application.cpm_msgs_genpy" />
+      <item index="19" class="java.lang.String" itemvalue="Application.geometry_msgs_generate_messages_cpp" />
+      <item index="20" class="java.lang.String" itemvalue="Application.geometry_msgs_generate_messages_eus" />
+      <item index="21" class="java.lang.String" itemvalue="Application.geometry_msgs_generate_messages_lisp" />
+      <item index="22" class="java.lang.String" itemvalue="Application.geometry_msgs_generate_messages_nodejs" />
+      <item index="23" class="java.lang.String" itemvalue="Application.geometry_msgs_generate_messages_py" />
+      <item index="24" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_cpp" />
+      <item index="25" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_eus" />
+      <item index="26" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_lisp" />
+      <item index="27" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_nodejs" />
+      <item index="28" class="java.lang.String" itemvalue="Application.roscpp_generate_messages_py" />
+      <item index="29" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_cpp" />
+      <item index="30" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_eus" />
+      <item index="31" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_lisp" />
+      <item index="32" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_nodejs" />
+      <item index="33" class="java.lang.String" itemvalue="Application.rosgraph_msgs_generate_messages_py" />
+      <item index="34" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_cpp" />
+      <item index="35" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_eus" />
+      <item index="36" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_lisp" />
+      <item index="37" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_nodejs" />
+      <item index="38" class="java.lang.String" itemvalue="Application.std_msgs_generate_messages_py" />
+      <item index="39" class="java.lang.String" itemvalue="Application.ips_lib" />
+      <item index="40" class="java.lang.String" itemvalue="Application.unittest" />
+      <item index="41" class="java.lang.String" itemvalue="Application.gtest" />
+      <item index="42" class="java.lang.String" itemvalue="Application.gtest_main" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
   </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f06cdaa3-2546-4de0-a53f-71830f665329" name="Default" comment="" />
+      <created>1510058813461</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1510058813461</updated>
+      <workItem from="1510058819085" duration="2597000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="2597000" />
+  </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="-4" width="3375" height="1444" extended-state="6" />
+    <frame x="65" y="24" width="1857" height="1092" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12977777" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1967655" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33582088" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29387754" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985073" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26530612" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16641791" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -288,10 +418,28 @@
     </ignored-roots>
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="4" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue_unittest.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="28" column="37" lean-forward="false" selection-start-line="28" selection-start-column="37" selection-end-line="28" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1188">
+          <caret line="66" column="9" lean-forward="false" selection-start-line="66" selection-start-column="9" selection-end-line="66" selection-end-column="9" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue_unittest.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -319,8 +467,34 @@
     <entry file="file://$PROJECT_DIR$/ips/src/utils/ThreadSafeQueue.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="716">
-          <caret line="66" column="9" lean-forward="false" selection-start-line="66" selection-start-column="9" selection-end-line="66" selection-end-column="9" />
+          <caret line="63" column="9" lean-forward="false" selection-start-line="63" selection-start-column="9" selection-end-line="63" selection-end-column="9" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/calib3d.hpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="522" column="0" lean-forward="false" selection-start-line="522" selection-start-column="0" selection-end-line="522" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="276">
+          <caret line="30" column="70" lean-forward="false" selection-start-line="30" selection-start-column="70" selection-end-line="30" selection-end-column="70" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ips/src/algorithms/CameraParameters/CameraParameters_unittest.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="15" column="25" lean-forward="true" selection-start-line="15" selection-start-column="25" selection-end-line="15" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

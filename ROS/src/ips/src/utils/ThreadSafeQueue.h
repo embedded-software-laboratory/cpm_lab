@@ -4,10 +4,7 @@
 #include <condition_variable>
 
 
-/*!
-    A thread-safe first in first out queue with a maximum capacity.
-    Implemented with a mutex and a simple ring buffer.
-*/
+//! A thread-safe first in first out queue with a maximum capacity. Implemented with a mutex and a simple ring buffer.
 template<typename Item, size_t capacity>
 class ThreadSafeQueue
 {

@@ -7,7 +7,7 @@
 #include "Parameter.h"
 
 #include <iostream>
-
+using namespace std;
 
 struct CameraParameters {
     Parameter<cv::Matx33d> R;
@@ -154,7 +154,14 @@ int main(int argc, char *argv[])
         cv::imwrite("CameraCalibrationDemo.png", cv_img);
         cv::imshow("a",cv_img);
         cv::waitKey(0);
+
+        cout << "R" << endl;
+        for (int i = 0; i < 9; ++i) cout << params.R().val[i] << endl;
+        cout << "T" << endl;
+        for (int i = 0; i < 3; ++i) cout << params.T().val[i] << endl;
     }
+
+
 
     return 0;
 }

@@ -11,9 +11,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-/*!
-    Represents the detection of a tag.
-*/
+//! Represents the detection of a tag.
 struct AprilTagDetection {
 
     //@{
@@ -39,9 +37,7 @@ struct AprilTagDetection {
 
 enum class AprilTagFamily { Tag36h11, Tag36h10, Tag25h9, Tag25h7, Tag16h5 };
 
-/*!
-    Thin wrapper class for the apriltag detector C library.
-*/
+//! Thin wrapper class for the apriltag detector C library.
 class AprilTagDetector {
 
     apriltag_family_t *tf;
