@@ -1,9 +1,10 @@
 #!/bin/bash
-set -e
 
 clear
 source /opt/ros/kinetic/setup.bash
 catkin_make $@
-source devel/setup.bash
-doxygen doc/Doxyfile
-rosrun ips unittest
+if [ $? -eq 0 ]; then
+    source devel/setup.bash
+    doxygen doc/Doxyfile
+    rosrun ips unittest
+fi
