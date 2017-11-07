@@ -1,8 +1,7 @@
 #include "CameraParameters.h"
 
 cv::Point2d CameraParameters::project(cv::Point3d point) {
-    cv::Matx31d p = R() * cv::Matx31d(point.x, point.y, point.z) + T();
-    assert(p(2, 0) > 0);
+    cv::Matx31d p = cv::Matx31d(point.x, point.y, point.z);
 
     cv::Matx33d cameraMatrix(
         fx(), 0, cx(),
