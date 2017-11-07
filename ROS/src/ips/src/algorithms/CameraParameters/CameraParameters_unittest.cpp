@@ -45,13 +45,11 @@ TEST_CASE("CameraParameters_forward_reverse_projection_consistency") {
     cv::Mat3d directions;
     std::tie(origin, directions) = params.pixelRays(pixels);
 
-    // find closest point on each ray that is closest to the original point
+    // find point on each ray that is closest to the original point
     double max_error = 0;
     for (int j = 0; j < cols; ++j) {
         auto direction = directions.at<cv::Vec3d>(0,j);
         auto point = points.at<cv::Vec3d>(0,j);
-
-        // find ray parameter
         double ray_param = (direction.dot(point-origin))/(direction.dot(direction));
         auto point_reconstruction = origin + ray_param * direction;
         auto error_vector = point_reconstruction - point;

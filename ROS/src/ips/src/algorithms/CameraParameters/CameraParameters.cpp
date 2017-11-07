@@ -24,7 +24,7 @@ std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoin
 
 
     cv::Mat undistored;
-    cv::undistortPoints(imagePoints, undistored, cameraMatrix, distCoeffs);
+    cv::undistortPoints(imagePoints, undistored, cameraMatrix, distCoeffs, cv::noArray(), cv::noArray(), cv::TermCriteria(cv::TermCriteria::COUNT,20,0.05));
 
     assert(undistored.type() == CV_64FC2);
 

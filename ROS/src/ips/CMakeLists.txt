@@ -15,7 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   cpm_msgs
 )
 find_package(PkgConfig)
-find_package( OpenCV REQUIRED )
+set(CMAKE_PREFIX_PATH /home/janis/Dev/opencv/build)
+find_package( OpenCV 3.3.1 EXACT REQUIRED )
 find_package (Threads)
 pkg_search_module(apriltag REQUIRED apriltag)
 
