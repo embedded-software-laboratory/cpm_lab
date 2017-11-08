@@ -20,13 +20,13 @@ struct CameraParameters {
     cv::Mat2d project(const cv::Mat3d &objectPoints);
 
     /*!
-        Calculate the 3D ray that corresponds to a pixel.
+        Calculate the 3D rays that corresponds to pixels.
         \param imagePoints (1xN) or (Nx1) list of 2D vectors in pixel coordinates.
         \return <tt>tuple(origin, directions)</tt>, 3D rays of the form <tt>ray(p) = origin + p * direction</tt>
         where \c direction is one of N entries in \c directions.
     */
     std::tuple<cv::Vec3d, cv::Mat3d> pixelRays(cv::Mat2d imagePoints);
 
-    /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world an image points. */
+    /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world and image points. */
     void setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts);
 };
