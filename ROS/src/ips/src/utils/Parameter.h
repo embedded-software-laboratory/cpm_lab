@@ -15,7 +15,15 @@ public:
         value = val;
         initialized = true;
     }
-    Parameter& operator = (const Parameter&) = delete;
+
+    Parameter& operator = (const Parameter& param) {
+        if(initialized) throw std::runtime_error("Parameter is immutable and cannot be set again.");
+        if(!param.initialized) throw std::runtime_error("Parameter is not initialized.");
+        value = param.value;
+        initialized = true;
+        return *this;
+    }
+
     void operator = (const T &val) {
         if(initialized) throw std::runtime_error("Parameter is immutable and cannot be set again.");
         value = val;

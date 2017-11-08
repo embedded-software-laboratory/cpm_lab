@@ -12,9 +12,19 @@ struct CameraParameters {
     Parameter<double> fx, fy, cx, cy, k1, k2, k3, p1, p2;
     //@}
 
-    /*! Simulate the projection of the camera from 3D world coordinates to 2D pixel coordinates. */
+    /*!
+        Simulate the projection of the camera from 3D world coordinates to 2D pixel coordinates.
+        \param objectPoints (1xN) or (Nx1) list of 3D vectors in world coordinates.
+        \return (1xN) or (Nx1) list of 2D vectors in pixel coordinates.
+    */
     cv::Mat2d project(const cv::Mat3d &objectPoints);
 
+    /*!
+        Calculate the 3D ray that corresponds to a pixel.
+        \param imagePoints (1xN) or (Nx1) list of 2D vectors in pixel coordinates.
+        \return <tt>tuple(origin, directions)</tt>, 3D rays of the form <tt>ray(p) = origin + p * direction</tt>
+        where \c direction is one of N entries in \c directions.
+    */
     std::tuple<cv::Vec3d, cv::Mat3d> pixelRays(cv::Mat2d imagePoints);
 
     /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world an image points. */

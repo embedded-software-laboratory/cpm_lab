@@ -165,6 +165,7 @@ include_directories(src)
 
 
 SET(IPS_LIB_SOURCES
+    src/utils/Parameter.h
     src/algorithms/AprilTagDetector/AprilTagDetector.cpp
     src/algorithms/AprilTagDetector/AprilTagDetector.h
     src/algorithms/CameraParameters/CameraParameters.cpp

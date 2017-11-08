@@ -38,7 +38,7 @@ std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoin
     assert(undistored.cols == 2);
     assert(undistored.type() == CV_64FC1);
 
-    // add homogeneous z=1, each row = (xi,yi,zi)
+    // add homogeneous z=1, each row = (xi,yi,zi) = (xi,yi, 1)
     cv::hconcat(undistored, cv::Mat::ones(rows*cols, 1, CV_64FC1), undistored);
 
     assert(undistored.rows == rows*cols);
