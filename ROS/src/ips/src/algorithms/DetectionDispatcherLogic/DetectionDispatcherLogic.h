@@ -6,13 +6,16 @@
 #include "algorithms/CameraParameters/CameraParameters.h"
 #include "algorithms/AprilTagDetector/AprilTagDetector.h"
 
+using AprilTagDetectionStamped = WithTimestamp<AprilTagDetection>;
+
+
 class DetectionDispatcherLogic {
     CameraParameters cameraParameters;
 public:
     DetectionDispatcherLogic(const CameraParameters &cameraParameters): cameraParameters(cameraParameters){}
 
     tuple<vector<cv::Rect>, bool> apply(
-        vector<tuple<ros::Time, AprilTagDetection>> previous_detections,
-        vector<cpm_msgs::VehicleState> vehicle_states
+        const vector<AprilTagDetectionStamped> &previous_detections,
+        const vector<cpm_msgs::VehicleState> &vehicle_states
     );
 };

@@ -32,7 +32,7 @@ TEST_CASE("DetectionDispatcherLogic") {
         aprilTagDetection.points[AprilTagDetection::i_bottom_right] = {3,1};
         aprilTagDetection.points[AprilTagDetection::i_top_left]     = {1,3};
         aprilTagDetection.points[AprilTagDetection::i_top_right]    = {3,3};
-        ros::Time detectionTime = ros::Time().fromNSec(12345678987654321);
+        WithTimestamp<AprilTagDetection> aprilTagDetectionStamped(aprilTagDetection, ros::Time().fromNSec(12345678987654321));
 
         cpm_msgs::VehicleState vehicle_state;
         vehicle_state.id = 42;
@@ -45,7 +45,7 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {make_tuple(detectionTime, aprilTagDetection)}, {vehicle_state} );
+            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
 
             CHECK(!full_frame_detection);
             CHECK(ROIs.size() == 1);
@@ -60,7 +60,7 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {make_tuple(detectionTime, aprilTagDetection)}, {vehicle_state} );
+            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
 
             CHECK(!full_frame_detection);
             CHECK(ROIs.size() == 1);
