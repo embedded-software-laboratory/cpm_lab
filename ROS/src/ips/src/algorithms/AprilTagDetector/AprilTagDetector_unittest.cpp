@@ -29,6 +29,12 @@ TEST_CASE("AprilTagDetector_simple_examples") {
 
         REQUIRE(detections.size() == 1);
         CHECK(detections[0].id == 0);
+
+        CHECK(fabs(detections[0].points[AprilTagDetection::i_center][0] - 357) < 1);
+        CHECK(fabs(detections[0].points[AprilTagDetection::i_center][1] - 257) < 1);
+
+        CHECK(fabs(detections[0].points[AprilTagDetection::i_top_right][0] - 380) < 1);
+        CHECK(fabs(detections[0].points[AprilTagDetection::i_top_right][1] - 271) < 1);
     }
 }
 
