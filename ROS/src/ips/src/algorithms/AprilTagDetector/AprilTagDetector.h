@@ -49,6 +49,8 @@ public:
     AprilTagDetector(AprilTagFamily family);
     ~AprilTagDetector();
 
-    /*! Find apriltags in a black and white image. */
-    std::vector<AprilTagDetection> detect(cv::Mat1b image);
+    /*! Find apriltags in a black and white image.
+     * \param offset This value is added to all resulting 2D points. Useful with cv::Rect::tl() if the \c image was cropped from a larger image.
+     * */
+    std::vector<AprilTagDetection> detect(cv::Mat1b image, cv::Point offset = cv::Point(0,0));
 };

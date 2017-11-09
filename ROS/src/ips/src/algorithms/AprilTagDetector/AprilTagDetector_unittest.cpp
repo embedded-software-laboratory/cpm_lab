@@ -1,5 +1,6 @@
 #include "tools/unittest/catch.hpp"
 #include "AprilTagDetector.h"
+#include "utils/default.h"
 #include <opencv2/opencv.hpp>
 #include <ros/package.h>
 
@@ -25,7 +26,23 @@ TEST_CASE("AprilTagDetector_simple_examples") {
 
     SECTION( "Image test_img_tag36h11_id_0" ) {
         AprilTagDetector detector(AprilTagFamily::Tag36h11);
-        auto detections = detector.detect(loadImg("test_img_tag36h11_id_0.jpg"));
+
+        auto img = loadImg("test_img_tag36h11_id_0.jpg");
+        vector<AprilTagDetection> detections;
+
+        SECTION("Normal test") {
+            detections = detector.detect(img);
+        }
+
+        SECTION("With ROI crop") {
+            cv::Rect ROI(299, 208, 128, 100);
+            detections = detector.detect(img(ROI), ROI.tl());
+        }
+
+        SECTION("With ROI crop clone") {
+            cv::Rect ROI(299, 208, 128, 100);
+            detections = detector.detect(img(ROI).clone(), ROI.tl());
+        }
 
         REQUIRE(detections.size() == 1);
         CHECK(detections[0].id == 0);

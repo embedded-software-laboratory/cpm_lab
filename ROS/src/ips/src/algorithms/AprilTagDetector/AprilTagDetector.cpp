@@ -31,7 +31,7 @@ AprilTagDetector::~AprilTagDetector() {
     else tag36h11_destroy(tf);
 }
 
-std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image) {
+std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image, cv::Point offset) {
     assert(image.type() == CV_8UC1);
     image_u8_t im = {
         .width = image.cols,
@@ -49,11 +49,11 @@ std::vector<AprilTagDetection> AprilTagDetector::detect(cv::Mat1b image) {
 
         my_detections.push_back(AprilTagDetection {
             .points = std::array<std::array<double, 2>, 5> {
-                std::array<double, 2>{det->p[0][0], det->p[0][1]},
-                std::array<double, 2>{det->p[1][0], det->p[1][1]},
-                std::array<double, 2>{det->p[2][0], det->p[2][1]},
-                std::array<double, 2>{det->p[3][0], det->p[3][1]},
-                std::array<double, 2>{det->c[0], det->c[1]}
+                std::array<double, 2>{det->p[0][0] + offset.x, det->p[0][1] + offset.y},
+                std::array<double, 2>{det->p[1][0] + offset.x, det->p[1][1] + offset.y},
+                std::array<double, 2>{det->p[2][0] + offset.x, det->p[2][1] + offset.y},
+                std::array<double, 2>{det->p[3][0] + offset.x, det->p[3][1] + offset.y},
+                std::array<double, 2>{det->c[0]    + offset.x, det->c[1]    + offset.y}
             },
             .id = det->id,
             .hamming = det->hamming,
