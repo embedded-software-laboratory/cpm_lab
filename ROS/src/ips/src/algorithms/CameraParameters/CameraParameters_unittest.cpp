@@ -1,5 +1,6 @@
 #include "CameraParameters.h"
 #include "tools/unittest/catch.hpp"
+#include "utils/default.h"
 
 TEST_CASE("CameraParameters") {
 
@@ -40,7 +41,7 @@ TEST_CASE("CameraParameters") {
         // reverse projection
         cv::Vec3d origin;
         cv::Mat3d directions;
-        std::tie(origin, directions) = params.pixelRays(pixels);
+        tie(origin, directions) = params.pixelRays(pixels);
 
         // test if each ray passes close to its corresponding point
         for (int j = 0; j < cols; ++j) {
@@ -66,7 +67,7 @@ TEST_CASE("CameraParameters") {
         cv::Mat2d pixels(1, 1, cv::Vec2d(pixel_x,pixel_y));
         cv::Vec3d origin;
         cv::Mat3d directions;
-        std::tie(origin, directions) = params.pixelRays(pixels);
+        tie(origin, directions) = params.pixelRays(pixels);
 
         // generate multiple points on the same ray
         const int cols = 100;

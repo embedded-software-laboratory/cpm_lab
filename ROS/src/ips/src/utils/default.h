@@ -2,11 +2,20 @@
 
 #include <string>
 #include <vector>
-#include <chrono>
 #include <tuple>
+#include <memory>
+#include <iostream>
+#include <ros/time.h>
+#include <limits>
 
 using std::vector;
 using std::string;
 using std::tuple;
-using time_point = std::chrono::high_resolution_clock::time_point;
-using std::chrono::high_resolution_clock;
+using std::make_tuple;
+using std::tie;
+using std::shared_ptr;
+using std::make_shared;
+using std::cout;
+using std::endl;
+
+constexpr double NaN = std::numeric_limits<double>::quiet_NaN();

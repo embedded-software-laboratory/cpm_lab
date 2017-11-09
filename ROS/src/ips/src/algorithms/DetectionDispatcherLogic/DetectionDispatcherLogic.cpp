@@ -2,8 +2,8 @@
 
 
 tuple<vector<cv::Rect>, bool> DetectionDispatcherLogic::apply(
-    vector<tuple<time_point, AprilTagDetection>> previous_detections,
+    vector<tuple<ros::Time, AprilTagDetection>> previous_detections,
     vector<cpm_msgs::VehicleState> vehicle_states
 ) {
-    return tuple<vector<cv::Rect>, bool>{vector<cv::Rect>{},false};
+    return make_tuple(vector<cv::Rect>{}, false);
 }

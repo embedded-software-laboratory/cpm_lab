@@ -12,7 +12,7 @@ public:
     DetectionDispatcherLogic(const CameraParameters &cameraParameters): cameraParameters(cameraParameters){}
 
     tuple<vector<cv::Rect>, bool> apply(
-        vector<tuple<time_point, AprilTagDetection>> previous_detections,
+        vector<tuple<ros::Time, AprilTagDetection>> previous_detections,
         vector<cpm_msgs::VehicleState> vehicle_states
     );
 };
