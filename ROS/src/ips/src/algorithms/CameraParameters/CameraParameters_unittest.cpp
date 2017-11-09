@@ -1,9 +1,6 @@
 #include "CameraParameters.h"
 #include "tools/unittest/catch.hpp"
 
-#include <iostream>
-using namespace std;
-
 TEST_CASE("CameraParameters") {
 
     CameraParameters params;

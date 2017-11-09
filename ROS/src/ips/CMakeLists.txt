@@ -165,11 +165,14 @@ include_directories(src)
 
 
 SET(IPS_LIB_SOURCES
+    src/utils/default.h
     src/utils/Parameter.h
     src/algorithms/AprilTagDetector/AprilTagDetector.cpp
     src/algorithms/AprilTagDetector/AprilTagDetector.h
     src/algorithms/CameraParameters/CameraParameters.cpp
     src/algorithms/CameraParameters/CameraParameters.h
+    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
+    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.h
 )
 
 add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
@@ -183,6 +186,7 @@ add_executable(unittest
     src/utils/ThreadSafeQueue_unittest.cpp
     src/algorithms/AprilTagDetector/AprilTagDetector_unittest.cpp
     src/algorithms/CameraParameters/CameraParameters_unittest.cpp
+    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
 )
 target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
