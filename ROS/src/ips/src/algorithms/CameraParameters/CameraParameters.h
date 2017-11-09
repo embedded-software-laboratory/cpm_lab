@@ -6,10 +6,22 @@
 //! Stores camera parameters as described in <a href="https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html">Camera Calibration and 3D Reconstruction</a>.
 struct CameraParameters {
     //@{
-    /*! Camera parameter as described in <a href="https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html">Camera Calibration and 3D Reconstruction</a>. */
-    Parameter<cv::Matx33d> R;
-    Parameter<cv::Vec3d> T;
-    Parameter<double> fx, fy, cx, cy, k1, k2, k3, p1, p2;
+    /*! Extrinsic camera parameter as described in <a href="https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html">Camera Calibration and 3D Reconstruction</a>. */
+    Parameter<cv::Matx33d> R = Parameter<cv::Matx33d>("R");
+    Parameter<cv::Vec3d> T = Parameter<cv::Vec3d>("T");
+    //@}
+
+    //@{
+    /*! Intrinsic camera parameter as described in <a href="https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html">Camera Calibration and 3D Reconstruction</a>. */
+    Parameter<double> fx = Parameter<double>("fx");
+    Parameter<double> fy = Parameter<double>("fy");
+    Parameter<double> cx = Parameter<double>("cx");
+    Parameter<double> cy = Parameter<double>("cy");
+    Parameter<double> k1 = Parameter<double>("k1");
+    Parameter<double> k2 = Parameter<double>("k2");
+    Parameter<double> k3 = Parameter<double>("k3");
+    Parameter<double> p1 = Parameter<double>("p1");
+    Parameter<double> p2 = Parameter<double>("p2");
     //@}
 
     /*!
