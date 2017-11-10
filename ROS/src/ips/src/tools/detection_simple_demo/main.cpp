@@ -2,7 +2,8 @@
 #include "utils/default.h"
 #include <opencv2/opencv.hpp>
 #include <pylon/PylonIncludes.h>
-
+#include "algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.h"
+#include "algorithms/AprilTagDetector/AprilTagDetector.h"
 
 using namespace Pylon;
 using namespace GenApi;
@@ -45,7 +46,6 @@ int main(int argc, char* argv[])
 {
     int exitCode = 0;
     PylonInitialize();
-    cv::namedWindow("img");
 
     try
     {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
         {
             cout << "Using device " << cameras[ i ].GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[i].GetDeviceInfo().GetSerialNumber() << endl;
 
-            cameras[ i ].RegisterImageEventHandler( new CMyImageEventPrinter, RegistrationMode_Append, Cleanup_Delete);
+            //cameras[ i ].RegisterImageEventHandler( new CMyImageEventPrinter, RegistrationMode_Append, Cleanup_Delete);
             cameras[ i ].RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
             cameras[ i ].StartGrabbing();
 
@@ -73,8 +73,44 @@ int main(int argc, char* argv[])
             gain->SetValue(5);
 
             CFloatPtr exp( nodemap.GetNode( "ExposureTime"));
-            exp->SetValue(10000);
+            exp->SetValue(1000);
         }
+
+        CameraParameters params;
+
+        params.fx = 1;
+        params.fy = 1;
+        params.cx = 0;
+        params.cy = 0;
+        params.k1 = 0;
+        params.k2 = 0;
+        params.k3 = 0;
+        params.p1 = 0;
+        params.p2 = 0;
+        params.R = cv::Matx33d(1,0,0,0,1,0,0,0,1);
+        params.T = cv::Vec3d(0,0,0);
+
+        DetectionDispatcherLogic detectionDispatcherLogic(params);
+
+        vector<AprilTagDetectionStamped> detections;
+
+        vector<cpm_msgs::VehicleState> vehicle_states;
+        {
+            cpm_msgs::VehicleState v;
+            v.id = 1;
+            v.pose.position.x = NaN;
+            vehicle_states.push_back(v);;
+        }
+        {
+            cpm_msgs::VehicleState v;
+            v.id = 50;
+            v.pose.position.x = NaN;
+            vehicle_states.push_back(v);;
+        }
+
+        AprilTagDetector aprilTagDetector(AprilTagFamily::Tag36h11);
+
+        ros::Time::init();
 
         bool loop = true;
         while(loop)
@@ -87,6 +123,7 @@ int main(int argc, char* argv[])
             for ( size_t i = 0; i < cameras.GetSize(); ++i)
             {
                 cv::Mat image_copy;
+                string serial_no;
 
                 {
                     CGrabResultPtr ptrGrabResult;
@@ -98,6 +135,7 @@ int main(int argc, char* argv[])
                     intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
 
                     auto SN = cameras[cameraContextValue].GetDeviceInfo().GetSerialNumber();
+                    serial_no = string(SN.c_str());
 
                     int rows = ptrGrabResult->GetHeight();
                     int cols = ptrGrabResult->GetWidth();
@@ -109,12 +147,58 @@ int main(int argc, char* argv[])
                     image_tmp.copyTo(image_copy);
                 }
 
+                //cv::resize(image_copy, image_copy, cv::Size(), 0.5, 0.5);
 
-                resize(image_copy, image_copy, cv::Size(), 0.5, 0.5);
 
-                cv::imshow("img", image_copy);
 
-                int key = cv::waitKey(30);
+                vector<cv::Rect> ROIs;
+                bool full_frame_detection;
+                tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( detections, vehicle_states );
+
+                detections.clear();
+
+                cv::Rect full_frame_ROI(0,0,image_copy.cols,image_copy.rows);
+
+                if(full_frame_detection) ROIs.push_back(full_frame_ROI);
+
+
+                for(auto ROI:ROIs) {
+                    ROI &= full_frame_ROI;
+                    if(ROI.area() > 0) {
+                        cv::Mat crop = image_copy(ROI);
+                        auto crop_detections = aprilTagDetector.detect(crop, ROI.tl());
+                        for (auto const &crop_detection : crop_detections) {
+                            for(auto const &vehicle:vehicle_states) {
+                                if(vehicle.id == crop_detection.id) {
+                                    detections.emplace_back(crop_detection, ros::Time::now());
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+
+                cout << ROIs.size() << " ---  " << detections.size() << endl;
+
+                cv::cvtColor(image_copy, image_copy, CV_GRAY2BGR);
+
+                for (auto const & detection:detections) {
+
+                    for (int k = 0; k < 4; ++k) {
+                        int m = (k + 1)%4;
+                        cv::line(image_copy,
+                                 cv::Point(detection.points[k][0], detection.points[k][1]),
+                                 cv::Point(detection.points[m][0], detection.points[m][1]),
+                                 k?cv::Scalar(0,255,0):cv::Scalar(0,0,255), 5);
+                    }
+                }
+
+                // smaller than my fullHD screen -> no scaling
+                image_copy = image_copy(cv::Rect(0,0,1600,950));
+                cv::imshow(serial_no, image_copy);
+
+                int key = cv::waitKey(1);
                 if(key == 27) loop = false;
             }
         }
