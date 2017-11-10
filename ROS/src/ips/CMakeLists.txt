@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ips)
 set (CMAKE_CXX_STANDARD 14)
-add_compile_options(-Werror=return-type -Wall)
+add_compile_options(-Werror=return-type -Wall -Wno-unknown-pragmas)
 
 
 ## Find catkin macros and libraries
@@ -20,6 +20,8 @@ find_package( OpenCV 3.3.1 EXACT REQUIRED )
 find_package (Threads)
 pkg_search_module(apriltag REQUIRED apriltag)
 
+
+set(PYLON_ROOT /opt/pylon5)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -129,6 +131,8 @@ include_directories(
 )
 
 include_directories(src)
+include_directories(${PYLON_ROOT}/include)
+link_directories(${PYLON_ROOT}/lib64)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -177,18 +181,24 @@ SET(IPS_LIB_SOURCES
 
 add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
 target_link_libraries(ips_lib apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(ips_lib cpm_msgs_generate_messages_cpp)
 
 
 
-add_executable(unittest 
-    src/tools/unittest/main.cpp
-    src/utils/ThreadSafeQueue.h
-    src/utils/ThreadSafeQueue_unittest.cpp
-    src/algorithms/AprilTagDetector/AprilTagDetector_unittest.cpp
-    src/algorithms/CameraParameters/CameraParameters_unittest.cpp
-    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
-)
+add_executable(unittest
+        src/tools/unittest/main.cpp
+        src/utils/ThreadSafeQueue.h
+        src/utils/ThreadSafeQueue_unittest.cpp
+        src/algorithms/AprilTagDetector/AprilTagDetector_unittest.cpp
+        src/algorithms/CameraParameters/CameraParameters_unittest.cpp
+        src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
+        )
 target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(detection_simple_demo
+        src/tools/detection_simple_demo/main.cpp
+)
+target_link_libraries(detection_simple_demo ips_lib pylonbase pylonutility GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##
