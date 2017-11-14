@@ -1,7 +1,7 @@
 #include "DetectionDispatcherLogic.h"
 
 
-tuple<vector<cv::Rect>, bool> DetectionDispatcherLogic::apply(
+tuple<vector<cv::Rect>, bool, vector<optional<AprilTagDetectionStamped>>> DetectionDispatcherLogic::apply(
     const vector<AprilTagDetectionStamped> &previous_detections,
     const vector<cpm_msgs::VehicleState> &vehicle_states
 ) {
@@ -83,5 +83,5 @@ tuple<vector<cv::Rect>, bool> DetectionDispatcherLogic::apply(
 
     }
 
-    return make_tuple(ROIs, full_frame_detection);
+    return make_tuple(ROIs, full_frame_detection, detection_per_vehicle);
 }

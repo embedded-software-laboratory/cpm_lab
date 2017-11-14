@@ -32,18 +32,7 @@ bool grabImage(size_t cam_id, WithTimestamp<cv::Mat> &image_copy) {
     return true;
 }
 
-void triggerLoop() {
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    while(loop) {
-        for (size_t i = 0; i < cameras_glob.size(); ++i) {
-            cameras_glob[i]->ExecuteSoftwareTrigger();
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-}
 
 template<size_t input_queue_size, size_t output_queue_size>
 void detectLoop(
@@ -105,23 +94,23 @@ void grabLoop(size_t cam_id) {
         cpm_msgs::VehicleState v;
         v.id = 1;
         v.pose.position.x = NaN;
-        vehicle_states.push_back(v);;
+        vehicle_states.push_back(v);
     }
     {
         cpm_msgs::VehicleState v;
-        v.id = 50;
+        v.id = 51;
         v.pose.position.x = NaN;
-        vehicle_states.push_back(v);;
+        vehicle_states.push_back(v);
+    }
+    {
+        cpm_msgs::VehicleState v;
+        v.id = 72;
+        v.pose.position.x = NaN;
+        vehicle_states.push_back(v);
     }
 
 
-    /*auto &camera_ref = *camera;
-    auto &x1 = camera_ref.GetDeviceInfo();
-    auto x2 = x1.GetSerialNumber();
-    auto x3 = x2.c_str();
-    const string serial_no(x3);
-    const string serial_no(camera->GetDeviceInfo().GetSerialNumber().c_str());*/
-    const string serial_no("asd");
+    const string serial_no(cameras_glob[cam_id]->GetDeviceInfo().GetSerialNumber().c_str());
 
 
     int active_crop_detection_jobs = 0;
@@ -161,7 +150,8 @@ void grabLoop(size_t cam_id) {
         // determine detection jobs for new image
         vector<cv::Rect> ROIs;
         bool full_frame_detection;
-        tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( detections, vehicle_states );
+        vector<optional<AprilTagDetectionStamped>> detection_per_vehicle;
+        tie(ROIs, full_frame_detection, detection_per_vehicle) = detectionDispatcherLogic.apply( detections, vehicle_states );
 
         cv::Rect full_frame_ROI(0,0,image.cols,image.rows);
 
@@ -185,14 +175,16 @@ void grabLoop(size_t cam_id) {
         if(previous_image.rows > 0 && previous_image.cols > 0) {
             cv::cvtColor(previous_image, previous_image, CV_GRAY2BGR);
 
-            for (auto const &detection:detections) {
-
-                for (int k = 0; k < 4; ++k) {
-                    int m = (k + 1) % 4;
-                    cv::line(previous_image,
-                             cv::Point(detection.points[k][0], detection.points[k][1]),
-                             cv::Point(detection.points[m][0], detection.points[m][1]),
-                             k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
+            for (auto const &detection:detection_per_vehicle) {
+                if(detection)
+                {
+                    for (int k = 0; k < 4; ++k) {
+                        int m = (k + 1) % 4;
+                        cv::line(previous_image,
+                                 cv::Point(detection.value().points[k][0], detection.value().points[k][1]),
+                                 cv::Point(detection.value().points[m][0], detection.value().points[m][1]),
+                                 k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
+                    }
                 }
             }
 
@@ -226,8 +218,6 @@ int main(int argc, char* argv[])
 
     try
     {
-
-
         //cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
         cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
 
@@ -258,17 +248,22 @@ int main(int argc, char* argv[])
         ros::Time::init();
 
 
-        thread triggerThread(triggerLoop);
         vector<thread> grabThreads;
         for ( size_t i = 0; i < cameras_glob.size(); ++i) {
             grabThreads.emplace_back([=](){grabLoop(i);});
         }
 
+        // trigger Loop
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        while(loop) {
+            for (size_t i = 0; i < cameras_glob.size(); ++i) {
+                cameras_glob[i]->ExecuteSoftwareTrigger();
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        }
 
-        triggerThread.join();
         for(auto &t:grabThreads) t.join();
-
-
+        cameras_glob.clear();
     }
     catch (const GenericException &e)
     {

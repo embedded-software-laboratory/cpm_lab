@@ -14,7 +14,7 @@ class DetectionDispatcherLogic {
 public:
     DetectionDispatcherLogic(const CameraParameters &cameraParameters): cameraParameters(cameraParameters){}
 
-    tuple<vector<cv::Rect>, bool> apply(
+    tuple<vector<cv::Rect>, bool, vector<optional<AprilTagDetectionStamped>>> apply(
         const vector<AprilTagDetectionStamped> &previous_detections,
         const vector<cpm_msgs::VehicleState> &vehicle_states
     );

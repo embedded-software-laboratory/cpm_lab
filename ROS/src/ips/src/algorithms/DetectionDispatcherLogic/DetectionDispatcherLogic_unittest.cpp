@@ -45,7 +45,8 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
+            vector<optional<AprilTagDetectionStamped>> detection_per_vehicle;
+            tie(ROIs, full_frame_detection, detection_per_vehicle) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
 
             CHECK(!full_frame_detection);
             CHECK(ROIs.size() == 1);
@@ -60,7 +61,8 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
+            vector<optional<AprilTagDetectionStamped>> detection_per_vehicle;
+            tie(ROIs, full_frame_detection, detection_per_vehicle) = detectionDispatcherLogic.apply( {aprilTagDetectionStamped}, {vehicle_state} );
 
             CHECK(!full_frame_detection);
             CHECK(ROIs.size() == 1);
@@ -71,7 +73,8 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {}, {vehicle_state} );
+            vector<optional<AprilTagDetectionStamped>> detection_per_vehicle;
+            tie(ROIs, full_frame_detection, detection_per_vehicle) = detectionDispatcherLogic.apply( {}, {vehicle_state} );
 
             CHECK(!full_frame_detection);
             CHECK(ROIs.size() == 1);
@@ -86,7 +89,8 @@ TEST_CASE("DetectionDispatcherLogic") {
 
             vector<cv::Rect> ROIs;
             bool full_frame_detection;
-            tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( {}, {vehicle_state} );
+            vector<optional<AprilTagDetectionStamped>> detection_per_vehicle;
+            tie(ROIs, full_frame_detection, detection_per_vehicle) = detectionDispatcherLogic.apply( {}, {vehicle_state} );
 
             CHECK(full_frame_detection);
             CHECK(ROIs.size() == 0);
