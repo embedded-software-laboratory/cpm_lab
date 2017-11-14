@@ -37,6 +37,18 @@ public:
         return true;
     }
 
+    bool read_nonblocking(Item &item) {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (closed || count == 0) return false;
+            item = data[start];
+            start = (start + 1) % capacity;
+            count--;
+        }
+        cond_var_write.notify_one();
+        return true;
+    }
+
     /*!
         Blocks while the queue is full and open.
         Inserts \p item to the back of the queue.
@@ -47,6 +59,17 @@ public:
             std::unique_lock<std::mutex> lock(m_mutex);
             while (count >= capacity && !closed) cond_var_write.wait(lock);
             if (closed) return false;
+            data[(start + count) % capacity] = item;
+            count++;
+        }
+        cond_var_read.notify_one();
+        return true;
+    }
+
+    bool write_nonblocking(Item item) {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (closed || count >= capacity) return false;
             data[(start + count) % capacity] = item;
             count++;
         }

@@ -4,42 +4,219 @@
 #include <pylon/PylonIncludes.h>
 #include "algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.h"
 #include "algorithms/AprilTagDetector/AprilTagDetector.h"
+#include "utils/ThreadSafeQueue.h"
 
 using namespace Pylon;
 using namespace GenApi;
 
+bool loop = true;
+vector<shared_ptr<CInstantCamera>> cameras_glob;
 
-class CMyImageEventPrinter : public CImageEventHandler
-{
-public:
+bool grabImage(size_t cam_id, WithTimestamp<cv::Mat> &image_copy) {
 
-    virtual void OnImagesSkipped( CInstantCamera& camera, size_t countOfSkippedImages)
+    CGrabResultPtr ptrGrabResult;
+    if (!cameras_glob[cam_id]->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_Return)) {
+        cout << "RetrieveResult() failed" << endl;
+        return false;
+    }
+
+    int rows = ptrGrabResult->GetHeight();
+    int cols = ptrGrabResult->GetWidth();
+    void *data = ptrGrabResult->GetBuffer();
+    size_t stride;
+    assert(ptrGrabResult->GetStride(stride));
+    assert(ptrGrabResult->GetPixelType() == PixelType_Mono8);
+    cv::Mat image_tmp(rows, cols, CV_8UC1, data, stride);
+    image_tmp.copyTo(image_copy);
+    image_copy.timestamp = ros::Time::now();
+    return true;
+}
+
+void triggerLoop() {
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    while(loop) {
+        for (size_t i = 0; i < cameras_glob.size(); ++i) {
+            cameras_glob[i]->ExecuteSoftwareTrigger();
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+}
+
+template<size_t input_queue_size, size_t output_queue_size>
+void detectLoop(
+    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>,  input_queue_size > &input_queue,
+    ThreadSafeQueue< vector<AprilTagDetectionStamped>, output_queue_size  > &output_queue
+) {
+
+    tuple<ros::Time, cv::Mat1b, cv::Point> input_data;
+
+    AprilTagDetector aprilTagDetector(AprilTagFamily::Tag36h11);
+
+    while(loop && input_queue.read(input_data)) {
+        ros::Time timestamp;
+        cv::Mat1b img;
+        cv::Point offset;
+        tie(timestamp, img, offset) = input_data;
+        auto detections = aprilTagDetector.detect(img, offset);
+        vector<AprilTagDetectionStamped> detections_stamped;
+        for(auto const & detection:detections) detections_stamped.emplace_back(detection, timestamp);
+        output_queue.write(detections_stamped);
+    }
+}
+
+
+
+void grabLoop(size_t cam_id) {
+
+    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
+    ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
+
+    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 1  > detect_full_input_queue;
+    ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 1  > detect_full_result_queue;
+
+
+    vector<std::thread> detection_threads;
+    for (int i = 0; i < 5; ++i) {
+        detection_threads.emplace_back([&](){detectLoop(detect_crop_input_queue, detect_crop_result_queue);});
+    }
+    detection_threads.emplace_back([&](){detectLoop(detect_full_input_queue, detect_full_result_queue);});
+
+
+
+    CameraParameters params;
+    params.fx = 1;
+    params.fy = 1;
+    params.cx = 0;
+    params.cy = 0;
+    params.k1 = 0;
+    params.k2 = 0;
+    params.k3 = 0;
+    params.p1 = 0;
+    params.p2 = 0;
+    params.R = cv::Matx33d(1,0,0,0,1,0,0,0,1);
+    params.T = cv::Vec3d(0,0,0);
+    DetectionDispatcherLogic detectionDispatcherLogic(params);
+
+    vector<cpm_msgs::VehicleState> vehicle_states;
     {
-        std::cout << "OnImagesSkipped event for device " << camera.GetDeviceInfo().GetModelName();
-        std::cout << countOfSkippedImages  << " images have been skipped." << std::endl;
-        std::cout << std::endl;
+        cpm_msgs::VehicleState v;
+        v.id = 1;
+        v.pose.position.x = NaN;
+        vehicle_states.push_back(v);;
+    }
+    {
+        cpm_msgs::VehicleState v;
+        v.id = 50;
+        v.pose.position.x = NaN;
+        vehicle_states.push_back(v);;
     }
 
 
-    virtual void OnImageGrabbed( CInstantCamera& camera, const CGrabResultPtr& ptrGrabResult)
-    {
-        std::cout << "OnImageGrabbed event for device " << camera.GetDeviceInfo().GetModelName() << std::endl;
+    /*auto &camera_ref = *camera;
+    auto &x1 = camera_ref.GetDeviceInfo();
+    auto x2 = x1.GetSerialNumber();
+    auto x3 = x2.c_str();
+    const string serial_no(x3);
+    const string serial_no(camera->GetDeviceInfo().GetSerialNumber().c_str());*/
+    const string serial_no("asd");
 
-        // Image grabbed successfully?
-        if (ptrGrabResult->GrabSucceeded())
-        {
-            std::cout << "SizeX: " << ptrGrabResult->GetWidth() << " -- ";
-            std::cout << "SizeY: " << ptrGrabResult->GetHeight() << " -- ";
-            const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
-            std::cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << " ------ Timestamp " << ptrGrabResult->GetTimeStamp() << std::endl;
-            std::cout << std::endl;
+
+    int active_crop_detection_jobs = 0;
+    cv::Mat previous_image;
+    while(loop)
+    {
+
+        // Get new image
+        WithTimestamp<cv::Mat> image;
+        if(!grabImage(cam_id, image)) {
+            loop = false;
+            break;
         }
-        else
-        {
-            std::cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << std::endl;
+
+
+        vector<AprilTagDetectionStamped> detections;
+
+        // Get previous detections
+        while (active_crop_detection_jobs > 0) {
+            vector<AprilTagDetectionStamped> detection;
+            assert(detect_crop_result_queue.read(detection));
+            detections.insert( detections.end(), detection.begin(), detection.end() );
+            active_crop_detection_jobs--;
         }
+
+        // Try to get full frame detections
+        {
+            vector<AprilTagDetectionStamped> detection;
+            if(detect_full_result_queue.read_nonblocking(detection)){
+                detections.insert( detections.end(), detection.begin(), detection.end() );
+            }
+        }
+
+
+
+
+        // determine detection jobs for new image
+        vector<cv::Rect> ROIs;
+        bool full_frame_detection;
+        tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( detections, vehicle_states );
+
+        cv::Rect full_frame_ROI(0,0,image.cols,image.rows);
+
+        // Start detection job for each crop
+        for(auto ROI:ROIs) {
+            ROI &= full_frame_ROI;
+            if(ROI.area() > 0) {
+                cv::Mat crop = image(ROI);
+                assert(detect_crop_input_queue.write(make_tuple(image.timestamp, crop, ROI.tl())));
+                active_crop_detection_jobs++;
+            }
+        }
+
+        // Try to start full frame detection
+        if(full_frame_detection) {
+            detect_full_input_queue.write_nonblocking(make_tuple(image.timestamp, image, cv::Point(0,0)));
+        }
+
+
+        // visualize
+        if(previous_image.rows > 0 && previous_image.cols > 0) {
+            cv::cvtColor(previous_image, previous_image, CV_GRAY2BGR);
+
+            for (auto const &detection:detections) {
+
+                for (int k = 0; k < 4; ++k) {
+                    int m = (k + 1) % 4;
+                    cv::line(previous_image,
+                             cv::Point(detection.points[k][0], detection.points[k][1]),
+                             cv::Point(detection.points[m][0], detection.points[m][1]),
+                             k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
+                }
+            }
+
+            // smaller than my fullHD screen -> no scaling
+            previous_image(cv::Rect(0, 0, 1600, 950)).copyTo(previous_image);
+
+            cv::imshow(serial_no, previous_image);
+
+            int key = cv::waitKey(1);
+            if (key == 27) loop = false;
+        }
+
+        image.copyTo(previous_image);
     }
-};
+
+
+    // cleanup
+    detect_crop_input_queue.close();
+    detect_crop_result_queue.close();
+    detect_full_input_queue.close();
+    detect_full_result_queue.close();
+
+    for(auto &t:detection_threads) t.join();
+}
 
 
 int main(int argc, char* argv[])
@@ -49,19 +226,20 @@ int main(int argc, char* argv[])
 
     try
     {
-        CInstantCameraArray cameras( 1 );
-        //cameras[0].Attach(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342")));
-        cameras[0].Attach(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260")));
 
-        for ( size_t i = 0; i < cameras.GetSize(); ++i)
+
+        //cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
+        cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
+
+
+        for ( size_t i = 0; i < cameras_glob.size(); ++i)
         {
-            cout << "Using device " << cameras[ i ].GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[i].GetDeviceInfo().GetSerialNumber() << endl;
+            cout << "Using device " << cameras_glob[ i ]->GetDeviceInfo().GetModelName()  << "   SN  "  << cameras_glob[i]->GetDeviceInfo().GetSerialNumber() << endl;
 
-            //cameras[ i ].RegisterImageEventHandler( new CMyImageEventPrinter, RegistrationMode_Append, Cleanup_Delete);
-            cameras[ i ].RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
-            cameras[ i ].StartGrabbing();
+            cameras_glob[ i ]->RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
+            cameras_glob[ i ]->StartGrabbing();
 
-            INodeMap& nodemap = cameras[ i ].GetNodeMap();
+            INodeMap& nodemap = cameras_glob[ i ]->GetNodeMap();
 
             CEnumerationPtr gainAuto( nodemap.GetNode( "GainAuto"));
             gainAuto->FromString("Off");
@@ -76,132 +254,21 @@ int main(int argc, char* argv[])
             exp->SetValue(1000);
         }
 
-        CameraParameters params;
-
-        params.fx = 1;
-        params.fy = 1;
-        params.cx = 0;
-        params.cy = 0;
-        params.k1 = 0;
-        params.k2 = 0;
-        params.k3 = 0;
-        params.p1 = 0;
-        params.p2 = 0;
-        params.R = cv::Matx33d(1,0,0,0,1,0,0,0,1);
-        params.T = cv::Vec3d(0,0,0);
-
-        DetectionDispatcherLogic detectionDispatcherLogic(params);
-
-        vector<AprilTagDetectionStamped> detections;
-
-        vector<cpm_msgs::VehicleState> vehicle_states;
-        {
-            cpm_msgs::VehicleState v;
-            v.id = 1;
-            v.pose.position.x = NaN;
-            vehicle_states.push_back(v);;
-        }
-        {
-            cpm_msgs::VehicleState v;
-            v.id = 50;
-            v.pose.position.x = NaN;
-            vehicle_states.push_back(v);;
-        }
-
-        AprilTagDetector aprilTagDetector(AprilTagFamily::Tag36h11);
 
         ros::Time::init();
 
-        bool loop = true;
-        while(loop)
-        {
 
-            for ( size_t i = 0; i < cameras.GetSize(); ++i) {
-                cameras[ i ].ExecuteSoftwareTrigger();
-            }
-
-            for ( size_t i = 0; i < cameras.GetSize(); ++i)
-            {
-                cv::Mat image_copy;
-                string serial_no;
-
-                {
-                    CGrabResultPtr ptrGrabResult;
-                    if (!cameras[i].RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException)) {
-                        cout << "RetrieveResult failed" << endl;
-                        return 1;
-                    }
-
-                    intptr_t cameraContextValue = ptrGrabResult->GetCameraContext();
-
-                    auto SN = cameras[cameraContextValue].GetDeviceInfo().GetSerialNumber();
-                    serial_no = string(SN.c_str());
-
-                    int rows = ptrGrabResult->GetHeight();
-                    int cols = ptrGrabResult->GetWidth();
-                    void *data = ptrGrabResult->GetBuffer();
-                    size_t stride;
-                    assert(ptrGrabResult->GetStride(stride));
-                    assert(ptrGrabResult->GetPixelType() == PixelType_Mono8);
-                    cv::Mat image_tmp(rows, cols, CV_8UC1, data, stride);
-                    image_tmp.copyTo(image_copy);
-                }
-
-                //cv::resize(image_copy, image_copy, cv::Size(), 0.5, 0.5);
-
-
-
-                vector<cv::Rect> ROIs;
-                bool full_frame_detection;
-                tie(ROIs, full_frame_detection) = detectionDispatcherLogic.apply( detections, vehicle_states );
-
-                detections.clear();
-
-                cv::Rect full_frame_ROI(0,0,image_copy.cols,image_copy.rows);
-
-                if(full_frame_detection) ROIs.push_back(full_frame_ROI);
-
-
-                for(auto ROI:ROIs) {
-                    ROI &= full_frame_ROI;
-                    if(ROI.area() > 0) {
-                        cv::Mat crop = image_copy(ROI);
-                        auto crop_detections = aprilTagDetector.detect(crop, ROI.tl());
-                        for (auto const &crop_detection : crop_detections) {
-                            for(auto const &vehicle:vehicle_states) {
-                                if(vehicle.id == crop_detection.id) {
-                                    detections.emplace_back(crop_detection, ros::Time::now());
-                                }
-                            }
-
-                        }
-                    }
-                }
-
-
-                cout << ROIs.size() << " ---  " << detections.size() << endl;
-
-                cv::cvtColor(image_copy, image_copy, CV_GRAY2BGR);
-
-                for (auto const & detection:detections) {
-
-                    for (int k = 0; k < 4; ++k) {
-                        int m = (k + 1)%4;
-                        cv::line(image_copy,
-                                 cv::Point(detection.points[k][0], detection.points[k][1]),
-                                 cv::Point(detection.points[m][0], detection.points[m][1]),
-                                 k?cv::Scalar(0,255,0):cv::Scalar(0,0,255), 5);
-                    }
-                }
-
-                // smaller than my fullHD screen -> no scaling
-                image_copy = image_copy(cv::Rect(0,0,1600,950));
-                cv::imshow(serial_no, image_copy);
-
-                int key = cv::waitKey(1);
-                if(key == 27) loop = false;
-            }
+        thread triggerThread(triggerLoop);
+        vector<thread> grabThreads;
+        for ( size_t i = 0; i < cameras_glob.size(); ++i) {
+            grabThreads.emplace_back([=](){grabLoop(i);});
         }
+
+
+        triggerThread.join();
+        for(auto &t:grabThreads) t.join();
+
+
     }
     catch (const GenericException &e)
     {

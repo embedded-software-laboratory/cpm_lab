@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <thread>
 #include <cmath>
 #include <iostream>
 #include <ros/time.h>
@@ -21,6 +22,7 @@ using std::shared_ptr;
 using std::make_shared;
 using std::cout;
 using std::endl;
+using std::thread;
 using std::map;
 using std::get;
 using std::experimental::optional;
@@ -30,6 +32,7 @@ constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 template <typename Base>
 struct WithTimestamp : public Base {
     ros::Time timestamp;
+    WithTimestamp(){}
     WithTimestamp(const Base &base, ros::Time timestamp):Base(base),timestamp(timestamp){}
     WithTimestamp(Base &&base, ros::Time timestamp):Base(std::move(base)),timestamp(timestamp){}
 };
