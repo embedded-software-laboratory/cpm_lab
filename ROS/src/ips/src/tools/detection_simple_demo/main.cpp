@@ -10,12 +10,11 @@ using namespace Pylon;
 using namespace GenApi;
 
 bool loop = true;
-vector<shared_ptr<CInstantCamera>> cameras_glob;
 
-bool grabImage(size_t cam_id, WithTimestamp<cv::Mat> &image_copy) {
+bool grabImage(shared_ptr<CInstantCamera> camera, WithTimestamp<cv::Mat> &image_copy) {
 
     CGrabResultPtr ptrGrabResult;
-    if (!cameras_glob[cam_id]->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_Return)) {
+    if (!camera->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_Return)) {
         cout << "RetrieveResult() failed" << endl;
         return false;
     }
@@ -58,7 +57,7 @@ void detectLoop(
 
 
 
-void grabLoop(size_t cam_id) {
+void grabLoop(shared_ptr<CInstantCamera> camera) {
 
     ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
@@ -110,7 +109,7 @@ void grabLoop(size_t cam_id) {
     }
 
 
-    const string serial_no(cameras_glob[cam_id]->GetDeviceInfo().GetSerialNumber().c_str());
+    const string serial_no(camera->GetDeviceInfo().GetSerialNumber().c_str());
 
 
     int active_crop_detection_jobs = 0;
@@ -120,7 +119,7 @@ void grabLoop(size_t cam_id) {
 
         // Get new image
         WithTimestamp<cv::Mat> image;
-        if(!grabImage(cam_id, image)) {
+        if(!grabImage(camera, image)) {
             loop = false;
             break;
         }
@@ -218,6 +217,8 @@ int main(int argc, char* argv[])
 
     try
     {
+
+        vector<shared_ptr<CInstantCamera>> cameras_glob;
         //cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
         cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
 
@@ -250,7 +251,8 @@ int main(int argc, char* argv[])
 
         vector<thread> grabThreads;
         for ( size_t i = 0; i < cameras_glob.size(); ++i) {
-            grabThreads.emplace_back([=](){grabLoop(i);});
+            auto sp_camera = cameras_glob[i];
+            grabThreads.emplace_back([=](){grabLoop(sp_camera);});
         }
 
         // trigger Loop
