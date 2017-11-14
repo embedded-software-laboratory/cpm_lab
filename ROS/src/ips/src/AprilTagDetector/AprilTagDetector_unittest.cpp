@@ -6,7 +6,7 @@
 
 
 cv::Mat1b loadImg(std::string file) {
-    auto filename = ros::package::getPath("ips") + "/src/algorithms/AprilTagDetector/" + file;
+    auto filename = ros::package::getPath("ips") + "/src/AprilTagDetector/" + file;
     cv::Mat img = cv::imread( filename );
     cv::Mat1b img_bw;
     cvtColor(img, img_bw, cv::COLOR_BGR2GRAY);

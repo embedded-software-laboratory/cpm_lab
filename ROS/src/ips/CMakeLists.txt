@@ -171,12 +171,12 @@ link_directories(${PYLON_ROOT}/lib64)
 SET(IPS_LIB_SOURCES
     src/utils/default.h
     src/utils/Parameter.h
-    src/algorithms/AprilTagDetector/AprilTagDetector.cpp
-    src/algorithms/AprilTagDetector/AprilTagDetector.h
-    src/algorithms/CameraParameters/CameraParameters.cpp
-    src/algorithms/CameraParameters/CameraParameters.h
-    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
-    src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.h
+    src/AprilTagDetector/AprilTagDetector.cpp
+    src/AprilTagDetector/AprilTagDetector.h
+    src/CameraParameters/CameraParameters.cpp
+    src/CameraParameters/CameraParameters.h
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic.h
 )
 
 add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
@@ -189,9 +189,9 @@ add_executable(unittest
         src/tools/unittest/main.cpp
         src/utils/ThreadSafeQueue.h
         src/utils/ThreadSafeQueue_unittest.cpp
-        src/algorithms/AprilTagDetector/AprilTagDetector_unittest.cpp
-        src/algorithms/CameraParameters/CameraParameters_unittest.cpp
-        src/algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
+        src/AprilTagDetector/AprilTagDetector_unittest.cpp
+        src/CameraParameters/CameraParameters_unittest.cpp
+        src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
         )
 target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

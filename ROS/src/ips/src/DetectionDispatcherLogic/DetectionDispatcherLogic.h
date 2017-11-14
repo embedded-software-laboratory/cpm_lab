@@ -3,8 +3,8 @@
 #include "utils/default.h"
 #include <opencv2/opencv.hpp>
 #include <cpm_msgs/VehicleState.h>
-#include "algorithms/CameraParameters/CameraParameters.h"
-#include "algorithms/AprilTagDetector/AprilTagDetector.h"
+#include "CameraParameters/CameraParameters.h"
+#include "AprilTagDetector/AprilTagDetector.h"
 
 using AprilTagDetectionStamped = WithTimestamp<AprilTagDetection>;
 

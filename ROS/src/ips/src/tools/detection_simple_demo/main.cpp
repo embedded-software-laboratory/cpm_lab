@@ -2,8 +2,8 @@
 #include "utils/default.h"
 #include <opencv2/opencv.hpp>
 #include <pylon/PylonIncludes.h>
-#include "algorithms/DetectionDispatcherLogic/DetectionDispatcherLogic.h"
-#include "algorithms/AprilTagDetector/AprilTagDetector.h"
+#include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
+#include "AprilTagDetector/AprilTagDetector.h"
 #include "utils/ThreadSafeQueue.h"
 
 using namespace Pylon;
@@ -18,6 +18,7 @@ bool grabImage(shared_ptr<CInstantCamera> camera, WithTimestamp<cv::Mat> &image_
         cout << "RetrieveResult() failed" << endl;
         return false;
     }
+    auto timestamp = ros::Time::now();
 
     int rows = ptrGrabResult->GetHeight();
     int cols = ptrGrabResult->GetWidth();
@@ -27,7 +28,7 @@ bool grabImage(shared_ptr<CInstantCamera> camera, WithTimestamp<cv::Mat> &image_
     assert(ptrGrabResult->GetPixelType() == PixelType_Mono8);
     cv::Mat image_tmp(rows, cols, CV_8UC1, data, stride);
     image_tmp.copyTo(image_copy);
-    image_copy.timestamp = ros::Time::now();
+    image_copy.timestamp = timestamp;
     return true;
 }
 
@@ -261,7 +262,7 @@ int main(int argc, char* argv[])
             for (size_t i = 0; i < cameras_glob.size(); ++i) {
                 cameras_glob[i]->ExecuteSoftwareTrigger();
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            std::this_thread::sleep_for(std::chrono::milliseconds(40));
         }
 
         for(auto &t:grabThreads) t.join();
