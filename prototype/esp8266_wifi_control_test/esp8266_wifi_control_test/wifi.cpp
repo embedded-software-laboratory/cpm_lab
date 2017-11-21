@@ -1,5 +1,3 @@
-
-
 #include "wifi.h"
 
 #define LOCAL_UDP_PORT 4210
