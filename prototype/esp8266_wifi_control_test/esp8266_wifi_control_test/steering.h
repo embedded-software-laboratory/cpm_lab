@@ -1,7 +1,10 @@
 #pragma once
 #include <Arduino.h>
+#include <Servo.h> 
 
 class Steering {
+  Servo myservo;
+  
 public:
   void setup();
 
