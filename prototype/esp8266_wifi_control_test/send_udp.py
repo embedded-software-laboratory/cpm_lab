@@ -1,7 +1,7 @@
 
 import socket
 
-UDP_IP = "192.168.0.105"
+UDP_IP = "192.168.0.103"
 UDP_PORT = 4210
 MESSAGE = "Hello, World!"
 

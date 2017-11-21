@@ -12,14 +12,11 @@
 
 using namespace std;
 
-
-#define SERVER "192.168.0.103"
 #define BUFLEN 512  //Max length of buffer
-#define PORT 4210   //The port on which to send data
  
-void die(char *s)
+void die(string s)
 {
-    perror(s);
+    perror(s.c_str());
     exit(1);
 }
 
@@ -45,24 +42,68 @@ int main ()
  
     memset((char *) &si_other, 0, sizeof(si_other));
     si_other.sin_family = AF_INET;
-    si_other.sin_port = htons(PORT);
-     
-    if (inet_aton(SERVER , &si_other.sin_addr) == 0) 
+    si_other.sin_port = htons(4210);
+
+
+    string hostname = "esp8266_43243.local";
+
+    struct hostent * hst = gethostbyname(hostname.c_str());
+    if(!hst) {
+        die("gethostbyname");
+    }
+
+    if(hst->h_addr_list == NULL) {
+        die("hst->h_addr_list");        
+    }
+
+    char addr_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, hst->h_addr_list[0], addr_str, INET_ADDRSTRLEN);
+    cout << hostname << " == " << addr_str << endl;
+
+
+    if (inet_aton(addr_str , &si_other.sin_addr) == 0) 
     {
-        fprintf(stderr, "inet_aton() failed\n");
-        exit(1);
+        die("inet_aton");
     }
  
+    FILE *kbd = fopen("/dev/input/by-path/platform-i8042-serio-0-event-kbd", "r");
+
+
     while(1)
     {
+
+
+
+        char key_map[KEY_MAX/8 + 1];    //  Create a byte array the size of the number of keys
+
+        memset(key_map, 0, sizeof(key_map));    //  Initate the array to zero's
+        ioctl(fileno(kbd), EVIOCGKEY(sizeof(key_map)), key_map);    //  Fill the keymap with the current keyboard state
+
+
+
+        /*
         printf("Enter message : ");
-        gets(message);
-         
+        fgets(message,BUFLEN-1,stdin);
+         */
+
+
+        char steering = 127;
+        char throttle = 127;
+
+        if(check_key(key_map, KEY_LEFT)) steering = 255;
+        if(check_key(key_map, KEY_RIGHT)) steering = 0;
+        if(check_key(key_map, KEY_UP)) throttle = 255;
+        if(check_key(key_map, KEY_DOWN)) throttle = 0;
+
+        message[0] = steering;
+        message[1] = throttle;
+
         //send the message
-        if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+        if (sendto(s, message, 2 , 0 , (struct sockaddr *) &si_other, slen)==-1)
         {
             die("sendto()");
         }
+        usleep(20000);
         
 
         /* 
