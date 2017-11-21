@@ -53,5 +53,26 @@ bool Wifi::receive_command(uint8_t &steering, uint8_t &throttle) {
 
 
 
+void Wifi::get_command(uint8_t &steering, uint8_t &throttle) {
+  static uint8_t latest_steering = 127;
+  static uint8_t latest_throttle = 127;
+  static long unsigned int timer_ms = 0;
+
+  if(receive_command(latest_steering, latest_throttle)) {
+    timer_ms = millis();
+  }
+
+  if(timer_ms + 150 < millis()) { // command is old, use safe default values
+    latest_steering = 127;
+    latest_throttle = 127;
+  }
+  
+  steering = latest_steering;
+  throttle = latest_throttle;
+}
+
+
+
+
 
 
