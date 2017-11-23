@@ -9,3 +9,4 @@ cmake-build-debug/
 html/
 latex/
 *.md.html
+gmon.out
