@@ -186,19 +186,31 @@ add_dependencies(ips_lib cpm_msgs_generate_messages_cpp)
 
 
 add_executable(unittest
-        src/tools/unittest/main.cpp
-        src/utils/ThreadSafeQueue.h
-        src/utils/ThreadSafeQueue_unittest.cpp
-        src/AprilTagDetector/AprilTagDetector_unittest.cpp
-        src/CameraParameters/CameraParameters_unittest.cpp
-        src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
-        )
+    src/tools/unittest/main.cpp
+    src/utils/ThreadSafeQueue.h
+    src/utils/ThreadSafeQueue_unittest.cpp
+    src/AprilTagDetector/AprilTagDetector_unittest.cpp
+    src/CameraParameters/CameraParameters_unittest.cpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
+)
 target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(detection_simple_demo
-        src/tools/detection_simple_demo/main.cpp
-)
+
+
+add_executable(detection_simple_demo src/tools/detection_simple_demo/main.cpp )
 target_link_libraries(detection_simple_demo ips_lib pylonbase pylonutility GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+
+add_executable(extract_camera_pose_calibration_points src/tools/extract_camera_pose_calibration_points/main.cpp )
+target_link_libraries(extract_camera_pose_calibration_points ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+add_executable(calculate_camera_pose_calibration src/tools/calculate_camera_pose_calibration/main.cpp )
+target_link_libraries(calculate_camera_pose_calibration yaml-cpp ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+
 
 #############
 ## Install ##

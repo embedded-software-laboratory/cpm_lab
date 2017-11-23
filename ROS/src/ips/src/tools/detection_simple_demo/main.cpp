@@ -219,19 +219,19 @@ int main(int argc, char* argv[])
     try
     {
 
-        vector<shared_ptr<CInstantCamera>> cameras_glob;
-        //cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
-        cameras_glob.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
+        vector<shared_ptr<CInstantCamera>> cameras;
+        //cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
+        cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
 
 
-        for ( size_t i = 0; i < cameras_glob.size(); ++i)
+        for ( size_t i = 0; i < cameras.size(); ++i)
         {
-            cout << "Using device " << cameras_glob[ i ]->GetDeviceInfo().GetModelName()  << "   SN  "  << cameras_glob[i]->GetDeviceInfo().GetSerialNumber() << endl;
+            cout << "Using device " << cameras[ i ]->GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[i]->GetDeviceInfo().GetSerialNumber() << endl;
 
-            cameras_glob[ i ]->RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
-            cameras_glob[ i ]->StartGrabbing();
+            cameras[ i ]->RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
+            cameras[ i ]->StartGrabbing();
 
-            INodeMap& nodemap = cameras_glob[ i ]->GetNodeMap();
+            INodeMap& nodemap = cameras[ i ]->GetNodeMap();
 
             CEnumerationPtr gainAuto( nodemap.GetNode( "GainAuto"));
             gainAuto->FromString("Off");
@@ -251,22 +251,22 @@ int main(int argc, char* argv[])
 
 
         vector<thread> grabThreads;
-        for ( size_t i = 0; i < cameras_glob.size(); ++i) {
-            auto sp_camera = cameras_glob[i];
+        for ( size_t i = 0; i < cameras.size(); ++i) {
+            auto sp_camera = cameras[i];
             grabThreads.emplace_back([=](){grabLoop(sp_camera);});
         }
 
         // trigger Loop
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         while(loop) {
-            for (size_t i = 0; i < cameras_glob.size(); ++i) {
-                cameras_glob[i]->ExecuteSoftwareTrigger();
+            for (size_t i = 0; i < cameras.size(); ++i) {
+                cameras[i]->ExecuteSoftwareTrigger();
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(40));
         }
 
         for(auto &t:grabThreads) t.join();
-        cameras_glob.clear();
+        cameras.clear();
     }
     catch (const GenericException &e)
     {
