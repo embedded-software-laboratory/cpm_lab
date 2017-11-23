@@ -1,8 +1,27 @@
 # Intrinsic Camera Calibration
 
 
-TODO
+Open MATLAB and run `cameraCalibrator`. 
 
+Follow this guide: [https://www.mathworks.com/help/vision/ug/single-camera-calibrator-app.html](https://www.mathworks.com/help/vision/ug/single-camera-calibrator-app.html)
+
+When you have the `cameraParams` data in your MATLAB workspace, run the following code snippet:
+
+    clc
+    k = [cameraParams.RadialDistortion 0];
+    p = struct(...
+        'fx',cameraParams.FocalLength(1),...
+        'fy',cameraParams.FocalLength(2),...
+        'cx',cameraParams.PrincipalPoint(1),...
+        'cy',cameraParams.PrincipalPoint(2),...
+        'k1',k(1), 'k2',k(2), 'k3',k(3),...
+        'p1',cameraParams.TangentialDistortion(1),...
+        'p2',cameraParams.TangentialDistortion(2));
+    for f = fieldnames(p)'
+        fprintf('%s: %f\n',f{1},p.(f{1}));
+    end
+
+Save the resulting text in the file `.../ROS/src/ips/cfg/cameras/<serial_no>/intrinsic_parameters.yaml` where `<serial_no>` is the camera serial number.
 
 # Extrinsic Camera Calibration
 
