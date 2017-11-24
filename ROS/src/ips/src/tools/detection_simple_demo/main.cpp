@@ -188,8 +188,7 @@ void grabLoop(shared_ptr<CInstantCamera> camera) {
                 }
             }
 
-            // smaller than my fullHD screen -> no scaling
-            previous_image(cv::Rect(0, 0, 1600, 950)).copyTo(previous_image);
+            cv::resize(previous_image, previous_image, cv::Size(), 0.5, 0.5);
 
             cv::imshow(serial_no, previous_image);
 
