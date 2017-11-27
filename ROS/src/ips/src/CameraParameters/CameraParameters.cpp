@@ -87,7 +87,7 @@ void CameraParameters::setExtrinsicParametersFromPnP(std::vector<cv::Point3d> ob
 
 
 
-void CameraParameters::setExtrinsicParametersFromYAML(char* filename) {
+void CameraParameters::setExtrinsicParametersFromYAML(string filename) {
 
     // Read camera parameters
     YAML::Node extrinsic_params = YAML::LoadFile(filename);
@@ -106,7 +106,7 @@ void CameraParameters::setExtrinsicParametersFromYAML(char* filename) {
 }
 
 
-void CameraParameters::setIntrinsicParametersFromYAML(char* filename) {
+void CameraParameters::setIntrinsicParametersFromYAML(string filename) {
 
     // Read camera parameters
     YAML::Node intrinsic_params = YAML::LoadFile(filename);

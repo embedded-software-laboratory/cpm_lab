@@ -1,3 +1,5 @@
+// TODO refactor this mess
+
 
 #include "utils/default.h"
 #include <opencv2/opencv.hpp>
@@ -5,6 +7,7 @@
 #include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
 #include "AprilTagDetector/AprilTagDetector.h"
 #include "utils/ThreadSafeQueue.h"
+#include <ros/package.h>
 
 using namespace Pylon;
 using namespace GenApi;
@@ -58,7 +61,7 @@ void detectLoop(
 
 
 
-void grabLoop(shared_ptr<CInstantCamera> camera) {
+void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
 
     ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
@@ -73,20 +76,14 @@ void grabLoop(shared_ptr<CInstantCamera> camera) {
     }
     detection_threads.emplace_back([&](){detectLoop(detect_full_input_queue, detect_full_result_queue);});
 
-
+    string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera_serial_number + "/extrinsic_parameters.yaml";
+    string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera_serial_number + "/intrinsic_parameters.yaml";
 
     CameraParameters params;
-    params.fx = 1;
-    params.fy = 1;
-    params.cx = 0;
-    params.cy = 0;
-    params.k1 = 0;
-    params.k2 = 0;
-    params.k3 = 0;
-    params.p1 = 0;
-    params.p2 = 0;
-    params.R = cv::Matx33d(1,0,0,0,1,0,0,0,1);
-    params.T = cv::Vec3d(0,0,0);
+
+    params.setExtrinsicParametersFromYAML(extrinsic_parameters_path);
+    params.setIntrinsicParametersFromYAML(intrinsic_parameters_path);
+
     DetectionDispatcherLogic detectionDispatcherLogic(params);
 
     vector<cpm_msgs::VehicleState> vehicle_states;
@@ -170,14 +167,33 @@ void grabLoop(shared_ptr<CInstantCamera> camera) {
             detect_full_input_queue.write_nonblocking(make_tuple(image.timestamp, image, cv::Point(0,0)));
         }
 
+        // convert detections to 3D rays and show intersection with the plane z=0
+        for (auto const &detection:detection_per_vehicle) {
+            if(detection) {
+                auto point = detection.value().points[AprilTagDetection::i_center];
+
+                cv::Vec3d origin;
+                cv::Mat3d directions;
+                tie(origin, directions) = params.pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
+                cv::Vec3d direction = directions.at<cv::Vec3d>(0,0);
+
+                double scale_factor = -origin(2) / direction(2);
+                cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
+                cout
+                    << "id " << detection.value().id
+                    << "  x " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(0)
+                    << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(1)
+                    << endl;
+            }
+        }
+
 
         // visualize
         if(previous_image.rows > 0 && previous_image.cols > 0) {
             cv::cvtColor(previous_image, previous_image, CV_GRAY2BGR);
 
             for (auto const &detection:detection_per_vehicle) {
-                if(detection)
-                {
+                if(detection) {
                     for (int k = 0; k < 4; ++k) {
                         int m = (k + 1) % 4;
                         cv::line(previous_image,
@@ -215,13 +231,16 @@ int main(int argc, char* argv[])
     int exitCode = 0;
     PylonInitialize();
 
+    vector<string> camera_serial_numbers { "21967260" /* , "21704342" */ };
+
     try
     {
 
         vector<shared_ptr<CInstantCamera>> cameras;
-        //cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21704342"))));
-        cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber("21967260"))));
 
+        for (auto serial_no: camera_serial_numbers) {
+            cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber(serial_no.c_str()))));
+        }
 
         for ( size_t i = 0; i < cameras.size(); ++i)
         {
@@ -252,7 +271,8 @@ int main(int argc, char* argv[])
         vector<thread> grabThreads;
         for ( size_t i = 0; i < cameras.size(); ++i) {
             auto sp_camera = cameras[i];
-            grabThreads.emplace_back([=](){grabLoop(sp_camera);});
+            string sn = camera_serial_numbers[i];
+            grabThreads.emplace_back([=](){grabLoop(sp_camera, sn);});
         }
 
         // trigger Loop

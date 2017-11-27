@@ -44,6 +44,6 @@ struct CameraParameters {
     /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world and image points. */
     void setExtrinsicParametersFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts);
 
-    void setExtrinsicParametersFromYAML(char* filename);
-    void setIntrinsicParametersFromYAML(char* filename);
+    void setExtrinsicParametersFromYAML(string filename);
+    void setIntrinsicParametersFromYAML(string filename);
 };
