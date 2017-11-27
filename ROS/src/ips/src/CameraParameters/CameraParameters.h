@@ -2,6 +2,8 @@
 
 #include <opencv2/opencv.hpp>
 #include "utils/Parameter.h"
+#include "utils/default.h"
+#include "yaml-cpp/yaml.h"
 
 //! Stores camera parameters as described in <a href="https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html">Camera Calibration and 3D Reconstruction</a>.
 struct CameraParameters {
@@ -29,7 +31,7 @@ struct CameraParameters {
         \param objectPoints (1xN) or (Nx1) list of 3D vectors in world coordinates.
         \return (1xN) or (Nx1) list of 2D vectors in pixel coordinates.
     */
-    cv::Mat2d project(const cv::Mat3d &objectPoints);
+    cv::Mat2d project(const cv::Mat3d &objectPoints) const;
 
     /*!
         Calculate the 3D rays that corresponds to pixels.
@@ -37,8 +39,11 @@ struct CameraParameters {
         \return <tt>tuple(origin, directions)</tt>, 3D rays of the form <tt>ray(p) = origin + p * direction</tt>
         where \c direction is one of N entries in \c directions.
     */
-    std::tuple<cv::Vec3d, cv::Mat3d> pixelRays(cv::Mat2d imagePoints);
+    std::tuple<cv::Vec3d, cv::Mat3d> pixelRays(cv::Mat2d imagePoints) const;
 
     /*! Calculate the extrinsic parameters CameraParameters::R and CameraParameters::T from pairs of corresponding world and image points. */
-    void setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts);
+    void setExtrinsicParametersFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts);
+
+    void setExtrinsicParametersFromYAML(char* filename);
+    void setIntrinsicParametersFromYAML(char* filename);
 };

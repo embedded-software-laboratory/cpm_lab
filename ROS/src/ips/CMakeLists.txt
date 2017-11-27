@@ -180,7 +180,7 @@ SET(IPS_LIB_SOURCES
 )
 
 add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
-target_link_libraries(ips_lib apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(ips_lib yaml-cpp apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(ips_lib cpm_msgs_generate_messages_cpp)
 
 
@@ -208,6 +208,11 @@ target_link_libraries(extract_camera_pose_calibration_points ips_lib ${catkin_LI
 
 add_executable(calculate_camera_pose_calibration src/tools/calculate_camera_pose_calibration/main.cpp )
 target_link_libraries(calculate_camera_pose_calibration yaml-cpp ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+
+add_executable(validate_camera_calibration src/tools/validate_camera_calibration/main.cpp )
+target_link_libraries(validate_camera_calibration yaml-cpp ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 

@@ -129,7 +129,7 @@ TEST_CASE("CameraParameters") {
         }
 
         // recover extrinsic parameters
-        params2.setExtrinsicsFromPnP(objPts, imgPts);
+        params2.setExtrinsicParametersFromPnP(objPts, imgPts);
 
         // compare extrinsic parameters
         for (int i = 0; i < 3; ++i) {

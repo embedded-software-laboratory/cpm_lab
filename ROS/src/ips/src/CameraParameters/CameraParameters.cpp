@@ -1,6 +1,6 @@
 #include "CameraParameters.h"
 
-cv::Mat2d CameraParameters::project(const cv::Mat3d &objectPoints) {
+cv::Mat2d CameraParameters::project(const cv::Mat3d &objectPoints) const {
     cv::Matx33d cameraMatrix(
         fx(), 0, cx(),
         0, fy(), cy(),
@@ -14,7 +14,7 @@ cv::Mat2d CameraParameters::project(const cv::Mat3d &objectPoints) {
     return cv::Mat2d(imagePoints);
 }
 
-std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoints) {
+std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoints) const {
 
     cv::Matx33d cameraMatrix(
             fx(), 0, cx(),
@@ -71,7 +71,7 @@ std::tuple<cv::Vec3d, cv::Mat3d> CameraParameters::pixelRays(cv::Mat2d imagePoin
     return std::make_tuple(origin, directions);
 }
 
-void CameraParameters::setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts) {
+void CameraParameters::setExtrinsicParametersFromPnP(std::vector<cv::Point3d> objPts, std::vector<cv::Point2d> imgPts) {
     cv::Vec3d rvec,t;
     cv::Matx33d r;
     cv::Matx33d cameraMatrix(
@@ -83,4 +83,41 @@ void CameraParameters::setExtrinsicsFromPnP(std::vector<cv::Point3d> objPts, std
     cv::Rodrigues(rvec, r);
     T = t;
     R = r;
+}
+
+
+
+void CameraParameters::setExtrinsicParametersFromYAML(char* filename) {
+
+    // Read camera parameters
+    YAML::Node extrinsic_params = YAML::LoadFile(filename);
+
+    cv::Matx33d R_;
+    vector<double> R_vec = extrinsic_params["R"].as<vector<double>>();
+    assert(R_vec.size() == 9);
+    for (int i = 0; i < 9; ++i) R_.val[i] = R_vec[i];
+    R = R_;
+
+    cv::Vec3d T_;
+    vector<double> T_vec = extrinsic_params["T"].as<vector<double>>();
+    assert(T_vec.size() == 3);
+    for (int i = 0; i < 3; ++i) T_.val[i] = T_vec[i];
+    T = T_;
+}
+
+
+void CameraParameters::setIntrinsicParametersFromYAML(char* filename) {
+
+    // Read camera parameters
+    YAML::Node intrinsic_params = YAML::LoadFile(filename);
+
+    fx = intrinsic_params["fx"].as<double>();
+    fy = intrinsic_params["fy"].as<double>();
+    cx = intrinsic_params["cx"].as<double>();
+    cy = intrinsic_params["cy"].as<double>();
+    k1 = intrinsic_params["k1"].as<double>();
+    k2 = intrinsic_params["k2"].as<double>();
+    k3 = intrinsic_params["k3"].as<double>();
+    p1 = intrinsic_params["p1"].as<double>();
+    p2 = intrinsic_params["p2"].as<double>();
 }
