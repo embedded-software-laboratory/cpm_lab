@@ -39,3 +39,8 @@ Then run the following, replacing `<serial_no>` with the camera serial number.
     rosrun ips calculate_camera_pose_calibration intrinsic_parameters.yaml </tmp/point_pairs | tee extrinsic_parameters.yaml
 
 This calculates and saves the camera rotation matrix and translation vector.
+
+With the following commands you can visualize the calibrated coordinate system and check whether it matches the real coordinate system.
+
+    cd .../ROS/src/ips/cfg/cameras/<serial_no>/
+    rosrun ips validate_camera_calibration /path/to/image.tif intrinsic_parameters.yaml extrinsic_parameters.yaml

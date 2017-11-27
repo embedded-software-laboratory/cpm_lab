@@ -22,3 +22,4 @@
         indicator-multiload \
         doxygen \
         pandoc \
+        gimp
