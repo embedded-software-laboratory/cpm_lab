@@ -177,6 +177,8 @@ SET(IPS_LIB_SOURCES
     src/CameraParameters/CameraParameters.h
     src/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic.h
+    src/CameraWrapper/CameraWrapper.cpp
+    src/CameraWrapper/CameraWrapper.h
 )
 
 add_library(ips_lib STATIC ${IPS_LIB_SOURCES})

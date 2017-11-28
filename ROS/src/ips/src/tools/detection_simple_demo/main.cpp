@@ -3,39 +3,13 @@
 
 #include "utils/default.h"
 #include <opencv2/opencv.hpp>
-#include <pylon/PylonIncludes.h>
 #include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
 #include "AprilTagDetector/AprilTagDetector.h"
 #include "utils/ThreadSafeQueue.h"
 #include <ros/package.h>
-
-using namespace Pylon;
-using namespace GenApi;
+#include "CameraWrapper/CameraWrapper.h"
 
 bool loop = true;
-
-bool grabImage(shared_ptr<CInstantCamera> camera, WithTimestamp<cv::Mat> &image_copy) {
-
-    CGrabResultPtr ptrGrabResult;
-    if (!camera->RetrieveResult(5000, ptrGrabResult, TimeoutHandling_Return)) {
-        cout << "RetrieveResult() failed" << endl;
-        return false;
-    }
-    auto timestamp = ros::Time::now();
-
-    int rows = ptrGrabResult->GetHeight();
-    int cols = ptrGrabResult->GetWidth();
-    void *data = ptrGrabResult->GetBuffer();
-    size_t stride;
-    assert(ptrGrabResult->GetStride(stride));
-    assert(ptrGrabResult->GetPixelType() == PixelType_Mono8);
-    cv::Mat image_tmp(rows, cols, CV_8UC1, data, stride);
-    image_tmp.copyTo(image_copy);
-    image_copy.timestamp = timestamp;
-    return true;
-}
-
-
 
 template<size_t input_queue_size, size_t output_queue_size>
 void detectLoop(
@@ -61,7 +35,7 @@ void detectLoop(
 
 
 
-void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
+void grabLoop(CameraWrapper &camera) {
 
     ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
@@ -76,8 +50,8 @@ void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
     }
     detection_threads.emplace_back([&](){detectLoop(detect_full_input_queue, detect_full_result_queue);});
 
-    string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera_serial_number + "/extrinsic_parameters.yaml";
-    string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera_serial_number + "/intrinsic_parameters.yaml";
+    string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera.getSerialNumber() + "/extrinsic_parameters.yaml";
+    string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera.getSerialNumber() + "/intrinsic_parameters.yaml";
 
     CameraParameters params;
 
@@ -107,9 +81,6 @@ void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
     }
 
 
-    const string serial_no(camera->GetDeviceInfo().GetSerialNumber().c_str());
-
-
     int active_crop_detection_jobs = 0;
     cv::Mat previous_image;
     while(loop)
@@ -117,7 +88,7 @@ void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
 
         // Get new image
         WithTimestamp<cv::Mat> image;
-        if(!grabImage(camera, image)) {
+        if(!camera.grabImage(image)) {
             loop = false;
             break;
         }
@@ -206,7 +177,7 @@ void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
 
             cv::resize(previous_image, previous_image, cv::Size(), 0.5, 0.5);
 
-            cv::imshow(serial_no, previous_image);
+            cv::imshow(camera.getSerialNumber(), previous_image);
 
             int key = cv::waitKey(1);
             if (key == 27) loop = false;
@@ -228,74 +199,40 @@ void grabLoop(shared_ptr<CInstantCamera> camera, string camera_serial_number) {
 
 int main(int argc, char* argv[])
 {
-    int exitCode = 0;
-    PylonInitialize();
-
     vector<string> camera_serial_numbers { "21967260" /* , "21704342" */ };
+    vector<CameraWrapper> cameras;
 
-    try
-    {
-
-        vector<shared_ptr<CInstantCamera>> cameras;
-
-        for (auto serial_no: camera_serial_numbers) {
-            cameras.push_back(make_shared<CInstantCamera>(CTlFactory::GetInstance().CreateDevice(CDeviceInfo().SetSerialNumber(serial_no.c_str()))));
+    for (auto serial_no: camera_serial_numbers) {
+        try {
+            cameras.emplace_back(serial_no);
         }
-
-        for ( size_t i = 0; i < cameras.size(); ++i)
-        {
-            cout << "Using device " << cameras[ i ]->GetDeviceInfo().GetModelName()  << "   SN  "  << cameras[i]->GetDeviceInfo().GetSerialNumber() << endl;
-
-            cameras[ i ]->RegisterConfiguration( new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
-            cameras[ i ]->StartGrabbing();
-
-            INodeMap& nodemap = cameras[ i ]->GetNodeMap();
-
-            CEnumerationPtr gainAuto( nodemap.GetNode( "GainAuto"));
-            gainAuto->FromString("Off");
-
-            CEnumerationPtr expauto( nodemap.GetNode( "ExposureAuto"));
-            expauto->FromString("Off");
-
-            CFloatPtr gain( nodemap.GetNode( "Gain"));
-            gain->SetValue(5);
-
-            CFloatPtr exp( nodemap.GetNode( "ExposureTime"));
-            exp->SetValue(1000);
+        catch (const std::runtime_error &e) {
+            cout << e.what() << endl;
+            return 1;
         }
-
-
-        ros::Time::init();
-
-
-        vector<thread> grabThreads;
-        for ( size_t i = 0; i < cameras.size(); ++i) {
-            auto sp_camera = cameras[i];
-            string sn = camera_serial_numbers[i];
-            grabThreads.emplace_back([=](){grabLoop(sp_camera, sn);});
-        }
-
-        // trigger Loop
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        while(loop) {
-            for (size_t i = 0; i < cameras.size(); ++i) {
-                cameras[i]->ExecuteSoftwareTrigger();
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(40));
-        }
-
-        for(auto &t:grabThreads) t.join();
-        cameras.clear();
-    }
-    catch (const GenericException &e)
-    {
-        // Error handling
-        cout << "An exception occurred." << endl
-             << e.GetDescription() << endl;
-        exitCode = 1;
     }
 
-    PylonTerminate();
+    for ( auto &camera: cameras) {
+        camera.setGainExposure(5,1000);
+    }
 
-    return exitCode;
+    ros::Time::init();
+
+    vector<thread> grabThreads;
+    for ( auto &camera: cameras) {
+        grabThreads.emplace_back([&](){grabLoop(camera);});
+    }
+
+    // trigger Loop
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    while(loop) {
+        for (size_t i = 0; i < cameras.size(); ++i) {
+            cameras[i].triggerExposure();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    }
+
+    for(auto &t:grabThreads) t.join();
+    cameras.clear();
+
 }
