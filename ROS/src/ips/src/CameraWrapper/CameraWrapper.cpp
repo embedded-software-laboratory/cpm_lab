@@ -39,6 +39,11 @@ void CameraWrapper::triggerExposure() {
     camera->ExecuteSoftwareTrigger();
 }
 
+void CameraWrapper::close() {
+    camera->StopGrabbing();
+    camera->Close();
+}
+
 string CameraWrapper::getSerialNumber() { return serial_number; }
 
 bool CameraWrapper::grabImage(WithTimestamp<cv::Mat> &image) {

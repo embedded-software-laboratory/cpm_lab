@@ -33,9 +33,16 @@ void detectLoop(
     }
 }
 
+struct DetectionVisualizationInfo {
+    vector<AprilTagDetectionStamped> detections;
+    cv::Mat image;
+    string camera_serial_number;
+    shared_ptr<CameraParameters> cameraParameters;
+};
 
-
-void grabLoop(CameraWrapper &camera) {
+void grabLoop(shared_ptr<CameraWrapper> camera,
+              shared_ptr<CameraParameters> params,
+              shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue) {
 
     ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
@@ -50,15 +57,9 @@ void grabLoop(CameraWrapper &camera) {
     }
     detection_threads.emplace_back([&](){detectLoop(detect_full_input_queue, detect_full_result_queue);});
 
-    string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera.getSerialNumber() + "/extrinsic_parameters.yaml";
-    string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera.getSerialNumber() + "/intrinsic_parameters.yaml";
 
-    CameraParameters params;
 
-    params.setExtrinsicParametersFromYAML(extrinsic_parameters_path);
-    params.setIntrinsicParametersFromYAML(intrinsic_parameters_path);
-
-    DetectionDispatcherLogic detectionDispatcherLogic(params);
+    DetectionDispatcherLogic detectionDispatcherLogic(*params);
 
     vector<cpm_msgs::VehicleState> vehicle_states;
     {
@@ -85,14 +86,12 @@ void grabLoop(CameraWrapper &camera) {
     cv::Mat previous_image;
     while(loop)
     {
-
         // Get new image
         WithTimestamp<cv::Mat> image;
-        if(!camera.grabImage(image)) {
+        if(!camera->grabImage(image)) {
             loop = false;
             break;
         }
-
 
         vector<AprilTagDetectionStamped> detections;
 
@@ -111,9 +110,6 @@ void grabLoop(CameraWrapper &camera) {
                 detections.insert( detections.end(), detection.begin(), detection.end() );
             }
         }
-
-
-
 
         // determine detection jobs for new image
         vector<cv::Rect> ROIs;
@@ -138,49 +134,18 @@ void grabLoop(CameraWrapper &camera) {
             detect_full_input_queue.write_nonblocking(make_tuple(image.timestamp, image, cv::Point(0,0)));
         }
 
-        // convert detections to 3D rays and show intersection with the plane z=0
-        for (auto const &detection:detection_per_vehicle) {
-            if(detection) {
-                auto point = detection.value().points[AprilTagDetection::i_center];
 
-                cv::Vec3d origin;
-                cv::Mat3d directions;
-                tie(origin, directions) = params.pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
-                cv::Vec3d direction = directions(0,0);
+        // Send visualization info
+        {
+            DetectionVisualizationInfo detectionVisualizationInfo;
+            detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
+            detectionVisualizationInfo.cameraParameters = params;
+            detectionVisualizationInfo.image = previous_image.clone();
+            for(auto const &detection:detection_per_vehicle)
+                if(detection)
+                    detectionVisualizationInfo.detections.push_back(detection.value());
 
-                double scale_factor = -origin(2) / direction(2);
-                cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
-                cout
-                    << "id " << detection.value().id
-                    << "  x " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(0)
-                    << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(1)
-                    << endl;
-            }
-        }
-
-
-        // visualize
-        if(previous_image.rows > 0 && previous_image.cols > 0) {
-            cv::cvtColor(previous_image, previous_image, CV_GRAY2BGR);
-
-            for (auto const &detection:detection_per_vehicle) {
-                if(detection) {
-                    for (int k = 0; k < 4; ++k) {
-                        int m = (k + 1) % 4;
-                        cv::line(previous_image,
-                                 cv::Point(detection.value().points[k][0], detection.value().points[k][1]),
-                                 cv::Point(detection.value().points[m][0], detection.value().points[m][1]),
-                                 k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
-                    }
-                }
-            }
-
-            cv::resize(previous_image, previous_image, cv::Size(), 0.5, 0.5);
-
-            cv::imshow(camera.getSerialNumber(), previous_image);
-
-            int key = cv::waitKey(1);
-            if (key == 27) loop = false;
+            visualization_queue->write(detectionVisualizationInfo);
         }
 
         image.copyTo(previous_image);
@@ -197,14 +162,61 @@ void grabLoop(CameraWrapper &camera) {
 }
 
 
+void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue) {
+    while(loop) {
+        DetectionVisualizationInfo info;
+        if(!visualization_queue->read(info)) return;
+
+        // convert detections to 3D rays and show intersection with the plane z=0
+        for (auto const &detection: info.detections) {
+            auto point = detection.points[AprilTagDetection::i_center];
+
+            cv::Vec3d origin;
+            cv::Mat3d directions;
+            tie(origin, directions) = info.cameraParameters->pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
+            cv::Vec3d direction = directions(0,0);
+
+            double scale_factor = -origin(2) / direction(2);
+            cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
+            cout
+                << "id " << detection.id
+                << "  x " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(0)
+                << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(1)
+                << endl;
+        }
+
+        // visualize
+        if(info.image.rows > 0 && info.image.cols > 0) {
+            cv::cvtColor(info.image, info.image, CV_GRAY2BGR);
+
+            for (auto const &detection: info.detections) {
+                for (int k = 0; k < 4; ++k) {
+                    int m = (k + 1) % 4;
+                    cv::line(info.image,
+                         cv::Point(detection.points[k][0], detection.points[k][1]),
+                         cv::Point(detection.points[m][0], detection.points[m][1]),
+                         k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
+                }
+            }
+
+            cv::resize(info.image, info.image, cv::Size(), 0.5, 0.5);
+            cv::imshow(info.camera_serial_number, info.image);
+
+            int key = cv::waitKey(1);
+            if (key == 27) loop = false;
+        }
+    }
+}
+
+
 int main(int argc, char* argv[])
 {
     vector<string> camera_serial_numbers { "21967260" /* , "21704342" */ };
-    vector<CameraWrapper> cameras;
+    vector<shared_ptr<CameraWrapper>> cameras;
 
     for (auto serial_no: camera_serial_numbers) {
         try {
-            cameras.emplace_back(serial_no);
+            cameras.push_back(make_shared<CameraWrapper>(serial_no));
         }
         catch (const std::runtime_error &e) {
             cout << e.what() << endl;
@@ -212,27 +224,45 @@ int main(int argc, char* argv[])
         }
     }
 
+    vector<shared_ptr<CameraParameters>> camera_parameters;
     for (auto &camera: cameras) {
-        camera.setGainExposure(5,1000);
+        camera->setGainExposure(5,1000);
+
+        string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
+        string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";
+
+        shared_ptr<CameraParameters> params = make_shared<CameraParameters>();
+
+        params->setExtrinsicParametersFromYAML(extrinsic_parameters_path);
+        params->setIntrinsicParametersFromYAML(intrinsic_parameters_path);
+        camera_parameters.push_back(params);
     }
 
     ros::Time::init();
 
+    auto visualization_queue = make_shared<ThreadSafeQueue< DetectionVisualizationInfo, 100 >>();
+
     vector<thread> grabThreads;
-    for (auto &camera: cameras) {
-        grabThreads.emplace_back([&](){grabLoop(camera);});
+    for (size_t i = 0; i < cameras.size(); ++i) {
+        auto &camera = cameras[i];
+        auto &camera_parameter = camera_parameters[i];
+        grabThreads.emplace_back([&](){grabLoop(camera, camera_parameter, visualization_queue);});
     }
+
+    thread visualization_thread( [&](){visualization_loop(visualization_queue);} );
 
     // trigger Loop
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     while(loop) {
         for (size_t i = 0; i < cameras.size(); ++i) {
-            cameras[i].triggerExposure();
+            cameras[i]->triggerExposure();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
+    for (auto &camera: cameras) camera->close();
+    visualization_queue->close();
 
     for(auto &t:grabThreads) t.join();
-    cameras.clear();
+    visualization_thread.join();
 
 }

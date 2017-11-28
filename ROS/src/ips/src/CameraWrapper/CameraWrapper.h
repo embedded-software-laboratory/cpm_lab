@@ -15,4 +15,5 @@ public:
     void triggerExposure();
     string getSerialNumber();
     bool grabImage(WithTimestamp<cv::Mat> &image);
+    void close();
 };
