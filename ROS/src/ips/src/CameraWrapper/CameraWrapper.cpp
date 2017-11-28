@@ -49,7 +49,7 @@ string CameraWrapper::getSerialNumber() { return serial_number; }
 bool CameraWrapper::grabImage(WithTimestamp<cv::Mat> &image) {
     Pylon::CGrabResultPtr ptrGrabResult;
     if (!camera->RetrieveResult(5000, ptrGrabResult, Pylon::TimeoutHandling_Return)) {
-        cout << "RetrieveResult() failed" << endl;
+        if(camera->IsOpen()) cout << "RetrieveResult() failed" << endl;
         return false;
     }
     auto timestamp = ros::Time::now();
