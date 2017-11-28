@@ -146,7 +146,7 @@ void grabLoop(CameraWrapper &camera) {
                 cv::Vec3d origin;
                 cv::Mat3d directions;
                 tie(origin, directions) = params.pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
-                cv::Vec3d direction = directions.at<cv::Vec3d>(0,0);
+                cv::Vec3d direction = directions(0,0);
 
                 double scale_factor = -origin(2) / direction(2);
                 cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
@@ -212,14 +212,14 @@ int main(int argc, char* argv[])
         }
     }
 
-    for ( auto &camera: cameras) {
+    for (auto &camera: cameras) {
         camera.setGainExposure(5,1000);
     }
 
     ros::Time::init();
 
     vector<thread> grabThreads;
-    for ( auto &camera: cameras) {
+    for (auto &camera: cameras) {
         grabThreads.emplace_back([&](){grabLoop(camera);});
     }
 
