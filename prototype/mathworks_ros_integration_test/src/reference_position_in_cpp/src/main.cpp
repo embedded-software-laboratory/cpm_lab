@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         std_msgs::Float64 msg;
-        msg.data = (count/20)%4+1;
+        msg.data = (count/150)%4+1;
         ref_publisher.publish(msg);
         loop_rate.sleep();
         count++;

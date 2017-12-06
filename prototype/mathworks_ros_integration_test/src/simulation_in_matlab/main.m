@@ -5,8 +5,8 @@ function main
     rosinit('localhost',11311);
     
     acceleration = 0;
-    position = 0;
-    speed = 1;
+    position = -2;
+    speed = 0;
     dt = 1/50;
     
     function set_acceleration_callback(src,msg)
