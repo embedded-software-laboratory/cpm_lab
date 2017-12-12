@@ -68,11 +68,21 @@ x_r = x - track_half_width * s_phi;
 y_r = y + track_half_width * c_phi;
 
 close all
-figure
+figure('Visible','off')
 hold on
 
 
 mm_to_pt = 1 / 25.4 * 72;
+rectangle('Position',[0 0 width_mm height_mm] * mm_to_pt,'FaceColor',[0 .9 0],'EdgeColor','none')
+
+for dot_x = 100:100:width_mm-50
+    for dot_y = 100:100:height_mm-50
+        dot_sz_mm = 5;
+        rectangle('Position',[(dot_x-dot_sz_mm/2) (dot_y-dot_sz_mm/2) dot_sz_mm dot_sz_mm] * mm_to_pt,'FaceColor',[.9 0 0],'EdgeColor','none','Curvature',1)
+    end
+end
+
+
 
 plot(x_l * mm_to_pt, y_l * mm_to_pt, 'LineWidth', line_width_mm * mm_to_pt, 'Color', 'white')
 plot(x_r * mm_to_pt, y_r * mm_to_pt, 'LineWidth', line_width_mm * mm_to_pt, 'Color', 'white')
@@ -93,10 +103,9 @@ fig.PaperType = '<custom>';
 fig.PaperUnits = 'points';
 fig.PaperSize = [width_mm height_mm] * mm_to_pt;
 fig.InvertHardcopy = 'off';
-fig.Color = 'black';
+% fig.Color = 'black';
 fig.PaperPosition = [0 0 width_mm height_mm] * mm_to_pt;
 
-print(fig, 'x.svg', '-dsvg', '-painters')
 print(fig, 'x.pdf', '-dpdf', '-painters')
 
 close all
