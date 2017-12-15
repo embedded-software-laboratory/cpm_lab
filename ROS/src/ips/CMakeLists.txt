@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   cpm_msgs
+  cpm_tools
 )
 find_package(PkgConfig)
 set(CMAKE_PREFIX_PATH /opt/opencv331/share/OpenCV)
@@ -169,8 +170,6 @@ link_directories(${PYLON_ROOT}/lib64)
 
 
 SET(${PROJECT_NAME}_LIB_SOURCES
-    src/utils/default.h
-    src/utils/Parameter.h
     src/AprilTagDetector/AprilTagDetector.cpp
     src/AprilTagDetector/AprilTagDetector.h
     src/CameraParameters/CameraParameters.cpp
@@ -189,8 +188,6 @@ add_dependencies(${PROJECT_NAME}_lib cpm_msgs_generate_messages_cpp)
 
 add_executable(${PROJECT_NAME}_unittest
     src/tools/unittest/main.cpp
-    src/utils/ThreadSafeQueue.h
-    src/utils/ThreadSafeQueue_unittest.cpp
     src/AprilTagDetector/AprilTagDetector_unittest.cpp
     src/CameraParameters/CameraParameters_unittest.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp

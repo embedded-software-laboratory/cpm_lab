@@ -1,6 +1,6 @@
-#include "tools/unittest/catch.hpp"
+#include "cpm_tools/catch.hpp"
 #include "AprilTagDetector.h"
-#include "utils/default.h"
+#include "cpm_tools/default.h"
 #include <opencv2/opencv.hpp>
 #include <ros/package.h>
 

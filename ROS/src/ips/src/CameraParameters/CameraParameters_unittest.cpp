@@ -1,6 +1,6 @@
 #include "CameraParameters.h"
-#include "tools/unittest/catch.hpp"
-#include "utils/default.h"
+#include "cpm_tools/catch.hpp"
+#include "cpm_tools/default.h"
 
 TEST_CASE("CameraParameters") {
 

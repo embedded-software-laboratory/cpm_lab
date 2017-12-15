@@ -1,11 +1,11 @@
 // TODO refactor this mess
 
 
-#include "utils/default.h"
+#include "cpm_tools/default.h"
 #include <opencv2/opencv.hpp>
 #include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
 #include "AprilTagDetector/AprilTagDetector.h"
-#include "utils/ThreadSafeQueue.h"
+#include "cpm_tools/ThreadSafeQueue.h"
 #include <ros/package.h>
 #include "CameraWrapper/CameraWrapper.h"
 
