@@ -153,14 +153,14 @@ include_directories(include)
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(unittest
+add_executable(${PROJECT_NAME}_unittest
     include/cpm_tools/default.h
     include/cpm_tools/ThreadSafeQueue.h
     include/cpm_tools/Parameter.h
     src/ThreadSafeQueue_unittest.cpp
     src/unittest/main.cpp
 )
-target_link_libraries(unittest ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_unittest ${catkin_LIBRARIES})
 
 
 #############

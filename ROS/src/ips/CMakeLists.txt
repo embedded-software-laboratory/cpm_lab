@@ -168,7 +168,7 @@ link_directories(${PYLON_ROOT}/lib64)
 
 
 
-SET(IPS_LIB_SOURCES
+SET(${PROJECT_NAME}_LIB_SOURCES
     src/utils/default.h
     src/utils/Parameter.h
     src/AprilTagDetector/AprilTagDetector.cpp
@@ -181,13 +181,13 @@ SET(IPS_LIB_SOURCES
     src/CameraWrapper/CameraWrapper.h
 )
 
-add_library(ips_lib STATIC ${IPS_LIB_SOURCES})
-target_link_libraries(ips_lib yaml-cpp apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-add_dependencies(ips_lib cpm_msgs_generate_messages_cpp)
+add_library(${PROJECT_NAME}_lib STATIC ${${PROJECT_NAME}_LIB_SOURCES})
+target_link_libraries(${PROJECT_NAME}_lib yaml-cpp apriltag ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_lib cpm_msgs_generate_messages_cpp)
 
 
 
-add_executable(unittest
+add_executable(${PROJECT_NAME}_unittest
     src/tools/unittest/main.cpp
     src/utils/ThreadSafeQueue.h
     src/utils/ThreadSafeQueue_unittest.cpp
@@ -195,26 +195,26 @@ add_executable(unittest
     src/CameraParameters/CameraParameters_unittest.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
 )
-target_link_libraries(unittest ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_unittest ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 
-add_executable(detection_simple_demo src/tools/detection_simple_demo/main.cpp )
-target_link_libraries(detection_simple_demo ips_lib pylonbase pylonutility GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(${PROJECT_NAME}_detection_simple_demo src/tools/detection_simple_demo/main.cpp )
+target_link_libraries(${PROJECT_NAME}_detection_simple_demo ${PROJECT_NAME}_lib pylonbase pylonutility GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 
-add_executable(extract_camera_pose_calibration_points src/tools/extract_camera_pose_calibration_points/main.cpp )
-target_link_libraries(extract_camera_pose_calibration_points ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(${PROJECT_NAME}_extract_camera_pose_calibration_points src/tools/extract_camera_pose_calibration_points/main.cpp )
+target_link_libraries(${PROJECT_NAME}_extract_camera_pose_calibration_points ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
-add_executable(calculate_camera_pose_calibration src/tools/calculate_camera_pose_calibration/main.cpp )
-target_link_libraries(calculate_camera_pose_calibration yaml-cpp ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(${PROJECT_NAME}_calculate_camera_pose_calibration src/tools/calculate_camera_pose_calibration/main.cpp )
+target_link_libraries(${PROJECT_NAME}_calculate_camera_pose_calibration yaml-cpp ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 
-add_executable(validate_camera_calibration src/tools/validate_camera_calibration/main.cpp )
-target_link_libraries(validate_camera_calibration yaml-cpp ips_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(${PROJECT_NAME}_validate_camera_calibration src/tools/validate_camera_calibration/main.cpp )
+target_link_libraries(${PROJECT_NAME}_validate_camera_calibration yaml-cpp ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 
