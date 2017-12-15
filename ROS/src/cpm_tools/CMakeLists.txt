@@ -160,7 +160,8 @@ add_executable(${PROJECT_NAME}_unittest
     src/ThreadSafeQueue_unittest.cpp
     src/unittest/main.cpp
 )
-target_link_libraries(${PROJECT_NAME}_unittest ${catkin_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_unittest PRIVATE --coverage)
+target_link_libraries(${PROJECT_NAME}_unittest ${catkin_LIBRARIES} gcov)
 
 
 #############

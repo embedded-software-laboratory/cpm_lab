@@ -192,7 +192,8 @@ add_executable(${PROJECT_NAME}_unittest
     src/CameraParameters/CameraParameters_unittest.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
 )
-target_link_libraries(${PROJECT_NAME}_unittest ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_unittest PRIVATE --coverage)
+target_link_libraries(${PROJECT_NAME}_unittest ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} gcov)
 
 
 
