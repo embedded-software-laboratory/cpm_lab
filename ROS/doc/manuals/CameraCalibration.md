@@ -29,18 +29,18 @@ Record an image form the installed camera, where the coordinate system gird mark
 
 Then run:
 
-    rosrun ips extract_camera_pose_calibration_points /path/to/image.tif | tee /tmp/point_pairs
+    rosrun ips ips_extract_camera_pose_calibration_points /path/to/image.tif | tee /tmp/point_pairs
 
 This detects the coordinate system markers and outputs corresponding image (2D) and world (3D) points. Check `/tmp/point_pairs` to see if the points are plausible. You can also add points manually.
 
 Then run the following, replacing `<serial_no>` with the camera serial number.
 
     cd .../ROS/src/ips/cfg/cameras/<serial_no>/
-    rosrun ips calculate_camera_pose_calibration intrinsic_parameters.yaml </tmp/point_pairs | tee extrinsic_parameters.yaml
+    rosrun ips ips_calculate_camera_pose_calibration intrinsic_parameters.yaml </tmp/point_pairs | tee extrinsic_parameters.yaml
 
 This calculates and saves the camera rotation matrix and translation vector.
 
 With the following commands you can visualize the calibrated coordinate system and check whether it matches the real coordinate system.
 
     cd .../ROS/src/ips/cfg/cameras/<serial_no>/
-    rosrun ips validate_camera_calibration /path/to/image.tif intrinsic_parameters.yaml extrinsic_parameters.yaml
+    rosrun ips ips_validate_camera_calibration /path/to/image.tif intrinsic_parameters.yaml extrinsic_parameters.yaml
