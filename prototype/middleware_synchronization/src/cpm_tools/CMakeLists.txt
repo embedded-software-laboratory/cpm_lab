@@ -153,6 +153,23 @@ include_directories(include)
 #   ${catkin_LIBRARIES}
 # )
 
+
+# lib
+SET(${PROJECT_NAME}_LIB_SOURCES
+    src/Timer.cpp
+)
+
+add_library(${PROJECT_NAME}_lib STATIC ${${PROJECT_NAME}_LIB_SOURCES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES})
+
+
+# timer test
+add_executable(${PROJECT_NAME}_timer_test src/Timer_test.cpp)
+target_link_libraries(${PROJECT_NAME}_timer_test ${PROJECT_NAME}_lib ${catkin_LIBRARIES})
+
+
+
+# unittest
 add_executable(${PROJECT_NAME}_unittest
     include/cpm_tools/default.h
     include/cpm_tools/ThreadSafeQueue.h
