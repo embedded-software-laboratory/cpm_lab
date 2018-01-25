@@ -202,6 +202,13 @@ target_link_libraries(${PROJECT_NAME}_detection_simple_demo ${PROJECT_NAME}_lib 
 
 
 
+
+
+add_executable(${PROJECT_NAME}_path_following_prototype src/tools/path_following_prototype/main.cpp )
+target_link_libraries(${PROJECT_NAME}_path_following_prototype ${PROJECT_NAME}_lib pylonbase pylonutility GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
+
 add_executable(${PROJECT_NAME}_extract_camera_pose_calibration_points src/tools/extract_camera_pose_calibration_points/main.cpp )
 target_link_libraries(${PROJECT_NAME}_extract_camera_pose_calibration_points ${PROJECT_NAME}_lib ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

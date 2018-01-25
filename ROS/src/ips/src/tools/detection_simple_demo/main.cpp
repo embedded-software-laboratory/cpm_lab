@@ -1,6 +1,6 @@
 // TODO refactor this mess
 
-
+#include <ros/ros.h>
 #include "cpm_tools/default.h"
 #include <opencv2/opencv.hpp>
 #include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
@@ -8,6 +8,7 @@
 #include "cpm_tools/ThreadSafeQueue.h"
 #include <ros/package.h>
 #include "CameraWrapper/CameraWrapper.h"
+#include <geometry_msgs/Pose2D.h>
 
 bool loop = true;
 
@@ -76,7 +77,7 @@ void grabLoop(shared_ptr<CameraWrapper> camera,
     }
     {
         cpm_msgs::VehicleState v;
-        v.id = 72;
+        v.id = 42;
         v.pose.position.x = NaN;
         vehicle_states.push_back(v);
     }
@@ -161,28 +162,53 @@ void grabLoop(shared_ptr<CameraWrapper> camera,
     for(auto &t:detection_threads) t.join();
 }
 
+std::array<double, 2> floor_projection_point(std::array<double, 2> point,
+    DetectionVisualizationInfo &info) {
 
-void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue) {
+    cv::Vec3d origin;
+    cv::Mat3d directions;
+    tie(origin, directions) = info.cameraParameters->pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
+    cv::Vec3d direction = directions(0,0);
+
+    double scale_factor = -origin(2) / direction(2);
+    cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
+
+    return { floor_intersection_point(0) ,floor_intersection_point(1)};
+
+}
+
+
+void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue, ros::Publisher &pose_publisher) {
     while(loop) {
         DetectionVisualizationInfo info;
         if(!visualization_queue->read(info)) return;
 
         // convert detections to 3D rays and show intersection with the plane z=0
         for (auto const &detection: info.detections) {
-            auto point = detection.points[AprilTagDetection::i_center];
 
-            cv::Vec3d origin;
-            cv::Mat3d directions;
-            tie(origin, directions) = info.cameraParameters->pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
-            cv::Vec3d direction = directions(0,0);
+            std::array<double, 2> floor_intersection_point_center = floor_projection_point(detection.points[AprilTagDetection::i_center], info);
 
-            double scale_factor = -origin(2) / direction(2);
-            cv::Vec3d floor_intersection_point = origin + direction * scale_factor;
             cout
                 << "id " << detection.id
-                << "  x " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(0)
-                << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point(1)
+                << "  x " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point_center[0]
+                << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point_center[1]
                 << endl;
+
+            geometry_msgs::Pose2D pose;
+            pose.x = floor_intersection_point_center[0];
+            pose.y = floor_intersection_point_center[1];
+
+
+            {
+                // calculate yaw angle theta
+                std::array<double, 2> pt_bottom_left = floor_projection_point(detection.points[AprilTagDetection::i_bottom_left], info);
+                std::array<double, 2> pt_top_left = floor_projection_point(detection.points[AprilTagDetection::i_top_left], info);
+                double dx = pt_top_left[0] - pt_bottom_left[0];
+                double dy = pt_top_left[1] - pt_bottom_left[1];
+                pose.theta = atan2(dy,dx);
+            }
+
+            pose_publisher.publish(pose);
         }
 
         // visualize
@@ -211,7 +237,12 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo,
 
 int main(int argc, char* argv[])
 {
-    vector<string> camera_serial_numbers { "21967260" /* , "21704342" */ };
+    ros::init(argc, argv, "detection");
+    ros::NodeHandle nh;
+    ros::Publisher pose_publisher = nh.advertise<geometry_msgs::Pose2D>("pose", 1);
+
+
+    vector<string> camera_serial_numbers { "22511669" /* , "21704342" */ };
     vector<shared_ptr<CameraWrapper>> cameras;
 
     for (auto serial_no: camera_serial_numbers) {
@@ -226,7 +257,7 @@ int main(int argc, char* argv[])
 
     vector<shared_ptr<CameraParameters>> camera_parameters;
     for (auto &camera: cameras) {
-        camera->setGainExposure(5,1000);
+        camera->setGainExposure(8,2000);
 
         string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
         string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";
@@ -249,7 +280,7 @@ int main(int argc, char* argv[])
         grabThreads.emplace_back([&](){grabLoop(camera, camera_parameter, visualization_queue);});
     }
 
-    thread visualization_thread( [&](){visualization_loop(visualization_queue);} );
+    thread visualization_thread( [&](){visualization_loop(visualization_queue, pose_publisher);} );
 
     // trigger Loop
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
