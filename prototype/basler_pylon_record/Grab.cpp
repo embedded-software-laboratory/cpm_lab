@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
         camera.GainAuto.SetValue(GainAuto_Off);
         camera.Gain.SetValue(0);
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(200);
+        camera.ExposureTime.SetValue(5000);
 
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
@@ -110,7 +110,8 @@ int main(int argc, char* argv[])
 
                 //cout << ss.str();
 
-                if((i++)%60==0)CImagePersistence::Save(ImageFileFormat_Tiff, ("img/" + ss.str() + ".tif").c_str(), ptrGrabResult);
+                if((i++)%30==0)CImagePersistence::Save(ImageFileFormat_Png, ("img/" + ss.str() + ".png").c_str(), ptrGrabResult);
+                
 
             }
             else
