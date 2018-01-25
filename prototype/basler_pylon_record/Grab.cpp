@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
         camera.GainAuto.SetValue(GainAuto_Off);
         camera.Gain.SetValue(0);
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(5000);
+        camera.ExposureTime.SetValue(10000);
 
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
