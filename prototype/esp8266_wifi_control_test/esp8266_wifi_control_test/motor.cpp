@@ -8,7 +8,7 @@ void Motor::setup() {
 void Motor::set_command(uint8_t throttle) {
 
   if(throttle == 255) {
-    int cmd = 97+speed;
+    int cmd = 99+speed;
     if(cmd > 105) cmd = 105;
     Serial.printf("   cmd: %i;  ", cmd);
     analogWrite(LED_BUILTIN, cmd);
