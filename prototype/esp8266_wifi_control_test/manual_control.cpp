@@ -37,7 +37,7 @@ int main ()
     si_other.sin_port = htons(4210);
 
 
-    string hostname = "esp8266_43243.local";
+    string hostname = "esp8266_44142.local";
 
     struct hostent * hst = gethostbyname(hostname.c_str());
     if(!hst) {

@@ -5,7 +5,7 @@ void Steering::setup() {
 }
 
 void Steering::set_command(uint8_t steering) {
-  myservo.write(map(steering,0,255,125,57));
+  myservo.write(map(steering,0,255,120,50));
   //Serial.printf("steering: %u; ", steering);  
 }
 
