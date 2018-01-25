@@ -7,9 +7,16 @@ void Motor::setup() {
 
 void Motor::set_command(uint8_t throttle) {
 
-  if(throttle == 255)  analogWrite(LED_BUILTIN, 85);
+  if(throttle == 255) {
+    int cmd = 97+speed;
+    if(cmd > 105) cmd = 105;
+    Serial.printf("   cmd: %i;  ", cmd);
+    analogWrite(LED_BUILTIN, cmd);
+  }
   else if(throttle == 0)  analogWrite(LED_BUILTIN, 50);
   else analogWrite(LED_BUILTIN, 105);
   //Serial.printf("throttle: %u; ", throttle);
 }
 
+
+void Motor::set_speed(int spd) {speed = spd;}
