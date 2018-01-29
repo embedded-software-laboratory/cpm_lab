@@ -80,13 +80,20 @@ int main(int argc, char* argv[])
         if(dt < 0.3) {
             steering = 0;
 
-            double dx = latest_pose.x - 1.5;
-            double dy = latest_pose.y - 1.5;
+            double dx = (latest_pose.x - 1.5)*0.4;
+            double dy = latest_pose.y - 0.95;
+            double theta_ref = atan2(dy,dx) + (M_PI/2);
+            double theta_error = theta_ref - latest_pose.theta;
+            while(theta_error > M_PI) theta_error -= 2*M_PI;
+            while(theta_error < -M_PI) theta_error += 2*M_PI;
             //double c = cos(latest_pose.theta);
             //double s = sin(latest_pose.theta);
-            double e_rad = sqrt(dx*dx+dy*dy)-1.0;
+            double e_rad = sqrt(dx*dx+dy*dy)-0.45;
 
-            steering = uint8_t(fmin(255,fmax(0,(127 + e_rad/0.2*127))));
+            //steering = uint8_t(fmin(255,fmax(0,(127 + e_rad/0.2*127))));
+            steering = uint8_t(fmin(255,fmax(0,
+                (theta_error+e_rad)*127+127
+                )));
             throttle = 255;
         }
         else {
