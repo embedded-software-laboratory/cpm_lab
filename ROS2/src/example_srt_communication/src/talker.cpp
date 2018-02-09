@@ -7,7 +7,7 @@ using namespace std::chrono_literals;
 class Talker : public rclcpp::Node {
 public:
     Talker() : Node("talker"), count_(0) {
-        publisher_ = this->create_publisher<std_msgs::msg::String>("topic");
+        publisher_ = this->create_publisher<std_msgs::msg::String>("topic", rmw_qos_profile_sensor_data);
         timer_ = this->create_wall_timer(500ms, std::bind(&Talker::timer_callback, this));
     }
 
