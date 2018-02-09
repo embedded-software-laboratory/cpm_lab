@@ -16,10 +16,10 @@ find_package(std_msgs REQUIRED)
 find_package(cpm_tools REQUIRED)
 
 add_executable(talker src/talker.cpp)
-ament_target_dependencies(talker rclcpp std_msgs)
+ament_target_dependencies(talker rclcpp std_msgs cpm_tools)
 
 add_executable(listener src/listener.cpp)
-ament_target_dependencies(listener rclcpp std_msgs)
+ament_target_dependencies(listener rclcpp std_msgs cpm_tools)
 
 install(TARGETS
   talker

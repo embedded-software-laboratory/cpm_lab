@@ -32,6 +32,6 @@ ament_export_include_directories(include)
 ament_package()
 
 install(
-  DIRECTORY include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
+  DIRECTORY include/
   DESTINATION include
 )
