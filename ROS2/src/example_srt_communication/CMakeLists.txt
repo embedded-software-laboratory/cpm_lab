@@ -21,9 +21,13 @@ ament_target_dependencies(talker rclcpp std_msgs cpm_tools)
 add_executable(listener src/listener.cpp)
 ament_target_dependencies(listener rclcpp std_msgs cpm_tools)
 
+add_executable(timer_test src/timer_test.cpp)
+ament_target_dependencies(timer_test rclcpp std_msgs cpm_tools)
+
 install(TARGETS
   talker
   listener
+  timer_test
   DESTINATION lib/${PROJECT_NAME}
 )
 
