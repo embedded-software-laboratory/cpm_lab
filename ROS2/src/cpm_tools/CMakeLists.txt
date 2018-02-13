@@ -15,19 +15,28 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
 include_directories(include)
-ament_export_include_directories(include)
 
-#add_executable(talker src/talker.cpp)
-#ament_target_dependencies(talker rclcpp std_msgs)
-#
-#add_executable(listener src/listener.cpp)
-#ament_target_dependencies(listener rclcpp std_msgs)
-#
-#install(TARGETS
-#  talker
-#  listener
-#  DESTINATION lib/${PROJECT_NAME}
-#)
+set(${PROJECT_NAME}_SRCS
+    src/cpm_tools/AbsoluteTimer.cpp
+)
+
+add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SRCS})
+ament_target_dependencies(${PROJECT_NAME} rclcpp)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(rclcpp)
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME} pthread)
+
+
 
 ament_package()
 
