@@ -40,6 +40,16 @@ AbsoluteTimer::AbsoluteTimer(time_t seconds, long nanoseconds, std::function<voi
 }
 
 void AbsoluteTimer::stop() {
-    active = false;
-    this->timer_thread.join();
+    if(active) {
+        active = false;
+        this->timer_thread.join();
+    }
+}
+
+
+AbsoluteTimer::~AbsoluteTimer() {
+    if(active) {
+        active = false;
+        this->timer_thread.join();
+    }  
 }

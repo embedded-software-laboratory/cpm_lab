@@ -12,6 +12,5 @@ int main(int argc, char *argv[])
         fflush(stdout); 
     });
     sleep(60);
-    at.stop();
     return 0;
 }

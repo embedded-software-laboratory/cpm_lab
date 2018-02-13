@@ -25,4 +25,5 @@ class AbsoluteTimer {
 public:
     AbsoluteTimer(time_t seconds, long nanoseconds, std::function<void()> callback);
     void stop();
+    ~AbsoluteTimer();
 };

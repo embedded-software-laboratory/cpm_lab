@@ -14,12 +14,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(cpm_tools REQUIRED)
+find_package(cpm_msgs REQUIRED)
 
 add_executable(talker src/talker.cpp)
-ament_target_dependencies(talker rclcpp std_msgs cpm_tools)
+ament_target_dependencies(talker rclcpp std_msgs cpm_tools cpm_msgs)
 
 add_executable(listener src/listener.cpp)
-ament_target_dependencies(listener rclcpp std_msgs cpm_tools)
+ament_target_dependencies(listener rclcpp std_msgs cpm_tools cpm_msgs)
 
 add_executable(timer_test src/timer_test.cpp)
 ament_target_dependencies(timer_test rclcpp std_msgs cpm_tools)
