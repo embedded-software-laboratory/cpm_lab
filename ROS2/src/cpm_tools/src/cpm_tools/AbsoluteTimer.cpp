@@ -1,6 +1,9 @@
 #include "cpm_tools/AbsoluteTimer.hpp"
 
-AbsoluteTimer::AbsoluteTimer(time_t seconds, long nanoseconds, std::function<void()> callback)
+AbsoluteTimer::AbsoluteTimer(
+    time_t period_seconds, long period_nanoseconds, 
+    time_t offset_seconds, long offset_nanoseconds, 
+    std::function<void()> callback)
 :callback_(callback)
 {
     // Timer setup
@@ -12,11 +15,15 @@ AbsoluteTimer::AbsoluteTimer(time_t seconds, long nanoseconds, std::function<voi
         exit(EXIT_FAILURE);
     }
 
+    if(offset_seconds == 0 && offset_nanoseconds == 0) {
+        offset_nanoseconds = 1;
+    }
+
     struct itimerspec its;
-    its.it_value.tv_sec = 0;
-    its.it_value.tv_nsec = 1;
-    its.it_interval.tv_sec = (time_t)seconds;
-    its.it_interval.tv_nsec = nanoseconds;
+    its.it_value.tv_sec = offset_seconds;
+    its.it_value.tv_nsec = offset_nanoseconds;
+    its.it_interval.tv_sec = period_seconds;
+    its.it_interval.tv_nsec = period_nanoseconds;
     int status = timerfd_settime(fd, TFD_TIMER_ABSTIME, &its, NULL);
     if (status != 0) {
         fprintf(stderr, "Call to timer_settime returned error status (%d).\n", status);

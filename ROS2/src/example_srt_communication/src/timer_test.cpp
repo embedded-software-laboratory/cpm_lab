@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-    AbsoluteTimer at(1, 0, [&](){
+    AbsoluteTimer at(2, 0, 1, 500000000, [&](){
         struct timespec start;
         clock_gettime(CLOCK_REALTIME, &start);
         printf("%li.%09li\n", start.tv_sec, start.tv_nsec);
