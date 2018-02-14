@@ -1,48 +1,45 @@
-#include <chrono>
 #include "rclcpp/rclcpp.hpp"
-#include <cpm_tools/AbsoluteTimer.hpp>
-#include <memory>
 #include "cpm_msgs/msg/vehicle_sensors.hpp"
+#include "cpm_tools/Subscriber.hpp"       
+#include "cpm_tools/CpmNode.hpp"
+#include <unistd.h>
 
 using namespace std::chrono_literals;
 using namespace cpm_tools;
 
 
-
-uint64_t clock_gettime_nanoseconds() {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
-
-
-class Talker : public rclcpp::Node {
+class TalkerNode : public CpmNode {    
+    rclcpp::Publisher<cpm_msgs::msg::VehicleSensors>::SharedPtr publisher_;
+    int count_=0;
 public:
-    Talker() : Node("talker"), count_(0) {
+    TalkerNode()
+    :CpmNode("TalkerNode", 1 * NANOSEC_PER_SEC, 700 * NANOSEC_PER_MILLISEC, false)
+    {
         publisher_ = this->create_publisher<cpm_msgs::msg::VehicleSensors>("topic", rmw_qos_profile_sensor_data);
-        absoluteTimer_ = std::make_shared<AbsoluteTimer>(1,0,0,0, std::bind(&Talker::timer_callback, this));
     }
 
-private:
-    void timer_callback() {
+    void update(uint64_t deadline_nanoseconds) override 
+    {
+        usleep(1000*200);
         auto message = cpm_msgs::msg::VehicleSensors();
-
-        auto t = clock_gettime_nanoseconds();
-        message.stamp_nanoseconds = (t / 1000000000)*1000000000;
-
+        message.stamp_nanoseconds = deadline_nanoseconds;
         message.odometer_count = count_++;
-        RCLCPP_INFO(this->get_logger(), "Publishing: %u", message.odometer_count)
+        RCLCPP_INFO(this->get_logger(), "Publishing: %u for deadline %.6f at time %.6f", 
+            message.odometer_count, 
+            deadline_nanoseconds/double(NANOSEC_PER_SEC), 
+            clock_gettime_nanoseconds()/double(NANOSEC_PER_SEC))
         publisher_->publish(message);
     }
-    rclcpp::Publisher<cpm_msgs::msg::VehicleSensors>::SharedPtr publisher_;
-    size_t count_;
-    std::shared_ptr<AbsoluteTimer> absoluteTimer_;
 };
 
-int main(int argc, char * argv[])
-{
+
+
+int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<Talker>());
+    auto node = std::make_shared<TalkerNode>();
+    std::thread node_thread([&](){node->start_loop();});
+    rclcpp::spin(node);
     rclcpp::shutdown();
+    node_thread.join();
     return 0;
 }

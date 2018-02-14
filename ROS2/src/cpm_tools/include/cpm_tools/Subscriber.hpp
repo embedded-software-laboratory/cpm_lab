@@ -1,7 +1,5 @@
 #pragma once
 #include "rclcpp/rclcpp.hpp"
-using std::placeholders::_1;
-
 #include <mutex>
 
 namespace cpm_tools { 
@@ -44,7 +42,7 @@ public:
     : subscription_(
         node->create_subscription<MessageT>(
             topic_name, 
-            std::bind(&Subscriber::topic_callback, this, _1), 
+            [this](const typename MessageT::SharedPtr msg) {topic_callback(msg);}, 
             rmw_qos_profile_sensor_data
         )
     )
