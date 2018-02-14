@@ -1,3 +1,4 @@
+#pragma once
 #include "rclcpp/rclcpp.hpp"
 using std::placeholders::_1;
 
