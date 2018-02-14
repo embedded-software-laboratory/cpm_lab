@@ -7,6 +7,15 @@
 using namespace std::chrono_literals;
 using namespace cpm_tools;
 
+
+
+uint64_t clock_gettime_nanoseconds() {
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+}
+
+
 class Talker : public rclcpp::Node {
 public:
     Talker() : Node("talker"), count_(0) {
@@ -16,13 +25,10 @@ public:
 
 private:
     void timer_callback() {
-
-
-        struct timespec t;
-        clock_gettime(CLOCK_REALTIME, &t);
-
         auto message = cpm_msgs::msg::VehicleSensors();
-        message.stamp_nanoseconds = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+
+        auto t = clock_gettime_nanoseconds();
+        message.stamp_nanoseconds = (t / 1000000000)*1000000000;
 
         message.odometer_count = count_++;
         RCLCPP_INFO(this->get_logger(), "Publishing: %u", message.odometer_count)

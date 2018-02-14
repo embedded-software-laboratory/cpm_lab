@@ -4,6 +4,8 @@
 #include "cpm_tools/Subscriber.hpp"       
 #include <unistd.h>
 #include "cpm_msgs/msg/vehicle_sensors.hpp"
+#include "cpm_tools/BinarySemaphore.hpp"
+
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace cpm_tools;
@@ -20,6 +22,7 @@ private:
     uint64_t period_nanoseconds_; 
     uint64_t offset_nanoseconds_;
     bool allow_early_execution_;
+    BinarySemaphore semaphore;
 public:
     CpmNode(const std::string &node_name, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool allow_early_execution)
     :Node(node_name)
@@ -33,15 +36,15 @@ public:
 
     void start_loop() {
         while(rclcpp::ok()) {
+            semaphore.wait();
             this->update(clock_gettime_nanoseconds());
-            sleep(1);
         }
     }
 
     template<typename T>
     typename cpm_tools::Subscriber<T>::SharedPtr 
     subscribe(const std::string &topic_name) {
-        return std::make_shared<Subscriber<T>>(topic_name, this, [&](){/*TODO notification to semaphore*/});
+        return std::make_shared<Subscriber<T>>(topic_name, this, [this](){ semaphore.signal(); });
     }
 
     virtual void update(uint64_t deadline_nanoseconds) = 0;
@@ -61,38 +64,20 @@ public:
 
     void update(uint64_t deadline_nanoseconds) override 
     {
-        for (size_t i = 0; i < subscriber_vehicle_sensors->size(); ++i) {
-            RCLCPP_INFO(this->get_logger(), "I heard: %i", subscriber_vehicle_sensors->at(i).odometer_count)
+        bool old_message_flag = false;
+        auto msg = subscriber_vehicle_sensors->get(deadline_nanoseconds - 1000 * 1000000, old_message_flag);
+
+        if(old_message_flag) {
+            RCLCPP_INFO(this->get_logger(), "Old message: %i at %lld", msg.odometer_count, msg.stamp_nanoseconds)
         }
-        RCLCPP_INFO(this->get_logger(), "==================")
+        else {
+            RCLCPP_INFO(this->get_logger(), "I heard: %i at %lld", msg.odometer_count, msg.stamp_nanoseconds)
+        }
+
     }
 };
 
-/*class CpmNodeRunner : public rclcpp::Node {
-public:
-    CpmNodeRunner():Node("listener"){}
 
-};*/
-
-
-
-/*class Listener : public rclcpp::Node {
-    Subscriber<std_msgs::msg::String, 5> sub_buf;
-    rclcpp::TimerBase::SharedPtr timer_;
-
-    void timer_callback() {
-        for (size_t i = 0; i < sub_buf.size(); ++i) {
-            RCLCPP_INFO(this->get_logger(), "I heard: '%s'", sub_buf.at(i).data.c_str())
-        }
-        RCLCPP_INFO(this->get_logger(), "==================")
-    }
-
-public:
-    Listener() : Node("listener"), sub_buf("topic", this, [&](){RCLCPP_INFO(this->get_logger(), ".")})
-    {
-        timer_ = this->create_wall_timer(2s, std::bind(&Listener::timer_callback, this));
-    }
-};*/
 
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
