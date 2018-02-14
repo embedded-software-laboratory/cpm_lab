@@ -5,15 +5,18 @@
 #include <unistd.h>
 #include "cpm_msgs/msg/vehicle_sensors.hpp"
 #include "cpm_tools/BinarySemaphore.hpp"
+#include "cpm_tools/AbsoluteTimer.hpp"
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 using namespace cpm_tools;
 
+#define NANOSEC_PER_SEC 1000000000ull
+
 uint64_t clock_gettime_nanoseconds() {
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+    return uint64_t(t.tv_sec) * NANOSEC_PER_SEC + uint64_t(t.tv_nsec);
 }
 
 
@@ -23,28 +26,65 @@ private:
     uint64_t offset_nanoseconds_;
     bool allow_early_execution_;
     BinarySemaphore semaphore;
+    std::vector<SubscriberBase::SharedPtr> subscribers;
+    AbsoluteTimer absoluteTimer_;
 public:
     CpmNode(const std::string &node_name, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool allow_early_execution)
     :Node(node_name)
     ,period_nanoseconds_(period_nanoseconds)
     ,offset_nanoseconds_(offset_nanoseconds)
-    ,allow_early_execution_(allow_early_execution){}
+    ,allow_early_execution_(allow_early_execution)
+    ,absoluteTimer_(
+        time_t(period_nanoseconds / NANOSEC_PER_SEC),
+        long(period_nanoseconds % NANOSEC_PER_SEC),
+        time_t(offset_nanoseconds / NANOSEC_PER_SEC),
+        long(offset_nanoseconds % NANOSEC_PER_SEC),
+        [this](){ semaphore.signal(); }
+    ){}
 
     uint64_t getPeriodNanoseconds() {return period_nanoseconds_;}
     uint64_t getOffsetNanoseconds() {return offset_nanoseconds_;}
     bool allowEarlyExecution() {return allow_early_execution_;}
 
     void start_loop() {
+        // Set the first deadline to the next full second plus offset
+        // The period must divide one second for this to work reliably across a distributed system (TODO)
+        uint64_t deadline_nanoseconds = ((clock_gettime_nanoseconds()/NANOSEC_PER_SEC)+1)*NANOSEC_PER_SEC + offset_nanoseconds_;
         while(rclcpp::ok()) {
             semaphore.wait();
-            this->update(clock_gettime_nanoseconds());
+
+            bool deadline_arrived = clock_gettime_nanoseconds() >= deadline_nanoseconds;
+
+            bool all_messages_arrived = true;
+            for(auto subscriber : subscribers) {
+                if(!subscriber->message_arrived(deadline_nanoseconds)) {
+                    all_messages_arrived = false;
+                    break;
+                }
+            }
+
+            if(deadline_arrived && !all_messages_arrived) {
+                RCLCPP_WARN(this->get_logger(), "New messages missing, using old messages, in node '%s'", get_name())
+            }
+
+            if(deadline_arrived || (allow_early_execution_ && all_messages_arrived)) {
+                RCLCPP_INFO(this->get_logger(), "starting run() for deadline %llu at time %llu", deadline_nanoseconds, clock_gettime_nanoseconds())
+                this->update(deadline_nanoseconds);
+                deadline_nanoseconds += period_nanoseconds_;
+                while(clock_gettime_nanoseconds() >= deadline_nanoseconds) {
+                    RCLCPP_WARN(this->get_logger(), "Missed deadline %llu", deadline_nanoseconds)
+                    deadline_nanoseconds += period_nanoseconds_;
+                }
+            }
         }
     }
 
     template<typename T>
     typename cpm_tools::Subscriber<T>::SharedPtr 
-    subscribe(const std::string &topic_name) {
-        return std::make_shared<Subscriber<T>>(topic_name, this, [this](){ semaphore.signal(); });
+    subscribe(const std::string &topic_name, uint64_t expected_delay) {
+        auto sub = std::make_shared<Subscriber<T>>(topic_name, expected_delay, this, [this](){ semaphore.signal(); });
+        subscribers.push_back(sub);
+        return sub;
     }
 
     virtual void update(uint64_t deadline_nanoseconds) = 0;
@@ -57,15 +97,15 @@ class ListenerNode : public CpmNode {
 
 public:
     ListenerNode()
-    :CpmNode("ListenerNode", 100 * 1000000, 10 * 1000000, true)
+    :CpmNode("ListenerNode", 1 * NANOSEC_PER_SEC, 0, true)
     {
-        subscriber_vehicle_sensors = subscribe<cpm_msgs::msg::VehicleSensors>("topic");
+        subscriber_vehicle_sensors = subscribe<cpm_msgs::msg::VehicleSensors>("topic", 1 * NANOSEC_PER_SEC);
     }
 
     void update(uint64_t deadline_nanoseconds) override 
     {
         bool old_message_flag = false;
-        auto msg = subscriber_vehicle_sensors->get(deadline_nanoseconds - 1000 * 1000000, old_message_flag);
+        auto msg = subscriber_vehicle_sensors->get(deadline_nanoseconds, old_message_flag);
 
         if(old_message_flag) {
             RCLCPP_INFO(this->get_logger(), "Old message: %i at %lld", msg.odometer_count, msg.stamp_nanoseconds)
