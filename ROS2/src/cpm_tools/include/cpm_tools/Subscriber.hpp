@@ -1,20 +1,26 @@
 #include "rclcpp/rclcpp.hpp"
 using std::placeholders::_1;
 
+#include <mutex>
 
 namespace cpm_tools { 
 
-template <typename MessageT, int buffer_size>
+template <typename MessageT, int buffer_size = 10>
 class Subscriber {
     MessageT buffer[buffer_size];
     size_t latest_message_index = 0;
     typename rclcpp::Subscription<MessageT>::SharedPtr subscription_;
     std::function<void()> new_message_callback_;
+    std::mutex m_mutex;
 
     void topic_callback(const typename MessageT::SharedPtr msg) {
-        // save messages in reverse chronologic order
-        latest_message_index = (buffer_size + latest_message_index - 1) % buffer_size;
-        buffer[latest_message_index] = *msg;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+
+            // save messages in reverse chronologic order
+            latest_message_index = (buffer_size + latest_message_index - 1) % buffer_size;
+            buffer[latest_message_index] = *msg;
+        }
         if(new_message_callback_)new_message_callback_();
     }
 
@@ -36,10 +42,14 @@ public:
 
     size_t size() { return buffer_size; }
 
-    const MessageT& at(size_t i) {
+    MessageT at(size_t i) {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        
         // shift index so that i = 0 is the latest message
         return buffer[(latest_message_index + i) % buffer_size];
     }
+
+    using SharedPtr = std::shared_ptr<Subscriber>;
 };
 
 }// end namespace
