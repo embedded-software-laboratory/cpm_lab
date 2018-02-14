@@ -1,8 +1,11 @@
 #include "rclcpp/rclcpp.hpp"
 using std::placeholders::_1;
 
+
+namespace cpm_tools { 
+
 template <typename MessageT, int buffer_size>
-class SubscriptionBuffer {
+class Subscriber {
     MessageT buffer[buffer_size];
     size_t latest_message_index = 0;
     typename rclcpp::Subscription<MessageT>::SharedPtr subscription_;
@@ -16,7 +19,7 @@ class SubscriptionBuffer {
     }
 
 public:
-    SubscriptionBuffer (
+    Subscriber (
         const std::string &topic_name, 
         rclcpp::Node* node, 
         std::function<void()> new_message_callback
@@ -24,7 +27,7 @@ public:
     : subscription_(
         node->create_subscription<MessageT>(
             topic_name, 
-            std::bind(&SubscriptionBuffer::topic_callback, this, _1), 
+            std::bind(&Subscriber::topic_callback, this, _1), 
             rmw_qos_profile_sensor_data
         )
     )
@@ -39,3 +42,4 @@ public:
     }
 };
 
+}// end namespace

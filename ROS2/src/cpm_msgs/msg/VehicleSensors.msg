@@ -1,4 +1,4 @@
-builtin_interfaces/Time stamp
+uint64 stamp_nanoseconds
 uint32 odometer_count
 geometry_msgs/Vector3 imu_linear_acceleration
 geometry_msgs/Vector3 imu_angular_velocity

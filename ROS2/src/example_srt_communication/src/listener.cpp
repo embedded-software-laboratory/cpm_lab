@@ -1,13 +1,14 @@
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "cpm_tools/SubscriptionBuffer.hpp"
+#include "cpm_tools/Subscriber.hpp"
 using std::placeholders::_1;
 using namespace std::chrono_literals;
+using namespace cpm_tools;
 
 
 class Listener : public rclcpp::Node {
-    SubscriptionBuffer<std_msgs::msg::String, 5> sub_buf;
+    Subscriber<std_msgs::msg::String, 5> sub_buf;
     rclcpp::TimerBase::SharedPtr timer_;
 
     void timer_callback() {

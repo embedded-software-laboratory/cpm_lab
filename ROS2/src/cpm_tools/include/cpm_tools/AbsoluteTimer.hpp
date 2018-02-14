@@ -7,6 +7,9 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
+
+namespace cpm_tools { 
+    
 /*
 
 A timer that calls the "callback" function repeatedly with a period 
@@ -32,3 +35,5 @@ public:
     void stop();
     ~AbsoluteTimer();
 };
+
+}// end namespace

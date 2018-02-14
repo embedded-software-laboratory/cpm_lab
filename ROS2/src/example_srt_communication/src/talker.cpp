@@ -5,6 +5,7 @@
 #include "cpm_msgs/msg/vehicle_sensors.hpp"
 
 using namespace std::chrono_literals;
+using namespace cpm_tools;
 
 class Talker : public rclcpp::Node {
 public:
@@ -21,8 +22,8 @@ private:
         clock_gettime(CLOCK_REALTIME, &t);
 
         auto message = cpm_msgs::msg::VehicleSensors();
-        message.stamp.sec = t.tv_sec;
-        message.stamp.nanosec = t.tv_nsec;
+        message.stamp_nanoseconds = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+
         message.odometer_count = count_++;
         RCLCPP_INFO(this->get_logger(), "Publishing: %u", message.odometer_count)
         publisher_->publish(message);

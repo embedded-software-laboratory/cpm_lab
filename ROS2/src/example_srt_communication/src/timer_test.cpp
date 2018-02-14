@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cpm_tools/AbsoluteTimer.hpp>
+using namespace cpm_tools;
 
 int main(int argc, char *argv[])
 {

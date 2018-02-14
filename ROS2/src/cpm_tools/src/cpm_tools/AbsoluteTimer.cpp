@@ -1,5 +1,8 @@
 #include "cpm_tools/AbsoluteTimer.hpp"
 
+
+namespace cpm_tools { 
+
 AbsoluteTimer::AbsoluteTimer(
     time_t period_seconds, long period_nanoseconds, 
     time_t offset_seconds, long offset_nanoseconds, 
@@ -60,3 +63,5 @@ AbsoluteTimer::~AbsoluteTimer() {
         this->timer_thread.join();
     }  
 }
+
+}// end namespace
