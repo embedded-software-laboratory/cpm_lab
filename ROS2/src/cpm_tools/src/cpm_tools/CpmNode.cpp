@@ -24,9 +24,8 @@ CpmNode::CpmNode(const std::string &node_name, uint64_t period_nanoseconds, uint
 ){}
 
 void CpmNode::start_loop() {
-    // Set the first deadline to the next full second plus offset
-    // The period must divide one second for this to work reliably across a distributed system (TODO)
-    uint64_t deadline_nanoseconds = ((clock_gettime_nanoseconds()/NANOSEC_PER_SEC)+1)*NANOSEC_PER_SEC + offset_nanoseconds_;
+    // Set the first deadline: Round up to the next period, then add the offset.
+    uint64_t deadline_nanoseconds = ((clock_gettime_nanoseconds()/period_nanoseconds_)+1)*period_nanoseconds_ + offset_nanoseconds_;
     while(rclcpp::ok()) {
         semaphore.wait();
 
