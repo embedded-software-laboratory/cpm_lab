@@ -19,6 +19,7 @@ include_directories(include)
 set(${PROJECT_NAME}_SRCS
     src/cpm_tools/AbsoluteTimer.cpp
     src/cpm_tools/CpmNode.cpp
+    src/cpm_tools/clock_gettime_nanoseconds.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SRCS})

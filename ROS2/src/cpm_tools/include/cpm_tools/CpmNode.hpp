@@ -4,13 +4,9 @@
 #include "cpm_tools/AbsoluteTimer.hpp"
 #include "cpm_tools/Subscriber.hpp"  
 #include "rclcpp/rclcpp.hpp"
-
-#define NANOSEC_PER_SEC 1000000000ull
-#define NANOSEC_PER_MILLISEC 1000000ull
+#include "cpm_tools/default.hpp"
 
 namespace cpm_tools { 
-
-uint64_t clock_gettime_nanoseconds();
 
 class CpmNode : public rclcpp::Node {
 private:

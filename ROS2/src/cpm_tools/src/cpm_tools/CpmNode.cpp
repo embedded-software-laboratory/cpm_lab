@@ -3,13 +3,6 @@
 
 namespace cpm_tools { 
 
-uint64_t clock_gettime_nanoseconds() {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * NANOSEC_PER_SEC + uint64_t(t.tv_nsec);
-}
-
-
 CpmNode::CpmNode(const std::string &node_name, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool allow_early_execution)
 :Node(node_name)
 ,period_nanoseconds_(period_nanoseconds)

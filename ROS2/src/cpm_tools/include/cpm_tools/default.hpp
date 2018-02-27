@@ -11,6 +11,9 @@
 #include <map>
 #include <experimental/optional>
 
+#define NANOSEC_PER_SEC 1000000000ull
+#define NANOSEC_PER_MILLISEC 1000000ull
+
 using std::vector;
 using std::string;
 using std::to_string;
@@ -35,3 +38,6 @@ struct WithTimestamp : public Base {
     WithTimestamp(const Base &base, uint64_t timestamp):Base(base),timestamp(timestamp){}
     WithTimestamp(Base &&base, uint64_t timestamp):Base(std::move(base)),timestamp(timestamp){}
 };
+
+
+uint64_t clock_gettime_nanoseconds();

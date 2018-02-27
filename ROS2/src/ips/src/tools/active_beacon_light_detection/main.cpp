@@ -7,36 +7,13 @@
 
 bool loop = true;
 
-
 struct DetectionVisualizationInfo {
+    vector<cv::Point2f> detections;
     cv::Mat image;
     string camera_serial_number;
     shared_ptr<CameraParameters> cameraParameters;
 };
 
-void processFrame(
-    shared_ptr<CameraWrapper> camera,
-    shared_ptr<CameraParameters> params,
-    shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
-
-    
-    camera->triggerExposure();
-    WithTimestamp<cv::Mat> image;
-    if(!camera->grabImage(image)) {
-        loop = false;
-        return;
-    }
-
-    // Send visualization info
-    {
-        DetectionVisualizationInfo detectionVisualizationInfo;
-        detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
-        detectionVisualizationInfo.cameraParameters = params;
-        detectionVisualizationInfo.image = image.clone();
-        visualization_queue->write_nonblocking(detectionVisualizationInfo);
-    } 
-
-}
 
 std::array<double, 2> floor_projection_point(std::array<double, 2> point,
     DetectionVisualizationInfo &info) {
@@ -53,6 +30,88 @@ std::array<double, 2> floor_projection_point(std::array<double, 2> point,
 
 }
 
+struct Cluster {
+    float x_sum = 0;
+    float y_sum = 0;
+    float weight = 0;
+};
+
+void processFrame(
+    shared_ptr<CameraWrapper> camera,
+    shared_ptr<CameraParameters> params,
+    shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
+
+    
+    camera->triggerExposure();
+    WithTimestamp<cv::Mat> image;
+    if(!camera->grabImage(image)) {
+        loop = false;
+        return;
+    }
+
+
+    auto t1 = clock_gettime_nanoseconds();
+
+    cv::Mat image_bw;
+    cv::threshold(image,image_bw, 127, 255, cv::THRESH_BINARY);
+
+
+
+
+    vector<cv::Point> locations;
+    vector<Cluster> clusters;
+    cv::findNonZero(image_bw, locations);
+    for(const auto& location:locations) {
+        bool insert_new_cluster = true;
+        for(auto& cluster:clusters) {
+            auto dx = location.x - (cluster.x_sum / cluster.weight);
+            auto dy = location.y - (cluster.y_sum / cluster.weight);
+            if(dx*dx + dy*dy < 8*8) {
+                cluster.x_sum += location.x;
+                cluster.y_sum += location.y;
+                cluster.weight += 1;
+                insert_new_cluster = false;
+                break;
+            }
+        }
+        if(insert_new_cluster) {
+            Cluster c;
+            c.x_sum = location.x;
+            c.y_sum = location.y;
+            c.weight = 1;
+            clusters.push_back(c);
+        }
+    }
+
+
+    vector<cv::Point2f> detections;
+    for(auto& cluster:clusters)
+    {
+        if(3 <= cluster.weight && cluster.weight < 200) {
+            float x = cluster.x_sum / cluster.weight;
+            float y = cluster.y_sum / cluster.weight;
+            detections.emplace_back(x,y);
+        }
+    }
+
+
+    auto t2 = clock_gettime_nanoseconds();
+    cout << "   dt: " << ((t2-t1)/1000000) << "   --  ";
+    cout << detections.size();
+    cout << endl;
+
+    // Send visualization info
+    {
+        DetectionVisualizationInfo detectionVisualizationInfo;
+        detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
+        detectionVisualizationInfo.detections = detections;
+        detectionVisualizationInfo.cameraParameters = params;
+        detectionVisualizationInfo.image = image.clone();
+        visualization_queue->write_nonblocking(detectionVisualizationInfo);
+    } 
+
+}
+
 
 void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo > > visualization_queue) {
     while(loop) {
@@ -64,17 +123,11 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo 
         if(info.image.rows > 0 && info.image.cols > 0) {
             cv::cvtColor(info.image, info.image, CV_GRAY2BGR);
 
-            /*for (auto const &detection: info.detections) {
-                for (int k = 0; k < 4; ++k) {
-                    int m = (k + 1) % 4;
-                    cv::line(info.image,
-                         cv::Point(detection.points[k][0], detection.points[k][1]),
-                         cv::Point(detection.points[m][0], detection.points[m][1]),
-                         k ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), 5);
-                }
-            }*/
+            for (auto const &detection: info.detections) {
+                cv::circle(info.image, detection, 8, cv::Scalar(0,0,255));
+            }
 
-            cv::resize(info.image, info.image, cv::Size(), 0.5, 0.5);
+            //cv::resize(info.image, info.image, cv::Size(), 0.5, 0.5);
             cv::imshow(info.camera_serial_number, info.image);
 
             int key = cv::waitKey(1);
@@ -101,7 +154,7 @@ int main(int argc, char* argv[])
 
     vector<shared_ptr<CameraParameters>> camera_parameters;
     for (auto &camera: cameras) {
-        camera->setGainExposure(8,2000);
+        camera->setGainExposure(0,50);
 
         string extrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
         string intrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";
@@ -121,7 +174,7 @@ int main(int argc, char* argv[])
     for (size_t i = 0; i < cameras.size(); ++i) {
         auto &camera = cameras[i];
         auto &camera_parameter = camera_parameters[i];
-        timers.push_back(make_shared<cpm_tools::AbsoluteTimer>(0, 40 * 1000000, 0, 0,[&](){
+        timers.push_back(make_shared<cpm_tools::AbsoluteTimer>(0, 100 * 1000000, 0, 0,[&](){
             processFrame(camera, camera_parameter, visualization_queue);
         }));
     }

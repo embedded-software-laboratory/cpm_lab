@@ -52,7 +52,7 @@ bool CameraWrapper::grabImage(WithTimestamp<cv::Mat> &image) {
         if(camera->IsOpen()) cout << "RetrieveResult() failed" << endl;
         return false;
     }
-    auto timestamp = cpm_tools::clock_gettime_nanoseconds();
+    auto timestamp = clock_gettime_nanoseconds();
 
     int rows = ptrGrabResult->GetHeight();
     int cols = ptrGrabResult->GetWidth();

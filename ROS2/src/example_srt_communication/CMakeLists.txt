@@ -17,13 +17,19 @@ find_package(cpm_tools REQUIRED)
 find_package(cpm_msgs REQUIRED)
 
 add_executable(talker src/talker.cpp)
-ament_target_dependencies(talker rclcpp std_msgs cpm_tools cpm_msgs)
+ament_target_dependencies(talker rclcpp)
+ament_target_dependencies(talker cpm_msgs)
+ament_target_dependencies(talker cpm_tools)
 
 add_executable(listener src/listener.cpp)
-ament_target_dependencies(listener rclcpp std_msgs cpm_tools cpm_msgs)
+ament_target_dependencies(listener rclcpp)
+ament_target_dependencies(listener cpm_msgs)
+ament_target_dependencies(listener cpm_tools)
 
 add_executable(timer_test src/timer_test.cpp)
-ament_target_dependencies(timer_test rclcpp std_msgs cpm_tools)
+ament_target_dependencies(timer_test rclcpp)
+ament_target_dependencies(timer_test cpm_msgs)
+ament_target_dependencies(timer_test cpm_tools)
 
 install(TARGETS
   talker
