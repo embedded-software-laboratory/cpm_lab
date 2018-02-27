@@ -1,29 +1,27 @@
 // TODO refactor this mess
 
-#include <ros/ros.h>
-#include "cpm_tools/default.h"
+#include "cpm_tools/default.hpp"
 #include <opencv2/opencv.hpp>
-#include "DetectionDispatcherLogic/DetectionDispatcherLogic.h"
-#include "AprilTagDetector/AprilTagDetector.h"
-#include "cpm_tools/ThreadSafeQueue.h"
-#include <ros/package.h>
-#include "CameraWrapper/CameraWrapper.h"
-#include <geometry_msgs/Pose2D.h>
+#include "DetectionDispatcherLogic/DetectionDispatcherLogic.hpp"
+#include "AprilTagDetector/AprilTagDetector.hpp"
+#include "cpm_tools/ThreadSafeQueue.hpp"
+#include "CameraWrapper/CameraWrapper.hpp"
+#include "cpm_msgs/msg/vehicle_state.hpp"
 
 bool loop = true;
 
 template<size_t input_queue_size, size_t output_queue_size>
 void detectLoop(
-    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>,  input_queue_size > &input_queue,
+    ThreadSafeQueue< tuple<uint64_t, cv::Mat1b, cv::Point>,  input_queue_size > &input_queue,
     ThreadSafeQueue< vector<AprilTagDetectionStamped>, output_queue_size  > &output_queue
 ) {
 
-    tuple<ros::Time, cv::Mat1b, cv::Point> input_data;
+    tuple<uint64_t, cv::Mat1b, cv::Point> input_data;
 
     AprilTagDetector aprilTagDetector(AprilTagFamily::Tag36h11);
 
     while(loop && input_queue.read(input_data)) {
-        ros::Time timestamp;
+        uint64_t timestamp;
         cv::Mat1b img;
         cv::Point offset;
         tie(timestamp, img, offset) = input_data;
@@ -45,10 +43,10 @@ void grabLoop(shared_ptr<CameraWrapper> camera,
               shared_ptr<CameraParameters> params,
               shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue) {
 
-    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
+    ThreadSafeQueue< tuple<uint64_t, cv::Mat1b, cv::Point>, 100  > detect_crop_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 100  > detect_crop_result_queue;
 
-    ThreadSafeQueue< tuple<ros::Time, cv::Mat1b, cv::Point>, 1  > detect_full_input_queue;
+    ThreadSafeQueue< tuple<uint64_t, cv::Mat1b, cv::Point>, 1  > detect_full_input_queue;
     ThreadSafeQueue< std::vector<AprilTagDetectionStamped>, 1  > detect_full_result_queue;
 
 
@@ -62,21 +60,21 @@ void grabLoop(shared_ptr<CameraWrapper> camera,
 
     DetectionDispatcherLogic detectionDispatcherLogic(*params);
 
-    vector<cpm_msgs::VehicleState> vehicle_states;
+    vector<cpm_msgs::msg::VehicleState> vehicle_states;
     {
-        cpm_msgs::VehicleState v;
+        cpm_msgs::msg::VehicleState v;
         v.id = 1;
         v.pose.position.x = NaN;
         vehicle_states.push_back(v);
     }
     {
-        cpm_msgs::VehicleState v;
+        cpm_msgs::msg::VehicleState v;
         v.id = 51;
         v.pose.position.x = NaN;
         vehicle_states.push_back(v);
     }
     {
-        cpm_msgs::VehicleState v;
+        cpm_msgs::msg::VehicleState v;
         v.id = 42;
         v.pose.position.x = NaN;
         vehicle_states.push_back(v);
@@ -178,7 +176,7 @@ std::array<double, 2> floor_projection_point(std::array<double, 2> point,
 }
 
 
-void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue, ros::Publisher &pose_publisher) {
+void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo, 100 > > visualization_queue) {
     while(loop) {
         DetectionVisualizationInfo info;
         if(!visualization_queue->read(info)) return;
@@ -194,7 +192,7 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo,
                 << "  y " << std::setw( 11 ) << std::setfill(' ') << std::fixed << std::setprecision( 3 ) << floor_intersection_point_center[1]
                 << endl;
 
-            geometry_msgs::Pose2D pose;
+            /*geometry_msgs::Pose2D pose;
             pose.x = floor_intersection_point_center[0];
             pose.y = floor_intersection_point_center[1];
 
@@ -206,9 +204,7 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo,
                 double dx = pt_top_left[0] - pt_bottom_left[0];
                 double dy = pt_top_left[1] - pt_bottom_left[1];
                 pose.theta = atan2(dy,dx);
-            }
-
-            pose_publisher.publish(pose);
+            }*/
         }
 
         // visualize
@@ -237,9 +233,6 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo,
 
 int main(int argc, char* argv[])
 {
-    ros::init(argc, argv, "detection");
-    ros::NodeHandle nh;
-    ros::Publisher pose_publisher = nh.advertise<geometry_msgs::Pose2D>("pose", 1);
 
 
     vector<string> camera_serial_numbers { "22511669" /* , "21704342" */ };
@@ -259,8 +252,8 @@ int main(int argc, char* argv[])
     for (auto &camera: cameras) {
         camera->setGainExposure(8,2000);
 
-        string extrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
-        string intrinsic_parameters_path = ros::package::getPath("ips") + "/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";
+        string extrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
+        string intrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";
 
         shared_ptr<CameraParameters> params = make_shared<CameraParameters>();
 
@@ -268,8 +261,6 @@ int main(int argc, char* argv[])
         params->setIntrinsicParametersFromYAML(intrinsic_parameters_path);
         camera_parameters.push_back(params);
     }
-
-    ros::Time::init();
 
     auto visualization_queue = make_shared<ThreadSafeQueue< DetectionVisualizationInfo, 100 >>();
 
@@ -280,7 +271,7 @@ int main(int argc, char* argv[])
         grabThreads.emplace_back([&](){grabLoop(camera, camera_parameter, visualization_queue);});
     }
 
-    thread visualization_thread( [&](){visualization_loop(visualization_queue, pose_publisher);} );
+    thread visualization_thread( [&](){visualization_loop(visualization_queue);} );
 
     // trigger Loop
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

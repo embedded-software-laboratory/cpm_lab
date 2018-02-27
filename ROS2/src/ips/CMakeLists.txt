@@ -19,18 +19,15 @@ find_package(cpm_tools REQUIRED)
 find_package(cpm_msgs REQUIRED)
 find_package(OpenCV 3.3.1 EXACT REQUIRED)
 
-#message(FATAL_ERROR ${cpm_tools_LIBRARIES})
-
-
 find_package(PkgConfig)
 pkg_search_module(apriltag REQUIRED apriltag)
 
 include_directories(src)
 
-
 set(PYLON_ROOT /opt/pylon5)
 include_directories(${PYLON_ROOT}/include)
 link_directories(${PYLON_ROOT}/lib64)
+set(Pylon_LIBRARIES GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 pylonbase pylonutility)
 
 SET(${PROJECT_NAME}_LIB_SOURCES
     src/AprilTagDetector/AprilTagDetector.cpp
@@ -46,6 +43,8 @@ SET(${PROJECT_NAME}_LIB_SOURCES
 add_library(${PROJECT_NAME}_lib STATIC ${${PROJECT_NAME}_LIB_SOURCES})
 ament_target_dependencies(${PROJECT_NAME}_lib cpm_tools)
 
+
+
 add_executable(ips_unittest
     src/tools/unittest/main.cpp
     src/AprilTagDetector/AprilTagDetector_unittest.cpp
@@ -54,17 +53,28 @@ add_executable(ips_unittest
 )
 target_link_libraries(ips_unittest
     ${PROJECT_NAME}_lib
-    yaml-cpp 
     ${OpenCV_LIBRARIES}
-    pylonbase
-    pylonutility
+    ${Pylon_LIBRARIES}
     apriltag
-    GenApi_gcc_v3_0_Basler_pylon_v5_0 
-    GCBase_gcc_v3_0_Basler_pylon_v5_0
+    yaml-cpp
 )
-ament_target_dependencies(ips_unittest std_msgs)
 ament_target_dependencies(ips_unittest cpm_tools)
 ament_target_dependencies(ips_unittest cpm_msgs)
+
+
+
+add_executable(${PROJECT_NAME}_detection_simple_demo src/tools/detection_simple_demo/main.cpp)
+target_link_libraries(${PROJECT_NAME}_detection_simple_demo 
+    ${PROJECT_NAME}_lib
+    ${OpenCV_LIBRARIES}
+    ${Pylon_LIBRARIES}
+    apriltag
+    yaml-cpp
+)
+ament_target_dependencies(${PROJECT_NAME}_detection_simple_demo cpm_tools)
+ament_target_dependencies(${PROJECT_NAME}_detection_simple_demo cpm_msgs)
+
+
 
 install(TARGETS
   ips_unittest

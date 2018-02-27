@@ -5,13 +5,6 @@
 #include "cpm_tools/CpmNode.hpp"
 
 
-template <typename Base>
-struct WithTimestamp : public Base {
-    uint64_t timestamp;
-    WithTimestamp(){}
-    WithTimestamp(const Base &base, uint64_t timestamp):Base(base),timestamp(timestamp){}
-    WithTimestamp(Base &&base, uint64_t timestamp):Base(std::move(base)),timestamp(timestamp){}
-};
 
 
 //! Wrapper for a Basler mono-camera. Exposes only necessary functionality

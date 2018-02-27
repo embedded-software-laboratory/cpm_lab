@@ -6,15 +6,6 @@
 #include "AprilTagDetector/AprilTagDetector.hpp"
 #include "cpm_msgs/msg/vehicle_state.hpp"
 
-
-template <typename Base>
-struct WithTimestamp : public Base {
-    uint64_t timestamp;
-    WithTimestamp(){}
-    WithTimestamp(const Base &base, uint64_t timestamp):Base(base),timestamp(timestamp){}
-    WithTimestamp(Base &&base, uint64_t timestamp):Base(std::move(base)),timestamp(timestamp){}
-};
-
 using AprilTagDetectionStamped = WithTimestamp<AprilTagDetection>;
 
 //! Decision logic for selective detection on image crops
