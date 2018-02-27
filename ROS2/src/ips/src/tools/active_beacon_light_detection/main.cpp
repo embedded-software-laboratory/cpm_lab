@@ -16,11 +16,11 @@ struct DetectionVisualizationInfo {
 
 
 std::array<double, 2> floor_projection_point(std::array<double, 2> point,
-    DetectionVisualizationInfo &info) {
+    shared_ptr<CameraParameters> cameraParameters) {
 
     cv::Vec3d origin;
     cv::Mat3d directions;
-    tie(origin, directions) = info.cameraParameters->pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
+    tie(origin, directions) = cameraParameters->pixelRays(cv::Mat2d(1,1, cv::Vec2d(point[0], point[1])));
     cv::Vec3d direction = directions(0,0);
 
     double scale_factor = -origin(2) / direction(2);
@@ -36,27 +36,10 @@ struct Cluster {
     float weight = 0;
 };
 
-void processFrame(
-    shared_ptr<CameraWrapper> camera,
-    shared_ptr<CameraParameters> params,
-    shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
-
-    
-    camera->triggerExposure();
-    WithTimestamp<cv::Mat> image;
-    if(!camera->grabImage(image)) {
-        loop = false;
-        return;
-    }
-
-
-    auto t1 = clock_gettime_nanoseconds();
+vector<cv::Point2f> detect_light_blobs(cv::Mat img) {
 
     cv::Mat image_bw;
-    cv::threshold(image,image_bw, 127, 255, cv::THRESH_BINARY);
-
-
-
+    cv::threshold(img,image_bw, 127, 255, cv::THRESH_BINARY);
 
     vector<cv::Point> locations;
     vector<Cluster> clusters;
@@ -93,18 +76,31 @@ void processFrame(
             detections.emplace_back(x,y);
         }
     }
+    return detections;
+}
 
+void processFrame(
+    shared_ptr<CameraWrapper> camera,
+    shared_ptr<CameraParameters> params,
+    shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
+    
+    camera->triggerExposure();
+    WithTimestamp<cv::Mat> image;
+    if(!camera->grabImage(image)) {
+        loop = false;
+        return;
+    }
 
-    auto t2 = clock_gettime_nanoseconds();
-    cout << "   dt: " << ((t2-t1)/1000000) << "   --  ";
-    cout << detections.size();
+    vector<cv::Point2f> detected_light_blobs = detect_light_blobs(image);
+
+    cout << detected_light_blobs.size();
     cout << endl;
 
     // Send visualization info
     {
         DetectionVisualizationInfo detectionVisualizationInfo;
         detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
-        detectionVisualizationInfo.detections = detections;
+        detectionVisualizationInfo.detections = detected_light_blobs;
         detectionVisualizationInfo.cameraParameters = params;
         detectionVisualizationInfo.image = image.clone();
         visualization_queue->write_nonblocking(detectionVisualizationInfo);
