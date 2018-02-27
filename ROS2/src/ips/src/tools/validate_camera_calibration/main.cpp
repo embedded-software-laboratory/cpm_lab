@@ -1,6 +1,6 @@
-#include "cpm_tools/default.h"
+#include "cpm_tools/default.hpp"
 #include <opencv2/opencv.hpp>
-#include "CameraParameters/CameraParameters.h"
+#include "CameraParameters/CameraParameters.hpp"
 
 
 cv::Point reproject(const CameraParameters& params, double x, double y, double z) {

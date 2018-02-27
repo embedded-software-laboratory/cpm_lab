@@ -45,39 +45,45 @@ ament_target_dependencies(${PROJECT_NAME}_lib cpm_tools)
 
 
 
-add_executable(ips_unittest
+add_executable(${PROJECT_NAME}_unittest
     src/tools/unittest/main.cpp
     src/AprilTagDetector/AprilTagDetector_unittest.cpp
     src/CameraParameters/CameraParameters_unittest.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
 )
-target_link_libraries(ips_unittest
-    ${PROJECT_NAME}_lib
-    ${OpenCV_LIBRARIES}
-    ${Pylon_LIBRARIES}
-    apriltag
-    yaml-cpp
-)
-ament_target_dependencies(ips_unittest cpm_tools)
-ament_target_dependencies(ips_unittest cpm_msgs)
+target_link_libraries(${PROJECT_NAME}_unittest ${PROJECT_NAME}_lib ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} apriltag yaml-cpp)
+ament_target_dependencies(${PROJECT_NAME}_unittest cpm_tools)
+ament_target_dependencies(${PROJECT_NAME}_unittest cpm_msgs)
 
 
 
 add_executable(${PROJECT_NAME}_detection_simple_demo src/tools/detection_simple_demo/main.cpp)
-target_link_libraries(${PROJECT_NAME}_detection_simple_demo 
-    ${PROJECT_NAME}_lib
-    ${OpenCV_LIBRARIES}
-    ${Pylon_LIBRARIES}
-    apriltag
-    yaml-cpp
-)
+target_link_libraries(${PROJECT_NAME}_detection_simple_demo ${PROJECT_NAME}_lib ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} apriltag yaml-cpp)
 ament_target_dependencies(${PROJECT_NAME}_detection_simple_demo cpm_tools)
 ament_target_dependencies(${PROJECT_NAME}_detection_simple_demo cpm_msgs)
 
 
 
+add_executable(${PROJECT_NAME}_calculate_camera_pose_calibration src/tools/calculate_camera_pose_calibration/main.cpp )
+target_link_libraries(${PROJECT_NAME}_calculate_camera_pose_calibration ${PROJECT_NAME}_lib ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} apriltag yaml-cpp)
+ament_target_dependencies(${PROJECT_NAME}_calculate_camera_pose_calibration cpm_tools)
+ament_target_dependencies(${PROJECT_NAME}_calculate_camera_pose_calibration cpm_msgs)
+
+
+
+add_executable(${PROJECT_NAME}_validate_camera_calibration src/tools/validate_camera_calibration/main.cpp )
+target_link_libraries(${PROJECT_NAME}_validate_camera_calibration ${PROJECT_NAME}_lib ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} apriltag yaml-cpp)
+ament_target_dependencies(${PROJECT_NAME}_validate_camera_calibration cpm_tools)
+ament_target_dependencies(${PROJECT_NAME}_validate_camera_calibration cpm_msgs)
+
+
+
+
 install(TARGETS
-  ips_unittest
+  ${PROJECT_NAME}_unittest
+  ${PROJECT_NAME}_detection_simple_demo
+  ${PROJECT_NAME}_calculate_camera_pose_calibration
+  ${PROJECT_NAME}_validate_camera_calibration
   DESTINATION lib/${PROJECT_NAME}
 )
 

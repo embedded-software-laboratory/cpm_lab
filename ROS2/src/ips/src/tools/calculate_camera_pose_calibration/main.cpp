@@ -1,7 +1,7 @@
-#include "cpm_tools/default.h"
+#include "cpm_tools/default.hpp"
 #include <opencv2/opencv.hpp>
 #include "yaml-cpp/yaml.h"
-#include "CameraParameters/CameraParameters.h"
+#include "CameraParameters/CameraParameters.hpp"
 
 int main(int argc, char* argv[]) {
     if(argc != 2) {
