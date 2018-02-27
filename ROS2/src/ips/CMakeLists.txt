@@ -7,7 +7,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unknown-pragmas)
 endif()
 
 include_directories(/opt/opencv331/include)
@@ -32,20 +32,28 @@ set(PYLON_ROOT /opt/pylon5)
 include_directories(${PYLON_ROOT}/include)
 link_directories(${PYLON_ROOT}/lib64)
 
-add_executable(ips_unittest
-    src/tools/unittest/main.cpp
+SET(${PROJECT_NAME}_LIB_SOURCES
     src/AprilTagDetector/AprilTagDetector.cpp
     src/AprilTagDetector/AprilTagDetector.hpp
-    src/AprilTagDetector/AprilTagDetector_unittest.cpp
     src/CameraParameters/CameraParameters.cpp
     src/CameraParameters/CameraParameters.hpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
     src/DetectionDispatcherLogic/DetectionDispatcherLogic.hpp
-    src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
     src/CameraWrapper/CameraWrapper.cpp
     src/CameraWrapper/CameraWrapper.hpp
 )
-target_link_libraries(ips_unittest 
+
+add_library(${PROJECT_NAME}_lib STATIC ${${PROJECT_NAME}_LIB_SOURCES})
+ament_target_dependencies(${PROJECT_NAME}_lib cpm_tools)
+
+add_executable(ips_unittest
+    src/tools/unittest/main.cpp
+    src/AprilTagDetector/AprilTagDetector_unittest.cpp
+    src/CameraParameters/CameraParameters_unittest.cpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
+)
+target_link_libraries(ips_unittest
+    ${PROJECT_NAME}_lib
     yaml-cpp 
     ${OpenCV_LIBRARIES}
     pylonbase
