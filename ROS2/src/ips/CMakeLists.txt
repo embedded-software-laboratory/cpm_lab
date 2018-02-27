@@ -79,12 +79,18 @@ ament_target_dependencies(${PROJECT_NAME}_validate_camera_calibration cpm_msgs)
 
 
 
+add_executable(${PROJECT_NAME}_active_beacon_light_detection src/tools/active_beacon_light_detection/main.cpp )
+target_link_libraries(${PROJECT_NAME}_active_beacon_light_detection ${PROJECT_NAME}_lib ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} apriltag yaml-cpp)
+ament_target_dependencies(${PROJECT_NAME}_active_beacon_light_detection cpm_tools)
+ament_target_dependencies(${PROJECT_NAME}_active_beacon_light_detection cpm_msgs)
+
 
 install(TARGETS
   ${PROJECT_NAME}_unittest
   ${PROJECT_NAME}_detection_simple_demo
   ${PROJECT_NAME}_calculate_camera_pose_calibration
   ${PROJECT_NAME}_validate_camera_calibration
+  ${PROJECT_NAME}_active_beacon_light_detection
   DESTINATION lib/${PROJECT_NAME}
 )
 

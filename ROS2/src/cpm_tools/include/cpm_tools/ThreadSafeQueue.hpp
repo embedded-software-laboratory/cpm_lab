@@ -5,7 +5,7 @@
 
 
 //! A thread-safe first in first out queue with a maximum capacity. Implemented with a mutex and a simple ring buffer.
-template<typename Item, size_t capacity>
+template<typename Item, size_t capacity = 10>
 class ThreadSafeQueue
 {
     std::mutex m_mutex;
