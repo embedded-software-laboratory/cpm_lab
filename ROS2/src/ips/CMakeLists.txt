@@ -19,10 +19,18 @@ find_package(cpm_tools REQUIRED)
 find_package(cpm_msgs REQUIRED)
 find_package(OpenCV 3.3.1 EXACT REQUIRED)
 
+#message(FATAL_ERROR ${cpm_tools_LIBRARIES})
+
+
 find_package(PkgConfig)
 pkg_search_module(apriltag REQUIRED apriltag)
 
 include_directories(src)
+
+
+set(PYLON_ROOT /opt/pylon5)
+include_directories(${PYLON_ROOT}/include)
+link_directories(${PYLON_ROOT}/lib64)
 
 add_executable(ips_unittest
     src/tools/unittest/main.cpp
@@ -31,10 +39,24 @@ add_executable(ips_unittest
     src/AprilTagDetector/AprilTagDetector_unittest.cpp
     src/CameraParameters/CameraParameters.cpp
     src/CameraParameters/CameraParameters.hpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic.cpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic.hpp
+    src/DetectionDispatcherLogic/DetectionDispatcherLogic_unittest.cpp
+    src/CameraWrapper/CameraWrapper.cpp
+    src/CameraWrapper/CameraWrapper.hpp
 )
-ament_target_dependencies(ips_unittest apriltag rclcpp std_msgs cpm_tools cpm_msgs)
-target_link_libraries(ips_unittest yaml-cpp ${OpenCV_LIBRARIES})
-
+target_link_libraries(ips_unittest 
+    yaml-cpp 
+    ${OpenCV_LIBRARIES}
+    pylonbase
+    pylonutility
+    apriltag
+    GenApi_gcc_v3_0_Basler_pylon_v5_0 
+    GCBase_gcc_v3_0_Basler_pylon_v5_0
+)
+ament_target_dependencies(ips_unittest std_msgs)
+ament_target_dependencies(ips_unittest cpm_tools)
+ament_target_dependencies(ips_unittest cpm_msgs)
 
 install(TARGETS
   ips_unittest
