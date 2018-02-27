@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "CameraWrapper/CameraWrapper.hpp"
 #include "CameraParameters/CameraParameters.hpp"
+#include "cpm_tools/AbsoluteTimer.hpp"
 
 bool loop = true;
 
@@ -13,33 +14,27 @@ struct DetectionVisualizationInfo {
     shared_ptr<CameraParameters> cameraParameters;
 };
 
-void grabLoop(shared_ptr<CameraWrapper> camera,
-              shared_ptr<CameraParameters> params,
-              shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
+void processFrame(
+    shared_ptr<CameraWrapper> camera,
+    shared_ptr<CameraParameters> params,
+    shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo> > visualization_queue) {
 
     
-    while(loop)
-    {
-        // Get new image
-        WithTimestamp<cv::Mat> image;
-        if(!camera->grabImage(image)) {
-            loop = false;
-            break;
-        }
-
-
-
-        // Send visualization info
-        {
-            DetectionVisualizationInfo detectionVisualizationInfo;
-            detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
-            detectionVisualizationInfo.cameraParameters = params;
-            detectionVisualizationInfo.image = image.clone();
-            visualization_queue->write(detectionVisualizationInfo);
-        }
-
+    camera->triggerExposure();
+    WithTimestamp<cv::Mat> image;
+    if(!camera->grabImage(image)) {
+        loop = false;
+        return;
     }
 
+    // Send visualization info
+    {
+        DetectionVisualizationInfo detectionVisualizationInfo;
+        detectionVisualizationInfo.camera_serial_number = camera->getSerialNumber();
+        detectionVisualizationInfo.cameraParameters = params;
+        detectionVisualizationInfo.image = image.clone();
+        visualization_queue->write_nonblocking(detectionVisualizationInfo);
+    } 
 
 }
 
@@ -91,8 +86,6 @@ void visualization_loop(shared_ptr< ThreadSafeQueue< DetectionVisualizationInfo 
 
 int main(int argc, char* argv[])
 {
-
-
     vector<string> camera_serial_numbers { "22511669" /* , "21704342" */ };
     vector<shared_ptr<CameraWrapper>> cameras;
 
@@ -122,29 +115,19 @@ int main(int argc, char* argv[])
 
     auto visualization_queue = make_shared<ThreadSafeQueue< DetectionVisualizationInfo >>();
 
-    vector<thread> grabThreads;
+    
+    vector< shared_ptr< cpm_tools::AbsoluteTimer > > timers;
+
     for (size_t i = 0; i < cameras.size(); ++i) {
         auto &camera = cameras[i];
         auto &camera_parameter = camera_parameters[i];
-        grabThreads.emplace_back([&](){grabLoop(camera, camera_parameter, visualization_queue);});
+        timers.push_back(make_shared<cpm_tools::AbsoluteTimer>(0, 40 * 1000000, 0, 0,[&](){
+            processFrame(camera, camera_parameter, visualization_queue);
+        }));
     }
 
-    thread visualization_thread( [&](){visualization_loop(visualization_queue);} );
-
-    // trigger Loop
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    while(loop) {
-        for (size_t i = 0; i < cameras.size(); ++i) {
-            cameras[i]->triggerExposure();
-            cout << i << endl;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
-    }
+    visualization_loop(visualization_queue);
 
     for (auto &camera: cameras) camera->close();
     visualization_queue->close();
-
-    for(auto &t:grabThreads) t.join();
-    visualization_thread.join();
-
 }
