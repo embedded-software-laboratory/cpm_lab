@@ -17,6 +17,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(cpm_tools REQUIRED)
 find_package(cpm_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_package(OpenCV 3.3.1 EXACT REQUIRED)
 
 find_package(PkgConfig)
