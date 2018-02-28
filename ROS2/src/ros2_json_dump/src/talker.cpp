@@ -32,6 +32,21 @@ public:
                 message.my_string = "Hello world";
 
 
+
+                message.my_float32_list = {6.6,5.5,4.4,3.3,2.2,1.1};
+                message.my_string_list = {"one","two","three"};
+
+                for (int i = 0; i < 3; ++i)
+                {
+                    geometry_msgs::msg::PoseStamped pose;
+                    pose.pose.orientation.x = i;
+                    pose.pose.orientation.y = 2*i;
+                    pose.pose.orientation.z = i+5;
+                    pose.pose.orientation.w = i*8;
+                    message.path.poses.push_back(pose);
+                }
+
+
                 RCLCPP_INFO(this->get_logger(), "Publishing ComplexTestMsg");
                 this->publisher_->publish(message);
             };

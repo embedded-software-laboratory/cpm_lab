@@ -12,3 +12,6 @@ uint32 my_uint32
 int64 my_int64
 uint64 my_uint64
 string my_string
+float32[] my_float32_list
+string[] my_string_list
+nav_msgs/Path path
