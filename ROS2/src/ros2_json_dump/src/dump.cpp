@@ -15,6 +15,8 @@ using std::ostringstream;
 #include "cpm_msgs/msg/vehicle_state.hpp"
 #include "cpm_msgs/msg/complex_test_msg.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "builtin_interfaces/msg/time.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
 
 using namespace rosidl_typesupport_introspection_cpp;
 
@@ -89,7 +91,6 @@ public:
     }
 
     void print_message(const rosidl_message_type_support_t* h, void* msg, ostringstream& out) {
-        
         if(h && h->data) {
             auto messageMembers = (MessageMembers*)(h->data);
             out << "{";
@@ -157,6 +158,8 @@ public:
     void subscribe(string topic_name, string type_name) {
         if(type_name == "cpm_msgs/VehicleSensors") { subscribe_with_type<cpm_msgs::msg::VehicleSensors>(topic_name, type_name); }
         else if(type_name == "cpm_msgs/ComplexTestMsg") { subscribe_with_type<cpm_msgs::msg::ComplexTestMsg>(topic_name, type_name); }
+        else if(type_name == "builtin_interfaces/Time") { subscribe_with_type<builtin_interfaces::msg::Time>(topic_name, type_name); }
+        else if(type_name == "rcl_interfaces/ParameterEvent") { subscribe_with_type<rcl_interfaces::msg::ParameterEvent>(topic_name, type_name); }
         else if(type_name == "cpm_msgs/VehicleState") { subscribe_with_type<cpm_msgs::msg::VehicleState>(topic_name, type_name); }
         else if(type_name == "nav_msgs/Path") { subscribe_with_type<nav_msgs::msg::Path>(topic_name, type_name); }
         else {
