@@ -1,13 +1,20 @@
 #include <chrono>
 #include <sstream>
+#include <limits>
+#include <iomanip>
 #include "cpm_tools/default.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "cpm_msgs/msg/vehicle_sensors.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_type_support_decl.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 using namespace std::chrono_literals;
 using std::ostringstream;
+
+
+#include "cpm_msgs/msg/vehicle_sensors.hpp"
+#include "cpm_msgs/msg/vehicle_state.hpp"
+#include "cpm_msgs/msg/complex_test_msg.hpp"
+
 
 class Dump : public rclcpp::Node
 {
@@ -30,10 +37,19 @@ public:
         });
     }
 
+    template<typename FloatingPointType>
+    std::string convert_float(FloatingPointType value)
+    {
+        std::stringstream ss;
+        ss << std::scientific << std::setprecision(std::numeric_limits<FloatingPointType>::digits10+1);
+        ss << value;
+        return ss.str();
+    }
 
     void print_message(const rosidl_message_type_support_t* h, void* msg, ostringstream& out) {
+        using namespace rosidl_typesupport_introspection_cpp;
         if(h && h->data) {
-            auto messageMembers = (::rosidl_typesupport_introspection_cpp::MessageMembers*)(h->data);
+            auto messageMembers = (MessageMembers*)(h->data);
             out << "{";
             for (size_t i = 0; i < messageMembers->member_count_; ++i) {
                 if(i) out << ", ";
@@ -41,21 +57,21 @@ public:
                 out << "\"" << member.name_ << "\": ";
                 if(!member.is_array_) {
                     void* data = msg + member.offset_;
-                    if(member.type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64) {
-                        out << *((uint64_t*)(data));
-                    }
-                    else if(member.type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32) {
-                        out << *((uint32_t*)(data));
-                    }
-                    else if(member.type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32) {
-                        out << *((float*)(data));
-                    }
-                    else if(member.type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64) {
-                        out << *((double*)(data));
-                    }
-                    else if(member.type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE) {
-                        print_message(member.members_, data, out);
-                    }
+                         if(member.type_id_ == ROS_TYPE_BOOL) {out << ((*((bool*)(data)))?("true"):("false"));}
+                    else if(member.type_id_ == ROS_TYPE_BYTE) {out << uint32_t(*((uint8_t*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_CHAR) {out << uint32_t(*((char*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_FLOAT32) {out << convert_float<float>(*((float*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_FLOAT64) {out << convert_float<double>(*((double*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_INT8) {out << int32_t(*((int8_t*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_UINT8) {out << uint32_t(*((uint8_t*)(data)));}
+                    else if(member.type_id_ == ROS_TYPE_INT16) {out << *((int16_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_UINT16) {out << *((uint16_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_INT32) {out << *((int32_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_UINT32) {out << *((uint32_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_INT64) {out << *((int64_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_UINT64) {out << *((uint64_t*)(data));}
+                    else if(member.type_id_ == ROS_TYPE_STRING) {out << "\"" <<((std::string*)(data))->c_str() << "\"";}
+                    else if(member.type_id_ == ROS_TYPE_MESSAGE) {print_message(member.members_, data, out);}
                 }
             }
             out << "}";
@@ -98,9 +114,9 @@ public:
 
     void subscribe(string topic_name, string type_name) {
 
-        if(type_name == "cpm_msgs/VehicleSensors") {
-            subscribe_with_type<cpm_msgs::msg::VehicleSensors>(topic_name, type_name);
-        }
+        if(type_name == "cpm_msgs/VehicleSensors") { subscribe_with_type<cpm_msgs::msg::VehicleSensors>(topic_name, type_name); }
+        else if(type_name == "cpm_msgs/ComplexTestMsg") { subscribe_with_type<cpm_msgs::msg::ComplexTestMsg>(topic_name, type_name); }
+        else if(type_name == "cpm_msgs/VehicleState") { subscribe_with_type<cpm_msgs::msg::VehicleState>(topic_name, type_name); }
     }
 
     rclcpp::TimerBase::SharedPtr timer_;

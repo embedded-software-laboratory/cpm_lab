@@ -23,8 +23,15 @@ ament_target_dependencies(dump cpm_msgs)
 ament_target_dependencies(dump cpm_tools)
 ament_target_dependencies(dump rosidl_typesupport_introspection_cpp)
 
+add_executable(talker src/talker.cpp)
+ament_target_dependencies(talker rclcpp)
+ament_target_dependencies(talker cpm_msgs)
+ament_target_dependencies(talker cpm_tools)
+ament_target_dependencies(talker rosidl_typesupport_introspection_cpp)
+
 install(TARGETS
   dump
+  talker
   DESTINATION lib/${PROJECT_NAME}
 )
 
