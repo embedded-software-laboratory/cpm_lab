@@ -27,7 +27,7 @@ function vehicle_friction_deceleration
 %     scatter(T,Theta)
 %     scatter(1:length(diff(T)),diff(T))
     
-    range = 255:294;
+    range = 255:292;
     
     T = T(range);
     X = X(range);
