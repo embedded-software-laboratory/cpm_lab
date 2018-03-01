@@ -4,9 +4,7 @@
 #include "cpm_tools/CpmNode.hpp"
 #include <unistd.h>
 
-using namespace std::chrono_literals;
 using namespace cpm_tools;
-
 
 class TalkerNode : public CpmNode {    
     rclcpp::Publisher<cpm_msgs::msg::VehicleSensors>::SharedPtr publisher_;
@@ -31,8 +29,6 @@ public:
         publisher_->publish(message);
     }
 };
-
-
 
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);

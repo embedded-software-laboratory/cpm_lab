@@ -1,0 +1,2 @@
+uint64 stamp_nanoseconds
+geometry_msgs/Pose pose
