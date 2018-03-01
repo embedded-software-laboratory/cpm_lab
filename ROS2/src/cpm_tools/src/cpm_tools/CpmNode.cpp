@@ -37,7 +37,7 @@ void CpmNode::start_loop() {
         }
 
         if(deadline_arrived || (allow_early_execution_ && all_messages_arrived)) {
-            RCLCPP_INFO(this->get_logger(), "starting update() for deadline %.6f at time %.6f", deadline_nanoseconds/double(NANOSEC_PER_SEC), clock_gettime_nanoseconds()/double(NANOSEC_PER_SEC))
+            //RCLCPP_INFO(this->get_logger(), "starting update() for deadline %.6f at time %.6f", deadline_nanoseconds/double(NANOSEC_PER_SEC), clock_gettime_nanoseconds()/double(NANOSEC_PER_SEC))
             this->update(deadline_nanoseconds);
             deadline_nanoseconds += period_nanoseconds_;
             while(clock_gettime_nanoseconds() >= deadline_nanoseconds) {

@@ -46,7 +46,7 @@ void CameraWrapper::close() {
 
 string CameraWrapper::getSerialNumber() { return serial_number; }
 
-bool CameraWrapper::grabImage(WithTimestamp<cv::Mat> &image) {
+bool CameraWrapper::grabImage(cv::Mat &image) {
     Pylon::CGrabResultPtr ptrGrabResult;
     if (!camera->RetrieveResult(5000, ptrGrabResult, Pylon::TimeoutHandling_Return)) {
         if(camera->IsOpen()) cout << "RetrieveResult() failed" << endl;
@@ -62,6 +62,5 @@ bool CameraWrapper::grabImage(WithTimestamp<cv::Mat> &image) {
     assert(ptrGrabResult->GetPixelType() == Pylon::PixelType_Mono8);
     cv::Mat image_tmp(rows, cols, CV_8UC1, data, stride);
     image_tmp.copyTo(image);
-    image.timestamp = timestamp;
     return true;
 }

@@ -18,6 +18,6 @@ public:
     void setGainExposure(double gain_val, double exposure_val);
     void triggerExposure();
     string getSerialNumber();
-    bool grabImage(WithTimestamp<cv::Mat> &image);
+    bool grabImage(cv::Mat &image);
     void close();
 };

@@ -89,7 +89,7 @@ class IpsNode : public CpmNode {
     thread visualization_thread;
 
 public:
-    IpsNode() : CpmNode("IpsNode", 100 * NANOSEC_PER_MILLISEC, 0, false)
+    IpsNode() : CpmNode("IpsNode", 40 * NANOSEC_PER_MILLISEC, 0, false)
     {
         publisher_ = this->create_publisher<cpm_msgs::msg::VehicleObservation>("vehicle04/observation", rmw_qos_profile_sensor_data);
 
@@ -127,24 +127,78 @@ public:
     void update(uint64_t deadline_nanoseconds) override 
     {
         for (size_t i = 0; i < cameras.size(); ++i) {
+            cameras[i]->triggerExposure();
+        }
+
+        for (size_t i = 0; i < cameras.size(); ++i) {
+            // TODO parallelize this loop
             auto &camera = cameras[i];
             auto &camera_parameter = camera_parameters[i];
-            processFrame(camera, camera_parameter);
+            processFrame(camera, camera_parameter, deadline_nanoseconds);
         }
     }
 
-    void processFrame( shared_ptr<CameraWrapper> camera, shared_ptr<CameraParameters> params) {        
-        camera->triggerExposure();
-        WithTimestamp<cv::Mat> image;
+    void processFrame(shared_ptr<CameraWrapper> camera, shared_ptr<CameraParameters> params, uint64_t deadline_nanoseconds) {        
+
+        cv::Mat image;
         if(!camera->grabImage(image)) {
+            cout << "grabImage() failed" << endl;
             rclcpp::shutdown();
             return;
         }
 
         vector<cv::Point2f> detected_light_blobs = detect_light_blobs(image);
 
-        cout << detected_light_blobs.size();
-        cout << endl;
+        vector<std::array<double, 2>> floor_points;
+        for(auto p:detected_light_blobs) floor_points.push_back(floor_projection_point({p.x, p.y},params));
+
+        //for(auto p:floor_points) { cout << "(" << p[0] << ", " << p[1] << "),  "; } cout << endl;
+
+
+        // Calculate pose for _single_ vehicle (special case).
+        // TODO pose detection an identification for multiple vehicles.
+        if(floor_points.size() == 3) {
+            double max_dist = 0;
+            int max_dist_i = 0;
+            for (int i = 0; i < 3; ++i) {
+                double dx = floor_points[(i+1)%3][0] - floor_points[i][0];
+                double dy = floor_points[(i+1)%3][1] - floor_points[i][1];
+                double dist = sqrt(dx*dx + dy*dy);
+                if(dist > max_dist) {
+                    max_dist = dist;
+                    max_dist_i = i;
+                }
+            }
+            int origin_index = (max_dist_i + 2)%3;
+
+            double dx1 = floor_points[(origin_index+1)%3][0] - floor_points[origin_index][0];
+            double dy1 = floor_points[(origin_index+1)%3][1] - floor_points[origin_index][1];
+            double dx2 = floor_points[(origin_index+2)%3][0] - floor_points[origin_index][0];
+            double dy2 = floor_points[(origin_index+2)%3][1] - floor_points[origin_index][1];
+
+            double theta = 0;
+            if(dx1*dy2-dy1*dx2 > 0) {
+                theta = atan2(dy1,dx1);
+            }
+            else {                
+                theta = atan2(dy2,dx2);
+            }
+
+            auto message = cpm_msgs::msg::VehicleObservation();
+            message.pose.position.x = floor_points[origin_index][0];
+            message.pose.position.y = floor_points[origin_index][1];
+
+            message.pose.orientation.x = 0;
+            message.pose.orientation.y = 0;
+            message.pose.orientation.z = sin(theta/2.0);
+            message.pose.orientation.w = cos(theta/2.0);
+
+            message.stamp_nanoseconds = deadline_nanoseconds;
+
+            publisher_->publish(message);
+        }
+
+        //cout << detected_light_blobs.size() << endl;
 
         // Send visualization info
         {

@@ -12,6 +12,7 @@ using std::ostringstream;
 
 
 #include "cpm_msgs/msg/vehicle_sensors.hpp"
+#include "cpm_msgs/msg/vehicle_observation.hpp"
 #include "cpm_msgs/msg/vehicle_state.hpp"
 #include "cpm_msgs/msg/complex_test_msg.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -151,6 +152,7 @@ public:
 
     void subscribe(string topic_name, string type_name) {
         if(type_name == "cpm_msgs/VehicleSensors") { subscribe_with_type<cpm_msgs::msg::VehicleSensors>(topic_name, type_name); }
+        else if(type_name == "cpm_msgs/VehicleObservation") { subscribe_with_type<cpm_msgs::msg::VehicleObservation>(topic_name, type_name); }
         else if(type_name == "cpm_msgs/ComplexTestMsg") { subscribe_with_type<cpm_msgs::msg::ComplexTestMsg>(topic_name, type_name); }
         else if(type_name == "builtin_interfaces/Time") { subscribe_with_type<builtin_interfaces::msg::Time>(topic_name, type_name); }
         else if(type_name == "rcl_interfaces/ParameterEvent") { subscribe_with_type<rcl_interfaces::msg::ParameterEvent>(topic_name, type_name); }
