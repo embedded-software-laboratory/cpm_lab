@@ -143,7 +143,8 @@ public:
                 T msg_copy = *msg;
                 ostringstream out;
                 print_message_metainfo(h, &msg_copy, out, topic_name, clock_gettime_nanoseconds());
-                cout << out.str() << endl;
+                out << endl;
+                cout << out.str() << std::flush;
             }, rmw_qos_profile_sensor_data
         );
     }
