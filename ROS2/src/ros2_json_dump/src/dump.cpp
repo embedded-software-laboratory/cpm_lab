@@ -104,18 +104,11 @@ public:
                 }
                 else if(member.is_array_ && member.array_size_ == 0) { // dynamic array
                     out << "[";
-                    // NOTE this relies on the GCC implementation of std::vector!
-                    // This is not safe and not portable!
-                    // A better solution would be to cast to std::vector<T>*.
-                    // But the type T is not known.
-                    void* array_start = ((void**)member_data)[0];
-                    void* array_end = ((void**)member_data)[1];
+                    auto member_array = reinterpret_cast<std::vector<uint8_t>*>(member_data);
                     size_t array_stride = get_size_of_member(member);
-
-                    for (void* element = array_start; element < array_end; element+=array_stride)
-                    {
-                        if(element != array_start) out << ", ";
-                        print_ros_type(element, member, out);
+                    for(auto it = member_array->begin(); it < member_array->end(); it += array_stride) {
+                        if(it != member_array->begin()) out << ", ";
+                        print_ros_type(&(*it), member, out);
                     }
                     out << "]";
                 }
