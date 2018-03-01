@@ -10,6 +10,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unknown-pragmas)
 endif()
 
+set(CMAKE_PREFIX_PATH /opt/opencv331/share/OpenCV)
 include_directories(/opt/opencv331/include)
 
 find_package(ament_cmake REQUIRED)
