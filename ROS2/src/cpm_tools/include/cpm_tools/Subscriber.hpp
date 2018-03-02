@@ -19,7 +19,7 @@ class Subscriber : public SubscriberBase {
     std::function<void()> new_message_callback_;
     std::mutex m_mutex;
     std::string topic_name_;
-    uint64_t expected_delay_;
+    uint64_t expected_delay_nanoseconds_;
 
     void topic_callback(const typename MessageT::SharedPtr msg) {
         {
@@ -35,7 +35,7 @@ class Subscriber : public SubscriberBase {
 public:
     Subscriber (
         const std::string &topic_name, 
-        uint64_t expected_delay,
+        uint64_t expected_delay_nanoseconds,
         rclcpp::Node* node, 
         std::function<void()> new_message_callback
     )
@@ -48,7 +48,7 @@ public:
     )
     ,new_message_callback_(new_message_callback)
     ,topic_name_(topic_name)
-    ,expected_delay_(expected_delay)
+    ,expected_delay_nanoseconds_(expected_delay_nanoseconds)
     { }
 
     size_t size() { return buffer_size; }
@@ -61,7 +61,7 @@ public:
     }
 
     MessageT get(uint64_t deadline_nanoseconds, bool &old_message_flag) {
-        uint64_t expected_stamp_nanoseconds = deadline_nanoseconds - expected_delay_;
+        uint64_t expected_stamp_nanoseconds = deadline_nanoseconds - expected_delay_nanoseconds_;
         std::unique_lock<std::mutex> lock(m_mutex);
         for (int i = 0; i < buffer_size; ++i)
         {
@@ -78,7 +78,7 @@ public:
     }
 
     bool message_arrived(uint64_t deadline_nanoseconds) override {
-        uint64_t expected_stamp_nanoseconds = deadline_nanoseconds - expected_delay_;
+        uint64_t expected_stamp_nanoseconds = deadline_nanoseconds - expected_delay_nanoseconds_;
         std::unique_lock<std::mutex> lock(m_mutex);
         for (int i = 0; i < buffer_size; ++i)
         {

@@ -1,0 +1,3 @@
+uint64 stamp_nanoseconds
+float32 speed
+float32 curvature

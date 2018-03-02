@@ -19,6 +19,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(cpm_msgs
   msg/VehicleSensors.msg
   msg/VehicleObservation.msg
+  msg/VehicleCommand.msg
   msg/VehicleState.msg
   msg/ComplexTestMsg.msg
   DEPENDENCIES builtin_interfaces geometry_msgs nav_msgs

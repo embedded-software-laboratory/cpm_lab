@@ -16,13 +16,13 @@ find_package(std_msgs REQUIRED)
 find_package(cpm_tools REQUIRED)
 find_package(cpm_msgs REQUIRED)
 
-add_executable(talker src/talker.cpp)
-ament_target_dependencies(talker rclcpp)
-ament_target_dependencies(talker cpm_msgs)
-ament_target_dependencies(talker cpm_tools)
+add_executable(simple_simulation src/simple_simulation.cpp)
+ament_target_dependencies(simple_simulation rclcpp)
+ament_target_dependencies(simple_simulation cpm_msgs)
+ament_target_dependencies(simple_simulation cpm_tools)
 
 install(TARGETS
-  talker
+  simple_simulation
   DESTINATION lib/${PROJECT_NAME}
 )
 
