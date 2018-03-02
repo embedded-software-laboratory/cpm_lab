@@ -41,3 +41,8 @@ struct WithTimestamp : public Base {
 
 
 uint64_t clock_gettime_nanoseconds();
+
+template<typename T>
+bool contains(const vector<T>& v, const T& x) {
+    return (std::find(v.begin(), v.end(), x) != v.end());
+}

@@ -4,7 +4,6 @@
 #include "cpm_msgs/msg/vehicle_command.hpp"
 #include "cpm_tools/Subscriber.hpp"       
 #include "cpm_tools/CpmNode.hpp"
-#include <unistd.h>
 
 using namespace cpm_tools;
 
@@ -36,7 +35,7 @@ public:
                 );
 
             vehicle_command_subscribers[id] = subscribe<cpm_msgs::msg::VehicleCommand>(
-                "vehicle" + id + "/observation", 10 * NANOSEC_PER_MILLISEC);
+                "vehicle" + id + "/command", 10 * NANOSEC_PER_MILLISEC);
 
 
             y += 0.3;

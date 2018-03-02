@@ -21,8 +21,14 @@ ament_target_dependencies(simple_simulation rclcpp)
 ament_target_dependencies(simple_simulation cpm_msgs)
 ament_target_dependencies(simple_simulation cpm_tools)
 
+add_executable(simple_controller src/simple_controller.cpp)
+ament_target_dependencies(simple_controller rclcpp)
+ament_target_dependencies(simple_controller cpm_msgs)
+ament_target_dependencies(simple_controller cpm_tools)
+
 install(TARGETS
   simple_simulation
+  simple_controller
   DESTINATION lib/${PROJECT_NAME}
 )
 
