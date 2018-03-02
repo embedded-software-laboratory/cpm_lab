@@ -7,7 +7,7 @@
 
 using namespace cpm_tools;
 
-const int period_millisec = 10;
+const int period_millisec = 20;
 
 struct VehicleState { double x=0, y=0, yaw=0, speed=0, steering_angle=0; };
 
@@ -60,7 +60,7 @@ public:
             auto command = vehicle_commands[id];
             const double wheelbase = 0.15;
             const double T_actor_delay = 0.5;
-            const double steering_angle_ref = atan(command.curvature * wheelbase);
+            const double steering_angle_ref = fmin(1.,fmax(-1.,atan(command.curvature * wheelbase)));
 
             state.x              += dt * (state.speed * cos(state.yaw));
             state.y              += dt * (state.speed * sin(state.yaw));
