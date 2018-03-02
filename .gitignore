@@ -3,6 +3,7 @@
 *.so
 build/
 install/
+__pycache__/
 devel/
 img/
 cmake-build-debug/
