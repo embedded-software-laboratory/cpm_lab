@@ -124,8 +124,8 @@ public:
             double yaw_error = sin(yaw-yaw_ref);
 
 
-            lateral_error = fmin(0.1,fmax(-0.1, lateral_error));
-            yaw_error = fmin(0.5,fmax(-0.5, yaw_error));
+            lateral_error = fmin(0.9,fmax(-0.9, lateral_error));
+            yaw_error = fmin(0.9,fmax(-0.9, yaw_error));
 
 
             /*cout 
@@ -136,7 +136,7 @@ public:
             << endl;*/
 
             // Linear control law
-            const double curvature = curvature_ref -12.0 * lateral_error -7.0 * yaw_error;
+            const double curvature = curvature_ref -8.0 * lateral_error -10.0 * yaw_error;
 
             // Send command
             auto command = cpm_msgs::msg::VehicleCommand();
