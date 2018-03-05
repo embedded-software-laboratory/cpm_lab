@@ -39,7 +39,7 @@ public:
             vehicle_command_subscribers[id] = subscribe<cpm_msgs::msg::VehicleCommand>(
                 "vehicle" + id + "/command", 10 * NANOSEC_PER_MILLISEC);
 
-            x += 0.1;
+            x -= 0.4;
             y += 0.1;
         }
     }
