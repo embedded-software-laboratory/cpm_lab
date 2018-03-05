@@ -27,8 +27,9 @@ public:
         double x = 0;
         for(auto id:vehicle_ids) {
             VehicleState s;
-            s.y = y;
+            s.y = 1.3;
             s.x = x;
+            s.yaw = 3.14;
             vehicle_states[id] = s;
 
             vehicle_observation_publishers[id] = 
@@ -39,8 +40,7 @@ public:
             vehicle_command_subscribers[id] = subscribe<cpm_msgs::msg::VehicleCommand>(
                 "vehicle" + id + "/command", 10 * NANOSEC_PER_MILLISEC);
 
-            x -= 0.4;
-            y += 0.1;
+            x += 0.5;
         }
     }
 

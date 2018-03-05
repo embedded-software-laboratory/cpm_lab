@@ -75,7 +75,7 @@ function lab_live_view
                     polygon_x(:,i) = vehicle_rect(1,:)';
                     polygon_y(:,i) = vehicle_rect(2,:)';
                     
-                    line_command = vehicle_transform * [0.15 0 1; 0.25 0.1*curvature(i) 1]';
+                    line_command = vehicle_transform * [0.15 0 1; 0.15 0.1*curvature(i) 1]';
                     lines_x(3*i-2:3*i-1) = line_command(1,:)';
                     lines_y(3*i-2:3*i-1) = line_command(2,:)';
                 end
