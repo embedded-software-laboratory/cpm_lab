@@ -12,3 +12,4 @@ html/
 latex/
 *.md.html
 gmon.out
+firmware/
