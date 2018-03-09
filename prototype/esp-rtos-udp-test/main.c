@@ -8,15 +8,16 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "udp_debug.h"
+#include "remote_debug.h"
 
 
 void task_talker(void *pvParameters)
 {
     int32_t i = 0;
     while(1) {
+        uint32_t id = sdk_system_get_chip_id();
         float f = 0.123f * i;
-        udp_debug_printf("counter %d, %f \n", i, f);
+        remote_debug_printf("counter %d, %f, %u \n", i, f, id);
         vTaskDelay(pdMS_TO_TICKS(500));
         i++;
     }
@@ -36,8 +37,8 @@ void user_init(void)
     sdk_wifi_set_opmode(STATION_MODE);
     sdk_wifi_station_set_config(&config);
 
-    init_udp_debug();
+    init_remote_debug();
 
-    xTaskCreate(task_udp_debug_sender, "task_udp_debug_sender", 512, NULL, 2, NULL);
+    xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_talker, "task_talker", 512, NULL, 2, NULL);
 }
