@@ -9,6 +9,7 @@
 #include <stdarg.h>
 
 #include "remote_debug.h"
+#include "remote_config.h"
 
 
 void task_talker(void *pvParameters)
@@ -18,7 +19,7 @@ void task_talker(void *pvParameters)
         uint32_t id = sdk_system_get_chip_id();
         float f = 0.123f * i;
         remote_debug_printf("counter %d, %f, %u \n", i, f, id);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(2000));
         i++;
     }
 }
@@ -40,5 +41,6 @@ void user_init(void)
     init_remote_debug();
 
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
+    xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     xTaskCreate(task_talker, "task_talker", 512, NULL, 2, NULL);
 }
