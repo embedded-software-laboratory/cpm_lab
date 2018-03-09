@@ -16,14 +16,30 @@ typedef struct {
     char data[256];
 } UdpPacket;
 
-void init_udp_debug() {    
-    udp_debug_output_queue = xQueueCreate(10, sizeof(UdpPacket));
+void init_udp_debug() {   
+    if(udp_debug_output_queue == NULL) {
+        udp_debug_output_queue = xQueueCreate(5, sizeof(UdpPacket));
+        if(udp_debug_output_queue == NULL) {
+            printf("%s: Error: xQueueCreate() failed\n", __FUNCTION__);
+        }
+    }
 }
 
 
 void task_udp_debug_sender(void *pvParameters)
-{
+{        
+    if(udp_debug_output_queue == NULL) {
+        printf("%s: Error: udp_debug_output_queue is uninitialized\n", __FUNCTION__);
+        vTaskDelete(NULL);
+        return;
+    }
+
     while(1) {
+        if(udp_debug_output_queue == NULL) {
+            vTaskDelete(NULL);
+            return;
+        }
+
         // wait for wifi connection
         while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP) {
             printf("Waiting for WiFi+IP...\n");
@@ -62,6 +78,7 @@ void task_udp_debug_sender(void *pvParameters)
 }
 
 void udp_debug_printf(const char* format, ...) {
+    if(udp_debug_output_queue == NULL) return;
     UdpPacket packet;
     va_list argptr;
     va_start(argptr, format);
