@@ -1,3 +1,4 @@
+#define CONFIG_GENERATE_VARIABLES 1
 #include "remote_config.h"
 #include "remote_debug.h"
 
@@ -8,116 +9,38 @@
 #include "queue.h"
 #include "lwip/api.h"
 #include <string.h>
-#include <stdbool.h>
 
-/*
-
-valid config commands:
-
-set intA -123
-get boolB
-set floatB 456.123
-
-
-*/
-
-typedef enum {
-    CONFIG_TYPE_INVALID = 0,
-    CONFIG_TYPE_INT,
-    CONFIG_TYPE_BOOL,
-    CONFIG_TYPE_FLOAT,
-} config_type_id;
-
-const int n_int_variables = 2;
-const char* int_variable_names[] = { "intA", "intB" };
-int int_variable_values[] = { 21, 42 };
-
-
-const int n_bool_variables = 2;
-const char* bool_variable_names[] = { "boolA", "boolB" };
-bool bool_variable_values[] = { true, false };
-
-
-const int n_float_variables = 2;
-const char* float_variable_names[] = { "floatA", "floatB" };
-float float_variable_values[] = { 3.1415, 2.7182818 };
-
-
-
-void find_variable_index_and_type(char* message, size_t offset, int* out_variable_index, config_type_id* out_variable_type) {
-    *out_variable_index = -1;
-
-    for (int i = 0; i < n_int_variables; ++i) {
-        char* match = strstr(message + offset, int_variable_names[i]);
+config_variable* find_variable(char* message, size_t offset) {
+    for (int i = 0; i < n_variables; ++i) {
+        char* match = strstr(message + offset, config_variables[i].name);
         if(match == message + offset) {
-            char next_char_after_name = *(match + strlen(int_variable_names[i]));
+            char next_char_after_name = *(match + strlen(config_variables[i].name));
             if(next_char_after_name == ' ' || next_char_after_name == 0) {
-                *out_variable_index = i;
-                *out_variable_type = CONFIG_TYPE_INT;
-                return;
+                return (config_variables + i);
             }
         }
     }
-
-    for (int i = 0; i < n_bool_variables; ++i) {
-        char* match = strstr(message + offset, bool_variable_names[i]);
-        if(match == message + offset) {
-            char next_char_after_name = *(match + strlen(bool_variable_names[i]));
-            if(next_char_after_name == ' ' || next_char_after_name == 0) {
-                *out_variable_index = i;
-                *out_variable_type = CONFIG_TYPE_BOOL;
-                return;
-            }
-        }
-    }
-
-    for (int i = 0; i < n_float_variables; ++i) {
-        char* match = strstr(message + offset, float_variable_names[i]);
-        if(match == message + offset) {
-            char next_char_after_name = *(match + strlen(float_variable_names[i]));
-            if(next_char_after_name == ' ' || next_char_after_name == 0) {
-                *out_variable_index = i;
-                *out_variable_type = CONFIG_TYPE_FLOAT;
-                return;
-            }
-        }
-    }
+    return NULL;
 }
 
 void decode_getset_message(char* message, size_t offset, bool is_get)  {
-    int variable_index = -1;
-    config_type_id variable_type = CONFIG_TYPE_INVALID;
-    find_variable_index_and_type(message, offset, &variable_index, &variable_type);
-
-    if(variable_index >= 0 && variable_type != CONFIG_TYPE_INVALID) {
-        switch(variable_type) {
-
+    config_variable* variable = find_variable(message, offset);
+    if(variable != NULL) {
+        char* value_str = message + offset + strlen(variable->name);
+        switch(variable->type) {
             case CONFIG_TYPE_INT:
-                if(!is_get) {
-                    int_variable_values[variable_index] 
-                        = atoi(message + offset + strlen(int_variable_names[variable_index]));
-                }
-                remote_debug_printf("set %s %i\n", int_variable_names[variable_index], int_variable_values[variable_index]);
+                if(!is_get) { variable->value_int = atoi(value_str); }
+                remote_debug_printf("set %s %i\n", variable->name, variable->value_int);
             break;
 
             case CONFIG_TYPE_BOOL:
-                if(!is_get) {
-                    bool_variable_values[variable_index] 
-                        = (strstr(message + offset + strlen(bool_variable_names[variable_index]), "true") != NULL);
-                }
-                if(bool_variable_values[variable_index]){
-                    remote_debug_printf("set %s true\n", bool_variable_names[variable_index]);
-                } else {
-                    remote_debug_printf("set %s false\n", bool_variable_names[variable_index]);
-                }
+                if(!is_get) { variable->value_bool = (strstr(value_str, "true") != NULL); }
+                remote_debug_printf("set %s %s\n", variable->name, ((variable->value_bool)?("true"):("false")));
             break;
 
             case CONFIG_TYPE_FLOAT:
-                if(!is_get) {
-                    float_variable_values[variable_index] 
-                        = atof(message + offset + strlen(float_variable_names[variable_index]));
-                }
-                remote_debug_printf("set %s %f\n", float_variable_names[variable_index], float_variable_values[variable_index]);
+                if(!is_get) { variable->value_float = atof(value_str); }
+                remote_debug_printf("set %s %e\n", variable->name, variable->value_float);
             break;
 
             default: break;

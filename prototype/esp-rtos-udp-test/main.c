@@ -14,13 +14,9 @@
 
 void task_talker(void *pvParameters)
 {
-    int32_t i = 0;
     while(1) {
-        uint32_t id = sdk_system_get_chip_id();
-        float f = 0.123f * i;
-        remote_debug_printf("counter %d, %f, %u \n", i, f, id);
+        remote_debug_printf("         talker:  floatEEEE %f\n", CONFIG_VAR_floatE);
         vTaskDelay(pdMS_TO_TICKS(2000));
-        i++;
     }
 }
 
