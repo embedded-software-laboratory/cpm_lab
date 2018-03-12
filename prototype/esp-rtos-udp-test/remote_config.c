@@ -66,7 +66,7 @@ void task_remote_config(void *pvParameters) {
     while(1) {
         // wait for wifi connection
         while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP) {
-            printf("Waiting for WiFi+IP...\n");
+            printf("%s: Waiting for WiFi+IP...\n", __FUNCTION__);
             vTaskDelay(pdMS_TO_TICKS(500));
         }
 

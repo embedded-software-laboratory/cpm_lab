@@ -26,24 +26,18 @@ void init_remote_debug() {
 }
 
 
-void task_remote_debug_sender(void *pvParameters)
-{        
-    if(remote_debug_output_queue == NULL) {
-        printf("%s: Error: remote_debug_output_queue is uninitialized\n", __FUNCTION__);
-        vTaskDelete(NULL);
-        return;
-    }
-
+void task_remote_debug_sender(void *pvParameters) {
     while(1) {
         if(remote_debug_output_queue == NULL) {
+            printf("%s: Error: remote_debug_output_queue is uninitialized\n", __FUNCTION__);
             vTaskDelete(NULL);
             return;
         }
 
         // wait for wifi connection
         while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP) {
-            printf("Waiting for WiFi+IP...\n");
-            vTaskDelay(pdMS_TO_TICKS(500));
+            printf("%s: Waiting for WiFi+IP...\n", __FUNCTION__);
+            vTaskDelay(pdMS_TO_TICKS(2000));
         }
 
         // UDP socket
@@ -59,8 +53,9 @@ void task_remote_debug_sender(void *pvParameters)
         UdpPacket packet;
         struct netbuf* buf = NULL;
         void* data = NULL;
+        bool loop = true;
 
-        while(1) {
+        while(loop) {
             if(xQueueReceive(remote_debug_output_queue, &(packet), portMAX_DELAY) == pdPASS) {
                 buf = netbuf_new();
                 data = netbuf_alloc(buf, packet.length);
@@ -68,8 +63,9 @@ void task_remote_debug_sender(void *pvParameters)
                 err = netconn_sendto(conn, buf, IP_ADDR_BROADCAST, 6780);
 
                 if (err != ERR_OK) {
-                    printf("%s : Could not send data!!! (%s)\n", __FUNCTION__, lwip_strerr(err));
-                    continue;
+                    printf("%s : Could not send data! (%s)\n", __FUNCTION__, lwip_strerr(err));
+                    netconn_delete(conn);
+                    loop = false;
                 }
                 netbuf_delete(buf);
             }
