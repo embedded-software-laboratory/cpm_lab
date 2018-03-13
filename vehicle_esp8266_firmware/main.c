@@ -18,15 +18,9 @@
 #define N_SCHEDULE_STEPS (N_PWM_PINS+1)
 
 uint8_t schedule_step = 0;
-uint8_t pin_numbers[] = {13, 12, 15};
+uint8_t pin_numbers[] = {13, 5, 15};
 
-uint32_t schedule_timer_ticks[N_SCHEDULE_STEPS] = {
-    2000 * MICROSECONDS_TO_TICKS, 
-    2000 * MICROSECONDS_TO_TICKS, 
-    2000 * MICROSECONDS_TO_TICKS, 
-   14000 * MICROSECONDS_TO_TICKS, 
-};
-
+uint32_t schedule_timer_ticks[N_SCHEDULE_STEPS];
 uint8_t pin_values[N_PWM_PINS][N_SCHEDULE_STEPS];
 
 static void IRAM frc1_interrupt_handler(void *arg) {
@@ -125,7 +119,20 @@ void my_pwm_init() {
 
 
 void task_pwm_test(void *pvParameters) {
+    uint32_t high_times[N_PWM_PINS] = { 2000, 7000, 2000, };
 
+    while(1) {
+        for (int i = 1000; i < 2000; i+=10) {
+            high_times[1] = i;
+            my_pwm_set_high_times(high_times);
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+        for (int i = 2000; i > 1000; i-=10) {
+            high_times[1] = i;
+            my_pwm_set_high_times(high_times);
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+    }
 }
 
 
