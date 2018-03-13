@@ -11,6 +11,7 @@
 #include "remote_debug.h"
 #include "remote_config.h"
 #include "servo_pwm.h"
+#include "battery_monitor.h"
 
 
 
@@ -62,5 +63,6 @@ void user_init(void)
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     //xTaskCreate(task_talker, "task_talker", 512, NULL, 2, NULL);
-    xTaskCreate(task_pwm_test, "task_pwm_test", 2048, NULL, 2, NULL);
+    //xTaskCreate(task_pwm_test, "task_pwm_test", 512, NULL, 2, NULL);
+    xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
