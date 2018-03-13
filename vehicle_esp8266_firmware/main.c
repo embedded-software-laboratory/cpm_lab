@@ -20,12 +20,12 @@ void task_pwm_test(void *pvParameters) {
     while(1) {
         for (uint32_t i = 1000; i < 2000; i+=10) {
             servo_pwm_set_steering(i);
-            //servo_pwm_set_motor(i);
+            servo_pwm_set_motor(CONFIG_VAR_motor_signal);
             vTaskDelay(pdMS_TO_TICKS(20));
         }
         for (int i = 2000; i > 1000; i-=10) {
             servo_pwm_set_steering(i);
-            //servo_pwm_set_motor(i);
+            servo_pwm_set_motor(CONFIG_VAR_motor_signal);
             vTaskDelay(pdMS_TO_TICKS(20));
         }
     }
@@ -59,8 +59,8 @@ void user_init(void)
 
     init_servo_pwm();
 
-    //xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
-    //xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
+    xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
+    xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     //xTaskCreate(task_talker, "task_talker", 512, NULL, 2, NULL);
     xTaskCreate(task_pwm_test, "task_pwm_test", 2048, NULL, 2, NULL);
 }
