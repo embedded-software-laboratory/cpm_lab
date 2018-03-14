@@ -156,7 +156,7 @@ public:
 
 
         // Calculate pose for _single_ vehicle (special case).
-        // TODO pose detection an identification for multiple vehicles.
+        // TODO pose detection and identification for multiple vehicles.
         if(floor_points.size() == 3) {
             double max_dist = 0;
             int max_dist_i = 0;
@@ -183,10 +183,11 @@ public:
             else {                
                 theta = atan2(dy2,dx2);
             }
-
+            
             auto message = cpm_msgs::msg::VehicleObservation();
-            message.pose.position.x = floor_points[origin_index][0];
-            message.pose.position.y = floor_points[origin_index][1];
+            // calculate translation from "origin LED" to vehicle origin (= center of rear axis)
+            message.pose.position.x = floor_points[origin_index][0] - 0.062 * cos(theta) + (-0.024) * sin(theta);
+            message.pose.position.y = floor_points[origin_index][1] - 0.062 * sin(theta) - (-0.024) * cos(theta);
 
             message.pose.orientation.x = 0;
             message.pose.orientation.y = 0;
