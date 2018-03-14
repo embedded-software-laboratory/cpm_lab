@@ -40,19 +40,25 @@ void user_init(void)
     uart_set_baud(0, 115200);
     printf("SDK version:%s\n", sdk_system_get_sdk_version());
 
+    /** WiFi config **/
     struct sdk_station_config config = {
         .ssid = WIFI_SSID,
         .password = WIFI_PASS,
     };
-
-    /* required to call wifi_set_opmode before station_set_config */
     sdk_wifi_set_opmode(STATION_MODE);
     sdk_wifi_station_set_config(&config);
 
+    /** Init modules **/
     init_remote_debug();
     init_servo_pwm();
 
 
+    /** Disable 4th LED **/
+    gpio_enable(0, GPIO_OUTPUT);
+    gpio_write(0, 0);
+
+
+    /** Start tasks **/
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     //xTaskCreate(task_pwm_test, "task_pwm_test", 512, NULL, 2, NULL);

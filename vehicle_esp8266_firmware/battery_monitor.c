@@ -4,6 +4,7 @@
 #include "espressif/esp_common.h"
 #include "esp/uart.h"
 #include "FreeRTOS.h"
+#include "task.h"
 
 
 void task_battery_monitor(void *pvParameters)
