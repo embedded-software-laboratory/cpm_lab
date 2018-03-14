@@ -19,7 +19,7 @@ struct VehcileContext {
 
 inline double distance(double dx, double dy) { return sqrt(dx*dx + dy*dy); }
 
-class SimpleSimulationNode : public CpmNode {    
+class SimpleSimulationNode : public CpmNode {
     map<string, VehcileContext> vehicles;
     int update_counter = 0;
 
@@ -101,14 +101,14 @@ public:
                 int next_waypoint_index = (vehicle.active_waypoint_index + 1) % path_x.size();
 
                 double waypoint_distance = distance(
-                    1e-3*path_x[vehicle.active_waypoint_index] - x,
-                    1e-3*path_y[vehicle.active_waypoint_index] - y);
+                    path_x[vehicle.active_waypoint_index] - x,
+                    path_y[vehicle.active_waypoint_index] - y);
 
                 double next_waypoint_distance = distance(
-                    1e-3*path_x[next_waypoint_index] - x,
-                    1e-3*path_y[next_waypoint_index] - y);
+                    path_x[next_waypoint_index] - x,
+                    path_y[next_waypoint_index] - y);
 
-                if(next_waypoint_distance < waypoint_distance) {
+                if(next_waypoint_distance < waypoint_distance + 1e-8) {
                     vehicle.active_waypoint_index = next_waypoint_index;
                 } else {
                     break;
@@ -116,10 +116,10 @@ public:
             }
 
             // Controller reference values
-            const double x_ref = 1e-3*path_x[vehicle.active_waypoint_index];
-            const double y_ref = 1e-3*path_y[vehicle.active_waypoint_index];
+            const double x_ref = path_x[vehicle.active_waypoint_index];
+            const double y_ref = path_y[vehicle.active_waypoint_index];
             const double yaw_ref = path_yaw[vehicle.active_waypoint_index];
-            const double curvature_ref = 1e3*path_curvature[vehicle.active_waypoint_index];
+            const double curvature_ref = path_curvature[vehicle.active_waypoint_index];
             double lateral_error = -sin(yaw_ref) * (x-x_ref)  +cos(yaw_ref) * (y-y_ref);
             double yaw_error = sin(yaw-yaw_ref);
 
@@ -127,8 +127,8 @@ public:
             lateral_error = fmin(0.9,fmax(-0.9, lateral_error));
             yaw_error = fmin(0.9,fmax(-0.9, yaw_error));
 
-
-            /*cout 
+            /*
+            cout 
             << "[" << "id" << ": " <<  e.first << "]"
             << "[" << "active_waypoint" << ": " <<  vehicle.active_waypoint_index << "]"
             << "[" << "lateral_error" << ": " <<  lateral_error << "]"

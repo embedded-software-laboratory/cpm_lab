@@ -56,6 +56,8 @@ x = x - min(x) + padding_x;
 y = y - min(y) + padding_y;
 
 
+format_path_as_text([x/1000 y/1000 phi path(:,4)*1000])
+
 c_phi = cos(phi);
 s_phi = sin(phi);
 
