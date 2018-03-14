@@ -12,13 +12,14 @@
 #include "remote_config.h"
 #include "servo_pwm.h"
 #include "battery_monitor.h"
+#include "odometer.h"
 
 
 
 
-void task_pwm_test(void *pvParameters) {
+void task_main(void *pvParameters) {
 
-    while(1) {
+    /*while(1) {
         for (uint32_t i = 1000; i < 2000; i+=10) {
             servo_pwm_set_steering(i);
             servo_pwm_set_motor(CONFIG_VAR_motor_signal);
@@ -29,6 +30,11 @@ void task_pwm_test(void *pvParameters) {
             servo_pwm_set_motor(CONFIG_VAR_motor_signal);
             vTaskDelay(pdMS_TO_TICKS(20));
         }
+    }*/
+
+    while(1) {
+        remote_debug_printf("odom %u counts , %f m\n", get_odometer_count(), get_odometer_distance());
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
@@ -51,6 +57,7 @@ void user_init(void)
     /** Init modules **/
     init_remote_debug();
     init_servo_pwm();
+    init_odometer();
 
 
     /** Disable 4th LED **/
@@ -61,6 +68,6 @@ void user_init(void)
     /** Start tasks **/
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
-    //xTaskCreate(task_pwm_test, "task_pwm_test", 512, NULL, 2, NULL);
+    xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
     xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
