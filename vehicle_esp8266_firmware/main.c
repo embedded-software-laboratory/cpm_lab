@@ -34,13 +34,6 @@ void task_pwm_test(void *pvParameters) {
 
 
 
-void task_talker(void *pvParameters)
-{
-    while(1) {
-        remote_debug_printf("         talker:  floatEEEE %f\n", CONFIG_VAR_floatE);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-}
 
 void user_init(void)
 {
@@ -57,12 +50,11 @@ void user_init(void)
     sdk_wifi_station_set_config(&config);
 
     init_remote_debug();
-
     init_servo_pwm();
+
 
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
-    //xTaskCreate(task_talker, "task_talker", 512, NULL, 2, NULL);
     //xTaskCreate(task_pwm_test, "task_pwm_test", 512, NULL, 2, NULL);
     xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
