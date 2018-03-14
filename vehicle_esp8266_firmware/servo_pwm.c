@@ -134,3 +134,19 @@ void servo_pwm_set_motor(uint32_t signal_microseconds) {
     servo_pwm_set_high_times(high_times_global);
 }
 
+void servo_pwm_set_steering_and_motor(uint32_t signal_steering, uint32_t signal_motor) {
+
+    assert(pin_numbers[0] == PIN_MOTOR);
+    if(signal_motor < 1000) signal_motor = 1000;
+    else if(signal_motor > 2000) signal_motor = 2000;
+    high_times_global[0] = signal_motor;
+
+
+    assert(pin_numbers[1] == PIN_STEERING_SERVO);
+    if(signal_steering < 1000) signal_steering = 1000;
+    else if(signal_steering > 2000) signal_steering = 2000;
+    high_times_global[1] = signal_steering;
+
+
+    servo_pwm_set_high_times(high_times_global);
+}

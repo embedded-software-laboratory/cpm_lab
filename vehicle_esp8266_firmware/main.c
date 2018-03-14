@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "esp/timer.h"
 #include "ssid_config.h"
 #include "lwip/api.h"
 #include <string.h>
@@ -33,9 +34,21 @@ void task_main(void *pvParameters) {
     }*/
 
     while(1) {
-        remote_debug_printf("odom %u counts , %f m\n", get_odometer_count(), get_odometer_distance());
-        vTaskDelay(pdMS_TO_TICKS(500));
+        //remote_debug_printf("odom %u counts , %f m\n", get_odometer_count(), get_odometer_distance());
+        //remote_debug_printf("timer_get_count FRC2 %f \n", (timer_get_count(FRC2)/(5000000.0)));
+        remote_debug_printf("get_odometer_speed %f \n", get_odometer_speed());
+        //remote_debug_printf("frc2_count %u \n", frc2_count);
+        
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
+
+
+    /*TickType_t previousWakeTime = xTaskGetTickCount();
+    while(1) {
+        speed_control_update();
+        vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(100));
+    }*/
+
 }
 
 
@@ -59,7 +72,6 @@ void user_init(void)
     init_servo_pwm();
     init_odometer();
 
-
     /** Disable 4th LED **/
     gpio_enable(0, GPIO_OUTPUT);
     gpio_write(0, 0);
@@ -69,5 +81,5 @@ void user_init(void)
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
-    xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
+    //xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
