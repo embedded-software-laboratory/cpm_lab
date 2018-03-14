@@ -11,10 +11,12 @@
 
 #include "remote_debug.h"
 #include "remote_config.h"
+#include "remote_command.h"
 #include "servo_pwm.h"
 #include "battery_monitor.h"
 #include "odometer.h"
 #include "speed_control.h"
+#include "remote_command.h"
 
 
 
@@ -43,25 +45,21 @@ void task_main(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(100));
     }*/
 
-    float error_integral = 0;
-
-
     vTaskDelay(pdMS_TO_TICKS(1000));
     TickType_t previousWakeTime = xTaskGetTickCount();
     while(1) {
-
-        float motor_signal = speed_control_get_motor_signal(CONFIG_VAR_reference_speed);
-
+        float command_speed = 0;
+        float command_curvature = 1500;
+        get_speed_and_curvature_command(&command_speed, &command_curvature);
+        float motor_signal = speed_control_get_motor_signal(command_speed);
         servo_pwm_set_motor((uint32_t)motor_signal);
+        servo_pwm_set_steering_and_motor((uint32_t)command_curvature, (uint32_t)motor_signal);
 
-
-
-        /*remote_debug_printf("odom_speed %f reference_speed %f motor_signal %f error_integral %f \n", 
-            odometer_speed, CONFIG_VAR_reference_speed, motor_signal, error_integral);*/
+        remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
 
         vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
-
     }
+
 
 }
 
@@ -94,6 +92,7 @@ void user_init(void)
     /** Start tasks **/
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
+    xTaskCreate(task_remote_command, "task_remote_command", 512, NULL, 2, NULL);
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
     xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
