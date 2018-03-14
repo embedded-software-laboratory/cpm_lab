@@ -23,8 +23,14 @@ bool check_key(char* key_map, int key) {
     return (keyb & mask);
 }
 
-int main ()
+int main (int argc, char** argv)
 {
+
+    float default_curvature = 1500;
+    if(argc == 2) {
+        default_curvature = atof(argv[1]);
+    }
+
     struct sockaddr_in si_other;
     int s, i, slen=sizeof(si_other);
  
@@ -65,7 +71,7 @@ int main ()
         memset(key_map, 0, sizeof(key_map));    //  Initate the array to zero's
         ioctl(fileno(kbd), EVIOCGKEY(sizeof(key_map)), key_map);    //  Fill the keymap with the current keyboard state
 
-        float curvature = 1500;
+        float curvature = default_curvature;
         float speed = 0;
         if(check_key(key_map, KEY_LEFT)) curvature = 1200;
         if(check_key(key_map, KEY_RIGHT)) curvature = 1800;
