@@ -10,7 +10,8 @@
 #include "lwip/api.h"
 #include <string.h>
 
-config_variable* find_variable(char* message, size_t offset) {
+static config_variable* find_variable(char* message, size_t offset) {
+    const int n_variables = sizeof(config_variables) / sizeof(*config_variables);
     for (int i = 0; i < n_variables; ++i) {
         char* match = strstr(message + offset, config_variables[i].name);
         if(match == message + offset) {
@@ -23,7 +24,7 @@ config_variable* find_variable(char* message, size_t offset) {
     return NULL;
 }
 
-void decode_getset_message(char* message, size_t offset, bool is_get)  {
+static void decode_getset_message(char* message, size_t offset, bool is_get)  {
     config_variable* variable = find_variable(message, offset);
     if(variable != NULL) {
         char* value_str = message + offset + strlen(variable->name);
@@ -51,7 +52,7 @@ void decode_getset_message(char* message, size_t offset, bool is_get)  {
 }
 
 
-void decode_config_message(char* message) {
+static void decode_config_message(char* message) {
     if(message == strstr(message, "get ")) {
         decode_getset_message(message, 4, true);
     } else if(message == strstr(message, "set ")) {

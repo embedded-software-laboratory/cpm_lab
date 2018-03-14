@@ -2,7 +2,6 @@
 
 #ifdef CONFIG_GENERATE_VARIABLES
 
-    const int n_variables = 2;
     config_variable config_variables[] = {
         //{ .type = CONFIG_TYPE_INT, .name = "intA", .value_int = 21 },
         //{ .type = CONFIG_TYPE_BOOL, .name = "boolC", .value_bool = true },
