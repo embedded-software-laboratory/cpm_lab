@@ -17,7 +17,11 @@ void task_battery_monitor(void *pvParameters)
     while(1) {
         float battery_volts = get_battery_voltage();
 
-        remote_debug_printf("battery_volts: %f\n", battery_volts);
-        vTaskDelay(pdMS_TO_TICKS(500));
+        if(battery_volts < 6.1) {
+            remote_debug_printf("Low battery alert: %.3fV\n", battery_volts);
+        }
+
+        
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }

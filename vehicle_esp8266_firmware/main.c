@@ -14,6 +14,7 @@
 #include "servo_pwm.h"
 #include "battery_monitor.h"
 #include "odometer.h"
+#include "speed_control.h"
 
 
 
@@ -33,21 +34,34 @@ void task_main(void *pvParameters) {
         }
     }*/
 
-    while(1) {
+    /*while(1) {
         //remote_debug_printf("odom %u counts , %f m\n", get_odometer_count(), get_odometer_distance());
         //remote_debug_printf("timer_get_count FRC2 %f \n", (timer_get_count(FRC2)/(5000000.0)));
         remote_debug_printf("get_odometer_speed %f \n", get_odometer_speed());
         //remote_debug_printf("frc2_count %u \n", frc2_count);
         
         vTaskDelay(pdMS_TO_TICKS(100));
-    }
-
-
-    /*TickType_t previousWakeTime = xTaskGetTickCount();
-    while(1) {
-        speed_control_update();
-        vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(100));
     }*/
+
+    float error_integral = 0;
+
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    TickType_t previousWakeTime = xTaskGetTickCount();
+    while(1) {
+
+        float motor_signal = speed_control_get_motor_signal(CONFIG_VAR_reference_speed);
+
+        servo_pwm_set_motor((uint32_t)motor_signal);
+
+
+
+        /*remote_debug_printf("odom_speed %f reference_speed %f motor_signal %f error_integral %f \n", 
+            odometer_speed, CONFIG_VAR_reference_speed, motor_signal, error_integral);*/
+
+        vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
+
+    }
 
 }
 
@@ -81,5 +95,5 @@ void user_init(void)
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
     xTaskCreate(task_remote_config, "task_remote_config", 512, NULL, 2, NULL);
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
-    //xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
+    xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
 }
