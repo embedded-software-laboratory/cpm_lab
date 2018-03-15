@@ -26,10 +26,6 @@ bool check_key(char* key_map, int key) {
 int main (int argc, char** argv)
 {
 
-    float default_curvature = 1500;
-    if(argc == 2) {
-        default_curvature = atof(argv[1]);
-    }
 
     struct sockaddr_in si_other;
     int s, i, slen=sizeof(si_other);
@@ -58,7 +54,7 @@ int main (int argc, char** argv)
     inet_ntop(AF_INET, hst->h_addr_list[0], addr_str, INET_ADDRSTRLEN);
     cout << hostname << " == " << addr_str << endl;*/
 
-    char addr_str[] = "192.168.0.100";
+    char addr_str[] = "192.168.0.103";
 
     if (inet_aton(addr_str , &si_other.sin_addr) == 0)  {
         die("inet_aton");
@@ -66,15 +62,39 @@ int main (int argc, char** argv)
  
     FILE *kbd = fopen("/dev/input/by-path/platform-i8042-serio-0-event-kbd", "r");
 
+    float curvature = 0;
+    const float delta_curvature = 0.3;
+    const float max_curvature = 2.4;
+
     while(1) {
         char key_map[KEY_MAX/8 + 1];    //  Create a byte array the size of the number of keys
         memset(key_map, 0, sizeof(key_map));    //  Initate the array to zero's
         ioctl(fileno(kbd), EVIOCGKEY(sizeof(key_map)), key_map);    //  Fill the keymap with the current keyboard state
 
-        float curvature = default_curvature;
         float speed = 0;
-        if(check_key(key_map, KEY_LEFT)) curvature = 1200;
-        if(check_key(key_map, KEY_RIGHT)) curvature = 1800;
+        if(check_key(key_map, KEY_LEFT))  {
+            curvature += delta_curvature;
+        }
+        else if(check_key(key_map, KEY_RIGHT))  {
+            curvature -= delta_curvature;
+        }
+        else {
+            if(curvature > delta_curvature) {
+                curvature -= delta_curvature;
+            }
+            else if(curvature < -delta_curvature) {
+                curvature += delta_curvature;
+            }
+        }
+
+        if(curvature > max_curvature) {
+            curvature = max_curvature;
+        }
+        else if(curvature < -max_curvature) {
+            curvature = -max_curvature;
+        }
+
+
         if(check_key(key_map, KEY_UP)) speed = 0.9;
         if(check_key(key_map, KEY_DOWN)) speed = -0.9;
 
@@ -89,6 +109,6 @@ int main (int argc, char** argv)
         if (sendto(s, message, 9 , 0 , (struct sockaddr *) &si_other, slen)==-1) {
             die("sendto()");
         }
-        usleep(20000);
+        usleep(40000);
     }
 }

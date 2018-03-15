@@ -49,11 +49,14 @@ void task_main(void *pvParameters) {
     TickType_t previousWakeTime = xTaskGetTickCount();
     while(1) {
         float command_speed = 0;
-        float command_curvature = 1500;
+        float command_curvature = 0;
         get_speed_and_curvature_command(&command_speed, &command_curvature);
         float motor_signal = speed_control_get_motor_signal(command_speed);
-        servo_pwm_set_motor((uint32_t)motor_signal);
-        servo_pwm_set_steering_and_motor((uint32_t)command_curvature, (uint32_t)motor_signal);
+
+        // steering curve
+        float steering_signal = CONFIG_VAR_steering_center_signal + command_curvature * CONFIG_VAR_steering_curvature_gain;
+
+        servo_pwm_set_steering_and_motor((uint32_t)steering_signal, (uint32_t)motor_signal);
 
         remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
 

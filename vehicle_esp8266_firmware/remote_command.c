@@ -36,7 +36,7 @@ void decode_command_message(char* message, uint16_t length) {
                 if(length == 9) {
                     memcpy(&command_speed, message+1, sizeof(float));
                     memcpy(&command_curvature, message+5, sizeof(float));
-                    command_TTL = 4;
+                    command_TTL = 10;
                 }
             }
             break;

@@ -14,6 +14,8 @@
         { .type = CONFIG_TYPE_FLOAT, .name = "reference_speed", .value_float = 0.0 },
         { .type = CONFIG_TYPE_FLOAT, .name = "speed_error_gain", .value_float = 10.0 },
         { .type = CONFIG_TYPE_FLOAT, .name = "speed_error_integral_gain", .value_float = 1.0 },
+        { .type = CONFIG_TYPE_FLOAT, .name = "steering_center_signal", .value_float = 1419.494262 },
+        { .type = CONFIG_TYPE_FLOAT, .name = "steering_curvature_gain", .value_float = -120.520668 },
     };
 
 #endif
@@ -24,3 +26,5 @@
 #define CONFIG_VAR_reference_speed               (config_variables[3].value_float)
 #define CONFIG_VAR_speed_error_gain              (config_variables[4].value_float)
 #define CONFIG_VAR_speed_error_integral_gain     (config_variables[5].value_float)
+#define CONFIG_VAR_steering_center_signal        (config_variables[6].value_float)
+#define CONFIG_VAR_steering_curvature_gain       (config_variables[7].value_float)
