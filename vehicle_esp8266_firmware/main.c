@@ -63,11 +63,25 @@ void task_main(void *pvParameters) {
 
         vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
     }
-
-
 }
 
+void task_mDNS_setup(void *pvParameters) {
 
+    while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP || netif_default == NULL) {
+        printf("%s: Waiting for WiFi+IP...\n", __FUNCTION__);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+    uint32_t id = sdk_system_get_chip_id();
+    char hostname[100];
+    sprintf(hostname, "esp_%u", id);
+    printf("Hostname: %s.local\n", hostname);
+    LOCK_TCPIP_CORE();
+    mdns_resp_add_netif(netif_default, hostname, 60);
+    UNLOCK_TCPIP_CORE();
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelete(NULL);
+}
 
 
 void user_init(void)
@@ -92,7 +106,7 @@ void user_init(void)
     /** Disable 4th LED **/
     gpio_enable(0, GPIO_OUTPUT);
     gpio_write(0, 0);
-
+    
 
     /** Start tasks **/
     xTaskCreate(task_remote_debug_sender, "task_remote_debug_sender", 512, NULL, 2, NULL);
@@ -100,4 +114,5 @@ void user_init(void)
     xTaskCreate(task_remote_command, "task_remote_command", 512, NULL, 2, NULL);
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
     xTaskCreate(task_battery_monitor, "task_battery_monitor", 512, NULL, 2, NULL);
+    xTaskCreate(task_mDNS_setup, "task_mDNS_setup", 512, NULL, 2, NULL);
 }
