@@ -55,7 +55,7 @@ bool CameraWrapper::grabImage(cv::Mat &image) {
         }
     }
     catch (const GenericException &e) {
-        cout << ("Error in grabImage(): " + string(e.GetDescription())) << endl;
+        cout << "Error in grabImage(): " << e.GetDescription() << endl;
         return false;
     }
 
