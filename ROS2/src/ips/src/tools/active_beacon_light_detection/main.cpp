@@ -162,7 +162,6 @@ public:
         cv::Mat image;
         if(!camera->grabImage(image)) {
             cout << "grabImage() failed" << endl;
-            rclcpp::shutdown();
             return;
         }
 

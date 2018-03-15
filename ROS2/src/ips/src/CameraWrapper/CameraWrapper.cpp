@@ -48,11 +48,16 @@ string CameraWrapper::getSerialNumber() { return serial_number; }
 
 bool CameraWrapper::grabImage(cv::Mat &image) {
     Pylon::CGrabResultPtr ptrGrabResult;
-    if (!camera->RetrieveResult(5000, ptrGrabResult, Pylon::TimeoutHandling_Return)) {
-        if(camera->IsOpen()) cout << "RetrieveResult() failed" << endl;
+    try {
+        if (!camera->RetrieveResult(5000, ptrGrabResult, Pylon::TimeoutHandling_Return)) {
+            if(camera->IsOpen()) cout << "RetrieveResult() failed" << endl;
+            return false;
+        }
+    }
+    catch (const GenericException &e) {
+        cout << ("Error in grabImage(): " + string(e.GetDescription())) << endl;
         return false;
     }
-    auto timestamp = clock_gettime_nanoseconds();
 
     int rows = ptrGrabResult->GetHeight();
     int cols = ptrGrabResult->GetWidth();
