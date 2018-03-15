@@ -60,7 +60,7 @@ int main (int argc, char** argv)
         die("inet_aton");
     }
  
-    FILE *kbd = fopen("/dev/input/by-path/platform-i8042-serio-0-event-kbd", "r");
+    FILE *kbd = fopen("/dev/input/by-id/usb-413c_Dell_KB216_Wired_Keyboard-event-kbd", "r");
 
     float curvature = 0;
     const float delta_curvature = 0.3;
