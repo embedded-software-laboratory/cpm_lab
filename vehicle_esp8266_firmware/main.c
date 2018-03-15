@@ -6,6 +6,7 @@
 #include "esp/timer.h"
 #include "ssid_config.h"
 #include "lwip/api.h"
+#include "lwip/apps/mdns.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -83,6 +84,7 @@ void user_init(void)
     sdk_wifi_station_set_config(&config);
 
     /** Init modules **/
+    mdns_resp_init();
     init_remote_debug();
     init_servo_pwm();
     init_odometer();
