@@ -141,7 +141,7 @@ public:
             // Send command
             auto command = cpm_msgs::msg::VehicleCommand();
             command.stamp_nanoseconds = deadline_nanoseconds;
-            command.speed = 0.5;
+            command.speed = old_message_flag ? 0 : 0.5;
             command.curvature = curvature;
             vehicle.command_publisher->publish(command);
         }
