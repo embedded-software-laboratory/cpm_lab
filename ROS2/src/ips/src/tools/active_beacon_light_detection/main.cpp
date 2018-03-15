@@ -86,10 +86,12 @@ class IpsNode : public CpmNode {
     vector<shared_ptr<CameraWrapper>> cameras;
     vector<shared_ptr<CameraParameters>> camera_parameters;
     shared_ptr<ThreadSafeQueue< DetectionVisualizationInfo > > visualization_queue;
+    shared_ptr<ThreadSafeQueue< std::function<void()>,20 > > job_queue;
     thread visualization_thread;
+    vector<thread> worker_threads;
 
 public:
-    IpsNode() : CpmNode("IpsNode", 40 * NANOSEC_PER_MILLISEC, 0, false)
+    IpsNode() : CpmNode("IpsNode", 20 * NANOSEC_PER_MILLISEC, 0, false)
     {
         publisher_ = this->create_publisher<cpm_msgs::msg::VehicleObservation>("vehicle04/observation", rmw_qos_profile_sensor_data);
 
@@ -122,6 +124,20 @@ public:
 
         visualization_queue = std::make_shared<ThreadSafeQueue< DetectionVisualizationInfo >>();
         visualization_thread = std::thread([this](){this->visualization_loop(this->visualization_queue);});
+
+
+        job_queue = std::make_shared<ThreadSafeQueue< std::function<void()>, 20 >>();
+        for (int i = 0; i < 20; ++i)
+        {
+            worker_threads.emplace_back([this](){
+                while(rclcpp::ok()) {
+                    std::function<void()> job;
+                    if(!job_queue->read(job)) return;
+                    if(job) job();
+                }
+            });
+        }
+
     }
 
     void update(uint64_t deadline_nanoseconds) override 
@@ -132,9 +148,12 @@ public:
 
         for (size_t i = 0; i < cameras.size(); ++i) {
             // TODO parallelize this loop
-            auto &camera = cameras[i];
-            auto &camera_parameter = camera_parameters[i];
-            processFrame(camera, camera_parameter, deadline_nanoseconds);
+            shared_ptr<CameraWrapper> camera = cameras[i];
+            shared_ptr<CameraParameters> camera_parameter = camera_parameters[i];
+
+            job_queue->write_nonblocking([=](){
+                processFrame(camera, camera_parameter, deadline_nanoseconds);
+            });
         }
     }
 
@@ -242,7 +261,9 @@ public:
         rclcpp::shutdown();
         for (auto &camera: cameras) camera->close();
         visualization_queue->close();
+        job_queue->close();
         visualization_thread.join();
+        for (int i = 0; i < worker_threads.size(); ++i) { worker_threads[i].join(); }
     }
 };
 
