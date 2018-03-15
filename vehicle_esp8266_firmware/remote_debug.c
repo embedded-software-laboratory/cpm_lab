@@ -7,6 +7,7 @@
 #include "ssid_config.h"
 #include "lwip/api.h"
 #include <string.h>
+#include "domains.h"
 
 
 QueueHandle_t remote_debug_output_queue = NULL;
@@ -40,6 +41,11 @@ void task_remote_debug_sender(void *pvParameters) {
             vTaskDelay(pdMS_TO_TICKS(2000));
         }
 
+        while(get_master_address() == NULL) {
+            printf("%s: Waiting master mDNS IP...\n", __FUNCTION__);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
+
         // UDP socket
         err_t err;
         struct netconn* conn = netconn_new(NETCONN_UDP);
@@ -60,7 +66,7 @@ void task_remote_debug_sender(void *pvParameters) {
                 buf = netbuf_new();
                 data = netbuf_alloc(buf, packet.length);
                 memcpy (data, packet.data, packet.length);
-                err = netconn_sendto(conn, buf, IP_ADDR_BROADCAST, 6780);
+                err = netconn_sendto(conn, buf, get_master_address(), 6780);
 
                 if (err != ERR_OK) {
                     printf("%s : Could not send data! (%s)\n", __FUNCTION__, lwip_strerr(err));

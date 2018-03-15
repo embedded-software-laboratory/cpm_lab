@@ -1,6 +1,7 @@
 #include "remote_command.h"
 #include "remote_config.h"
 #include "remote_debug.h"
+#include "domains.h"
 
 #include "espressif/esp_common.h"
 #include "esp/uart.h"
@@ -50,7 +51,12 @@ void task_remote_command(void *pvParameters) {
         // wait for wifi connection
         while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP) {
             printf("%s: Waiting for WiFi+IP...\n", __FUNCTION__);
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+
+        while(get_master_address() == NULL) {
+            printf("%s: Waiting master mDNS IP...\n", __FUNCTION__);
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
 
         // UDP socket
@@ -68,7 +74,7 @@ void task_remote_command(void *pvParameters) {
             // Receive message
             struct netbuf *netbuf;
             err = netconn_recv(conn, &netbuf);
-            if(err == ERR_OK && netbuf_len(netbuf) < 256) {
+            if(err == ERR_OK && netbuf_len(netbuf) < 256 && ip_addr_cmp(get_master_address(), &(netbuf->addr))) {
                 char message[256];
                 netbuf_copy(netbuf, message, netbuf_len(netbuf));
                 message[netbuf_len(netbuf)] = 0;

@@ -7,6 +7,7 @@
 #include "ssid_config.h"
 #include "lwip/api.h"
 #include "lwip/apps/mdns.h"
+#include "lwip/ip_addr.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -18,8 +19,7 @@
 #include "odometer.h"
 #include "speed_control.h"
 #include "remote_command.h"
-
-
+#include "domains.h"
 
 
 void task_main(void *pvParameters) {
@@ -59,28 +59,10 @@ void task_main(void *pvParameters) {
 
         servo_pwm_set_steering_and_motor((uint32_t)steering_signal, (uint32_t)motor_signal);
 
-        remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
+        //remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
 
         vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
     }
-}
-
-void task_mDNS_setup(void *pvParameters) {
-
-    while(sdk_wifi_station_get_connect_status() != STATION_GOT_IP || netif_default == NULL) {
-        printf("%s: Waiting for WiFi+IP...\n", __FUNCTION__);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-
-    uint32_t id = sdk_system_get_chip_id();
-    char hostname[100];
-    sprintf(hostname, "esp_%u", id);
-    printf("Hostname: %s.local\n", hostname);
-    LOCK_TCPIP_CORE();
-    mdns_resp_add_netif(netif_default, hostname, 60);
-    UNLOCK_TCPIP_CORE();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    vTaskDelete(NULL);
 }
 
 
