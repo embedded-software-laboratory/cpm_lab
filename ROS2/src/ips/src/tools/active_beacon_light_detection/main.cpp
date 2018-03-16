@@ -91,7 +91,7 @@ class IpsNode : public CpmNode {
     vector<thread> worker_threads;
 
 public:
-    IpsNode() : CpmNode("IpsNode", 20 * NANOSEC_PER_MILLISEC, 0, false)
+    IpsNode() : CpmNode("IpsNode", 40 * NANOSEC_PER_MILLISEC, 0, false)
     {
         publisher_ = this->create_publisher<cpm_msgs::msg::VehicleObservation>("vehicle04/observation", rmw_qos_profile_sensor_data);
 
@@ -262,7 +262,7 @@ public:
         visualization_queue->close();
         job_queue->close();
         visualization_thread.join();
-        for (int i = 0; i < worker_threads.size(); ++i) { worker_threads[i].join(); }
+        for (size_t i = 0; i < worker_threads.size(); ++i) { worker_threads[i].join(); }
     }
 };
 

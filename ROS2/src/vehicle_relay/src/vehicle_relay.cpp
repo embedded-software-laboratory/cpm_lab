@@ -26,10 +26,10 @@ class VehicleRelayNode : public CpmNode {
 
 public:
     VehicleRelayNode()
-    :CpmNode("VehicleRelayNode", 20 * NANOSEC_PER_MILLISEC, 0, false)
+    :CpmNode("VehicleRelayNode", 40 * NANOSEC_PER_MILLISEC, 0, false)
     {
         vehicle_command_subscriber = subscribe<cpm_msgs::msg::VehicleCommand>(
-            "vehicle04/command", 10 * NANOSEC_PER_MILLISEC);
+            "vehicle04/command", 20 * NANOSEC_PER_MILLISEC);
 
 
 
