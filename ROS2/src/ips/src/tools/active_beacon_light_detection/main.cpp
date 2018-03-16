@@ -109,7 +109,7 @@ public:
         }
 
         for (auto &camera: cameras) {
-            camera->setGainExposure(0,50);
+            camera->setGainExposure(0,150);
 
             string extrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/extrinsic_parameters.yaml";
             string intrinsic_parameters_path = "src/ips/cfg/cameras/" + camera->getSerialNumber() + "/intrinsic_parameters.yaml";

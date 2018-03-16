@@ -136,7 +136,7 @@ public:
             << endl;*/
 
             // Linear control law
-            const double curvature = curvature_ref -8.0 * lateral_error -10.0 * yaw_error;
+            const double curvature = curvature_ref -4.0 * lateral_error -8.0 * yaw_error;
 
             // Send command
             auto command = cpm_msgs::msg::VehicleCommand();
