@@ -25,7 +25,7 @@ class SimpleSimulationNode : public CpmNode {
 
 public:
     SimpleSimulationNode()
-    :CpmNode("SimpleSimulationNode", 20 * NANOSEC_PER_MILLISEC, 10 * NANOSEC_PER_MILLISEC, false)
+    :CpmNode("SimpleSimulationNode", 40 * NANOSEC_PER_MILLISEC, 20 * NANOSEC_PER_MILLISEC, false)
     { }
 
     map<string, vector<string>> find_topics(string topic_name_regex_pattern, string required_type_name)
@@ -74,7 +74,7 @@ public:
                     "vehicle" + id + "/command", rmw_qos_profile_sensor_data);
 
                 ctx.observation_subscriber = subscribe<cpm_msgs::msg::VehicleObservation>(
-                    "vehicle" + id + "/observation", 50 * NANOSEC_PER_MILLISEC);
+                    "vehicle" + id + "/observation", 60 * NANOSEC_PER_MILLISEC);
 
                 vehicles[id] = ctx;
             }
@@ -136,7 +136,7 @@ public:
             << endl;*/
 
             // Linear control law
-            const double curvature = curvature_ref -8.0 * lateral_error -10.0 * yaw_error;
+            const double curvature = curvature_ref -4.0 * lateral_error -8.0 * yaw_error;
 
             // Send command
             auto command = cpm_msgs::msg::VehicleCommand();
