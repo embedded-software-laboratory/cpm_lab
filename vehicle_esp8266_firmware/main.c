@@ -20,6 +20,7 @@
 #include "speed_control.h"
 #include "remote_command.h"
 #include "domains.h"
+#include "imu.h"
 
 
 void task_main(void *pvParameters) {
@@ -61,7 +62,15 @@ void task_main(void *pvParameters) {
 
         //remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
 
+
+        float yaw;
+        if(imu_get_yaw(&yaw)) {
+            printf("yaw: %f\n", yaw);
+        }
+
+
         vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
+
     }
 }
 
@@ -84,6 +93,7 @@ void user_init(void)
     init_remote_debug();
     init_servo_pwm();
     init_odometer();
+    init_imu();
 
     /** Disable 4th LED **/
     gpio_enable(0, GPIO_OUTPUT);
