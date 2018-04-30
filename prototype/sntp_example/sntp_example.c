@@ -42,6 +42,7 @@ void sntp_tsk(void *pvParameters)
 
 	/* Start SNTP */
 	printf("Starting SNTP... ");
+    LOCK_TCPIP_CORE();
 	/* SNTP will request an update each 5 minutes */
 	sntp_set_update_delay(5*60000);
 	/* Set GMT+1 zone, daylight savings off */
@@ -50,6 +51,7 @@ void sntp_tsk(void *pvParameters)
 	sntp_initialize(&tz);
 	/* Servers must be configured right after initialization */
 	sntp_set_servers(servers, sizeof(servers) / sizeof(char*));
+    UNLOCK_TCPIP_CORE();
 	printf("DONE!\n");
 
 	/* Print date and time each 5 seconds */
