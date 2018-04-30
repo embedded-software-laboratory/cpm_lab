@@ -24,8 +24,8 @@
 #include <sntp.h>
 #include <time.h>
 
-#define SNTP_SERVERS 	"0.pool.ntp.org", "1.pool.ntp.org", \
-						"2.pool.ntp.org", "3.pool.ntp.org"
+#define SNTP_SERVERS 	"192.168.0.118", "192.168.0.118", \
+						"192.168.0.118", "3.pool.ntp.org"
 
 #define vTaskDelayMs(ms)	vTaskDelay((ms)/portTICK_PERIOD_MS)
 #define UNUSED_ARG(x)	(void)x
@@ -44,7 +44,7 @@ void sntp_tsk(void *pvParameters)
 	printf("Starting SNTP... ");
     LOCK_TCPIP_CORE();
 	/* SNTP will request an update each 5 minutes */
-	sntp_set_update_delay(5*60000);
+	sntp_set_update_delay(15000);
 	/* Set GMT+1 zone, daylight savings off */
 	const struct timezone tz = {1*60, 0};
 	/* SNTP initialization */
