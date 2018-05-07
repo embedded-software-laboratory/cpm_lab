@@ -26,19 +26,6 @@
 void task_main(void *pvParameters) {
 
     /*while(1) {
-        for (uint32_t i = 1000; i < 2000; i+=10) {
-            servo_pwm_set_steering(i);
-            servo_pwm_set_motor(CONFIG_VAR_motor_signal);
-            vTaskDelay(pdMS_TO_TICKS(20));
-        }
-        for (int i = 2000; i > 1000; i-=10) {
-            servo_pwm_set_steering(i);
-            servo_pwm_set_motor(CONFIG_VAR_motor_signal);
-            vTaskDelay(pdMS_TO_TICKS(20));
-        }
-    }*/
-
-    /*while(1) {
         //remote_debug_printf("odom %u counts , %f m\n", get_odometer_count(), get_odometer_distance());
         //remote_debug_printf("timer_get_count FRC2 %f \n", (timer_get_count(FRC2)/(5000000.0)));
         remote_debug_printf("get_odometer_speed %f \n", get_odometer_speed());
@@ -61,7 +48,7 @@ void task_main(void *pvParameters) {
         servo_pwm_set_steering_and_motor((uint32_t)steering_signal, (uint32_t)motor_signal);
 
         //remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
-
+        //remote_debug_printf("odom: %u counts, %f meter\n", get_odometer_count(), get_odometer_distance());
 
         /*float yaw;
         if(imu_get_yaw(&yaw)) {

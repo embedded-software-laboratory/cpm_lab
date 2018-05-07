@@ -1,6 +1,7 @@
 #include "speed_control.h"
 #include "odometer.h"
 #include "remote_config.h"
+#include "remote_debug.h"
 
 
 
@@ -20,10 +21,13 @@ float speed_control_get_motor_signal(float reference_speed) {
 
 
     // closed loop PI control
-    float speed_error = reference_speed - get_odometer_speed();
+    float odom_speed = get_odometer_speed();
+    float speed_error = reference_speed - odom_speed;
     error_integral += speed_error;
     if(error_integral > 500) error_integral = 500; // integral clamping
     else if(error_integral < -500) error_integral = -500;
+
+    //printf("refspd %f spderr %f int %f\n", reference_speed, speed_error, error_integral);
 
     return motor_signal_ref 
         - CONFIG_VAR_speed_error_gain * speed_error
