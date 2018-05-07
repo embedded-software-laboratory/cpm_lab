@@ -63,10 +63,10 @@ void task_main(void *pvParameters) {
         //remote_debug_printf("command_speed %f  command_curvature %f\n", command_speed, command_curvature);
 
 
-        float yaw;
+        /*float yaw;
         if(imu_get_yaw(&yaw)) {
             printf("yaw: %f\n", yaw);
-        }
+        }*/
 
 
         vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
@@ -89,11 +89,11 @@ void user_init(void)
     sdk_wifi_station_set_config(&config);
 
     /** Init modules **/
-    mdns_resp_init();
+    //init_imu();
     init_remote_debug();
     init_servo_pwm();
     init_odometer();
-    init_imu();
+    mdns_resp_init();
 
     /** Disable 4th LED **/
     gpio_enable(0, GPIO_OUTPUT);

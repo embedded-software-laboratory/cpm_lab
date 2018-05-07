@@ -54,17 +54,21 @@ int main (int argc, char** argv)
     inet_ntop(AF_INET, hst->h_addr_list[0], addr_str, INET_ADDRSTRLEN);
     cout << hostname << " == " << addr_str << endl;*/
 
-    char addr_str[] = "192.168.0.103";
+    char addr_str[] = "192.168.0.100";
 
     if (inet_aton(addr_str , &si_other.sin_addr) == 0)  {
         die("inet_aton");
     }
  
-    FILE *kbd = fopen("/dev/input/by-id/usb-413c_Dell_KB216_Wired_Keyboard-event-kbd", "r");
+    //FILE *kbd = fopen("/dev/input/by-id/usb-413c_Dell_KB216_Wired_Keyboard-event-kbd", "r");
+    //FILE *kbd = fopen("/dev/input/by-id/usb-E-Signal_USB_Gaming_Mouse-if01-event-kbd", "r");
+    FILE *kbd = fopen("/dev/input/by-id/usb-DELL_Dell_QuietKey_Keyboard-event-kbd", "r");
+
 
     float curvature = 0;
     const float delta_curvature = 0.3;
     const float max_curvature = 2.4;
+    const float eps = 1e-5;
 
     while(1) {
         char key_map[KEY_MAX/8 + 1];    //  Create a byte array the size of the number of keys
@@ -79,10 +83,10 @@ int main (int argc, char** argv)
             curvature -= delta_curvature;
         }
         else {
-            if(curvature > delta_curvature) {
+            if(curvature > delta_curvature - eps) {
                 curvature -= delta_curvature;
             }
-            else if(curvature < -delta_curvature) {
+            else if(curvature < -delta_curvature + eps) {
                 curvature += delta_curvature;
             }
         }
@@ -109,6 +113,7 @@ int main (int argc, char** argv)
         if (sendto(s, message, 9 , 0 , (struct sockaddr *) &si_other, slen)==-1) {
             die("sendto()");
         }
+        printf("sent: %f, %f\n", speed, curvature);
         usleep(40000);
     }
 }

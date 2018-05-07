@@ -15,7 +15,7 @@
         { .type = CONFIG_TYPE_FLOAT, .name = "speed_error_gain", .value_float = 10.0 },
         { .type = CONFIG_TYPE_FLOAT, .name = "speed_error_integral_gain", .value_float = 1.0 },
         { .type = CONFIG_TYPE_FLOAT, .name = "steering_center_signal", .value_float = 1419.494262 },
-        { .type = CONFIG_TYPE_FLOAT, .name = "steering_curvature_gain", .value_float = -120.520668 },
+        { .type = CONFIG_TYPE_FLOAT, .name = "steering_curvature_gain", .value_float = 120.520668 },
     };
 
 #endif
