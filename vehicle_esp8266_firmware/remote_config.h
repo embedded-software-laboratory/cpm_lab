@@ -3,12 +3,20 @@
 
 /*
 
-valid UDP config commands:
+Allows variables to be set and read via UDP.
+Send a ASCII UDP packet to port 6781.
+The response is broadcast via UDP port 6780 (see remote_debug_printf()).
+There is no added security beyond the WiFi password.
+Use only in a trusted network.
 
-set intA -123
-get boolB
-set floatB 456.123
+Command format:
+"set <var-name> <var-value>"
+"get <var-name>"
 
+Examples:
+"set intA -123"
+"get boolB"
+"set floatB 456.123"
 
 */
 
