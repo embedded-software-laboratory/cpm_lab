@@ -99,8 +99,8 @@ int main (int argc, char** argv)
         }
 
 
-        if(check_key(key_map, KEY_UP)) speed = 0.5;
-        if(check_key(key_map, KEY_DOWN)) speed = -0.9;
+        if(check_key(key_map, KEY_UP)) speed = 1.0;
+        if(check_key(key_map, KEY_DOWN)) speed = 0.0;
 
         char message[9];
         message[0] = 'c';
