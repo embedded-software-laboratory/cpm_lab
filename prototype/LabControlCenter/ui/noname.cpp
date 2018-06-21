@@ -33,7 +33,7 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	fgSizer1->Add( m_bitmap18, 0, wxALL, 5 );
 	
-	m_richText2 = new wxRichTextCtrl( m_scrolledWindow_systemOverview, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0|wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS );
+	m_richText2 = new wxRichTextCtrl( m_scrolledWindow_systemOverview, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS );
 	m_richText2->SetMinSize( wxSize( -1,100 ) );
 	
 	fgSizer1->Add( m_richText2, 1, wxEXPAND | wxALL, 5 );
