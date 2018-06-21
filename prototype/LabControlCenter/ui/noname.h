@@ -10,16 +10,18 @@
 
 #include <wx/artprov.h>
 #include <wx/xrc/xmlres.h>
-#include <wx/sizer.h>
+#include <wx/bitmap.h>
+#include <wx/image.h>
+#include <wx/icon.h>
+#include <wx/statbmp.h>
 #include <wx/gdicmn.h>
-#include <wx/scrolwin.h>
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
 #include <wx/string.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
-#include <wx/icon.h>
+#include <wx/richtext/richtextctrl.h>
+#include <wx/sizer.h>
+#include <wx/scrolwin.h>
 #include <wx/aui/auibook.h>
 #include <wx/panel.h>
 #include <wx/frame.h>
@@ -35,10 +37,14 @@ class MainFrame : public wxFrame
 	private:
 	
 	protected:
+		wxBoxSizer* mainSizer;
 		wxPanel* mainPanel;
+		wxBoxSizer* notebookSizer;
 		wxAuiNotebook* auinotebook;
-		wxScrolledWindow* m_scrolledWindow1;
-		wxScrolledWindow* m_scrolledWindow2;
+		wxScrolledWindow* m_scrolledWindow_systemOverview;
+		wxStaticBitmap* m_bitmap18;
+		wxRichTextCtrl* m_richText2;
+		wxScrolledWindow* m_scrolledWindow_vehicles;
 	
 	public:
 		
