@@ -7,6 +7,7 @@
 #include <fastrtps/participant/Participant.h>
 #include <fastrtps/publisher/Publisher.h>
 #include <fastrtps/publisher/PublisherListener.h>
+#include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/subscriber/Subscriber.h>
 
 
@@ -58,28 +59,29 @@ int main() {
         return 1;
 
 
-    VehicleInput input;
     VehicleState state;
-    input.steeringAngle(0.1);
-    input.throttle(0);
     state.x(0);
     state.y(0);
     state.yaw(0);
-    state.speed(1);
+    state.speed(2);
 
     while(true) {
-        double dt = 0.5;
 
-        input.steeringAngle(fmax(-1,input.steeringAngle()));
-        input.steeringAngle(fmin( 1,input.steeringAngle()));
+        VehicleInput input;
+        SampleInfo_t info;
+        subscriber->takeNextData((void *) &input, &info);
+
+        const double dt = 0.1;
+        const double wheelbase = 0.15;
+        const double steering_angle = fmin(.3,fmax(-.3,atan(input.curvature() * wheelbase)));
 
         state.x(     state.x()      + dt * state.speed() * cos(state.yaw()) );
         state.y(     state.y()      + dt * state.speed() * sin(state.yaw()) );
-        state.yaw(   state.yaw()    + dt * state.speed() * tan(input.steeringAngle()) );
+        state.yaw(   state.yaw()    + dt * state.speed() * tan(steering_angle) / wheelbase );
         state.speed( state.speed()  + dt * input.throttle() );
 
         publisher->write(&state);
-        usleep(500000);
+        usleep(50000);
     }
 
 

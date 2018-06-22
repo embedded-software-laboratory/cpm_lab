@@ -7,6 +7,7 @@
 #include <fastrtps/participant/Participant.h>
 #include <fastrtps/publisher/Publisher.h>
 #include <fastrtps/publisher/PublisherListener.h>
+#include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/subscriber/Subscriber.h>
 
 
@@ -15,10 +16,76 @@
 
 #include <cmath>
 #include <unistd.h>
-#include <fastrtps/subscriber/SampleInfo.h>
 
+using namespace std;
 using namespace eprosima;
 using namespace eprosima::fastrtps;
+
+
+VehicleInput control_law(VehicleState state) {
+    // implement a simple controller, drive around a square
+    static int mode = 0;  
+
+    double x_ref = 0;
+    double y_ref = 0;
+    double yaw_ref = 0;
+
+    cout << mode << endl;
+
+    const double d = 10;
+
+    if(mode == 0) {
+        if(state.x() > d) {
+            mode = 1;
+        }
+        x_ref = 0;
+        y_ref = 0;
+        yaw_ref = 0;
+    }
+    else if(mode == 1) {
+        if(state.y() > d) {
+            mode = 2;
+        }
+        x_ref = d;
+        y_ref = 0;
+        yaw_ref = M_PI/2;
+    }
+    else if(mode == 2) {
+        if(state.x() < 0) {
+            mode = 3;
+        }
+        x_ref = d;
+        y_ref = d;
+        yaw_ref = M_PI;
+    }
+    else {
+        if(state.y() < 0) {
+            mode = 0;
+        }
+        x_ref = 0;
+        y_ref = d;
+        yaw_ref = M_PI * 1.5;
+    }
+
+    double x = state.x();
+    double y = state.y();
+    double yaw = state.yaw();
+
+
+    double lateral_error = -sin(yaw_ref) * (x-x_ref)  +cos(yaw_ref) * (y-y_ref);
+    double yaw_error = sin(yaw-yaw_ref);
+
+
+    lateral_error = fmin(0.9,fmax(-0.9, lateral_error));
+    yaw_error = fmin(0.9,fmax(-0.9, yaw_error));
+
+    const double curvature = -4.0 * lateral_error -8.0 * yaw_error;
+
+    VehicleInput input;
+    input.curvature(curvature);
+    return input;
+}
+
 
 int main() {
 
@@ -61,16 +128,19 @@ int main() {
 
 
 
-    std::cout << "Start..." << std::endl;    
+    std::cout << "Start..." << std::endl;
     while(true) {
-        VehicleInput input;
         VehicleState state;
         SampleInfo_t info;
 
         subscriber->waitForUnreadMessage();
         if(subscriber->takeNextData((void *) &state, &info)) {
-            std::cout << " x " << state.x() << "  y " << state.y() << std::endl;   
+            VehicleInput input = control_law(state);
+            std::cout << " x " << state.x() << "  y " << state.y() << " curv " << input.curvature() << std::endl;
+            publisher->write(&input);
         }
+
+        usleep(20000); // Add some delay to make it more interesting
     }
 
 
