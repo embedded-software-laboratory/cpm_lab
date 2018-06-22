@@ -1,0 +1,7 @@
+struct VehicleState
+{
+    double x;
+    double y;
+    double yaw;
+    double speed;
+};
