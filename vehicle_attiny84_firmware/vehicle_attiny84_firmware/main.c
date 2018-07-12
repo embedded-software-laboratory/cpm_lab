@@ -7,11 +7,30 @@
 #define SET_BIT(p,n) ((p) |= (1 << (n)))
 #define CLEAR_BIT(p,n) ((p) &= ~((1) << (n)))
 
-int main(void)
+void motor_pwm_setup() 
 {
-	
-	SET_BIT(DDRA, 1);
-	
+	// PWM mode 9: Phase & Freq. Correct
+	SET_BIT(TCCR1A, WGM10);
+	SET_BIT(TCCR1B, WGM13);
+		
+	// Target frequency: 20kHz PWM, calculation: 8 MHz / 20kHz / 2 == 200
+	OCR1A = 200;
+		
+	// Enable output
+	SET_BIT(TCCR1A, COM1B1);
+	SET_BIT(DDRA, 5);
+		
+	// no clock scaling, counter runs at 8MHz
+	SET_BIT(TCCR1B, CS10);
+}
+
+void motor_set_duty(uint16_t duty) // values from 0 to 200
+{
+	OCR1B = duty;
+}
+
+void adc_setup()
+{
 	//// ADC setup
 	// Use ADC on Pin 13 == PA0 == ADC0
 	// Use V_CC as voltage reference
@@ -20,40 +39,31 @@ int main(void)
 	SET_BIT(ADCSRA, ADPS2); // ADC prescaler = 128
 	SET_BIT(ADCSRA, ADPS1); // ADC prescaler = 128
 	SET_BIT(ADCSRA, ADPS0); // ADC prescaler = 128
+}
+
+uint16_t adc_read() {
+	ADCSRA |= (1 << ADSC);
+	while (ADCSRA & (1 << ADSC) );
+	uint16_t adc_val = ADC;
+	return adc_val;
+}
+
+int main(void)
+{
 	
-	
-	//// motor PWM timer setup
-	// OCR1A/B, TCCR1A/B, TIFR, TIMSK
-	
-	
-	// PWM mode 9: Phase & Freq. Correct
-	SET_BIT(TCCR1A, WGM10);
-	SET_BIT(TCCR1B, WGM13);
-	
-	// Target frequency: 20kHz PWM, calculation: 8 MHz / 20kHz / 2 == 200
-	OCR1A = 200;
-	
-	// Enable output
-	SET_BIT(TCCR1A, COM1B1);
-	SET_BIT(TCCR1A, COM1B0);
-	SET_BIT(DDRA, 5);
-	
-	// duty cycle...
-	OCR1B = 30;
-	
-	// no clock scaling, counter runs at 8MHz
-	SET_BIT(TCCR1B, CS10);
-	
+	SET_BIT(DDRA, 1); // enable LED	
+
+	adc_setup();
+	motor_pwm_setup();
 	
 	while (1)
 	{
-		PORTA ^= 0b10;
+		PORTA ^= 0b10; // toggle LED
 		
-		// Read ADC
-		ADCSRA |= (1 << ADSC);
-		while (ADCSRA & (1 << ADSC) );
-		uint16_t adc_val = ADC;
-		OCR1B = adc_val>>2;
+		uint16_t adc_val = adc_read();
+		
+		motor_set_duty(adc_val>>2);
+		
 		while(adc_val) {
 			adc_val--;
 			_delay_us(100);
