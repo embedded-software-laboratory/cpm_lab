@@ -13,3 +13,5 @@ latex/
 *.md.html
 gmon.out
 firmware/
+Debug/
+.vs/
