@@ -3,9 +3,16 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include "usiTwiSlave.h"
 
 #define SET_BIT(p,n) ((p) |= (1 << (n)))
 #define CLEAR_BIT(p,n) ((p) &= ~((1) << (n)))
+
+
+
+/****************************************************/
+/******************* Motor PWM **********************/
+/****************************************************/
 
 void motor_pwm_setup() 
 {
@@ -28,6 +35,11 @@ void motor_set_duty(uint16_t duty) // values from 0 to 200
 {
 	OCR1B = duty;
 }
+
+
+/****************************************************/
+/******************** Servo PWM *********************/
+/****************************************************/
 
 
 // Servo PWM rising edge interrupt
@@ -80,6 +92,10 @@ void servo_set_position(uint8_t val) // from 0 to 125
 	OCR0B = val;
 }
 
+/****************************************************/
+/*********************** ADC ************************/
+/****************************************************/
+
 void adc_setup()
 {
 	//// ADC setup
@@ -92,33 +108,95 @@ void adc_setup()
 	SET_BIT(ADCSRA, ADPS0); // ADC prescaler = 128
 }
 
-uint16_t adc_read() {
+void adc_read() {
 	ADCSRA |= (1 << ADSC);
 	while (ADCSRA & (1 << ADSC) );
-	uint16_t adc_val = ADC;
-	return adc_val;
 }
+
+
+/****************************************************/
+/*********************** LED ************************/
+/****************************************************/
+
+
+void led_setup()
+{
+	SET_BIT(DDRA, 1);
+}
+
+void led_set(uint8_t status)
+{
+	if(status)
+	{
+		SET_BIT(PORTA, 1);
+	}
+	else
+	{
+		CLEAR_BIT(PORTA, 1);
+	}
+}
+
+/****************************************************/
+/*********************** I2C ************************/
+/****************************************************/
+
+#define I2C_SLAVE_ADDR 0x26
+
+void i2c_slave_receive_event(uint8_t num_bytes)
+{
+	if(num_bytes == 3) // expected message size
+	{
+		led_set(usiTwiReceiveByte());
+		motor_set_duty(usiTwiReceiveByte());
+		servo_set_position(usiTwiReceiveByte());
+	}
+	else // invalid message, flush buffer
+	{
+		while(num_bytes) {
+			usiTwiReceiveByte();
+			num_bytes--;
+		}
+	}
+}
+
+void i2c_slave_request_event()
+{
+	usiTwiTransmitByte(ADCH);
+	usiTwiTransmitByte(ADCL);
+}
+
+void i2c_slave_setup()
+{
+	usiTwiSlaveInit(I2C_SLAVE_ADDR);
+	usi_onReceiverPtr = i2c_slave_receive_event;
+	usi_onRequestPtr = i2c_slave_request_event;
+	// TODO maybe disable watch dog timer !?
+}
+
+
 
 int main(void)
 {
-	sei();
-	SET_BIT(DDRA, 1); // enable LED	
-
+	
+	led_setup();
+	i2c_slave_setup();
 	adc_setup();
 	motor_pwm_setup();
 	servo_pwm_setup();
 	
 	
+	sei();
 	
 	while (1)
 	{
 		PORTA ^= 0b10; // toggle LED
 		
-		uint16_t adc_val = adc_read();
+		adc_read();
 		
-		motor_set_duty(adc_val>>2);
-		servo_set_position(adc_val>>2);
+		motor_set_duty(ADC>>2);
+		servo_set_position(ADC>>2);
 		
+		uint16_t adc_val = ADC;
 		while(adc_val) {
 			adc_val--;
 			_delay_us(100);
