@@ -39,7 +39,7 @@ int main (int argc, char** argv)
     si_other.sin_port = htons(6783);
 
 
-    /*string hostname = "esp8266_44142.local";
+    string hostname = "esp_6028349.local";
 
     struct hostent * hst = gethostbyname(hostname.c_str());
     if(!hst) {
@@ -52,17 +52,17 @@ int main (int argc, char** argv)
 
     char addr_str[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, hst->h_addr_list[0], addr_str, INET_ADDRSTRLEN);
-    cout << hostname << " == " << addr_str << endl;*/
+    cout << hostname << " == " << addr_str << endl;
 
-    char addr_str[] = "192.168.0.100";
+    //char addr_str[] = "192.168.0.100";
 
     if (inet_aton(addr_str , &si_other.sin_addr) == 0)  {
         die("inet_aton");
     }
  
-    //FILE *kbd = fopen("/dev/input/by-id/usb-413c_Dell_KB216_Wired_Keyboard-event-kbd", "r");
+    FILE *kbd = fopen("/dev/input/by-id/usb-413c_Dell_KB216_Wired_Keyboard-event-kbd", "r");
     //FILE *kbd = fopen("/dev/input/by-id/usb-E-Signal_USB_Gaming_Mouse-if01-event-kbd", "r");
-    FILE *kbd = fopen("/dev/input/by-id/usb-DELL_Dell_QuietKey_Keyboard-event-kbd", "r");
+    //FILE *kbd = fopen("/dev/input/by-id/usb-DELL_Dell_QuietKey_Keyboard-event-kbd", "r");
 
 
     float curvature = 0;
