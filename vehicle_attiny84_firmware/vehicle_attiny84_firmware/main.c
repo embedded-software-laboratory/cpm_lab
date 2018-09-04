@@ -3,7 +3,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
-#include "usiTwiSlave.h"
 
 #define SET_BIT(p,n) ((p) |= (1 << (n)))
 #define CLEAR_BIT(p,n) ((p) &= ~((1) << (n)))
@@ -136,50 +135,11 @@ void led_set(uint8_t status)
 	}
 }
 
-/****************************************************/
-/*********************** I2C ************************/
-/****************************************************/
-
-#define I2C_SLAVE_ADDR 0x26
-
-void i2c_slave_receive_event(uint8_t num_bytes)
-{
-	if(num_bytes == 3) // expected message size
-	{
-		led_set(usiTwiReceiveByte());
-		motor_set_duty(usiTwiReceiveByte());
-		servo_set_position(usiTwiReceiveByte());
-	}
-	else // invalid message, flush buffer
-	{
-		while(num_bytes) {
-			usiTwiReceiveByte();
-			num_bytes--;
-		}
-	}
-}
-
-void i2c_slave_request_event()
-{
-	usiTwiTransmitByte(ADCH);
-	usiTwiTransmitByte(ADCL);
-}
-
-void i2c_slave_setup()
-{
-	usiTwiSlaveInit(I2C_SLAVE_ADDR);
-	usi_onReceiverPtr = i2c_slave_receive_event;
-	usi_onRequestPtr = i2c_slave_request_event;
-	// TODO maybe disable watch dog timer !?
-}
-
-
 
 int main(void)
 {
 	
 	led_setup();
-	i2c_slave_setup();
 	adc_setup();
 	motor_pwm_setup();
 	servo_pwm_setup();
