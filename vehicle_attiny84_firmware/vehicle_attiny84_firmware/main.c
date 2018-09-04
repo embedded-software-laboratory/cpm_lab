@@ -10,13 +10,57 @@
 
 
 /****************************************************/
+/*******************   Pinout  **********************/
+/****************************************************/
+
+// Package PDIP/SOIC
+
+// 01 == VCC
+// 02 == Oscillator
+// 03 == Oscillator
+// 04 == Programming
+// 05 == Motor INA (Direction selector)
+// 06 == Motor PWM
+// 07 == Programming / SPI MOSI
+// 08 == Programming / SPI MISO
+// 09 == Programming / SPI SCK
+// 10 == Motor INB (Direction selector)
+// 11 == Servo PWM
+// 12 == LED
+// 13 == ADC battery voltage
+// 14 == GND
+
+
+/****************************************************/
 /******************* Motor PWM **********************/
 /****************************************************/
 
 
 void motor_set_duty(uint16_t duty) // values from 0 to 200
 {
+	if(duty > 200) {
+		duty = 200;
+	}
 	OCR0B = duty;
+}
+
+#define MOTOR_DIRECTION_BRAKE 0
+#define MOTOR_DIRECTION_FORWARD 1
+#define MOTOR_DIRECTION_REVERSE 2
+
+void motor_set_direction(uint8_t direction)
+{
+	if(direction & 1) {
+		SET_BIT(PORTA, 3);
+	} else {
+		CLEAR_BIT(PORTA, 3);
+	}
+	
+	if(direction & 2) {
+		SET_BIT(PORTB, 2);
+	} else {
+		CLEAR_BIT(PORTB, 2);
+	}
 }
 
 void motor_pwm_setup()
@@ -34,6 +78,11 @@ void motor_pwm_setup()
 	
 	// no clock scaling, counter runs at 8MHz
 	SET_BIT(TCCR0B, CS00);
+	
+	// Enable direction control
+	SET_BIT(DDRB, 2);
+	SET_BIT(DDRA, 3);
+	motor_set_direction(MOTOR_DIRECTION_FORWARD);
 }
 
 
@@ -160,7 +209,7 @@ int main(void)
 		uint16_t adc_val = ADC;
 		while(adc_val) {
 			adc_val--;
-			_delay_us(100);
+			_delay_us(300);
 		}
 		
 	}
