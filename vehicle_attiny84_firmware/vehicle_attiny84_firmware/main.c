@@ -13,26 +13,27 @@
 /******************* Motor PWM **********************/
 /****************************************************/
 
-void motor_pwm_setup() 
-{
-	// PWM mode 9: Phase & Freq. Correct
-	SET_BIT(TCCR1A, WGM10);
-	SET_BIT(TCCR1B, WGM13);
-		
-	// Target frequency: 20kHz PWM, calculation: 8 MHz / 20kHz / 2 == 200
-	OCR1A = 200;
-		
-	// Enable output
-	SET_BIT(TCCR1A, COM1B1);
-	SET_BIT(DDRA, 5);
-		
-	// no clock scaling, counter runs at 8MHz
-	SET_BIT(TCCR1B, CS10);
-}
 
 void motor_set_duty(uint16_t duty) // values from 0 to 200
 {
-	OCR1B = duty;
+	OCR0B = duty;
+}
+
+void motor_pwm_setup()
+{
+	// PWM mode 5: Phase Correct
+	SET_BIT(TCCR0A, WGM00);
+	SET_BIT(TCCR0B, WGM02);
+	
+	// Set frequency TODO calculation
+	OCR0A = 200;
+	
+	// Enable output on Pin 6 / PORTA7 / OC0B
+	SET_BIT(TCCR0A, COM0B1);
+	SET_BIT(DDRA, 7);	
+	
+	// no clock scaling, counter runs at 8MHz
+	SET_BIT(TCCR0B, CS00);
 }
 
 
@@ -40,7 +41,7 @@ void motor_set_duty(uint16_t duty) // values from 0 to 200
 /******************** Servo PWM *********************/
 /****************************************************/
 
-
+/*
 // Servo PWM rising edge interrupt
 uint8_t servo_pwm_step_mask = 0;
 ISR(TIM0_OVF_vect)
@@ -89,7 +90,7 @@ void servo_set_position(uint8_t val) // from 0 to 125
 {
 	if(val > 124) val = 124;
 	OCR0B = val;
-}
+}*/
 
 /****************************************************/
 /*********************** ADC ************************/
@@ -142,7 +143,7 @@ int main(void)
 	led_setup();
 	adc_setup();
 	motor_pwm_setup();
-	servo_pwm_setup();
+	//servo_pwm_setup();
 	
 	
 	sei();
@@ -154,7 +155,7 @@ int main(void)
 		adc_read();
 		
 		motor_set_duty(ADC>>2);
-		servo_set_position(ADC>>2);
+		//servo_set_position(ADC>>2);
 		
 		uint16_t adc_val = ADC;
 		while(adc_val) {
