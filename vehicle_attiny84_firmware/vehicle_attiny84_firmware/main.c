@@ -69,12 +69,12 @@ void motor_pwm_setup()
 	SET_BIT(TCCR0A, WGM00);
 	SET_BIT(TCCR0B, WGM02);
 	
-	// Set frequency TODO calculation
+	// Set PWM frequency to 20kHz
 	OCR0A = 200;
 	
 	// Enable output on Pin 6 / PORTA7 / OC0B
 	SET_BIT(TCCR0A, COM0B1);
-	SET_BIT(DDRA, 7);	
+	SET_BIT(DDRA, 7);
 	
 	// no clock scaling, counter runs at 8MHz
 	SET_BIT(TCCR0B, CS00);
@@ -90,56 +90,47 @@ void motor_pwm_setup()
 /******************** Servo PWM *********************/
 /****************************************************/
 
-/*
+
 // Servo PWM rising edge interrupt
-uint8_t servo_pwm_step_mask = 0;
-ISR(TIM0_OVF_vect)
+ISR(TIM1_OVF_vect)
 {
-	if(servo_pwm_step_mask >= 19) {
-		SET_BIT(PORTA, 2);
-		servo_pwm_step_mask = 0;
-	} else {
-		servo_pwm_step_mask++;
-	}	
+	SET_BIT(PORTA, 2);
 }
 
 // Servo PWM falling edge interrupt
-ISR(TIM0_COMPB_vect)
+ISR(TIM1_COMPB_vect)
 {
-	if(servo_pwm_step_mask > 0) {
-		CLEAR_BIT(PORTA, 2);
-	}
+	CLEAR_BIT(PORTA, 2);
 }
 
 void servo_pwm_setup() 
 {
-	// PWM mode: fast PWM
-	SET_BIT(TCCR0A, WGM00);
-	SET_BIT(TCCR0A, WGM01);	
-	SET_BIT(TCCR0B, WGM02);
+	// PWM mode: phase & freq correct
+	SET_BIT(TCCR1B, WGM13);
+	SET_BIT(TCCR1A, WGM10);
 	
 	// Enable output
 	SET_BIT(DDRA, 2);
 	
-	// Reset counter after 124 steps. This results in a reset rate of 1kHz.
-	OCR0A = 124;
+	// Set frequency to 50Hz
+	OCR1A = 10000;
 	
 	// Configure separate interrupts for rising and falling edge
-	SET_BIT(TIFR0, OCF0B);
-	SET_BIT(TIMSK0, OCIE0B);
-	SET_BIT(TIFR0, TOV0);
-	SET_BIT(TIMSK0, TOIE0);
+	SET_BIT(TIFR1, OCF1B);
+	SET_BIT(TIMSK1, OCIE1B);
+	SET_BIT(TIFR1, TOV1);
+	SET_BIT(TIMSK1, TOIE1);
 	
-	// Set /64 prescaler, results in 125 kHz
-	SET_BIT(TCCR0B, CS01);
-	SET_BIT(TCCR0B, CS00);
+	// Set /8 prescaler, results in 1 MHz
+	SET_BIT(TCCR1B, CS11);
 }
 
-void servo_set_position(uint8_t val) // from 0 to 125
+void servo_set_position(uint8_t val8) // from 0 to 250
 {
-	if(val > 124) val = 124;
-	OCR0B = val;
-}*/
+	uint16_t val = 1000 + 4 * ((uint16_t)(val8));
+	if(val > 2000) val = 2000;
+	OCR1B = val;
+}
 
 /****************************************************/
 /*********************** ADC ************************/
@@ -192,7 +183,7 @@ int main(void)
 	led_setup();
 	adc_setup();
 	motor_pwm_setup();
-	//servo_pwm_setup();
+	servo_pwm_setup();
 	
 	
 	sei();
@@ -204,7 +195,7 @@ int main(void)
 		adc_read();
 		
 		motor_set_duty(ADC>>2);
-		//servo_set_position(ADC>>2);
+		servo_set_position(ADC>>2);
 		
 		uint16_t adc_val = ADC;
 		while(adc_val) {
