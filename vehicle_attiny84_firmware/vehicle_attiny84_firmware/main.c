@@ -36,7 +36,7 @@
 /****************************************************/
 
 
-void motor_set_duty(uint16_t duty) // values from 0 to 200
+void motor_set_duty(uint8_t duty) // values from 0 to 200
 {
 	if(duty > 200) {
 		duty = 200;
@@ -176,6 +176,79 @@ void led_set(uint8_t status)
 	}
 }
 
+/****************************************************/
+/******************** SPI Slave *********************/
+/****************************************************/
+
+
+#define SPI_INPUT_PACKAGE_SIZE 7
+uint8_t spi_input_package_index = 0;
+
+typedef union
+{
+	uint8_t buffer[SPI_INPUT_PACKAGE_SIZE];
+	struct 
+	{
+		uint8_t marker_a;
+		uint8_t marker_S;
+		uint8_t motor_command;
+		uint8_t servo_command;
+		uint8_t led_command;
+		uint8_t marker_Y;
+		uint8_t marker_j;
+	} data;
+} spi_input_package_t;
+
+spi_input_package_t spi_input_package;
+
+ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
+{
+	spi_input_package.buffer[spi_input_package_index] = USIDR; // copy input
+	
+	// set next byte to send
+	if(spi_input_package_index == 0) {
+		USIDR = ADCH;
+	} else if(spi_input_package_index == 1) {
+		USIDR = ADCL;
+	} else {
+		USIDR = 0;
+	}
+	
+	
+	
+	USISR = (1<<USIOIF); // reset for next byte
+	
+	spi_input_package_index++;
+	
+	// message complete?
+	if(spi_input_package_index == SPI_INPUT_PACKAGE_SIZE) {
+		spi_input_package_index = 0;
+		
+		// message aligned?
+		if(spi_input_package.data.marker_a == 'a'
+		&& spi_input_package.data.marker_S == 'S'
+		&& spi_input_package.data.marker_Y == 'Y'
+		&& spi_input_package.data.marker_j == 'j') {
+			
+			motor_set_duty(spi_input_package.data.motor_command);
+			servo_set_position(spi_input_package.data.servo_command);
+			led_set(spi_input_package.data.led_command);
+		}
+	}
+}
+
+void spi_slave_setup() {
+	SET_BIT(USICR, USIWM0);  // SPI mode
+	SET_BIT(USICR, USICS1); // SPI slave, mode 0
+	SET_BIT(USICR, USIOIE);  // Enable interrupt for byte transfer complete
+	SET_BIT(DDRA, 5); // Output on DO pin
+	CLEAR_BIT(DDRA, 6); // Input on DI pin
+	CLEAR_BIT(DDRA, 4); // Input on clock pin
+	SET_BIT(PORTA, 6); // Input pullup
+	SET_BIT(PORTA, 4); // Input pullup
+}
+
+
 
 int main(void)
 {
@@ -184,6 +257,7 @@ int main(void)
 	adc_setup();
 	motor_pwm_setup();
 	servo_pwm_setup();
+	spi_slave_setup();
 	
 	
 	sei();
@@ -200,8 +274,7 @@ int main(void)
 		uint16_t adc_val = ADC;
 		while(adc_val) {
 			adc_val--;
-			_delay_us(300);
+			_delay_us(800);
 		}
-		
 	}
 }
