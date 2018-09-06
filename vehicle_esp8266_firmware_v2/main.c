@@ -15,16 +15,19 @@ void task_main(void *pvParameters) {
     //TickType_t previousWakeTime = xTaskGetTickCount();
     //vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(10));
 
-    uint16_t servo = 0;
+    uint16_t counter = 0;
 
     uint8_t i = 0;
     while(1) {
 
         if(i==0) {
-            servo++;
+            counter++;
         }
 
-        uint8_t message[] = {'a', 'S', 20, (uint8_t)((servo>>4)&0xff), 11, 'Y', 'j'};
+        uint8_t servo = (uint8_t)((counter>>4)&0xff);
+        uint8_t led = (uint8_t)((counter>>9)&1);
+
+        uint8_t message[] = {'a', 'S', 20, servo, led, 'Y', 'j'};
         uint8_t recvd = spi_transfer_8(1, message[i]);
 
         i = (i+1)%7;
