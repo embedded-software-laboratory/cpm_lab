@@ -181,13 +181,13 @@ void led_set(uint8_t status)
 /****************************************************/
 
 
-#define SPI_INPUT_PACKAGE_SIZE 7
-uint8_t spi_input_package_index = 0;
+#define SPI_PACKAGE_SIZE 7
+uint8_t spi_package_index = 0;
 
 typedef union
 {
-	uint8_t buffer[SPI_INPUT_PACKAGE_SIZE];
-	struct 
+	uint8_t buffer[SPI_PACKAGE_SIZE];
+	struct
 	{
 		uint8_t marker_a;
 		uint8_t marker_S;
@@ -199,30 +199,35 @@ typedef union
 	} data;
 } spi_input_package_t;
 
+typedef union
+{
+	uint8_t buffer[SPI_PACKAGE_SIZE];
+	struct
+	{
+		uint8_t marker_f;
+		uint8_t marker_P;
+		uint8_t adc_h;
+		uint8_t adc_l;
+		uint8_t marker_K;
+		uint8_t marker_4;
+		uint8_t marker_q;
+	} data;
+} spi_output_package_t;
+
 spi_input_package_t spi_input_package;
+spi_output_package_t spi_output_package;
 
 ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
 {
-	spi_input_package.buffer[spi_input_package_index] = USIDR; // copy input
-	
-	// set next byte to send
-	if(spi_input_package_index == 0) {
-		USIDR = ADCH;
-	} else if(spi_input_package_index == 1) {
-		USIDR = ADCL;
-	} else {
-		USIDR = 0;
-	}
-	
-	
-	
+	spi_input_package.buffer[spi_package_index] = USIDR; // copy input
+	USIDR = spi_output_package.buffer[spi_package_index]; // set output
 	USISR = (1<<USIOIF); // reset for next byte
 	
-	spi_input_package_index++;
+	spi_package_index++;
 	
 	// message complete?
-	if(spi_input_package_index == SPI_INPUT_PACKAGE_SIZE) {
-		spi_input_package_index = 0;
+	if(spi_package_index == SPI_PACKAGE_SIZE) {
+		spi_package_index = 0;
 		
 		// message aligned?
 		if(spi_input_package.data.marker_a == 'a'
@@ -230,6 +235,7 @@ ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
 		&& spi_input_package.data.marker_Y == 'Y'
 		&& spi_input_package.data.marker_j == 'j') {
 			
+			// apply content
 			motor_set_duty(spi_input_package.data.motor_command);
 			servo_set_position(spi_input_package.data.servo_command);
 			led_set(spi_input_package.data.led_command);
@@ -246,6 +252,13 @@ void spi_slave_setup() {
 	CLEAR_BIT(DDRA, 4); // Input on clock pin
 	SET_BIT(PORTA, 6); // Input pullup
 	SET_BIT(PORTA, 4); // Input pullup
+	
+	
+	spi_output_package.data.marker_f = 'f';
+	spi_output_package.data.marker_P = 'P';
+	spi_output_package.data.marker_K = 'K';
+	spi_output_package.data.marker_4 = '4';
+	spi_output_package.data.marker_q = 'q';
 }
 
 
@@ -264,7 +277,7 @@ int main(void)
 	
 	while (1)
 	{
-		PORTA ^= 0b10; // toggle LED
+		/*PORTA ^= 0b10; // toggle LED
 		
 		adc_read();
 		
@@ -275,6 +288,12 @@ int main(void)
 		while(adc_val) {
 			adc_val--;
 			_delay_us(800);
-		}
+		}*/
+		
+		
+		adc_read();
+		spi_output_package.data.adc_h = ADCH;
+		spi_output_package.data.adc_l = ADCL;
+		_delay_us(500);
 	}
 }
