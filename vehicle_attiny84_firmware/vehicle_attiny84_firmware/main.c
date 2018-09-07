@@ -148,8 +148,9 @@ void adc_setup()
 {
 	//// ADC setup
 	// Use ADC on Pin 13 == PA0 == ADC0
-	// Use V_CC as voltage reference
-	ADMUX = 0;
+	// Use internal 1.1V as voltage reference
+	SET_BIT(ADMUX, REFS1);
+	
 	SET_BIT(ADCSRA, ADEN); // Enable ADC
 	SET_BIT(ADCSRA, ADPS2); // ADC prescaler = 128
 	SET_BIT(ADCSRA, ADPS1); // ADC prescaler = 128
