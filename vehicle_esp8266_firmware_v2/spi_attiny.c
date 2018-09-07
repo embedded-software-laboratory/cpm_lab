@@ -1,7 +1,7 @@
 #include "spi_attiny.h"
 #include "esp/spi.h"
 #include "espressif/esp_common.h"
-
+#include <stdbool.h>
 
 #define SPI_PACKAGE_SIZE 7
 
@@ -66,10 +66,10 @@ uint16_t attiny_get_adc_value()
 void task_spi_attiny(void *pvParameters) {
 
 
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(400));
     TickType_t previousWakeTime = xTaskGetTickCount();
 
-    // Default init for spi message
+    // Default init spi message
     spi_mosi_package.data.marker_a = 'a';
     spi_mosi_package.data.motor_direction = 0;
     spi_mosi_package.data.motor_command = 0;
@@ -78,8 +78,16 @@ void task_spi_attiny(void *pvParameters) {
     spi_mosi_package.data.marker_Y = 'Y';
     spi_mosi_package.data.marker_j = 'j';
 
+    bool insert_shift_byte = false;
+
     while(1) {
 
+        // insert extra byte if synchronization is lost. 
+        // this should eventually restore synchronization
+        if(insert_shift_byte) { 
+            insert_shift_byte = false;
+            spi_transfer_8(1, 0);
+        }
 
         spi_miso_package_t spi_miso_package;
 
@@ -98,8 +106,9 @@ void task_spi_attiny(void *pvParameters) {
         && spi_miso_package.data.marker_q == 'q')
         {
             adc_value = (((uint16_t)spi_miso_package.data.adc_h) << 8)
-                          | ((uint16_t)spi_miso_package.data.adc_l);
+                       | ((uint16_t)spi_miso_package.data.adc_l);
         } else {
+            insert_shift_byte = true;
 
             printf("Error in SPI communication with ATtiny, received:\n");
             for (int i = 0; i < SPI_PACKAGE_SIZE; ++i)
@@ -109,6 +118,6 @@ void task_spi_attiny(void *pvParameters) {
             printf("\n");
         }
 
-        vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(20));
+        vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(10));
     }
 }

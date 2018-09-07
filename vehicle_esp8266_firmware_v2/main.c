@@ -31,11 +31,11 @@ void task_main(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(1000));
 
         attiny_set_led(1);
-        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 60, 125);
+        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 40, 125);
         vTaskDelay(pdMS_TO_TICKS(1000));
 
         attiny_set_led(0);
-        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 130, 125);
+        attiny_set_driving_commands(MOTOR_DIRECTION_REVERSE, 40, 125);
         vTaskDelay(pdMS_TO_TICKS(1000));
 
     }
