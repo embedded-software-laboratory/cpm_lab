@@ -6,36 +6,38 @@
 #include "queue.h"
 #include "esp/timer.h"
 #include "ssid_config.h"
+#include "spi_attiny.h"
+
 
 
 void task_main(void *pvParameters) {
 
 
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(2000));
     //TickType_t previousWakeTime = xTaskGetTickCount();
     //vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(10));
 
-    uint16_t counter = 0;
 
-    uint8_t i = 0;
     while(1) {
 
-        if(i==0) {
-            counter++;
-        }
+        printf("ADC %8i\n", attiny_get_adc_value());
 
-        uint8_t servo = (uint8_t)((counter>>4)&0xff);
-        uint8_t led = (uint8_t)((counter>>9)&1);
+        attiny_set_led(1);
+        attiny_set_driving_commands(MOTOR_DIRECTION_BRAKE, 0, 100);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-        uint8_t message[] = {'a', 'S', 20, servo, led, 'Y', 'j'};
-        uint8_t recvd = spi_transfer_8(1, message[i]);
+        attiny_set_led(0);
+        attiny_set_driving_commands(MOTOR_DIRECTION_BRAKE, 0, 140);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-        i = (i+1)%7;
+        attiny_set_led(1);
+        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 60, 125);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-        //printf("Hello %6i, %6i\n", message[i], recvd);
+        attiny_set_led(0);
+        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 130, 125);
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-
-        sdk_os_delay_us(50);
     }
 }
 
@@ -60,4 +62,5 @@ void user_init(void)
 
     /** Start tasks **/
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
+    xTaskCreate(task_spi_attiny, "task_spi_attiny", 512, NULL, 2, NULL);
 }
