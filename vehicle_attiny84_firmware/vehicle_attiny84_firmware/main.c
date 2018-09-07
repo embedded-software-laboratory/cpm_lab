@@ -8,6 +8,11 @@
 #define CLEAR_BIT(p,n) ((p) &= ~((1) << (n)))
 
 
+// This variable counts down to zero.
+// It is reset when a SPI message is received.
+// When it reaches zero, the vehicle should stop.
+uint8_t spi_watch_dog_counter = 0;
+
 
 /****************************************************/
 /*******************   Pinout  **********************/
@@ -101,6 +106,9 @@ ISR(TIM1_OVF_vect)
 ISR(TIM1_COMPB_vect)
 {
 	CLEAR_BIT(PORTA, 2);
+	
+	// (ab)use the 50Hz servo interrupt for the watch dog
+	if(spi_watch_dog_counter > 0) spi_watch_dog_counter--;
 }
 
 void servo_pwm_setup() 
@@ -190,7 +198,7 @@ typedef union
 	struct
 	{
 		uint8_t marker_a;
-		uint8_t marker_S;
+		uint8_t motor_direction;
 		uint8_t motor_command;
 		uint8_t servo_command;
 		uint8_t led_command;
@@ -231,14 +239,16 @@ ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
 		
 		// message aligned?
 		if(spi_mosi_package.data.marker_a == 'a'
-		&& spi_mosi_package.data.marker_S == 'S'
 		&& spi_mosi_package.data.marker_Y == 'Y'
 		&& spi_mosi_package.data.marker_j == 'j') {
 			
 			// apply content
+			motor_set_direction(spi_mosi_package.data.motor_direction);
 			motor_set_duty(spi_mosi_package.data.motor_command);
 			servo_set_position(spi_mosi_package.data.servo_command);
 			led_set(spi_mosi_package.data.led_command);
+			
+			spi_watch_dog_counter = 20; // reset watch dog
 		}
 	}
 }
@@ -276,25 +286,22 @@ int main(void)
 	sei();
 	
 	while (1)
-	{
-		/*PORTA ^= 0b10; // toggle LED
-		
-		adc_read();
-		
-		motor_set_duty(ADC>>2);
-		servo_set_position(ADC>>2);
-		
-		uint16_t adc_val = ADC;
-		while(adc_val) {
-			adc_val--;
-			_delay_us(800);
-		}*/
-		
-		
+	{		
+		// Update ADC (battery voltage)
 		adc_read();
 		uint16_t adc_val = ADC;
 		spi_miso_package.data.adc_h = (uint8_t)((adc_val >> 8) & 0xff);
 		spi_miso_package.data.adc_l = (uint8_t)(adc_val & 0xff);
+		
+		// Check spi watch dog
+		if(spi_watch_dog_counter == 0) {
+			motor_set_direction(MOTOR_DIRECTION_BRAKE);
+			motor_set_duty(0);
+			servo_set_position(125);
+			led_set(1);			
+		}
+		
+		
 		_delay_us(500);
 	}
 }
