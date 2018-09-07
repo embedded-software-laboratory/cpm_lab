@@ -197,7 +197,7 @@ typedef union
 		uint8_t marker_Y;
 		uint8_t marker_j;
 	} data;
-} spi_input_package_t;
+} spi_mosi_package_t;
 
 typedef union
 {
@@ -212,15 +212,15 @@ typedef union
 		uint8_t marker_4;
 		uint8_t marker_q;
 	} data;
-} spi_output_package_t;
+} spi_miso_package_t;
 
-spi_input_package_t spi_input_package;
-spi_output_package_t spi_output_package;
+spi_mosi_package_t spi_mosi_package;
+spi_miso_package_t spi_miso_package;
 
 ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
 {
-	spi_input_package.buffer[spi_package_index] = USIDR; // copy input
-	USIDR = spi_output_package.buffer[spi_package_index]; // set output
+	spi_mosi_package.buffer[spi_package_index] = USIDR; // copy input
+	USIDR = spi_miso_package.buffer[spi_package_index]; // set output
 	USISR = (1<<USIOIF); // reset for next byte
 	
 	spi_package_index++;
@@ -230,15 +230,15 @@ ISR (USI_OVF_vect) // Interrupt for new byte exchanged via SPI
 		spi_package_index = 0;
 		
 		// message aligned?
-		if(spi_input_package.data.marker_a == 'a'
-		&& spi_input_package.data.marker_S == 'S'
-		&& spi_input_package.data.marker_Y == 'Y'
-		&& spi_input_package.data.marker_j == 'j') {
+		if(spi_mosi_package.data.marker_a == 'a'
+		&& spi_mosi_package.data.marker_S == 'S'
+		&& spi_mosi_package.data.marker_Y == 'Y'
+		&& spi_mosi_package.data.marker_j == 'j') {
 			
 			// apply content
-			motor_set_duty(spi_input_package.data.motor_command);
-			servo_set_position(spi_input_package.data.servo_command);
-			led_set(spi_input_package.data.led_command);
+			motor_set_duty(spi_mosi_package.data.motor_command);
+			servo_set_position(spi_mosi_package.data.servo_command);
+			led_set(spi_mosi_package.data.led_command);
 		}
 	}
 }
@@ -254,11 +254,11 @@ void spi_slave_setup() {
 	SET_BIT(PORTA, 4); // Input pullup
 	
 	
-	spi_output_package.data.marker_f = 'f';
-	spi_output_package.data.marker_P = 'P';
-	spi_output_package.data.marker_K = 'K';
-	spi_output_package.data.marker_4 = '4';
-	spi_output_package.data.marker_q = 'q';
+	spi_miso_package.data.marker_f = 'f';
+	spi_miso_package.data.marker_P = 'P';
+	spi_miso_package.data.marker_K = 'K';
+	spi_miso_package.data.marker_4 = '4';
+	spi_miso_package.data.marker_q = 'q';
 }
 
 
@@ -292,8 +292,9 @@ int main(void)
 		
 		
 		adc_read();
-		spi_output_package.data.adc_h = ADCH;
-		spi_output_package.data.adc_l = ADCL;
+		uint16_t adc_val = ADC;
+		spi_miso_package.data.adc_h = (uint8_t)((adc_val >> 8) & 0xff);
+		spi_miso_package.data.adc_l = (uint8_t)(adc_val & 0xff);
 		_delay_us(500);
 	}
 }
