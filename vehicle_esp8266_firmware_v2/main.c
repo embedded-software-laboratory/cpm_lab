@@ -7,6 +7,7 @@
 #include "esp/timer.h"
 #include "ssid_config.h"
 #include "spi_attiny.h"
+#include "i2c_bus.h"
 
 
 
@@ -56,11 +57,10 @@ void user_init(void)
     //sdk_wifi_station_set_config(&config);
 
     /** Init modules **/
-    if(!spi_init(1, 0, SPI_FREQ_DIV_500K, true, SPI_BIG_ENDIAN, true)) {
-        printf("Error in spi_init()\n");
-    }
+    init_spi_attiny();
 
     /** Start tasks **/
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
     xTaskCreate(task_spi_attiny, "task_spi_attiny", 512, NULL, 2, NULL);
+    xTaskCreate(task_i2c_bus, "task_i2c_bus", 512, NULL, 2, NULL);
 }
