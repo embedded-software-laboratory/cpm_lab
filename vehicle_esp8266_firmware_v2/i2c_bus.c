@@ -10,6 +10,7 @@ void task_i2c_bus(void *pvParameters) {
 
 
     while(1) {
+        
 
 
         vTaskDelay(pdMS_TO_TICKS(1000));

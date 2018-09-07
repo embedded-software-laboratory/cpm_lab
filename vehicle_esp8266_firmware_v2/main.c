@@ -57,7 +57,6 @@ void user_init(void)
     //sdk_wifi_station_set_config(&config);
 
     /** Init modules **/
-    init_spi_attiny();
 
     /** Start tasks **/
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
