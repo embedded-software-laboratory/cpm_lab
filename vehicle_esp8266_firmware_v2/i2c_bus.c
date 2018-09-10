@@ -6,7 +6,10 @@
 
 #define SDA_PIN (2)
 #define SCL_PIN (0)
+
 #define BNO055_ADDRESS (0x28)
+#define AS5601_ADDRESS (0x36)
+
 #define BNO055_CHIP_ID_ADDR (0x00)
 #define BNO055_CHIP_ID      (0xA0)
 #define BNO055_EULER_H_LSB_ADDR (0x1A)
@@ -15,6 +18,9 @@
 #define BNO055_PWR_MODE_ADDR     0X3E
 #define POWER_MODE_NORMAL        0X00
 #define OPERATION_MODE_NDOF      0X0C
+
+#define AS5601_RAW_ANGLE_LSB_ADDR (0x0D)
+#define AS5601_RAW_ANGLE_MSB_ADDR (0x0C)
 
 
 void writeByte(uint8_t slave_addr, uint8_t register_addr, uint8_t data_byte) {
@@ -75,5 +81,20 @@ void task_i2c_bus(void *pvParameters) {
 
 
         printf("yaw %8i\n", yaw);
+
+
+
+        vTaskDelay(pdMS_TO_TICKS(50));
+        uint8_t odometer_data[2];
+        uint8_t odometer_register = AS5601_RAW_ANGLE_MSB_ADDR;        
+        if(i2c_slave_read(0, AS5601_ADDRESS, &odometer_register, odometer_data, 2)) {
+            printf("Error in i2c_slave_read()\n");
+        }
+
+        uint16_t odometer = ((uint16_t)odometer_data[0])<<8 | ((uint16_t)odometer_data[1]);
+
+        
+        printf("odometer %8i\n", odometer);
+
     }
 }
