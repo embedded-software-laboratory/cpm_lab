@@ -49,6 +49,7 @@ void user_init(void)
     printf("SDK version:%s\n", sdk_system_get_sdk_version());
 
     /** WiFi config **/
+    sdk_wifi_set_opmode(0); // disable
     //struct sdk_station_config config = {
     //    .ssid = WIFI_SSID,
     //    .password = WIFI_PASS,
