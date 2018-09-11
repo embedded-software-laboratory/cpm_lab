@@ -43,7 +43,7 @@ void task_i2c_bus(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(500));
 
     // I2C Bus setup
-    if(i2c_init(0, SCL_PIN, SDA_PIN, I2C_FREQ_100K) != 0) {
+    if(i2c_init(0, SCL_PIN, SDA_PIN, I2C_FREQ_400K) != 0) {
         printf("Error in i2c_init()\n");
     }
 
