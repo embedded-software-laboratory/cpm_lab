@@ -62,11 +62,16 @@ uint16_t attiny_get_adc_value()
     return adc_value;
 }
 
-
 void task_spi_attiny(void *pvParameters) {
 
 
     vTaskDelay(pdMS_TO_TICKS(400));
+
+    if(!spi_init(1, 0, SPI_FREQ_DIV_500K, true, SPI_BIG_ENDIAN, true)) {
+        printf("Error in spi_init()\n");
+    }
+
+
     TickType_t previousWakeTime = xTaskGetTickCount();
 
     // Default init spi message
