@@ -9,27 +9,34 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "util.h"
+#include "led.h"
 #include "motor.h"
+#include "odometer.h"
+
+
+volatile int32_t speed = 0; // just for testing
 
 int main(void)
 {
 	
-	SET_BIT(DDRC, 0); // LED
+	SET_BIT(DDRC, 0); // Red LED
+	SET_BIT(DDRC, 1); // Green LED
+	SET_BIT(DDRC, 2); // Blue LED
 	
 	motor_setup();
+	odometer_setup();
 	
+	motor_set_direction(MOTOR_DIRECTION_REVERSE);
 	
 	sei();
 	
-	uint16_t duty = 0;
 	
     while (1) 
     {
-		duty = (duty+1)%400;
-		motor_set_duty(duty);
-			
-		TOGGLE_BIT(PORTC, 0); // blink LED
-	    _delay_ms(50);
+		motor_set_duty(120);		
+		
+		speed = get_speed();
+		
+	    _delay_ms(100);
     }
 }
-

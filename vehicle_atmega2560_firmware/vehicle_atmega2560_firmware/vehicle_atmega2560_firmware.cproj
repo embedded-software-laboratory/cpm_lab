@@ -151,10 +151,22 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="led.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motor.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="motor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="odometer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="odometer.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="util.h">
