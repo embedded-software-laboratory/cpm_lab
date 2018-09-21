@@ -35,7 +35,22 @@ int main(void)
     {
 		motor_set_duty(120);		
 		
-		speed = get_speed();
+		speed = -get_speed();
+		
+		DISABLE_RED_LED;
+		DISABLE_GREEN_LED;
+		DISABLE_BLUE_LED;
+		
+		if(speed > 0) {
+			ENABLE_RED_LED;
+		}
+		if(speed > 500000) {
+			ENABLE_GREEN_LED;
+		}
+		if(speed > 800000) {
+			ENABLE_BLUE_LED;
+		}
+		
 		
 	    _delay_ms(100);
     }

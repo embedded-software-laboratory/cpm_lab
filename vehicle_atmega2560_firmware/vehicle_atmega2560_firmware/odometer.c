@@ -54,8 +54,8 @@ int32_t get_speed() {
 	cli();
 	
 	uint16_t time_since_last_interrupt = TCNT1 - timer1_prev;
-	if(time_since_last_interrupt > 15625) {
-		// After 1 second, assume we are stopped.
+	if(time_since_last_interrupt > 1562) {
+		// After 0.1 second, assume we are stopped.
 		// Need to use a flag, because the timer overflows after 4 seconds.
 		standstill_flag = 1;
 	}
