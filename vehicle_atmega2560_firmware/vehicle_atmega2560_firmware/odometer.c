@@ -12,7 +12,7 @@
 
 const int8_t direction_lookup[] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
 
-volatile uint8_t pinK_prev = 0;
+volatile uint8_t hall_sensor_states_prev = 0;
 volatile uint16_t timer1_prev = 0;
 volatile uint8_t standstill_flag = 0;
 
@@ -23,16 +23,18 @@ volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
 volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
 volatile uint8_t odometer_buffer_index = 0;
 
+// interrupt for hall sensor pin change
 ISR(PCINT2_vect) {
 	uint16_t timer1_now = TCNT1;
-	uint8_t pinK_now = PINK;
+	uint8_t hall_sensor_states_now = PINK;
 	
 	// take the useful bits
-	pinK_now = ((pinK_now >> 2) & 0b00000001) |
-	           ((pinK_now >> 3) & 0b00000010);
+	hall_sensor_states_now = 
+	    ((hall_sensor_states_now >> 2) & 0b00000001) |
+	    ((hall_sensor_states_now >> 3) & 0b00000010);
 	
 	// rotation direction is determined from the current and previous state
-	uint8_t direction_indicator = (pinK_now << 2) | pinK_prev;
+	uint8_t direction_indicator = (hall_sensor_states_now << 2) | hall_sensor_states_prev;
 	int8_t direction = direction_lookup[direction_indicator];
 	
 	// update odometer
@@ -46,14 +48,14 @@ ISR(PCINT2_vect) {
 	// Since we got an interrupt, we are moving
 	standstill_flag = 0;
 	
-	pinK_prev = pinK_now;
+	hall_sensor_states_prev = hall_sensor_states_now;
 	timer1_prev = timer1_now;
 }
 
 int32_t get_speed() {
 	cli();
-	
-	uint16_t time_since_last_interrupt = TCNT1 - timer1_prev;
+	uint16_t timer1_now = TCNT1;
+	uint16_t time_since_last_interrupt = timer1_now - timer1_prev;
 	if(time_since_last_interrupt > 1562) {
 		// After 0.1 second, assume we are stopped.
 		// Need to use a flag, because the timer overflows after 4 seconds.

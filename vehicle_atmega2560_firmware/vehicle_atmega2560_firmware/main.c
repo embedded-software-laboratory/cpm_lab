@@ -6,12 +6,13 @@
  */
 
 #include <avr/io.h>
-#include <util/delay.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "util.h"
 #include "led.h"
 #include "motor.h"
 #include "odometer.h"
+#include "spi.h"
 
 
 volatile int32_t speed = 0; // just for testing
@@ -25,6 +26,7 @@ int main(void)
 	
 	motor_setup();
 	odometer_setup();
+	spi_setup();
 	
 	motor_set_direction(MOTOR_DIRECTION_REVERSE);
 	
@@ -33,9 +35,13 @@ int main(void)
 	
     while (1) 
     {
-		motor_set_duty(120);		
+		motor_set_duty(120);
 		
-		speed = -get_speed();
+		speed = get_speed();
+		
+		//spi_set_speed(speed);
+		uint16_t timer = TCNT1; // just for testing
+		spi_send_speed(timer);
 		
 		DISABLE_RED_LED;
 		DISABLE_GREEN_LED;
@@ -52,6 +58,6 @@ int main(void)
 		}
 		
 		
-	    _delay_ms(100);
+	    _delay_ms(1);
     }
 }
