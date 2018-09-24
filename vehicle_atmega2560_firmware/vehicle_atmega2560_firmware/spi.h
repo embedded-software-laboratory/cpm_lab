@@ -9,7 +9,11 @@
 #ifndef SPI_H_
 #define SPI_H_
 
-void spi_send_speed(int32_t speed);
+
+
+void spi_send(int32_t speed);
+
+
 
 void spi_setup();
 

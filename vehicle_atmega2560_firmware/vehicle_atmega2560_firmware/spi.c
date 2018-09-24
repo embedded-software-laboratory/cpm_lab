@@ -27,7 +27,7 @@ volatile uint8_t mosi_buffer_b[SPI_BUFFER_SIZE];
 volatile uint8_t* mosi_buffer_local = mosi_buffer_a;
 volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
 
-
+volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
 
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
@@ -51,21 +51,25 @@ ISR(PCINT0_vect) {
 		spi_buffer_index = 0;
 		
 		// swap send buffer
-		volatile uint8_t* tmp = miso_buffer_local;
-		miso_buffer_local = miso_buffer_bus;
-		miso_buffer_bus = tmp;
-		
+		if(local_miso_buffer_has_new_data_flag) { // prevent resending old data
+			volatile uint8_t* tmp = miso_buffer_local;
+			miso_buffer_local = miso_buffer_bus;
+			miso_buffer_bus = tmp;
+			local_miso_buffer_has_new_data_flag = 0;
+		}
 	}
 	
 }
 
-void spi_send_speed(int32_t speed) {
+void spi_send(int32_t speed) {
 	cli(); // stop buffer swap
 	uint8_t* ptr = (uint8_t*)(&speed);
 	miso_buffer_local[0] = ptr[0];
 	miso_buffer_local[1] = ptr[1];
 	miso_buffer_local[2] = ptr[2];
 	miso_buffer_local[3] = ptr[3];
+	
+	local_miso_buffer_has_new_data_flag = 1;
 	sei();
 }
 

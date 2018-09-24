@@ -14,10 +14,6 @@
 #include "odometer.h"
 #include "spi.h"
 
-
-volatile int32_t speed = 0; // just for testing
-volatile int32_t ctrl_I = 0; // just for testing
-
 int main(void)
 {
 	
@@ -37,30 +33,14 @@ int main(void)
     while (1) 
     {
 		
-		speed = get_speed();
+		int32_t speed = get_speed();
 		
-		int32_t Kp_e = (speed - 15000) / (-3000);
-		
-		if(Kp_e > 0) ctrl_I++;
-		if(Kp_e < 0) ctrl_I--;
+		motor_set_duty(0);
 		
 		
-		if(ctrl_I > 200) ctrl_I = 200;
-		
-		if(ctrl_I < -200) ctrl_I = -200;
-		
-		
-		int32_t motor_duty = Kp_e + ctrl_I + 90;
-		
-		if(motor_duty < 0) motor_duty = 0;
-		
-		
-		
-		motor_set_duty(motor_duty);
-		
-		spi_send_speed(speed);
-		//uint16_t timer = TCNT1; // just for testing
-		//spi_send_speed(timer);
+		//spi_send(speed);
+		uint16_t timer = TCNT1; // just for testing
+		spi_send(timer);
 		
 		DISABLE_RED_LED;
 		DISABLE_GREEN_LED;
@@ -76,6 +56,6 @@ int main(void)
 			ENABLE_BLUE_LED;
 		}
 		
-		_delay_ms(100);
+		_delay_ms(1000);
     }
 }
