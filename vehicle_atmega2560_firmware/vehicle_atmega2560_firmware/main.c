@@ -42,7 +42,7 @@ int main(void)
 		// TODO validate spi_mosi_data CRC, default init if invalid
 		
 	    const uint32_t tick = get_tick();
-		const int32_t speed = get_speed();
+		const int16_t speed = get_speed();
 		
 		motor_set_duty(5);
 		

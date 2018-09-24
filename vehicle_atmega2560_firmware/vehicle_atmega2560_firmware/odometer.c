@@ -52,7 +52,7 @@ ISR(PCINT2_vect) {
 	timer1_prev = timer1_now;
 }
 
-int32_t get_speed() {
+int16_t get_speed() {
 	cli();
 	uint16_t timer1_now = TCNT1;
 	uint16_t time_since_last_interrupt = timer1_now - timer1_prev;
@@ -82,9 +82,11 @@ int32_t get_speed() {
 	// and that no integer overflows occur.
 	// The units are arbitrary at this point. Physical units will be determined through calibration.
 	int32_t ds_sum_scaled = ((int32_t)ds_sum) << 24;
-		
+	
 	int32_t average_speed = ds_sum_scaled / dt_sum;
-	return average_speed;		
+	int16_t average_speed_i16 = average_speed / 256;
+	
+	return average_speed_i16;		
 }
 
 int32_t get_odometer_count() { return odometer_count; }
