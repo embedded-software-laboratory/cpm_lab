@@ -11,23 +11,22 @@
 #include "spi.h"
 
 
-
 // SPI protocol: exchange fixed size buffers (no register addressing)
+// This (ATmega) is the SPI slave.
 // use double buffering to avoid data corruption
-#define SPI_BUFFER_SIZE 32
-volatile uint8_t spi_buffer_index = 0;
+static volatile uint8_t spi_buffer_index = 0;
 
-volatile uint8_t miso_buffer_a[SPI_BUFFER_SIZE];
-volatile uint8_t miso_buffer_b[SPI_BUFFER_SIZE];
-volatile uint8_t* miso_buffer_local = miso_buffer_a;
-volatile uint8_t* miso_buffer_bus = miso_buffer_b;
+static volatile uint8_t miso_buffer_a[SPI_BUFFER_SIZE];
+static volatile uint8_t miso_buffer_b[SPI_BUFFER_SIZE];
+static volatile uint8_t* miso_buffer_local = miso_buffer_a;
+static volatile uint8_t* miso_buffer_bus = miso_buffer_b;
 
-volatile uint8_t mosi_buffer_a[SPI_BUFFER_SIZE];
-volatile uint8_t mosi_buffer_b[SPI_BUFFER_SIZE];
-volatile uint8_t* mosi_buffer_local = mosi_buffer_a;
-volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
+static volatile uint8_t mosi_buffer_a[SPI_BUFFER_SIZE];
+static volatile uint8_t mosi_buffer_b[SPI_BUFFER_SIZE];
+static volatile uint8_t* mosi_buffer_local = mosi_buffer_a;
+static volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
 
-volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
+static volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
 
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
@@ -61,15 +60,24 @@ ISR(PCINT0_vect) {
 	
 }
 
-void spi_send(int32_t speed) {
+void spi_send(spi_miso_data_t *packet) {
 	cli(); // stop buffer swap
-	uint8_t* ptr = (uint8_t*)(&speed);
-	miso_buffer_local[0] = ptr[0];
-	miso_buffer_local[1] = ptr[1];
-	miso_buffer_local[2] = ptr[2];
-	miso_buffer_local[3] = ptr[3];
-	
+	uint8_t* p = (uint8_t*) packet;
+	for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++)
+	{
+		miso_buffer_local[i] = p[i];
+	}
 	local_miso_buffer_has_new_data_flag = 1;
+	sei();
+}
+
+void spi_receive(spi_mosi_data_t *packet) {
+	cli(); // stop buffer swap
+	uint8_t* p = (uint8_t*) packet;
+	for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++)
+	{
+		p[i] = mosi_buffer_local[i];
+	}
 	sei();
 }
 

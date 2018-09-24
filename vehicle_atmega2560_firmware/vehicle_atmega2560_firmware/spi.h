@@ -10,10 +10,10 @@
 #define SPI_H_
 
 
+#include "spi_packets.h"
 
-void spi_send(int32_t speed);
-
-
+void spi_send(spi_miso_data_t *packet);
+void spi_receive(spi_mosi_data_t *packet);
 
 void spi_setup();
 

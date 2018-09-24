@@ -13,6 +13,8 @@
 #include "motor.h"
 #include "odometer.h"
 #include "spi.h"
+#include "servo_timer.h"
+
 
 int main(void)
 {
@@ -24,6 +26,7 @@ int main(void)
 	motor_setup();
 	odometer_setup();
 	spi_setup();
+	servo_timer_setup();
 	
 	motor_set_direction(MOTOR_DIRECTION_FORWARD);
 	
@@ -32,16 +35,22 @@ int main(void)
 	
     while (1) 
     {
+		spi_mosi_data_t spi_mosi_data;
+		spi_miso_data_t spi_miso_data; // TODO default init
 		
-		int32_t speed = get_speed();
+		spi_receive(&spi_mosi_data);
+		// TODO validate spi_mosi_data CRC, default init if invalid
 		
-		motor_set_duty(0);
+	    const uint32_t tick = get_tick();
+		const int32_t speed = get_speed();
+		
+		motor_set_duty(5);
 		
 		
 		//spi_send(speed);
 		uint16_t timer = TCNT1; // just for testing
-		spi_send(timer);
 		
+		/*
 		DISABLE_RED_LED;
 		DISABLE_GREEN_LED;
 		DISABLE_BLUE_LED;
@@ -54,8 +63,14 @@ int main(void)
 		}
 		if(speed > 800000) {
 			ENABLE_BLUE_LED;
-		}
+		}*/
 		
-		_delay_ms(1000);
+		TOGGLE_BLUE_LED;
+		
+		
+		// TODO calculate spi_miso_data CRC
+		spi_send(&spi_miso_data);
+		
+		tick_wait(); // synchronize 50 Hz loop
     }
 }

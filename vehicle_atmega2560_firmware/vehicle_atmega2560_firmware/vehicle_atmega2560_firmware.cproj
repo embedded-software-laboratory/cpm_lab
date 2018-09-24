@@ -169,10 +169,19 @@
     <Compile Include="odometer.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="servo_timer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="servo_timer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="spi.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="spi.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="spi_packets.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="util.h">

@@ -10,18 +10,18 @@
 #include "util.h"
 #include "odometer.h"
 
-const int8_t direction_lookup[] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
+static const int8_t direction_lookup[] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
 
-volatile uint8_t hall_sensor_states_prev = 0;
-volatile uint16_t timer1_prev = 0;
-volatile uint8_t standstill_flag = 0;
+static volatile uint8_t hall_sensor_states_prev = 0;
+static volatile uint16_t timer1_prev = 0;
+static volatile uint8_t standstill_flag = 0;
 
-volatile int32_t odometer_count = 0;
+static volatile int32_t odometer_count = 0;
 
 #define ODOMETER_BUFFER_SIZE 4
-volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
-volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
-volatile uint8_t odometer_buffer_index = 0;
+static volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
+static volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
+static volatile uint8_t odometer_buffer_index = 0;
 
 // interrupt for hall sensor pin change
 ISR(PCINT2_vect) {
