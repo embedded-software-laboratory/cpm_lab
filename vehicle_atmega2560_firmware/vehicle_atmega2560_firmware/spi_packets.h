@@ -28,7 +28,7 @@ typedef struct
 	uint8_t motor_mode;
 	uint8_t LED_bits;
 	uint8_t CRC;
-} spi_mosi_data_t;
+} __attribute__((packed)) spi_mosi_data_t;
 
 _Static_assert(sizeof(spi_mosi_data_t) == 13, "spi_mosi_data_t unexpected size, not packed?");
 
@@ -46,7 +46,7 @@ typedef struct
 	int16_t debugD;
 	uint8_t status_flags;
 	uint8_t CRC;
-} spi_miso_data_t;
+} __attribute__((packed)) spi_miso_data_t;
 
 
 _Static_assert(sizeof(spi_miso_data_t) == 26, "spi_miso_data_t unexpected size, not packed?");

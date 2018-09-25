@@ -6,8 +6,7 @@
 #include "queue.h"
 #include "esp/timer.h"
 #include "ssid_config.h"
-#include "spi_attiny.h"
-#include "i2c_bus.h"
+#include "spi_atmega.h"
 
 
 
@@ -18,27 +17,24 @@ void task_main(void *pvParameters) {
     //TickType_t previousWakeTime = xTaskGetTickCount();
     //vTaskDelayUntil(&previousWakeTime, pdMS_TO_TICKS(10));
 
+    uint8_t count = 0;
 
     while(1) {
 
-        printf("ADC %8i\n", attiny_get_adc_value());
 
-        attiny_set_led(1);
-        attiny_set_driving_commands(MOTOR_DIRECTION_BRAKE, 0, 100);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        spi_mosi_data_t send_data;
 
-        attiny_set_led(0);
-        attiny_set_driving_commands(MOTOR_DIRECTION_BRAKE, 0, 140);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        send_data.LED_bits = count;
 
-        attiny_set_led(1);
-        attiny_set_driving_commands(MOTOR_DIRECTION_FORWARD, 40, 125);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        send_data.debugA = count;
 
-        attiny_set_led(0);
-        attiny_set_driving_commands(MOTOR_DIRECTION_REVERSE, 40, 125);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        spi_miso_data_t recv_data = spi_atmega_exchange(send_data);
 
+        printf("--- %i\n", recv_data.tick);
+        printf("debugA %i debugC %i\n", send_data.debugA, recv_data.debugC);
+
+        count++;
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
@@ -58,9 +54,11 @@ void user_init(void)
     //sdk_wifi_station_set_config(&config);
 
     /** Init modules **/
+    spi_atmega_setup();
 
     /** Start tasks **/
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
-    xTaskCreate(task_spi_attiny, "task_spi_attiny", 512, NULL, 2, NULL);
-    xTaskCreate(task_i2c_bus, "task_i2c_bus", 512, NULL, 2, NULL);
+    //xTaskCreate(task_spi_attiny, "task_spi_attiny", 512, NULL, 2, NULL);
+    //xTaskCreate(task_i2c_bus, "task_i2c_bus", 512, NULL, 2, NULL);
 }
+
