@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include "util.h"
 #include "spi.h"
+#include "servo_timer.h"
 
 
 // SPI protocol: exchange fixed size buffers (no register addressing)
@@ -27,6 +28,7 @@ static volatile uint8_t* mosi_buffer_local = mosi_buffer_a;
 static volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
 
 static volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
+static volatile uint32_t latest_receive_tick = 0;
 
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
@@ -45,6 +47,8 @@ ISR(PCINT0_vect) {
 		volatile uint8_t* tmp = mosi_buffer_local;
 		mosi_buffer_local = mosi_buffer_bus;
 		mosi_buffer_bus = tmp;
+		
+		latest_receive_tick = get_tick();
 	}
 	else { // beginning of spi transmission
 		spi_buffer_index = 0;
@@ -71,7 +75,7 @@ void spi_send(spi_miso_data_t *packet) {
 	sei();
 }
 
-void spi_receive(spi_mosi_data_t *packet) {
+uint32_t spi_receive(spi_mosi_data_t *packet) {
 	cli(); // stop buffer swap
 	uint8_t* p = (uint8_t*) packet;
 	for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++)
@@ -79,6 +83,7 @@ void spi_receive(spi_mosi_data_t *packet) {
 		p[i] = mosi_buffer_local[i];
 	}
 	sei();
+	return latest_receive_tick;
 }
 
 void spi_setup() {
