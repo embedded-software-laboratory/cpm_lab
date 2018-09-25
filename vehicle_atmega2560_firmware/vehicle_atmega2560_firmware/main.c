@@ -47,8 +47,6 @@ int main(void)
 		motor_set_duty(5);
 		
 		
-		//spi_send(speed);
-		uint16_t timer = TCNT1; // just for testing
 		
 		/*
 		DISABLE_RED_LED;
@@ -67,6 +65,11 @@ int main(void)
 		
 		TOGGLE_BLUE_LED;
 		
+		
+		
+		spi_miso_data.tick = tick;
+		spi_miso_data.speed = speed;
+		// TODO fill spi_miso_data
 		
 		// TODO calculate spi_miso_data CRC
 		spi_send(&spi_miso_data);
