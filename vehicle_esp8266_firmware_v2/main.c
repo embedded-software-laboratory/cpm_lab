@@ -8,6 +8,7 @@
 #include "ssid_config.h"
 #include "spi_atmega.h"
 #include "wifi_telemetry.h"
+#include "wifi_command.h"
 
 
 void task_main(void *pvParameters) {
@@ -66,7 +67,6 @@ void user_init(void)
 
     /** Start tasks **/
     xTaskCreate(task_main, "task_main", 512, NULL, 2, NULL);
-    //xTaskCreate(task_spi_attiny, "task_spi_attiny", 512, NULL, 2, NULL);
-    //xTaskCreate(task_i2c_bus, "task_i2c_bus", 512, NULL, 2, NULL);
+    xTaskCreate(task_wifi_command, "task_wifi_command", 512, NULL, 2, NULL);
 }
 
