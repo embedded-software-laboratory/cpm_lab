@@ -7,11 +7,15 @@
 #include <string.h>
 #include "task.h"
 #include "master_ip.h"
-#include "spi_atmega.h"
 
 static spi_mosi_data_t spi_mosi_data_glob;
 static int command_TTL = 0;
 
+bool wifi_get_command(spi_mosi_data_t* out) {
+    *out = spi_mosi_data_glob;
+    command_TTL--;
+    return command_TTL > 0;
+}
 
 
 void task_wifi_command(void *pvParameters) {

@@ -26,23 +26,30 @@ void task_main(void *pvParameters) {
 
         spi_mosi_data_t send_data;
 
-        send_data.LED_bits = count;
+        if(!wifi_get_command(&send_data)) {
+            memset(&send_data, 0, sizeof(spi_mosi_data_t));
+            send_data.servo_command = 3000;
+        }
+
+        spi_miso_data_t recv_data = spi_atmega_exchange(send_data);
+
+        wifi_telemetry_send((void*)(&recv_data), sizeof(spi_miso_data_t));
+
+        /*send_data.LED_bits = count;
         send_data.debugA = count;
         //if((count>>4)&1)
-            send_data.servo_command = 3200;
+            send_data.servo_command = 3200;*/
         //else
         //    send_data.servo_command = 2800;
 
-        spi_miso_data_t recv_data = spi_atmega_exchange(send_data);
 
         //printf("tick %i debugA %i debugC %i speed %i\n", recv_data.tick, send_data.debugA, recv_data.debugC, recv_data.speed);
 
         //char msg[] = "Hallo\n";
 
-        wifi_telemetry_send((void*)(&recv_data), sizeof(spi_miso_data_t));
 
-        count++;
-        vTaskDelay(pdMS_TO_TICKS(50));
+        //count++;
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 
