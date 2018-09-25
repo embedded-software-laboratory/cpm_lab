@@ -25,16 +25,18 @@ void task_main(void *pvParameters) {
         spi_mosi_data_t send_data;
 
         send_data.LED_bits = count;
-
         send_data.debugA = count;
+        //if((count>>4)&1)
+            send_data.servo_command = 3200;
+        //else
+        //    send_data.servo_command = 2800;
 
         spi_miso_data_t recv_data = spi_atmega_exchange(send_data);
 
-        printf("--- %i\n", recv_data.tick);
-        printf("debugA %i debugC %i\n", send_data.debugA, recv_data.debugC);
+        printf("tick %i debugA %i debugC %i speed %i\n", recv_data.tick, send_data.debugA, recv_data.debugC, recv_data.speed);
 
         count++;
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
