@@ -14,6 +14,7 @@
 #include "odometer.h"
 #include "spi.h"
 #include "servo_timer.h"
+#include <string.h>
 
 
 int main(void)
@@ -35,40 +36,48 @@ int main(void)
 	
     while (1) 
     {
-		spi_mosi_data_t spi_mosi_data;
-		spi_miso_data_t spi_miso_data; // TODO default init
-		
-		spi_receive(&spi_mosi_data);
-		// TODO validate spi_mosi_data CRC, default init if invalid
-		
 	    const uint32_t tick = get_tick();
-		const int16_t speed = get_speed();
+	    const int16_t speed = get_speed();
+	    const int32_t odometer_count = get_odometer_count();
 		
-		motor_set_duty(5);
+		uint8_t safe_mode_flag = 0;
+		spi_mosi_data_t spi_mosi_data;
+		memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+		
+		uint32_t latest_receive_tick = spi_receive(&spi_mosi_data);
+		
+		// TODO validate spi_mosi_data CRC
+		
+		if(latest_receive_tick + 5 < tick) { // if we dont receive new data, to into safe mode
+			safe_mode_flag = 1;
+		}		
+		
+		if(safe_mode_flag) {
+			spi_mosi_data.servo_command = 3000; // center servo
+			spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
+			spi_mosi_data.motor_pwm = 0;
+		}		
+		
+		motor_set_direction(spi_mosi_data.motor_mode); // TODO speed controller
+		motor_set_duty(spi_mosi_data.motor_pwm);
+		set_servo_pwm(spi_mosi_data.servo_command);
+		
+		if(spi_mosi_data.LED_bits & 1) ENABLE_RED_LED;
+		else DISABLE_RED_LED;		
+		
+		if((spi_mosi_data.LED_bits >> 1) & 1) ENABLE_GREEN_LED;
+		else DISABLE_GREEN_LED;
+		
+		if((spi_mosi_data.LED_bits >> 2) & 1) ENABLE_BLUE_LED;
+		else DISABLE_BLUE_LED;
 		
 		
-		
-		/*
-		DISABLE_RED_LED;
-		DISABLE_GREEN_LED;
-		DISABLE_BLUE_LED;
-		
-		if(speed > 0) {
-			ENABLE_RED_LED;
-		}
-		if(speed > 500000) {
-			ENABLE_GREEN_LED;
-		}
-		if(speed > 800000) {
-			ENABLE_BLUE_LED;
-		}*/
-		
-		TOGGLE_BLUE_LED;
-		
-		
-		
+		spi_miso_data_t spi_miso_data;
+		memset(&spi_miso_data, 0, sizeof(spi_miso_data_t));
 		spi_miso_data.tick = tick;
+		spi_miso_data.odometer_steps = odometer_count;
 		spi_miso_data.speed = speed;
+		spi_miso_data.debugC = -spi_mosi_data.debugA / 2;
 		// TODO fill spi_miso_data
 		
 		// TODO calculate spi_miso_data CRC
