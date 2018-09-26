@@ -53,14 +53,13 @@ int main(void)
 		}		
 		
 		if(safe_mode_flag) {
-			spi_mosi_data.servo_command = 3000; // center servo
 			spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
 			spi_mosi_data.motor_pwm = 0;
 		}		
 		
 		motor_set_direction(spi_mosi_data.motor_mode); // TODO speed controller
 		motor_set_duty(spi_mosi_data.motor_pwm);
-		set_servo_pwm(spi_mosi_data.servo_command);
+		set_servo_pwm(spi_mosi_data.servo_command + 3000);
 		
 		if(spi_mosi_data.LED_bits & 1) ENABLE_RED_LED;
 		else DISABLE_RED_LED;		
