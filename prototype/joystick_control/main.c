@@ -193,7 +193,17 @@ int main(int argc, char *argv[])
                 spi_mosi_data_t commands;
                 memset(&commands, 0, sizeof(spi_mosi_data_t));
 
-                commands.servo_command = 3000 - joystick_axes[2]/30;
+                double servo_cmd = -joystick_axes[2];
+                servo_cmd /= 1<<15; // normalize
+                servo_cmd = (0.3* servo_cmd + 1.0 * (servo_cmd*servo_cmd*servo_cmd))/(0.3 + 1.0); // expo control
+                servo_cmd *= 700;
+
+                // prevent integer overflow
+                if(servo_cmd > 30000) servo_cmd = 30000;
+                if(servo_cmd < -30000) servo_cmd = -30000;
+
+
+                commands.servo_command = (int16_t)servo_cmd;
 
                 commands.LED_bits |= joystick_buttons[0];
                 commands.LED_bits |= joystick_buttons[1] << 1;

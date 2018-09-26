@@ -28,7 +28,6 @@ void task_main(void *pvParameters) {
 
         if(!wifi_get_command(&send_data)) {
             memset(&send_data, 0, sizeof(spi_mosi_data_t));
-            send_data.servo_command = 3000;
         }
 
         spi_miso_data_t recv_data = spi_atmega_exchange(send_data);
