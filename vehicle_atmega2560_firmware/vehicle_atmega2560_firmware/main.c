@@ -6,7 +6,6 @@
  */
 
 #include <avr/io.h>
-#include <avr/boot.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "util.h"
@@ -19,15 +18,6 @@
 #include "i2c.h"
 #include <string.h>
 
-
-uint32_t read_signature_row()
-{
-	uint32_t sr0 = boot_signature_byte_get(0x0000);
-	uint32_t sr1 = boot_signature_byte_get(0x0002);
-	uint32_t sr2 = boot_signature_byte_get(0x0004);
-	
-	return ((sr0 << 16) | (sr1 << 8) | sr2);
-}
 
 int main(void)
 {
@@ -43,10 +33,8 @@ int main(void)
 	adc_setup();
 	i2c_setup();
 	
-	const uint32_t signature = read_signature_row();
-	
 	sei();
-
+	
 	
     while (1) 
     {
@@ -96,10 +84,7 @@ int main(void)
 		spi_miso_data.battery_voltage = battery_voltage;
 		spi_miso_data.motor_current = current_sense;
 		spi_miso_data.debugC = -spi_mosi_data.debugA / 2;
-		spi_miso_data.debugD = signature;
 		// TODO fill spi_miso_data
-		
-		// TODO add signature field to spi_miso_data_t
 		
 		// TODO calculate spi_miso_data CRC
 		spi_send(&spi_miso_data);
