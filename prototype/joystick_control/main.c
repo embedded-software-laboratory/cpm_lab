@@ -172,6 +172,8 @@ int main(int argc, char *argv[])
     other_ip[0] = 0;
     char receive_buffer[1000];
 
+    spi_miso_data_t telemetry;
+
 
     while (1)
     {
@@ -182,6 +184,10 @@ int main(int argc, char *argv[])
         int message_size = 0;
         if((message_size = receive(sock, other_ip, receive_buffer, 1000))>0) {
             //printf("rcvd %i bytes from %s\n", message_size, other_ip);
+
+            if(message_size == sizeof(spi_miso_data_t)) {
+                memcpy(&telemetry, receive_buffer, sizeof(spi_miso_data_t));
+            }
         }
 
 
@@ -209,7 +215,7 @@ int main(int argc, char *argv[])
                 commands.LED_bits |= joystick_buttons[1] << 1;
                 commands.LED_bits |= joystick_buttons[2] << 2;
 
-                int32_t throttle = joystick_axes[1]/100;
+                int32_t throttle = joystick_axes[1]/80;
 
 
 
@@ -246,6 +252,8 @@ int main(int argc, char *argv[])
 
 
             printf("vehicle IP %s\n", other_ip);
+            printf("battery %u\n", telemetry.battery_voltage);
+            printf("motor_current %u\n", telemetry.motor_current);
         }
 
     }
