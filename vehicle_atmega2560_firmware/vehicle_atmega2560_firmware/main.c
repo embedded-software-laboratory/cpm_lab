@@ -15,6 +15,7 @@
 #include "spi.h"
 #include "servo_timer.h"
 #include "adc.h"
+#include "i2c.h"
 #include <string.h>
 
 
@@ -30,6 +31,7 @@ int main(void)
 	spi_setup();
 	servo_timer_setup();
 	adc_setup();
+	i2c_setup();
 	
 	sei();
 	
