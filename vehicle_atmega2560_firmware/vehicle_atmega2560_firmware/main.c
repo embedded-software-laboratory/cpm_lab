@@ -14,6 +14,7 @@
 #include "odometer.h"
 #include "spi.h"
 #include "servo_timer.h"
+#include "adc.h"
 #include <string.h>
 
 
@@ -28,8 +29,7 @@ int main(void)
 	odometer_setup();
 	spi_setup();
 	servo_timer_setup();
-	
-	motor_set_direction(MOTOR_DIRECTION_FORWARD);
+	adc_setup();
 	
 	sei();
 	
@@ -39,6 +39,9 @@ int main(void)
 	    const uint32_t tick = get_tick();
 	    const int16_t speed = get_speed();
 	    const int32_t odometer_count = get_odometer_count();
+		uint16_t battery_voltage = 0;
+		uint16_t current_sense = 0;
+		adc_measure(&battery_voltage, &current_sense);
 		
 		uint8_t safe_mode_flag = 0;
 		spi_mosi_data_t spi_mosi_data;
@@ -48,7 +51,7 @@ int main(void)
 		
 		// TODO validate spi_mosi_data CRC
 		
-		if(latest_receive_tick + 5 < tick) { // if we dont receive new data, to into safe mode
+		if(latest_receive_tick + 5 < tick) { // if we do not receive new data, go into safe mode
 			safe_mode_flag = 1;
 		}		
 		
@@ -76,6 +79,8 @@ int main(void)
 		spi_miso_data.tick = tick;
 		spi_miso_data.odometer_steps = odometer_count;
 		spi_miso_data.speed = speed;
+		spi_miso_data.battery_voltage = battery_voltage;
+		spi_miso_data.motor_current = current_sense;
 		spi_miso_data.debugC = -spi_mosi_data.debugA / 2;
 		// TODO fill spi_miso_data
 		
