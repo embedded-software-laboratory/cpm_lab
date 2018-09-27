@@ -157,10 +157,10 @@
     <Compile Include="adc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="i2c.c">
+    <Compile Include="imu.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="i2c.h">
+    <Compile Include="imu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="led.h">
@@ -194,6 +194,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="spi_packets.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="twi.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="twi.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="util.h">
