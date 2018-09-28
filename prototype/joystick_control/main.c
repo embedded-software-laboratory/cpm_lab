@@ -262,15 +262,18 @@ int main(int argc, char *argv[])
                 printf("axs %i: %i\n", i, joystick_axes[i]);
             }
 
-
-            printf("vehicle IP %s\n", other_ip);
-            printf("battery %u\n", telemetry.battery_voltage);
+            printf("tick %u\n", telemetry.tick);
+            printf("odometer_steps %u\n", telemetry.odometer_steps);
             printf("imu_yaw %u\n", telemetry.imu_yaw);
-            printf("motor_current %u\n", telemetry.motor_current);
-            printf("imu_acceleration_forward %u\n", telemetry.imu_acceleration_forward);
-            printf("imu_acceleration_left %u\n", telemetry.imu_acceleration_left);
+            printf("imu_acceleration_forward %i\n", telemetry.imu_acceleration_forward);
+            printf("imu_acceleration_left %i\n", telemetry.imu_acceleration_left);
             printf("speed %i\n", telemetry.speed);
-            printf("CRC %i\n", telemetry.CRC);
+            printf("battery_voltage %u\n", telemetry.battery_voltage);
+            printf("motor_current %u\n", telemetry.motor_current);
+            printf("debugC %i\n", telemetry.debugC);
+            printf("debugD %i\n", telemetry.debugD);
+            printf("CRC %u\n", telemetry.CRC);
+            printf("status_flags %u\n", telemetry.status_flags);
         }
 
     }
