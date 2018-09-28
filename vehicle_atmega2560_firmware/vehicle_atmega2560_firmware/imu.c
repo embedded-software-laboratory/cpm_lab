@@ -14,6 +14,8 @@
 #define BNO055_PWR_MODE_ADDR     0X3E
 #define BNO055_POWER_MODE_NORMAL        0X00
 #define BNO055_OPERATION_MODE_NDOF      0X0C
+#define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR  0X28
+#define BNO055_ACCEL_DATA_X_LSB_ADDR         0X08
 
 
 #include <avr/io.h>
@@ -66,21 +68,28 @@ bool imu_setup() {
 	
 }
 
-bool imu_read(uint16_t* imu_yaw, uint16_t* imu_acceleration_forward, uint16_t* imu_acceleration_left) {
+bool imu_read(uint16_t* imu_yaw, int16_t* imu_acceleration_forward, int16_t* imu_acceleration_left) {
 	
-	
+	bool error_flag = false;
 	uint8_t buffer[10];
-	volatile uint8_t status_write = 0;
-	volatile uint8_t status_read = 0;
 	
 	// read yaw
 	buffer[0] = BNO055_EULER_H_LSB_ADDR;
-	status_write = twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false);
-	status_read = twi_readFrom(BNO055_ADDRESS, buffer, 2, true);
-	
-	*imu_yaw = ((uint16_t)buffer[1])<<8 | ((uint16_t)buffer[0]);
+	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) error_flag = true;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) error_flag = true;
+	*imu_yaw = *((uint16_t*)(buffer));
 	 
-	// TODO all readouts
+	_delay_us(50);
 	
-	return true;
+	// read acceleration
+	buffer[0] = BNO055_ACCEL_DATA_X_LSB_ADDR;
+	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) error_flag = true;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 4, true) != 4) error_flag = true;
+	
+	*imu_acceleration_left = -*((int16_t*)(buffer)); // TODO update axis mapping when the PCB arrives
+	*imu_acceleration_forward = *((int16_t*)(buffer+2));
+	 
+	
+	
+	return error_flag;
 }
