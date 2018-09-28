@@ -8,6 +8,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <string.h>
 #include "util.h"
 #include "led.h"
 #include "motor.h"
@@ -18,7 +19,6 @@
 #include "twi.h"
 #include "imu.h"
 #include "crc.h"
-#include <string.h>
 
 
 int main(void)
@@ -111,10 +111,8 @@ int main(void)
 		spi_miso_data.motor_current = current_sense;		
 		
 		if(!(imu_init_status && imu_status)) {
-			SET_BIT(spi_miso_data.status_flags, 0); // TODO flag documentation
-		}
-		// TODO fill spi_miso_data
-		
+			SET_BIT(spi_miso_data.status_flags, 0);
+		}		
 		
 		spi_miso_data.CRC = 0;
 		spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
