@@ -28,6 +28,9 @@ bool imu_setup() {
 	uint8_t buffer[10];
 	uint8_t status = 0;
 	
+	
+	// TODO reset the IMU, because it may already have been setup, if this ATmega was reset independently.
+	
 	_delay_ms(10);
 	
 	// check chip ID
@@ -75,7 +78,9 @@ bool imu_read(uint16_t* imu_yaw, uint16_t* imu_acceleration_forward, uint16_t* i
 	status_write = twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false);
 	status_read = twi_readFrom(BNO055_ADDRESS, buffer, 2, true);
 	
-	 *imu_yaw = ((uint16_t)buffer[1])<<8 | ((uint16_t)buffer[0]);
+	*imu_yaw = ((uint16_t)buffer[1])<<8 | ((uint16_t)buffer[0]);
+	 
+	// TODO all readouts
 	
 	return true;
 }

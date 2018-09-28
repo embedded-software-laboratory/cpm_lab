@@ -157,6 +157,12 @@
     <Compile Include="adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="crc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="crc.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="imu.c">
       <SubType>compile</SubType>
     </Compile>

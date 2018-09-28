@@ -16,7 +16,7 @@
 #define SPI_MOTOR_MODE_REVERSE 2
 #define SPI_MOTOR_MODE_SPEEDCONTROL 3
 
-#define SPI_BUFFER_SIZE 27
+#define SPI_BUFFER_SIZE 28
 
 typedef struct
 {
@@ -25,12 +25,12 @@ typedef struct
 	int16_t servo_command;
 	int16_t debugA;
 	int16_t debugB;
+	uint16_t CRC;
 	uint8_t motor_mode;
 	uint8_t LED_bits;
-	uint8_t CRC;
 } __attribute__((packed)) spi_mosi_data_t;
 
-_Static_assert(sizeof(spi_mosi_data_t) == 13, "spi_mosi_data_t unexpected size, not packed?");
+_Static_assert(sizeof(spi_mosi_data_t) == 14, "spi_mosi_data_t unexpected size, not packed?");
 
 typedef struct
 {
@@ -44,12 +44,23 @@ typedef struct
 	uint16_t motor_current;
 	int16_t debugC;
 	int16_t debugD;
+	uint16_t CRC;
 	uint8_t status_flags;
-	uint8_t CRC;
+	/*
+	 * status_flags:
+	 * Bit 7: reserved
+	 * Bit 6: reserved
+	 * Bit 5: reserved
+	 * Bit 4: reserved
+	 * Bit 3: reserved
+	 * Bit 2: reserved
+	 * Bit 1: reserved
+	 * Bit 0: IMU status, 0 -> OK, 1 -> fault
+	*/
 } __attribute__((packed)) spi_miso_data_t;
 
 
-_Static_assert(sizeof(spi_miso_data_t) == 26, "spi_miso_data_t unexpected size, not packed?");
+_Static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
 
 
 _Static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
