@@ -70,26 +70,24 @@ bool imu_setup() {
 
 bool imu_read(uint16_t* imu_yaw, int16_t* imu_acceleration_forward, int16_t* imu_acceleration_left) {
 	
-	bool error_flag = false;
+	bool success_flag = true;
 	uint8_t buffer[10];
 	
 	// read yaw
 	buffer[0] = BNO055_EULER_H_LSB_ADDR;
-	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) error_flag = true;
-	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) error_flag = true;
+	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) success_flag = false;
 	*imu_yaw = *((uint16_t*)(buffer));
 	 
 	_delay_us(50);
 	
 	// read acceleration
 	buffer[0] = BNO055_ACCEL_DATA_X_LSB_ADDR;
-	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) error_flag = true;
-	if(twi_readFrom(BNO055_ADDRESS, buffer, 4, true) != 4) error_flag = true;
+	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 4, true) != 4) success_flag = false;
 	
 	*imu_acceleration_left = -*((int16_t*)(buffer)); // TODO update axis mapping when the PCB arrives
 	*imu_acceleration_forward = *((int16_t*)(buffer+2));
-	 
 	
-	
-	return error_flag;
+	return success_flag;
 }
