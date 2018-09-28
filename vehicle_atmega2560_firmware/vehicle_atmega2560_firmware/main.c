@@ -28,7 +28,7 @@ int main(void)
 	SET_BIT(DDRC, 1); // Green LED
 	SET_BIT(DDRC, 2); // Blue LED
 	
-	//_delay_ms(6000);
+	_delay_ms(500); // Wait for the IMU to boot
 		
 	sei();
 	
