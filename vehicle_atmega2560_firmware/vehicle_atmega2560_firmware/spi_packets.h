@@ -37,8 +37,8 @@ typedef struct
 	uint32_t tick;
 	uint32_t odometer_steps;
 	uint16_t imu_yaw;
-	uint16_t imu_acceleration_forward;
-	uint16_t imu_acceleration_left;
+	int16_t imu_acceleration_forward;
+	int16_t imu_acceleration_left;
 	int16_t speed;
 	uint16_t battery_voltage;
 	uint16_t motor_current;
