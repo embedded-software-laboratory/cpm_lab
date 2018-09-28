@@ -25,6 +25,7 @@ void task_main(void *pvParameters) {
 
 
         spi_mosi_data_t send_data;
+        memset(&send_data, 0, sizeof(spi_mosi_data_t));
 
         if(!wifi_get_command(&send_data)) {
             memset(&send_data, 0, sizeof(spi_mosi_data_t));

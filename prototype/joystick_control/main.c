@@ -15,6 +15,8 @@
 
 
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
+#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
+#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c"
 
 
 /**
@@ -173,6 +175,9 @@ int main(int argc, char *argv[])
     char receive_buffer[1000];
 
     spi_miso_data_t telemetry;
+    memset(&telemetry, 0, sizeof(spi_miso_data_t));
+
+    crcInit();
 
 
     while (1)
@@ -229,6 +234,13 @@ int main(int argc, char *argv[])
                 }
 
                 ip_addr target = make_addr(other_ip, 6783);
+
+                commands.debugB = 42;
+                commands.CRC = 0;
+                commands.CRC = crcFast((uint8_t*)(&commands), sizeof(spi_mosi_data_t));
+                //printf("out-CRC %i\n", commands.CRC);
+
+
                 //printf("sending %i bytes to %s\n", sizeof(spi_mosi_data_t), other_ip);
                 send_to(sock, target, &commands, sizeof(spi_mosi_data_t));
             }
@@ -253,7 +265,12 @@ int main(int argc, char *argv[])
 
             printf("vehicle IP %s\n", other_ip);
             printf("battery %u\n", telemetry.battery_voltage);
+            printf("imu_yaw %u\n", telemetry.imu_yaw);
             printf("motor_current %u\n", telemetry.motor_current);
+            printf("imu_acceleration_forward %u\n", telemetry.imu_acceleration_forward);
+            printf("imu_acceleration_left %u\n", telemetry.imu_acceleration_left);
+            printf("speed %i\n", telemetry.speed);
+            printf("CRC %i\n", telemetry.CRC);
         }
 
     }
