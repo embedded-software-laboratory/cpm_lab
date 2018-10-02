@@ -206,8 +206,8 @@ int main(int argc, char *argv[])
 
                 double servo_cmd = -joystick_axes[2];
                 servo_cmd /= 1<<15; // normalize
-                servo_cmd = (0.3* servo_cmd + 1.0 * (servo_cmd*servo_cmd*servo_cmd))/(0.3 + 1.0); // expo control
-                servo_cmd *= 700;
+                //servo_cmd = (0.3* servo_cmd + 1.0 * (servo_cmd*servo_cmd*servo_cmd))/(0.3 + 1.0); // expo control
+                servo_cmd *= 1000;
 
                 // prevent integer overflow
                 if(servo_cmd > 30000) servo_cmd = 30000;
