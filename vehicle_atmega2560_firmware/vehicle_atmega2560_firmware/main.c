@@ -27,8 +27,6 @@ int main(void)
 	SET_BIT(DDRC, 0); // Red LED
 	SET_BIT(DDRC, 1); // Green LED
 	SET_BIT(DDRC, 2); // Blue LED
-	
-	_delay_ms(500); // Wait for the IMU to boot
 		
 	sei();
 	
@@ -59,7 +57,7 @@ int main(void)
 		uint16_t imu_yaw = 0;
 		uint16_t imu_acceleration_forward = 0;
 		uint16_t imu_acceleration_left = 0;
-		const bool imu_status = imu_read(&imu_yaw, &imu_acceleration_forward, &imu_acceleration_left);
+		const bool imu_status = imu_read(&imu_yaw, &imu_acceleration_forward, &imu_acceleration_left);			
 		
 		// Read SPI
 		uint8_t safe_mode_flag = 0;
@@ -88,6 +86,8 @@ int main(void)
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
 		
+		
+		// TODO LED_bits interpretation
 		if(spi_mosi_data.LED_bits & 1) ENABLE_RED_LED;
 		else DISABLE_RED_LED;		
 		
@@ -103,14 +103,16 @@ int main(void)
 		memset(&spi_miso_data, 0, sizeof(spi_miso_data_t));
 		spi_miso_data.tick = tick;
 		spi_miso_data.odometer_steps = odometer_count;
-		spi_miso_data.imu_yaw = imu_yaw;
-		spi_miso_data.imu_acceleration_forward = imu_acceleration_forward;
-		spi_miso_data.imu_acceleration_left = imu_acceleration_left;
 		spi_miso_data.speed = speed;
 		spi_miso_data.battery_voltage = battery_voltage;
 		spi_miso_data.motor_current = current_sense;		
 		
-		if(!(imu_init_status && imu_status)) {
+		if(imu_init_status && imu_status) {
+			spi_miso_data.imu_yaw = imu_yaw;
+			spi_miso_data.imu_acceleration_forward = imu_acceleration_forward;
+			spi_miso_data.imu_acceleration_left = imu_acceleration_left;
+		}
+		else {
 			SET_BIT(spi_miso_data.status_flags, 0);
 		}		
 		
