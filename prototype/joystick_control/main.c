@@ -222,9 +222,11 @@ int main(int argc, char *argv[])
 
                 int32_t throttle = joystick_axes[1]/80;
 
-
-
-                if(throttle > 0) {
+                if(throttle < 8 && throttle > -8) {
+                    commands.motor_pwm = 0;
+                    commands.motor_mode = SPI_MOTOR_MODE_BRAKE;
+                }
+                else if(throttle > 0) {
                     commands.motor_pwm = throttle;
                     commands.motor_mode = SPI_MOTOR_MODE_FORWARD;
                 }
