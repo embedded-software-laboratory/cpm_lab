@@ -84,7 +84,7 @@ int main(void)
 		}		
 		
 		// Apply commands
-		motor_set_direction(spi_mosi_data.motor_mode); // TODO speed controller
+		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
 		

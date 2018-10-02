@@ -14,13 +14,11 @@
 #define SPI_MOTOR_MODE_BRAKE 0
 #define SPI_MOTOR_MODE_FORWARD 1
 #define SPI_MOTOR_MODE_REVERSE 2
-#define SPI_MOTOR_MODE_SPEEDCONTROL 3
 
 #define SPI_BUFFER_SIZE 28
 
 typedef struct
 {
-	int16_t target_speed;
 	int16_t motor_pwm;
 	int16_t servo_command;
 	int16_t debugA;
@@ -30,7 +28,7 @@ typedef struct
 	uint8_t LED_bits;
 } __attribute__((packed)) spi_mosi_data_t;
 
-_Static_assert(sizeof(spi_mosi_data_t) == 14, "spi_mosi_data_t unexpected size, not packed?");
+_Static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
 
 typedef struct
 {
