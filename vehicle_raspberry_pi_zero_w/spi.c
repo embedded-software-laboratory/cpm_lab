@@ -2,6 +2,17 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include "spi.h"
+
+volatile uint8_t dummy = 0;
+
+void busy_wait(uint32_t ticks) {
+    for (uint32_t i = 0; i < ticks; ++i)
+    {
+        dummy--;
+    }
+}
 
 void spi_init() {
     if (!bcm2835_spi_begin()) {
@@ -11,7 +22,7 @@ void spi_init() {
 
     bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
     bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
-    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256);
+    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_128);
     bcm2835_spi_chipSelect(BCM2835_SPI_CS_NONE);
 
     // enable CS pin
@@ -23,26 +34,30 @@ void spi_init() {
     usleep(1000);
 }
 
-void spi_transfer() {
-    while (1) {
+spi_miso_data_t spi_transfer(spi_mosi_data_t spi_mosi_data) {
 
-        // CS low => transmission start
-        bcm2835_gpio_clr(RPI_GPIO_P1_24);
-        usleep(10);
+    uint8_t SPI_recv_buffer[SPI_BUFFER_SIZE];
+    uint8_t* mosi_data_ptr = (uint8_t*)(&spi_mosi_data);
 
-        for (int i = 0; i < 27; ++i)
-        {
-            uint8_t send_data = 0;
-            uint8_t read_data = bcm2835_spi_transfer(send_data);
-            printf("%02x ", read_data);
-            usleep(10);
-        }
-        printf(" --A\n");
-        fflush(stdout);
+    // CS low => transmission start
+    bcm2835_gpio_clr(RPI_GPIO_P1_24);
+    busy_wait(200);
 
-
-        // CS high => transmission end
-        bcm2835_gpio_set(RPI_GPIO_P1_24);
-        usleep(10);
+    for (int i = 0; i < SPI_BUFFER_SIZE; ++i)
+    {
+        SPI_recv_buffer[i] = bcm2835_spi_transfer(mosi_data_ptr[i]);
+        //printf("%02x ", read_data);
+        busy_wait(100);
     }
+    //printf(" --A\n");
+    fflush(stdout);
+
+
+    // CS high => transmission end
+    bcm2835_gpio_set(RPI_GPIO_P1_24);
+
+    spi_miso_data_t spi_miso_data;
+
+    memcpy(&spi_miso_data, SPI_recv_buffer+1, sizeof(spi_miso_data_t));
+    return spi_miso_data;    
 }

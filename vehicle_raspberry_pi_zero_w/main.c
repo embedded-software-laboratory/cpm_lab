@@ -16,8 +16,14 @@ int main(int argc, char **argv) {
 
 
     while (1) {
-        spi_transfer();
-        usleep(30000);
+        spi_mosi_data_t spi_mosi_data = {0};
+        spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
+
+        printf("tick %u\n", spi_miso_data.tick);
+        printf("odometer_steps %i\n", spi_miso_data.odometer_steps);
+        printf("imu_yaw %u\n", spi_miso_data.imu_yaw);
+        printf("\n");
+        usleep(60000);
     }
 
     return 0;
