@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
             printf("CRC %u\n", telemetry.CRC);
             printf("status_flags %u\n", telemetry.status_flags);
         }
-
+        usleep(5000);
     }
 
     close(js);

@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
         }
         else {            
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+            spi_mosi_data.LED_bits = 0b10101001;
+            spi_mosi_data.CRC = crcFast((uint8_t*)&spi_mosi_data, sizeof(spi_mosi_data_t));
         }
 
         spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
