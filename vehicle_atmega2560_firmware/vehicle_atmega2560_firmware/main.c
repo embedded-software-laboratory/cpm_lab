@@ -23,13 +23,9 @@
 
 int main(void)
 {
-	
-	SET_BIT(DDRC, 0); // Red LED
-	SET_BIT(DDRC, 1); // Green LED
-	SET_BIT(DDRC, 2); // Blue LED
-		
 	sei();
 	
+	led_setup();
 	twi_init();
 	motor_setup();
 	odometer_setup();
@@ -85,18 +81,7 @@ int main(void)
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
-		
-		
-		// TODO LED_bits interpretation
-		if(spi_mosi_data.LED_bits & 1) ENABLE_RED_LED;
-		else DISABLE_RED_LED;		
-		
-		if((tick >> 5) & 1) ENABLE_GREEN_LED;
-		else DISABLE_GREEN_LED;
-		
-		if((spi_mosi_data.LED_bits >> 2) & 1) ENABLE_BLUE_LED;
-		else DISABLE_BLUE_LED;
-		
+		led_set_state(tick, spi_mosi_data.LED_bits);		
 		
 		// Send sensor data to master
 		spi_miso_data_t spi_miso_data;

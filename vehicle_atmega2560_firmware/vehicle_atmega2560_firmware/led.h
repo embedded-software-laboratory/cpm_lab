@@ -11,19 +11,32 @@
 
 #include "util.h"
 
+static inline void led_set_state(uint32_t tick, uint8_t LED_bits) {
+	uint8_t blink_fast_state = (tick >> 3) & 1;
+	uint8_t blink_slow_state = (tick >> 5) & 1;
+	
+	uint8_t state_map[4] = {blink_fast_state, blink_slow_state, 0, 1};
 
-#define ENABLE_RED_LED SET_BIT(PORTC, 0)
-#define DISABLE_RED_LED CLEAR_BIT(PORTC, 0)
-#define TOGGLE_RED_LED TOGGLE_BIT(PORTC, 0)
 
-#define ENABLE_GREEN_LED SET_BIT(PORTC, 1)
-#define DISABLE_GREEN_LED CLEAR_BIT(PORTC, 1)
-#define TOGGLE_GREEN_LED TOGGLE_BIT(PORTC, 1)
+	if(state_map[(LED_bits >> 0) & 0b00000011]) SET_BIT(PORTC, 0);
+	else                                      CLEAR_BIT(PORTC, 0);
+	
+	if(state_map[(LED_bits >> 2) & 0b00000011]) SET_BIT(PORTC, 1);
+	else                                      CLEAR_BIT(PORTC, 1);
+	
+	if(state_map[(LED_bits >> 4) & 0b00000011]) SET_BIT(PORTC, 2);
+	else                                      CLEAR_BIT(PORTC, 2);
+	
+	if(state_map[(LED_bits >> 6) & 0b00000011]) SET_BIT(PORTC, 7);
+	else                                      CLEAR_BIT(PORTC, 7);
+}
 
-#define ENABLE_BLUE_LED SET_BIT(PORTC, 2)
-#define DISABLE_BLUE_LED CLEAR_BIT(PORTC, 2)
-#define TOGGLE_BLUE_LED TOGGLE_BIT(PORTC, 2)
-
+static inline void led_setup() {	
+	SET_BIT(DDRC, 0);
+	SET_BIT(DDRC, 1);
+	SET_BIT(DDRC, 2);
+	SET_BIT(DDRC, 7);
+}
 
 
 #endif /* LED_H_ */
