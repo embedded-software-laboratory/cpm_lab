@@ -216,9 +216,17 @@ int main(int argc, char *argv[])
 
                 commands.servo_command = (int16_t)servo_cmd;
 
-                commands.LED_bits |= joystick_buttons[0];
-                commands.LED_bits |= joystick_buttons[1] << 1;
-                commands.LED_bits |= joystick_buttons[2] << 2;
+                commands.LED_bits = 0b10100110;
+
+                if(joystick_buttons[0]) {
+                    commands.LED_bits |= 0b00000011;
+                }
+                if(joystick_buttons[1]) {
+                    commands.LED_bits |= 0b00110000;
+                }
+                if(joystick_buttons[2]) {
+                    commands.LED_bits |= 0b11000000;
+                }
 
                 int32_t throttle = joystick_axes[1]/80;
 
@@ -264,6 +272,8 @@ int main(int argc, char *argv[])
                 printf("axs %i: %i\n", i, joystick_axes[i]);
             }
 
+
+            printf("vehicle IP %s\n", other_ip);
             printf("tick %u\n", telemetry.tick);
             printf("odometer_steps %u\n", telemetry.odometer_steps);
             printf("imu_yaw %u\n", telemetry.imu_yaw);
