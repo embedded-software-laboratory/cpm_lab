@@ -1,0 +1,13 @@
+struct VehicleState {
+    octet vehicle_id; //@key
+    TimeStamp stamp;
+    Pose2D pose;
+
+    double odometer_distance;          // meter
+    double imu_yaw;                    // radian
+    double imu_acceleration_forward;   // m/s^2
+    double imu_acceleration_left;      // m/s^2
+    double speed;                      // m/s
+    double battery_voltage;            // volt
+    double motor_current;              // ampere
+};
