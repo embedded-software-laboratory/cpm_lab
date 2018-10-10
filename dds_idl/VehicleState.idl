@@ -1,3 +1,6 @@
+#include "TimeStamp.idl"
+#include "Pose2D.idl"
+
 struct VehicleState {
     octet vehicle_id; //@key
     TimeStamp stamp;
