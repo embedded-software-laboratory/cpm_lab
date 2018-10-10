@@ -1,0 +1,548 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" version="XHTML+RDFa 1.0" dir="ltr" class="js"><link type="text/css" id="dark-mode" rel="stylesheet" href=""><style type="text/css" id="dark-mode-custom-style"></style><head><link type="text/css" id="dark-mode" rel="stylesheet" href=""><style type="text/css" id="dark-mode-custom-style"></style>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<link rel="dns-prefetch" href="https://d2vkrkwbbxbylk.cloudfront.net/">
+<!--[if IE 9]>
+<link rel="prefetch" href="//d2vkrkwbbxbylk.cloudfront.net" />
+<![endif]-->
+<meta name="Generator" content="Drupal 7 (http://drupal.org)">
+<link rel="canonical" href="https://community.rti.com/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi">
+<link rel="shortlink" href="https://community.rti.com/node/2602">
+  <title>HOWTO Run RTI Connext DDS on Raspberry Pi | Data Distribution Service (DDS) Community RTI Connext Users</title>
+  <link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_46mJMVJIWJRW0HgByOhet1ulNoT4vBO3KXsAcTnwFcI.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_h901DvxtMS8t0rgMOKtzA3N9K5oZHAoz8r7Fb9r7Qws.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_TQMq8RYUebyLOf8AgSOB7w8Yt4dK_hLWVSbwFKVBmNE.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_YObmECsqGVmJVCkAad2QAZM9u6qXTBB6W44K52Liwy4.css" media="all">
+<style type="text/css" media="all">
+<!--/*--><![CDATA[/*><!--*/
+#sliding-popup.sliding-popup-bottom,#sliding-popup.sliding-popup-bottom .eu-cookie-withdraw-banner,.eu-cookie-withdraw-tab{background:#0779bf;}#sliding-popup.sliding-popup-bottom.eu-cookie-withdraw-wrapper{background:transparent}#sliding-popup .popup-content #popup-text h1,#sliding-popup .popup-content #popup-text h2,#sliding-popup .popup-content #popup-text h3,#sliding-popup .popup-content #popup-text p,.eu-cookie-compliance-more-button,.eu-cookie-compliance-secondary-button,.eu-cookie-withdraw-tab{color:#fff !important;}.eu-cookie-withdraw-tab{border-color:#fff;}
+
+/*]]>*/-->
+</style>
+<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_6U16mkQcGzYUlPVWT5PXgIakg-VsMY-gAzU9NXE-waY.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_2THG1eGiBIizsWFeexsNe1iDifJ00QRS9uSd03rY9co.css" media="print">
+
+<!--[if lte IE 7]>
+<link type="text/css" rel="stylesheet" href="https://d2vkrkwbbxbylk.cloudfront.net/sites/default/files/cdn/css/https/css_CQ6eoaDQ9JbIFnnc8xtnLAPZkaOrPoOFTgYbssbKgTg_ie.css.css" media="all" />
+<![endif]-->
+
+<!--[if IE 6]>
+<link type="text/css" rel="stylesheet" href="https://d2vkrkwbbxbylk.cloudfront.net/sites/default/files/cdn/css/https/css_qvY3lZIZDNHRNsIKQYZKZOxljoe9Mn-xk-hYDicQHRs_ie6.css.css" media="all" />
+<![endif]-->
+  <script async="" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/analytics_002.js"></script><script async="" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/analytics.js"></script><script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_vDrW3Ry_4gtSYaLsh77lWhWjIC6ml2QNkcfvfP5CVFs.js"></script>
+<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Oq6ruP-xSadx-QnSRF27cRdi_VPT5Np6lQFTEFQHHnY.js"></script>
+<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Utlukeo-CtfDmwMvFh2pQ2p3Wb_mMczTU4GrOmzMNUc.js"></script>
+<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_aYfVMQPe8P2rCf6DJ1LhPCg7gBb0JOOlHqxPPNPgF94.js"></script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+(function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,"script","https://www.google-analytics.com/analytics.js","ga");ga("create", "UA-27780364-1", {"cookieDomain":"auto"});ga("send", "pageview");
+//--><!]]>
+</script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+jQuery.extend(Drupal.settings, {"basePath":"\/","pathPrefix":"","ajaxPageState":{"theme":"rtibartik","theme_token":"YwzgHMcOSDQZEUAwjdOxkBzz_6rQT1xLUV-f4PS258Y","js":{"sites\/default\/modules\/syntaxhighlighter\/syntaxhighlighter.min.js":1,"0":1,"1":1,"sites\/default\/modules\/eu_cookie_compliance\/js\/eu_cookie_compliance.js":1,"misc\/jquery.js":1,"misc\/jquery.once.js":1,"misc\/drupal.js":1,"misc\/ui\/jquery.ui.core.min.js":1,"misc\/ui\/jquery.ui.widget.min.js":1,"sites\/default\/modules\/syntaxhighlighter_insert\/syntaxhighlighter_insert.utils.js":1,"sites\/default\/modules\/syntaxhighlighter_insert\/syntaxhighlighter_insert.js":1,"misc\/ui\/jquery.ui.button.min.js":1,"misc\/ui\/jquery.ui.mouse.min.js":1,"misc\/ui\/jquery.ui.draggable.min.js":1,"misc\/ui\/jquery.ui.position.min.js":1,"misc\/ui\/jquery.ui.resizable.min.js":1,"misc\/ui\/jquery.ui.dialog.min.js":1,"sites\/default\/modules\/views\/js\/jquery.ui.dialog.patch.js":1,"sites\/default\/modules\/eu_cookie_compliance\/js\/jquery.cookie-1.4.1.min.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shCore.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushBash.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushCSharp.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushCpp.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushDiff.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushErlang.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushJava.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushPerl.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushPhp.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushPlain.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushPython.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushRuby.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushSql.js":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/scripts\/shBrushXml.js":1,"sites\/default\/modules\/admin_menu\/admin_devel\/admin_devel.js":1,"sites\/default\/modules\/filetree\/filetree.js":1,"sites\/default\/modules\/jquerymenu\/jquerymenu.js":1,"sites\/default\/modules\/video\/js\/video.js":1,"sites\/all\/modules\/google_analytics\/googleanalytics.js":1,"2":1},"css":{"modules\/system\/system.base.css":1,"modules\/system\/system.menus.css":1,"modules\/system\/system.messages.css":1,"modules\/system\/system.theme.css":1,"misc\/ui\/jquery.ui.core.css":1,"misc\/ui\/jquery.ui.theme.css":1,"misc\/ui\/jquery.ui.button.css":1,"misc\/ui\/jquery.ui.resizable.css":1,"misc\/ui\/jquery.ui.dialog.css":1,"modules\/aggregator\/aggregator.css":1,"modules\/comment\/comment.css":1,"sites\/default\/modules\/date\/date_api\/date.css":1,"sites\/default\/modules\/date\/date_popup\/themes\/datepicker.1.7.css":1,"sites\/default\/modules\/date\/date_repeat_field\/date_repeat_field.css":1,"sites\/default\/modules\/examples_search\/examples_search.css":1,"modules\/field\/theme\/field.css":1,"sites\/default\/modules\/filetree\/filetree.css":1,"sites\/default\/modules\/kb_search\/kb_search.css":1,"modules\/node\/node.css":1,"modules\/search\/search.css":1,"modules\/user\/user.css":1,"sites\/default\/modules\/calendar\/css\/calendar_multiday.css":1,"modules\/forum\/forum.css":1,"sites\/default\/modules\/views\/css\/views.css":1,"sites\/default\/modules\/media\/modules\/media_wysiwyg\/css\/media_wysiwyg.base.css":1,"sites\/default\/modules\/ctools\/css\/ctools.css":1,"sites\/default\/modules\/jquerymenu\/jquerymenu.css":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/styles\/shCore.css":1,"sites\/all\/libraries\/syntaxhighlighter_3.0.83\/styles\/shThemeDefault.css":1,"sites\/default\/modules\/video\/css\/video.css":1,"sites\/default\/modules\/panels\/css\/panels.css":1,"sites\/default\/modules\/syntaxhighlighter_insert\/syntaxhighlighter_insert_wysiwyg\/syntaxhighlighter_insert_wysiwyg.css":1,"sites\/default\/modules\/eu_cookie_compliance\/css\/eu_cookie_compliance.css":1,"0":1,"sites\/default\/themes\/rtibartik\/css\/layout.css":1,"sites\/default\/themes\/rtibartik\/css\/style.css":1,"sites\/default\/themes\/rtibartik\/css\/colors.css":1,"sites\/default\/themes\/rtibartik\/css\/print.css":1,"sites\/default\/themes\/rtibartik\/css\/ie.css":1,"sites\/default\/themes\/rtibartik\/css\/ie6.css":1}},"jquerymenu":{"hover":0,"animate":0,"edit_link":0},"syntaxhighlighter_insert_wysiwyg":{"current_form":"form-w4H2rQ3vE0vrf9YYggofHZsSc68xcHik-eFxtQYjpd0"},"eu_cookie_compliance":{"popup_enabled":1,"popup_agreed_enabled":0,"popup_hide_agreed":0,"popup_clicking_confirmation":1,"popup_scrolling_confirmation":0,"popup_html_info":"\u003Cdiv\u003E\n  \u003Cdiv class =\u0022popup-content info\u0022\u003E\n    \u003Cdiv id=\u0022popup-text\u0022\u003E\n      \u003Cp\u003EThis website uses cookies in order to optimize your browsing experience, better meet your needs, and perform analytical tasks. Please click here to continue browsing and accept \u003Cspan style=\u0022text-decoration: underline;\u0022\u003E\u003Cspan style=\u0022color: #ffffff;\u0022\u003E\u003Cstrong\u003E\u003Ca href=\u0022https:\/\/www.rti.com\/cookie\u0022\u003E\u003Cspan style=\u0022color: #ffffff; text-decoration: underline;\u0022\u003ERTI\u0027s Cookie Policy\u003C\/span\u003E\u003C\/a\u003E\u003C\/strong\u003E\u003C\/span\u003E\u003C\/span\u003E.\u003C\/p\u003E          \u003C\/div\u003E\n    \u003Cdiv id=\u0022popup-buttons\u0022\u003E\n      \u003Cbutton type=\u0022button\u0022 class=\u0022agree-button eu-cookie-compliance-default-button\u0022\u003EAccept and continue browsing\u003C\/button\u003E\n          \u003C\/div\u003E\n  \u003C\/div\u003E\n\u003C\/div\u003E","use_mobile_message":false,"mobile_popup_html_info":"\u003Cdiv\u003E\n  \u003Cdiv class =\u0022popup-content info\u0022\u003E\n    \u003Cdiv id=\u0022popup-text\u0022\u003E\n                \u003C\/div\u003E\n    \u003Cdiv id=\u0022popup-buttons\u0022\u003E\n      \u003Cbutton type=\u0022button\u0022 class=\u0022agree-button eu-cookie-compliance-default-button\u0022\u003EAccept and continue browsing\u003C\/button\u003E\n          \u003C\/div\u003E\n  \u003C\/div\u003E\n\u003C\/div\u003E\n","mobile_breakpoint":"768","popup_html_agreed":"\u003Cdiv\u003E\n  \u003Cdiv class =\u0022popup-content agreed\u0022\u003E\n    \u003Cdiv id=\u0022popup-text\u0022\u003E\n      \u003Ch2\u003EThank you for accepting cookies\u003C\/h2\u003E\u003Cp\u003EYou can now hide this message or find out more about cookies.\u003C\/p\u003E    \u003C\/div\u003E\n    \u003Cdiv id=\u0022popup-buttons\u0022\u003E\n      \u003Cbutton type=\u0022button\u0022 class=\u0022hide-popup-button eu-cookie-compliance-hide-button\u0022\u003EHide\u003C\/button\u003E\n          \u003C\/div\u003E\n  \u003C\/div\u003E\n\u003C\/div\u003E","popup_use_bare_css":false,"popup_height":"auto","popup_width":"100%","popup_delay":1000,"popup_link":"https:\/\/www.rti.com\/cookie","popup_link_new_window":1,"popup_position":null,"popup_language":"en","store_consent":false,"better_support_for_screen_readers":0,"reload_page":0,"domain":"","popup_eu_only_js":0,"cookie_lifetime":"100","cookie_session":false,"disagree_do_not_show_popup":0,"method":"default","whitelisted_cookies":"","withdraw_markup":"\u003Cbutton type=\u0022button\u0022 class=\u0022eu-cookie-withdraw-tab\u0022\u003EPrivacy settings\u003C\/button\u003E\n\u003Cdiv class=\u0022eu-cookie-withdraw-banner\u0022\u003E\n  \u003Cdiv class=\u0022popup-content info\u0022\u003E\n    \u003Cdiv id=\u0022popup-text\u0022\u003E\n      \u003Ch2\u003EWe use cookies on this site to enhance your user experience\u003C\/h2\u003E\u003Cp\u003EYou have given your consent for us to set cookies.\u003C\/p\u003E    \u003C\/div\u003E\n    \u003Cdiv id=\u0022popup-buttons\u0022\u003E\n      \u003Cbutton type=\u0022button\u0022 class=\u0022eu-cookie-withdraw-button\u0022\u003EWithdraw consent\u003C\/button\u003E\n    \u003C\/div\u003E\n  \u003C\/div\u003E\n\u003C\/div\u003E\n","withdraw_enabled":false},"googleanalytics":{"trackOutbound":1,"trackMailto":1,"trackDownload":1,"trackDownloadExtensions":"7z|aac|arc|arj|asf|asx|avi|bin|csv|doc(x|m)?|dot(x|m)?|exe|flv|gif|gz|gzip|hqx|jar|jpe?g|js|mp(2|3|4|e?g)|mov(ie)?|msi|msp|pdf|phps|png|ppt(x|m)?|pot(x|m)?|pps(x|m)?|ppam|sld(x|m)?|thmx|qtm?|ra(m|r)?|sea|sit|tar|tgz|torrent|txt|wav|wma|wmv|wpd|xls(x|m|b)?|xlt(x|m)|xlam|xml|z|zip"},"urlIsAjaxTrusted":{"\/content\/forum-topic\/howto-run-rti-connext-dds-raspberry-pi":true,"\/content\/forum-topic\/howto-run-rti-connext-dds-raspberry-pi?destination=node\/2602":true}});
+//--><!]]>
+</script>
+</head>
+<body class="html not-front not-logged-in one-sidebar sidebar-first page-node page-node- page-node-2602 node-type-howto eu-cookie-compliance-processed">
+  <div id="skip-link">
+    <a href="#main-content" class="element-invisible element-focusable">Skip to main content</a>
+  </div>
+    <div id="page-wrapper"><div id="page">
+
+  <div id="header" class="with-secondary-menu"><div class="section clearfix">
+
+          <a href="https://community.rti.com/" title="Home" rel="home" id="logo">
+        <img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/community05_0_transparent.png" alt="Home">
+      </a>
+    
+          <div id="name-and-slogan">
+
+                              <div id="site-name">
+              <strong>
+                <a href="https://community.rti.com/" title="Home" rel="home"><span>Data Distribution Service (DDS) Community <br> 
+RTI Connext Users</span></a>
+              </strong>
+            </div>
+                  
+                  <div id="site-slogan" class="element-invisible">
+            The Global Leader in DDS. Your Systems working as one.          </div>
+        
+      </div> <!-- /#name-and-slogan -->
+    
+      <div class="region region-header">
+    <div id="block-search-form" class="block block-search">
+
+    <h2 class="element-invisible">Search</h2>
+  
+  <div class="content">
+    <form action="/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi" method="post" id="search-block-form" accept-charset="UTF-8"><div><div class="container-inline">
+    <div class="form-item form-type-textfield form-item-search-block-form">
+  <label class="element-invisible" for="edit-search-block-form--2">Search </label>
+ <input title="Enter the terms you wish to search for." id="edit-search-block-form--2" name="search_block_form" size="15" maxlength="128" class="form-text" type="text">
+</div>
+<div class="form-actions form-wrapper" id="edit-actions"><input id="edit-submit" name="op" value="Search" class="form-submit" type="submit"></div><input name="form_build_id" value="form-AnMTAqViwpED8f2J3OXpaBPf5OWq_B9yb5zOAgYHuUM" type="hidden">
+<input name="form_id" value="search_block_form" type="hidden">
+</div>
+</div></form>  </div>
+</div>
+  </div>
+
+    
+          <div id="secondary-menu" class="navigation">
+        <h2 class="element-invisible">Secondary menu</h2><ul id="secondary-menu-links" class="links inline clearfix"><li class="menu-3578 first"><a href="http://www.rti.com/" title="Link to Real-Time Innovations (RTI) home page">RTI.com</a></li>
+<li class="menu-5815"><a href="http://blogs.rti.com/" title="">RTI Blog</a></li>
+<li class="menu-7549"><a href="https://github.com/rticommunity" title="">RTI Github</a></li>
+<li class="menu-9946"><a href="https://www.rti.com/labs?utm_campaign=RTI%20Labs&amp;utm_source=RTI%20Developer%20Community&amp;utm_medium=Sidebar%20Link" title="">RTI Labs</a></li>
+<li class="menu-4000 last"><a href="http://portals.omg.org/dds/" title="OMG Data-Distribution Service (DDS) portal.">OMG DDS Portal</a></li>
+</ul>      </div> <!-- /#secondary-menu -->
+    
+  </div></div> <!-- /.section, /#header -->
+
+  
+  
+  <div id="main-wrapper" class="clearfix"><div id="main" class="clearfix">
+
+          <div id="breadcrumb"><h2 class="element-invisible">You are here</h2><div class="breadcrumb"><a href="https://community.rti.com/">Home</a> » <a href="https://community.rti.com/kb" title="">Knowledge Base</a> » <a href="https://community.rti.com/howto" title="">HOWTOs</a></div></div>
+    
+          <div id="sidebar-first" class="column sidebar"><div class="section">
+          <div class="region region-sidebar-first">
+    <div id="block-system-navigation" class="block block-system block-menu">
+
+    <h2>Navigation</h2>
+  
+  <div class="content">
+    <ul class="menu clearfix"><li class="first leaf"><a href="https://community.rti.com/forum" title="">Forums</a></li>
+<li class="expanded active-trail"><a href="https://community.rti.com/kb" title="" class="active-trail">Knowledge Base</a><ul class="menu clearfix"><li class="first leaf"><a href="https://community.rti.com/best-practices" title="">Best Practices</a></li>
+<li class="leaf"><a href="https://community.rti.com/case-and-code" title="">Case + Code</a></li>
+<li class="leaf"><a href="https://community.rti.com/examples" title="">Examples</a></li>
+<li class="expanded active-trail"><a href="https://community.rti.com/howto" title="" class="active-trail">HOWTOs</a><ul class="menu clearfix"><li class="first last leaf active-trail"><a href="https://community.rti.com/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi" class="menu-position-link active-trail active">HOWTO Run RTI Connext DDS on Raspberry Pi</a></li>
+</ul></li>
+<li class="leaf"><a href="https://community.rti.com/solutions" title="">Solutions</a></li>
+<li class="leaf"><a href="https://community.rti.com/glossary" title="">Glossary</a></li>
+<li class="last leaf"><a href="https://www.rti.com/gettingstarted?utm_campaign=Getting%20Started%20Phase%201&amp;utm_source=RTI%20Developer%20Community&amp;utm_medium=Sidebar%20Link" title="">Getting Started Videos</a></li>
+</ul></li>
+<li class="expanded"><a href="https://community.rti.com/research" title="">University and Research</a><ul class="menu clearfix"><li class="first leaf"><a href="https://community.rti.com/projects" title="">Projects</a></li>
+<li class="leaf"><a href="https://community.rti.com/dds_papers" title="">Papers</a></li>
+<li class="last leaf"><a href="https://community.rti.com/presentations" title="Presentations">Presentations</a></li>
+</ul></li>
+<li class="leaf"><a href="https://community.rti.com/documentation" title="">Documentation</a></li>
+<li class="leaf"><a href="https://community.rti.com/content/page/downloads" title="">Downloads</a></li>
+<li class="last collapsed"><a href="https://community.rti.com/filedepot" title="A place to share example code and application snippets">File Exchange</a></li>
+</ul>  </div>
+</div>
+<div id="block-user-login" class="block block-user">
+
+    <h2>User login</h2>
+  
+  <div class="content">
+    <form action="/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi?destination=node/2602" method="post" id="user-login-form" accept-charset="UTF-8"><div><div class="form-item form-type-textfield form-item-name">
+  <label for="edit-name">Username <span class="form-required" title="This field is required.">*</span></label>
+ <input id="edit-name" name="name" size="15" maxlength="60" class="form-text required" type="text">
+</div>
+<div class="form-item form-type-password form-item-pass">
+  <label for="edit-pass">Password <span class="form-required" title="This field is required.">*</span></label>
+ <input id="edit-pass" name="pass" size="15" maxlength="128" class="form-text required" type="password">
+</div>
+<div class="item-list"><ul><li class="first"><a href="https://community.rti.com/user/register" title="Create a new user account.">Create new account</a></li>
+<li class="last"><a href="https://community.rti.com/user/password" title="Request new password via e-mail.">Request new password</a></li>
+</ul></div><input name="form_build_id" value="form-w4H2rQ3vE0vrf9YYggofHZsSc68xcHik-eFxtQYjpd0" type="hidden">
+<input name="form_id" value="user_login_block" type="hidden">
+<div class="form-actions form-wrapper" id="edit-actions--2"><input id="edit-submit--2" name="op" value="Log in" class="form-submit" type="submit"></div></div></form>  </div>
+</div>
+  </div>
+      </div></div> <!-- /.section, /#sidebar-first -->
+    
+    <div id="content" class="column"><div class="section">
+            <a id="main-content"></a>
+                    <h1 class="title" id="page-title">
+          HOWTO Run RTI Connext DDS on Raspberry Pi        </h1>
+                          <div class="tabs">
+                  </div>
+                          <div class="region region-content">
+    <div id="block-system-main" class="block block-system">
+
+    
+  <div class="content">
+    <div id="node-2602" class="node node-howto node-full clearfix">
+
+      
+      <div class="meta submitted">
+            Submitted by <a href="https://community.rti.com/users/fernando-garcia" title="View user profile." class="username">Fernando Garcia</a> on Thu, 12/20/2012 - 04:35    </div>
+  
+  <div class="content clearfix">
+    <div class="field field-name-body field-type-text-with-summary field-label-hidden"><div class="field-items"><div class="field-item even"><h2>Originally posted in 2012, updated September 2016</h2><h2>1 Introduction</h2><p>RTI has recently released a community port of RTI Connext DDS for <a href="http://www.raspberrypi.org/about">Raspberry Pi</a>,
+ an inexpensive credit-card-sized single-board computer with an ARM 
+processor. RTI Connext DDS is RTI's implementation of the OMG Data 
+Distribution Service specification.&nbsp;</p><p>This HOWTO describes the
+ steps you need to follow to set up your machine to build DDS 
+applications able to run on a Raspberry Pi. We will use a cross-compiler
+ that can be run on a 32- or 64-bit Linux machine, but we will also 
+provide some links with documentation to cross-compile from different 
+platforms.</p><p>The document is organized as follows:</p><ul><li><a href="#Install_Raspbian">Section 2</a> explains how to set up your Raspberry Pi to run a supported version of Raspbian.</li><li><a href="#Install_Connext_DDS">Section 3</a> shows how to install RTI Connext DDS on your Linux host.</li><li><a href="#Install_RaspberryPi_Libraries">Section 4</a> explains how to install the RTI Connext DDS libraries for Raspberry Pi on your Linux host.</li><li><a href="#Setup_Cross_Compiling_Environment">Section 5</a> describes the steps you need to follow to set up a cross-compiling environment for Raspberry Pi.</li><li><a href="#Compile_And_Run_Hello_World_Example">Section 6</a> illustrates the development of DDS applications for Raspberry Pi.</li></ul><h2 id="Install_Raspbian">2 Install Raspbian</h2><p>Before
+ installing RTI Connext DDS on your Raspberry Pi check that you have a 
+supported image of Raspbian (hard-float ABI) installed in your SD. You 
+can downloaded the latest version from the <a href="http://downloads.raspberrypi.org/raspbian/images/">RaspberryPi repository or Raspian Images</a>. We have tested our application on several versions starting with&nbsp;<em>2012-10-28</em><em>-wheezy-raspbian</em> images up to <a href="http://downloads.raspberrypi.org/raspbian/images/raspbian-2016-05-31/2016-05-27-raspbian-jessie.zip">2016-05-27-raspbian-jessie</a>.&nbsp;If you find any issue running DDS applications on newer images, post a comment and we will look into it.</p><h3>2.1 Install Raspbian image into the SD card</h3><p>First, download and unzip the latest image (e.g., <a href="http://downloads.raspberrypi.org/raspbian/images/raspbian-2016-05-31/2016-05-27-raspbian-jessie.zip">2016-05-27-raspbian-jessie</a>).</p><pre>unzip 2016-05-27-raspbian-jessie.zip
+</pre><p>To copy the image to the SD card, on Unix-based systems (e.g., Linux or MacOSX) you will need to use the <code>dd</code> command. If you are using Windows, use <a href="https://launchpad.net/win32-image-writer/+download">Win32DiskManager</a>.</p><blockquote><strong>Note:</strong>
+ This tutorial covers the process on Linux and MacOSX environments, you 
+can find instructions on how to install the image from a Windows system <a href="http://elinux.org/RPi_Easy_SD_Card_Setup#Copying_the_image_to_an_SD_card_on_Windows">here</a>.</blockquote><p>Before copying the image to the SD card, identify the device name comparing the results of <code>df -h</code> before and after inserting the SD card on your machine.</p><p><strong>On Linux</strong>, the filesystem returned by <code>df -h</code> will be something like <em>/dev/mmcblk0p1</em> (device name is <em>/dev/mmcblk0</em> and partition number is <em>p1</em>) or <em>/dev/sdd1&nbsp;</em>(device name is <em>/dev/sdd</em> and partition number is <em>1</em>).</p><pre>df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        19G  7.6G   11G  42% /
+udev            494M  4.0K  494M   1% /dev
+tmpfs           201M  812K  200M   1% /run
+none            5.0M     0  5.0M   0% /run/lock
+none            501M  124K  501M   1% /run/shm
+<strong>/dev/sdd1        56M   17M   39M  30% /media/Untitled</strong>
+</pre><p><strong>On MacOSX</strong>, the filesystem returned by <code>df -h</code> will be something like <em>/dev/disk3s1</em>, where <em>/dev/disk3</em> is the device name and <em>s1</em> is the partition number.</p><pre>df -h
+Filesystem      Size   Used  Avail Capacity  Mounted on
+/dev/disk0s2   465Gi  439Gi   26Gi    95%    /
+devfs          112Ki  112Ki    0Bi   100%    /dev
+map -hosts       0Bi    0Bi    0Bi   100%    /net
+map auto_home    0Bi    0Bi    0Bi   100%    /home
+<strong>/dev/disk3s1    56Mi   35Mi   21Mi    63%    /Volumes/Untitled</strong>
+</pre><p>Once you have identified the device name, unmount the file 
+system (if your SD card has more than one partition unmount all of 
+them).</p><p><strong>On Linux:</strong></p><pre>umount /media/Untitled</pre><p><strong>On MacOSX:</strong></p><pre>sudo umount /Volumes/Untitled</pre><p>Now, copy the image to the SD card using the <code>dd</code> command. You should use the device name without the partition name (e.g., if the device name was <em>/dev/sdd1</em> set <code>of=/dev/sdd</code>).</p><blockquote><p><strong>Note:</strong> You will lose all data stored on the device so be <strong>EXTREMELY CAREFUL</strong> specifying the right device.</p></blockquote><p><strong>On Linux</strong>, as indicated <a href="http://elinux.org/RPi_Easy_SD_Card_Setup#Copying_an_image_to_the_SD_card_in_Linux_.28command_line.29">here</a>, setting block size (bs) to 4M will work most of the time, try 1M if the process fails.</p><pre>dd bs=4M if=/path/to/2016-05-27-raspbian-jessie.img of=/dev/sdd
+</pre><p><strong>On MacOSX</strong>, use <em>/dev/rdiskX</em> instead of <em>/dev/diskX</em> when specifying the output file (e.g., if the device name was <em>/dev/disk3s1</em> set <code>of=/dev/rdisk3</code>). Set block size to 1m, as indicated <a href="http://elinux.org/RPi_Easy_SD_Card_Setup#Copying_an_image_to_the_SD_card_in_Mac.C2.A0OS.C2.A0X_.28command_line.29">here</a>.</p><pre>dd bs=1m if=/path/to/2016-05-27-raspbian-jessie.img of=/dev/rdisk3
+</pre><p>If you get a "permission denied" error, <strong>triple-check you are specifying the right device</strong> on the <code>of=</code>&nbsp;argument and the use <code>sudo</code> as in:</p><pre>sudo dd bs=1m if=/path/to/2016-05-27-raspbian-jessie.img of=/dev/rdisk3
+</pre><div>Copying the image can take some time, depending on the size 
+of the image and the speed of the SD card. For me it was about 8MB/sec 
+on a MacBookPro, so the 4 GB&nbsp;<span style="font-size: 13.44px;">raspbian-jessie image took about 8 minutes.</span></div><div><span style="font-size: 13.44px;">&nbsp;</span></div><p>Finally,
+ remove the SD card, put into the Raspberry Pi board and boot the board.
+ You should have a monitor and a keyboard attached to the Raspberry 
+Pi.&nbsp;You will see the board boot logging the process to the screen.</p><p><span style="font-size: 13.44px;">On the older raspbian images after the board finished booting the display would show the Rasbpain configuration screen.</span></p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspi-config.jpg" alt="Raspberry Pi configuration screen" title="Raspberry Pi configuration screen" width="608" height="358"></p><p>On the newer Raspbian images after the boot the window system will start directly the LXDE desktop:</p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspbian_jessie_setup.png" alt="Raspbian Jessie LXDE desktop" title="Raspbian Jessie LXDE desktop" width="600" height="346">&nbsp;</p><h3>2.2 Configure Raspbian</h3><p>The
+ first time you boot the Raspberry Pi you will see a configuration menu 
+with some actions. These are the actions we recommend you to do:</p><ul><li>Expand root partition to fill SD card (<code>expand_rootfs</code>).</li><li>Change the password for the "pi" user (by default username is "pi" and password "raspberry").</li><li>Enable SSH server to allow remote access.</li></ul><p>In
+ the older Raspbian distributions this was done using the Raspbian 
+configuration screen. In the newer ones with the LXDE desktop you need 
+to go to the Raspberry menu and select "Preferences-&gt;Raspberry Pi 
+Configuration" this will bring a configuration dialog (see below) where 
+you can perform the actions listed above.</p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspbian-jessie-config_dialog.png" alt="RaspberryPi configuration dialog" title="RaspberryPi configuration dialog" width="494" height="395"></p><p>Once
+ you are finished configuring the system, reboot the Rasbperry Pi. If 
+you are using the older images with the special config screen you can 
+access the configuration menu again running the command <code>raspi-config</code> as root. On the newer images it is available from the Raspberry menu.</p><h3>2.3 Connect to the Raspberry over Ethernet</h3><p>The
+ easiest way to download the software into the Raspberry Pi is to use 
+the ethernet connection. The older Raspberry Pis (up to model 2) did not
+ include a wireless Ethernet adaptor so to simplify things the 
+instrutions assume you are using the wired ethernet connector.</p><p>There are two approaches to this:</p><ol><li>Use a DHCP-capable router.</li><li>Configure the IP address manually.</li></ol><h4>2.3.1 Option 1: Use a DHCP-capable Router</h4><p>The
+ simplest option is to plug the Raspberry to a DHCP enabled 
+router/switch. If you have one of these routers, you can connect the 
+Raspberry Pi to one of the ports and the router will automatically 
+assign an IP address to the Raspberry Pi automatically.</p><p>If this process succeeds you will be able to see the IP address using the <code>ifconfig</code>command:</p><pre>pi@raspberrypi ~ $ ifconfig
+eth0      Link encap:Ethernet  HWaddr b8:27:eb:03:24:b0  
+          inet addr:<strong>192.168.33.10</strong>  Bcast:192.168.33.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:227 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:88 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:21872 (21.3 KiB)  TX bytes:17740 (17.3 KiB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+</pre><p>Here we see that the router assigned the IP address 192.168.33.10 to the <em>eth0&nbsp;</em>interface on the Raspberry Pi.</p><h4>2.3.2 Option 2: Configure the IP Address Manually</h4><p>If
+ you do not have a DHCP enabled router available you can connect the 
+Raspberry Pi directly to the Ethernet port of another computer. You can 
+use a regular Ethernet cable (no need for a so-called crossover cable) 
+as the Raspberry Pi is smart enough to detect the direct connection.</p><p>If
+ you connect your laptop or PC directly to the Raspberry Pi with an 
+ethernet cable you also need to set the IP addresses manually as there 
+is no DHCP server to assign them to the Raspberry Pi.</p><p>It is 
+possible that when you connect the ethernet cable from the host to the 
+Raspberry Pi, the host's network interface has already an auto-assigned 
+IP address (e.g., 169.254.x.x). You can check that by typing <code>ifconfig</code>on Linux or MacOSX (or <code>ipconfig</code> on Windows). For instance, on MacOSX you will see something like:</p><pre>ifconfig
+lo0: flags=8049&lt;UP,LOOPBACK,RUNNING,MULTICAST&gt; mtu 16384
+	inet6 ::1 prefixlen 128 
+	inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1 
+	inet 127.0.0.1 netmask 0xff000000 
+gif0: flags=8010&lt;POINTOPOINT,MULTICAST&gt; mtu 1280
+stf0: flags=0&lt;&gt; mtu 1280
+en0: flags=8863&lt;UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+	ether 58:b0:35:fe:09:22 
+	inet6 fe80::5ab0:35ff:fefe:922%en0 prefixlen 64 scopeid 0x4 
+	inet <strong>169.254.71.49</strong> netmask <strong>0xffff0000</strong> broadcast 169.254.255.255
+	media: autoselect (100baseTX &lt;full-duplex,flow-control&gt;)
+	status: active
+en1: flags=8863&lt;UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+	ether 90:27:e4:e8:f1:e8 
+	inet6 fe80::9227:e4ff:fee8:f1e8%en1 prefixlen 64 scopeid 0x5 
+	inet 10.30.1.124 netmask 0xffffff00 broadcast 10.30.1.255
+	media: autoselect
+	status: active
+</pre><p>In this case, <em>en0</em> (the name MacOSX uses for the wired ethernet interface) was assigned the address 169.254.71.49 with the mask&nbsp;<em>0xffff0000</em>&nbsp;(i.e., 255.255.0.0).</p><p>If
+ the host has an IP address, you only need to configure manually the 
+address on the Raspberry Pi. If the host does not, you need to configure
+ manually the IP address on both the host and the Raspberry Pi.</p><p>In
+ our situation we only needed to configure manually the Raspberry Pi. To
+ do this we need to choose an IP address that is on the same network as 
+the host, for instance&nbsp;169.254.71.1&nbsp;as it is on the same 
+169.254.x.x network.&nbsp;You can set this IP address on the Raspberry 
+Pi is done using the <code>ifconfig</code> command:</p><pre>sudo ifconfig eth0 169.254.71.1 netmask 255.255.0.0 up
+</pre><p>Once you have set the IP address you can use SSH to log in from
+ your host using the username "pi" and the password you set on section 
+2.2. If you did not change the password, use "raspberry", which is the 
+one configured by default. The messages below will vary depending on 
+your host and raaspbian image.</p><pre>ssh pi@169.254.71.1
+The authenticity of host '169.254.71.1 (169.254.71.1)' can't be established.
+RSA key fingerprint is ba:8a:bf:90:a0:42:fb:ba:34:74:03:b3:2d:55:50:f4.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '169.254.71.1' (RSA) to the list of known hosts.
+pi@169.254.71.1's password: 
+Linux raspberrypi 3.2.27+ #250 PREEMPT Thu Oct 18 19:03:02 BST 2012 armv6l
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Dec 16 21:32:50 2012 from 169.254.71.49
+pi@raspberrypi ~ 
+</pre><blockquote><strong>Note:</strong> If you want to set manually the
+ IP address on both host and the Raspberry Pi you will need to pick two 
+IP addresses. We recommend you to use addresses that fall in the private
+ IP range. For instance, two in the <em>192.168.x.x</em> range: <em>192.168.1.1</em> and <em>192.168.1.2</em>. These addresses use a <em>255.255.255.0&nbsp;</em>mask. On the Raspberry Pi run:<pre>sudo ifconfig eth0 192.168.1.1 netmask 255.255.255.0 up</pre>If you are using a Linux host (assuming you are using the <em>eth0&nbsp;</em>interface) run:<pre>sudo ifconfig eth0 192.168.1.2 netmask 255.255.255.0 up</pre>On MacOSX host (assuming you are ussing the <em>en0&nbsp;</em>interface run the following command (you can also use the GUI under system utilities):<pre>sudo ifconfig en0 192.168.1.2 netmask 255.255.255.0 up</pre></blockquote><h4>2.3.3 Configure the Raspberry Pi get the same assigned IP each time it boots</h4><p>If
+ you want to setup the Raspberry Pi as a headless device—and you 
+anticipate you will not be able to connect it to a DHCP-enabled 
+router—you need to configure it so that it gets a manual IP address each
+ time it boots. The effect of the <code>ifconfig</code> command only 
+lasts until the next reboot, so you boot the Raspberry Pi headless 
+(i.e., operating without a monitor, keyboard, and mouse) you will not be
+ able to connect to it.</p><p>To configure the Rasberry Pi to get a specific IP address each time it boots, edit <em>/etc/network/interfaces</em> as root:</p><pre># Comment out the following line:
+# iface eth0 inet dhcp
+
+# And add the following lines instead:
+iface eth0 inet static
+address 169.254.71.1
+netmask 255.255.0.0
+</pre><p>The next time you reboot and connect the ethernet cable to the 
+Rasberry Pi, it will have the assigned IP address and you will be able 
+to SSH directly to it.</p><blockquote><strong>Note:</strong> Remember to revert these changes if you ever want to connect to a router and get an address automatically assigned via DHCP.</blockquote><h2 id="Install_Connext_DDS">3 Install RTI Connext DDS on your Linux Host</h2><p>The
+ next thing you need is to do is to set up a Linux computer with the RTI
+ Connext DDS Host development bundles. There are two ways in which you 
+can do this:</p><ol><li>Downloading a bundle/installer from the RTI Support Portal.</li><li>Downloading&nbsp;the RTI Open Community Source, free Evaluation, or University bundles.</li></ol><h3>3.1 Option 1: Install RTI Connext DDS from the RTI Support portal</h3><p>If
+ you have purchased a support contract, and you have an account on the 
+RTI Support Portal&nbsp;you can download the Linux Host bundles from <a href="https://support.rti.com/index.php">it</a>.</p><p>You
+ can use any of the options bellow, as&nbsp;RTI Connext Professional 
+includes RTI Connext Messaging, which itself includes RTI Connext DDS.</p><ul><li>RTI Connext DDS Core bundles:</li><ul><li>On 32-bit Linux: <a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-core-host-i86Linux.run">rti_connext_dds-5.2.3-core-host-i86Linux.run</a></li><li>On 64-bit Linux: <a href="https://support.rti.com/library/rtidds500/RTI_Connext_DDS_Host-5.0.0-i86Linux.tar.gz">r</a><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-core-host-x64Linux.run">ti_connext_dds-5.2.3-core-host-x64Linux.run</a></li></ul><li>RTI Connext DDS Basic bundles:</li><ul><li>On 32-bit Linux: <a href="https://support.rti.com/library/rtidds500/RTI_Connext_Messaging_Host-5.0.0-i86Linux.tar.gz">r</a><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-basic-host-i86Linux.run">ti_connext_dds-5.2.3-basic-host-i86Linux.run</a></li><li>On 64-bit Linux: <a href="https://support.rti.com/library/rtidds500/RTI_Connext_Messaging_Host-5.0.0-x64Linux.tar.gz">r</a><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-basic-host-x64Linux.run">ti_connext_dds-5.2.3-basic-host-x64Linux.run</a></li></ul><li>RTI Connext DDS Professional bundles:</li><ul><li>On 32-bit Linux: <a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-pro-host-i86Linux.run">rti_connext_dds-5.2.3-pro-host-i86Linux.run</a></li><li>On 64-bit Linux: <a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-pro-host-x64Linux.run">rti_connext_dds-5.2.3-pro-host-x64Linux.run</a></li></ul></ul><h3>3.2 Option 2: Download the RTI Connext free evaluation, the Open Community Source, or the University &amp; IR&amp;D bundles</h3><p>If you do not want to use the RTI Live CD and you cannot access the RTI support portal, you can download RTI Connext from <a href="http://www.rti.com/downloads/index.html">here</a>.
+ This link gives you access to the free RTI DDS Open Community Source, 
+the free University and IR&amp;D bundles, and also the full Connext DDS 
+Product and Tools under an evaluation license.</p><h2 id="Install_RaspberryPi_Libraries">4 Install RTI Connext DDS 5.2.3 libraries for Raspberry Pi on your Linux host</h2><p>For
+ this step we assume that you have completed the previous step and you 
+have installed RTI Connext DDS under some directory on your Linux host. 
+In the following we assume your installation directory is&nbsp;<em>/home/rticonnext/rti_connext_dds-5.2.3</em>.</p><p>The
+ first step is to download and install the RTI Connext DDS 5.2.3 target 
+libraries for Raspberry Pi. These libraries are distributed as an <em>rtipkg </em>file
+ that needs to be installed using the rtipkginstall utility distributed 
+along with RTI Connext DDS. You have the following options to download 
+the Connext DDS libraries for Raspberry Pi:</p><ul><li>RTI customers can download the appropriate rtipkg target package from the RTI Support Portal:</li><ul><li><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg">rti_connext_dds-5.2.3-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg</a></li><li><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-basic-target-armv6vfphLinux3.xgcc4.7.2.rtipkg">rti_connext_dds-5.2.3-basic-target-armv6vfphLinux3.xgcc4.7.2.rtipkg</a></li><li><a href="https://support.rti.com/library/rtidds523/rti_connext_dds-5.2.3-pro-target-armv6vfphLinux3.xgcc4.7.2.rtipkg">rti_connext_dds-5.2.3-pro-target-armv6vfphLinux3.xgcc4.7.2.rtipkg</a></li></ul><li>Evaluation, Open Community Source, or University &amp; IR&amp;D users can download it from the RTI Community Portal:</li><ul><li><a href="https://community.rti.com/static/downloads/connext-dds/5.2.3/rti_connext_dds-5.2.3-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg">rti_connext_dds-5.2.3-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg</a></li></ul></ul><p>Once you have download the appropriate rtipkg, you can install it as follows:</p><pre>cd /home/rticonnext/rti_connext_dds-5.2.3
+./bin/rtipkginstall ~/Downloads/rti_connext_dds-5.2.3-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
+</pre><p>You will see all the library files installed under the <em>rti_connext_dds-5.2.3/lib&nbsp;</em>directory:</p><pre>ls ./lib/armv6vfphLinux3.xgcc4.7.2
+libnddscd.so     libnddscorezd.a  libnddscppzd.a
+libnddscored.so  libnddscppd.so   libnddsc.so
+libnddscore.so   libnddscpp.so    libnddscz.a
+libnddscorez.a   libnddscppz.a    libnddsczd.a
+</pre><p>Note that in addition to the libraries, the utility programs <code>rtiddsping</code>, <code>rtiddsspy</code>, and <code>rtiddsprototyper</code> are all available to run on the Raspberry Pi.</p><p>Now, you can start building DDS applications for the Raspberry Pi.</p><blockquote><strong>Note:</strong>
+ If you compile your application statically against the RTI Connext DDS 
+libraries, you will not need to install these libraries on your 
+Raspberry Pi. However, if you link RTI Connext DDS libraries 
+dynamically, you will need follow the instructions above to also install
+ RTI Connext onto the Raspberry Pi itself. If you do this, remember also
+ to set the <code>LD_LIBRARY_PATH</code> environment variable on the 
+Raspberry Pi to include the directory 
+rti_connext_dds-5.2.3/lib/armv6vfphLinux3.xgcc4.7.2. For example, if you
+ copied the RTI Connext DDS installation into your Raspberry under <em>/home/pi/rti_connext_dds-5.2.3 </em>you will need to set <code>LD_LIBRARY_PATH</code>as follows:<pre>export LD_LIBRARY_PATH=/home/pi/rti_connext_dds-5.2.3/lib/armv6vfphLinux3.xgcc4.7.2:$LD_LIBRARY_PATH
+</pre></blockquote><h2 id="Setup_Cross_Compiling_Environment">5 Set up linux Cross-compiling Environment for Raspberry Pi</h2><p>The
+ Raspberry Pi has limited resources compared to a regular desktop PC. 
+Development and compilation on the Raspberry Pi tends to be quite slow. 
+For this reason, we normally cross-compile most applications. That is, 
+we compile the application in a different machine (e.g., a regular <em>x86</em> Linux desktop) using a cross-compiler able to create binaries for the ARM 6 processor used by the Raspberry Pi.</p><p>There are two ways to do this:</p><ol><li>Use an existing toolchain for cross-compilation to the Raspberry Pi.</li><li>Create your own toolchain for cross-compilation to the Raspberry Pi.</li></ol><h3>5.1 Option 1 [Recommended]: Use an existing toolchain for cross-compilation</h3><p>You
+ can find many toolchains including cross-compilers capable of creating 
+code that can be run on the Raspberry Pi. In this section, we show you 
+how to use toolchains built by RTI for 32- and 64-bit Linux 
+environments. If you want to build your own toolchain, see instructions 
+on Section 5.2. If you want to build applications on Windows, take a 
+look at this <a href="http://www.gurucoding.com/en/rpi_cross_compiler/index.php">tutorial</a>.</p><p>Download the Raspberry Pi toolchain for your platform into a suitable directory (e.g., under <em>/home/rticonnext/toolchains</em>).</p><pre>mkdir -p /home/rticonnext/toolchains
+cd /home/rticonnext/toolchains
+</pre><p>On 32-bit Linux:</p><pre>wget <a href="https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux32.tar.gz">https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux32.tar.gz</a>
+tar xvzf raspbian-toolchain-gcc-4.7.2-linux32.tar.gz
+</pre><p>On 64-bit Linux:</p><pre>wget <a href="https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz">https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz</a>
+tar xvzf raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
+</pre><p>Now that you have the toolchain, add its <em>bin</em> directory to the path. Assuming you are using BASH in a 32-bit environment, run:</p><pre>export PATH=/home/rticonnext/toolchains/raspbian-toolchain-gcc-4.7.2-linux32/bin:$PATH
+</pre><p>If you want these changes to be permanent on your system, assuming again you are using BASH, add the line above to <em>~/.bashrc</em>.</p><h3>5.2 Option 2: Build your own toolchain for cross-compilation to Raspberry Pi</h3><p>Building
+ a custom toolchain gives you great flexibility, as it allows you to 
+tune the compiler for a specific target. In this tutorial we show you 
+how to use Crosstool-ng—a toolchain generator for more than 40 
+platforms—to generate a toolchain to compile for your Raspberry Pi.</p><h4>5.2.1 Install Crosstool-ng</h4><p>To
+ configure and compile Crosstool-ng you need to install some 
+dependencies in your system. Assuming you are using Ubuntu (in other 
+distributions package names will be quite similar) run:</p><pre>sudo apt-get install bison flex texinfo gperf gawk libtool automake libncurses5-dev subversion
+</pre><p>Now download, extract, compile, and install crosstool-ng. Assuming you want to install Crosstool-ng under <em>/home/rticonnext/build_tools/crosstool-ng-1.17&nbsp;</em>run:</p><pre>wget <a href="http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.17.0.tar.bz2">http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.17.0.tar.bz2</a>
+tar xvjf crosstool-ng-1.17.0.tar.bz2
+cd crosstool-ng-1.17.0
+mkdir -p /home/rticonnext/build_tools/crosstool-ng-1.17
+./configure --prefix=/home/rticonnext/build_tools/crosstool-ng-1.17
+make
+make install
+</pre><h4>5.2.2 Configure and build the toolchain</h4><p>Once you have compiled Crostool-ng, you can configure and build a toolchain for the Raspberry Pi:</p><pre>/home/rticonnext/build_tools/crosstool-ng-1.17/bin/ct-ng menuconfig
+</pre><blockquote><strong>Note:</strong> This will create a .config file
+ under the working directory with your configuration (and a .build 
+directory with all the binaries that will be copied later to the 
+directory you want to install the toolchain on). We recommend you to run
+ these commands from a place you can remove the files from once you are 
+done building your toolchain.</blockquote><p>In the configuration menu, edit the following options:</p><ul><li>Paths and misc options<ul><li>Try features marked as EXPERIMENTAL</li><li>In prefix directory indicate the directory where you want your toolchain. In this case: <em>${HOME}/toolchains/raspbian-toolchain-gcc-4.7.2-linux32</em></li></ul></li><li>Target options<ul><li>Target architecture: arm</li><li>Endianness: Little endian</li><li>Bitness: 32-bit</li><li>Floating point: hardware (FPU)</li></ul></li><li>Toolchain options<ul><li>Build static toolchain (Experimental)</li><li>Toolchain bug url: <a href="http://community.rti.com/">http://community.rti.com</a></li><li>Tuple's vendor string: raspbian</li><li>Tuple's alias: arm-linux-gnueabihf</li></ul></li><li>Operating system<ul><li>Target OS: Linux</li><li>You can also select the kernel version you run in your target. In this case, use 2.6.32.60.</li></ul></li><li>C compiler<ul><li>C compiler: gcc</li><li>gcc version: 4.7.2</li><li>In additional supported languages add C++</li></ul></li></ul><p>Once you are done with your configuration, run:</p><pre>/home/rticonnext/build_tools/crosstool-ng-1.17/bin/ct-ng build
+</pre><p>This toolchain building process takes quite long. Once the toolchain is ready, you should find it under <em>/home/rticonnext/toolchains/raspbian-toolchain-gcc-4.7.2-linux32</em>&nbsp;(or the directory you selected when you run <code>ct-ng menuconfig</code>).</p><p>Now that you have the toolchain, add its <em>bin</em> directory to the path. Assuming you are using BASH in a 32-bit environment, run:</p><pre>export PATH=/home/rticonnext/toolchains/raspbian-toolchain-gcc-4.7.2-linux32/bin:$PATH
+</pre><h2 id="Compile_And_Run_Hello_World_Example">6 Compile and Run a Hello World Example</h2><p>To
+ validate your installation you can build a "hello world" application in
+ C++ and Java using rtiddsgen in your own machine. You will generate and
+ and edit the source files in your machine, cross-compile the code, and 
+copy the executables to your Raspberry Pi.</p><h3>6.1 C++ Example</h3><p>First, create a file called <em>hello.idl </em>with the following content:</p><div><div id="highlighter_158687" class="syntaxhighlighter  cpp"><div class="toolbar"><span><a href="#" class="toolbar_item command_help help">?</a></span></div><table cellspacing="0" cellpadding="0" border="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="cpp keyword bold">struct</code> <code class="cpp plain">hello_message {</code></div><div class="line number2 index1 alt1"><code class="cpp spaces">&nbsp;&nbsp;&nbsp;</code><code class="cpp plain">string name; </code><code class="cpp comments">//@key</code></div><div class="line number3 index2 alt2"><code class="cpp spaces">&nbsp;&nbsp;&nbsp;</code><code class="cpp color1 bold">long</code> <code class="cpp plain">count;</code></div><div class="line number4 index3 alt1"><code class="cpp plain">};</code></div></div></td></tr></tbody></table></div></div><p>Use rtiddsgen to generate a C++ example for the Raspberry Pi platform:</p><pre>./bin/rtiddsgen -example armv6vfphLinux3.xgcc4.7.2 -language C++ hello.idl
+</pre><blockquote><strong>Note:</strong> Remember to export the NDDSHOME
+ environment variable and include the toolchain bin/ directory in the 
+PATH and as we explained in Sections 4 and 5.1.</blockquote><p>The 
+rtiddsgen utility generates several files, including a makefile and two 
+source files with the publisher and subscriber applications. Now, edit <em>hello_publisher.cxx&nbsp;</em>and add some data to be sent. To do this, look for the comment "<code>/* Modify the data to be sent here */</code>" in the C++ source file and add the code highlighted here:</p><div><div id="highlighter_731638" class="syntaxhighlighter  cpp"><div class="toolbar"><span><a href="#" class="toolbar_item command_help help">?</a></span></div><table cellspacing="0" cellpadding="0" border="0"><tbody><tr><td class="gutter"><div class="line number187 index0 alt2">187</div><div class="line number188 index1 alt1">188</div><div class="line number189 index2 alt2">189</div><div class="line number190 index3 alt1">190</div><div class="line number191 index4 alt2">191</div><div class="line number192 index5 alt1">192</div><div class="line number193 index6 alt2">193</div><div class="line number194 index7 alt1">194</div><div class="line number195 index8 alt2">195</div><div class="line number196 index9 alt1">196</div><div class="line number197 index10 alt2">197</div><div class="line number198 index11 alt1">198</div></td><td class="code"><div class="container"><div class="line number187 index0 alt2"><code class="cpp functions bold">printf</code><code class="cpp plain">(</code><code class="cpp string">"Writing hello_message, count %d\n"</code><code class="cpp plain">, count);</code></div><div class="line number188 index1 alt1">&nbsp;</div><div class="line number189 index2 alt2"><code class="cpp comments">/* Modify the data to be sent here */</code></div><div class="line number190 index3 alt1"><code class="cpp functions bold">strcpy</code><code class="cpp plain">(instance-&gt;name, </code><code class="cpp string">"Fernando"</code><code class="cpp plain">);</code></div><div class="line number191 index4 alt2"><code class="cpp plain">instance-&gt;count = count;</code></div><div class="line number192 index5 alt1">&nbsp;</div><div class="line number193 index6 alt2"><code class="cpp plain">retcode = hello_message_writer-&gt;write(*instance, instance_handle);</code></div><div class="line number194 index7 alt1"><code class="cpp keyword bold">if</code> <code class="cpp plain">(retcode != DDS_RETCODE_OK) {</code></div><div class="line number195 index8 alt2"><code class="cpp spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="cpp functions bold">printf</code><code class="cpp plain">(</code><code class="cpp string">"write error %d\n"</code><code class="cpp plain">, retcode);</code></div><div class="line number196 index9 alt1"><code class="cpp plain">}</code></div><div class="line number197 index10 alt2">&nbsp;</div><div class="line number198 index11 alt1"><code class="cpp plain">NDDSUtility::sleep(send_period);</code></div></div></td></tr></tbody></table></div></div><p>To build the examples, use the makefile generated by rtiddsgen.</p><pre>make -f makefile_hello_armv6vfphLinux3.xgcc4.7.2
+</pre><p>Finally, copy the executables and the XML file with the default QoS settings for the example to the Raspberry Pi (e.g., to <em>/home/pi/examples</em>), and run the publisher and subscriber applications.</p><pre>scp objs/armv6vfphLinux3.xgcc4.7.2/hello_publisher \
+pi@&lt;raspberrypi_ip&gt;:/home/pi/example/
+scp objs/armv6vfphLinux3.xgcc4.7.2/hello_subscriber \
+pi@&lt;raspberrypi_ip&gt;:/home/pi/example/
+scp USER_QOS_PROFILES.xml pi@&lt;raspberrypi_ip&gt;:/home/pi/example/
+ssh pi@
+cd /home/pi/example
+./hello_publisher
+Writing hello_message, count 0
+Writing hello_message, count 1
+Writing hello_message, count 2
+Writing hello_message, count 3
+./hello_subscriber 
+hello_message subscriber sleeping for 4 sec...
+
+  name: "Fernando"
+  count: 1
+hello_message subscriber sleeping for 4 sec...
+
+  name: "Fernando"
+  count: 2
+hello_message subscriber sleeping for 4 sec...
+
+  name: "Fernando"
+  count: 3
+</pre><h3><a name="JavaExample"></a>6.2 Java Example</h3><p>In this 
+example we will show you how to generate code for Java and how to run it
+ on your Raspberry Pi. We assume that you already have JDK installed on 
+your device.</p><h4>6.2.1 Create RTI Connext Java Example</h4><p>Just like in the C++ example, create a file called <em>hello.idl</em>&nbsp;with the following content in your computer:</p><div><div id="highlighter_239003" class="syntaxhighlighter  cpp"><div class="toolbar"><span><a href="#" class="toolbar_item command_help help">?</a></span></div><table cellspacing="0" cellpadding="0" border="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="cpp keyword bold">struct</code> <code class="cpp plain">hello_message {</code></div><div class="line number2 index1 alt1"><code class="cpp spaces">&nbsp;&nbsp;&nbsp;</code><code class="cpp plain">string name; </code><code class="cpp comments">//@key</code></div><div class="line number3 index2 alt2"><code class="cpp spaces">&nbsp;&nbsp;&nbsp;</code><code class="cpp color1 bold">long</code> <code class="cpp plain">count;</code></div><div class="line number4 index3 alt1"><code class="cpp plain">};</code></div></div></td></tr></tbody></table></div></div><p>Use rtiddsgen to generate a Java example for the Raspberry Pi platform (<em>armv6vfphLinux3.xgcc4.7.2</em> in this case). Remember to set NDDSHOME to the right path before running the rtiddsgen.</p><pre>./bin/rtiddsgen -example armv6vfphLinux3.xgcc4.7.2 -language java hello.idl
+</pre><p>Edit&nbsp;<em>hello_messagePublisher.java&nbsp;</em>and add some data to be sent. To do this, look for the comment "<code>/* Modify the data to be sent here */</code>" in the Java source file and add the code highlighted here:</p><div><div id="highlighter_713130" class="syntaxhighlighter  java"><div class="toolbar"><span><a href="#" class="toolbar_item command_help help">?</a></span></div><table cellspacing="0" cellpadding="0" border="0"><tbody><tr><td class="gutter"><div class="line number187 index0 alt2">187</div><div class="line number188 index1 alt1">188</div><div class="line number189 index2 alt2">189</div><div class="line number190 index3 alt1">190</div><div class="line number191 index4 alt2">191</div><div class="line number192 index5 alt1">192</div><div class="line number193 index6 alt2">193</div><div class="line number194 index7 alt1">194</div><div class="line number195 index8 alt2">195</div><div class="line number196 index9 alt1">196</div><div class="line number197 index10 alt2">197</div><div class="line number198 index11 alt1">198</div><div class="line number199 index12 alt2">199</div><div class="line number200 index13 alt1">200</div></td><td class="code"><div class="container"><div class="line number187 index0 alt2"><code class="java plain">System.out.println(</code><code class="java string">"Writing hello_message, count "</code> <code class="java plain">+ count);</code></div><div class="line number188 index1 alt1">&nbsp;</div><div class="line number189 index2 alt2"><code class="java comments">/* Modify the instance to be written here */</code></div><div class="line number190 index3 alt1"><code class="java comments">instance.name = "Fernando";</code></div><div class="line number191 index4 alt2"><code class="java comments">instance.count = count;</code></div><div class="line number192 index5 alt1">&nbsp;</div><div class="line number193 index6 alt2"><code class="java comments">/* Write data */</code></div><div class="line number194 index7 alt1"><code class="java plain">writer.write(instance, instance_handle);</code></div><div class="line number195 index8 alt2"><code class="java keyword">try</code> <code class="java plain">{</code></div><div class="line number196 index9 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">Thread.sleep(sendPeriodMillis);</code></div><div class="line number197 index10 alt2"><code class="java plain">} </code><code class="java keyword">catch</code> <code class="java plain">(InterruptedException ix) {</code></div><div class="line number198 index11 alt1"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java plain">System.err.println(</code><code class="java string">"INTERRUPTED"</code><code class="java plain">);</code></div><div class="line number199 index12 alt2"><code class="java spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="java keyword">break</code><code class="java plain">;</code></div><div class="line number200 index13 alt1"><code class="java plain">}</code></div></div></td></tr></tbody></table></div></div><p>Although
+ you can generate the Java .class files in your Raspberry Pi, 
+"cross-compiling" the .class files from your computer will be much 
+faster.&nbsp;</p><pre>make -f makefile_hello_armv6vfphLinux3.xgcc4.7.2</pre><p>Now, copy the example to the Raspberry Pi (e.g., to <em>/home/pi/examples</em>).</p><pre>scp -r /path/to/example_dir pi@&lt;raspberrypi_ip&gt;:/home/pi/example
+</pre><h4>6.2.3 Run RTI Connext Java Example</h4><p>Finally, using the 
+makefile we ship with the example, run the publisher and subscriber 
+applications. Remember to set NDDSHOME to the right path before running 
+the applications.</p><pre>ssh pi@&lt;raspberrypi_ip&gt;
+cd /home/pi/example
+ 
+make -f makefile_hello_armv6vfphLinux3.xgcc4.7.2 hello_messagePublisher
+javac -classpath .:/home/pi/rti_connext_dds-5.2.3/lib/java/nddsjava.jar hello_messagePublisher.java
+java -classpath ".:/home/pi/rti_connext_dds-5.2.3/lib/java/nddsjava.jar" hello_messagePublisher
+Writing hello_message, count 0
+Writing hello_message, count 1
+Writing hello_message, count 2
+Writing hello_message, count 3
+Writing hello_message, count 4
+
+make -f makefile_hello_armv6vfphLinux3.xgcc4.7.2 hello_messageSubscriber
+java -classpath ".:/home/pi/rti_connext_dds-5.2.3/lib/java/nddsjava.jar" hello_messageSubscriber
+hello_message subscriber sleeping for 4 sec...
+hello_message subscriber sleeping for 4 sec...
+Received:
+ name: Fernando
+count: 0
+
+hello_message subscriber sleeping for 4 sec...
+Received:
+    name: Fernando
+    count: 1
+
+hello_message subscriber sleeping for 4 sec...
+Received:
+    name: Fernando
+    count: 2
+
+hello_message subscriber sleeping for 4 sec...
+Received:
+    name: Fernando
+    count: 3
+</pre></div></div></div><div class="field field-name-field-tags field-type-taxonomy-term-reference field-label-above clearfix"><class="field-label">Tags: <ul class="links"><li class="taxonomy-term-reference-0"><a href="https://community.rti.com/glossary-tags/raspberry-pi">Raspberry pi</a></li><li class="taxonomy-term-reference-1"><a href="https://community.rti.com/glossary-tags/arm">ARM</a></li><li class="taxonomy-term-reference-2"><a href="https://community.rti.com/glossary-tags/ports">Ports</a></li><li class="taxonomy-term-reference-3"><a href="https://community.rti.com/glossary-tags/toolchains">Toolchains</a></li><li class="taxonomy-term-reference-4"><a href="https://community.rti.com/glossary-tags/crosstool-ng">Crosstool-ng</a></li></ul></class="field-label"></div>  </div>
+
+      <div class="link-wrapper">
+      <ul class="links inline"><li class="comment_forbidden first last"><span><a href="https://community.rti.com/user/login?destination=node/2602%23comment-form">Log in</a> or <a href="https://community.rti.com/user/register?destination=node/2602%23comment-form">register</a> to post comments</span></li>
+</ul>    </div>
+  
+  
+
+</div>
+  </div>
+</div>
+  </div>
+      
+    </div></div> <!-- /.section, /#content -->
+
+    
+  </div></div> <!-- /#main, /#main-wrapper -->
+
+  
+  <div id="footer-wrapper"><div class="section">
+
+    
+          <div id="footer" class="clearfix">
+          <div class="region region-footer">
+    <div id="block-block-5" class="block block-block">
+
+    <h2>RTI Community Portal Terms of Use</h2>
+  
+  <div class="content">
+    <p><strong>NOTICE:</strong>&nbsp;Any content you submit to the RTI 
+Research Community Portal, including personal information, is not 
+subject to the protections which may be afforded to information 
+collected under other sections of RTI's Web site. You are entirely 
+responsible for all content that you upload, post, e-mail, transmit or 
+otherwise make available via RTI Community Portal. RTI does not control 
+the content posted by visitors to RTI Community Portal and, does not 
+guarantee the accuracy, integrity, or quality of such content. Under no 
+circumstances will RTI be liable in any way for any content not authored
+ by RTI, or any loss or damage of any kind incurred as a result of the 
+use of any content posted, e-mailed, transmitted or otherwise made 
+available via RTI Community Portal.&nbsp;<a style="text-decoration: underline;" href="http://community.rti.com/termsofuse">Read the complete Terms prior to use</a>.</p><p>Please see RTI's <span style="text-decoration: underline;"><a href="https://www.rti.com/privacy">privacy policy</a></span> and <span style="text-decoration: underline;"><a href="https://www.rti.com/cookie">cookie policy</a></span> if you have questions about any information collected during the sign-up process.</p>  </div>
+</div>
+<div id="block-block-4" class="block block-block">
+
+    
+  <div class="content">
+    Community of  RTI Data Distribution Service Users. Copyright © Real-Time Innovations, Inc.  </div>
+</div>
+  </div>
+      </div> <!-- /#footer -->
+    
+  </div></div> <!-- /.section, /#footer-wrapper -->
+
+</div></div> <!-- /#page, /#page-wrapper -->
+  <script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Rk5YIkK6m2gKTGH-GrMu0pM_PlMKXnI0ktQUgXw1XgA.js"></script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+function euCookieComplianceLoadScripts() {}
+//--><!]]>
+</script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+var eu_cookie_compliance_cookie_name = "";
+//--><!]]>
+</script>
+<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_4MRGjqSerJEQxet46pdKTifSYprPwyhoaSNKNoRsFw4.js"></script>
+
+
+</body></html>
