@@ -5,7 +5,7 @@ mkdir rtidds
 rm -rf build
 mkdir build
 
-/home/janis/rti_connext_dds-5.3.1/bin/rtiddsgen -language C++11 ../dds_idl/Pose2D.idl -example x64Linux3gcc5.4.0 -d ./rtidds/
+rtiddsgen -language C++11 ../dds_idl/Pose2D.idl -example x64Linux3gcc5.4.0 -d ./rtidds/
 
 cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
