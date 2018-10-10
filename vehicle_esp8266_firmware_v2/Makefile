@@ -1,5 +1,0 @@
-PROGRAM=vehicle_esp8266_firmware_v2
-ESPBAUD=921600
-EXTRA_COMPONENTS = extras/i2c
-EXTRA_CFLAGS+=-DI2C_DEBUG=1
-include $(ESP_OPEN_RTOS_ROOT)/common.mk
