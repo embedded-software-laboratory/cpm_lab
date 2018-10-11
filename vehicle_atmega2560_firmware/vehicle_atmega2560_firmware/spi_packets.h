@@ -28,12 +28,11 @@ typedef struct
 	uint8_t LED_bits;
 } __attribute__((packed)) spi_mosi_data_t;
 
-_Static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
 
 typedef struct
 {
 	uint32_t tick;
-	uint32_t odometer_steps;
+	int32_t odometer_steps;
 	uint16_t imu_yaw;
 	int16_t imu_acceleration_forward;
 	int16_t imu_acceleration_left;
@@ -58,10 +57,17 @@ typedef struct
 } __attribute__((packed)) spi_miso_data_t;
 
 
+
+#ifdef __cplusplus
+static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
+static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
+static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
+static_assert(sizeof(spi_miso_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
+#else
+_Static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
 _Static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
-
-
 _Static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 _Static_assert(sizeof(spi_miso_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
+#endif
 
 #endif /* SPI_PACKETS_H_ */
