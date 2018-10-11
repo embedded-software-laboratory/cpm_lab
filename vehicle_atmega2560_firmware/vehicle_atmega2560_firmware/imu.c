@@ -93,8 +93,8 @@ bool imu_read(uint16_t* imu_yaw, int16_t* imu_acceleration_forward, int16_t* imu
 	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
 	if(twi_readFrom(BNO055_ADDRESS, buffer, 4, true) != 4) success_flag = false;
 	
-	*imu_acceleration_left = -*((int16_t*)(buffer)); // TODO update axis mapping when the PCB arrives
-	*imu_acceleration_forward = *((int16_t*)(buffer+2));
+	*imu_acceleration_left = *((int16_t*)(buffer)); // TODO update axis mapping when the PCB arrives
+	*imu_acceleration_forward = -*((int16_t*)(buffer+2));
 	
 	return success_flag;
 }
