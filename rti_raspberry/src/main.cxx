@@ -54,14 +54,21 @@ int main(/*int argc, char *argv[]*/)
         spi_miso_data.CRC = 0;
         uint16_t mosi_CRC_target = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 
+
+
+        const double odometer_meter_per_step = 0.00468384074941;
+        const double speed_meter_per_second_per_step = odometer_meter_per_step * 0.2384185791;
+        const double imu_yaw_radian_per_step = 0.00109083078249645598;
+        const double battery_volt_per_step = 0.0116669;
+
         if(miso_CRC_actual == mosi_CRC_target) {
             VehicleState sample;
-            sample.odometer_distance           (spi_miso_data.odometer_steps);
-            sample.imu_yaw                     (spi_miso_data.imu_yaw);
-            sample.imu_acceleration_forward    (spi_miso_data.imu_acceleration_forward);
-            sample.imu_acceleration_left       (spi_miso_data.imu_acceleration_left);
-            sample.speed                       (spi_miso_data.speed);
-            sample.battery_voltage             (spi_miso_data.battery_voltage);
+            sample.odometer_distance           (spi_miso_data.odometer_steps * odometer_meter_per_step);
+            sample.imu_yaw                     (spi_miso_data.imu_yaw * imu_yaw_radian_per_step);
+            sample.imu_acceleration_forward    (spi_miso_data.imu_acceleration_forward * 0.01);
+            sample.imu_acceleration_left       (spi_miso_data.imu_acceleration_left * 0.01);
+            sample.speed                       (spi_miso_data.speed * speed_meter_per_second_per_step);
+            sample.battery_voltage             (spi_miso_data.battery_voltage * battery_volt_per_step);
             sample.motor_current               (spi_miso_data.motor_current);
             writer.write(sample);
         }
