@@ -10,18 +10,18 @@
 <link rel="canonical" href="https://community.rti.com/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi">
 <link rel="shortlink" href="https://community.rti.com/node/2602">
   <title>HOWTO Run RTI Connext DDS on Raspberry Pi | Data Distribution Service (DDS) Community RTI Connext Users</title>
-  <link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_46mJMVJIWJRW0HgByOhet1ulNoT4vBO3KXsAcTnwFcI.css" media="all">
-<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_h901DvxtMS8t0rgMOKtzA3N9K5oZHAoz8r7Fb9r7Qws.css" media="all">
-<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_TQMq8RYUebyLOf8AgSOB7w8Yt4dK_hLWVSbwFKVBmNE.css" media="all">
-<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_YObmECsqGVmJVCkAad2QAZM9u6qXTBB6W44K52Liwy4.css" media="all">
+  <link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_46mJMVJIWJRW0HgByOhet1ulNoT4vBO3KXsAcTnwFcI.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_h901DvxtMS8t0rgMOKtzA3N9K5oZHAoz8r7Fb9r7Qws.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_TQMq8RYUebyLOf8AgSOB7w8Yt4dK_hLWVSbwFKVBmNE.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_YObmECsqGVmJVCkAad2QAZM9u6qXTBB6W44K52Liwy4.css" media="all">
 <style type="text/css" media="all">
 <!--/*--><![CDATA[/*><!--*/
 #sliding-popup.sliding-popup-bottom,#sliding-popup.sliding-popup-bottom .eu-cookie-withdraw-banner,.eu-cookie-withdraw-tab{background:#0779bf;}#sliding-popup.sliding-popup-bottom.eu-cookie-withdraw-wrapper{background:transparent}#sliding-popup .popup-content #popup-text h1,#sliding-popup .popup-content #popup-text h2,#sliding-popup .popup-content #popup-text h3,#sliding-popup .popup-content #popup-text p,.eu-cookie-compliance-more-button,.eu-cookie-compliance-secondary-button,.eu-cookie-withdraw-tab{color:#fff !important;}.eu-cookie-withdraw-tab{border-color:#fff;}
 
 /*]]>*/-->
 </style>
-<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_6U16mkQcGzYUlPVWT5PXgIakg-VsMY-gAzU9NXE-waY.css" media="all">
-<link type="text/css" rel="stylesheet" href="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/css_2THG1eGiBIizsWFeexsNe1iDifJ00QRS9uSd03rY9co.css" media="print">
+<link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_6U16mkQcGzYUlPVWT5PXgIakg-VsMY-gAzU9NXE-waY.css" media="all">
+<link type="text/css" rel="stylesheet" href="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/css_2THG1eGiBIizsWFeexsNe1iDifJ00QRS9uSd03rY9co.css" media="print">
 
 <!--[if lte IE 7]>
 <link type="text/css" rel="stylesheet" href="https://d2vkrkwbbxbylk.cloudfront.net/sites/default/files/cdn/css/https/css_CQ6eoaDQ9JbIFnnc8xtnLAPZkaOrPoOFTgYbssbKgTg_ie.css.css" media="all" />
@@ -30,10 +30,10 @@
 <!--[if IE 6]>
 <link type="text/css" rel="stylesheet" href="https://d2vkrkwbbxbylk.cloudfront.net/sites/default/files/cdn/css/https/css_qvY3lZIZDNHRNsIKQYZKZOxljoe9Mn-xk-hYDicQHRs_ie6.css.css" media="all" />
 <![endif]-->
-  <script async="" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/analytics_002.js"></script><script async="" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/analytics.js"></script><script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_vDrW3Ry_4gtSYaLsh77lWhWjIC6ml2QNkcfvfP5CVFs.js"></script>
-<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Oq6ruP-xSadx-QnSRF27cRdi_VPT5Np6lQFTEFQHHnY.js"></script>
-<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Utlukeo-CtfDmwMvFh2pQ2p3Wb_mMczTU4GrOmzMNUc.js"></script>
-<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_aYfVMQPe8P2rCf6DJ1LhPCg7gBb0JOOlHqxPPNPgF94.js"></script>
+  <script async="" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/analytics_002.js"></script><script async="" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/analytics.js"></script><script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_vDrW3Ry_4gtSYaLsh77lWhWjIC6ml2QNkcfvfP5CVFs.js"></script>
+<script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_Oq6ruP-xSadx-QnSRF27cRdi_VPT5Np6lQFTEFQHHnY.js"></script>
+<script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_Utlukeo-CtfDmwMvFh2pQ2p3Wb_mMczTU4GrOmzMNUc.js"></script>
+<script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_aYfVMQPe8P2rCf6DJ1LhPCg7gBb0JOOlHqxPPNPgF94.js"></script>
 <script type="text/javascript">
 <!--//--><![CDATA[//><!--
 (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,"script","https://www.google-analytics.com/analytics.js","ga");ga("create", "UA-27780364-1", {"cookieDomain":"auto"});ga("send", "pageview");
@@ -54,7 +54,7 @@ jQuery.extend(Drupal.settings, {"basePath":"\/","pathPrefix":"","ajaxPageState":
   <div id="header" class="with-secondary-menu"><div class="section clearfix">
 
           <a href="https://community.rti.com/" title="Home" rel="home" id="logo">
-        <img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/community05_0_transparent.png" alt="Home">
+        <img src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/community05_0_transparent.png" alt="Home">
       </a>
     
           <div id="name-and-slogan">
@@ -211,14 +211,14 @@ of the image and the speed of the SD card. For me it was about 8MB/sec
 on a MacBookPro, so the 4 GB&nbsp;<span style="font-size: 13.44px;">raspbian-jessie image took about 8 minutes.</span></div><div><span style="font-size: 13.44px;">&nbsp;</span></div><p>Finally,
  remove the SD card, put into the Raspberry Pi board and boot the board.
  You should have a monitor and a keyboard attached to the Raspberry 
-Pi.&nbsp;You will see the board boot logging the process to the screen.</p><p><span style="font-size: 13.44px;">On the older raspbian images after the board finished booting the display would show the Rasbpain configuration screen.</span></p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspi-config.jpg" alt="Raspberry Pi configuration screen" title="Raspberry Pi configuration screen" width="608" height="358"></p><p>On the newer Raspbian images after the boot the window system will start directly the LXDE desktop:</p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspbian_jessie_setup.png" alt="Raspbian Jessie LXDE desktop" title="Raspbian Jessie LXDE desktop" width="600" height="346">&nbsp;</p><h3>2.2 Configure Raspbian</h3><p>The
+Pi.&nbsp;You will see the board boot logging the process to the screen.</p><p><span style="font-size: 13.44px;">On the older raspbian images after the board finished booting the display would show the Rasbpain configuration screen.</span></p><p><img src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/raspi-config.jpg" alt="Raspberry Pi configuration screen" title="Raspberry Pi configuration screen" width="608" height="358"></p><p>On the newer Raspbian images after the boot the window system will start directly the LXDE desktop:</p><p><img src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/raspbian_jessie_setup.png" alt="Raspbian Jessie LXDE desktop" title="Raspbian Jessie LXDE desktop" width="600" height="346">&nbsp;</p><h3>2.2 Configure Raspbian</h3><p>The
  first time you boot the Raspberry Pi you will see a configuration menu 
 with some actions. These are the actions we recommend you to do:</p><ul><li>Expand root partition to fill SD card (<code>expand_rootfs</code>).</li><li>Change the password for the "pi" user (by default username is "pi" and password "raspberry").</li><li>Enable SSH server to allow remote access.</li></ul><p>In
  the older Raspbian distributions this was done using the Raspbian 
 configuration screen. In the newer ones with the LXDE desktop you need 
 to go to the Raspberry menu and select "Preferences-&gt;Raspberry Pi 
 Configuration" this will bring a configuration dialog (see below) where 
-you can perform the actions listed above.</p><p><img src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/raspbian-jessie-config_dialog.png" alt="RaspberryPi configuration dialog" title="RaspberryPi configuration dialog" width="494" height="395"></p><p>Once
+you can perform the actions listed above.</p><p><img src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/raspbian-jessie-config_dialog.png" alt="RaspberryPi configuration dialog" title="RaspberryPi configuration dialog" width="494" height="395"></p><p>Once
  you are finished configuring the system, reboot the Rasbperry Pi. If 
 you are using the older images with the special config screen you can 
 access the configuration menu again running the command <code>raspi-config</code> as root. On the newer images it is available from the Raspberry menu.</p><h3>2.3 Connect to the Raspberry over Ethernet</h3><p>The
@@ -531,7 +531,7 @@ available via RTI Community Portal.&nbsp;<a style="text-decoration: underline;" 
   </div></div> <!-- /.section, /#footer-wrapper -->
 
 </div></div> <!-- /#page, /#page-wrapper -->
-  <script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_Rk5YIkK6m2gKTGH-GrMu0pM_PlMKXnI0ktQUgXw1XgA.js"></script>
+  <script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_Rk5YIkK6m2gKTGH-GrMu0pM_PlMKXnI0ktQUgXw1XgA.js"></script>
 <script type="text/javascript">
 <!--//--><![CDATA[//><!--
 function euCookieComplianceLoadScripts() {}
@@ -542,7 +542,7 @@ function euCookieComplianceLoadScripts() {}
 var eu_cookie_compliance_cookie_name = "";
 //--><!]]>
 </script>
-<script type="text/javascript" src="HOWTO%20Run%20RTI%20Connext%20DDS%20on%20Raspberry%20Pi%20|%20Data%20Distribution%20Service%20(DDS)%20Community%20RTI%20Connext%20Users_files/js_4MRGjqSerJEQxet46pdKTifSYprPwyhoaSNKNoRsFw4.js"></script>
+<script type="text/javascript" src="HOWTO_Run_RTI_Connext_DDS_on_Raspberry_Pi_Data_Distribution_Service_(DDS)_Community_RTI_Connext_Users_files/js_4MRGjqSerJEQxet46pdKTifSYprPwyhoaSNKNoRsFw4.js"></script>
 
 
 </body></html>
