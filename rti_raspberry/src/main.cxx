@@ -48,7 +48,7 @@ int main(/*int argc, char *argv[]*/)
 
 
     VehicleCommand latest_command;
-    int latest_command_TTL = 10;
+    int latest_command_TTL = 0;
 
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
@@ -84,13 +84,6 @@ int main(/*int argc, char *argv[]*/)
             spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
             spi_mosi_data.motor_mode = motor_mode;
             spi_mosi_data.LED_bits = 0b10100110;
-
-            /*std::cout << "motor_pwm " << spi_mosi_data.motor_pwm 
-            << " motor_throttle" << latest_command.motor_throttle() 
-            << " motor_mode " << motor_mode <<  std::endl;*/
-            std::cout << "motor mode  " << int32_t(motor_mode) << std::endl;
-
-
         }
         else {
             spi_mosi_data.LED_bits = 0b10101001;
