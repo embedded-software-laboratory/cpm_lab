@@ -37,13 +37,13 @@ struct TrajectorySegment
 union VehicleCommandData switch (VehicleCommandMode)
 {
     case DirectControlMode:
-        DirectControl directControl;
+        DirectControl direct_control;
 
     case SpeedCurvatureMode: 
-        SpeedCurvature speedCurvature;
+        SpeedCurvature speed_curvature;
 
     case TrajectorySegmentMode: 
-        TrajectorySegment trajectorySegment;       
+        TrajectorySegment trajectory_segment;       
 };
 
 

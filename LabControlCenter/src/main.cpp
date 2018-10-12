@@ -24,8 +24,9 @@ int main(/*int argc, char *argv[]*/)
         cout << joystick->getAxis(2) << endl;
         VehicleCommand sample;
         sample.vehicle_id(0);
-        sample.motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
-        sample.steering_angle(joystick->getAxis(2) / (-double(1<<15)));
+        sample.data()._d(VehicleCommandMode_def::DirectControlMode);
+        sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
+        sample.data().direct_control().steering_angle(joystick->getAxis(2) / (-double(1<<15)));
         writer.write(sample);
 
     });

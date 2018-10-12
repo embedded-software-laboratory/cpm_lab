@@ -85,18 +85,42 @@ int main(/*int argc, char *argv[]*/)
 
         if(latest_command_TTL > 0) {
 
-            double motor_throttle = fmax(-1.0, fmin(1.0, latest_command.motor_throttle()));
-            double steering_angle = fmax(-1.0, fmin(1.0, latest_command.steering_angle()));
 
-            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
+            switch(latest_command.data()._d().underlying()) {
+                
+                case VehicleCommandMode::DirectControlMode:
+                {
+                    double motor_throttle = fmax(-1.0, fmin(1.0, latest_command.data().direct_control().motor_throttle()));
+                    double steering_angle = fmax(-1.0, fmin(1.0, latest_command.data().direct_control().steering_angle()));
+
+                    uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+                    if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+                    if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
 
 
-            spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-            spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
-            spi_mosi_data.motor_mode = motor_mode;
-            spi_mosi_data.LED_bits = 0b10100110;
+                    spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+                    spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
+                    spi_mosi_data.motor_mode = motor_mode;
+                    spi_mosi_data.LED_bits = 0b10100110;
+                }
+                break;
+
+                case VehicleCommandMode::SpeedCurvatureMode:
+                {
+                    // TODO
+                    std::cerr << "SpeedCurvatureMode not implemented" << std::endl;
+                }
+                break;
+
+                case VehicleCommandMode::TrajectorySegmentMode:
+                {
+                    // TODO
+                    std::cerr << "TrajectorySegmentMode not implemented" << std::endl;
+                }
+                break;
+            }
+
+
         }
         else {
             spi_mosi_data.LED_bits = 0b10101001;
