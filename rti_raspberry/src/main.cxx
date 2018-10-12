@@ -1,9 +1,14 @@
 #include <iostream>
 #include <cstring>
+#include <vector>
+#include <iterator>
+using std::vector;
 
 #include <dds/pub/ddspub.hpp>
+#include <dds/sub/ddssub.hpp>
 #include <rti/util/util.hpp> // for sleep()
 
+#include "VehicleCommand.hpp"
 #include "VehicleState.hpp"
 #include "AbsoluteTimer.hpp"
 
@@ -27,28 +32,77 @@ int main(/*int argc, char *argv[]*/)
 
 
     dds::domain::DomainParticipant participant (0);
-    dds::topic::Topic<VehicleState> topic (participant, "vehicleState");
 
+
+    dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
     auto QoS = dds::pub::qos::DataWriterQos();
-
     auto reliability = dds::core::policy::Reliability::BestEffort();
     reliability.max_blocking_time(dds::core::Duration(0,0));
     QoS.policy(reliability);
+    dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
 
-    dds::pub::DataWriter<VehicleState> writer(dds::pub::Publisher(participant), topic, QoS);
 
-    int count = 0;
+    dds::topic::Topic<VehicleCommand> topic_vehicleCommand (participant, "vehicleCommand");
+    dds::sub::DataReader<VehicleCommand> reader_vehicleCommand(dds::sub::Subscriber(participant), topic_vehicleCommand);
+
+
+    VehicleCommand latest_command;
+    int latest_command_TTL = 10;
+
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
 
-        // Exchange data with low level controller
-        spi_mosi_data_t spi_mosi_data; // todo receive data, calculate
+
+        {
+            vector<dds::sub::Sample<VehicleCommand>> new_commands;
+            auto asd = std::back_inserter(new_commands);
+            if(reader_vehicleCommand.take(asd) > 0) 
+            {
+                latest_command = new_commands.back().data();
+                latest_command_TTL = 10;
+
+                //std::cout << "thr " << latest_command.motor_throttle() << " str "  << latest_command.steering_angle() << std::endl;
+            }
+        }
+
+
+        spi_mosi_data_t spi_mosi_data;
         memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
+        if(latest_command_TTL > 0) {
+
+            double motor_throttle = fmax(-1.0, fmin(1.0, latest_command.motor_throttle()));
+            double steering_angle = fmax(-1.0, fmin(1.0, latest_command.steering_angle()));
+
+            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
+
+
+            spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+            spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
+            spi_mosi_data.motor_mode = motor_mode;
+            spi_mosi_data.LED_bits = 0b10100110;
+
+            /*std::cout << "motor_pwm " << spi_mosi_data.motor_pwm 
+            << " motor_throttle" << latest_command.motor_throttle() 
+            << " motor_mode " << motor_mode <<  std::endl;*/
+            std::cout << "motor mode  " << int32_t(motor_mode) << std::endl;
+
+
+        }
+        else {
+            spi_mosi_data.LED_bits = 0b10101001;
+        }
+
+
+
+        spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
+
+
+        // Exchange data with low level controller
         spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
-
-
 
         uint16_t miso_CRC_actual = spi_miso_data.CRC;
         spi_miso_data.CRC = 0;
@@ -70,13 +124,16 @@ int main(/*int argc, char *argv[]*/)
             sample.speed                       (spi_miso_data.speed * speed_meter_per_second_per_step);
             sample.battery_voltage             (spi_miso_data.battery_voltage * battery_volt_per_step);
             sample.motor_current               (spi_miso_data.motor_current);
-            writer.write(sample);
+            writer_vehicleState.write(sample);
         }
         else {
             std::cerr << "Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
         }
 
-        count++;
+
+        if(latest_command_TTL > 0) {
+            latest_command_TTL--;
+        }
 
     });
     

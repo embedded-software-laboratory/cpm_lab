@@ -18,24 +18,31 @@ link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
 
 add_executable(vehicle_rpi_firmware 
 
-rtidds/TimeStamp.cxx
 rtidds/Pose2D.cxx
 rtidds/Pose2D.hpp
-rtidds/VehicleStateImpl.cxx
-rtidds/Pose2DImpl.h
-rtidds/TimeStampImplPlugin.cxx
-rtidds/VehicleStateImplPlugin.cxx
-rtidds/VehicleState.hpp
-rtidds/Pose2DImplPlugin.h
-rtidds/TimeStampImpl.h
-rtidds/VehicleStateImplPlugin.h
 rtidds/Pose2DImpl.cxx
-rtidds/TimeStamp.hpp
+rtidds/Pose2DImpl.h
 rtidds/Pose2DImplPlugin.cxx
-rtidds/VehicleStateImpl.h
+rtidds/Pose2DImplPlugin.h
+rtidds/TimeStamp.cxx
+rtidds/TimeStamp.hpp
 rtidds/TimeStampImpl.cxx
+rtidds/TimeStampImpl.h
+rtidds/TimeStampImplPlugin.cxx
 rtidds/TimeStampImplPlugin.h
+rtidds/VehicleCommand.cxx
+rtidds/VehicleCommand.hpp
+rtidds/VehicleCommandImpl.cxx
+rtidds/VehicleCommandImpl.h
+rtidds/VehicleCommandImplPlugin.cxx
+rtidds/VehicleCommandImplPlugin.h
 rtidds/VehicleState.cxx
+rtidds/VehicleState.hpp
+rtidds/VehicleStateImpl.cxx
+rtidds/VehicleStateImpl.h
+rtidds/VehicleStateImplPlugin.cxx
+rtidds/VehicleStateImplPlugin.h
+
 
 src/bcm2835.h
 src/bcm2835.c

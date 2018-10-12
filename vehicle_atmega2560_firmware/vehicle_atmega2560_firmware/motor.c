@@ -16,14 +16,14 @@
 
 void motor_set_direction(uint8_t direction)
 {
-	if(direction & 1) {
+	if(direction & MOTOR_DIRECTION_REVERSE) {
 		SET_BIT(PORTC, 3);
 	}
 	else {
 		CLEAR_BIT(PORTC, 3);
 	}
 	
-	if(direction & 2) {
+	if(direction & MOTOR_DIRECTION_FORWARD) {
 		SET_BIT(PORTC, 5);
 	} 
 	else {
