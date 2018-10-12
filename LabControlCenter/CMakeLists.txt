@@ -1,12 +1,36 @@
 cmake_minimum_required(VERSION 3.1)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
-
+link_libraries(dl nsl m pthread rt)
+add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
+include_directories($ENV{NDDSHOME}/include)
+include_directories($ENV{NDDSHOME}/include/ndds)
+include_directories($ENV{NDDSHOME}/include/ndds/hpp)
+include_directories(rtidds)
+link_libraries(nddscpp2z nddscz nddscorez)
+link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 include_directories(src)
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 add_executable(LabControlCenter
-    src/Joystick.hpp
+
+    rtidds/TimeStamp.cxx
+    rtidds/TimeStamp.hpp
+    rtidds/TimeStampImpl.cxx
+    rtidds/TimeStampImpl.h
+    rtidds/TimeStampImplPlugin.cxx
+    rtidds/TimeStampImplPlugin.h
+    rtidds/VehicleCommand.cxx
+    rtidds/VehicleCommand.hpp
+    rtidds/VehicleCommandImpl.cxx
+    rtidds/VehicleCommandImpl.h
+    rtidds/VehicleCommandImplPlugin.cxx
+    rtidds/VehicleCommandImplPlugin.h
+
+    src/AbsoluteTimer.cpp
+    src/AbsoluteTimer.hpp
     src/defaults.hpp
     src/Joystick.cpp
+    src/Joystick.hpp
     src/main.cpp
 )

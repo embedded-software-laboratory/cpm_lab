@@ -1,0 +1,8 @@
+#include "TimeStamp.idl"
+
+struct VehicleCommand {
+    octet vehicle_id; //@key
+    TimeStamp stamp;
+    double motor_throttle;          // dimensionless, in [-1, 1]
+    double steering_angle;          // in radian
+};
