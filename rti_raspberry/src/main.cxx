@@ -72,6 +72,7 @@ int main(/*int argc, char *argv[]*/)
     Controller controller;
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
+        const uint64_t t_iteration_start = clock_gettime_nanoseconds();
 
         // Read new commands
         {
@@ -105,9 +106,16 @@ int main(/*int argc, char *argv[]*/)
             VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
             Pose2D new_pose = localization.sensor_update(vehicleState);
             vehicleState.pose(new_pose);
+            vehicleState.stamp().nanoseconds(t_iteration_start);
 
             controller.update_vehicle_state(vehicleState);
             writer_vehicleState.write(vehicleState);
+
+
+            // temporary monitoring, delete later
+            if(vehicleState.battery_voltage() < 6.5) {
+                printf("battery_voltage %6.2f V\n", vehicleState.battery_voltage());
+            }
         }
         else {
             std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;

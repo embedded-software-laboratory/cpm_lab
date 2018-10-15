@@ -26,6 +26,18 @@ add_executable(LabControlCenter
     rtidds/VehicleCommandImpl.h
     rtidds/VehicleCommandImplPlugin.cxx
     rtidds/VehicleCommandImplPlugin.h
+    rtidds/VehicleState.cxx
+    rtidds/VehicleState.hpp
+    rtidds/VehicleStateImpl.cxx
+    rtidds/VehicleStateImpl.h
+    rtidds/VehicleStateImplPlugin.cxx
+    rtidds/VehicleStateImplPlugin.h
+    rtidds/Pose2D.cxx
+    rtidds/Pose2D.hpp
+    rtidds/Pose2DImpl.cxx
+    rtidds/Pose2DImpl.h
+    rtidds/Pose2DImplPlugin.cxx
+    rtidds/Pose2DImplPlugin.h
 
     src/AbsoluteTimer.cpp
     src/AbsoluteTimer.hpp
