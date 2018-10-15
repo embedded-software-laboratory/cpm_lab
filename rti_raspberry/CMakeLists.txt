@@ -53,6 +53,8 @@ src/SensorCalibration.cxx
 src/SensorCalibration.hpp
 src/Localization.cxx
 src/Localization.hpp
+src/Controller.cxx
+src/Controller.hpp
 src/spi.c
 src/spi.h
 

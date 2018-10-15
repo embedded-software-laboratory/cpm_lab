@@ -17,6 +17,26 @@
 
 #define SPI_BUFFER_SIZE 28
 
+#define LED1_BLINK_FAST (0<<0)
+#define LED1_BLINK_SLOW (1<<0)
+#define LED1_OFF        (2<<0)
+#define LED1_ON         (3<<0)
+
+#define LED2_BLINK_FAST (0<<2)
+#define LED2_BLINK_SLOW (1<<2)
+#define LED2_OFF        (2<<2)
+#define LED2_ON         (3<<2)
+
+#define LED3_BLINK_FAST (0<<4)
+#define LED3_BLINK_SLOW (1<<4)
+#define LED3_OFF        (2<<4)
+#define LED3_ON         (3<<4)
+
+#define LED4_BLINK_FAST (0<<6)
+#define LED4_BLINK_SLOW (1<<6)
+#define LED4_OFF        (2<<6)
+#define LED4_ON         (3<<6)
+
 typedef struct
 {
 	int16_t motor_pwm;

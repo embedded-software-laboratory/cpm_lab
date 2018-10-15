@@ -1,5 +1,6 @@
 #!/bin/bash
 
+clear
 rm -rf rtidds
 mkdir rtidds
 rm -rf build

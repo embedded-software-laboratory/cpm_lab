@@ -16,6 +16,7 @@ using std::vector;
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
+#include "Controller.hpp"
 
 #include "bcm2835.h"
 
@@ -40,18 +41,18 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
 
 int main(/*int argc, char *argv[]*/)
 {
-    crcInit();
-
+    // Hardware setup
     if (!bcm2835_init())
     {
         printf("bcm2835_init failed. Are you running as root??\n");
         exit(EXIT_FAILURE);
     }
+    crcInit();
     spi_init();
 
 
+    // DDS setup
     dds::domain::DomainParticipant participant (0);
-
 
     dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
     auto QoS = dds::pub::qos::DataWriterQos();
@@ -60,100 +61,58 @@ int main(/*int argc, char *argv[]*/)
     QoS.policy(reliability);
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
-
-
     dds::topic::Topic<VehicleCommand> topic_vehicleCommand (participant, "vehicleCommand");
     dds::sub::DataReader<VehicleCommand> reader_vehicleCommand(dds::sub::Subscriber(participant), topic_vehicleCommand);
 
 
-    VehicleCommand latest_command;
+
+    // Control loop
     int latest_command_TTL = 0;
     Localization localization;
-
+    Controller controller;
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
 
-
+        // Read new commands
         {
             vector<dds::sub::Sample<VehicleCommand>> new_commands;
-            auto asd = std::back_inserter(new_commands);
-            if(reader_vehicleCommand.take(asd) > 0) 
+            if(reader_vehicleCommand.take(std::back_inserter(new_commands)) > 0) 
             {
-                latest_command = new_commands.back().data();
+                controller.update_command(new_commands.back().data());
                 latest_command_TTL = 10;
-
-                //std::cout << "thr " << latest_command.motor_throttle() << " str "  << latest_command.steering_angle() << std::endl;
             }
         }
 
-
-        spi_mosi_data_t spi_mosi_data;
-        memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
-
+        // Watchdog countdown for loss of signal
         if(latest_command_TTL > 0) {
-
-
-            switch(latest_command.data()._d().underlying()) {
-                
-                case VehicleCommandMode::DirectControlMode:
-                {
-                    double motor_throttle = fmax(-1.0, fmin(1.0, latest_command.data().direct_control().motor_throttle()));
-                    double steering_angle = fmax(-1.0, fmin(1.0, latest_command.data().direct_control().steering_angle()));
-
-                    uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-                    if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-                    if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
-
-
-                    spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                    spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
-                    spi_mosi_data.motor_mode = motor_mode;
-                    spi_mosi_data.LED_bits = 0b10100110;
-                }
-                break;
-
-                case VehicleCommandMode::SpeedCurvatureMode:
-                {
-                    // TODO
-                    std::cerr << "SpeedCurvatureMode not implemented" << std::endl;
-                }
-                break;
-
-                case VehicleCommandMode::TrajectorySegmentMode:
-                {
-                    // TODO
-                    std::cerr << "TrajectorySegmentMode not implemented" << std::endl;
-                }
-                break;
-            }
-
-
+            latest_command_TTL--;
         }
         else {
-            spi_mosi_data.LED_bits = 0b10101001;
+            controller.vehicle_emergency_stop();
         }
 
+        // Run controller
+        spi_mosi_data_t spi_mosi_data = controller.get_control_signals();
 
 
-
-        // Exchange data with low level controller
+        // Exchange data with low level micro-controller
         spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
         spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
  
 
+        // Process sensor data
         if(check_CRC_miso(spi_miso_data)) {
             VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
-            vehicleState.pose(localization.sensor_update(vehicleState));
+            Pose2D new_pose = localization.sensor_update(vehicleState);
+            vehicleState.pose(new_pose);
+
+            controller.update_vehicle_state(vehicleState);
             writer_vehicleState.write(vehicleState);
         }
         else {
             std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
         }
 
-
-        if(latest_command_TTL > 0) {
-            latest_command_TTL--;
-        }
 
     });
     
