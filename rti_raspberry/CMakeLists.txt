@@ -44,13 +44,17 @@ rtidds/VehicleStateImplPlugin.cxx
 rtidds/VehicleStateImplPlugin.h
 
 
-src/bcm2835.h
-src/bcm2835.c
-src/spi.h
-src/spi.c
-src/AbsoluteTimer.hpp
-src/main.cxx
 src/AbsoluteTimer.cxx
+src/AbsoluteTimer.hpp
+src/bcm2835.c
+src/bcm2835.h
+src/main.cxx
+src/SensorCalibration.cxx
+src/SensorCalibration.hpp
+src/Localization.cxx
+src/Localization.hpp
+src/spi.c
+src/spi.h
 
 )
 
