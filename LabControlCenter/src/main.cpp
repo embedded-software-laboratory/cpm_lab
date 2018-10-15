@@ -1,4 +1,5 @@
 #include "defaults.hpp"
+#include "stdio.h"
 #include "Joystick.hpp"
 #include <unistd.h>
 #include <dds/pub/ddspub.hpp>
@@ -21,14 +22,16 @@ int main(/*int argc, char *argv[]*/)
 
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
-        cout << joystick->getAxis(2) << endl;
         VehicleCommand sample;
         sample.vehicle_id(0);
         sample.data()._d(VehicleCommandMode_def::DirectControlMode);
         sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
-        sample.data().direct_control().steering_angle(joystick->getAxis(2) / (-double(1<<15)));
-        writer.write(sample);
+        sample.data().direct_control().steering_servo(joystick->getAxis(2) / (-double(1<<15)));
+        printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
+            sample.data().direct_control().motor_throttle(), 
+            sample.data().direct_control().steering_servo());
 
+        writer.write(sample);
     });
 
     while(1) sleep(1);

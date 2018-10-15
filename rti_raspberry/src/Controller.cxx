@@ -34,17 +34,16 @@ spi_mosi_data_t Controller::get_control_signals() {
             case VehicleCommandMode::DirectControlMode:
             {
                 double motor_throttle = fmax(-1.0, fmin(1.0, m_vehicleCommand.data().direct_control().motor_throttle()));
+                double steering_servo = fmax(-1.0, fmin(1.0, m_vehicleCommand.data().direct_control().steering_servo()));
 
-                // TODO steering angle calibration / units
-                double steering_angle = fmax(-1.0, fmin(1.0, m_vehicleCommand.data().direct_control().steering_angle()));
-
+                // Motor deadband, to prevent small stall currents when standing still
                 uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
                 if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
                 if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
 
 
                 spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_angle * 1000.0);
+                spi_mosi_data.servo_command = int16_t(steering_servo * 1000.0);
                 spi_mosi_data.motor_mode = motor_mode;
                 spi_mosi_data.LED_bits = LED1_OFF | LED2_BLINK_SLOW | LED3_OFF | LED4_OFF;
             }

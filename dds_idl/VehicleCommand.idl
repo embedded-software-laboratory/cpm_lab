@@ -10,7 +10,7 @@ enum VehicleCommandMode
 struct DirectControl 
 {
     double motor_throttle;          // dimensionless, in [-1, 1]
-    double steering_angle;          // dimensionless, in [-1, 1] // TODO calibrate?
+    double steering_servo;          // dimensionless, in [-1, 1]
 };
 
 struct SpeedCurvature 
