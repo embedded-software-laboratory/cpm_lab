@@ -34,19 +34,80 @@ function main
     steering_servo = load_timeseries(vehicleCommand, 'data.direct_control.steering_servo', Timestamp_command, T);
     
     
-    
     motor_speed_fit(T, dt, speed, motor_throttle)
+    steering_calibration(T, yaw, steering_servo, odometer_distance)
+end
+
+function steering_calibration(T, yaw, steering_servo, odometer_distance)
+
+    % estimate curvature as d_yaw/d_s
+    n_shift = 2;
+    delta_yaw = circshift(yaw, -n_shift) - circshift(yaw, n_shift);
+    delta_s = circshift(odometer_distance, -n_shift) - circshift(odometer_distance, n_shift);
+    
+    filter_delta_s = abs(delta_s) < 1 & abs(delta_s) > 1e-5;
+    
+    delta_yaw(~filter_delta_s) = 0;
+    delta_s(~filter_delta_s) = 1;
+    
+    curvature = delta_yaw ./ delta_s;
+    
+    curvature = circshift(curvature, -10); % compensate delay
+    curvature = medfilt1(curvature, 5); % filter noise
+    
+    % cut off the ends
+    T = T(30:end-30);
+    steering_servo = steering_servo(30:end-30);
+    curvature = curvature(30:end-30);
+    
+    
+    clf
+    hold on
+    grid on
+    plot(T, steering_servo)
+    plot(T, curvature)
+    
+    
+    
+    % remove nonlinear part, where the steering angle is maximal and the
+    % servo moves the connecting spring
+    saturation_filter = -0.6 < steering_servo & steering_servo < 0.6;
+    steering_servo = steering_servo(saturation_filter);
+    curvature = curvature(saturation_filter);
+    
+    P = polyfit(curvature,steering_servo,1);   
+    
+    residuals = abs(curvature * P(1) + P(2) - steering_servo);
+    outlier_filter = residuals < quantile(residuals, 0.8);
+    P = polyfit(curvature(outlier_filter),steering_servo(outlier_filter),1);
+    
+    clf
+    hold on
+    grid on
+    plot(curvature, steering_servo)
+    plot(curvature, curvature * P(1) + P(2))
+    
+    
+    fprintf('====================================\n');
+    fprintf('          Servo Parameters          \n');
+    fprintf('====================================\n');
+    
+    fprintf('steering_servo = (%f) * curvature + (%f)\n', P(1), P(2));
     
 end
 
 function motor_speed_fit(T, dt, speed, motor_throttle)
 
     % nonlinear parameters, optimized with trial and error
-    params = [1.592861  0.031120];
+    params = [1.592584  0.031177];
     mse = 1e100;
 
     for i = 1:1
-        params_new = params + randn(size(params)) * 0.001;
+        if i == 1
+            params_new = params;
+        else
+            params_new = params + randn(size(params)) * 0.01;
+        end
         
         % cost function
         u = motor_throttle';
@@ -85,6 +146,8 @@ function motor_speed_fit(T, dt, speed, motor_throttle)
     fprintf('input_exponent  %13f\n', input_exponent);
     fprintf('PT1_time        %13f sec\n', PT1_time);
     fprintf('gain            %13f\n', gain);
+    fprintf('Steady state:\n');
+    fprintf('motor_throttle = sign(speed) * abs(%f * speed)^(%f)\n', 1/gain, 1/input_exponent);
     
 end
 
