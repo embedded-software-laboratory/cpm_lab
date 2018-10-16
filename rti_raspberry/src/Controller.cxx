@@ -72,10 +72,13 @@ spi_mosi_data_t Controller::get_control_signals() {
         }
         break;
 
-        case VehicleCommandMode::TrajectorySegmentMode:
+        case VehicleCommandMode::TrajectoryMode:
         {
-            // TODO
-            std::cerr << "TrajectorySegmentMode not implemented" << std::endl;
+            auto trajectory_point = m_vehicleCommand.data().trajectory_point();
+            trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
+
+            std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
+                << " --- total nodes: " << trajectory_points.size() << std::endl;
         }
         break;
     }

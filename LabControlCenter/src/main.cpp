@@ -7,6 +7,7 @@
 #include "VehicleCommand.hpp"
 #include "VehicleState.hpp"
 #include "AbsoluteTimer.hpp"
+#include "example_trajectory.hpp"
 
 
 uint64_t clock_gettime_nanoseconds() {
@@ -34,7 +35,8 @@ int main(/*int argc, char *argv[]*/)
     dds::sub::DataReader<VehicleState> reader_vehicleState(dds::sub::Subscriber(participant), topic_vehicleState);
 
     double ref_speed = 0;
-
+    uint64_t ref_trajectory_start_time = 0;
+    int ref_trajectory_index = 0;
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
 
@@ -61,8 +63,30 @@ int main(/*int argc, char *argv[]*/)
                 sample.data().speed_curvature().curvature());
 
         }
-        else {
-            ref_speed = 0;
+        else if(joystick->getButton(5)) { // trajectory mode
+            if(ref_trajectory_start_time == 0) {
+                // start in 4 seconds
+                ref_trajectory_start_time = clock_gettime_nanoseconds() + 4000000000ull;
+            }
+
+            while(ref_trajectory_index < example_trajectory_size
+                && ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index] 
+                    < clock_gettime_nanoseconds() + 2000000000ull) {
+
+                ref_trajectory_index++;
+            }
+            std::cout << "ref_trajectory_index " << ref_trajectory_index << std::endl;
+
+
+            sample.data()._d(VehicleCommandMode_def::TrajectoryMode);
+            sample.data().trajectory_point().t().nanoseconds(ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index]);
+            sample.data().trajectory_point().px(example_trajectory_px[ref_trajectory_index]);
+            sample.data().trajectory_point().py(example_trajectory_py[ref_trajectory_index]);
+            sample.data().trajectory_point().vx(example_trajectory_vx[ref_trajectory_index]);
+            sample.data().trajectory_point().vy(example_trajectory_vy[ref_trajectory_index]);
+
+        }
+        else { // direct control
             sample.data()._d(VehicleCommandMode_def::DirectControlMode);
             sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
             sample.data().direct_control().steering_servo(joystick->getAxis(2) / (-double(1<<15)));
@@ -73,8 +97,22 @@ int main(/*int argc, char *argv[]*/)
                 sample.data().direct_control().steering_servo());
 
         }
-        writer.write(sample);
 
+
+        // resets
+        if(sample.data()._d() != VehicleCommandMode_def::SpeedCurvatureMode) {
+            ref_speed = 0;
+        }
+
+        if(sample.data()._d() != VehicleCommandMode_def::TrajectoryMode) {
+            ref_trajectory_start_time = 0;
+            ref_trajectory_index = 0;
+        }
+
+
+
+
+        writer.write(sample);
 
 
 

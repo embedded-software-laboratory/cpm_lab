@@ -2,6 +2,7 @@
 
 #include "VehicleCommand.hpp"
 #include "VehicleState.hpp"
+#include <map>
 
 extern "C" {
     #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -14,6 +15,7 @@ class Controller
     bool emergency_stop = true;
 
     double speed_throttle_error_integral = 0;
+    std::map<uint64_t, TrajectoryPoint> trajectory_points;
 
     double speed_controller(const double speed_measured, const double speed_target);
 
