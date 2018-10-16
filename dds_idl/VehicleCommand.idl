@@ -4,7 +4,7 @@ enum VehicleCommandMode
 {
     DirectControlMode,
     SpeedCurvatureMode,
-    TrajectorySegmentMode
+    TrajectoryMode
 };
 
 struct DirectControl 
@@ -28,12 +28,6 @@ struct TrajectoryPoint
     double vy;  //  m/s
 };
 
-struct TrajectorySegment 
-{
-    TrajectoryPoint start_point;
-    TrajectoryPoint end_point;
-};
-
 union VehicleCommandData switch (VehicleCommandMode)
 {
     case DirectControlMode:
@@ -42,8 +36,8 @@ union VehicleCommandData switch (VehicleCommandMode)
     case SpeedCurvatureMode: 
         SpeedCurvature speed_curvature;
 
-    case TrajectorySegmentMode: 
-        TrajectorySegment trajectory_segment;       
+    case TrajectoryMode: 
+        TrajectoryPoint trajectory_point;       
 };
 
 
