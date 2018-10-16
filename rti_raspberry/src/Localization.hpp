@@ -9,6 +9,7 @@ class Localization
     Pose2D pose2D = Pose2D(0,0,0);
 public:
     Pose2D sensor_update(VehicleState vehicleState);
+    void reset() {pose2D = Pose2D(0,0,0);}
     // TODO add IPS observation update
     
 };

@@ -70,6 +70,7 @@ int main(/*int argc, char *argv[]*/)
     int latest_command_TTL = 0;
     Localization localization;
     Controller controller;
+    int loop_counter = 0;
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
         const uint64_t t_iteration_start = clock_gettime_nanoseconds();
@@ -97,7 +98,7 @@ int main(/*int argc, char *argv[]*/)
         }
 
         // Run controller
-        spi_mosi_data_t spi_mosi_data = controller.get_control_signals();
+        spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_iteration_start);
 
 
         // Exchange data with low level micro-controller
@@ -126,7 +127,11 @@ int main(/*int argc, char *argv[]*/)
             std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
         }
 
+        if(loop_counter == 10) {
+            localization.reset(); // ignore initial signals
+        }
 
+        loop_counter++;
     });
     
 

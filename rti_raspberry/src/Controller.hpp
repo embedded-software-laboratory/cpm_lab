@@ -23,5 +23,5 @@ public:
     void update_vehicle_state(VehicleState vehicleState);
     void update_command(VehicleCommand vehicleCommand);
     void vehicle_emergency_stop();
-    spi_mosi_data_t get_control_signals();
+    spi_mosi_data_t get_control_signals(uint64_t stamp_now);
 };

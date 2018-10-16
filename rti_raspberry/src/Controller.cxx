@@ -1,6 +1,6 @@
 #include "Controller.hpp"
 #include <iostream>
-
+#include "TrajectoryInterpolation.hpp"
 
 
 void Controller::update_vehicle_state(VehicleState vehicleState) {
@@ -37,7 +37,15 @@ double Controller::speed_controller(const double speed_measured, const double sp
 }
 
 
-spi_mosi_data_t Controller::get_control_signals() {
+double steering_curvature_calibration(double curvature) 
+{
+    // steady-state curve, from curve fitting
+    double steering_servo = (0.241857) * curvature + (-0.035501);   
+    return steering_servo;
+}
+
+
+spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
     spi_mosi_data_t spi_mosi_data;
     memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
@@ -66,19 +74,62 @@ spi_mosi_data_t Controller::get_control_signals() {
             const double curvature    = m_vehicleCommand.data().speed_curvature().curvature();
             const double speed_measured = m_vehicleState.speed();
 
-            // steady-state curve, from curve fitting
-            steering_servo = (0.241857) * curvature + (-0.035501);
+            steering_servo = steering_curvature_calibration(curvature);
             motor_throttle = speed_controller(speed_measured, speed_target);
         }
         break;
 
         case VehicleCommandMode::TrajectoryMode:
         {
-            auto trajectory_point = m_vehicleCommand.data().trajectory_point();
+            TrajectoryPoint trajectory_point = m_vehicleCommand.data().trajectory_point();
             trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
 
-            std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
-                << " --- total nodes: " << trajectory_points.size() << std::endl;
+            //std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
+            //    << " --- total nodes: " << trajectory_points.size() << std::endl;
+
+            // Find active segment
+            auto iterator_segment_end = trajectory_points.lower_bound(stamp_now);
+            if(iterator_segment_end != trajectory_points.end()
+                && iterator_segment_end != trajectory_points.begin()) 
+            {
+                auto iterator_segment_start = iterator_segment_end;
+                iterator_segment_start--;
+                TrajectoryPoint start_point = (*iterator_segment_start).second;
+                TrajectoryPoint end_point = (*iterator_segment_end).second;
+                assert(stamp_now >= start_point.t().nanoseconds());
+                assert(stamp_now <= end_point.t().nanoseconds());
+
+                // We have a valid trajectory segment.
+                // Interpolate for the current time.
+                TrajectoryInterpolation trajectory_interpolation(stamp_now, start_point, end_point);
+
+
+                const double x_ref = trajectory_interpolation.position_x;
+                const double y_ref = trajectory_interpolation.position_y;
+                const double yaw_ref = trajectory_interpolation.yaw;
+
+                const double x = m_vehicleState.pose().x();
+                const double y = m_vehicleState.pose().y();
+                const double yaw = m_vehicleState.pose().yaw();
+
+                double longitudinal_error =  cos(yaw_ref) * (x-x_ref)  + sin(yaw_ref) * (y-y_ref);
+                double lateral_error      = -sin(yaw_ref) * (x-x_ref)  + cos(yaw_ref) * (y-y_ref);
+                const double yaw_error = sin(yaw - yaw_ref);
+
+                lateral_error = fmin(0.9,fmax(-0.9, lateral_error));
+                longitudinal_error = fmin(0.9,fmax(-0.9, longitudinal_error));
+
+
+                // Linear lateral controller
+                const double curvature = trajectory_interpolation.curvature - 1.0000 * lateral_error - 2.2650 * yaw_error;
+
+                // Linear longitudinal controller
+                const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
+
+                const double speed_measured = m_vehicleState.speed();
+                steering_servo = steering_curvature_calibration(curvature);
+                motor_throttle = speed_controller(speed_measured, speed_target);
+            }
         }
         break;
     }

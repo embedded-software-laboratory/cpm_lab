@@ -15,7 +15,7 @@ function generate_example_trajectory
     
     start_idx = find(v > 0.1);
     start_idx = start_idx(1);
-    slice = start_idx:20:(start_idx+550);
+    slice = start_idx:20:(start_idx+520);
     
     T_traj = uint64(Timestamp(slice));
     Timestamp = Timestamp - uint64(min(T_traj));
@@ -25,7 +25,11 @@ function generate_example_trajectory
     vx_traj = vx(slice);
     vy_traj = vy(slice);
     
-    cycle_start = 10;
+    clf
+    axis equal
+    scatter(px_traj, py_traj)
+    
+    cycle_start = 5;
     tmp_ds = norm([px_traj(cycle_start) py_traj(cycle_start)]-[px_traj(end) py_traj(end)]);
     tmp_v = norm([vx_traj(cycle_start) vy_traj(cycle_start)]);
     cycle_closing_segment_time = 1e9 * tmp_ds / tmp_v;

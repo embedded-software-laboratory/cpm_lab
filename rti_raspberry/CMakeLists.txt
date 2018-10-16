@@ -55,6 +55,8 @@ src/Localization.cxx
 src/Localization.hpp
 src/Controller.cxx
 src/Controller.hpp
+src/TrajectoryInterpolation.cxx
+src/TrajectoryInterpolation.hpp
 src/spi.c
 src/spi.h
 

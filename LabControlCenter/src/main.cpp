@@ -66,12 +66,12 @@ int main(/*int argc, char *argv[]*/)
         else if(joystick->getButton(5)) { // trajectory mode
             if(ref_trajectory_start_time == 0) {
                 // start in 4 seconds
-                ref_trajectory_start_time = clock_gettime_nanoseconds() + 4000000000ull;
+                ref_trajectory_start_time = clock_gettime_nanoseconds() + 2000000000ull; 
             }
 
             while(ref_trajectory_index < example_trajectory_size
                 && ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index] 
-                    < clock_gettime_nanoseconds() + 2000000000ull) {
+                    < clock_gettime_nanoseconds() + 1000000000ull) {
 
                 ref_trajectory_index++;
             }
