@@ -13,6 +13,8 @@ class Controller
     VehicleCommand m_vehicleCommand;
     bool emergency_stop = true;
 
+    double speed_throttle_error_integral = 0;
+
 public:
     void update_vehicle_state(VehicleState vehicleState);
     void update_command(VehicleCommand vehicleCommand);

@@ -33,7 +33,7 @@ int main(/*int argc, char *argv[]*/)
     dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
     dds::sub::DataReader<VehicleState> reader_vehicleState(dds::sub::Subscriber(participant), topic_vehicleState);
 
-
+    double ref_speed = 0;
 
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
@@ -41,16 +41,40 @@ int main(/*int argc, char *argv[]*/)
 
         VehicleCommand sample;
         sample.vehicle_id(0);
-        sample.data()._d(VehicleCommandMode_def::DirectControlMode);
-        sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
-        sample.data().direct_control().steering_servo(joystick->getAxis(2) / (-double(1<<15)));
 
+        if(joystick->getButton(4) || joystick->getButton(6)) { // constant speed mode
+            sample.data()._d(VehicleCommandMode_def::SpeedCurvatureMode);
+
+            double axis1 = joystick->getAxis(1) / (-double(1<<15));
+            if(fabs(axis1) > 0.08)
+                ref_speed += axis1 * 0.02;
+
+            if(joystick->getButton(6)) {
+                ref_speed = 1.0;
+            }
+
+            sample.data().speed_curvature().speed(ref_speed);
+            sample.data().speed_curvature().curvature(joystick->getAxis(2) * 4.0 / (-double(1<<15)));
+
+            printf("speed %12.4f  curvature %12.4f\n", 
+                sample.data().speed_curvature().speed(), 
+                sample.data().speed_curvature().curvature());
+
+        }
+        else {
+            ref_speed = 0;
+            sample.data()._d(VehicleCommandMode_def::DirectControlMode);
+            sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
+            sample.data().direct_control().steering_servo(joystick->getAxis(2) / (-double(1<<15)));
+
+
+            printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
+                sample.data().direct_control().motor_throttle(), 
+                sample.data().direct_control().steering_servo());
+
+        }
         writer.write(sample);
 
-
-        printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
-            sample.data().direct_control().motor_throttle(), 
-            sample.data().direct_control().steering_servo());
 
 
 

@@ -115,6 +115,7 @@ int main(/*int argc, char *argv[]*/)
             // temporary monitoring, delete later
             if(vehicleState.battery_voltage() < 6.5) {
                 printf("battery_voltage %6.2f V\n", vehicleState.battery_voltage());
+                exit(1);
             }
         }
         else {
