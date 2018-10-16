@@ -1,0 +1,26 @@
+function main
+    
+    
+    t_start = 4;
+    position_start = [12; 13];
+    velocity_start = [0; 1];
+    t_end = 5.65;
+    t_interp = t_start:0.02:t_end;
+    position_end = [12-1; 13+1];
+    velocity_end = [-1; 0];
+
+    
+    [position, velocity, yaw, speed, curvature] = trajectory_interpolation(...
+            t_interp,...
+            t_start, ...
+            position_start, ...
+            velocity_start, ...
+            t_end, ...
+            position_end, ...
+            velocity_end...
+        );
+    
+    
+
+end
+
