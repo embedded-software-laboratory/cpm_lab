@@ -15,6 +15,8 @@ class Controller
 
     double speed_throttle_error_integral = 0;
 
+    double speed_controller(const double speed_measured, const double speed_target);
+
 public:
     void update_vehicle_state(VehicleState vehicleState);
     void update_command(VehicleCommand vehicleCommand);
