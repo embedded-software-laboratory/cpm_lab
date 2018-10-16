@@ -82,18 +82,20 @@ int main(/*int argc, char *argv[]*/)
         // Read new states
         {
             vector<dds::sub::Sample<VehicleState>> new_states;
-            if(reader_vehicleState.take(std::back_inserter(new_states)) > 0) 
+            reader_vehicleState.take(std::back_inserter(new_states));
+            for(auto state:new_states)
             {
-                uint64_t stamp = new_states.back().data().stamp().nanoseconds();
-                uint64_t t_local = clock_gettime_nanoseconds();
-                printf("local %20lu   stamp %20lu  delta %20lu \n", 
-                    clock_gettime_nanoseconds(), 
-                    stamp,
-                    (int64_t(t_local) - int64_t(stamp)) );
+                if(state.info().valid())
+                {
+                    uint64_t stamp = state.data().stamp().nanoseconds();
+                    uint64_t t_local = clock_gettime_nanoseconds();
+                    printf("local %20lu   stamp %20lu  delta %20lu \n", 
+                        clock_gettime_nanoseconds(), 
+                        stamp,
+                        (int64_t(t_local) - int64_t(stamp)) );
+                }
             }
         }
-
-
 
     });
 

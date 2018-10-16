@@ -77,10 +77,14 @@ int main(/*int argc, char *argv[]*/)
         // Read new commands
         {
             vector<dds::sub::Sample<VehicleCommand>> new_commands;
-            if(reader_vehicleCommand.take(std::back_inserter(new_commands)) > 0) 
+            reader_vehicleCommand.take(std::back_inserter(new_commands));
+            for(auto command : new_commands)
             {
-                controller.update_command(new_commands.back().data());
-                latest_command_TTL = 10;
+                if(command.info().valid())
+                {
+                    controller.update_command(command.data());
+                    latest_command_TTL = 10;
+                }
             }
         }
 
