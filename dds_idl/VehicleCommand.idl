@@ -11,6 +11,9 @@
  * the vehicle will brake and stop until the next command message is received.
  * 
  * 
+ * TODO clear definition of VehicleCommand.stamp
+ * 
+ * 
  * DirectControlMode
  *     Uses dimensionless, uncalibrated inputs and applies them directly to the motor and servo.
  *     (motor_throttle ==  1) => Max forward
