@@ -1,5 +1,58 @@
 #include "TimeStamp.idl"
 
+/*
+ *
+ * There are three modes of controlling the vehicle: 
+ * DirectControlMode, SpeedCurvatureMode and TrajectoryMode
+ * There is no explicit switch between the modes. Sending a 
+ * command for a particular mode activates that mode.
+ * 
+ * If the time between receiving consecutive command messages exceeds 500ms
+ * the vehicle will brake and stop until the next command message is received.
+ * 
+ * 
+ * DirectControlMode
+ *     Uses dimensionless, uncalibrated inputs and applies them directly to the motor and servo.
+ *     (motor_throttle ==  1) => Max forward
+ *     (motor_throttle ==  0) => Brake to standstill
+ *     (motor_throttle == -1) => Max reverse
+ *     (steering_servo ==  1) => Max left
+ *     (steering_servo ==  0) => Steering roughly centered, but may have an offset
+ *     (steering_servo == -1) => Max right
+ * 
+ * 
+ * SpeedCurvatureMode
+ *     Uses a feedback controller to match the given reference speed.
+ *     Uses a feedforward controller to steer along a path with the given curvature.
+ *     This only works with "normal" driving, results may vary when spinning or sliding.
+ *     
+ *     
+ * TrajectoryMode
+ *     The vehicle has feedback controllers for both longitudinal and 
+ *     lateral motion which keep it on the given reference trajectory.
+ *     The reference trajectory is a continuous function of time. It is
+ *     defined as a Cubic Hermite spline, which is constructed by points and
+ *     segments between consecutive points. The reference trajectory can be
+ *     extended with new segments while the controller is using it, like this:
+ *             https://i.imgur.com/vp4PQ7C.gif
+ *     Each point in the trajectory is described by a TrajectoryPoint struct.
+ *     TrajectoryPoints may be sent in any order and may be repeated. A repeated
+ *     TimeStamp in a TrajectoryPoint will overwrite the existing TrajectoryPoint 
+ *     with the same TimeStamp.
+ *         The current segment is defined by the newest TrajectoryPoint in the past
+ *     and the oldest TrajectoryPoint in the future. If the current segment is
+ *     unavailable the vehicle will brake and stop. 
+ *         The selection of TrajectoryPoints 
+ *     and the interpolation is done based on the local clock on the vehicle. Thus, 
+ *     the user must ensure that their clock synchronized, or account for clock offsets.
+ *         The user should ensure that the duration, distance and speed in a 
+ *     trajectory segment are plausible in relation to each other. A poor choice of
+ *     trajectory parameters may lead to phsically impossible curvatures and
+ *     accelerations. The trajectory interpolation formulas can be found in
+ *         rti_raspberry/src/TrajectoryInterpolation.cxx
+ * 
+ */
+
 enum VehicleCommandMode
 {
     DirectControlMode,

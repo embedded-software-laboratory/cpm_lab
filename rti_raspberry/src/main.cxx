@@ -84,7 +84,7 @@ int main(/*int argc, char *argv[]*/)
                 if(command.info().valid())
                 {
                     controller.update_command(command.data());
-                    latest_command_TTL = 10;
+                    latest_command_TTL = 25;
                 }
             }
         }
