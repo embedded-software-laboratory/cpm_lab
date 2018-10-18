@@ -41,6 +41,9 @@ add_executable(LabControlCenter
 
     src/AbsoluteTimer.cpp
     src/AbsoluteTimer.hpp
+    src/VehicleManualControl.cpp
+    src/VehicleManualControl.hpp
+    src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
     src/Joystick.hpp

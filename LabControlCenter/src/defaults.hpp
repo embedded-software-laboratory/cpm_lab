@@ -23,3 +23,7 @@ using std::int32_t;
 using std::uint32_t;
 using std::int64_t;
 using std::uint64_t;
+
+
+
+uint64_t clock_gettime_nanoseconds();
