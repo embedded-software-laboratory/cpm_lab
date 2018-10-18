@@ -52,7 +52,5 @@ TrajectoryInterpolation::TrajectoryInterpolation(uint64_t stamp_now, TrajectoryP
     
     yaw = atan2(velocity_y, velocity_x);
     speed = sqrt(velocity_x*velocity_x + velocity_y*velocity_y);
-    
     curvature = (velocity_x * acceleration_y - velocity_y * acceleration_x) / (speed*speed*speed);
-    
 }

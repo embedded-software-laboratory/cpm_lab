@@ -79,12 +79,16 @@ int main(/*int argc, char *argv[]*/)
 
 
             sample.data()._d(VehicleCommandMode_def::TrajectoryMode);
-            sample.data().trajectory_point().t().nanoseconds(ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index]);
-            sample.data().trajectory_point().px(example_trajectory_px[ref_trajectory_index]);
-            sample.data().trajectory_point().py(example_trajectory_py[ref_trajectory_index]);
-            sample.data().trajectory_point().vx(example_trajectory_vx[ref_trajectory_index]);
-            sample.data().trajectory_point().vy(example_trajectory_vy[ref_trajectory_index]);
 
+            TrajectoryPoint trajectoryPoint;
+
+            trajectoryPoint.t().nanoseconds(ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index]);
+            trajectoryPoint.px(example_trajectory_px[ref_trajectory_index]);
+            trajectoryPoint.py(example_trajectory_py[ref_trajectory_index]);
+            trajectoryPoint.vx(example_trajectory_vx[ref_trajectory_index]);
+            trajectoryPoint.vy(example_trajectory_vy[ref_trajectory_index]);
+
+            sample.data().trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
         }
         else { // direct control
             sample.data()._d(VehicleCommandMode_def::DirectControlMode);

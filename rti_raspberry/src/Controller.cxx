@@ -81,8 +81,9 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
 
         case VehicleCommandMode::TrajectoryMode:
         {
-            TrajectoryPoint trajectory_point = m_vehicleCommand.data().trajectory_point();
-            trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
+            for(TrajectoryPoint trajectory_point : m_vehicleCommand.data().trajectory_points()) {
+                trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
+            }            
 
             //std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
             //    << " --- total nodes: " << trajectory_points.size() << std::endl;

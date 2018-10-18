@@ -45,12 +45,12 @@
  *         The current segment is defined by the newest TrajectoryPoint in the past
  *     and the oldest TrajectoryPoint in the future. If the current segment is
  *     unavailable the vehicle will brake and stop. 
- *         The selection of TrajectoryPoints 
- *     and the interpolation is done based on the local clock on the vehicle. Thus, 
- *     the user must ensure that their clock synchronized, or account for clock offsets.
+ *         The selection of TrajectoryPoints and the interpolation is done based 
+ *     on the local clock on the vehicle. Thus, the user must ensure that their 
+ *     clock synchronized, or account for clock offsets.
  *         The user should ensure that the duration, distance and speed in a 
  *     trajectory segment are plausible in relation to each other. A poor choice of
- *     trajectory parameters may lead to phsically impossible curvatures and
+ *     trajectory parameters may lead to physically impossible curvatures and
  *     accelerations. The trajectory interpolation formulas can be found in
  *         rti_raspberry/src/TrajectoryInterpolation.cxx
  * 
@@ -65,8 +65,8 @@ enum VehicleCommandMode
 
 struct DirectControl 
 {
-    double motor_throttle;          // dimensionless, in [-1, 1]
-    double steering_servo;          // dimensionless, in [-1, 1]
+    double motor_throttle;  // dimensionless, in [-1, 1]
+    double steering_servo;  // dimensionless, in [-1, 1]
 };
 
 struct SpeedCurvature 
@@ -93,7 +93,7 @@ union VehicleCommandData switch (VehicleCommandMode)
         SpeedCurvature speed_curvature;
 
     case TrajectoryMode: 
-        TrajectoryPoint trajectory_point;       
+        sequence<TrajectoryPoint> trajectory_points;
 };
 
 
