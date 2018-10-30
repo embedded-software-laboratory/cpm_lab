@@ -10,7 +10,12 @@ include_directories(rtidds)
 link_libraries(nddscpp2z nddscz nddscorez)
 link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 include_directories(src)
+include_directories(.)
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
+
+find_package(PkgConfig)
+
+pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 add_executable(LabControlCenter
 
@@ -43,9 +48,15 @@ add_executable(LabControlCenter
     src/AbsoluteTimer.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
+    ui/manual_control/VehicleManualControlUi.cpp
+    ui/manual_control/VehicleManualControlUi.hpp
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
     src/Joystick.hpp
     src/main.cpp
 )
+
+target_link_libraries(LabControlCenter ${GTKMM_LIBRARIES})
+target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
+target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})

@@ -100,7 +100,9 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
 void VehicleManualControl::stop() 
 {
-    update_loop->stop();
-    update_loop = nullptr;
+    if(update_loop) {        
+        update_loop->stop();
+        update_loop = nullptr;
+    }
     joystick = nullptr;
 }
