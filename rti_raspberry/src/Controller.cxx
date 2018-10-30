@@ -143,7 +143,7 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
 
 
     spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-    spi_mosi_data.servo_command = int16_t(steering_servo * 1000.0);
+    spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
     spi_mosi_data.motor_mode = motor_mode;
     spi_mosi_data.LED_bits = LED1_OFF | LED2_BLINK_SLOW | LED3_OFF | LED4_OFF;
 

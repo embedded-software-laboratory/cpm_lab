@@ -115,13 +115,6 @@ int main(/*int argc, char *argv[]*/)
 
             controller.update_vehicle_state(vehicleState);
             writer_vehicleState.write(vehicleState);
-
-
-            // temporary monitoring, delete later
-            if(vehicleState.battery_voltage() < 6.5) {
-                printf("battery_voltage %6.2f V\n", vehicleState.battery_voltage());
-                exit(1);
-            }
         }
         else {
             std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
