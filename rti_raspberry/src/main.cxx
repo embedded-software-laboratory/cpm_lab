@@ -73,58 +73,66 @@ int main(/*int argc, char *argv[]*/)
     int loop_counter = 0;
 
     AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
-        const uint64_t t_iteration_start = clock_gettime_nanoseconds();
 
-        // Read new commands
+        try 
         {
-            vector<dds::sub::Sample<VehicleCommand>> new_commands;
-            reader_vehicleCommand.take(std::back_inserter(new_commands));
-            for(auto command : new_commands)
+            const uint64_t t_iteration_start = clock_gettime_nanoseconds();
+
+            // Read new commands
             {
-                if(command.info().valid())
+                vector<dds::sub::Sample<VehicleCommand>> new_commands;
+                reader_vehicleCommand.take(std::back_inserter(new_commands));
+                for(auto command : new_commands)
                 {
-                    controller.update_command(command.data());
-                    latest_command_TTL = 25;
+                    if(command.info().valid())
+                    {
+                        controller.update_command(command.data());
+                        latest_command_TTL = 25;
+                    }
                 }
             }
+
+            // Watchdog countdown for loss of signal
+            if(latest_command_TTL > 0) {
+                latest_command_TTL--;
+            }
+            else {
+                controller.vehicle_emergency_stop();
+            }
+
+            // Run controller
+            spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_iteration_start);
+
+
+            // Exchange data with low level micro-controller
+            spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
+            spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
+     
+
+            // Process sensor data
+            if(check_CRC_miso(spi_miso_data)) {
+                VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
+                Pose2D new_pose = localization.sensor_update(vehicleState);
+                vehicleState.pose(new_pose);
+                vehicleState.stamp().nanoseconds(t_iteration_start);
+
+                controller.update_vehicle_state(vehicleState);
+                writer_vehicleState.write(vehicleState);
+            }
+            else {
+                std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
+            }
+
+            if(loop_counter == 10) {
+                localization.reset(); // ignore initial signals
+            }
+
+            loop_counter++;
         }
-
-        // Watchdog countdown for loss of signal
-        if(latest_command_TTL > 0) {
-            latest_command_TTL--;
+        catch(const dds::core::Exception& e)
+        {
+            std::cerr << "Exception: " << e.what() << std::endl;
         }
-        else {
-            controller.vehicle_emergency_stop();
-        }
-
-        // Run controller
-        spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_iteration_start);
-
-
-        // Exchange data with low level micro-controller
-        spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
-        spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
- 
-
-        // Process sensor data
-        if(check_CRC_miso(spi_miso_data)) {
-            VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
-            Pose2D new_pose = localization.sensor_update(vehicleState);
-            vehicleState.pose(new_pose);
-            vehicleState.stamp().nanoseconds(t_iteration_start);
-
-            controller.update_vehicle_state(vehicleState);
-            writer_vehicleState.write(vehicleState);
-        }
-        else {
-            std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
-        }
-
-        if(loop_counter == 10) {
-            localization.reset(); // ignore initial signals
-        }
-
-        loop_counter++;
     });
     
 
