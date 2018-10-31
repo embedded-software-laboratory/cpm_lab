@@ -5,6 +5,14 @@
 #include <string.h>
 #include "spi.h"
 
+volatile int dummy = 0;
+
+void busy_wait(int n) {
+    for (int i = 0; i < n; ++i)
+    {
+        dummy++;
+    }
+}
 
 void spi_init() {
     if (!bcm2835_spi_begin()) {
@@ -34,12 +42,14 @@ spi_miso_data_t spi_transfer(spi_mosi_data_t spi_mosi_data) {
     // CS low => transmission start
     bcm2835_gpio_clr(RPI_GPIO_P1_24);
 
-    usleep(10);
+    //usleep(2);
+    busy_wait(600);
 
     for (int i = 0; i < SPI_BUFFER_SIZE; ++i)
     {
         SPI_recv_buffer[i] = bcm2835_spi_transfer(mosi_data_ptr[i]);
-        usleep(10);
+        //usleep(2);
+        busy_wait(600);
     }
 
     // CS high => transmission end
