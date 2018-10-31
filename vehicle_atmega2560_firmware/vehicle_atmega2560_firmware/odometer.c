@@ -10,7 +10,7 @@
 #include "util.h"
 #include "odometer.h"
 
-static const int8_t direction_lookup[] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
+static const int8_t direction_lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 static volatile uint8_t hall_sensor_states_prev = 0;
 static volatile uint16_t timer1_prev = 0;
@@ -18,7 +18,7 @@ static volatile uint8_t standstill_flag = 0;
 
 static volatile int32_t odometer_count = 0;
 
-#define ODOMETER_BUFFER_SIZE 4
+#define ODOMETER_BUFFER_SIZE 6
 static volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
 static volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
 static volatile uint8_t odometer_buffer_index = 0;
@@ -29,12 +29,10 @@ ISR(PCINT2_vect) {
 	uint8_t hall_sensor_states_now = PINK;
 	
 	// take the useful bits
-	hall_sensor_states_now = 
-	    ((hall_sensor_states_now >> 2) & 0b00000001) |
-	    ((hall_sensor_states_now >> 3) & 0b00000010);
+	hall_sensor_states_now = (hall_sensor_states_now >> 2) & 0b00000111;
 	
 	// rotation direction is determined from the current and previous state
-	uint8_t direction_indicator = (hall_sensor_states_now << 2) | hall_sensor_states_prev;
+	uint8_t direction_indicator = (hall_sensor_states_now << 3) | hall_sensor_states_prev;
 	int8_t direction = direction_lookup[direction_indicator];
 	
 	// update odometer
@@ -101,8 +99,9 @@ void odometer_setup() {
 	SET_BIT(TCCR1B, CS12);
 	
 	// Setup Pin Change Interrupt for PCINT 16-23, PORTK, Pins 89-82
-	// Only using pins 87, 85 for now.
+	// Only pins 85, 86, 87.
 	SET_BIT(PCICR, PCIE2);
 	SET_BIT(PCMSK2, PCINT18);
+	SET_BIT(PCMSK2, PCINT19);
 	SET_BIT(PCMSK2, PCINT20);
 }
