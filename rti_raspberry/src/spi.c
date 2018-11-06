@@ -22,7 +22,7 @@ void spi_init() {
 
     bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
     bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
-    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_512);
+    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_4096);
     bcm2835_spi_chipSelect(BCM2835_SPI_CS_NONE);
 
     // enable CS pin
@@ -42,14 +42,12 @@ spi_miso_data_t spi_transfer(spi_mosi_data_t spi_mosi_data) {
     // CS low => transmission start
     bcm2835_gpio_clr(RPI_GPIO_P1_24);
 
-    //usleep(2);
-    busy_wait(600);
+    busy_wait(5000);
 
     for (int i = 0; i < SPI_BUFFER_SIZE; ++i)
     {
         SPI_recv_buffer[i] = bcm2835_spi_transfer(mosi_data_ptr[i]);
-        //usleep(2);
-        busy_wait(600);
+        busy_wait(5000);
     }
 
     // CS high => transmission end
