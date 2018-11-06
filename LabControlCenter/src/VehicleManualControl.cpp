@@ -1,6 +1,9 @@
 #include "VehicleManualControl.hpp"
 #include "example_trajectory.hpp"
 
+#define AXIS_THROTTLE (1)
+#define AXIS_STEERING (2)
+
 VehicleManualControl::VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant)
 :participant(participant)
 {
@@ -20,6 +23,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
     update_loop = make_shared<AbsoluteTimer>(0, 20000000, 0, 0, [&](){
 
+        if(!joystick) return;
 
         VehicleCommand sample;
         sample.vehicle_id(vehicle_id);
@@ -27,7 +31,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
         if(joystick->getButton(4) || joystick->getButton(6)) { // constant speed mode
             sample.data()._d(VehicleCommandMode_def::SpeedCurvatureMode);
 
-            double axis1 = joystick->getAxis(1) / (-double(1<<15));
+            double axis1 = joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15));
             if(fabs(axis1) > 0.08) {
                 ref_speed += axis1 * 0.02;
             }
@@ -37,7 +41,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             }
 
             sample.data().speed_curvature().speed(ref_speed);
-            sample.data().speed_curvature().curvature(joystick->getAxis(2) * 4.0 / (-double(1<<15)));
+            sample.data().speed_curvature().curvature(joystick->getAxis(AXIS_STEERING) * 4.0 / (-double(1<<15)));
 
             printf("speed %12.4f  curvature %12.4f\n", 
                 sample.data().speed_curvature().speed(), 
@@ -73,8 +77,8 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
         }
         else { // direct control
             sample.data()._d(VehicleCommandMode_def::DirectControlMode);
-            sample.data().direct_control().motor_throttle(joystick->getAxis(1) / (-double(1<<15)));
-            sample.data().direct_control().steering_servo(joystick->getAxis(2) / (-double(1<<15)));
+            sample.data().direct_control().motor_throttle(joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15)));
+            sample.data().direct_control().steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
 
 
             printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
@@ -94,6 +98,8 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             ref_trajectory_index = 0;
         }
         writer_vehicleCommand->write(sample);
+
+        if(m_update_callback) m_update_callback();
     });
 }
 
@@ -105,4 +111,13 @@ void VehicleManualControl::stop()
         update_loop = nullptr;
     }
     joystick = nullptr;
+}
+
+
+void VehicleManualControl::get_state(double& throttle, double& steering) 
+{
+    if(joystick) {
+        throttle = joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15));
+        steering = joystick->getAxis(AXIS_STEERING) / (-double(1<<15));
+    }
 }

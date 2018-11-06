@@ -22,17 +22,10 @@ int main(int argc, char *argv[])
     auto vehicleManualControl = make_shared<VehicleManualControl>(participant);
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
     VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
+    vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
 
     //app->signal_startup().connect([&]{ app->add_window(*window2); });
     return app->run(vehicleManualControlUi.get_window());
-
-
-
-
-    //dds::topic::Topic<VehicleState> topic_vehicleState (*participant, "vehicleState");
-    //dds::sub::DataReader<VehicleState> reader_vehicleState(dds::sub::Subscriber(*participant), topic_vehicleState);
-
-    //vehicleManualControl.start(0, "/dev/input/js1");
 
     while(1) sleep(1);
     return 0;

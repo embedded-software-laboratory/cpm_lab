@@ -4,6 +4,7 @@
 #include "AbsoluteTimer.hpp"
 #include "Joystick.hpp"
 #include "VehicleCommand.hpp"
+#include <functional>
 
 class VehicleManualControl
 {
@@ -20,8 +21,12 @@ class VehicleManualControl
     shared_ptr<dds::topic::Topic<VehicleCommand>> topic_vehicleCommand = nullptr;
     shared_ptr<dds::pub::DataWriter<VehicleCommand>> writer_vehicleCommand = nullptr;
 
+    std::function<void()> m_update_callback;
+
 public:
     VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant);
     void start(uint8_t vehicleId, string joystick_device_file);
-    void stop();    
+    void stop();
+    void set_callback(std::function<void()> update_callback) { m_update_callback = update_callback; }
+    void get_state(double& throttle, double& steering);
 };

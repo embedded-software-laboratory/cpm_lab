@@ -15,6 +15,9 @@ class VehicleManualControlUi
     Gtk::Button* button_stop = nullptr;
     Gtk::Entry* entry_js_device = nullptr;
     Gtk::Entry* entry_vehicle_id = nullptr;
+    Gtk::ProgressBar* progressbar_throttle = nullptr;
+    Gtk::ProgressBar* progressbar_steering = nullptr;
+    Glib::Dispatcher m_dispatcher;
     
     shared_ptr<VehicleManualControl> vehicleManualControl = nullptr;
 
@@ -22,5 +25,5 @@ public:
     VehicleManualControlUi(shared_ptr<VehicleManualControl> vehicleManualControl);
 
     Gtk::Window& get_window();
-    
+    void update();
 };
