@@ -6,4 +6,4 @@ sleep 1
 echo "Uploading"
 sshpass -p 'raspberry' scp build/vehicle_rpi_firmware pi@192.168.1.109:/tmp
 echo "Running"
-sshpass -p 'raspberry' ssh -t pi@192.168.1.109 'sudo /tmp/vehicle_rpi_firmware' 
+sshpass -p 'raspberry' ssh -t pi@192.168.1.109 'sudo /tmp/vehicle_rpi_firmware $(cat /etc/vehicle_id)' 

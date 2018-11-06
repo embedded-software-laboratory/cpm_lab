@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 #include <vector>
+#include <string>
 #include <iterator>
 #include <iomanip>
 #include <ios>
@@ -39,8 +41,23 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
 }
 
 
-int main(/*int argc, char *argv[]*/)
+int main(int argc, char *argv[])
 {
+
+    if(argc != 2) {
+        std::cerr << "Usage: vehicle_rpi_firmware <vehicle-id>" << std::endl;
+        return 1;
+    }
+
+    const int vehicle_id = std::atoi(argv[1]);
+
+    if(vehicle_id < 0 || vehicle_id >= 255) {
+        std::cerr << "Invalid vehicle ID." << std::endl;
+        return 1;
+    }
+    std::cout << "vehicle_id " << vehicle_id << std::endl;
+
+
     // Hardware setup
     if (!bcm2835_init())
     {
@@ -62,7 +79,9 @@ int main(/*int argc, char *argv[]*/)
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
     dds::topic::Topic<VehicleCommand> topic_vehicleCommand (participant, "vehicleCommand");
-    dds::sub::DataReader<VehicleCommand> reader_vehicleCommand(dds::sub::Subscriber(participant), topic_vehicleCommand);
+    dds::topic::ContentFilteredTopic<VehicleCommand> topic_vehicleCommand_filtered(topic_vehicleCommand, "vehicleCommand_filtered", dds::topic::Filter("vehicle_id = " + std::to_string(vehicle_id)));
+    dds::sub::DataReader<VehicleCommand> reader_vehicleCommand(dds::sub::Subscriber(participant), topic_vehicleCommand_filtered);
+
 
 
 
@@ -115,6 +134,7 @@ int main(/*int argc, char *argv[]*/)
                 Pose2D new_pose = localization.sensor_update(vehicleState);
                 vehicleState.pose(new_pose);
                 vehicleState.stamp().nanoseconds(t_iteration_start);
+                vehicleState.vehicle_id(vehicle_id);
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
