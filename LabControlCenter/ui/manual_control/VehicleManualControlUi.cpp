@@ -24,6 +24,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
     assert(progressbar_throttle);
     assert(progressbar_steering);
 
+    window->show();
     window->set_size_request(350, 200);
 
     button_restart->signal_clicked().connect([&]()
@@ -57,7 +58,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
         }
     });
 
-    window->signal_delete_event().connect([&](GdkEventAny* event)->bool{
+    window->signal_delete_event().connect([&](GdkEventAny*)->bool{
         vehicleManualControl->stop();
         return false;
     });

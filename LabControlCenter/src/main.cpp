@@ -9,6 +9,7 @@
 #include "AbsoluteTimer.hpp"
 #include "example_trajectory.hpp"
 #include "VehicleManualControl.hpp"
+#include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 
 #include <gtkmm/builder.h>
@@ -24,8 +25,10 @@ int main(int argc, char *argv[])
     VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
     vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
 
-    //app->signal_startup().connect([&]{ app->add_window(*window2); });
-    return app->run(vehicleManualControlUi.get_window());
+    MonitoringUi monitoringUi;
+
+    app->signal_startup().connect([&]{ app->add_window(vehicleManualControlUi.get_window()); });
+    return app->run(monitoringUi.get_window());
 
     while(1) sleep(1);
     return 0;

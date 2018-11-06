@@ -3,6 +3,7 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
 link_libraries(dl nsl m pthread rt)
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
+add_definitions(-O0 -g3) # for debugging!
 include_directories($ENV{NDDSHOME}/include)
 include_directories($ENV{NDDSHOME}/include/ndds)
 include_directories($ENV{NDDSHOME}/include/ndds/hpp)
@@ -50,6 +51,8 @@ add_executable(LabControlCenter
     src/VehicleManualControl.hpp
     ui/manual_control/VehicleManualControlUi.cpp
     ui/manual_control/VehicleManualControlUi.hpp
+    ui/monitoring/MonitoringUi.cpp
+    ui/monitoring/MonitoringUi.hpp
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
