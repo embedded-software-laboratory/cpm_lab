@@ -3,15 +3,18 @@
 
 MonitoringUi::MonitoringUi() 
 {
-    
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
+    window = make_shared<Gtk::Window>();
+    window->set_default_size( 800, 600 );
 
-    builder->get_widget("window1", window);
+    this->webKitWebView = WEBKIT_WEB_VIEW( webkit_web_view_new() );
+    this->gtkmm_webKitWebView = Glib::wrap( GTK_WIDGET( this->webKitWebView ) );
 
-    assert(window);
+    window->add( *(this->gtkmm_webKitWebView) );
+    webkit_web_view_load_html(this->webKitWebView, "<html><head><style>h1 {color: red;}</style><title>title</title></head><body><h1>header</h1><b>bold</b><i>italic</i></body></html>", NULL);
 
-    window->show();
-    window->set_size_request(350, 200);
+    window->set_title("Lab Monitoring");
+    window->maximize();
+    window->show_all();
 }
 
 

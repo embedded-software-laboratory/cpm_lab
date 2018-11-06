@@ -17,6 +17,7 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 find_package(PkgConfig)
 
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
+pkg_check_modules(WEBKIT2 REQUIRED webkit2gtk-4.0)
 
 add_executable(LabControlCenter
 
@@ -60,6 +61,6 @@ add_executable(LabControlCenter
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter ${GTKMM_LIBRARIES})
-target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
-target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
+target_link_libraries(LabControlCenter ${GTKMM_LIBRARIES} ${WEBKIT2_LIBRARIES})
+target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS} ${WEBKIT2_INCLUDE_DIRS})
+target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER} ${WEBKIT2_CFLAGS_OTHER})
