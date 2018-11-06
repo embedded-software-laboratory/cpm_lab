@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 
-VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> vehicleManualControl) : vehicleManualControl(vehicleManualControl)
+VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> _vehicleManualControl) : vehicleManualControl(_vehicleManualControl)
 {
     assert(vehicleManualControl);
 
