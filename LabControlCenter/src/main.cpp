@@ -21,14 +21,16 @@ int main(int argc, char *argv[])
 {
     auto participant = make_shared<dds::domain::DomainParticipant>(0);
     auto vehicleManualControl = make_shared<VehicleManualControl>(participant);
+
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
-    VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
-    vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
 
     MonitoringUi monitoringUi;
+    VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
 
-    app->signal_startup().connect([&]{ app->add_window(vehicleManualControlUi.get_window()); });
-    return app->run(monitoringUi.get_window());
+    vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
+
+    app->signal_startup().connect([&]{ app->add_window(monitoringUi.get_window()); });
+    return app->run(vehicleManualControlUi.get_window());
 
     while(1) sleep(1);
     return 0;
