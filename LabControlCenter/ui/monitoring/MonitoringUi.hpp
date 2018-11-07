@@ -7,7 +7,8 @@
 class MonitoringUi
 {
     Glib::RefPtr<Gtk::Builder> builder;
-    Gtk::Window* window = nullptr;
+    Gtk::Window* window;
+    Gtk::Grid* grid_vehicle_monitor;
     
 public:
     MonitoringUi();

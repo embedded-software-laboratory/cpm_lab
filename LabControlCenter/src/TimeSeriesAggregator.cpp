@@ -16,31 +16,31 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicleState[vehicle_id] = map<string, shared_ptr<TimeSeries>>();
 
     timeseries_vehicleState[vehicle_id]["pose_x"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Position X", vehicle_id), "%6.2f", "m");
+        "Position X", "%6.2f", "m");
 
     timeseries_vehicleState[vehicle_id]["pose_y"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Position Y", vehicle_id), "%6.2f", "m");
+        "Position Y", "%6.2f", "m");
 
     timeseries_vehicleState[vehicle_id]["pose_yaw"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Yaw", vehicle_id), "%6.3f", "rad");
+        "Yaw", "%6.3f", "rad");
 
     timeseries_vehicleState[vehicle_id]["odometer_distance"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Odometer Distance", vehicle_id), "%7.2f", "m");
+        "Odometer Distance", "%7.2f", "m");
 
     timeseries_vehicleState[vehicle_id]["imu_acceleration_forward"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Acceleration Forward", vehicle_id), "%4.1f", "m/s^2");
+        "Acceleration Forward", "%4.1f", "m/s^2");
 
     timeseries_vehicleState[vehicle_id]["imu_acceleration_left"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Acceleration Left", vehicle_id), "%4.1f", "m/s^2");
+        "Acceleration Left", "%4.1f", "m/s^2");
 
     timeseries_vehicleState[vehicle_id]["speed"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Speed", vehicle_id), "%5.2f", "m/s");
+        "Speed", "%5.2f", "m/s");
 
     timeseries_vehicleState[vehicle_id]["battery_voltage"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Battery Voltage", vehicle_id), "%5.2f", "V");
+        "Battery Voltage", "%5.2f", "V");
 
     timeseries_vehicleState[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
-        string_format("Vehicle %02u, Motor Current", vehicle_id), "%5.2f", "A");
+        "Motor Current", "%5.2f", "A");
 
     for(auto callback : vehicle_added_callbacks)
     {
