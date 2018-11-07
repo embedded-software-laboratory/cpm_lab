@@ -49,6 +49,8 @@ add_executable(LabControlCenter
     src/AbsoluteTimer.hpp
     src/TimeSeries.cpp
     src/TimeSeries.hpp
+    src/TimeSeriesAggregator.cpp
+    src/TimeSeriesAggregator.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
     ui/manual_control/VehicleManualControlUi.cpp
