@@ -58,15 +58,17 @@ int main(int argc, char *argv[])
     std::cout << "vehicle_id " << vehicle_id << std::endl;
 
 
+#ifndef VEHICLE_SIMULATION
     // Hardware setup
     if (!bcm2835_init())
     {
         printf("bcm2835_init failed. Are you running as root??\n");
         exit(EXIT_FAILURE);
     }
-    crcInit();
     spi_init();
+#endif
 
+    crcInit();
 
     // DDS setup
     dds::domain::DomainParticipant participant (0);
@@ -121,11 +123,17 @@ int main(int argc, char *argv[])
 
             // Run controller
             spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_iteration_start);
-
-
-            // Exchange data with low level micro-controller
             spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
+
+
+#ifdef VEHICLE_SIMULATION
+            // TODO simulation
+            //spi_miso_data_t spi_miso_data = vehicle_simulation(spi_mosi_data);
+            spi_miso_data_t spi_miso_data = {1};
+#else
+            // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
+#endif            
      
 
             // Process sensor data
