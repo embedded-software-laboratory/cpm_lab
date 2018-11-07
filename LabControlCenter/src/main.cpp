@@ -15,15 +15,21 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <gdkmm/display.h>
 
 int main(int argc, char *argv[])
 {
+    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
+    Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
+    cssProvider->load_from_path("ui/style.css");
+    Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,0);
+
+
     auto participant = make_shared<dds::domain::DomainParticipant>(0);
     auto vehicleManualControl = make_shared<VehicleManualControl>(participant);
 
     TimeSeriesAggregator timeSeriesAggregator(participant);
 
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
 
     MonitoringUi monitoringUi;
     VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);

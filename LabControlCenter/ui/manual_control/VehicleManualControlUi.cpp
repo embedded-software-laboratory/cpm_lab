@@ -60,6 +60,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
 
     window->signal_delete_event().connect([&](GdkEventAny*)->bool{
         vehicleManualControl->stop();
+        exit(0);
         return false;
     });
 

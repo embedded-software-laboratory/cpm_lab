@@ -5,7 +5,7 @@ TimeSeries::TimeSeries(string _name, string _format, string _unit)
 ,format(_format)
 ,unit(_unit)
 {
-
+    
 }
 
 
