@@ -57,6 +57,8 @@ set(SOURCE
     src/TrajectoryInterpolation.hpp
     src/spi.c
     src/spi.h
+    ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h
+    ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c
 )
 
 
@@ -67,6 +69,8 @@ if(BUILD_SIMULATION)
     add_executable(vehicle_rpi_firmware 
         ${SOURCE_RTI}
         ${SOURCE}
+        src/Simulation.cxx
+        src/Simulation.hpp
     )
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)

@@ -2,6 +2,7 @@
 *.a
 *.so
 build/
+build_sim/
 install/
 __pycache__/
 devel/

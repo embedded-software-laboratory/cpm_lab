@@ -19,12 +19,13 @@ using std::vector;
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
 #include "Controller.hpp"
+#include "Simulation.hpp"
 
 #include "bcm2835.h"
 
 extern "C" {
 #include "spi.h"
-#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c"
+#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
 }
 
 
@@ -66,6 +67,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     spi_init();
+#else
+    Simulation simulation;
 #endif
 
     crcInit();
@@ -93,7 +96,9 @@ int main(int argc, char *argv[])
     Controller controller;
     int loop_counter = 0;
 
-    AbsoluteTimer timer_loop(0, 20000000, 0, 0, [&](){
+
+    const long period_nanoseconds = 20000000; // 50 Hz
+    AbsoluteTimer timer_loop(0, period_nanoseconds, 0, 0, [&](){
 
         try 
         {
@@ -127,9 +132,7 @@ int main(int argc, char *argv[])
 
 
 #ifdef VEHICLE_SIMULATION
-            // TODO simulation
-            //spi_miso_data_t spi_miso_data = vehicle_simulation(spi_mosi_data);
-            spi_miso_data_t spi_miso_data = {1};
+            spi_miso_data_t spi_miso_data = simulation.update(spi_mosi_data, period_nanoseconds/1e9);
 #else
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
