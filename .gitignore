@@ -17,3 +17,4 @@ Debug/
 .vs/
 vehicle_raspberry_pi_zero_w/cross_compile/tools/
 rtidds/
+*.glade~

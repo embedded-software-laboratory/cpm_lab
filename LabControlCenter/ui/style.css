@@ -1,8 +1,5 @@
-
-* {
-    color:red;
-    font-weight:bold;
-    background-color: green;
-    border-color:#ff0000;
-    background-image: none;
+.entry {
+  background-color: blue;
+  color: #ffff00;
+  background-image: linear-gradient(red);
 }
