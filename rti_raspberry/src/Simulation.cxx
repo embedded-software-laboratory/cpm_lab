@@ -29,8 +29,19 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
 
     const double T_curvature = 0.09; // steering PT1 time constant in seconds
     const double T_speed = 0.7; // speed PT1 time constant in seconds
-    const double curvature_ref = ((input_now.servo_command/(-1000.0)) + 0.035)/(0.24);
+    double curvature_ref = ((input_now.servo_command/(-1000.0)) + 0.035)/(0.24);
     double speed_ref = 6.5 * pow((input_now.motor_pwm/400.0), 1.6);
+
+    speed_ref = fmin( 4.0, speed_ref);
+    speed_ref = fmax(-4.0, speed_ref);
+
+    curvature_ref = fmin( 2.8, curvature_ref);
+    curvature_ref = fmax(-2.8, curvature_ref);
+
+    const double speed_max_acc = sqrt(8/(fabs(curvature_ref)+0.01));
+
+    speed_ref = fmin( speed_max_acc, speed_ref);
+    speed_ref = fmax(-speed_max_acc, speed_ref);
 
     if(input_now.motor_mode == SPI_MOTOR_MODE_BRAKE) 
     {

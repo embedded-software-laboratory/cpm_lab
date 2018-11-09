@@ -2,7 +2,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
-#include <TimeSeries.hpp>
+#include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "AbsoluteTimer.hpp"
 

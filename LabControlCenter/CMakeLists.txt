@@ -57,6 +57,8 @@ add_executable(LabControlCenter
     ui/manual_control/VehicleManualControlUi.hpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
+    ui/map_view/MapViewUi.cpp
+    ui/map_view/MapViewUi.hpp
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
