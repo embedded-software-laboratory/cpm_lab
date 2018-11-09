@@ -41,16 +41,6 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
         speed_ref = -speed_ref;
     }
 
-    /*std::cout 
-    << "curvature_ref" << "  " << curvature_ref << std::endl
-    << "speed_ref" << "  " << speed_ref << std::endl
-    << "dt" << "  " << dt << std::endl
-    << "speed" << "  " << speed << std::endl
-    << "curvature" << "  " << curvature << std::endl
-    << "yaw" << "  " << yaw << std::endl
-    << "x" << "  " << x << std::endl
-    << "distance" << "  " << distance << std::endl
-    << "===============================" << std::endl;*/
 
     // solve ODE timestep
     const int N_substeps = 5;
@@ -65,8 +55,8 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
     }
 
 
-    if(yaw > 2*M_PI) yaw -= 2*M_PI;
-    if(yaw < 0) yaw += 2*M_PI;
+    if(yaw > 0) yaw -= 2*M_PI;
+    if(yaw < -2*M_PI) yaw += 2*M_PI;
 
 
     spi_miso_data.tick                      = tick;
@@ -82,7 +72,19 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
     spi_miso_data.status_flags              = 0;
 
 
-    spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
+
+    /*std::cout 
+    << "curvature_ref" << "  " << curvature_ref << std::endl
+    << "speed_ref" << "  " << speed_ref << std::endl
+    << "dt" << "  " << dt << std::endl
+    << "speed" << "  " << speed << std::endl
+    << "curvature" << "  " << curvature << std::endl
+    << "yaw" << "  " << yaw << std::endl
+    << "spi_miso_data.imu_yaw" << "  " << spi_miso_data.imu_yaw << std::endl
+    << "x" << "  " << x << std::endl
+    << "distance" << "  " << distance << std::endl
+    << "===============================" << std::endl;
+    spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));*/
 
     return spi_miso_data;
 }
