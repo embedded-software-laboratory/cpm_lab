@@ -7,8 +7,33 @@
     <property name="title" translatable="yes">Lab Monitoring</property>
     <child>
       <object class="GtkGrid" id="grid_vehicle_monitor">
+        <property name="name">grid_vehicle_monitor</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
         <child>
           <placeholder/>
         </child>

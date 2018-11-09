@@ -1,5 +1,21 @@
-/*.entry {
-  background-color: blue;
-  color: #ffff00;
-  background-image: linear-gradient(red);
-}*/
+#grid_vehicle_monitor .label {
+    padding: 4px;
+    margin: 4px;
+    color: black;
+    font-weight: bold;
+}
+
+#grid_vehicle_monitor .label.ok {
+    color: white;
+    background-image: linear-gradient(green);
+}
+
+#grid_vehicle_monitor .label.warn {
+    color: white;
+    background-image: linear-gradient(#eb0);
+}
+
+#grid_vehicle_monitor .label.alert {
+    color: white;
+    background-image: linear-gradient(red);
+}

@@ -8,9 +8,13 @@
 #include <stdexcept>
 #include <map>
 #include <cstdio>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 using std::vector;
 using std::string;
+using std::to_string;
 using std::map;
 using std::cout;
 using std::cerr;
@@ -42,3 +46,5 @@ string string_format( const std::string& format, Args ... args )
     snprintf( buf.get(), size, format.c_str(), args ... );
     return string( buf.get(), buf.get() + size - 1 );
 }
+
+double frand();
