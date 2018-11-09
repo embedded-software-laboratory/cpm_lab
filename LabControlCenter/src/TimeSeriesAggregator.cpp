@@ -41,14 +41,6 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     timeseries_vehicleState[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
         "Motor Current", "%5.2f", "A");
-
-    for(auto callback : vehicle_added_callbacks)
-    {
-        if(callback)
-        {
-            callback(vehicle_id, timeseries_vehicleState);
-        }
-    }
 }
 
 

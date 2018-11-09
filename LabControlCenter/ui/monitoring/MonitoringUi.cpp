@@ -1,7 +1,8 @@
 #include "MonitoringUi.hpp"
 #include <cassert>
 
-MonitoringUi::MonitoringUi() 
+MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
+:vehicle_data(_vehicle_data)
 {    
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
 
@@ -12,53 +13,79 @@ MonitoringUi::MonitoringUi()
     assert(grid_vehicle_monitor);
 
 
-    for (int i = 0; i < 15; ++i)
-    {
-        for (int j = 0; j < 14; ++j)
-        {
-            Gtk::Label* aWidget = Gtk::manage(new Gtk::Label()); 
-            aWidget->set_text(to_string(i)+", "+to_string(j));
-            aWidget->set_width_chars(10);
-            aWidget->set_xalign(1);
-
-            if(i == 0 && j == 0) aWidget->get_style_context()->add_class("ok");
-            if(i == 1 && j == 1) aWidget->get_style_context()->add_class("warn");
-            if(i == 2 && j == 2) aWidget->get_style_context()->add_class("alert");
-
-            grid_vehicle_monitor->attach (*aWidget, i, j, 1, 1);
-        }
-    }
-
     window->maximize();
     window->show_all();
 
-    function<int()> update_fn = [=](){
 
-        for (int i = 0; i < 15; ++i)
-        {
-            for (int j = 0; j < 14; ++j)
+    update_loop = make_shared<AbsoluteTimer>(0, 100000000, 0, 0, [&](){ update_dispatcher.emit(); });
+
+    update_dispatcher.connect([&](){
+
+        // Row header
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+
+            Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id + 1, 0));
+
+            if(!label)
             {
-                Gtk::Label* aWidget = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(i,j));
-
-                double p = frand();
-                aWidget->set_text(to_string(p));
-
-                aWidget->get_style_context()->remove_class("ok");
-                aWidget->get_style_context()->remove_class("warn");
-                aWidget->get_style_context()->remove_class("alert");
-
-                if(p < 0.1)      aWidget->get_style_context()->add_class("ok");
-                else if(p > 0.9) aWidget->get_style_context()->add_class("warn");
-                else if(p > 0.8) aWidget->get_style_context()->add_class("alert");
+                label = Gtk::manage(new Gtk::Label()); 
+                label->set_width_chars(10);
+                label->set_xalign(1);
+                label->set_text(string_format("Vehicle %02i", vehicle_id));
+                label->show_all();
+                grid_vehicle_monitor->attach(*label, vehicle_id + 1, 0, 1, 1);
             }
         }
-        return 0;
-    };
 
-    for (int i = 0; i < 100; ++i)
-    {
-        Glib::signal_timeout().connect(update_fn, i*500);
-    }
+        // Column header
+        if(!vehicle_data.empty())
+        {
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+                Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(0, i + 1));
+
+                if(!label)
+                {
+                    label = Gtk::manage(new Gtk::Label()); 
+                    label->set_width_chars(25);
+                    label->set_xalign(0);
+                    label->set_text(
+                        vehicle_data.begin()->second.at(rows[i])->get_name() + " [" + 
+                        vehicle_data.begin()->second.at(rows[i])->get_unit() + "]"
+                    );
+                    label->show_all();
+                    grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
+                }
+            }
+        }
+
+        for(const auto& entry: vehicle_data)
+        {
+            const auto vehicle_id = entry.first;
+
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+                auto vehicle_sensor_timeseries = entry.second;
+                if(vehicle_sensor_timeseries.count(rows[i]))
+                {
+                    Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
+
+                    if(!label)
+                    {
+                        label = Gtk::manage(new Gtk::Label()); 
+                        label->set_width_chars(10);
+                        label->set_xalign(1);
+                        label->show_all();
+                        grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
+                    }
+
+                    auto sensor_timeseries = vehicle_sensor_timeseries.at(rows[i]);
+                    label->set_text(sensor_timeseries->format_value(sensor_timeseries->get_latest_value()));
+                }
+            }
+        }
+    });
 
 
     window->signal_delete_event().connect([&](GdkEventAny*)->bool{

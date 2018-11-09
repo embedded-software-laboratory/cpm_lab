@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     TimeSeriesAggregator timeSeriesAggregator(participant);
 
 
-    MonitoringUi monitoringUi;
+    MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
     VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});

@@ -13,12 +13,7 @@ class TimeSeriesAggregator : dds::sub::NoOpDataReaderListener<VehicleState>
     void create_vehicle_timeseries(uint8_t vehicle_id);
     void on_data_available (dds::sub::DataReader<VehicleState>&) override;
 
-
-    vector<std::function<void(uint8_t new_vehicle_id, map<uint8_t, map<string, shared_ptr<TimeSeries> > >& timeseries)>> vehicle_added_callbacks;
-
 public:
-    TimeSeriesAggregator(shared_ptr<dds::domain::DomainParticipant>);  
-
-    void add_vehicle_added_callback(std::function<void(uint8_t new_vehicle_id, map<uint8_t, map<string, shared_ptr<TimeSeries> > >& timeseries)> callback)
-    { vehicle_added_callbacks.push_back(callback); } 
+    TimeSeriesAggregator(shared_ptr<dds::domain::DomainParticipant>);
+    const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& get_vehicle_data() { return timeseries_vehicleState; }
 };
