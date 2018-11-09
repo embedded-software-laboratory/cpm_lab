@@ -43,9 +43,9 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             sample.data().speed_curvature().speed(ref_speed);
             sample.data().speed_curvature().curvature(joystick->getAxis(AXIS_STEERING) * 4.0 / (-double(1<<15)));
 
-            printf("speed %12.4f  curvature %12.4f\n", 
-                sample.data().speed_curvature().speed(), 
-                sample.data().speed_curvature().curvature());
+            //printf("speed %12.4f  curvature %12.4f\n", 
+            //    sample.data().speed_curvature().speed(), 
+            //    sample.data().speed_curvature().curvature());
 
         }
         else if(joystick->getButton(5)) { // trajectory mode
@@ -60,7 +60,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
                 ref_trajectory_index++;
             }
-            std::cout << "ref_trajectory_index " << ref_trajectory_index << std::endl;
+            //std::cout << "ref_trajectory_index " << ref_trajectory_index << std::endl;
 
 
             sample.data()._d(VehicleCommandMode_def::TrajectoryMode);
@@ -81,9 +81,9 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             sample.data().direct_control().steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
 
 
-            printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
-                sample.data().direct_control().motor_throttle(), 
-                sample.data().direct_control().steering_servo());
+            //printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
+            //    sample.data().direct_control().motor_throttle(), 
+            //    sample.data().direct_control().steering_servo());
 
         }
 

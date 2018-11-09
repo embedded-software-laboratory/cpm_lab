@@ -40,8 +40,21 @@ string TimeSeries::format_value(double value)
     return string_format(format, value);
 }
 
-double TimeSeries::get_latest_value()
+double TimeSeries::get_latest_value() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     return values.back();
+}
+
+
+bool TimeSeries::has_new_data(double dt) const 
+{
+    const uint64_t age = double(clock_gettime_nanoseconds() - get_latest_time());
+    return age/1e9 < dt;
+}
+
+uint64_t TimeSeries::get_latest_time() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return times.back();
 }

@@ -66,7 +66,7 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
     spi_miso_data.imu_acceleration_left     = curvature*speed*speed*100;
     spi_miso_data.speed                     = speed/0.003122/0.2384;
     spi_miso_data.battery_voltage           = (8.0 - 0.1 * fabs(speed_ref-speed))/0.01166;
-    spi_miso_data.motor_current             = ((speed_ref-speed) * 0.2)/0.01;
+    spi_miso_data.motor_current             = fabs(((speed_ref-speed) * 0.2)/0.01);
     spi_miso_data.debugC                    = 0;
     spi_miso_data.debugD                    = 0;
     spi_miso_data.status_flags              = 0;
@@ -83,8 +83,9 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
     << "spi_miso_data.imu_yaw" << "  " << spi_miso_data.imu_yaw << std::endl
     << "x" << "  " << x << std::endl
     << "distance" << "  " << distance << std::endl
-    << "===============================" << std::endl;
-    spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));*/
+    << "===============================" << std::endl;*/
+
+    spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 
     return spi_miso_data;
 }

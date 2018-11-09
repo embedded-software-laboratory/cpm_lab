@@ -81,7 +81,17 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
                     }
 
                     auto sensor_timeseries = vehicle_sensor_timeseries.at(rows[i]);
-                    label->set_text(sensor_timeseries->format_value(sensor_timeseries->get_latest_value()));
+
+                    const uint64_t age = clock_gettime_nanoseconds() - sensor_timeseries->get_latest_time();
+
+                    if(sensor_timeseries->has_new_data(0.5))
+                    {
+                        label->set_text(sensor_timeseries->format_value(sensor_timeseries->get_latest_value()));
+                    }
+                    else 
+                    {
+                        label->set_text("---");
+                    }
                 }
             }
         }
