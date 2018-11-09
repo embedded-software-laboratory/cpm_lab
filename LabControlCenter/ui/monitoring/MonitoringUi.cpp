@@ -21,7 +21,7 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
 
     update_dispatcher.connect([&](){
 
-        // Row header
+        // Top header
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
 
@@ -38,7 +38,7 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
             }
         }
 
-        // Column header
+        // Left header
         if(!vehicle_data.empty())
         {
             for (size_t i = 0; i < rows.size(); ++i)
@@ -56,6 +56,11 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
                     );
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
+
+                    if(i % 2 == 1) 
+                    {
+                        label->get_style_context()->add_class("zebra");
+                    }
                 }
             }
         }
@@ -77,16 +82,34 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
                         label->set_width_chars(10);
                         label->set_xalign(1);
                         label->show_all();
+                        if(i % 2 == 1) 
+                        {
+                            label->get_style_context()->add_class("zebra");
+                        }
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                     }
 
                     auto sensor_timeseries = vehicle_sensor_timeseries.at(rows[i]);
 
-                    const uint64_t age = clock_gettime_nanoseconds() - sensor_timeseries->get_latest_time();
-
                     if(sensor_timeseries->has_new_data(0.5))
                     {
-                        label->set_text(sensor_timeseries->format_value(sensor_timeseries->get_latest_value()));
+                        const auto value = sensor_timeseries->get_latest_value();
+                        label->set_text(sensor_timeseries->format_value(value));
+
+
+
+                        if(rows[i] == "battery_voltage")
+                        {
+                            label->get_style_context()->remove_class("ok");
+                            label->get_style_context()->remove_class("warn");
+                            label->get_style_context()->remove_class("alert");
+
+
+                            if     (value > 6.6) label->get_style_context()->add_class("ok");
+                            else if(value > 6.3) label->get_style_context()->add_class("warn");
+                            else                 label->get_style_context()->add_class("alert");
+
+                        }
                     }
                     else 
                     {

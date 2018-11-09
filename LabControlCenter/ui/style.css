@@ -7,7 +7,7 @@
 
 #grid_vehicle_monitor .label.ok {
     color: white;
-    background-image: linear-gradient(green);
+    background-image: linear-gradient(#080);
 }
 
 #grid_vehicle_monitor .label.warn {
@@ -17,5 +17,9 @@
 
 #grid_vehicle_monitor .label.alert {
     color: white;
-    background-image: linear-gradient(red);
+    background-image: linear-gradient(#f00);
+}
+
+#grid_vehicle_monitor .label.zebra {
+    background-image: linear-gradient(#fff);
 }
