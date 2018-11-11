@@ -58,3 +58,10 @@ uint64_t TimeSeries::get_latest_time() const
     std::lock_guard<std::mutex> lock(m_mutex);
     return times.back();
 }
+
+vector<double> TimeSeries::get_last_n_values(size_t n) const 
+{
+    if(values.size() <= n) return values;
+
+    return vector<double>(values.end()-n, values.end());
+}

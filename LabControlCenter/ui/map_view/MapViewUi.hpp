@@ -13,6 +13,9 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     shared_ptr<AbsoluteTimer> update_loop;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
+    double zoom = 300.0;
+    double pan_x = 0;
+    double pan_y = 0;
 
 public:
     explicit MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >&);

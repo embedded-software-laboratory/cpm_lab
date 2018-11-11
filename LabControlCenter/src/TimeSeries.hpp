@@ -25,4 +25,6 @@ public:
     void add_new_sample_callback(function<void(TimeSeries&, uint64_t time, double value)> callback);
     string get_name() const {return name;}
     string get_unit() const {return unit;}
+    vector<double> get_last_n_values(size_t n) const;
+
 };

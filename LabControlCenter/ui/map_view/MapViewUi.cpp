@@ -1,5 +1,6 @@
 #include "MapViewUi.hpp"
 #include <cassert>
+#include <glibmm/main.h>
 
 MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
 :vehicle_data(_vehicle_data)
@@ -19,28 +20,77 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
 
     window->set_title("Map View");
+    window->set_size_request(1280, 720);
     window->maximize();
     window->show_all();
+
+    window->add_events(Gdk::SCROLL_MASK);
+
+    // initialize pan offset
+    Glib::signal_timeout().connect([&](){
+        pan_x = drawingArea->get_allocated_width()/2;
+        pan_y = drawingArea->get_allocated_height()/2;
+        return false;
+    }, 100);
+
+
+    window->signal_scroll_event().connect([&](GdkEventScroll* event){
+
+        double zoom_speed = 1;
+
+        if(event->delta_y > 0 && zoom > 30) 
+        {
+            zoom_speed = 1.0/1.2;
+        }
+
+        if(event->delta_y < 0 && zoom < 900)
+        {
+            zoom_speed = 1.2;            
+        } 
+
+        if(zoom_speed != 1)
+        {
+            pan_x = event->x - zoom_speed * (event->x - pan_x);
+            pan_y = event->y - zoom_speed * (event->y - pan_y);
+            zoom *= zoom_speed;
+        }
+
+        return true; 
+    });
+
 
     drawingArea->signal_draw().connect([&](const ::Cairo::RefPtr< ::Cairo::Context >& ctx)->bool {
         ctx->save();
         {
-            ctx->translate(drawingArea->get_allocated_width()/2, drawingArea->get_allocated_height()/2);
-            ctx->scale(300, 300);
+            ctx->translate(pan_x, pan_y);
+            ctx->scale(zoom, zoom);
 
-            ctx->set_line_width(0.005);
 
-            const int grid_size = 10;
-            for (int i = -grid_size; i <= grid_size; ++i)
+            // Draw grid
+            ctx->save();
             {
-                ctx->move_to(i,-grid_size);
-                ctx->line_to(i,grid_size);
-                ctx->stroke();
+                ctx->scale(.1, .1);
+                const int n_grid = 100;
+                for (int i = -n_grid; i <= n_grid; ++i)
+                {
+                    if(i % 10 == 0) {
+                        ctx->set_line_width(0.05);
+                    }
+                    else {
+                        ctx->set_line_width(0.01);
+                    }
 
-                ctx->move_to(-grid_size,i);
-                ctx->line_to(grid_size,i);
-                ctx->stroke();
+                    ctx->move_to(i,-n_grid);
+                    ctx->line_to(i,n_grid);
+                    ctx->stroke();
+
+                    ctx->move_to(-n_grid,i);
+                    ctx->line_to(n_grid,i);
+                    ctx->stroke();
+                }    
             }
+            ctx->restore();
+
 
             for(const auto& entry : vehicle_data) {
                 const auto vehicle_id = entry.first;
@@ -48,6 +98,22 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
                 if(vehicle_sensor_timeseries.at("pose_x")->has_new_data(1.0))
                 {
+
+                    // Draw vehicle trajectory
+                    {
+                        vector<double> trajectory_x = vehicle_sensor_timeseries.at("pose_x")->get_last_n_values(100);
+                        vector<double> trajectory_y = vehicle_sensor_timeseries.at("pose_y")->get_last_n_values(100);
+                        for (size_t i = 1; i < trajectory_x.size(); ++i)
+                        {
+                            if(i == 1) ctx->move_to(trajectory_x[i], -trajectory_y[i]);
+                            else ctx->line_to(trajectory_x[i], -trajectory_y[i]);
+                        }
+                        ctx->set_source_rgb(1,0,0);
+                        ctx->set_line_width(0.01);
+                        ctx->stroke();
+                    }
+
+                    // Draw vehicle
                     ctx->save();
                     {                        
                         const double x = vehicle_sensor_timeseries.at("pose_x")->get_latest_value();
@@ -75,7 +141,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
                         ctx->save();
                         {
-                            ctx->translate((LF+LR)/2-LR,0);
+                            ctx->translate(0.04, 0);
                             const double scale = 0.01;
                             ctx->rotate(yaw);
                             ctx->scale(scale, scale);
