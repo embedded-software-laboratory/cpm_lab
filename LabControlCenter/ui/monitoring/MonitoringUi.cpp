@@ -13,7 +13,8 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
     assert(grid_vehicle_monitor);
 
 
-    window->maximize();
+    window->set_size_request(500, 300);
+    //window->maximize();
     window->show_all();
 
 

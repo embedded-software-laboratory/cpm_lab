@@ -32,14 +32,14 @@ int main(int argc, char *argv[])
     TimeSeriesAggregator timeSeriesAggregator(participant);
 
 
-    //MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
     MapViewUi mapViewUi(timeSeriesAggregator.get_vehicle_data());
+    MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
     VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
 
     app->signal_startup().connect([&]{
-        //app->add_window(monitoringUi.get_window());
+        app->add_window(monitoringUi.get_window());
         app->add_window(mapViewUi.get_window());
     });
     return app->run(vehicleManualControlUi.get_window());
