@@ -7,14 +7,27 @@ void Controller::update_vehicle_state(VehicleState vehicleState) {
     m_vehicleState = vehicleState;
 }
 
-void Controller::update_command(VehicleCommand vehicleCommand) {
-    m_vehicleCommand = vehicleCommand;
-    emergency_stop = false;
+void Controller::update_command(VehicleCommandDirect vehicleCommand)
+{
+    m_vehicleCommandDirect = vehicleCommand;
+    state = ControllerState::Direct;
 }
 
+void Controller::update_command(VehicleCommandSpeedCurvature vehicleCommand)
+{
+    m_vehicleCommandSpeedCurvature = vehicleCommand;
+    state = ControllerState::SpeedCurvature;
+}
 
-void Controller::vehicle_emergency_stop() {
-    emergency_stop = true;
+void Controller::update_command(VehicleCommandTrajectory vehicleCommand)
+{
+    m_vehicleCommandTrajectory = vehicleCommand;
+    state = ControllerState::Trajectory;
+}
+
+void Controller::vehicle_emergency_stop() 
+{
+    state = ControllerState::Stop;
 }
 
 double Controller::speed_controller(const double speed_measured, const double speed_target) {
@@ -49,29 +62,21 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
     spi_mosi_data_t spi_mosi_data;
     memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
-    if(emergency_stop) {
+    if(state == ControllerState::Stop) {
         spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
         spi_mosi_data.LED_bits = LED1_BLINK_SLOW | LED2_OFF | LED3_OFF | LED4_OFF;
         return spi_mosi_data;
     }
 
-
     double motor_throttle = 0;
     double steering_servo = 0;
 
-    switch(m_vehicleCommand.data()._d().underlying()) {
-        
-        case VehicleCommandMode::DirectControlMode:
-        {
-            motor_throttle = fmax(-1.0, fmin(1.0, m_vehicleCommand.data().direct_control().motor_throttle()));
-            steering_servo = fmax(-1.0, fmin(1.0, m_vehicleCommand.data().direct_control().steering_servo()));
-        }
-        break;
+    switch(state) {        
 
-        case VehicleCommandMode::SpeedCurvatureMode:
+        case ControllerState::SpeedCurvature:
         {
-            const double speed_target = m_vehicleCommand.data().speed_curvature().speed();
-            const double curvature    = m_vehicleCommand.data().speed_curvature().curvature();
+            const double speed_target = m_vehicleCommandSpeedCurvature.speed();
+            const double curvature    = m_vehicleCommandSpeedCurvature.curvature();
             const double speed_measured = m_vehicleState.speed();
 
             steering_servo = steering_curvature_calibration(curvature);
@@ -79,9 +84,9 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
         }
         break;
 
-        case VehicleCommandMode::TrajectoryMode:
+        case ControllerState::Trajectory:
         {
-            for(TrajectoryPoint trajectory_point : m_vehicleCommand.data().trajectory_points()) {
+            for(TrajectoryPoint trajectory_point : m_vehicleCommandTrajectory.trajectory_points()) {
                 trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
             }            
 
@@ -131,6 +136,13 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
                 steering_servo = steering_curvature_calibration(curvature);
                 motor_throttle = speed_controller(speed_measured, speed_target);
             }
+        }
+        break;
+
+        default: // Direct
+        {
+            motor_throttle = fmax(-1.0, fmin(1.0, m_vehicleCommandDirect.motor_throttle()));
+            steering_servo = fmax(-1.0, fmin(1.0, m_vehicleCommandDirect.steering_servo()));
         }
         break;
     }

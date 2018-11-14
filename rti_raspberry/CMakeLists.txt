@@ -15,6 +15,12 @@ include_directories(src)
 
 
 set(SOURCE_RTI
+    rtidds/Header.cxx
+    rtidds/Header.hpp
+    rtidds/HeaderImpl.cxx
+    rtidds/HeaderImpl.h
+    rtidds/HeaderImplPlugin.cxx
+    rtidds/HeaderImplPlugin.h
     rtidds/Pose2D.cxx
     rtidds/Pose2D.hpp
     rtidds/Pose2DImpl.cxx
@@ -27,12 +33,24 @@ set(SOURCE_RTI
     rtidds/TimeStampImpl.h
     rtidds/TimeStampImplPlugin.cxx
     rtidds/TimeStampImplPlugin.h
-    rtidds/VehicleCommand.cxx
-    rtidds/VehicleCommand.hpp
-    rtidds/VehicleCommandImpl.cxx
-    rtidds/VehicleCommandImpl.h
-    rtidds/VehicleCommandImplPlugin.cxx
-    rtidds/VehicleCommandImplPlugin.h
+    rtidds/VehicleCommandDirect.cxx
+    rtidds/VehicleCommandDirect.hpp
+    rtidds/VehicleCommandDirectImpl.cxx
+    rtidds/VehicleCommandDirectImpl.h
+    rtidds/VehicleCommandDirectImplPlugin.cxx
+    rtidds/VehicleCommandDirectImplPlugin.h
+    rtidds/VehicleCommandSpeedCurvature.cxx
+    rtidds/VehicleCommandSpeedCurvature.hpp
+    rtidds/VehicleCommandSpeedCurvatureImpl.cxx
+    rtidds/VehicleCommandSpeedCurvatureImpl.h
+    rtidds/VehicleCommandSpeedCurvatureImplPlugin.cxx
+    rtidds/VehicleCommandSpeedCurvatureImplPlugin.h
+    rtidds/VehicleCommandTrajectory.cxx
+    rtidds/VehicleCommandTrajectory.hpp
+    rtidds/VehicleCommandTrajectoryImpl.cxx
+    rtidds/VehicleCommandTrajectoryImpl.h
+    rtidds/VehicleCommandTrajectoryImplPlugin.cxx
+    rtidds/VehicleCommandTrajectoryImplPlugin.h
     rtidds/VehicleState.cxx
     rtidds/VehicleState.hpp
     rtidds/VehicleStateImpl.cxx

@@ -12,7 +12,9 @@ using std::vector;
 #include <dds/sub/ddssub.hpp>
 #include <rti/util/util.hpp> // for sleep()
 
-#include "VehicleCommand.hpp"
+#include "VehicleCommandDirect.hpp"
+#include "VehicleCommandSpeedCurvature.hpp"
+#include "VehicleCommandTrajectory.hpp"
 #include "VehicleState.hpp"
 #include "AbsoluteTimer.hpp"
 
@@ -34,6 +36,7 @@ extern "C" {
 }
 
 
+// TODO move to cpm_lib
 uint64_t clock_gettime_nanoseconds() {
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
@@ -46,6 +49,49 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
     return mosi_CRC == crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 }
 
+
+// TODO move to cpm_lib
+template<typename T>
+struct VehicleIDFilteredTopic : public dds::topic::ContentFilteredTopic<T>
+{
+    VehicleIDFilteredTopic(const dds::domain::DomainParticipant &participant, const std::string &topic_name, const uint8_t &vehicle_id)
+    :dds::topic::ContentFilteredTopic<T>(
+        dds::topic::Topic<T>(participant, topic_name), 
+        topic_name + "_vehicle_id_filtered", 
+        dds::topic::Filter("vehicle_id = " + std::to_string(vehicle_id))
+    )
+    {
+        static_assert(std::is_same<decltype(std::declval<T>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
+    }
+};
+
+
+
+// TODO move to cpm_lib
+#include <type_traits>
+template<typename T>
+bool take_new_sample(dds::sub::DataReader<T> &reader, T& value_out, uint64_t t_now)
+{
+    static_assert(std::is_same<decltype(value_out.header()), Header&>::value, "IDL type must have a header.");
+
+    bool has_new_sample = false;    
+
+    // TODO is there a type-safe alternative for the Query?
+    // TODO test this!
+    dds::sub::LoanedSamples<T> new_samples = reader.select().content(dds::sub::Query(reader, "header.valid_after_stamp.nanoseconds <= " + std::to_string(t_now))).take();
+
+    for(auto sample : new_samples)
+    {
+        if(sample.info().valid())
+        {
+            // TODO if there are multiple valid samples, use the one with the latest header.created_stamp
+            value_out = sample.data();
+            has_new_sample = true;
+        }
+    }
+
+    return has_new_sample;
+}
 
 int main(int argc, char *argv[])
 {
@@ -89,11 +135,15 @@ int main(int argc, char *argv[])
     QoS.policy(reliability);
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
-    dds::topic::Topic<VehicleCommand> topic_vehicleCommand (participant, "vehicleCommand");
-    dds::topic::ContentFilteredTopic<VehicleCommand> topic_vehicleCommand_filtered(topic_vehicleCommand, "vehicleCommand_filtered", dds::topic::Filter("vehicle_id = " + std::to_string(vehicle_id)));
-    dds::sub::DataReader<VehicleCommand> reader_vehicleCommand(dds::sub::Subscriber(participant), topic_vehicleCommand_filtered);
 
+    VehicleIDFilteredTopic<VehicleCommandDirect> topic_vehicleCommandDirect(participant, "vehicleCommandDirect", vehicle_id);
+    dds::sub::DataReader<VehicleCommandDirect> reader_vehicleCommandDirect(dds::sub::Subscriber(participant), topic_vehicleCommandDirect);
 
+    VehicleIDFilteredTopic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature(participant, "vehicleCommandSpeedCurvature", vehicle_id);
+    dds::sub::DataReader<VehicleCommandSpeedCurvature> reader_vehicleCommandSpeedCurvature(dds::sub::Subscriber(participant), topic_vehicleCommandSpeedCurvature);
+
+    VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory(participant, "vehicleCommandTrajectory", vehicle_id);
+    dds::sub::DataReader<VehicleCommandTrajectory> reader_vehicleCommandTrajectory(dds::sub::Subscriber(participant), topic_vehicleCommandTrajectory);
 
 
     // Control loop
@@ -110,19 +160,32 @@ int main(int argc, char *argv[])
         {
             const uint64_t t_iteration_start = clock_gettime_nanoseconds();
 
-            // Read new commands
+            // Read new commands, reset watchdog countdown on new command
             {
-                vector<dds::sub::Sample<VehicleCommand>> new_commands;
-                reader_vehicleCommand.take(std::back_inserter(new_commands));
-                for(auto command : new_commands)
+                VehicleCommandDirect sample_CommandDirect;
+                if(take_new_sample(reader_vehicleCommandDirect, sample_CommandDirect, t_iteration_start))
                 {
-                    if(command.info().valid())
-                    {
-                        controller.update_command(command.data());
-                        latest_command_TTL = 25;
-                    }
+                    controller.update_command(sample_CommandDirect);
+                    latest_command_TTL = 25;
                 }
             }
+            {
+                VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
+                if(take_new_sample(reader_vehicleCommandSpeedCurvature, sample_CommandSpeedCurvature, t_iteration_start))
+                {
+                    controller.update_command(sample_CommandSpeedCurvature);
+                    latest_command_TTL = 25;
+                }
+            }
+            {
+                VehicleCommandTrajectory sample_CommandTrajectory;
+                if(take_new_sample(reader_vehicleCommandTrajectory, sample_CommandTrajectory, t_iteration_start))
+                {
+                    controller.update_command(sample_CommandTrajectory);
+                    latest_command_TTL = 25;
+                }
+            }
+
 
             // Watchdog countdown for loss of signal
             if(latest_command_TTL > 0) {
@@ -150,7 +213,7 @@ int main(int argc, char *argv[])
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.sensor_update(vehicleState);
                 vehicleState.pose(new_pose);
-                vehicleState.stamp().nanoseconds(t_iteration_start);
+                vehicleState.header().create_stamp().nanoseconds(t_iteration_start);
                 vehicleState.vehicle_id(vehicle_id);
 
                 controller.update_vehicle_state(vehicleState);

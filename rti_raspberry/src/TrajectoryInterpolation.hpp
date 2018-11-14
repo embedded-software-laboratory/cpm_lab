@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VehicleCommand.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
 struct TrajectoryInterpolation {
 
