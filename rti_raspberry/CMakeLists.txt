@@ -71,6 +71,8 @@ if(BUILD_SIMULATION)
         ${SOURCE}
         src/SimulationVehicle.cxx
         src/SimulationVehicle.hpp
+        src/SimulationIPS.cxx
+        src/SimulationIPS.hpp
     )
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)

@@ -19,7 +19,12 @@ using std::vector;
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
 #include "Controller.hpp"
+
+
+#ifdef VEHICLE_SIMULATION
 #include "SimulationVehicle.hpp"
+#include "SimulationIPS.hpp"
+#endif
 
 #include "bcm2835.h"
 
@@ -69,6 +74,7 @@ int main(int argc, char *argv[])
     spi_init();
 #else
     SimulationVehicle simulationVehicle;
+    SimulationIPS simulationIPS;
 #endif
 
     crcInit();

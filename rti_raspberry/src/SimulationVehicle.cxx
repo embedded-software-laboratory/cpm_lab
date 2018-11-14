@@ -20,6 +20,8 @@ SimulationVehicle::SimulationVehicle()
 
 spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, const double dt)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
     // save one input sample to simulate delay time
     spi_mosi_data_t input_now = input_next;
     input_next = spi_mosi_data;
@@ -105,4 +107,15 @@ spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, c
     spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 
     return spi_miso_data;
+}
+
+
+
+void SimulationVehicle::get_state(double& _x, double& _y, double& _yaw, double& _speed) 
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    _x = x;
+    _y = y;
+    _yaw = yaw;
+    _speed = speed;
 }
