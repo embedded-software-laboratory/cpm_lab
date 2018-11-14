@@ -1,4 +1,4 @@
-#include "TimeStamp.idl"
+#include "Header.idl"
 #include "Pose2D.idl"
 
 /*
@@ -19,7 +19,7 @@
 
 struct VehicleState {
     octet vehicle_id; //@key
-    TimeStamp stamp;
+    Header header;
     Pose2D pose;
 
     double odometer_distance;          // meter

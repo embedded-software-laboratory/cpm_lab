@@ -1,0 +1,16 @@
+#include "TimeStamp.idl"
+
+/*
+ * SpeedCurvatureMode
+ *     Uses a feedback controller to match the given reference speed.
+ *     Uses a feedforward controller to steer along a path with the given curvature.
+ *     This only works with "normal" driving, results may vary when spinning or sliding.
+ */
+
+struct VehicleCommandSpeedCurvature 
+{
+    octet vehicle_id; //@key
+    Header header;
+    double speed;       //    m/s
+    double curvature;   //    1/meter
+};
