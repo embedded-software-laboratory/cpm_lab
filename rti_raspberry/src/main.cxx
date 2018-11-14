@@ -19,7 +19,7 @@ using std::vector;
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
 #include "Controller.hpp"
-#include "Simulation.hpp"
+#include "SimulationVehicle.hpp"
 
 #include "bcm2835.h"
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     }
     spi_init();
 #else
-    Simulation simulation;
+    SimulationVehicle simulationVehicle;
 #endif
 
     crcInit();
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 
 
 #ifdef VEHICLE_SIMULATION
-            spi_miso_data_t spi_miso_data = simulation.update(spi_mosi_data, period_nanoseconds/1e9);
+            spi_miso_data_t spi_miso_data = simulationVehicle.update(spi_mosi_data, period_nanoseconds/1e9);
 #else
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);

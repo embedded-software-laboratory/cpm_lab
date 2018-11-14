@@ -1,4 +1,4 @@
-#include "Simulation.hpp"
+#include "SimulationVehicle.hpp"
 #include <string.h>
 #include <math.h>
 #include <iostream>
@@ -8,14 +8,17 @@ extern "C" {
 }
 
 
-Simulation::Simulation() 
+double frand() { return (double(rand()))/RAND_MAX; }
+
+
+SimulationVehicle::SimulationVehicle() 
 {
     memset(&input_next, 0, sizeof(spi_mosi_data_t));
     crcInit();
 }
 
 
-spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const double dt)
+spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, const double dt)
 {
     // save one input sample to simulate delay time
     spi_mosi_data_t input_now = input_next;
@@ -57,22 +60,25 @@ spi_miso_data_t Simulation::update(const spi_mosi_data_t spi_mosi_data, const do
     const int N_substeps = 5;
     for (int i = 0; i < N_substeps; ++i)
     {
-        speed +=     (dt/N_substeps) * ((speed_ref-speed)/T_speed);
-        curvature += (dt/N_substeps) * ((curvature_ref-curvature)/T_curvature);
-        yaw +=       (dt/N_substeps) * (curvature*speed);
-        x +=         (dt/N_substeps) * (speed*cos(yaw));
-        y +=         (dt/N_substeps) * (speed*sin(yaw));
-        distance +=  (dt/N_substeps) * (speed);
+        speed +=         (dt/N_substeps) * ((speed_ref-speed)/T_speed);
+        curvature +=     (dt/N_substeps) * ((curvature_ref-curvature)/T_curvature);
+        yaw +=           (dt/N_substeps) * (curvature*speed);
+        yaw_measured +=  (dt/N_substeps) * (curvature*speed);
+        x +=             (dt/N_substeps) * (speed*cos(yaw));
+        y +=             (dt/N_substeps) * (speed*sin(yaw));
+        distance +=      (dt/N_substeps) * (speed);
     }
 
+    yaw_measured += 1e-4 * frand(); // simulate random biased gyro drift
 
-    if(yaw > 0) yaw -= 2*M_PI;
-    if(yaw < -2*M_PI) yaw += 2*M_PI;
+
+    if(yaw_measured > 0)       yaw_measured -= 2*M_PI;
+    if(yaw_measured < -2*M_PI) yaw_measured += 2*M_PI;
 
 
     spi_miso_data.tick                      = tick;
     spi_miso_data.odometer_steps            = distance/0.003122;
-    spi_miso_data.imu_yaw                   = yaw/(-0.00109083078249645598);
+    spi_miso_data.imu_yaw                   = yaw_measured/(-0.00109083078249645598);
     spi_miso_data.imu_acceleration_forward  = ((speed_ref-speed)/T_speed)*100;
     spi_miso_data.imu_acceleration_left     = curvature*speed*speed*100;
     spi_miso_data.speed                     = speed/0.003122/0.2384;
