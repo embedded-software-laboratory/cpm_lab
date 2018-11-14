@@ -7,13 +7,22 @@
 VehicleManualControl::VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant)
 :participant(participant)
 {
-    topic_vehicleCommand = make_shared<dds::topic::Topic<VehicleCommand>>(*participant, "vehicleCommand");
     auto QoS = dds::pub::qos::DataWriterQos();
     auto reliability = dds::core::policy::Reliability::BestEffort();
     reliability.max_blocking_time(dds::core::Duration(0,0));
     QoS.policy(reliability);
-    writer_vehicleCommand = make_shared<dds::pub::DataWriter<VehicleCommand>>(
-        dds::pub::Publisher(*participant), *topic_vehicleCommand, QoS);
+    auto publisher = dds::pub::Publisher(*participant);
+    publisher.default_datawriter_qos(QoS);
+
+
+    topic_vehicleCommandDirect = make_shared<dds::topic::Topic<VehicleCommandDirect>>(*participant, "vehicleCommandDirect");
+    writer_vehicleCommandDirect = make_shared<dds::pub::DataWriter<VehicleCommandDirect>>(publisher, *topic_vehicleCommandDirect);
+
+    topic_vehicleCommandSpeedCurvature = make_shared<dds::topic::Topic<VehicleCommandSpeedCurvature>>(*participant, "vehicleCommandSpeedCurvature");
+    writer_vehicleCommandSpeedCurvature = make_shared<dds::pub::DataWriter<VehicleCommandSpeedCurvature>>(publisher, *topic_vehicleCommandSpeedCurvature);
+
+    topic_vehicleCommandTrajectory = make_shared<dds::topic::Topic<VehicleCommandTrajectory>>(*participant, "vehicleCommandTrajectory");
+    writer_vehicleCommandTrajectory = make_shared<dds::pub::DataWriter<VehicleCommandTrajectory>>(publisher, *topic_vehicleCommandTrajectory);
 }
 
 void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file) 
@@ -25,11 +34,11 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
         if(!joystick) return;
 
-        VehicleCommand sample;
-        sample.vehicle_id(vehicle_id);
 
         if(joystick->getButton(4) || joystick->getButton(6)) { // constant speed mode
-            sample.data()._d(VehicleCommandMode_def::SpeedCurvatureMode);
+
+            VehicleCommandSpeedCurvature sample;
+            sample.vehicle_id(vehicle_id);
 
             double axis1 = joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15));
             if(fabs(axis1) > 0.08) {
@@ -40,15 +49,21 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
                 ref_speed = 1.0;
             }
 
-            sample.data().speed_curvature().speed(ref_speed);
-            sample.data().speed_curvature().curvature(joystick->getAxis(AXIS_STEERING) * 4.0 / (-double(1<<15)));
+            sample.speed(ref_speed);
+            sample.curvature(joystick->getAxis(AXIS_STEERING) * 4.0 / (-double(1<<15)));
 
             //printf("speed %12.4f  curvature %12.4f\n", 
             //    sample.data().speed_curvature().speed(), 
             //    sample.data().speed_curvature().curvature());
+            
+            writer_vehicleCommandSpeedCurvature->write(sample);
 
         }
         else if(joystick->getButton(5)) { // trajectory mode
+
+            VehicleCommandTrajectory sample;
+            sample.vehicle_id(vehicle_id);
+
             if(ref_trajectory_start_time == 0) {
                 // start in 2 seconds
                 ref_trajectory_start_time = clock_gettime_nanoseconds() + 2000000000ull; 
@@ -63,7 +78,6 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             //std::cout << "ref_trajectory_index " << ref_trajectory_index << std::endl;
 
 
-            sample.data()._d(VehicleCommandMode_def::TrajectoryMode);
 
             TrajectoryPoint trajectoryPoint;
 
@@ -73,31 +87,31 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             trajectoryPoint.vx(example_trajectory_vx[ref_trajectory_index]);
             trajectoryPoint.vy(example_trajectory_vy[ref_trajectory_index]);
 
-            sample.data().trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
+            sample.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
+            
+            writer_vehicleCommandTrajectory->write(sample);
         }
         else { // direct control
-            sample.data()._d(VehicleCommandMode_def::DirectControlMode);
-            sample.data().direct_control().motor_throttle(joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15)));
-            sample.data().direct_control().steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
 
+            VehicleCommandDirect sample;
+            sample.vehicle_id(vehicle_id);
+
+            sample.motor_throttle(joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15)));
+            sample.steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
+
+            writer_vehicleCommandDirect->write(sample);
 
             //printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
             //    sample.data().direct_control().motor_throttle(), 
             //    sample.data().direct_control().steering_servo());
 
-        }
 
-
-        // resets
-        if(sample.data()._d() != VehicleCommandMode_def::SpeedCurvatureMode) {
+            // mode resets
             ref_speed = 0;
-        }
-
-        if(sample.data()._d() != VehicleCommandMode_def::TrajectoryMode) {
             ref_trajectory_start_time = 0;
             ref_trajectory_index = 0;
+
         }
-        writer_vehicleCommand->write(sample);
 
         if(m_update_callback) m_update_callback();
     });

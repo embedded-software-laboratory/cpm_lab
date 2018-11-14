@@ -20,30 +20,49 @@ pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 add_executable(LabControlCenter
 
-    rtidds/TimeStamp.cxx
-    rtidds/TimeStamp.hpp
-    rtidds/TimeStampImpl.cxx
-    rtidds/TimeStampImpl.h
-    rtidds/TimeStampImplPlugin.cxx
-    rtidds/TimeStampImplPlugin.h
-    rtidds/VehicleCommand.cxx
-    rtidds/VehicleCommand.hpp
-    rtidds/VehicleCommandImpl.cxx
-    rtidds/VehicleCommandImpl.h
-    rtidds/VehicleCommandImplPlugin.cxx
-    rtidds/VehicleCommandImplPlugin.h
-    rtidds/VehicleState.cxx
-    rtidds/VehicleState.hpp
-    rtidds/VehicleStateImpl.cxx
-    rtidds/VehicleStateImpl.h
-    rtidds/VehicleStateImplPlugin.cxx
-    rtidds/VehicleStateImplPlugin.h
+    rtidds/Header.cxx
+    rtidds/Header.hpp
+    rtidds/HeaderImpl.cxx
+    rtidds/HeaderImpl.h
+    rtidds/HeaderImplPlugin.cxx
+    rtidds/HeaderImplPlugin.h
     rtidds/Pose2D.cxx
     rtidds/Pose2D.hpp
     rtidds/Pose2DImpl.cxx
     rtidds/Pose2DImpl.h
     rtidds/Pose2DImplPlugin.cxx
     rtidds/Pose2DImplPlugin.h
+    rtidds/TimeStamp.cxx
+    rtidds/TimeStamp.hpp
+    rtidds/TimeStampImpl.cxx
+    rtidds/TimeStampImpl.h
+    rtidds/TimeStampImplPlugin.cxx
+    rtidds/TimeStampImplPlugin.h
+    rtidds/VehicleCommandDirect.cxx
+    rtidds/VehicleCommandDirect.hpp
+    rtidds/VehicleCommandDirectImpl.cxx
+    rtidds/VehicleCommandDirectImpl.h
+    rtidds/VehicleCommandDirectImplPlugin.cxx
+    rtidds/VehicleCommandDirectImplPlugin.h
+    rtidds/VehicleCommandSpeedCurvature.cxx
+    rtidds/VehicleCommandSpeedCurvature.hpp
+    rtidds/VehicleCommandSpeedCurvatureImpl.cxx
+    rtidds/VehicleCommandSpeedCurvatureImpl.h
+    rtidds/VehicleCommandSpeedCurvatureImplPlugin.cxx
+    rtidds/VehicleCommandSpeedCurvatureImplPlugin.h
+    rtidds/VehicleCommandTrajectory.cxx
+    rtidds/VehicleCommandTrajectory.hpp
+    rtidds/VehicleCommandTrajectoryImpl.cxx
+    rtidds/VehicleCommandTrajectoryImpl.h
+    rtidds/VehicleCommandTrajectoryImplPlugin.cxx
+    rtidds/VehicleCommandTrajectoryImplPlugin.h
+    rtidds/VehicleState.cxx
+    rtidds/VehicleState.hpp
+    rtidds/VehicleStateImpl.cxx
+    rtidds/VehicleStateImpl.h
+    rtidds/VehicleStateImplPlugin.cxx
+    rtidds/VehicleStateImplPlugin.h
+
 
     src/AbsoluteTimer.cpp
     src/AbsoluteTimer.hpp
