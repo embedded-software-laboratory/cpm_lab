@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 add_definitions(-Wall -Wextra -Werror=return-type)
 include_directories(src)
 include_directories(include)
@@ -26,6 +26,10 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 add_library(cpm SHARED    
     include/myadd.hpp
     src/myadd.cpp
+    include/ParameterDistribution.hpp
+    src/ParameterDistribution.cpp
+    src/ParameterStorage.hpp
+    src/ParameterStorage.cpp
 )
 
 

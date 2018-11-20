@@ -29,10 +29,10 @@ private:
 
 	void handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func);
 public:
-	Subscriber(int count, int dom_id, std::string topic_name, std::function<void(dds::sub::LoanedSamples<MessageType>&)>, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
+	Subscriber(int dom_id, std::string topic_name, std::function<void(dds::sub::LoanedSamples<MessageType>&)>, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
 };
 
-template<class MessageType> Subscriber<MessageType>::Subscriber(int c, int domain_id, std::string topic_name, std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic) :
+template<class MessageType> Subscriber<MessageType>::Subscriber(int domain_id, std::string topic_name, std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic) :
 	sub(_participant),
 	reader(sub, topic),
 	read_condition(reader)

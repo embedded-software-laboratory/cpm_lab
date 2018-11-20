@@ -3,6 +3,7 @@
 /*
  * Singleton that receives and stores constants, e.g. for configuration
  * Is used by ParameterDistribution to get data for the user
+ * domain_id, subscriberTopic and publisherTopic can be set before the singleton is used
  */
 
 #include <string>
@@ -10,15 +11,19 @@
 #include <map>
 #include <shared_mutex>
 
-#include "Parameter.h"
-#include "ParameterRequest.h"
+#include "../build/rti/Parameter.hpp"
+#include "../build/rti/ParameterRequest.hpp"
 
 #include "Subscriber.h"
 #include <dds/pub/ddspub.hpp>
 
 class ParameterStorage {
 public:
-    static ParameterStorage& Instance(int domain_id, std::string subscriberTopic, std::string publisherTopic);
+    static ParameterStorage& Instance();
+
+    static int domain_id; 
+    static std::string subscriberTopicName; 
+    static std::string publisherTopicName;
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -36,7 +41,7 @@ public:
     std::vector<std::string> parameter_strings(std::string parameter_name);
 
 private:
-    ParameterStorage(int domain_id, std::string subscriberTopic, std::string publisherTopic);
+    ParameterStorage();
 
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;
