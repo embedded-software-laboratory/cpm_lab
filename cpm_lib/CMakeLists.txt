@@ -30,6 +30,18 @@ add_library(cpm SHARED
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
+    build/rti/Parameter.hpp
+    build/rti/Parameter.cxx
+    build/rti/ParameterImpl.h
+    build/rti/ParameterImpl.cxx
+    build/rti/ParameterImplPlugin.h
+    build/rti/ParameterImplPlugin.cxx
+    build/rti/ParameterRequest.hpp
+    build/rti/ParameterRequest.cxx
+    build/rti/ParameterRequestImpl.h
+    build/rti/ParameterRequestImpl.cxx
+    build/rti/ParameterRequestImplPlugin.h
+    build/rti/ParameterRequestImplPlugin.cxx
 )
 
 
