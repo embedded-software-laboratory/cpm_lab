@@ -30,7 +30,7 @@ https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
 ## Bash RC
 
     export PATH=$PATH:$HOME/rti_connext_dds-5.3.1/bin
+    export PATH=$PATH:$HOME/toolchains/raspbian-toolchain-gcc-4.7.2-linux64/bin
     export NDDSHOME=$HOME/rti_connext_dds-5.3.1
     export RASPBIAN_TOOLCHAIN=$HOME/raspbian-toolchain-gcc-4.7.2-linux64
-
-
+    export RTI_LICENSE_FILE=$HOME/rti_workspace/rti_license.dat
