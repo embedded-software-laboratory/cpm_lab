@@ -10,33 +10,14 @@
 #define LED_H_
 
 #include "util.h"
-
-static inline void led_set_state(uint32_t tick, uint8_t LED_bits) {
-	uint8_t blink_fast_state = (tick >> 3) & 1;
-	uint8_t blink_slow_state = (tick >> 5) & 1;
-	
-	uint8_t state_map[4] = {blink_fast_state, blink_slow_state, 0, 1};
+#include "spi_packets.h"
+#include <avr/io.h>
+#include <util/delay.h>
 
 
-	if(state_map[(LED_bits >> 0) & 0b00000011]) SET_BIT(PORTC, 0);
-	else                                      CLEAR_BIT(PORTC, 0);
-	
-	if(state_map[(LED_bits >> 2) & 0b00000011]) SET_BIT(PORTC, 1);
-	else                                      CLEAR_BIT(PORTC, 1);
-	
-	if(state_map[(LED_bits >> 4) & 0b00000011]) SET_BIT(PORTC, 2);
-	else                                      CLEAR_BIT(PORTC, 2);
-	
-	if(state_map[(LED_bits >> 6) & 0b00000011]) SET_BIT(PORTC, 7);
-	else                                      CLEAR_BIT(PORTC, 7);
-}
+void led_set_state(uint32_t tick, spi_mosi_data_t* spi_mosi_data);
 
-static inline void led_setup() {	
-	SET_BIT(DDRC, 0);
-	SET_BIT(DDRC, 1);
-	SET_BIT(DDRC, 2);
-	SET_BIT(DDRC, 7);
-}
+void led_setup();
 
 
 #endif /* LED_H_ */

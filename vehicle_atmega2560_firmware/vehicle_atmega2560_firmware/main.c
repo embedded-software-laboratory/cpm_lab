@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <string.h>
+#include <stdint.h>
 #include "util.h"
 #include "led.h"
 #include "motor.h"
@@ -75,13 +76,23 @@ int main(void)
 		
 		if(safe_mode_flag) {
 			memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t)); // Safe default value: all zeros
+			
+			// Flash all LEDs to indicate connection loss
+			spi_mosi_data.LED1_period_ticks = 25;
+			spi_mosi_data.LED1_enabled_ticks = 1;
+			spi_mosi_data.LED2_period_ticks = 25;
+			spi_mosi_data.LED2_enabled_ticks = 1;
+			spi_mosi_data.LED3_period_ticks = 25;
+			spi_mosi_data.LED3_enabled_ticks = 1;
+			spi_mosi_data.LED4_period_ticks = 25;
+			spi_mosi_data.LED4_enabled_ticks = 1;
 		}		
-		
+			
 		// Apply commands
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
-		led_set_state(tick, spi_mosi_data.LED_bits);		
+		led_set_state(tick, &spi_mosi_data);		
 		
 		// Send sensor data to master
 		spi_miso_data_t spi_miso_data;
