@@ -23,6 +23,9 @@ https://community.rti.com/content/forum-topic/howto-run-rti-connext-dds-raspberr
 wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
 tar xvzf raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
 
+Raspberry PI RTI Libraries
+
+https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
 
 ## Bash RC
 
