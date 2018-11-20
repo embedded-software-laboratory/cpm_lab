@@ -64,7 +64,8 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
 
     if(state == ControllerState::Stop) {
         spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
-        spi_mosi_data.LED_bits = LED1_BLINK_SLOW | LED2_OFF | LED3_OFF | LED4_OFF;
+        spi_mosi_data.LED1_period_ticks = 50;
+        spi_mosi_data.LED1_enabled_ticks = 25;
         return spi_mosi_data;
     }
 
@@ -157,8 +158,9 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
     spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
     spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
     spi_mosi_data.motor_mode = motor_mode;
-    spi_mosi_data.LED_bits = LED1_OFF | LED2_OFF | LED3_OFF | LED4_BLINK_SLOW;
 
+    spi_mosi_data.LED4_period_ticks = 50;
+    spi_mosi_data.LED4_enabled_ticks = 25;
 
     return spi_mosi_data;
 }

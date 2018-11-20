@@ -86,8 +86,6 @@ spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, c
     spi_miso_data.speed                     = speed/0.003122/0.2384;
     spi_miso_data.battery_voltage           = (7.2 - 0.2 * fabs(speed_ref-speed))/0.01166;
     spi_miso_data.motor_current             = fabs(((speed_ref-speed) * 0.2)/0.01);
-    spi_miso_data.debugC                    = 0;
-    spi_miso_data.debugD                    = 0;
     spi_miso_data.status_flags              = 0;
 
 
