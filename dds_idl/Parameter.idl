@@ -1,0 +1,21 @@
+enum ParameterType 
+{
+    Invalid = 0,
+    Int32,
+    Double,
+    String,
+    Vector_Int32,
+    Vector_Double,
+    Vector_String
+};
+
+struct Parameter 
+{
+    string name; //@key
+    ParameterType type;
+
+    // Since weak typing is not supported, we reserve a member for each type.
+    sequence<long>   values_int32;
+    sequence<double> values_double;
+    sequence<string> values_string;
+};
