@@ -24,7 +24,7 @@ ParameterStorage& ParameterStorage::Instance() {
 }
 
 bool ParameterStorage::parameter_bool(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_bool_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_bool_mutex); 
 
     while (param_bool.find(parameter_name) == param_bool.end()) {
         s_lock.unlock();
@@ -40,7 +40,7 @@ bool ParameterStorage::parameter_bool(std::string parameter_name) {
 }
 
 int32_t ParameterStorage::parameter_int(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_int_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_int_mutex); 
 
     while (param_int.find(parameter_name) == param_int.end()) {
         s_lock.unlock();
@@ -56,7 +56,7 @@ int32_t ParameterStorage::parameter_int(std::string parameter_name) {
 }
 
 double ParameterStorage::parameter_double(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_double_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_double_mutex); 
 
     while (param_double.find(parameter_name) == param_double.end()) {
         s_lock.unlock();
@@ -72,7 +72,7 @@ double ParameterStorage::parameter_double(std::string parameter_name) {
 }
 
 std::string ParameterStorage::parameter_string(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_string_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_string_mutex); 
 
     while (param_string.find(parameter_name) == param_string.end()) {
         s_lock.unlock();
@@ -88,7 +88,7 @@ std::string ParameterStorage::parameter_string(std::string parameter_name) {
 }
 
 std::vector<int32_t> ParameterStorage::parameter_ints(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_ints_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_ints_mutex); 
 
     while (param_ints.find(parameter_name) == param_ints.end()) {
         s_lock.unlock();
@@ -104,7 +104,7 @@ std::vector<int32_t> ParameterStorage::parameter_ints(std::string parameter_name
 }
 
 std::vector<double> ParameterStorage::parameter_doubles(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_doubles_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_doubles_mutex); 
 
     while (param_doubles.find(parameter_name) == param_doubles.end()) {
         s_lock.unlock();
@@ -120,7 +120,7 @@ std::vector<double> ParameterStorage::parameter_doubles(std::string parameter_na
 }
 
 std::vector<std::string> ParameterStorage::parameter_strings(std::string parameter_name) {
-    std::shared_lock<std::shared_mutex> s_lock(param_strings_mutex); 
+    std::unique_lock<std::mutex> s_lock(param_strings_mutex); 
 
     while (param_strings.find(parameter_name) == param_strings.end()) {
         s_lock.unlock();
@@ -149,7 +149,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_int_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_int_mutex);
                     param_int.insert(std::pair<std::string, int32_t>(sample.data().name(), sample.data().values_int32()[0]));
                     u_lock.unlock();
                 }
@@ -159,7 +159,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_double_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_double_mutex);
                     param_double.insert(std::pair<std::string, double>(sample.data().name(), sample.data().values_double()[0]));
                     u_lock.unlock();
                 }
@@ -169,13 +169,13 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_string_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_string_mutex);
                     param_string.insert(std::pair<std::string, std::string>(sample.data().name(), sample.data().values_string()[0]));
                     u_lock.unlock();
                 }
             }
             else if (sample.data().type() == ParameterType::Bool) {
-                std::unique_lock<std::shared_mutex> u_lock(param_bool_mutex);
+                std::unique_lock<std::mutex> u_lock(param_bool_mutex);
                 param_bool.insert(std::pair<std::string, bool>(sample.data().name(), sample.data().value_bool()));
                 u_lock.unlock();
             }
@@ -184,7 +184,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_ints_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_ints_mutex);
                     param_ints.insert(std::pair<std::string, std::vector<int32_t>>(sample.data().name(), std::vector<int32_t>(sample.data().values_int32().begin(), sample.data().values_int32().end())));
                     u_lock.unlock();
                 }
@@ -194,7 +194,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_doubles_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_doubles_mutex);
                     param_doubles.insert(std::pair<std::string, std::vector<double>>(sample.data().name(), std::vector<double>(sample.data().values_double().begin(), sample.data().values_double().end())));
                     u_lock.unlock();
                 }
@@ -204,7 +204,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                     std::cout << "Received null param" << std::endl;
                 } 
                 else {
-                    std::unique_lock<std::shared_mutex> u_lock(param_strings_mutex);
+                    std::unique_lock<std::mutex> u_lock(param_strings_mutex);
                     param_strings.insert(std::pair<std::string, std::vector<std::string>>(sample.data().name(), std::vector<std::string>(sample.data().values_string().begin(), sample.data().values_string().end())));
                     u_lock.unlock();
                 }

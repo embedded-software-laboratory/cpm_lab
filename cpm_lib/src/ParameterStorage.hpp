@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <shared_mutex>
+#include <mutex>
 
 #include "../build/rti/Parameter.hpp"
 #include "../build/rti/ParameterRequest.hpp"
@@ -53,13 +53,13 @@ private:
     std::map<std::string, std::vector<std::string>> param_strings;
 
     //Mutex for each map
-    std::shared_mutex param_bool_mutex;
-    std::shared_mutex param_int_mutex;
-    std::shared_mutex param_double_mutex;
-    std::shared_mutex param_string_mutex;
-    std::shared_mutex param_ints_mutex;
-    std::shared_mutex param_doubles_mutex;
-    std::shared_mutex param_strings_mutex;
+    std::mutex param_bool_mutex;
+    std::mutex param_int_mutex;
+    std::mutex param_double_mutex;
+    std::mutex param_string_mutex;
+    std::mutex param_ints_mutex;
+    std::mutex param_doubles_mutex;
+    std::mutex param_strings_mutex;
 
     void requestParam(std::string parameter_name);
     void callback(dds::sub::LoanedSamples<Parameter>& samples);
@@ -67,6 +67,6 @@ private:
     dds::domain::DomainParticipant participant;
 	dds::topic::Topic<Parameter> subscriberTopic;
     dds::topic::Topic<ParameterRequest> writerTopic;
-    Subscriber<Parameter> subscriber;
     dds::pub::DataWriter<ParameterRequest> writer;
+    Subscriber<Parameter> subscriber;
 };
