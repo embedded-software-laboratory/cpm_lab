@@ -1,11 +1,12 @@
 #include "cpm/Parameter.hpp"
+#include "ParameterStorage.hpp"
 
-void cpm::init_param_distribution(int dom_id, std::string subscriberTopicName, std::string publisherTopicName) {
+/*void cpm::init_param_distribution(int dom_id, std::string subscriberTopicName, std::string publisherTopicName) {
     ParameterStorage::domain_id = dom_id;
     ParameterStorage::subscriberTopicName = subscriberTopicName;
     ParameterStorage::publisherTopicName = publisherTopicName;
     ParameterStorage::Instance();
-}
+}*/
 
 bool cpm::parameter_bool(std::string parameter_name) {
     return ParameterStorage::Instance().parameter_bool(parameter_name);

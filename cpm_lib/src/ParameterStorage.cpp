@@ -1,8 +1,8 @@
 #include "ParameterStorage.hpp"
 
 int ParameterStorage::domain_id = 0; 
-std::string ParameterStorage::subscriberTopicName = "Parameter"; 
-std::string ParameterStorage::publisherTopicName = "ParameterRequest";
+std::string ParameterStorage::subscriberTopicName = "parameter"; 
+std::string ParameterStorage::publisherTopicName = "parameterRequest";
 
 using namespace std::placeholders;
 
