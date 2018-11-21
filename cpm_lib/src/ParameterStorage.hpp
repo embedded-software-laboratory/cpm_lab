@@ -14,7 +14,7 @@
 #include "../build/rti/Parameter.hpp"
 #include "../build/rti/ParameterRequest.hpp"
 
-#include "Subscriber.h"
+#include "Subscriber.hpp"
 #include <dds/pub/ddspub.hpp>
 
 class ParameterStorage {
@@ -65,7 +65,7 @@ private:
     void callback(dds::sub::LoanedSamples<Parameter>& samples);
 
     dds::domain::DomainParticipant participant;
-	dds::topic::Topic<Parameter> subscriberTopic;
+    dds::topic::Topic<Parameter> subscriberTopic;
     dds::topic::Topic<ParameterRequest> writerTopic;
     dds::pub::DataWriter<ParameterRequest> writer;
     Subscriber<Parameter> subscriber;
