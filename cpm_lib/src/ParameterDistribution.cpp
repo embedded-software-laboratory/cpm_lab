@@ -1,4 +1,4 @@
-#include "ParameterDistribution.hpp"
+#include "cpm/Parameter.hpp"
 
 void cpm::init_param_distribution(int dom_id, std::string subscriberTopicName, std::string publisherTopicName) {
     ParameterStorage::domain_id = dom_id;

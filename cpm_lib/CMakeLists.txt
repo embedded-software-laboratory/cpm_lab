@@ -40,7 +40,7 @@ set(SOURCE_RTI
 set(SOURCE_CPM
     include/myadd.hpp
     src/myadd.cpp
-    include/ParameterDistribution.hpp
+    include/cpm/Parameter.hpp
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
