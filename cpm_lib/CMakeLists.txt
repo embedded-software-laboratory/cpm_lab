@@ -57,6 +57,7 @@ add_library(cpm SHARED
 
 add_executable(unittest test/catch.cpp
     test/test_myadd.cpp
+    test/test_parameter.cpp
 )
 
 target_link_libraries(unittest cpm)
