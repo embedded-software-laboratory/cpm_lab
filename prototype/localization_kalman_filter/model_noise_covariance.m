@@ -1,7 +1,5 @@
 function [process_covariance, IPS_covariance] = model_noise_covariance
     
-    % Guessed values for standard deviations in 20 ms.
-    % Assuming worst-case: Sliding -> model is wrong
     process_covariance = diag([...
         0.005... % position deviation [m]
         0.005... % position deviation [m]
