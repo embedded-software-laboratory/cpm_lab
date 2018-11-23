@@ -8,7 +8,7 @@ function main
     yaw_fn = @(t) 0.7*t + sin(t) + 3;
     
     my_ode = @(t,x) model(x, [v_fn(t); yaw_fn(t)]);
-    t_grid = 0:dt:20;
+    t_grid = 0:dt:50;
     
     [~,X] = ode45(my_ode, t_grid, [1 2 0]);
     px_true = X(:,1)';
@@ -18,7 +18,7 @@ function main
     
     % simulate noisy drift for the imu yaw
     yaw_offset_true = cumsum(cumsum(randn(size(t_grid))));
-    yaw_offset_true = 0.7 * yaw_offset_true / max(abs(yaw_offset_true))+3;
+    yaw_offset_true = 0.1 * yaw_offset_true / max(abs(yaw_offset_true))+1;
     
     yaw_imu_true = yaw_true - yaw_offset_true;
     
@@ -29,7 +29,7 @@ function main
     %% Simulate IPS measurements
     px_IPS = px_true + 0.001 * randn(size(px_true));
     py_IPS = py_true + 0.001 * randn(size(py_true));
-    yaw_IPS = yaw_true + 0.04 * randn(size(yaw_true));
+    yaw_IPS = yaw_true + 0.01 * randn(size(yaw_true));
     
     
     %% Run Kalman Filter    
@@ -43,7 +43,7 @@ function main
 
     discrete_model_fn = discretize_linearize(dt);
     [Q, R] = model_noise_covariance;
-    P = eye(3);
+    P = 1e-4*eye(3);
     
     for i = 1:(length(t_grid)-1)
         
@@ -52,9 +52,9 @@ function main
         
         [x_est, Ad, ~, C, z_est] = discrete_model_fn( x, u );
         
-        z_measured = [px_IPS(i); py_IPS(i); yaw_IPS(i)];
         
-        if i > 400
+        if mod(i,50) == 1
+            z_measured = [px_IPS(i); py_IPS(i); yaw_IPS(i)];
             [x_est,P] = kalman_filter_step(x_est,z_est,z_measured,P,Ad,C,Q,R);
         end
         
@@ -65,8 +65,9 @@ function main
     
     yaw_estimated = yaw_imu_measured + yaw_offset_estimated;
     
-    clf
     
+    figure(1)
+    clf    
     subplot(221)
     hold on
     plot(t_grid, yaw_estimated,'DisplayName','est');
@@ -74,8 +75,6 @@ function main
     plot(t_grid, yaw_true,'DisplayName','true');
     ylabel('yaw')
     legend
-    
-    
     
     subplot(222)
     hold on
@@ -100,5 +99,17 @@ function main
     plot(t_grid, yaw_offset_true,'DisplayName','true');
     ylabel('yaw offset')
     legend
+    
+    
+    
+    figure(2)
+    clf
+    hold on
+    axis equal
+    plot(px_true,py_true,'DisplayName','true')
+    plot(px_estimated,py_estimated,'DisplayName','est')
+    legend
+    
+    
 end
 
