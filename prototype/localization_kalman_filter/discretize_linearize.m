@@ -2,40 +2,35 @@ function system_fn = discretize_linearize(dt)
 
     px = sym('px', 'real');
     py = sym('py', 'real');
-    yaw = sym('yaw', 'real');
     yaw_offset = sym('yaw_offset', 'real');
-    s = sym('s', 'real');
-    v = sym('v', 'real');    
-    curvature = sym('curvature', 'real');    
+
+    v = sym('v', 'real'); 
+    yaw_imu = sym('yaw_imu', 'real');
     
-    v_ref = sym('v_ref', 'real');    
-    curvature_ref = sym('curvature_ref', 'real');    
-    
-    x = [px; py; yaw; yaw_offset; s; v; curvature];
-    u = [v_ref; curvature_ref];
+    x = [px; py; yaw_offset];
+    u = [v; yaw_imu];
     
 
-    [dx, z_L, z_P] = model(x, u);
+    [dx, z] = model(x, u);
     
     A_c = jacobian(dx, x);
-    B_c = double(jacobian(dx, u));
-    C_L = double(jacobian(z_L, x));
-    C_P = double(jacobian(z_P, x));
+    B_c = jacobian(dx, u);
+    C = double(jacobian(z, x));
     
-    A_c_fn = matlabFunction(A_c,'Vars',{x});
-    z_L_fn = matlabFunction(z_L,'Vars',{x});
-    z_P_fn = matlabFunction(z_P,'Vars',{x});
-    
+    A_c_fn = matlabFunction(A_c,'Vars',{x,u});
+    B_c_fn = matlabFunction(B_c,'Vars',{x,u});
+    z_fn = matlabFunction(z,'Vars',{x,u});
     
     
-    system_fn = @(X,U)output_helper(A_c_fn, z_L_fn, z_P_fn, X, U, B_c, C_L, C_P, dt);
+    
+    system_fn = @(X,U)output_helper(A_c_fn, z_fn, X, U, B_c_fn, C, dt);
 end
 
-function [x_next, Ad, Bd, CL, CP, zL, zP] = output_helper(A_c_fn, z_L_fn, z_P_fn, x, u, Bc, CL, CP, dt)
+function [x_next, Ad, Bd, C, z] = output_helper(A_c_fn, z_fn, x, u, B_c_fn, C, dt)
     
-    Ac = A_c_fn(x);
-    zL = z_L_fn(x);
-    zP = z_P_fn(x);    
+    Ac = A_c_fn(x,u);
+    z = z_fn(x,u);
+    Bc = B_c_fn(x,u);
     
     [Ad, Bd] = c2d_expm(Ac, Bc, dt);
     x_next = Ad*x + Bd*u;
