@@ -1,25 +1,22 @@
 #include "catch.hpp"
 #include "cpm/Parameter.hpp"
+#include "../src/ParameterServer.hpp"
 #include <thread>
 #include <memory>
 #include <chrono>
 
 TEST_CASE( "parameter" ) {
     
-    std::thread parameter_server_thread([](){
-        // TODO create instance of parameter server,
-        //      distribute parameter "my_param_name" = (int) 42
-    });
+    // TODO create instance of parameter server,
+    //      distribute parameter "my_param_name" = (int) 42
+    ParameterServer server(0, "parameterRequest", "parameter");
+    server.set_value("my_param_name", 42);
 
 
     std::shared_ptr<int32_t> received_parameter_value = nullptr;
 
-    std::thread parameter_client_thread([&](){
-        int32_t value = cpm::parameter_int("my_param_name");
-        received_parameter_value = std::make_shared<int32_t>(value);
-    });
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    int32_t value = cpm::parameter_int("my_param_name");
+    received_parameter_value = std::make_shared<int32_t>(value);
 
     // TODO kill parameter_client_thread and parameter_server_thread. 
     // This seems impossible with c++11.

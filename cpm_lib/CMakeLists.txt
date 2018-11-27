@@ -44,6 +44,8 @@ set(SOURCE_CPM
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
+    src/ParameterServer.hpp
+    src/ParameterServer.cpp
     src/Subscriber.hpp
 )
 
