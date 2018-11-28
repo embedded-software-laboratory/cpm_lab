@@ -41,6 +41,10 @@ set(SOURCE_CPM
     src/ParameterStorage.cpp
     src/ParameterServer.hpp
     src/ParameterServer.cpp
+    include/cpm/Timer.hpp
+    src/Timer.cpp
+    src/TimerFD.hpp
+    src/TimerFD.cpp
     src/Subscriber.hpp
 )
 
@@ -74,6 +78,7 @@ if(NOT BUILD_ARM)
     add_executable(unittest test/catch.cpp
         test/test_myadd.cpp
         test/test_parameter.cpp
+        test/test_timer.cpp
     )
 
     target_link_libraries(unittest cpm)
