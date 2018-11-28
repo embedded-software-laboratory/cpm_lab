@@ -12,7 +12,7 @@ TEST_CASE( "parameter" ) {
         received_parameter_value = cpm::parameter_double("my_param_name");
     });
 
-    ParameterServer server(0, "parameterRequest", "parameter");
+    ParameterServer server;
     server.set_value("my_param_name", 42.1);
 
     client_thread.join();

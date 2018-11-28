@@ -18,7 +18,7 @@
 
 class ParameterServer {
 public:
-    ParameterServer(int domain_id, std::string subscriberTopicName, std::string publisherTopicName);
+    ParameterServer();
 
     void set_value(std::string name, bool value);
     void set_value(std::string name, int32_t value);

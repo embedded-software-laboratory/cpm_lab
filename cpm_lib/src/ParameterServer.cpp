@@ -2,12 +2,12 @@
 
 using namespace std::placeholders;
 
-ParameterServer::ParameterServer(int domain_id, std::string subscriberTopicName, std::string publisherTopicName) : 
-    participant(domain_id),
-    subscriberTopic(participant, subscriberTopicName),
-    writerTopic(participant, publisherTopicName),
+ParameterServer::ParameterServer():
+    participant(0),
+    subscriberTopic(participant, "parameterRequest"),
+    writerTopic(participant, "parameter"),
     writer(dds::pub::Publisher(participant), writerTopic),
-    subscriber(subscriberTopicName, std::bind(&ParameterServer::handleParamRequest, this, _1), participant, subscriberTopic)
+    subscriber("parameterRequest", std::bind(&ParameterServer::handleParamRequest, this, _1), participant, subscriberTopic)
 {
 
 }
