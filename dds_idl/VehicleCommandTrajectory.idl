@@ -17,7 +17,7 @@
  * unavailable the vehicle will brake and stop. 
  *     The selection of TrajectoryPoints and the interpolation is done based 
  * on the local clock on the vehicle. Thus, the user must ensure that their 
- * clock synchronized, or account for clock offsets.
+ * clock is synchronized, or account for clock offsets.
  *     The user should ensure that the duration, distance and speed in a 
  * trajectory segment are plausible in relation to each other. A poor choice of
  * trajectory parameters may lead to physically impossible curvatures and
