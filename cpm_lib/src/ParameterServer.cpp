@@ -149,20 +149,44 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
         if (sample.info().valid()) {
             std::string name = sample.data().name();
 
-            //Go through all maps, return if param found
-            std::unique_lock<std::mutex> b_lock(param_bool_mutex);
-            if(param_bool.find(name) != param_bool.end()) {
-                //Create data to send
-                Parameter param = Parameter();
-                param.name(name);
+            Parameter param = Parameter();
+            param.name(name);
+
+            std::experimental::optional<bool> boolParam = find_bool(name);
+            if (boolParam) {
                 param.type(ParameterType::Bool);
                 param.value_bool(param_bool.at(name));
 
-                b_lock.unlock();
+                writer.write(param);
+                break;
+            }
+
+            std::experimental::optional<int_32t> intParam = find_int(name);
+            if (intParam) {
+                //Create data to send
+                std::vector<int32_t> stdInts;
+                stdInts.push_back(param_int.at(name));
+                i_lock.unlock();
+                rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(stdInts);
+
+                param.type(ParameterType::Int32);
+                param.values_int32(ints);
                 
                 //Send new value
                 writer.write(param);
+                break;
             }
+
+/*
+            std::experimental::optional<double> doubleParam = find_double(name);
+            if (boolParam) {
+                param.type(ParameterType::Bool);
+                param.value_bool(param_bool.at(name));
+
+                writer.write(param);
+                break;
+            }
+
             else {
                 b_lock.unlock();
 
@@ -279,6 +303,55 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
                     }
                 }
             }
+        }*/
+    }
+
+    std::experimental::optional<bool> ParameterServer::find_bool(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_bool_mutex);
+        if(param_bool.find(name) != param_bool.end()) {
+            return param_bool.at(name);
+        }
+    }
+
+    std::experimental::optional<int32_t> ParameterServer::find_int(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_int_mutex);
+        if(param_int.find(name) != param_int.end()) {
+            return param_int.at(name);
+        }
+    }
+
+    std::experimental::optional<double> ParameterServer::find_double(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_double_mutex);
+        if(param_double.find(name) != param_double.end()) {
+            return param_double.at(name);
+        }
+    }
+
+    std::experimental::optional<std::string> ParameterServer::find_string(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_string_mutex);
+        if(param_string.find(name) != param_string.end()) {
+            return param_string.at(name);
+        }
+    }
+
+    std::experimental::optional<std::vector<int32_t>> ParameterServer::find_ints(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_ints_mutex);
+        if(param_ints.find(name) != param_ints.end()) {
+            return param_ints.at(name);
+        }
+    }
+
+    std::experimental::optional<std::vector<double>> ParameterServer::find_doubles(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_doubles_mutex);
+        if(param_doubles.find(name) != param_doubles.end()) {
+            return param_doubles.at(name);
+        }
+    }
+
+    std::experimental::optional<std::vector<std::string>> ParameterServer::find_strings(std::string param_name) {
+        std::lock_guard<std::mutex> lock(param_strings_mutex);
+        if(param_strings.find(name) != param_strings.end()) {
+            return param_strings.at(name);
         }
     }
 }
