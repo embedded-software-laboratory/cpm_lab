@@ -1,4 +1,4 @@
 build/
 .vscode/
 cpm_lib/dds/
-include/cpm/dds/
+cpm_lib/include/cpm/dds/
