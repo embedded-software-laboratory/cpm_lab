@@ -16,19 +16,19 @@ else()
 endif()
 
 
-set(SOURCE_RTI
-    rti/Parameter.hpp
-    rti/Parameter.cxx
-    rti/ParameterImpl.h
-    rti/ParameterImpl.cxx
-    rti/ParameterImplPlugin.h
-    rti/ParameterImplPlugin.cxx
-    rti/ParameterRequest.hpp
-    rti/ParameterRequest.cxx
-    rti/ParameterRequestImpl.h
-    rti/ParameterRequestImpl.cxx
-    rti/ParameterRequestImplPlugin.h
-    rti/ParameterRequestImplPlugin.cxx
+set(SOURCE_DDS
+    dds/Parameter.hpp
+    dds/Parameter.cxx
+    dds/ParameterImpl.h
+    dds/ParameterImpl.cxx
+    dds/ParameterImplPlugin.h
+    dds/ParameterImplPlugin.cxx
+    dds/ParameterRequest.hpp
+    dds/ParameterRequest.cxx
+    dds/ParameterRequestImpl.h
+    dds/ParameterRequestImpl.cxx
+    dds/ParameterRequestImplPlugin.h
+    dds/ParameterRequestImplPlugin.cxx
 )
 
 
@@ -56,7 +56,7 @@ include_directories($ENV{NDDSHOME}/include/ndds)
 include_directories($ENV{NDDSHOME}/include/ndds/hpp)
 link_libraries(dl nsl m pthread rt)
 link_libraries(nddscpp2 nddsc nddscore)
-include_directories(rti)
+include_directories(dds)
 
 if(BUILD_ARM)
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
@@ -69,7 +69,7 @@ endif()
 
 
 add_library(cpm SHARED
-    ${SOURCE_RTI}
+    ${SOURCE_DDS}
     ${SOURCE_CPM}
 )
 
