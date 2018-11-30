@@ -52,7 +52,10 @@ void TimerFD::wait()
 
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 {
-    // TODO prevent the user from calling this function from multiple threads simultaneously.
+    if(this->active) {
+        std::cerr << "The cpm::Timer can not be started twice" << std::endl;
+        return;
+    }
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
     this->active = true;
