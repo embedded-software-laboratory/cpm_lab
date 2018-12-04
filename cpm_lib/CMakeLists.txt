@@ -17,30 +17,72 @@ endif()
 
 
 set(SOURCE_DDS
-    dds/Parameter.hpp
-    dds/Parameter.cxx
+    dds/VehicleCommandDirectImpl.h
+    dds/ParameterRequest.hpp
+    dds/VehicleCommandTrajectoryImpl.h
+    dds/TimeStamp.cxx
+    dds/VehicleCommandTrajectory.hpp
+    dds/VehicleCommandDirect.hpp
+    dds/VehicleCommandDirectImpl.cxx
+    dds/Pose2D.cxx
+    dds/HeaderImpl.h
+    dds/Pose2D.hpp
+    dds/VehicleStateImpl.cxx
+    dds/VehicleCommandSpeedCurvatureImplPlugin.h
+    dds/VehicleCommandDirectImplPlugin.h
+    dds/VehicleCommandSpeedCurvature.cxx
+    dds/ParameterRequestImpl.h
+    dds/Pose2DImpl.h
+    dds/TimeStampImplPlugin.cxx
+    dds/ParameterRequestImplPlugin.h
+    dds/VehicleStateImplPlugin.cxx
+    dds/ParameterRequestImpl.cxx
+    dds/VehicleCommandTrajectoryImplPlugin.h
+    dds/Header.hpp
+    dds/HeaderImpl.cxx
     dds/ParameterImpl.h
+    dds/ParameterRequest.cxx
     dds/ParameterImpl.cxx
+    dds/VehicleState.hpp
+    dds/Parameter.hpp
+    dds/Pose2DImplPlugin.h
+    dds/Header.cxx
+    dds/VehicleCommandTrajectoryImplPlugin.cxx
+    dds/TimeStampImpl.h
+    dds/VehicleCommandSpeedCurvature.hpp
+    dds/ParameterRequestImplPlugin.cxx
+    dds/VehicleCommandTrajectory.cxx
+    dds/HeaderImplPlugin.h
+    dds/VehicleCommandSpeedCurvatureImpl.h
+    dds/VehicleStateImplPlugin.h
+    dds/Pose2DImpl.cxx
+    dds/VehicleCommandTrajectoryImpl.cxx
+    dds/TimeStamp.hpp
+    dds/HeaderImplPlugin.cxx
+    dds/Pose2DImplPlugin.cxx
+    dds/VehicleStateImpl.h
+    dds/VehicleCommandDirectImplPlugin.cxx
+    dds/TimeStampImpl.cxx
     dds/ParameterImplPlugin.h
     dds/ParameterImplPlugin.cxx
-    dds/ParameterRequest.hpp
-    dds/ParameterRequest.cxx
-    dds/ParameterRequestImpl.h
-    dds/ParameterRequestImpl.cxx
-    dds/ParameterRequestImplPlugin.h
-    dds/ParameterRequestImplPlugin.cxx
+    dds/VehicleCommandDirect.cxx
+    dds/VehicleCommandSpeedCurvatureImplPlugin.cxx
+    dds/TimeStampImplPlugin.h
+    dds/VehicleState.cxx
+    dds/VehicleCommandSpeedCurvatureImpl.cxx
+    dds/Parameter.cxx
 )
 
 
 set(SOURCE_CPM
-    include/myadd.hpp
-    src/myadd.cpp
     include/cpm/Parameter.hpp
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
     src/ParameterServer.hpp
     src/ParameterServer.cpp
+    include/cpm/ParticipantSingleton.hpp
+    src/ParticipantSingleton.cpp
     include/cpm/Timer.hpp
     src/Timer.cpp
     src/TimerFD.hpp
@@ -76,9 +118,9 @@ add_library(cpm SHARED
 
 if(NOT BUILD_ARM)
     add_executable(unittest test/catch.cpp
-        test/test_myadd.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
+        test/test_VehicleIDFilteredTopic.cpp
     )
 
     target_link_libraries(unittest cpm)
