@@ -25,7 +25,6 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
         vehicleState.odometer_distance(2);
         vehicleState.vehicle_id(42);
         writer_vehicleState.write(vehicleState);
-        usleep(5000);
     }
     
     {
@@ -33,12 +32,11 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
         vehicleState.odometer_distance(3);
         vehicleState.vehicle_id(11);
         writer_vehicleState.write(vehicleState);
-        usleep(5000);
     }
 
 
     // wait for 'transmission'
-    usleep(1000000);
+    usleep(100000);
 
     // receive
     auto reader_samples11 = reader_vehicle11.take();
