@@ -14,8 +14,8 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicle_state);
 
     // receiver
-    VehicleIDFilteredTopic<VehicleState> topic_vehicle42_state(topic_vehicle_state, 42);
-    VehicleIDFilteredTopic<VehicleState> topic_vehicle11_state(topic_vehicle_state, 11);
+    cpm::VehicleIDFilteredTopic<VehicleState> topic_vehicle42_state(topic_vehicle_state, 42);
+    cpm::VehicleIDFilteredTopic<VehicleState> topic_vehicle11_state(topic_vehicle_state, 11);
     dds::sub::DataReader<VehicleState> reader_vehicle42(dds::sub::Subscriber(participant), topic_vehicle42_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
     dds::sub::DataReader<VehicleState> reader_vehicle11(dds::sub::Subscriber(participant), topic_vehicle11_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
 
