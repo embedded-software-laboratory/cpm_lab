@@ -16,7 +16,7 @@ using std::vector;
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleState.hpp"
-#include "AbsoluteTimer.hpp"
+#include "cpm/Timer.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -153,13 +153,15 @@ int main(int argc, char *argv[])
     int loop_counter = 0;
 
 
-    const long period_nanoseconds = 20000000; // 50 Hz
-    AbsoluteTimer timer_loop(0, period_nanoseconds, 0, 0, [&](){
+    const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
+
+    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0);
+
+
+    update_loop->start([&](uint64_t t_iteration_start){
 
         try 
         {
-            const uint64_t t_iteration_start = clock_gettime_nanoseconds();
-
             // Read new commands, reset watchdog countdown on new command
             {
                 VehicleCommandDirect sample_CommandDirect;
@@ -235,7 +237,5 @@ int main(int argc, char *argv[])
         }
     });
     
-
-    while(1) sleep(1);
     return 0;
 }

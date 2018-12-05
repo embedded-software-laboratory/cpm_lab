@@ -6,6 +6,7 @@ add_definitions(-Wall -Wextra)
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_C_STANDARD 99)
 
+# RTI DDS
 include_directories(SYSTEM $ENV{NDDSHOME}/include)
 include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
 include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
@@ -13,55 +14,15 @@ include_directories(SYSTEM rtidds)
 include_directories(src)
 
 
+# CPM lib
+include_directories(../cpm_base/cpm_lib/include/)
+include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
 
-set(SOURCE_RTI
-    rtidds/Header.cxx
-    rtidds/Header.hpp
-    rtidds/HeaderImpl.cxx
-    rtidds/HeaderImpl.h
-    rtidds/HeaderImplPlugin.cxx
-    rtidds/HeaderImplPlugin.h
-    rtidds/Pose2D.cxx
-    rtidds/Pose2D.hpp
-    rtidds/Pose2DImpl.cxx
-    rtidds/Pose2DImpl.h
-    rtidds/Pose2DImplPlugin.cxx
-    rtidds/Pose2DImplPlugin.h
-    rtidds/TimeStamp.cxx
-    rtidds/TimeStamp.hpp
-    rtidds/TimeStampImpl.cxx
-    rtidds/TimeStampImpl.h
-    rtidds/TimeStampImplPlugin.cxx
-    rtidds/TimeStampImplPlugin.h
-    rtidds/VehicleCommandDirect.cxx
-    rtidds/VehicleCommandDirect.hpp
-    rtidds/VehicleCommandDirectImpl.cxx
-    rtidds/VehicleCommandDirectImpl.h
-    rtidds/VehicleCommandDirectImplPlugin.cxx
-    rtidds/VehicleCommandDirectImplPlugin.h
-    rtidds/VehicleCommandSpeedCurvature.cxx
-    rtidds/VehicleCommandSpeedCurvature.hpp
-    rtidds/VehicleCommandSpeedCurvatureImpl.cxx
-    rtidds/VehicleCommandSpeedCurvatureImpl.h
-    rtidds/VehicleCommandSpeedCurvatureImplPlugin.cxx
-    rtidds/VehicleCommandSpeedCurvatureImplPlugin.h
-    rtidds/VehicleCommandTrajectory.cxx
-    rtidds/VehicleCommandTrajectory.hpp
-    rtidds/VehicleCommandTrajectoryImpl.cxx
-    rtidds/VehicleCommandTrajectoryImpl.h
-    rtidds/VehicleCommandTrajectoryImplPlugin.cxx
-    rtidds/VehicleCommandTrajectoryImplPlugin.h
-    rtidds/VehicleState.cxx
-    rtidds/VehicleState.hpp
-    rtidds/VehicleStateImpl.cxx
-    rtidds/VehicleStateImpl.h
-    rtidds/VehicleStateImplPlugin.cxx
-    rtidds/VehicleStateImplPlugin.h
-)
+
+
+
 
 set(SOURCE
-    src/AbsoluteTimer.cxx
-    src/AbsoluteTimer.hpp
     src/bcm2835.c
     src/bcm2835.h
     src/main.cxx
@@ -81,11 +42,11 @@ set(SOURCE
 
 
 
-if(BUILD_SIMULATION)
+if(BUILD_SIMULATION) # x64 options
+    link_directories(../cpm_base/cpm_lib/build/)
 
     link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
-    add_executable(vehicle_rpi_firmware 
-        ${SOURCE_RTI}
+    add_executable(vehicle_rpi_firmware
         ${SOURCE}
         src/SimulationVehicle.cxx
         src/SimulationVehicle.hpp
@@ -95,11 +56,9 @@ if(BUILD_SIMULATION)
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
     target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
-    target_link_libraries(vehicle_rpi_firmware dl nsl m pthread rt)
-    target_link_libraries(vehicle_rpi_firmware nddscpp2 nddsc nddscore)
     SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
-
-else()
+else() # ARM/Raspberry options
+    link_directories(../cpm_base/cpm_lib/build_arm/)
 
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
     add_executable(vehicle_rpi_firmware 
@@ -108,7 +67,9 @@ else()
     )
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -march=armv6 -mfpu=vfp -mfloat-abi=hard -mlong-calls)
-    target_link_libraries(vehicle_rpi_firmware dl nsl m pthread rt)
-    target_link_libraries(vehicle_rpi_firmware nddscpp2 nddsc nddscore)
-
 endif()
+
+
+target_link_libraries(vehicle_rpi_firmware dl nsl m pthread rt)
+target_link_libraries(vehicle_rpi_firmware nddscpp2 nddsc nddscore)
+target_link_libraries(vehicle_rpi_firmware cpm)
