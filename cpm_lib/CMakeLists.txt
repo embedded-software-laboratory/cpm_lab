@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
 
-
 option(BUILD_ARM OFF)
 
 set (CMAKE_CXX_STANDARD 11)
@@ -8,69 +7,61 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 include_directories(src)
 include_directories(include)
 
-
-if(BUILD_ARM)
-    set(BUILD_DIR build_arm)
-else()
-    set(BUILD_DIR build)
-endif()
-
-
 set(SOURCE_DDS
-    dds/VehicleCommandDirectImpl.h
-    dds/ParameterRequest.hpp
-    dds/VehicleCommandTrajectoryImpl.h
-    dds/TimeStamp.cxx
-    dds/VehicleCommandTrajectory.hpp
-    dds/VehicleCommandDirect.hpp
-    dds/VehicleCommandDirectImpl.cxx
-    dds/Pose2D.cxx
-    dds/HeaderImpl.h
-    dds/Pose2D.hpp
-    dds/VehicleStateImpl.cxx
-    dds/VehicleCommandSpeedCurvatureImplPlugin.h
-    dds/VehicleCommandDirectImplPlugin.h
-    dds/VehicleCommandSpeedCurvature.cxx
-    dds/ParameterRequestImpl.h
-    dds/Pose2DImpl.h
-    dds/TimeStampImplPlugin.cxx
-    dds/ParameterRequestImplPlugin.h
-    dds/VehicleStateImplPlugin.cxx
-    dds/ParameterRequestImpl.cxx
-    dds/VehicleCommandTrajectoryImplPlugin.h
+    dds/Header.cxx
     dds/Header.hpp
     dds/HeaderImpl.cxx
-    dds/ParameterImpl.h
-    dds/ParameterRequest.cxx
-    dds/ParameterImpl.cxx
-    dds/VehicleState.hpp
-    dds/Parameter.hpp
-    dds/Pose2DImplPlugin.h
-    dds/Header.cxx
-    dds/VehicleCommandTrajectoryImplPlugin.cxx
-    dds/TimeStampImpl.h
-    dds/VehicleCommandSpeedCurvature.hpp
-    dds/ParameterRequestImplPlugin.cxx
-    dds/VehicleCommandTrajectory.cxx
-    dds/HeaderImplPlugin.h
-    dds/VehicleCommandSpeedCurvatureImpl.h
-    dds/VehicleStateImplPlugin.h
-    dds/Pose2DImpl.cxx
-    dds/VehicleCommandTrajectoryImpl.cxx
-    dds/TimeStamp.hpp
+    dds/HeaderImpl.h
     dds/HeaderImplPlugin.cxx
-    dds/Pose2DImplPlugin.cxx
-    dds/VehicleStateImpl.h
-    dds/VehicleCommandDirectImplPlugin.cxx
-    dds/TimeStampImpl.cxx
-    dds/ParameterImplPlugin.h
-    dds/ParameterImplPlugin.cxx
-    dds/VehicleCommandDirect.cxx
-    dds/VehicleCommandSpeedCurvatureImplPlugin.cxx
-    dds/TimeStampImplPlugin.h
-    dds/VehicleState.cxx
-    dds/VehicleCommandSpeedCurvatureImpl.cxx
+    dds/HeaderImplPlugin.h
     dds/Parameter.cxx
+    dds/Parameter.hpp
+    dds/ParameterImpl.cxx
+    dds/ParameterImpl.h
+    dds/ParameterImplPlugin.cxx
+    dds/ParameterImplPlugin.h
+    dds/ParameterRequest.cxx
+    dds/ParameterRequest.hpp
+    dds/ParameterRequestImpl.cxx
+    dds/ParameterRequestImpl.h
+    dds/ParameterRequestImplPlugin.cxx
+    dds/ParameterRequestImplPlugin.h
+    dds/Pose2D.cxx
+    dds/Pose2D.hpp
+    dds/Pose2DImpl.cxx
+    dds/Pose2DImpl.h
+    dds/Pose2DImplPlugin.cxx
+    dds/Pose2DImplPlugin.h
+    dds/TimeStamp.cxx
+    dds/TimeStamp.hpp
+    dds/TimeStampImpl.cxx
+    dds/TimeStampImpl.h
+    dds/TimeStampImplPlugin.cxx
+    dds/TimeStampImplPlugin.h
+    dds/VehicleCommandDirect.cxx
+    dds/VehicleCommandDirect.hpp
+    dds/VehicleCommandDirectImpl.cxx
+    dds/VehicleCommandDirectImpl.h
+    dds/VehicleCommandDirectImplPlugin.cxx
+    dds/VehicleCommandDirectImplPlugin.h
+    dds/VehicleCommandSpeedCurvature.cxx
+    dds/VehicleCommandSpeedCurvature.hpp
+    dds/VehicleCommandSpeedCurvatureImpl.cxx
+    dds/VehicleCommandSpeedCurvatureImpl.h
+    dds/VehicleCommandSpeedCurvatureImplPlugin.cxx
+    dds/VehicleCommandSpeedCurvatureImplPlugin.h
+    dds/VehicleCommandTrajectory.cxx
+    dds/VehicleCommandTrajectory.hpp
+    dds/VehicleCommandTrajectoryImpl.cxx
+    dds/VehicleCommandTrajectoryImpl.h
+    dds/VehicleCommandTrajectoryImplPlugin.cxx
+    dds/VehicleCommandTrajectoryImplPlugin.h
+    dds/VehicleState.cxx
+    dds/VehicleState.hpp
+    dds/VehicleStateImpl.cxx
+    dds/VehicleStateImpl.h
+    dds/VehicleStateImplPlugin.cxx
+    dds/VehicleStateImplPlugin.h
 )
 
 

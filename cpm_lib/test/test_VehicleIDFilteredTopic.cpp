@@ -36,7 +36,7 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
 
 
     // wait for 'transmission'
-    usleep(100000);
+    usleep(1000000);
 
     // receive
     auto reader_samples11 = reader_vehicle11.take();
