@@ -1,5 +1,6 @@
 #include "VehicleManualControl.hpp"
 #include "example_trajectory.hpp"
+#include "cpm/stamp_message.hpp"
 
 #define AXIS_THROTTLE (1)
 #define AXIS_STEERING (2)
@@ -58,6 +59,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             //    sample.data().speed_curvature().speed(), 
             //    sample.data().speed_curvature().curvature());
             
+            cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandSpeedCurvature->write(sample);
 
         }
@@ -91,6 +93,8 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
             sample.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
             
+
+            cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandTrajectory->write(sample);
         }
         else { // direct control
@@ -101,6 +105,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             sample.motor_throttle(joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15)));
             sample.steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
 
+            cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandDirect->write(sample);
 
             //printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
