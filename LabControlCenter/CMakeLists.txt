@@ -2,67 +2,32 @@ cmake_minimum_required(VERSION 3.1)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
 link_libraries(dl nsl m pthread rt)
+
+# RTI DDS
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
-#add_definitions(-O0 -g3) # for debugging
 include_directories($ENV{NDDSHOME}/include)
 include_directories($ENV{NDDSHOME}/include/ndds)
 include_directories($ENV{NDDSHOME}/include/ndds/hpp)
-include_directories(rtidds)
 link_libraries(nddscpp2z nddscz nddscorez)
 link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 include_directories(src)
 include_directories(.)
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
+# GTK
 find_package(PkgConfig)
-
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
+# CPM lib
+include_directories(../cpm_base/cpm_lib/include/)
+include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
+link_directories(../cpm_base/cpm_lib/build/)
+
+
+
+
+
 add_executable(LabControlCenter
-
-    rtidds/Header.cxx
-    rtidds/Header.hpp
-    rtidds/HeaderImpl.cxx
-    rtidds/HeaderImpl.h
-    rtidds/HeaderImplPlugin.cxx
-    rtidds/HeaderImplPlugin.h
-    rtidds/Pose2D.cxx
-    rtidds/Pose2D.hpp
-    rtidds/Pose2DImpl.cxx
-    rtidds/Pose2DImpl.h
-    rtidds/Pose2DImplPlugin.cxx
-    rtidds/Pose2DImplPlugin.h
-    rtidds/TimeStamp.cxx
-    rtidds/TimeStamp.hpp
-    rtidds/TimeStampImpl.cxx
-    rtidds/TimeStampImpl.h
-    rtidds/TimeStampImplPlugin.cxx
-    rtidds/TimeStampImplPlugin.h
-    rtidds/VehicleCommandDirect.cxx
-    rtidds/VehicleCommandDirect.hpp
-    rtidds/VehicleCommandDirectImpl.cxx
-    rtidds/VehicleCommandDirectImpl.h
-    rtidds/VehicleCommandDirectImplPlugin.cxx
-    rtidds/VehicleCommandDirectImplPlugin.h
-    rtidds/VehicleCommandSpeedCurvature.cxx
-    rtidds/VehicleCommandSpeedCurvature.hpp
-    rtidds/VehicleCommandSpeedCurvatureImpl.cxx
-    rtidds/VehicleCommandSpeedCurvatureImpl.h
-    rtidds/VehicleCommandSpeedCurvatureImplPlugin.cxx
-    rtidds/VehicleCommandSpeedCurvatureImplPlugin.h
-    rtidds/VehicleCommandTrajectory.cxx
-    rtidds/VehicleCommandTrajectory.hpp
-    rtidds/VehicleCommandTrajectoryImpl.cxx
-    rtidds/VehicleCommandTrajectoryImpl.h
-    rtidds/VehicleCommandTrajectoryImplPlugin.cxx
-    rtidds/VehicleCommandTrajectoryImplPlugin.h
-    rtidds/VehicleState.cxx
-    rtidds/VehicleState.hpp
-    rtidds/VehicleStateImpl.cxx
-    rtidds/VehicleStateImpl.h
-    rtidds/VehicleStateImplPlugin.cxx
-    rtidds/VehicleStateImplPlugin.h
-
 
     src/AbsoluteTimer.cpp
     src/AbsoluteTimer.hpp
@@ -85,6 +50,6 @@ add_executable(LabControlCenter
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter ${GTKMM_LIBRARIES})
+target_link_libraries(LabControlCenter cpm ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
