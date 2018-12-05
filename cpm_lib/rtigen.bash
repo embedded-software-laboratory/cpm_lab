@@ -11,5 +11,5 @@ if [ ! -d "include/cpm/dds" ]; then
     mkdir include/cpm/dds
 
     # Copy headers to public inclues
-    (cd ../dds_idl/; find . -type f) | sed -r 's/..(.*).idl/dds\/\1.hpp/' | xargs -n 1 -I ARG cp ARG include/cpm/dds/
+    (cd dds;find -type f) | grep \\.h | xargs -n 1 -I ARG cp dds/ARG include/cpm/dds/
 fi
