@@ -30,7 +30,9 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
     vehicle_id = vehicleId;
     joystick = make_shared<Joystick>(joystick_device_file);
 
-    update_loop = make_shared<AbsoluteTimer>(0, 20000000, 0, 0, [&](){
+    update_loop = cpm::Timer::create("LabControlCenter", 20000000ull, 0);
+
+    update_loop->start_async([&](uint64_t t_now){
 
         if(!joystick) return;
 

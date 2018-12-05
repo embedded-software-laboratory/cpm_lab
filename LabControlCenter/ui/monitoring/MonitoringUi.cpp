@@ -17,8 +17,8 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
     //window->maximize();
     window->show_all();
 
-
-    update_loop = make_shared<AbsoluteTimer>(0, 100000000, 0, 0, [&](){ update_dispatcher.emit(); });
+    update_loop = cpm::Timer::create("LabControlCenterMonitor",100000000ull, 0);
+    update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
 
     update_dispatcher.connect([&](){
 

@@ -28,9 +28,6 @@ link_directories(../cpm_base/cpm_lib/build/)
 
 
 add_executable(LabControlCenter
-
-    src/AbsoluteTimer.cpp
-    src/AbsoluteTimer.hpp
     src/TimeSeries.cpp
     src/TimeSeries.hpp
     src/TimeSeriesAggregator.cpp
