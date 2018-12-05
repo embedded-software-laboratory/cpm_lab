@@ -21,6 +21,12 @@
 #include "imu.h"
 #include "crc.h"
 
+#define ENABLE_TEST_PROGRAM 1
+
+#if ENABLE_TEST_PROGRAM == 1
+#include "test_sequence.h"
+#endif
+
 
 int main(void)
 {
@@ -86,15 +92,9 @@ int main(void)
 			spi_mosi_data.LED3_enabled_ticks = 1;
 			spi_mosi_data.LED4_period_ticks = 25;
 			spi_mosi_data.LED4_enabled_ticks = 1;
-		}		
-			
-		// Apply commands
-		motor_set_direction(spi_mosi_data.motor_mode);
-		motor_set_duty(spi_mosi_data.motor_pwm);
-		set_servo_pwm(spi_mosi_data.servo_command + 3000);
-		led_set_state(tick, &spi_mosi_data);		
+		}
 		
-		// Send sensor data to master
+		// Collect sensor data
 		spi_miso_data_t spi_miso_data;
 		memset(&spi_miso_data, 0, sizeof(spi_miso_data_t));
 		spi_miso_data.tick = tick;
@@ -114,6 +114,19 @@ int main(void)
 		
 		spi_miso_data.CRC = 0;
 		spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
+		
+		
+#if ENABLE_TEST_PROGRAM == 1
+		test_sequence(&spi_mosi_data, &spi_miso_data);
+#endif
+		
+		// Apply commands
+		motor_set_direction(spi_mosi_data.motor_mode);
+		motor_set_duty(spi_mosi_data.motor_pwm);
+		set_servo_pwm(spi_mosi_data.servo_command + 3000);
+		led_set_state(tick, &spi_mosi_data);
+		
+		// Send sensor data to master
 		spi_send(&spi_miso_data);
 		
 		tick_wait(); // synchronize 50 Hz loop

@@ -205,6 +205,9 @@
     <Compile Include="spi_packets.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="test_sequence.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="twi.c">
       <SubType>compile</SubType>
     </Compile>
