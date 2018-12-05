@@ -18,6 +18,12 @@ namespace cpm
         )
         { }
         
+        Reader(dds::topic::ContentFilteredTopic<T> &topic)
+        :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
+            (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
+        )
+        { }
+        
 
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
