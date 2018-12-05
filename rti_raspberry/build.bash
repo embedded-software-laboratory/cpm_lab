@@ -2,10 +2,7 @@
 
 clear
 
-rm -rf build
 mkdir build
-
-rm -rf build_sim
 mkdir build_sim
 
 

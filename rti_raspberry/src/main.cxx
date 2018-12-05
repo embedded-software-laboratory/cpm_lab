@@ -35,14 +35,6 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
 }
 
-
-// TODO move to cpm_lib
-uint64_t clock_gettime_nanoseconds() {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
-
 bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
     uint16_t mosi_CRC = spi_miso_data.CRC;
     spi_miso_data.CRC = 0;
@@ -222,7 +214,7 @@ int main(int argc, char *argv[])
                 writer_vehicleState.write(vehicleState);
             }
             else {
-                std::cerr << "[" << std::fixed << std::setprecision(9) << double(clock_gettime_nanoseconds())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
+                std::cerr << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
             }
 
             if(loop_counter == 10) {
