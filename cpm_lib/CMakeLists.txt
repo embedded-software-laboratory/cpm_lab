@@ -74,7 +74,9 @@ set(SOURCE_CPM
     src/ParameterServer.cpp
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
+    include/cpm/Reader.hpp
     include/cpm/Timer.hpp
+    include/cpm/stamp_message.hpp
     src/Timer.cpp
     src/TimerFD.hpp
     src/TimerFD.cpp
@@ -112,6 +114,7 @@ if(NOT BUILD_ARM)
         test/test_parameter.cpp
         test/test_timer.cpp
         test/test_VehicleIDFilteredTopic.cpp
+        test/test_Reader.cpp
     )
 
     target_link_libraries(unittest cpm)
