@@ -17,6 +17,9 @@ using std::vector;
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleState.hpp"
 #include "cpm/Timer.hpp"
+#include "cpm/VehicleIDFilteredTopic.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Reader.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -40,24 +43,6 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
     spi_miso_data.CRC = 0;
     return mosi_CRC == crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 }
-
-
-// TODO move to cpm_lib
-template<typename T>
-struct VehicleIDFilteredTopic : public dds::topic::ContentFilteredTopic<T>
-{
-    VehicleIDFilteredTopic(const dds::domain::DomainParticipant &participant, const std::string &topic_name, const uint8_t &vehicle_id)
-    :dds::topic::ContentFilteredTopic<T>(
-        dds::topic::Topic<T>(participant, topic_name), 
-        topic_name + "_vehicle_id_filtered", 
-        dds::topic::Filter("vehicle_id = " + std::to_string(vehicle_id))
-    )
-    {
-        static_assert(std::is_same<decltype(std::declval<T>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
-    }
-};
-
-
 
 // TODO move to cpm_lib
 #include <type_traits>
@@ -118,7 +103,7 @@ int main(int argc, char *argv[])
     crcInit();
 
     // DDS setup
-    dds::domain::DomainParticipant participant (0);
+    auto& participant = cpm::ParticipantSingleton::Instance();
 
     dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
     auto QoS = dds::pub::qos::DataWriterQos();
@@ -128,13 +113,19 @@ int main(int argc, char *argv[])
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
 
-    VehicleIDFilteredTopic<VehicleCommandDirect> topic_vehicleCommandDirect(participant, "vehicleCommandDirect", vehicle_id);
+    cpm::VehicleIDFilteredTopic<VehicleCommandDirect> topic_vehicleCommandDirect(
+        dds::topic::Topic<VehicleCommandDirect>(participant, "vehicleCommandDirect"), vehicle_id);
     dds::sub::DataReader<VehicleCommandDirect> reader_vehicleCommandDirect(dds::sub::Subscriber(participant), topic_vehicleCommandDirect);
 
-    VehicleIDFilteredTopic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature(participant, "vehicleCommandSpeedCurvature", vehicle_id);
+
+    //cpm::Reader<VehicleCommandDirect> cpm_reader_CommandDirect(topic_vehicleCommandDirect);
+
+    cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature(
+        dds::topic::Topic<VehicleCommandSpeedCurvature>(participant, "vehicleCommandSpeedCurvature"), vehicle_id);
     dds::sub::DataReader<VehicleCommandSpeedCurvature> reader_vehicleCommandSpeedCurvature(dds::sub::Subscriber(participant), topic_vehicleCommandSpeedCurvature);
 
-    VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory(participant, "vehicleCommandTrajectory", vehicle_id);
+    cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory(
+        dds::topic::Topic<VehicleCommandTrajectory>(participant, "vehicleCommandTrajectory"), vehicle_id);
     dds::sub::DataReader<VehicleCommandTrajectory> reader_vehicleCommandTrajectory(dds::sub::Subscriber(participant), topic_vehicleCommandTrajectory);
 
 
