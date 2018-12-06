@@ -155,155 +155,98 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
             std::experimental::optional<bool> boolParam = find_bool(name);
             if (boolParam) {
                 param.type(ParameterType::Bool);
-                param.value_bool(param_bool.at(name));
+                param.value_bool(boolParam);
 
                 writer.write(param);
-                break;
+                return;
             }
 
             std::experimental::optional<int_32t> intParam = find_int(name);
             if (intParam) {
                 //Create data to send
                 std::vector<int32_t> stdInts;
-                stdInts.push_back(param_int.at(name));
-                i_lock.unlock();
-                rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(stdInts);
+                stdInts.push_back(intParam);
+                rti::core::vector<int32_t> ints(stdInts);
 
                 param.type(ParameterType::Int32);
                 param.values_int32(ints);
                 
                 //Send new value
                 writer.write(param);
-                break;
+                return;
             }
 
-/*
             std::experimental::optional<double> doubleParam = find_double(name);
-            if (boolParam) {
-                param.type(ParameterType::Bool);
-                param.value_bool(param_bool.at(name));
+            if (doubleParam) {
+                //Create data to send
+                std::vector<double> stdDoubles;
+                stdDoubles.push_back(doubleParam);
+                rti::core::vector<double> doubles(stdDoubles);
 
+                param.type(ParameterType::Double);
+                param.values_double(doubles);
+                
+                //Send new value
                 writer.write(param);
-                break;
+                return;
             }
 
-            else {
-                b_lock.unlock();
+            std::experimental::optional<string> stringParam = find_string(name);
+            if (doubleParam) {
+                //Create data to send
+                std::vector<std::string> stdStrings;
+                stdStrings.push_back(stringParam);
+                rti::core::vector<dds::core::string> strings;
+                std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
 
-                std::unique_lock<std::mutex> i_lock(param_int_mutex);
-                if(param_int.find(name) != param_int.end()) {
-                    //Create data to send
-                    std::vector<int32_t> stdInts;
-                    stdInts.push_back(param_int.at(name));
-                    i_lock.unlock();
-                    rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(stdInts);
-
-                    Parameter param = Parameter();
-                    param.name(name);
-                    param.type(ParameterType::Int32);
-                    param.values_int32(ints);
-                    
-                    //Send new value
-                    writer.write(param);
-                }
-                else {
-                    i_lock.unlock();
-
-                    std::unique_lock<std::mutex> d_lock(param_double_mutex);
-                    if(param_double.find(name) != param_double.end()) {
-                        //Create data to send
-                        std::vector<double> stdDoubles;
-                        stdDoubles.push_back(param_double.at(name));
-                        d_lock.unlock();
-                        rti::core::vector<double> doubles(stdDoubles);
-
-                        Parameter param = Parameter();
-                        param.name(name);
-                        param.type(ParameterType::Double);
-                        param.values_double(doubles);
-                        
-                        //Send new value
-                        writer.write(param);
-                    }
-                    else {
-                        d_lock.unlock();
-
-                        std::unique_lock<std::mutex> s_lock(param_string_mutex);
-                        if(param_string.find(name) != param_string.end()) {
-                            //Create data to send
-                            std::vector<std::string> stdStrings;
-                            stdStrings.push_back(param_string.at(name));
-                            s_lock.unlock();
-                            rti::core::vector<dds::core::string> strings;
-                            std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
-
-                            Parameter param = Parameter();
-                            param.name(name);
-                            param.type(ParameterType::String);
-                            param.values_string(strings);
-                            
-                            //Send new value
-                            writer.write(param);
-                        }
-                        else {
-                            s_lock.unlock();
-
-                            std::unique_lock<std::mutex> is_lock(param_ints_mutex);
-                            if(param_ints.find(name) != param_ints.end()) {
-                                //Create data to send
-                                rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(param_ints.at(name));
-                                is_lock.unlock();
-
-                                Parameter param = Parameter();
-                                param.name(name);
-                                param.type(ParameterType::Vector_Int32);
-                                param.values_int32(ints);
-                                
-                                //Send new value
-                                writer.write(param);
-                            }
-                            else {
-                                is_lock.unlock();
-
-                                std::unique_lock<std::mutex> ds_lock(param_doubles_mutex);
-                                if(param_doubles.find(name) != param_doubles.end()) {
-                                    //Create data to send
-                                    rti::core::vector<double> doubles(param_doubles.at(name));
-                                    ds_lock.unlock();
-
-                                    Parameter param = Parameter();
-                                    param.name(name);
-                                    param.type(ParameterType::Vector_Double);
-                                    param.values_double(doubles);
-                                    
-                                    //Send new value
-                                    writer.write(param);
-                                }
-                                else {
-                                    ds_lock.unlock();
-
-                                    std::unique_lock<std::mutex> st_lock(param_strings_mutex);
-                                    if(param_strings.find(name) != param_strings.end()) {
-                                        //Create data to send
-                                        rti::core::vector<dds::core::string> strings;
-                                        std::copy(strings.begin(), strings.end(), std::back_inserter(param_strings.at(name)));
-                                        st_lock.unlock();
-
-                                        Parameter param = Parameter();
-                                        param.name(name);
-                                        param.type(ParameterType::Vector_String);
-                                        param.values_string(strings);
-                                        
-                                        //Send new value
-                                        writer.write(param);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                param.type(ParameterType::String);
+                param.values_string(strings);
+                
+                //Send new value
+                writer.write(param);
+                return;
             }
-        }*/
+
+            std::experimental::optional<int_32t> intParams = find_ints(name);
+            if (intParams) {
+                //Create data to send
+                rti::core::vector<int32_t> ints(intParams);
+
+                param.type(ParameterType::Vector_Int32);
+                param.values_int32(ints);
+                
+                //Send new value
+                writer.write(param);
+                return;
+            }
+
+            std::experimental::optional<double> doubleParams = find_doubles(name);
+            if (doubleParams) {
+                //Create data to send
+                rti::core::vector<double> doubles(doubleParams);
+
+                param.type(ParameterType::Vector_Double);
+                param.values_double(doubles);
+                
+                //Send new value
+                writer.write(param);
+                return;
+            }
+
+            std::experimental::optional<string> stringParams = find_strings(name);
+            if (stringParams) {
+                //Create data to send
+                rti::core::vector<dds::core::string> strings;
+                std::copy(strings.begin(), strings.end(), std::back_inserter(stringParams));
+
+                param.type(ParameterType::Vector_String);
+                param.values_string(strings);
+                
+                //Send new value
+                writer.write(param);
+                return;
+            }
+        }
     }
 
     std::experimental::optional<bool> ParameterServer::find_bool(std::string param_name) {
