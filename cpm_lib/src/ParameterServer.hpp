@@ -31,6 +31,7 @@ public:
 private:
     //Callback
     void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
+    void handleSingleParamRequest(std::string name);
 
     //Get variables, if they exist
     std::experimental::optional<bool> find_bool(std::string param_name);

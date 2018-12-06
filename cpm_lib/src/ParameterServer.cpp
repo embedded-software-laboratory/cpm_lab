@@ -18,14 +18,8 @@ void ParameterServer::set_value(std::string name, bool value) {
     param_bool.insert(std::pair<std::string, bool>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Bool);
-    param.value_bool(value);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, int32_t value) {
@@ -34,18 +28,8 @@ void ParameterServer::set_value(std::string name, int32_t value) {
     param_int.insert(std::pair<std::string, int32_t>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    std::vector<int32_t> stdInts;
-    stdInts.push_back(value);
-    rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(stdInts);
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Int32);
-    param.values_int32(ints);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, double value) {
@@ -54,18 +38,8 @@ void ParameterServer::set_value(std::string name, double value) {
     param_double.insert(std::pair<std::string, double>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    std::vector<double> stdDoubles;
-    stdDoubles.push_back(value);
-    rti::core::vector<double> doubles(stdDoubles);
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Double);
-    param.values_double(doubles);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, std::string value) {
@@ -74,19 +48,8 @@ void ParameterServer::set_value(std::string name, std::string value) {
     param_string.insert(std::pair<std::string, std::string>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    std::vector<std::string> stdStrings;
-    stdStrings.push_back(value);
-    rti::core::vector<dds::core::string> strings;
-    std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::String);
-    param.values_string(strings);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, std::vector<int32_t> value) {
@@ -95,16 +58,8 @@ void ParameterServer::set_value(std::string name, std::vector<int32_t> value) {
     param_ints.insert(std::pair<std::string, std::vector<int32_t>>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    rti::core::vector<int32_t> ints = rti::core::vector<int32_t>(value);
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Vector_Int32);
-    param.values_int32(ints);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, std::vector<double> value) {
@@ -113,16 +68,8 @@ void ParameterServer::set_value(std::string name, std::vector<double> value) {
     param_doubles.insert(std::pair<std::string, std::vector<double>>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    rti::core::vector<double> doubles(value);
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Vector_Double);
-    param.values_double(doubles);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::set_value(std::string name, std::vector<std::string> value) {
@@ -131,24 +78,18 @@ void ParameterServer::set_value(std::string name, std::vector<std::string> value
     param_strings.insert(std::pair<std::string, std::vector<std::string>>(name, value));
     s_lock.unlock();
 
-    //Create data to send
-    rti::core::vector<dds::core::string> strings;
-    std::copy(strings.begin(), strings.end(), std::back_inserter(value));
-
-    Parameter param = Parameter();
-    param.name(name);
-    param.type(ParameterType::Vector_String);
-    param.values_string(strings);
-    
-    //Send new value
-    writer.write(param);
+    //Fake request to send data
+    handleSingleParamRequest(name);
 }
 
 void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            std::string name = sample.data().name();
+            handleSingleParamRequest(sample.data().name());
+        }
+    }
 
+    handleSingleParamRequest(std::string name) {
             Parameter param = Parameter();
             param.name(name);
 
@@ -246,7 +187,6 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
                 writer.write(param);
                 return;
             }
-        }
     }
 
     std::experimental::optional<bool> ParameterServer::find_bool(std::string param_name) {
