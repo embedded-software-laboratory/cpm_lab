@@ -94,20 +94,20 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     Parameter param = Parameter();
     param.name(name);
 
-    std::experimental::optional<bool> boolParam = find_bool(name);
-    if (boolParam) {
+    bool boolParam;
+    if(find_bool(name, boolParam)) {
         param.type(ParameterType::Bool);
-        param.value_bool(boolParam.value());
+        param.value_bool(boolParam);
 
         writer.write(param);
         return;
     }
 
-    std::experimental::optional<int32_t> intParam = find_int(name);
-    if (intParam) {
+    int32_t intParam;
+    if(find_int(name, intParam)) {
         //Create data to send
         std::vector<int32_t> stdInts;
-        stdInts.push_back(intParam.value());
+        stdInts.push_back(intParam);
         rti::core::vector<int32_t> ints(stdInts);
 
         param.type(ParameterType::Int32);
@@ -118,11 +118,11 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
-    std::experimental::optional<double> doubleParam = find_double(name);
-    if (doubleParam) {
+    double doubleParam;
+    if(find_double(name, doubleParam)) {
         //Create data to send
         std::vector<double> stdDoubles;
-        stdDoubles.push_back(doubleParam.value());
+        stdDoubles.push_back(doubleParam);
         rti::core::vector<double> doubles(stdDoubles);
 
         param.type(ParameterType::Double);
@@ -133,11 +133,11 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
-    std::experimental::optional<std::string> stringParam = find_string(name);
-    if (doubleParam) {
+    std::string stringParam;
+    if(find_string(name, stringParam)) {
         //Create data to send
         std::vector<std::string> stdStrings;
-        stdStrings.push_back(stringParam.value());
+        stdStrings.push_back(stringParam);
         rti::core::vector<dds::core::string> strings;
         std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
 
@@ -149,10 +149,10 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
-    std::experimental::optional<std::vector<int32_t>> intParams = find_ints(name);
-    if (intParams) {
+    std::vector<int32_t> intParams;
+    if(find_ints(name, intParams)) {
         //Create data to send
-        rti::core::vector<int32_t> ints(intParams.value());
+        rti::core::vector<int32_t> ints(intParams);
 
         param.type(ParameterType::Vector_Int32);
         param.values_int32(ints);
@@ -162,10 +162,10 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
-    std::experimental::optional<std::vector<double>> doubleParams = find_doubles(name);
-    if (doubleParams) {
+    std::vector<double> doubleParams;
+    if(find_doubles(name, doubleParams)) {
         //Create data to send
-        rti::core::vector<double> doubles(doubleParams.value());
+        rti::core::vector<double> doubles(doubleParams);
 
         param.type(ParameterType::Vector_Double);
         param.values_double(doubles);
@@ -175,11 +175,11 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
-    std::experimental::optional<std::vector<std::string>> stringParams = find_strings(name);
-    if (stringParams) {
+    std::vector<std::string> stringParams;
+    if(find_strings(name, stringParams)) {
         //Create data to send
         rti::core::vector<dds::core::string> strings;
-        std::copy(strings.begin(), strings.end(), std::back_inserter(stringParams.value()));
+        std::copy(strings.begin(), strings.end(), std::back_inserter(stringParams));
 
         param.type(ParameterType::Vector_String);
         param.values_string(strings);
@@ -190,51 +190,65 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 }
 
-std::experimental::optional<bool> ParameterServer::find_bool(std::string param_name) {
+bool ParameterServer::find_bool(std::string param_name, bool &value_out) {
     std::lock_guard<std::mutex> lock(param_bool_mutex);
     if(param_bool.find(param_name) != param_bool.end()) {
-        return param_bool.at(param_name);
+        value_out = param_bool.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<int32_t> ParameterServer::find_int(std::string param_name) {
+bool ParameterServer::find_int(std::string param_name, int32_t &value_out) {
     std::lock_guard<std::mutex> lock(param_int_mutex);
     if(param_int.find(param_name) != param_int.end()) {
-        return param_int.at(param_name);
+        value_out = param_int.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<double> ParameterServer::find_double(std::string param_name) {
+bool ParameterServer::find_double(std::string param_name, double &value_out) {
     std::lock_guard<std::mutex> lock(param_double_mutex);
     if(param_double.find(param_name) != param_double.end()) {
-        return param_double.at(param_name);
+        value_out = param_double.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<std::string> ParameterServer::find_string(std::string param_name) {
+bool ParameterServer::find_string(std::string param_name, std::string &value_out) {
     std::lock_guard<std::mutex> lock(param_string_mutex);
     if(param_string.find(param_name) != param_string.end()) {
-        return param_string.at(param_name);
+        value_out = param_string.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<std::vector<int32_t>> ParameterServer::find_ints(std::string param_name) {
+bool ParameterServer::find_ints(std::string param_name, std::vector<int32_t> &value_out) {
     std::lock_guard<std::mutex> lock(param_ints_mutex);
     if(param_ints.find(param_name) != param_ints.end()) {
-        return param_ints.at(param_name);
+        value_out = param_ints.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<std::vector<double>> ParameterServer::find_doubles(std::string param_name) {
+bool ParameterServer::find_doubles(std::string param_name, std::vector<double> &value_out) {
     std::lock_guard<std::mutex> lock(param_doubles_mutex);
     if(param_doubles.find(param_name) != param_doubles.end()) {
-        return param_doubles.at(param_name);
+        value_out = param_doubles.at(param_name);
+        return true;
     }
+    return false;
 }
 
-std::experimental::optional<std::vector<std::string>> ParameterServer::find_strings(std::string param_name) {
+bool ParameterServer::find_strings(std::string param_name, std::vector<std::string> &value_out) {
     std::lock_guard<std::mutex> lock(param_strings_mutex);
     if(param_strings.find(param_name) != param_strings.end()) {
-        return param_strings.at(param_name);
+        value_out = param_strings.at(param_name);
+        return true;
     }
+    return false;
 }

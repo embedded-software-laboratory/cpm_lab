@@ -9,7 +9,6 @@
 #include <vector>
 #include <map>
 #include <mutex>
-#include <experimental/optional>
 
 #include "../build/rti/Parameter.hpp"
 #include "../build/rti/ParameterRequest.hpp"
@@ -34,13 +33,13 @@ private:
     void handleSingleParamRequest(std::string name);
 
     //Get variables, if they exist
-    std::experimental::optional<bool> find_bool(std::string param_name);
-    std::experimental::optional<int32_t> find_int(std::string param_name);
-    std::experimental::optional<double> find_double(std::string param_name);
-    std::experimental::optional<std::string> find_string(std::string param_name);
-    std::experimental::optional<std::vector<int32_t>> find_ints(std::string param_name);
-    std::experimental::optional<std::vector<double>> find_doubles(std::string param_name);
-    std::experimental::optional<std::vector<std::string>> find_strings(std::string param_name);
+    bool find_bool(std::string param_name, bool &value_out);
+    bool find_int(std::string param_name, int32_t &value_out);
+    bool find_double(std::string param_name, double &value_out);
+    bool find_string(std::string param_name, std::string &value_out);
+    bool find_ints(std::string param_name, std::vector<int32_t> &value_out);
+    bool find_doubles(std::string param_name, std::vector<double> &value_out);
+    bool find_strings(std::string param_name, std::vector<std::string> &value_out);
 
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;
