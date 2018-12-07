@@ -184,6 +184,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::vector<std::string> stringParams;
     if(find_strings(name, stringParams)) {
+        param.type(ParameterType::Vector_String);
         param.values_string().resize(stringParams.size());
         for (size_t i = 0; i < stringParams.size(); ++i) {
             param.values_string().at(i) = stringParams.at(i);

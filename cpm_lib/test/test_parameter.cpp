@@ -46,3 +46,23 @@ TEST_CASE( "parameter_strings" ) {
     REQUIRE( received_parameter_value[2] == str3 );
     REQUIRE( received_parameter_value[3] == str4 );
 }
+
+TEST_CASE( "parameter_bool" ) {
+
+    bool received_parameter_value_true = false;
+    bool received_parameter_value_false = true;
+
+    std::thread client_thread([&](){
+        received_parameter_value_true = cpm::parameter_bool("my_param_true");
+        received_parameter_value_false = cpm::parameter_bool("my_param_false");
+    });
+
+    ParameterServer server;
+    server.set_value("my_param_true", true);
+    server.set_value("my_param_false", false);
+
+    client_thread.join();
+
+    REQUIRE( received_parameter_value_true );
+    REQUIRE( !received_parameter_value_false );
+}
