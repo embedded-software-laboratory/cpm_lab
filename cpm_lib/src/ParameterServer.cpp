@@ -15,7 +15,7 @@ ParameterServer::ParameterServer():
 void ParameterServer::set_value(std::string name, bool value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_bool_mutex); 
-    param_bool.insert(std::pair<std::string, bool>(name, value));
+    param_bool[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -25,7 +25,7 @@ void ParameterServer::set_value(std::string name, bool value) {
 void ParameterServer::set_value(std::string name, int32_t value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_int_mutex); 
-    param_int.insert(std::pair<std::string, int32_t>(name, value));
+    param_int[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -35,7 +35,7 @@ void ParameterServer::set_value(std::string name, int32_t value) {
 void ParameterServer::set_value(std::string name, double value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_double_mutex); 
-    param_double.insert(std::pair<std::string, double>(name, value));
+    param_double[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -45,7 +45,7 @@ void ParameterServer::set_value(std::string name, double value) {
 void ParameterServer::set_value(std::string name, std::string value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_string_mutex); 
-    param_string.insert(std::pair<std::string, std::string>(name, value));
+    param_string[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -55,7 +55,7 @@ void ParameterServer::set_value(std::string name, std::string value) {
 void ParameterServer::set_value(std::string name, std::vector<int32_t> value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_ints_mutex); 
-    param_ints.insert(std::pair<std::string, std::vector<int32_t>>(name, value));
+    param_ints[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -65,7 +65,7 @@ void ParameterServer::set_value(std::string name, std::vector<int32_t> value) {
 void ParameterServer::set_value(std::string name, std::vector<double> value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_doubles_mutex); 
-    param_doubles.insert(std::pair<std::string, std::vector<double>>(name, value));
+    param_doubles[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -75,7 +75,7 @@ void ParameterServer::set_value(std::string name, std::vector<double> value) {
 void ParameterServer::set_value(std::string name, std::vector<std::string> value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_strings_mutex); 
-    param_strings.insert(std::pair<std::string, std::vector<std::string>>(name, value));
+    param_strings[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -177,13 +177,11 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::vector<std::string> stringParams;
     if(find_strings(name, stringParams)) {
-        //Create data to send
-        rti::core::vector<dds::core::string> strings;
-        std::copy(strings.begin(), strings.end(), std::back_inserter(stringParams));
+        param.values_string().resize(stringParams.size());
+        for (size_t i = 0; i < stringParams.size(); ++i) {
+            param.values_string().at(i) = stringParams.at(i);
+        }
 
-        param.type(ParameterType::Vector_String);
-        param.values_string(strings);
-        
         //Send new value
         writer.write(param);
         return;

@@ -47,6 +47,8 @@ set(SOURCE_CPM
     src/ParameterServer.hpp
     src/ParameterServer.cpp
     src/Subscriber.hpp
+    src/ParticipantSingleton.cpp
+    include/cpm/ParticipantSingleton.hpp
 )
 
 
