@@ -1,7 +1,7 @@
 #pragma once
 
 #include <dds/sub/ddssub.hpp>
-
+#include <mutex>
 #include "cpm/ParticipantSingleton.hpp"
 
 #define CPM_READER_RING_BUFFER_SIZE (32)
@@ -12,6 +12,7 @@ namespace cpm
     class Reader
     {
         dds::sub::DataReader<T> dds_reader;
+        std::mutex m_mutex;
 
         T ring_buffer[CPM_READER_RING_BUFFER_SIZE];
         size_t ring_buffer_index = 0; // index of next write == index of oldest element
@@ -45,6 +46,7 @@ namespace cpm
 
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
+            std::lock_guard<std::mutex> lock(m_mutex);
             flush_dds_reader();
 
             sample_out = T();
