@@ -38,8 +38,6 @@ set(SOURCE_RTI
 
 
 set(SOURCE_CPM
-    include/myadd.hpp
-    src/myadd.cpp
     include/cpm/Parameter.hpp
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
@@ -59,8 +57,8 @@ add_library(cpm SHARED
 
 
 
-add_executable(unittest test/catch.cpp
-    test/test_myadd.cpp
+add_executable(unittest 
+    test/catch.cpp
     test/test_parameter.cpp
 )
 
