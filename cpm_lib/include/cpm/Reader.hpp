@@ -42,6 +42,15 @@ namespace cpm
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { }
+
+        Reader(const Reader &other) 
+        :dds_reader(other.dds_reader)
+        ,ring_buffer_index(other.ring_buffer_index)
+        {
+            for (size_t i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i) {
+                ring_buffer[i] = other.ring_buffer[i];
+            }
+        }
         
 
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
