@@ -1,19 +1,16 @@
 #include "ParameterStorage.hpp"
+#include "cpm/ParticipantSingleton.hpp"
 
-int ParameterStorage::domain_id = 0; 
-std::string ParameterStorage::subscriberTopicName = "parameter"; 
-std::string ParameterStorage::publisherTopicName = "parameterRequest";
 
 using namespace std::placeholders;
 
-ParameterStorage::ParameterStorage() : 
-    participant(domain_id),
-    subscriberTopic(participant, subscriberTopicName),
-    writerTopic(participant, publisherTopicName),
-    writer(dds::pub::Publisher(participant), writerTopic),
-    subscriber(subscriberTopicName, std::bind(&ParameterStorage::callback, this, _1), participant, subscriberTopic)
+ParameterStorage::ParameterStorage():
+    parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
+    parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
+    writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic),
+    subscriber("parameter", std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
 {
-    
+
 }
 
 ParameterStorage& ParameterStorage::Instance() {

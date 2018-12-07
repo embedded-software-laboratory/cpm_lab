@@ -1,13 +1,20 @@
 #include "ParameterServer.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "ParameterStorage.hpp"
 
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer():
-    participant(0),
-    subscriberTopic(participant, "parameterRequest"),
-    writerTopic(participant, "parameter"),
-    writer(dds::pub::Publisher(participant), writerTopic),
-    subscriber("parameterRequest", std::bind(&ParameterServer::handleParamRequest, this, _1), participant, subscriberTopic)
+    writer(
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        ParameterStorage::Instance().parameterTopic
+    ),
+    subscriber(
+        "parameterRequest", 
+        std::bind(&ParameterServer::handleParamRequest, this, _1), 
+        cpm::ParticipantSingleton::Instance(), 
+        ParameterStorage::Instance().parameterRequestTopic
+    )
 {
 
 }

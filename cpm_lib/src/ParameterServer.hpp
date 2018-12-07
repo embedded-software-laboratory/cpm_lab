@@ -59,9 +59,6 @@ private:
     std::mutex param_doubles_mutex;
     std::mutex param_strings_mutex;
 
-    dds::domain::DomainParticipant participant;
-    dds::topic::Topic<ParameterRequest> subscriberTopic;
-    dds::topic::Topic<Parameter> writerTopic;
     dds::pub::DataWriter<Parameter> writer;
     Subscriber<ParameterRequest> subscriber;
 };

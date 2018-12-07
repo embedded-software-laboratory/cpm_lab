@@ -3,7 +3,7 @@
 /*
  * Singleton that receives and stores constants, e.g. for configuration
  * Is used by ParameterDistribution to get data for the user
- * domain_id, subscriberTopic and publisherTopic can be set before the singleton is used
+ * domain_id, parameterTopic and publisherTopic can be set before the singleton is used
  */
 
 #include <string>
@@ -20,10 +20,6 @@
 class ParameterStorage {
 public:
     static ParameterStorage& Instance();
-
-    static int domain_id; 
-    static std::string subscriberTopicName; 
-    static std::string publisherTopicName;
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -64,9 +60,11 @@ private:
     void requestParam(std::string parameter_name);
     void callback(dds::sub::LoanedSamples<Parameter>& samples);
 
-    dds::domain::DomainParticipant participant;
-    dds::topic::Topic<Parameter> subscriberTopic;
-    dds::topic::Topic<ParameterRequest> writerTopic;
+public:
+    dds::topic::Topic<Parameter> parameterTopic;
+    dds::topic::Topic<ParameterRequest> parameterRequestTopic;
+
+private:
     dds::pub::DataWriter<ParameterRequest> writer;
     Subscriber<Parameter> subscriber;
 };
