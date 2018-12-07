@@ -22,13 +22,15 @@ TimerFD::TimerFD(
         exit(EXIT_FAILURE);
     }
 
-    if(offset_nanoseconds == 0) { // A zero value disarms the timer, overwrite with a negligible 1 ns.
-        offset_nanoseconds = 1;
+    uint64_t offset_nanoseconds_fd = offset_nanoseconds;
+
+    if(offset_nanoseconds_fd == 0) { // A zero value disarms the timer, overwrite with a negligible 1 ns.
+        offset_nanoseconds_fd = 1;
     }
 
     struct itimerspec its;
-    its.it_value.tv_sec     = offset_nanoseconds / 1000000000ull;
-    its.it_value.tv_nsec    = offset_nanoseconds % 1000000000ull;
+    its.it_value.tv_sec     = offset_nanoseconds_fd / 1000000000ull;
+    its.it_value.tv_nsec    = offset_nanoseconds_fd % 1000000000ull;
     its.it_interval.tv_sec  = period_nanoseconds / 1000000000ull;
     its.it_interval.tv_nsec = period_nanoseconds % 1000000000ull;
     int status = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &its, NULL);
