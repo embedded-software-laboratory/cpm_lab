@@ -1,0 +1,3 @@
+struct ParameterRequest {
+    string name; //@key
+};

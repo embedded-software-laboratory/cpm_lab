@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
+
 set (CMAKE_CXX_STANDARD 11)
 add_definitions(-Wall -Wextra -Werror=return-type)
 include_directories(src)
@@ -20,19 +21,45 @@ SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 
 
+set(SOURCE_RTI
+    build/rti/Parameter.hpp
+    build/rti/Parameter.cxx
+    build/rti/ParameterImpl.h
+    build/rti/ParameterImpl.cxx
+    build/rti/ParameterImplPlugin.h
+    build/rti/ParameterImplPlugin.cxx
+    build/rti/ParameterRequest.hpp
+    build/rti/ParameterRequest.cxx
+    build/rti/ParameterRequestImpl.h
+    build/rti/ParameterRequestImpl.cxx
+    build/rti/ParameterRequestImplPlugin.h
+    build/rti/ParameterRequestImplPlugin.cxx
+)
 
 
+set(SOURCE_CPM
+    include/cpm/Parameter.hpp
+    src/ParameterDistribution.cpp
+    src/ParameterStorage.hpp
+    src/ParameterStorage.cpp
+    src/ParameterServer.hpp
+    src/ParameterServer.cpp
+    src/Subscriber.hpp
+    src/ParticipantSingleton.cpp
+    include/cpm/ParticipantSingleton.hpp
+)
 
-add_library(cpm SHARED    
-    include/myadd.hpp
-    src/myadd.cpp
+
+add_library(cpm SHARED
+    ${SOURCE_RTI}
+    ${SOURCE_CPM}
 )
 
 
 
-
-
-add_executable(unittest test/catch.cpp
-    test/test_myadd.cpp
+add_executable(unittest 
+    test/catch.cpp
+    test/test_parameter.cpp
 )
+
 target_link_libraries(unittest cpm)

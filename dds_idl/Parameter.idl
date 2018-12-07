@@ -1,6 +1,7 @@
 enum ParameterType 
 {
     Invalid = 0,
+    Bool,
     Int32,
     Double,
     String,
@@ -15,6 +16,7 @@ struct Parameter
     ParameterType type;
 
     // Since weak typing is not supported, we reserve a member for each type.
+    boolean value_bool;
     sequence<long>   values_int32;
     sequence<double> values_double;
     sequence<string> values_string;
