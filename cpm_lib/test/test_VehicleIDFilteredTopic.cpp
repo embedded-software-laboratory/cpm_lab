@@ -3,8 +3,6 @@
 #include "cpm/dds/VehicleState.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
-#include <thread>
-
 TEST_CASE( "VehicleIDFilteredTopic" ) {
 
     auto participant = cpm::ParticipantSingleton::Instance();
@@ -19,38 +17,34 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     dds::sub::DataReader<VehicleState> reader_vehicle42(dds::sub::Subscriber(participant), topic_vehicle42_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
     dds::sub::DataReader<VehicleState> reader_vehicle11(dds::sub::Subscriber(participant), topic_vehicle11_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
 
-
+    // allow time for DDS discovery
+    sleep(1);
 
     // send
-    std::thread t([&](){
-
-        {
-            VehicleState vehicleState;    
-            vehicleState.odometer_distance(2);
-            vehicleState.vehicle_id(42);
-            writer_vehicleState.write(vehicleState);
-        }
-        
-        {
-            VehicleState vehicleState;
-            vehicleState.odometer_distance(3);
-            vehicleState.vehicle_id(11);
-            writer_vehicleState.write(vehicleState);
-        }
-        
-        {
-            VehicleState vehicleState;
-            vehicleState.odometer_distance(6);
-            vehicleState.vehicle_id(42);
-            writer_vehicleState.write(vehicleState);
-        }
-
-    });
+    {
+        VehicleState vehicleState;    
+        vehicleState.odometer_distance(2);
+        vehicleState.vehicle_id(42);
+        writer_vehicleState.write(vehicleState);
+    }
+    
+    {
+        VehicleState vehicleState;
+        vehicleState.odometer_distance(3);
+        vehicleState.vehicle_id(11);
+        writer_vehicleState.write(vehicleState);
+    }
+    
+    {
+        VehicleState vehicleState;
+        vehicleState.odometer_distance(6);
+        vehicleState.vehicle_id(42);
+        writer_vehicleState.write(vehicleState);
+    }
 
 
     // wait for 'transmission'
-    sleep(2);
-    t.join();
+    usleep(1000);
 
 
     // receive
