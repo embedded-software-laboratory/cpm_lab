@@ -33,8 +33,6 @@ set(SOURCE_RTI
 
 
 set(SOURCE_CPM
-    include/myadd.hpp
-    src/myadd.cpp
     include/cpm/Parameter.hpp
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
@@ -46,6 +44,8 @@ set(SOURCE_CPM
     src/TimerFD.hpp
     src/TimerFD.cpp
     src/Subscriber.hpp
+    src/ParticipantSingleton.cpp
+    include/cpm/ParticipantSingleton.hpp
 )
 
 
@@ -75,8 +75,8 @@ add_library(cpm SHARED
 
 
 if(NOT BUILD_ARM)
-    add_executable(unittest test/catch.cpp
-        test/test_myadd.cpp
+    add_executable(unittest 
+        test/catch.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
     )

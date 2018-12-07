@@ -1,19 +1,16 @@
 #include "ParameterStorage.hpp"
+#include "cpm/ParticipantSingleton.hpp"
 
-int ParameterStorage::domain_id = 0; 
-std::string ParameterStorage::subscriberTopicName = "parameter"; 
-std::string ParameterStorage::publisherTopicName = "parameterRequest";
 
 using namespace std::placeholders;
 
-ParameterStorage::ParameterStorage() : 
-    participant(domain_id),
-    subscriberTopic(participant, subscriberTopicName),
-    writerTopic(participant, publisherTopicName),
-    writer(dds::pub::Publisher(participant), writerTopic),
-    subscriber(subscriberTopicName, std::bind(&ParameterStorage::callback, this, _1), participant, subscriberTopic)
+ParameterStorage::ParameterStorage():
+    parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
+    parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
+    writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic),
+    subscriber("parameter", std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
 {
-    
+
 }
 
 ParameterStorage& ParameterStorage::Instance() {
@@ -144,69 +141,35 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
             const auto& parameter = sample.data();
-            if (parameter.type() == ParameterType::Int32) {
-                if (parameter.values_int32().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_int_mutex);
-                    param_int.insert(std::pair<std::string, int32_t>(parameter.name(), parameter.values_int32()[0]));
-                    u_lock.unlock();
-                }
+
+            if (parameter.type() == ParameterType::Int32 && parameter.values_int32().size() == 1) {
+                std::lock_guard<std::mutex> u_lock(param_int_mutex);
+                param_int[parameter.name()] = parameter.values_int32().at(0);
             }
-            else if (parameter.type() == ParameterType::Double) {
-                if (parameter.values_double().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_double_mutex);
-                    param_double.insert(std::pair<std::string, double>(parameter.name(), parameter.values_double()[0]));
-                    u_lock.unlock();
-                }
+            else if (parameter.type() == ParameterType::Double && parameter.values_double().size() == 1) {
+                std::lock_guard<std::mutex> u_lock(param_double_mutex);
+                param_double[parameter.name()] = parameter.values_double().at(0);
             }
-            else if (parameter.type() == ParameterType::String) {
-                if (parameter.values_string().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_string_mutex);
-                    param_string.insert(std::pair<std::string, std::string>(parameter.name(), parameter.values_string()[0]));
-                    u_lock.unlock();
-                }
+            else if (parameter.type() == ParameterType::String && parameter.values_string().size() == 1) {
+                std::lock_guard<std::mutex> u_lock(param_string_mutex);
+                param_string[parameter.name()] = parameter.values_string().at(0);
             }
             else if (parameter.type() == ParameterType::Bool) {
-                std::unique_lock<std::mutex> u_lock(param_bool_mutex);
-                param_bool.insert(std::pair<std::string, bool>(parameter.name(), parameter.value_bool()));
-                u_lock.unlock();
+                std::lock_guard<std::mutex> u_lock(param_bool_mutex);
+                param_bool[parameter.name()] = parameter.value_bool();
             }
             else if (parameter.type() == ParameterType::Vector_Int32) {
-                if (parameter.values_int32().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_ints_mutex);
-                    param_ints.insert(std::pair<std::string, std::vector<int32_t>>(parameter.name(), std::vector<int32_t>(parameter.values_int32().begin(), parameter.values_int32().end())));
-                    u_lock.unlock();
-                }
+                std::lock_guard<std::mutex> u_lock(param_ints_mutex);
+                param_ints[parameter.name()] = parameter.values_int32();
             }
             else if (parameter.type() == ParameterType::Vector_Double) {
-                if (parameter.values_double().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_doubles_mutex);
-                    param_doubles.insert(std::pair<std::string, std::vector<double>>(parameter.name(), std::vector<double>(parameter.values_double().begin(), parameter.values_double().end())));
-                    u_lock.unlock();
-                }
+                std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
+                param_doubles[parameter.name()] = parameter.values_double();
             }
             else if (parameter.type() == ParameterType::Vector_String) {
-                if (parameter.values_int32().size() == 0) {
-                    std::cout << "Received null param" << std::endl;
-                } 
-                else {
-                    std::unique_lock<std::mutex> u_lock(param_strings_mutex);
-                    param_strings.insert(std::pair<std::string, std::vector<std::string>>(parameter.name(), std::vector<std::string>(parameter.values_string().begin(), parameter.values_string().end())));
-                    u_lock.unlock();
+                std::lock_guard<std::mutex> u_lock(param_strings_mutex);
+                for(const auto& str: parameter.values_string()) {
+                    param_strings[parameter.name()].push_back(str);
                 }
             }
         }

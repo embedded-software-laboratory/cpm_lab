@@ -27,12 +27,14 @@ private:
 public:
     Subscriber(
         std::string topic_name, 
-        std::function<void(dds::sub::LoanedSamples<MessageType>&)>, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
+        std::function<void(dds::sub::LoanedSamples<MessageType>&)>, 
+        dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
 };
 
 template<class MessageType> Subscriber<MessageType>::Subscriber(
     std::string topic_name, 
-    std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
+    std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+    dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
 )
 :sub(_participant)
 ,reader(sub, topic)
@@ -46,7 +48,10 @@ template<class MessageType> Subscriber<MessageType>::Subscriber(
     t_name = topic_name;
 }
 
-template<class MessageType> void Subscriber<MessageType>::handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func)
+template<class MessageType> 
+void Subscriber<MessageType>::handler(
+    std::function<void(dds::sub::LoanedSamples<MessageType>&)> func
+)
 {
     // Take all samples This will reset the StatusCondition
     dds::sub::LoanedSamples<MessageType> samples = reader.take();
