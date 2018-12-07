@@ -12,13 +12,8 @@ sleep 0.1
 
 echo "Uploading"
 sshpass -p t4nxAdDwrgqn scp build/vehicle_rpi_firmware pi@$1:/tmp
+sshpass -p t4nxAdDwrgqn scp ../cpm_base/cpm_lib/build_arm/libcpm.so pi@$1:/tmp
 sleep 0.1
 
 echo "Running"
-sshpass -p t4nxAdDwrgqn ssh -t pi@$1 "sudo /tmp/vehicle_rpi_firmware $2"
-
-
-#sshpass -p t4nxAdDwrgqn ssh -t pi@192.168.1.109 'sudo /home/pi/start_tmp_firmware.sh'
-#sleep 1
-
-#sshpass -p t4nxAdDwrgqn ssh -t pi@192.168.1.109 'sudo tail -f /tmp/vehicle_rpi_firmware_log'
+sshpass -p t4nxAdDwrgqn ssh -t pi@$1 "sudo LD_LIBRARY_PATH=/tmp /tmp/vehicle_rpi_firmware $2"
