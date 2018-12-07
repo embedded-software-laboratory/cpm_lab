@@ -56,6 +56,8 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
         std::cerr << "The cpm::Timer can not be started twice" << std::endl;
         return;
     }
+
+    m_update_callback = update_callback;
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
     this->active = true;
@@ -63,7 +65,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     while(this->active) {
         this->wait();
         if(this->get_time() >= deadline) {
-            if(update_callback) update_callback(deadline);
+            if(m_update_callback) m_update_callback(deadline);
 
             deadline += period_nanoseconds;
 
@@ -80,8 +82,9 @@ void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
 {
     if(!runner_thread.joinable())
     {
-        runner_thread = std::thread([&](){
-            this->start(update_callback);
+        m_update_callback = update_callback;
+        runner_thread = std::thread([this](){
+            this->start(m_update_callback);
         });
     }
     else
@@ -91,6 +94,15 @@ void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
 }
 
 void TimerFD::stop()
+{
+    active = false;
+    if(runner_thread.joinable())
+    {
+        runner_thread.join();
+    }
+}
+
+TimerFD::~TimerFD()
 {
     active = false;
     if(runner_thread.joinable())
