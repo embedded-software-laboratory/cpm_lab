@@ -33,32 +33,3 @@ TEST_CASE( "TimerFD_accuracy" ) {
         usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime
     });
 }
-
-
-
-
-
-
-
-
-
-class dummy_class
-{
-    std::shared_ptr<cpm::Timer> update_loop = nullptr;
-
-public:
-    dummy_class()
-    {
-        update_loop = cpm::Timer::create("sdfgsdfg", 20000000ull, 0);
-        update_loop->start_async([](uint64_t){});
-    }
-};
-
-
-TEST_CASE( "TimerFD_bug_regression_test" ) {
-
-    dummy_class sdfgsdfg;
-    // this causes a SIGSEGV, WTF?
-    sleep(100);
-
-}
