@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "VehicleObservation.hpp"
+#include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
 
 extern "C" {
@@ -27,8 +28,10 @@ class SimulationVehicle
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
 
+    SimulationIPS& simulationIPS;
+
 public:
-    SimulationVehicle();
+    SimulationVehicle(SimulationIPS& _simulationIPS);
     spi_miso_data_t update(
         const spi_mosi_data_t spi_mosi_data, 
         const uint64_t t_now, 

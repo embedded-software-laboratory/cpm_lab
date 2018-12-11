@@ -30,6 +30,7 @@ using std::vector;
 
 #ifdef VEHICLE_SIMULATION
 #include "SimulationVehicle.hpp"
+#include "SimulationIPS.hpp"
 #endif
 
 #include "bcm2835.h"
@@ -57,7 +58,6 @@ cpm::Reader<T> make_reader(std::string name, uint8_t vehicle_id)
 
 int main(int argc, char *argv[])
 {
-
     if(argc != 2) {
         std::cerr << "Usage: vehicle_rpi_firmware <vehicle-id>" << std::endl;
         return 1;
@@ -71,20 +71,6 @@ int main(int argc, char *argv[])
     }
     std::cout << "vehicle_id " << vehicle_id << std::endl;
 
-
-#ifndef VEHICLE_SIMULATION
-    // Hardware setup
-    if (!bcm2835_init())
-    {
-        printf("bcm2835_init failed. Are you running as root??\n");
-        exit(EXIT_FAILURE);
-    }
-    spi_init();
-#else
-    SimulationVehicle simulationVehicle;
-#endif
-
-    crcInit();
 
     // DDS setup
     auto& participant = cpm::ParticipantSingleton::Instance();
@@ -104,6 +90,23 @@ int main(int argc, char *argv[])
     cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
     cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
 
+
+
+#ifndef VEHICLE_SIMULATION
+    // Hardware setup
+    if (!bcm2835_init())
+    {
+        printf("bcm2835_init failed. Are you running as root??\n");
+        exit(EXIT_FAILURE);
+    }
+    spi_init();
+#else
+    SimulationIPS simulationIPS(topic_vehicleObservation);
+    SimulationVehicle simulationVehicle(simulationIPS);
+#endif
+
+    crcInit();
+    
     // Loop setup
     Localization localization;
     Controller controller;
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
     auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0);
 
     // Control loop
-    update_loop->start([&](uint64_t t_now){
+    update_loop->start([&](uint64_t t_now) {
         try 
         {
             // Read new commands

@@ -13,9 +13,10 @@ extern "C" {
 double frand() { return (double(rand()))/RAND_MAX; }
 
 
-SimulationVehicle::SimulationVehicle()
+SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
 :topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
 ,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
+,simulationIPS(_simulationIPS)
 {
     memset(&input_next, 0, sizeof(spi_mosi_data_t));
     crcInit();
@@ -105,7 +106,11 @@ spi_miso_data_t SimulationVehicle::update(
         simulatedState.pose().yaw(yaw);
         cpm::stamp_message(simulatedState, t_now, 0);
         writer_vehiclePoseSimulated.write(simulatedState);
+
+
+        simulationIPS.update(simulatedState);
     }
+
 
 
     /*std::cout 
