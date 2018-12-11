@@ -2,30 +2,31 @@
 #include "Pose2D.idl"
 
 /*
- * 
  * Provides calibrated vehicle sensor data.
- * The 'pose' combines data from the IMU, odometer and IPS
- * to give an estimate of the vehicle position and orientation.
- * 
- * TODO add variable that indicates whether the pose coordinate system
- *      is arbitrary/local or consistent with the IPS coordinate system.
- *      The arbitrary coordinate system may still be useful when the IPS
- *      is unavailable.
- * 
- * TODO clear definition of VehicleState.stamp
- * 
  */
-
 
 struct VehicleState {
     octet vehicle_id; //@key
     Header header;
+
+    /*
+     * The pose combines data from the IMU, odometer and the IPS
+     * to give an estimate of the vehicle position and orientation.
+     */
     Pose2D pose;
 
-    double odometer_distance;          // meter
-    double imu_acceleration_forward;   // m/s^2
-    double imu_acceleration_left;      // m/s^2
-    double speed;                      // m/s
-    double battery_voltage;            // volt
-    double motor_current;              // ampere
+    /*
+     * Elapsed time since the last pose update from the IPS.
+     * For a value greater than 10,000,000,000 the pose should be
+     * regarded as unreliable.
+     */
+    unsigned long long IPS_update_age_nanoseconds;
+
+
+    double odometer_distance;                         // meter
+    double imu_acceleration_forward;                  // m/s^2
+    double imu_acceleration_left;                     // m/s^2
+    double speed;                                     // m/s
+    double battery_voltage;                           // volt
+    double motor_current;                             // ampere
 };
