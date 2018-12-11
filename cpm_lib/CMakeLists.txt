@@ -7,63 +7,7 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 include_directories(src)
 include_directories(include)
 
-set(SOURCE_DDS
-    dds/Header.cxx
-    dds/Header.hpp
-    dds/HeaderImpl.cxx
-    dds/HeaderImpl.h
-    dds/HeaderImplPlugin.cxx
-    dds/HeaderImplPlugin.h
-    dds/Parameter.cxx
-    dds/Parameter.hpp
-    dds/ParameterImpl.cxx
-    dds/ParameterImpl.h
-    dds/ParameterImplPlugin.cxx
-    dds/ParameterImplPlugin.h
-    dds/ParameterRequest.cxx
-    dds/ParameterRequest.hpp
-    dds/ParameterRequestImpl.cxx
-    dds/ParameterRequestImpl.h
-    dds/ParameterRequestImplPlugin.cxx
-    dds/ParameterRequestImplPlugin.h
-    dds/Pose2D.cxx
-    dds/Pose2D.hpp
-    dds/Pose2DImpl.cxx
-    dds/Pose2DImpl.h
-    dds/Pose2DImplPlugin.cxx
-    dds/Pose2DImplPlugin.h
-    dds/TimeStamp.cxx
-    dds/TimeStamp.hpp
-    dds/TimeStampImpl.cxx
-    dds/TimeStampImpl.h
-    dds/TimeStampImplPlugin.cxx
-    dds/TimeStampImplPlugin.h
-    dds/VehicleCommandDirect.cxx
-    dds/VehicleCommandDirect.hpp
-    dds/VehicleCommandDirectImpl.cxx
-    dds/VehicleCommandDirectImpl.h
-    dds/VehicleCommandDirectImplPlugin.cxx
-    dds/VehicleCommandDirectImplPlugin.h
-    dds/VehicleCommandSpeedCurvature.cxx
-    dds/VehicleCommandSpeedCurvature.hpp
-    dds/VehicleCommandSpeedCurvatureImpl.cxx
-    dds/VehicleCommandSpeedCurvatureImpl.h
-    dds/VehicleCommandSpeedCurvatureImplPlugin.cxx
-    dds/VehicleCommandSpeedCurvatureImplPlugin.h
-    dds/VehicleCommandTrajectory.cxx
-    dds/VehicleCommandTrajectory.hpp
-    dds/VehicleCommandTrajectoryImpl.cxx
-    dds/VehicleCommandTrajectoryImpl.h
-    dds/VehicleCommandTrajectoryImplPlugin.cxx
-    dds/VehicleCommandTrajectoryImplPlugin.h
-    dds/VehicleState.cxx
-    dds/VehicleState.hpp
-    dds/VehicleStateImpl.cxx
-    dds/VehicleStateImpl.h
-    dds/VehicleStateImplPlugin.cxx
-    dds/VehicleStateImplPlugin.h
-)
-
+file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
     include/cpm/Parameter.hpp
