@@ -2,6 +2,8 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/stamp_message.hpp"
 
 extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
@@ -11,17 +13,22 @@ extern "C" {
 double frand() { return (double(rand()))/RAND_MAX; }
 
 
-SimulationVehicle::SimulationVehicle() 
+SimulationVehicle::SimulationVehicle()
+:topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
+,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
 {
     memset(&input_next, 0, sizeof(spi_mosi_data_t));
     crcInit();
 }
 
 
-spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, const double dt)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    
+spi_miso_data_t SimulationVehicle::update(
+    const spi_mosi_data_t spi_mosi_data, 
+    const uint64_t t_now, 
+    const double dt, 
+    const uint8_t vehicle_id
+)
+{    
     // save one input sample to simulate delay time
     spi_mosi_data_t input_now = input_next;
     input_next = spi_mosi_data;
@@ -89,6 +96,17 @@ spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, c
     spi_miso_data.status_flags              = 0;
 
 
+    // Publish simulated state
+    {
+        VehicleObservation simulatedState;
+        simulatedState.vehicle_id(vehicle_id);
+        simulatedState.pose().x(x);
+        simulatedState.pose().y(y);
+        simulatedState.pose().yaw(yaw);
+        cpm::stamp_message(simulatedState, t_now, 0);
+        writer_vehiclePoseSimulated.write(simulatedState);
+    }
+
 
     /*std::cout 
     << "curvature_ref" << "  " << curvature_ref << std::endl
@@ -111,7 +129,6 @@ spi_miso_data_t SimulationVehicle::update(const spi_mosi_data_t spi_mosi_data, c
 
 void SimulationVehicle::get_state(double& _x, double& _y, double& _yaw, double& _speed) 
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     _x = x;
     _y = y;
     _yaw = yaw;

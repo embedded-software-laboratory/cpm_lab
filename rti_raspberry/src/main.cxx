@@ -12,6 +12,7 @@ using std::vector;
 #include <dds/sub/ddssub.hpp>
 #include <rti/util/util.hpp> // for sleep()
 
+#include "VehicleObservation.hpp"
 #include "VehicleCommandDirect.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandTrajectory.hpp"
@@ -29,7 +30,6 @@ using std::vector;
 
 #ifdef VEHICLE_SIMULATION
 #include "SimulationVehicle.hpp"
-#include "SimulationIPS.hpp"
 #endif
 
 #include "bcm2835.h"
@@ -82,7 +82,6 @@ int main(int argc, char *argv[])
     spi_init();
 #else
     SimulationVehicle simulationVehicle;
-    SimulationIPS simulationIPS;
 #endif
 
     crcInit();
@@ -100,6 +99,10 @@ int main(int argc, char *argv[])
     auto reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
     auto reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
     auto reader_vehicleCommandTrajectory = make_reader<VehicleCommandTrajectory>("vehicleCommandTrajectory", vehicle_id);
+
+    dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), "vehicleObservation");
+    cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
+    cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
 
     // Loop setup
     Localization localization;
@@ -155,7 +158,8 @@ int main(int argc, char *argv[])
 
 
 #ifdef VEHICLE_SIMULATION
-            spi_miso_data_t spi_miso_data = simulationVehicle.update(spi_mosi_data, period_nanoseconds/1e9);
+            spi_miso_data_t spi_miso_data = simulationVehicle.update(
+                spi_mosi_data, t_now, period_nanoseconds/1e9, vehicle_id);
 #else
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
