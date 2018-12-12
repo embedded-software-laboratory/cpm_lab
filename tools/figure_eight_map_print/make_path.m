@@ -55,7 +55,7 @@ padding_y = (height_mm - (max(y) - min(y)))/2;
 x = x - min(x) + padding_x;
 y = y - min(y) + padding_y;
 
-
+save path
 format_path_as_text([x/1000 y/1000 phi path(:,4)*1000])
 
 c_phi = cos(phi);

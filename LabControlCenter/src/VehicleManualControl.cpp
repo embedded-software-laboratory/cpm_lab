@@ -69,23 +69,26 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             sample.vehicle_id(vehicle_id);
 
             if(ref_trajectory_start_time == 0) {
-                // start in 2 seconds
-                ref_trajectory_start_time = clock_gettime_nanoseconds() + 2000000000ull; 
+                ref_trajectory_start_time = clock_gettime_nanoseconds() + 1000000000ull; 
             }
 
             while(ref_trajectory_index < example_trajectory_size
-                && ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index] 
-                    < clock_gettime_nanoseconds() + 1000000000ull) {
+                && ref_trajectory_start_time + uint64_t(1e9*example_trajectory_timestamp_offset[ref_trajectory_index])
+                    < clock_gettime_nanoseconds() + 500000000ull) {
 
                 ref_trajectory_index++;
             }
-            //std::cout << "ref_trajectory_index " << ref_trajectory_index << std::endl;
 
+            if(ref_trajectory_index >= example_trajectory_size)
+            {
+                ref_trajectory_index = 0;
+                ref_trajectory_start_time += uint64_t(1e9*example_trajectory_period);
+            }
 
 
             TrajectoryPoint trajectoryPoint;
 
-            trajectoryPoint.t().nanoseconds(ref_trajectory_start_time + example_trajectory_timestamp_offset[ref_trajectory_index]);
+            trajectoryPoint.t().nanoseconds(ref_trajectory_start_time + uint64_t(1e9*example_trajectory_timestamp_offset[ref_trajectory_index]));
             trajectoryPoint.px(example_trajectory_px[ref_trajectory_index]);
             trajectoryPoint.py(example_trajectory_py[ref_trajectory_index]);
             trajectoryPoint.vx(example_trajectory_vx[ref_trajectory_index]);
