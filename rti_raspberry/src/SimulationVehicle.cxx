@@ -10,7 +10,7 @@ extern "C" {
 }
 
 
-double frand() { return (double(rand()))/RAND_MAX; }
+static inline double frand() { return (double(rand()))/RAND_MAX; }
 
 
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
