@@ -41,6 +41,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     timeseries_vehicleState[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
         "Motor Current", "%5.2f", "A");
+
+    timeseries_vehicleState[vehicle_id]["clock_delta"] = make_shared<TimeSeries>(
+        "Clock Delta", "%5.1f", "ms");
 }
 
 
@@ -73,6 +76,10 @@ void TimeSeriesAggregator::on_data_available(dds::sub::DataReader<VehicleState> 
         timeseries_vehicleState[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
         timeseries_vehicleState[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
         timeseries_vehicleState[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
+
+        timeseries_vehicleState[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(now - state.header().create_stamp().nanoseconds())/1e6 );
+
+
     }
 
 }

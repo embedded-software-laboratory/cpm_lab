@@ -15,7 +15,7 @@ class MonitoringUi
     shared_ptr<cpm::Timer> update_loop;
     const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& vehicle_data;
 
-    const vector<string> rows = { "battery_voltage", "pose_x", "pose_y", "pose_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
+    const vector<string> rows = { "battery_voltage", "clock_delta", "pose_x", "pose_y", "pose_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     
 public:
     explicit MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >&);

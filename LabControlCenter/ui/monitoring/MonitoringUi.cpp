@@ -104,12 +104,21 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
                             label->get_style_context()->remove_class("ok");
                             label->get_style_context()->remove_class("warn");
                             label->get_style_context()->remove_class("alert");
-
+                            label->get_style_context()->remove_class("zebra");
 
                             if     (value > 6.6) label->get_style_context()->add_class("ok");
                             else if(value > 6.3) label->get_style_context()->add_class("warn");
                             else                 label->get_style_context()->add_class("alert");
+                        }
+                        else if(rows[i] == "clock_delta") {
+                            label->get_style_context()->remove_class("ok");
+                            label->get_style_context()->remove_class("warn");
+                            label->get_style_context()->remove_class("alert");
+                            label->get_style_context()->remove_class("zebra");
 
+                            if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
+                            else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
+                            else                       label->get_style_context()->add_class("alert");
                         }
                     }
                     else 
