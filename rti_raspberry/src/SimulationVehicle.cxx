@@ -81,7 +81,6 @@ spi_miso_data_t SimulationVehicle::update(
 
     yaw_measured += 1e-4 * frand(); // simulate random biased gyro drift
 
-
     if(yaw_measured > 0)       yaw_measured -= 2*M_PI;
     if(yaw_measured < -2*M_PI) yaw_measured += 2*M_PI;
 
@@ -103,7 +102,7 @@ spi_miso_data_t SimulationVehicle::update(
         simulatedState.vehicle_id(vehicle_id);
         simulatedState.pose().x(x);
         simulatedState.pose().y(y);
-        simulatedState.pose().yaw(yaw);
+        simulatedState.pose().yaw( remainder(yaw, 2*M_PI) ); // yaw in range [-PI, PI]
         cpm::stamp_message(simulatedState, t_now, 0);
         writer_vehiclePoseSimulated.write(simulatedState);
 

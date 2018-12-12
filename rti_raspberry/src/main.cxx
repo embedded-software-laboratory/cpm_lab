@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
     // Loop setup
     Localization localization;
     Controller controller;
-    int loop_counter = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
     auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0);
@@ -181,12 +180,14 @@ int main(int argc, char *argv[])
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.update(
+                    t_now,
                     vehicleState,
                     sample_vehicleObservation, 
                     sample_vehicleObservation_age
                 );
                 vehicleState.pose(new_pose);
                 vehicleState.vehicle_id(vehicle_id);
+                vehicleState.IPS_update_age_nanoseconds(sample_vehicleObservation_age);
                 cpm::stamp_message(vehicleState, t_now, 60000000ull);
 
                 controller.update_vehicle_state(vehicleState);
@@ -195,12 +196,6 @@ int main(int argc, char *argv[])
             else {
                 std::cerr << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
             }
-
-            if(loop_counter == 10) {
-                localization.reset(); // ignore initial signals
-            }
-
-            loop_counter++;
         }
         catch(const dds::core::Exception& e)
         {

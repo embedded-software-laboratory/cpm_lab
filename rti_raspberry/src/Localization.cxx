@@ -1,32 +1,67 @@
 #include "Localization.hpp"
 
 
+void filter_update_step(const LocalizationState& previous, LocalizationState& current)
+{
+
+}
+
 
 Pose2D Localization::update(
+    uint64_t t_now,
     VehicleState vehicleState,
     VehicleObservation sample_vehicleObservation,
     uint64_t sample_vehicleObservation_age
 )
 {
-    const double imu_yaw = vehicleState.pose().yaw();
 
-    // Calculate continuous yaw angle (with number of rotations)
-    double delta_yaw = imu_yaw - imu_yaw_previous;
-    if(delta_yaw > M_PI) delta_yaw -= 2*M_PI;
-    else if(delta_yaw < -M_PI) delta_yaw += 2*M_PI;
-    pose2D.yaw(pose2D.yaw() + delta_yaw);
+    // Save new sensor data, update current step
+    {
+        LocalizationState localizationStateNew;
+        localizationStateNew.t = t_now;
+        localizationStateNew.imu_yaw = vehicleState.pose().yaw();
+        localizationStateNew.odometer_distance = vehicleState.odometer_distance();
+        write_next_state(localizationStateNew);
 
-
-    // Dead reckoning
-    const double odometer_distance = vehicleState.odometer_distance();    
-    const double ds = odometer_distance - odometer_distance_previous;
-    if(-0.5 < ds && ds < 0.5) {
-        pose2D.x(pose2D.x() + ds * cos(pose2D.yaw()));
-        pose2D.y(pose2D.y() + ds * sin(pose2D.yaw()));
+        filter_update_step(get_state(LOCALIZATION_BUFFER_SIZE-2), get_state(LOCALIZATION_BUFFER_SIZE-1));
     }
 
-    odometer_distance_previous = odometer_distance;
-    imu_yaw_previous = imu_yaw;
+    // Check for new observation. Reprocess if necessary
+    if(sample_vehicleObservation_age < 10000000000ull)
+    {
+        int reprocessing_start_index = -1;
 
-    return pose2D;
+        // search for state index corresponding to the given observation
+        for (int i = LOCALIZATION_BUFFER_SIZE-1; i > 0; i--)
+        {
+            LocalizationState& state_i = get_state(i);
+
+            // found the corresponding state
+            if(state_i.t == sample_vehicleObservation.header().create_stamp().nanoseconds())
+            {
+                // have we already done this on a previous update()? then skip it
+                if(state_i.has_valid_observation) break;
+
+                state_i.has_valid_observation = true;
+                state_i.vehicleObservation = sample_vehicleObservation;
+
+                // we have a new observation, need to do reprocessing
+                reprocessing_start_index = i;
+                break;
+            }
+        }
+
+        // reprocessing
+        if(reprocessing_start_index > 0)
+        {
+            for (int i = reprocessing_start_index; i < LOCALIZATION_BUFFER_SIZE; ++i)
+            {
+                filter_update_step(get_state(i-1), get_state(i));
+            }
+        }
+    }
+
+
+    // output latest pose
+    return get_state(LOCALIZATION_BUFFER_SIZE-1).pose;
 }

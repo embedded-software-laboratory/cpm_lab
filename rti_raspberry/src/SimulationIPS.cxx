@@ -2,6 +2,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/stamp_message.hpp"
 #include <stdlib.h>
+#include <cmath>
 
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
@@ -26,6 +27,8 @@ void SimulationIPS::update(VehicleObservation simulatedState)
     simulatedState.pose().x(simulatedState.pose().x() + 0.005 * frand_sym());
     simulatedState.pose().y(simulatedState.pose().y() + 0.005 * frand_sym());
     simulatedState.pose().yaw(simulatedState.pose().yaw() + 0.03 * frand_sym());
+
+    simulatedState.pose().yaw(remainder(simulatedState.pose().yaw(), 2*M_PI)); // yaw in range [-PI, PI]
 
 
     delay_buffer.push_back(simulatedState);
