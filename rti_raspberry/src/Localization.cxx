@@ -2,7 +2,12 @@
 
 
 
-Pose2D Localization::sensor_update(VehicleState vehicleState) {
+Pose2D Localization::update(
+    VehicleState vehicleState,
+    VehicleObservation sample_vehicleObservation,
+    uint64_t sample_vehicleObservation_age
+)
+{
     const double imu_yaw = vehicleState.pose().yaw();
 
     // Calculate continuous yaw angle (with number of rotations)

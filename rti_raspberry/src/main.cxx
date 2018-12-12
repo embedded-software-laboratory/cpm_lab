@@ -155,6 +155,12 @@ int main(int argc, char *argv[])
                 }
             }
 
+            // get IPS observation
+            VehicleObservation sample_vehicleObservation;
+            uint64_t sample_vehicleObservation_age;
+            reader_vehicleObservation.get_sample(t_now, sample_vehicleObservation, sample_vehicleObservation_age);
+
+
             // Run controller
             spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_now);
             spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
@@ -172,10 +178,13 @@ int main(int argc, char *argv[])
             // Process sensor data
             if(check_CRC_miso(spi_miso_data)) {
                 // TODO rethink this. What should be skipped when there is a SPI error?
-                // TODO IPS Kalman filter
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
-                Pose2D new_pose = localization.sensor_update(vehicleState);
+                Pose2D new_pose = localization.update(
+                    vehicleState,
+                    sample_vehicleObservation, 
+                    sample_vehicleObservation_age
+                );
                 vehicleState.pose(new_pose);
                 vehicleState.vehicle_id(vehicle_id);
                 cpm::stamp_message(vehicleState, t_now, 60000000ull);
