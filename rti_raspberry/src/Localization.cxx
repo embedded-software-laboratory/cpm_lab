@@ -1,32 +1,49 @@
 #include "Localization.hpp"
 #include <cmath>
+#include <iostream>
 
 void filter_update_step(const LocalizationState& previous, LocalizationState& current)
 {
-    double delta_s = current.odometer_distance - previous.odometer_distance;
-    double delta_yaw = remainder(current.imu_yaw - previous.imu_yaw, 2*M_PI);
-
-    // ignore signal discontinuities
-    if(!(-0.5 < delta_s && delta_s < 0.5)) {
-        delta_s = 0;
-    }
-
-    if(!(-1.5 < delta_yaw && delta_yaw < 1.5)) {
-        delta_yaw = 0;
-    }
+    Pose2D new_pose = previous.pose;
 
     // Dead reckoning update
-    Pose2D new_pose = previous.pose;
-    new_pose.yaw(new_pose.yaw() + delta_yaw);
-    new_pose.x(new_pose.x() + delta_s * cos(new_pose.yaw()));
-    new_pose.y(new_pose.y() + delta_s * sin(new_pose.yaw()));
-
-
-    if(current.has_valid_observation)
     {
-        // TODO IPS update
+        double delta_s = current.odometer_distance - previous.odometer_distance;
+        double delta_yaw = remainder(current.imu_yaw - previous.imu_yaw, 2*M_PI);
+
+        // ignore signal discontinuities
+        if(!(-0.5 < delta_s && delta_s < 0.5)) {
+            delta_s = 0;
+        }
+
+        if(!(-1.5 < delta_yaw && delta_yaw < 1.5)) {
+            delta_yaw = 0;
+        }
+
+        new_pose.yaw(new_pose.yaw() + delta_yaw);
+        new_pose.x(new_pose.x() + delta_s * cos(new_pose.yaw()));
+        new_pose.y(new_pose.y() + delta_s * sin(new_pose.yaw()));
     }
 
+    // IPS update
+    if(current.has_valid_observation)
+    {
+        // TODO proper kalman filter
+
+        const double s = 0.1;
+
+        double dx = current.vehicleObservation.pose().x() - new_pose.x();
+        double dy = current.vehicleObservation.pose().y() - new_pose.y();
+        double dyaw = current.vehicleObservation.pose().yaw() - new_pose.yaw();
+        dyaw = remainder(dyaw, 2*M_PI);
+
+        new_pose.x(new_pose.x() + s*dx);
+        new_pose.y(new_pose.y() + s*dy);
+        new_pose.yaw(new_pose.yaw() + s*dyaw);
+    }
+
+
+    new_pose.yaw(remainder(new_pose.yaw(), 2*M_PI));
     current.pose = new_pose;
 }
 
