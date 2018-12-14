@@ -65,7 +65,13 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
     if(state == ControllerState::Stop) {
         spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
         spi_mosi_data.LED1_period_ticks = 50;
-        spi_mosi_data.LED1_enabled_ticks = 25;
+        spi_mosi_data.LED1_enabled_ticks = 1;
+        spi_mosi_data.LED2_period_ticks = 25;
+        spi_mosi_data.LED2_enabled_ticks = 1;
+        spi_mosi_data.LED3_period_ticks = 25;
+        spi_mosi_data.LED3_enabled_ticks = 1;
+        spi_mosi_data.LED4_period_ticks = 50;
+        spi_mosi_data.LED4_enabled_ticks = 1;
         return spi_mosi_data;
     }
 
@@ -159,8 +165,15 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
     spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
     spi_mosi_data.motor_mode = motor_mode;
 
-    spi_mosi_data.LED4_period_ticks = 50;
-    spi_mosi_data.LED4_enabled_ticks = 25;
+    // Hardcode ID 6 for now
+    spi_mosi_data.LED1_period_ticks = 1;
+    spi_mosi_data.LED1_enabled_ticks = 1;
+    spi_mosi_data.LED2_period_ticks = 1;
+    spi_mosi_data.LED2_enabled_ticks = 1;
+    spi_mosi_data.LED3_period_ticks = 1;
+    spi_mosi_data.LED3_enabled_ticks = 1;
+    spi_mosi_data.LED4_period_ticks = 7;
+    spi_mosi_data.LED4_enabled_ticks = 5;
 
     return spi_mosi_data;
 }
