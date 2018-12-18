@@ -16,16 +16,17 @@ function main
         height = full_height - margin;
         width = full_width - margin;
         lane_width = 0.15;
+        intersection_radius = 0.8;
 
         %% Create segment reference lines
         node_corner = [[width height]-(0.5) (-pi/4) -1.61];
         node_top = [0 (height - 1.5 * lane_width) 0 0];
         node_right = [(width - 1.5 * lane_width) 0 (-pi/2) 0];
-        node_intersection_top = [0.5*lane_width 0.6 pi/2 0];
-        node_intersection_right = [0.6 0.5*lane_width -pi 0];
+        node_intersection_top = [0.5*lane_width intersection_radius pi/2 0];
+        node_intersection_right = [intersection_radius 0.5*lane_width -pi 0];
         node_intersection_centerJ = [0.5*lane_width 0 pi/2 0];
         node_intersection_centerH = [0 0.5*lane_width -pi 0];
-        node_intersection_left = [-0.6 -0.5*lane_width 0 0];
+        node_intersection_left = [-intersection_radius -0.5*lane_width 0 0];
 
         segment_A = solve_segment_path(node_top, node_corner);
         segment_B = solve_segment_path(node_corner, node_right);
@@ -49,26 +50,101 @@ function main
         segment_G = solve_segment_path(node_intersection_right + [0 0 2*pi 0], node_intersection_top);
         segment_H = solve_segment_path(node_intersection_right, node_intersection_centerH);
         segment_J = solve_segment_path(node_intersection_centerJ, node_intersection_top);
-        segment_K = solve_segment_path(node_intersection_left, node_intersection_top);
 
-
-        segments = [segment_A segment_B segment_C segment_D segment_E segment_F segment_G segment_H segment_J segment_K];
         save cache
-    end   
+    end
     
+    segment_A.lane_boundaries(1) = struct('offset', -0.5, 'style', '-'  , 'width', 2);
+    segment_A.lane_boundaries(2) = struct('offset',  0.5, 'style', '--', 'width', 1);
+    segment_A.lane_boundaries(3) = struct('offset',  1.5, 'style', '-'  , 'width', 2);
+    
+    segment_B.lane_boundaries(1) = struct('offset', -0.5, 'style', '-'  , 'width', 2);
+    segment_B.lane_boundaries(2) = struct('offset',  0.5, 'style', '--', 'width', 1);
+    segment_B.lane_boundaries(3) = struct('offset',  1.5, 'style', '-'  , 'width', 2);
+    
+    segment_C.lane_boundaries(1) = struct('offset', -1.5, 'style', '-'  , 'width', 2);
+    segment_C.lane_boundaries(2) = struct('offset', -0.5, 'style', '--', 'width', 1);
+    segment_C.lane_boundaries(3) = struct('offset',  0.5, 'style', '-'  , 'width', 2);
+    
+    segment_D.lane_boundaries(1) = struct('offset', -1.5, 'style', '-'  , 'width', 2);
+    segment_D.lane_boundaries(2) = struct('offset', -0.5, 'style', '--', 'width', 1);
+    segment_D.lane_boundaries(3) = struct('offset',  0.5, 'style', '-'  , 'width', 2);
+    
+    segment_E.lane_boundaries(1) = struct('offset', -0.5, 'style', '--', 'width', 1);
+    segment_E.lane_boundaries(2) = struct('offset', 0.5, 'style', '--', 'width', 1);
+    
+    segment_F.lane_boundaries(1) = struct('offset', -0.5, 'style', '--', 'width', 1);
+    segment_F.lane_boundaries(2) = struct('offset', 0.5, 'style', '--', 'width', 1);
+    
+    segment_G.lane_boundaries(1) = struct('offset', -1.5, 'style', '-', 'width', 2);
+    segment_G.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
+    segment_G.lane_boundaries(3) = struct('offset',  0.5, 'style', ':', 'width', 1);
+    segment_G.lane_boundaries(4) = struct('offset',  1.5, 'style', ':', 'width', 1);
+    segment_G.lane_boundaries(5) = struct('offset',  2.5, 'style', ':', 'width', 1);
+    
+    segment_H.lane_boundaries(1) = struct('offset', -1.5, 'style', '', 'width', 2);
+    segment_H.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
+    segment_H.lane_boundaries(3) = struct('offset',  0.5, 'style', '', 'width', 2);
+    
+    segment_J.lane_boundaries(1) = struct('offset', -1.5, 'style', '', 'width', 2);
+    segment_J.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
+    segment_J.lane_boundaries(3) = struct('offset',  0.5, 'style', '', 'width', 2);
+    
+    
+    
+    close all
+    figure('Visible','off')
+    hold on
 
+    plot_scale = 1000 / 25.4 * 72; % 1:1 scale
+    plot_scale = 100 / 25.4 * 72; % 1:10 scale
+    plot_scale = 50 / 25.4 * 72; % 1:20 scale
+    
+    segments = [segment_A segment_B segment_C segment_D segment_E segment_F segment_G segment_H segment_J];
+    
+    slice = round(linspace(1,length(segment_A.s),300));
     clf
     hold on
     axis equal
     box on
-    grid on
-    xlim([-1 1] * full_width*1.1)
-    ylim([-1 1] * full_height*1.1)
-    plot(full_width*[-1 1 1 -1 -1],full_height*[-1 -1 1 1 -1],'k')
-
-    for i = 1:length(segments)
-        plot(segments(i).x(1:10:end), segments(i).y(1:10:end), 'LineWidth', 3)        
+    xlim(plot_scale*[-1 1] * full_width)
+    ylim(plot_scale*[-1 1] * full_height)
+    
+    for sx = [-1 1]
+        for sy = [-1 1]
+            if 1%~(sx == 1 && sy == 1)
+                for i = 1:length(segments)
+                    for j = 1:length(segments(i).lane_boundaries)
+                        
+                        x = segments(i).x(slice);
+                        y = segments(i).y(slice);
+                        yaw = segments(i).yaw(slice);
+                        c = segments(i).lane_boundaries(j).offset * lane_width * cos(yaw);
+                        s = segments(i).lane_boundaries(j).offset * lane_width * sin(yaw);
+                        plot(plot_scale*sx*(x-s), plot_scale*sy*(y+c), segments(i).lane_boundaries(j).style, 'LineWidth', segments(i).lane_boundaries(j).width * plot_scale * 0.005, 'Color', [1 1 1])
+                    end
+                end
+            end
+        end
     end
     
+%     for i = 1:length(segments)
+%         plot(segments(i).x(slice), segments(i).y(slice), 'LineWidth', 5)        
+%     end
+    
+
+    axis off
+    ax = gca;
+    ax.Position = [0 0 1 1];
+    fig = gcf;
+    fig.PaperPositionMode = 'manual';
+    fig.PaperType = '<custom>';
+    fig.PaperUnits = 'points';
+    fig.PaperSize = 2*[full_width full_height] * plot_scale;
+    fig.InvertHardcopy = 'off';
+    fig.Color = 'black';
+    fig.PaperPosition = [0 0 2*full_width 2*full_height] * plot_scale;
+
+    print(fig, 'x.pdf', '-dpdf', '-painters')
 end
 
