@@ -15,7 +15,7 @@ function path = solve_segment_path(start_pose, end_pose)
     
     state_names = {'px', 'py', 'yaw', 'curvature'};
     input_names = {'dk'};
-    n_nodes = 12;
+    n_nodes = 20;
     n_states = length(state_names);
     n_inputs = length(input_names);
     
