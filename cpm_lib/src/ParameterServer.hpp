@@ -10,8 +10,8 @@
 #include <map>
 #include <mutex>
 
-#include "../build/rti/Parameter.hpp"
-#include "../build/rti/ParameterRequest.hpp"
+#include "Parameter.hpp"
+#include "ParameterRequest.hpp"
 
 #include "Subscriber.hpp"
 #include <dds/pub/ddspub.hpp>

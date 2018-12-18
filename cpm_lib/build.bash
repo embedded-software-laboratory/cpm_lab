@@ -7,16 +7,10 @@ if [ ! -d "build" ]; then
     mkdir build
 fi
 
-if [ ! -d "build/rti" ]; then
-    mkdir build/rti
-    rtiddsgen -language C++11 -d ./build/rti/ ../dds_idl/Parameter.idl
-    rtiddsgen -language C++11 -d ./build/rti/ ../dds_idl/ParameterRequest.idl
-fi
+./rtigen.bash
 
 
 cd build
 cmake .. 
-make -j8
+make -j8 && ./unittest
 cd ..
-
-build/unittest
