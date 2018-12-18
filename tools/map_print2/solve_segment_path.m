@@ -1,13 +1,15 @@
 function path = solve_segment_path(start_pose, end_pose)
 
+    % start_pose = [x y yaw curvature]
+    % end_pose = [x y yaw curvature]
+
     assert(size(start_pose, 1) == 1);
     assert(size(start_pose, 2) == 4);
     assert(size(end_pose, 1) == 1);
     assert(size(end_pose, 2) == 4);
     
-    curvature_max = 2.6;
+    %curvature_max = 3.3;
     
-    clc
     import casadi.*;
 
     
@@ -45,20 +47,20 @@ function path = solve_segment_path(start_pose, end_pose)
     equations = [equations; (reshape(D*X - T .* my_ode(X, U), n_states * n_nodes,1))];
     
     %% Objective
-    objective = 1000*T;    
-    objective = objective + T * (w_integration' * sum((([X(:,4) U]) .* repmat([.1 1],n_nodes,1)).^2,2));
+    objective = 10*T;    
+    objective = objective + T * (w_integration' * sum(U.^2,2));
     
     %% Box constraints
     X_ub =  inf(n_nodes, n_states);
     X_lb = -inf(n_nodes, n_states);
     U_ub =  inf(n_nodes, n_inputs);
     U_lb = -inf(n_nodes, n_inputs);
-    T_ub = 100;
-    T_lb = 0.01;
+    T_ub = 1000;
+    T_lb = 0.001;
     
     % Maximum curvature
-    X_ub(:,4,:) =  curvature_max;
-    X_lb(:,4,:) = -curvature_max;
+%     X_ub(:,4,:) =  curvature_max;
+%     X_lb(:,4,:) = -curvature_max;
     
     % Initial + final conditions
     X_ub(1,:) = start_pose;
@@ -74,8 +76,9 @@ function path = solve_segment_path(start_pose, end_pose)
     %% Initial guess    
     x_guess = start_pose + nodes * (end_pose - start_pose);
     u_guess = zeros(n_nodes, n_inputs);
-    t_guess = 1;
+    t_guess = norm(end_pose(1:2) - start_pose(1:2)) * 1.2;
     guess_flat = pack_fn(t_guess, x_guess, u_guess);
+    guess_flat = guess_flat + 0.001 * randn(size(guess_flat));
     
     
     nlp = struct('x', variables_flat, 'f', objective, 'g', equations);
@@ -97,19 +100,17 @@ function path = solve_segment_path(start_pose, end_pose)
     T_interp = linspace(min(nodes), max(nodes), 5000);
     interpolation_matrix = Lagrange_interpolation_matrix(nodes, T_interp, w_interp);
     X_interp = interpolation_matrix * X_opt;
-    U_interp = interpolation_matrix * U_opt;
+    %U_interp = interpolation_matrix * U_opt;
     
-    clf
-    
-    subplot(121)
-    hold on
-    axis equal
-    plot(X_interp(:,1), X_interp(:,2))
-    
-    
-    subplot(122)
-    hold on
-    plot(T_interp*T_opt, X_interp(:,4))
+%     clf    
+%     subplot(121)
+%     hold on
+%     axis equal
+%     plot(X_interp(:,1), X_interp(:,2))
+%         
+%     subplot(122)
+%     hold on
+%     plot(T_interp*T_opt, X_interp(:,4))
     
     
     path = struct;
@@ -117,7 +118,8 @@ function path = solve_segment_path(start_pose, end_pose)
     path.x = X_interp(:,1);
     path.y = X_interp(:,2);
     path.yaw = X_interp(:,3);
-    path.curvature = X_interp(:,4);    
+    path.curvature = X_interp(:,4);  
+    path.nodes = X_interp;
     
 end
 
