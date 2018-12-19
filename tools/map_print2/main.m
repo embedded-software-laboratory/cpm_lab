@@ -6,7 +6,7 @@ function main
     %% and horizontal axis, centered on the intersection, 
     %% giving 4x the segments.
     
-    
+    clc
     if isfile('cache.mat')
         load('cache.mat')
     else
@@ -37,7 +37,7 @@ function main
         [~,I]=min(abs(segment_B.s - 0.6));
         node_transition_BC = segment_B.nodes(I,:);
 
-        [~,I]=min(abs(segment_A.s - 1.65));
+        [~,I]=min(abs(segment_A.s - 1.58));
         node_transition_ABEF = segment_A.nodes(I,:);
 
         node_transition_CF = node_transition_BC + lane_width * [sin(node_transition_BC(3)) -cos(node_transition_BC(3)) 0 0];
@@ -54,41 +54,66 @@ function main
         save cache
     end
     
-    segment_A.lane_boundaries(1) = struct('offset', -0.5, 'style', '-'  , 'width', 2);
-    segment_A.lane_boundaries(2) = struct('offset',  0.5, 'style', '--', 'width', 1);
-    segment_A.lane_boundaries(3) = struct('offset',  1.5, 'style', '-'  , 'width', 2);
+    pattern_dash = repmat([nan(1,215) ones(1,147)], 1, 1000)';
+    pattern_dash = pattern_dash(1:length(segment_A.s));
     
-    segment_B.lane_boundaries(1) = struct('offset', -0.5, 'style', '-'  , 'width', 2);
-    segment_B.lane_boundaries(2) = struct('offset',  0.5, 'style', '--', 'width', 1);
-    segment_B.lane_boundaries(3) = struct('offset',  1.5, 'style', '-'  , 'width', 2);
+    pattern_solid = ones(size(pattern_dash));
     
-    segment_C.lane_boundaries(1) = struct('offset', -1.5, 'style', '-'  , 'width', 2);
-    segment_C.lane_boundaries(2) = struct('offset', -0.5, 'style', '--', 'width', 1);
-    segment_C.lane_boundaries(3) = struct('offset',  0.5, 'style', '-'  , 'width', 2);
+    % Find intersection of boundaries of segments A and D
+    dx = (segment_A.x + 0.5 * lane_width * sin(segment_A.yaw)) - (segment_D.x - 0.5 * lane_width * sin(segment_D.yaw))';
+    dy = (segment_A.y - 0.5 * lane_width * cos(segment_A.yaw)) - (segment_D.y + 0.5 * lane_width * cos(segment_D.yaw))';
+    dist_sq = (dx.^2 + dy.^2);
+    [~,I] = min(dist_sq(:));
+    [iA,iD] = ind2sub(size(dist_sq),I);    
+    custom_pattern_boundary_A = ones(size(segment_A.s));
+    custom_pattern_boundary_A(iA:length(segment_A.s)) = pattern_dash(iA:length(segment_A.s));   
+    custom_pattern_boundary_A(end-1300:end) = nan;
+    custom_pattern_boundary_D = ones(size(segment_A.s));
+    custom_pattern_boundary_D(iD:length(segment_D.s)) = nan;
     
-    segment_D.lane_boundaries(1) = struct('offset', -1.5, 'style', '-'  , 'width', 2);
-    segment_D.lane_boundaries(2) = struct('offset', -0.5, 'style', '--', 'width', 1);
-    segment_D.lane_boundaries(3) = struct('offset',  0.5, 'style', '-'  , 'width', 2);
+    % Find intersection of boundaries of segments B and C
+    dx = (segment_B.x + 0.5 * lane_width * sin(segment_B.yaw)) - (segment_C.x - 0.5 * lane_width * sin(segment_C.yaw))';
+    dy = (segment_B.y - 0.5 * lane_width * cos(segment_B.yaw)) - (segment_C.y + 0.5 * lane_width * cos(segment_C.yaw))';
+    dist_sq = (dx.^2 + dy.^2);
+    [~,I] = min(dist_sq(:));
+    [iB,iC] = ind2sub(size(dist_sq),I);
+    custom_pattern_boundary_B = ones(size(segment_B.s));
+    custom_pattern_boundary_B(1:iB) = pattern_dash(1:iB); 
+    custom_pattern_boundary_B(iB-100:iB) = nan;
     
-    segment_E.lane_boundaries(1) = struct('offset', -0.5, 'style', '--', 'width', 1);
-    segment_E.lane_boundaries(2) = struct('offset', 0.5, 'style', '--', 'width', 1);
+    custom_pattern_boundary_C = ones(size(segment_B.s));
+    custom_pattern_boundary_C(1:iC) = nan;
     
-    segment_F.lane_boundaries(1) = struct('offset', -0.5, 'style', '--', 'width', 1);
-    segment_F.lane_boundaries(2) = struct('offset', 0.5, 'style', '--', 'width', 1);
+    custom_pattern_boundary_C_center = custom_pattern_boundary_C.*pattern_dash;
+    custom_pattern_boundary_C_center(end-100:end) = nan;
+
     
-    segment_G.lane_boundaries(1) = struct('offset', -1.5, 'style', '-', 'width', 2);
-    segment_G.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
-    segment_G.lane_boundaries(3) = struct('offset',  0.5, 'style', ':', 'width', 1);
-    segment_G.lane_boundaries(4) = struct('offset',  1.5, 'style', ':', 'width', 1);
-    segment_G.lane_boundaries(5) = struct('offset',  2.5, 'style', ':', 'width', 1);
+    % Define lane boundaries
+    segment_A.lane_boundaries(1) = struct('offset',  0.5, 'style', pattern_dash, 'width', 0.3);
+    segment_A.lane_boundaries(2) = struct('offset',  1.5, 'style', pattern_solid, 'width', 1);
+    segment_A.lane_boundaries(3) = struct('offset', -0.5, 'style', custom_pattern_boundary_A, 'width', 1);
     
-    segment_H.lane_boundaries(1) = struct('offset', -1.5, 'style', '', 'width', 2);
-    segment_H.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
-    segment_H.lane_boundaries(3) = struct('offset',  0.5, 'style', '', 'width', 2);
+    segment_B.lane_boundaries(1) = struct('offset', -0.5, 'style', custom_pattern_boundary_B  , 'width', 1);
+    segment_B.lane_boundaries(2) = struct('offset',  0.5, 'style', pattern_dash, 'width', 0.3);
+    segment_B.lane_boundaries(3) = struct('offset',  1.5, 'style', pattern_solid  , 'width', 1);
     
-    segment_J.lane_boundaries(1) = struct('offset', -1.5, 'style', '', 'width', 2);
-    segment_J.lane_boundaries(2) = struct('offset', -0.5, 'style', ':', 'width', 1);
-    segment_J.lane_boundaries(3) = struct('offset',  0.5, 'style', '', 'width', 2);
+    segment_C.lane_boundaries(1) = struct('offset', -1.5, 'style', pattern_solid  , 'width', 1);
+    segment_C.lane_boundaries(2) = struct('offset', -0.5, 'style', custom_pattern_boundary_C_center, 'width', 0.3);
+    segment_C.lane_boundaries(3) = struct('offset',  0.5, 'style', custom_pattern_boundary_C  , 'width', 1);
+    
+    segment_D.lane_boundaries(1) = struct('offset', -1.5, 'style', pattern_solid  , 'width', 1);
+    segment_D.lane_boundaries(2) = struct('offset', -0.5, 'style', custom_pattern_boundary_D.*pattern_dash, 'width', 0.3);
+    segment_D.lane_boundaries(3) = struct('offset',  0.5, 'style', custom_pattern_boundary_D, 'width', 1);
+    
+    segment_E.lane_boundaries(1) = struct('offset', -0.5, 'style', pattern_solid, 'width', 1);
+    
+    segment_F.lane_boundaries(1) = struct('offset', -0.5, 'style', pattern_solid, 'width', 1);
+    
+    segment_G.lane_boundaries(1) = struct('offset', -1.5, 'style', pattern_solid, 'width', 1);
+    
+    segment_H.lane_boundaries(1) = struct('offset', -1.5, 'style', pattern_dash, 'width', .3);
+    
+    segment_J.lane_boundaries(1) = struct('offset', -1.5, 'style', flipud(pattern_dash), 'width', .3);
     
     
     
@@ -97,12 +122,15 @@ function main
     hold on
 
     plot_scale = 1000 / 25.4 * 72; % 1:1 scale
-    plot_scale = 100 / 25.4 * 72; % 1:10 scale
     plot_scale = 50 / 25.4 * 72; % 1:20 scale
+    plot_scale = 100 / 25.4 * 72; % 1:10 scale
     
+    
+    
+
     segments = [segment_A segment_B segment_C segment_D segment_E segment_F segment_G segment_H segment_J];
     
-    slice = round(linspace(1,length(segment_A.s),300));
+    slice = 1:5000;% round(linspace(1,length(segment_A.s),300));
     clf
     hold on
     axis equal
@@ -114,24 +142,49 @@ function main
         for sy = [-1 1]
             if 1%~(sx == 1 && sy == 1)
                 for i = 1:length(segments)
-                    for j = 1:length(segments(i).lane_boundaries)
-                        
+                    for j = 1:length(segments(i).lane_boundaries)                        
                         x = segments(i).x(slice);
                         y = segments(i).y(slice);
                         yaw = segments(i).yaw(slice);
                         c = segments(i).lane_boundaries(j).offset * lane_width * cos(yaw);
                         s = segments(i).lane_boundaries(j).offset * lane_width * sin(yaw);
-                        plot(plot_scale*sx*(x-s), plot_scale*sy*(y+c), segments(i).lane_boundaries(j).style, 'LineWidth', segments(i).lane_boundaries(j).width * plot_scale * 0.005, 'Color', [1 1 1])
+                        plot(...
+                            plot_scale*sx*(x-s) .* segments(i).lane_boundaries(j).style(:), ...
+                            plot_scale*sy*(y+c) .* segments(i).lane_boundaries(j).style(:), ...
+                            '-', ...
+                            'LineWidth', segments(i).lane_boundaries(j).width * plot_scale * 0.01, ...
+                            'Color', [ 1 1 1 ]...
+                        )
                     end
                 end
             end
         end
     end
     
+    % Draw holding line
+    for a = (1:4) * (pi/2)
+        p = [intersection_radius * [1 1]-1.5/100; [-0.005 2*lane_width]]';
+        p = p*[cos(a) -sin(a);sin(a) cos(a)];
+        plot(plot_scale*p(:,1), plot_scale*p(:,2) , '-', 'LineWidth', 3 * plot_scale * 0.01, 'Color', [ 1 1 1 ])
+    end
+    
+    
 %     for i = 1:length(segments)
-%         plot(segments(i).x(slice), segments(i).y(slice), 'LineWidth', 5)        
+%         plot(plot_scale*segments(i).x(slice), plot_scale*segments(i).y(slice), 'LineWidth', 9 *  plot_scale * 0.005)        
 %     end
     
+% 
+%     scatter(...
+%     plot_scale*(segment_A.x + 0.5 * lane_width * sin(segment_A.yaw)),...
+%     plot_scale*(segment_A.y - 0.5 * lane_width * cos(segment_A.yaw))...
+%     )
+% 
+%     scatter(...
+%     plot_scale*(segment_D.x - 0.5 * lane_width * sin(segment_D.yaw)),...
+%     plot_scale*(segment_D.y + 0.5 * lane_width * cos(segment_D.yaw))...
+%     )
+    
+
 
     axis off
     ax = gca;
