@@ -21,6 +21,8 @@ set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_dnn opencv_features2d ope
 add_executable(ips
     src/CameraWrapper.cpp
     src/CameraWrapper.hpp
+    src/detect_light_blobs.cpp
+    src/detect_light_blobs.hpp
     src/main.cpp
 )
 

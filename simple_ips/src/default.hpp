@@ -9,7 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
-
+#include <opencv2/opencv.hpp>
 
 using std::vector;
 using std::string;
