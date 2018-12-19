@@ -2,6 +2,11 @@
 #include "CameraWrapper.hpp"
 #include <opencv2/imgproc/types_c.h>
 #include "detect_light_blobs.hpp"
+#include "cpm/Timer.hpp"
+#include "VehicleObservation.hpp"
+#include <dds/pub/ddspub.hpp>
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/stamp_message.hpp"
 
 
 void calibration(
@@ -22,14 +27,26 @@ int main() {
     shared_ptr<CameraWrapper> camera = std::make_shared<CameraWrapper>("22511669");
     camera->setGainExposure(0, 500);
 
-    while(1)
-    {
+
+    // DDS setup
+    auto& participant = cpm::ParticipantSingleton::Instance();
+    dds::topic::Topic<VehicleObservation> topic_vehicleObservation (
+        participant, "vehicleObservation");
+    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation(
+        dds::pub::Publisher(participant), topic_vehicleObservation);
+
+
+
+
+    auto update_loop = cpm::Timer::create("IPS", 80000000ull, 0);
+
+    update_loop->start([&](uint64_t t_now) {
         camera->triggerExposure();
 
         cv::Mat image;
         if(!camera->grabImage(image)) {
             cout << "grabImage() failed" << endl;
-            return 0;
+            update_loop->stop();
         }
 
         vector<cv::Point2f> detected_light_blobs = detect_light_blobs(image);
@@ -79,9 +96,24 @@ int main() {
 
 
 
+            auto rem = t_now % 3000000000ull;
+            for (uint8_t vehicle_id = 0; vehicle_id < 20; ++vehicle_id)
+            {
+                uint64_t slot = vehicle_id * 500000000ull;
+
+                if( slot <= rem && rem < slot + 250000000ull )
+                {
+                    VehicleObservation vehicleObservation;
+                    vehicleObservation.vehicle_id(vehicle_id);
+                    vehicleObservation.pose().x(position_x);
+                    vehicleObservation.pose().y(position_y);
+                    vehicleObservation.pose().yaw(theta);
+                    cpm::stamp_message(vehicleObservation, t_now, 0);
+                    writer_vehicleObservation.write(vehicleObservation);
+                    break;
+                }
+            }
         }
-
-
 
         // visualize
         if(image.rows > 0 && image.cols > 0) {
@@ -96,10 +128,10 @@ int main() {
 
             int key = cv::waitKey(1);
             if (key == 27) {
-                return 0;
+                update_loop->stop();
             }
         }
-    }
+    });
 
     return 0;
 }

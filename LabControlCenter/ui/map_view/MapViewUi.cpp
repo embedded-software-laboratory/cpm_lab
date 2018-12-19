@@ -75,7 +75,10 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
                 const int n_grid = 100;
                 for (int i = -n_grid; i <= n_grid; ++i)
                 {
-                    if(i % 10 == 0) {
+                    if(i == 0) {
+                        ctx->set_line_width(0.15);
+                    }
+                    else if(i % 10 == 0) {
                         ctx->set_line_width(0.05);
                     }
                     else {

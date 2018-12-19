@@ -18,6 +18,25 @@ link_directories(${PYLON_ROOT}/lib)
 set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_dnn opencv_features2d opencv_flann opencv_gapi opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
 
 
+
+# RTI DDS
+add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
+include_directories(SYSTEM $ENV{NDDSHOME}/include)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
+link_libraries(nddscpp2z nddscz nddscorez)
+link_libraries(dl nsl m pthread rt)
+link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
+
+
+
+# CPM lib
+include_directories(../cpm_base/cpm_lib/include/)
+include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
+link_directories(../cpm_base/cpm_lib/build/)
+
+
 add_executable(ips
     src/CameraWrapper.cpp
     src/CameraWrapper.hpp
@@ -27,4 +46,4 @@ add_executable(ips
 )
 
 
-target_link_libraries(ips ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+target_link_libraries(ips ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)
