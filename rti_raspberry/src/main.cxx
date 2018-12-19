@@ -168,11 +168,11 @@ int main(int argc, char *argv[])
             // LED identification signal
             {
                 spi_mosi_data.LED1_period_ticks = 1;
-                spi_mosi_data.LED1_enabled_ticks = 0;
+                spi_mosi_data.LED1_enabled_ticks = 1;
                 spi_mosi_data.LED2_period_ticks = 1;
-                spi_mosi_data.LED2_enabled_ticks = 0;
+                spi_mosi_data.LED2_enabled_ticks = 1;
                 spi_mosi_data.LED3_period_ticks = 1;
-                spi_mosi_data.LED3_enabled_ticks = 0;
+                spi_mosi_data.LED3_enabled_ticks = 1;
                 spi_mosi_data.LED4_period_ticks = 1;
                 spi_mosi_data.LED4_enabled_ticks = 0;
 

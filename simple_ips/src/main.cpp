@@ -88,14 +88,27 @@ int main() {
                 theta = atan2(dy2,dx2);
             }
 
+            theta = theta + 0.045;
+
+            theta = remainder(theta, 2*M_PI);
+
             // calculate translation from "origin LED" to vehicle origin (= center of rear axis)
-            double position_x = floor_points[origin_index][0] - 0.062 * cos(theta) + (-0.024) * sin(theta);
-            double position_y = floor_points[origin_index][1] - 0.062 * sin(theta) - (-0.024) * cos(theta);
+            double position_x = floor_points[origin_index][0] + (0.0) * cos(theta) + (0.0) * sin(theta);
+            double position_y = floor_points[origin_index][1] + (0.0) * sin(theta) + (0.0) * cos(theta);
 
             cout << "pose (" << position_x << ", " << position_y << ", " << theta << ")" << endl;
 
 
 
+            VehicleObservation vehicleObservation;
+            vehicleObservation.vehicle_id(1);
+            vehicleObservation.pose().x(position_x);
+            vehicleObservation.pose().y(position_y);
+            vehicleObservation.pose().yaw(theta);
+            cpm::stamp_message(vehicleObservation, t_now, 0);
+            writer_vehicleObservation.write(vehicleObservation);
+
+            /*
             auto rem = t_now % 3000000000ull;
             for (uint8_t vehicle_id = 0; vehicle_id < 20; ++vehicle_id)
             {
@@ -112,7 +125,7 @@ int main() {
                     writer_vehicleObservation.write(vehicleObservation);
                     break;
                 }
-            }
+            }*/
         }
 
         // visualize

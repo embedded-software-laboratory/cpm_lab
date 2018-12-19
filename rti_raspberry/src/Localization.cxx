@@ -30,7 +30,7 @@ void filter_update_step(const LocalizationState& previous, LocalizationState& cu
     {
         // TODO proper kalman filter
 
-        const double s = 0.1;
+        const double s = 0.3;
 
         double dx = current.vehicleObservation.pose().x() - new_pose.x();
         double dy = current.vehicleObservation.pose().y() - new_pose.y();
