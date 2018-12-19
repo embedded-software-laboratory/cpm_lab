@@ -162,8 +162,42 @@ int main(int argc, char *argv[])
 
             // Run controller
             spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_now);
-            spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
 
+
+
+            // LED identification signal
+            {
+                spi_mosi_data.LED1_period_ticks = 1;
+                spi_mosi_data.LED1_enabled_ticks = 0;
+                spi_mosi_data.LED2_period_ticks = 1;
+                spi_mosi_data.LED2_enabled_ticks = 0;
+                spi_mosi_data.LED3_period_ticks = 1;
+                spi_mosi_data.LED3_enabled_ticks = 0;
+                spi_mosi_data.LED4_period_ticks = 1;
+                spi_mosi_data.LED4_enabled_ticks = 0;
+
+
+                auto rem = t_now % 3000000000ull;
+
+                uint64_t slot = vehicle_id * 500000000ull;
+
+                if( slot <= rem && rem < slot + 250000000ull )
+                {
+                    spi_mosi_data.LED1_enabled_ticks = 1;
+                    spi_mosi_data.LED2_enabled_ticks = 1;
+                    spi_mosi_data.LED3_enabled_ticks = 1;
+                }
+            }
+
+
+
+
+
+
+
+
+
+            spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
 
 #ifdef VEHICLE_SIMULATION
             spi_miso_data_t spi_miso_data = simulationVehicle.update(
