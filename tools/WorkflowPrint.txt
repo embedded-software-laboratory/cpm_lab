@@ -1,0 +1,32 @@
+Matlab:
+    Export with 
+        print(fig, 'x.pdf', '-dpdf', '-painters')
+
+Inkscape:
+    Import 'x.pdf'
+    Ctrl+Shift+D -> "Resize page to drawing or selection"
+    Save as 'x.svg'
+
+Scribus:
+    Open 'x.svg'
+    Edit -> Colors...
+        Manually convert palette to CMYK
+            Create "Tiefschwarz": 60 % Cyan, 50 % Magenta, 45 % Gelb, 100 % Schwarz 
+            Delete RGB black #000000, replace with "Tiefschwarz"
+            Delete RGB white #ffffff, replace with CMYK white
+            Convert other colors if necessary
+    Increase size of background rectangle, to avoid stripes on the edges "Blitzer" (Optional?)
+        Select All (Ctrl-A)
+        Ungroup (Ctrl-Shift-G) multiple times
+        Deselect All
+        Select Background rectangle
+        Properties (F2)
+        Edit geometry: X,Y = -1, Width, Height: Increase by 2
+    File -> Export -> As PDF
+        General, Compatibility: PDF/X-3
+        Pre-press, crop marks: check
+        Pre-press, bleed marks: check
+        Pre-press, registration marks: check
+        Pre-press, bleed settings: ~1% of the document size
+            experience value: 2pt for 4.5m print in 1:10 scale
+    See also: "maxxprint_druckdaten_anforderungen.pdf"
