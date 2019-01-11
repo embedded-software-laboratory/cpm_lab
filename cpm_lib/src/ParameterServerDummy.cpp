@@ -18,7 +18,13 @@ int main(int argc, char *argv[])
 
     sleep(5);
 
-    server.set_value("t5", 7.777777);
+    server.set_value("t4", 7.777777);
+
+    sleep(5);
+
+    server.set_value("t5", "Hey");
+    vector<std::string> strings = {"Dies", "ist", "ein", "Test"};
+    server.set_value("t6", strings);
 
     sleep(100);
 }

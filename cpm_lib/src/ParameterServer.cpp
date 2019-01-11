@@ -271,8 +271,14 @@ charArray ParameterServer::stringToCharArray(std::string &stringParam) {
     if (stringParam.length() > 255) {
         stringParam.resize(255);
     }
+    
     for (int i = 0; i < stringParam.length(); ++i) {
         stringAsChar[i] = stringParam.at(i);
+    }
+
+    //Use "end"-character if the size of the string is less than 255
+    if(stringParam.length() < 255) {
+        stringAsChar[stringParam.length()] = '~';
     }
     
     return stringAsChar;

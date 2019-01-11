@@ -186,6 +186,11 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
 std::string ParameterStorage::charToString(const charArray& array) {
     std::string s = "";
     for (char c : array) {
+        //Stop if end character was reached
+        if (c == '~') {
+            break;
+        }
+
         s += c;
     }
     return s;
