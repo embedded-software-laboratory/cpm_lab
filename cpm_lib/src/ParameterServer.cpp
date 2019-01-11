@@ -142,11 +142,12 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::string stringParam;
     if(find_string(name, stringParam)) {
+        //String to charArray
+        charArray stringAsChar = stringToCharArray(stringParam);
+
         //Create data to send
-        std::vector<std::string> stdStrings;
-        stdStrings.push_back(stringParam);
-        rti::core::vector<dds::core::string> strings;
-        std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
+        dds::core::vector<charArray> strings(1);
+        strings.at(0) = stringAsChar;
 
         param.type(ParameterType::String);
         param.values_string(strings);
@@ -184,12 +185,17 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::vector<std::string> stringParams;
     if(find_strings(name, stringParams)) {
-        param.type(ParameterType::Vector_String);
-        param.values_string().resize(stringParams.size());
-        for (size_t i = 0; i < stringParams.size(); ++i) {
-            param.values_string().at(i) = stringParams.at(i);
+        dds::core::vector<charArray> strings(stringParams.size());
+
+        for (int i = 0; i < stringParams.size(); ++i) {
+            //String to charArray
+            charArray stringAsChar = stringToCharArray(stringParams.at(i));
+            strings.at(i) = stringAsChar;
         }
 
+        param.type(ParameterType::Vector_String);
+        param.values_string(strings);
+        
         //Send new value
         writer.write(param);
         return;
@@ -257,4 +263,17 @@ bool ParameterServer::find_strings(std::string param_name, std::vector<std::stri
         return true;
     }
     return false;
+}
+
+//If the string has more than 255 characters, these are omitted
+charArray ParameterServer::stringToCharArray(std::string &stringParam) {
+    charArray stringAsChar;
+    if (stringParam.length() > 255) {
+        stringParam.resize(255);
+    }
+    for (int i = 0; i < stringParam.length(); ++i) {
+        stringAsChar[i] = stringParam.at(i);
+    }
+    
+    return stringAsChar;
 }

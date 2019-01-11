@@ -41,6 +41,9 @@ private:
     bool find_doubles(std::string param_name, std::vector<double> &value_out);
     bool find_strings(std::string param_name, std::vector<std::string> &value_out);
 
+    //String to Char[255]
+    charArray stringToCharArray(std::string &s);
+
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;
     std::map<std::string, int32_t> param_int;
