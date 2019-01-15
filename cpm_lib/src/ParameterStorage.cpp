@@ -115,22 +115,6 @@ std::vector<double> ParameterStorage::parameter_doubles(std::string parameter_na
     return retValue;
 }
 
-std::vector<std::string> ParameterStorage::parameter_strings(std::string parameter_name) {
-    std::unique_lock<std::mutex> s_lock(param_strings_mutex); 
-
-    while (param_strings.find(parameter_name) == param_strings.end()) {
-        s_lock.unlock();
-        requestParam(parameter_name);
-        std::cout << "Waiting for parameter " << parameter_name << std::endl;
-        rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
-        s_lock.lock();
-    }
-
-    std::vector<std::string> retValue(param_strings.at(parameter_name));
-    s_lock.unlock();
-    return retValue;
-}
-
 void ParameterStorage::requestParam(std::string parameter_name) {
     ParameterRequest request;
     request.name(parameter_name);
@@ -150,11 +134,9 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                 std::lock_guard<std::mutex> u_lock(param_double_mutex);
                 param_double[parameter.name()] = parameter.values_double().at(0);
             }
-            else if (parameter.type() == ParameterType::String && parameter.values_string().size() == 1) {
-                std::string charString = charToString(parameter.values_string().at(0));
-
+            else if (parameter.type() == ParameterType::String) {
                 std::lock_guard<std::mutex> u_lock(param_string_mutex);
-                param_string[parameter.name()] = charString;
+                param_string[parameter.name()] = parameter.values_string();
             }
             else if (parameter.type() == ParameterType::Bool) {
                 std::lock_guard<std::mutex> u_lock(param_bool_mutex);
@@ -168,30 +150,6 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
                 std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
                 param_doubles[parameter.name()] = parameter.values_double();
             }
-            else if (parameter.type() == ParameterType::Vector_String) {
-                std::vector<std::string> charStrings;
-                for(const auto& str: parameter.values_string()) {
-                    charStrings.push_back(charToString(str));
-                }
-
-                std::lock_guard<std::mutex> u_lock(param_strings_mutex);
-                for(const auto& str: charStrings) {
-                    param_strings[parameter.name()].push_back(str);
-                }
-            }
         }
     }
-}
-
-std::string ParameterStorage::charToString(const charArray& array) {
-    std::string s = "";
-    for (char c : array) {
-        //Stop if end character was reached
-        if (c == end_character) {
-            break;
-        }
-
-        s += c;
-    }
-    return s;
 }

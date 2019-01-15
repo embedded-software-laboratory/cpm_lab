@@ -34,15 +34,9 @@ public:
     std::string parameter_string(std::string parameter_name);
     std::vector<int32_t> parameter_ints(std::string parameter_name);
     std::vector<double> parameter_doubles(std::string parameter_name);
-    std::vector<std::string> parameter_strings(std::string parameter_name);
 
 private:
     ParameterStorage();
-
-    char end_character = 0x00;
-
-    //Create a string from a charArray
-    std::string charToString(const charArray& array);
 
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;
@@ -51,7 +45,6 @@ private:
     std::map<std::string, std::string> param_string;
     std::map<std::string, std::vector<int32_t>> param_ints;
     std::map<std::string, std::vector<double>> param_doubles;
-    std::map<std::string, std::vector<std::string>> param_strings;
 
     //Mutex for each map
     std::mutex param_bool_mutex;
@@ -60,7 +53,6 @@ private:
     std::mutex param_string_mutex;
     std::mutex param_ints_mutex;
     std::mutex param_doubles_mutex;
-    std::mutex param_strings_mutex;
 
     void requestParam(std::string parameter_name);
     void callback(dds::sub::LoanedSamples<Parameter>& samples);

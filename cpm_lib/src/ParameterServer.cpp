@@ -79,16 +79,6 @@ void ParameterServer::set_value(std::string name, std::vector<double> value) {
     handleSingleParamRequest(name);
 }
 
-void ParameterServer::set_value(std::string name, std::vector<std::string> value) {
-    //Store new value
-    std::unique_lock<std::mutex> s_lock(param_strings_mutex); 
-    param_strings[name] = value;
-    s_lock.unlock();
-
-    //Fake request to send data
-    handleSingleParamRequest(name);
-}
-
 void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
@@ -142,15 +132,8 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::string stringParam;
     if(find_string(name, stringParam)) {
-        //String to charArray
-        charArray stringAsChar = stringToCharArray(stringParam);
-
-        //Create data to send
-        dds::core::vector<charArray> strings(1);
-        strings.at(0) = stringAsChar;
-
         param.type(ParameterType::String);
-        param.values_string(strings);
+        param.values_string(stringParam);
         
         //Send new value
         writer.write(param);
@@ -177,24 +160,6 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
         param.type(ParameterType::Vector_Double);
         param.values_double(doubles);
-        
-        //Send new value
-        writer.write(param);
-        return;
-    }
-
-    std::vector<std::string> stringParams;
-    if(find_strings(name, stringParams)) {
-        dds::core::vector<charArray> strings(stringParams.size());
-
-        for (int i = 0; i < stringParams.size(); ++i) {
-            //String to charArray
-            charArray stringAsChar = stringToCharArray(stringParams.at(i));
-            strings.at(i) = stringAsChar;
-        }
-
-        param.type(ParameterType::Vector_String);
-        param.values_string(strings);
         
         //Send new value
         writer.write(param);
@@ -254,32 +219,4 @@ bool ParameterServer::find_doubles(std::string param_name, std::vector<double> &
         return true;
     }
     return false;
-}
-
-bool ParameterServer::find_strings(std::string param_name, std::vector<std::string> &value_out) {
-    std::lock_guard<std::mutex> lock(param_strings_mutex);
-    if(param_strings.find(param_name) != param_strings.end()) {
-        value_out = param_strings.at(param_name);
-        return true;
-    }
-    return false;
-}
-
-//If the string has more than 255 characters, these are omitted
-charArray ParameterServer::stringToCharArray(std::string &stringParam) {
-    charArray stringAsChar;
-    if (stringParam.length() > 255) {
-        stringParam.resize(255);
-    }
-    
-    for (int i = 0; i < stringParam.length(); ++i) {
-        stringAsChar[i] = stringParam.at(i);
-    }
-
-    //Use "end"-character if the size of the string is less than 255
-    if(stringParam.length() < 255) {
-        stringAsChar[stringParam.length()] = end_character;
-    }
-    
-    return stringAsChar;
 }

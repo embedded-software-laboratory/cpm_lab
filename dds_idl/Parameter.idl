@@ -10,8 +10,6 @@ enum ParameterType
     Vector_String
 };
 
-typedef char charArray[255];
-
 struct Parameter 
 {
     string name; //@key
@@ -21,5 +19,5 @@ struct Parameter
     boolean value_bool;
     sequence<long>   values_int32;
     sequence<double> values_double;
-    sequence<charArray> values_string;
+    string values_string;
 };
