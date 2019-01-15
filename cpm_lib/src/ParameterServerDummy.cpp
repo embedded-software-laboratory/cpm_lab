@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 
     std::string val = "Hey";
     server.set_value("t5", val);
+    server.set_value("t6", "Hey2");
 
     sleep(100);
 }

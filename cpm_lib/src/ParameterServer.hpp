@@ -24,6 +24,7 @@ public:
     void set_value(std::string name, int32_t value);
     void set_value(std::string name, double value);
     void set_value(std::string name, std::string value);
+    void set_value(std::string name, const char* value);
     void set_value(std::string name, std::vector<int32_t> value);
     void set_value(std::string name, std::vector<double> value);
 private:    

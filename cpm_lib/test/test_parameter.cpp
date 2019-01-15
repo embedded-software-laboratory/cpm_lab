@@ -37,7 +37,7 @@ TEST_CASE( "parameter_strings" ) {
 
     ParameterServer server;
     server.set_value("my_param_name2", str1);
-    server.set_value("my_param_name3", str2);
+    server.set_value("my_param_name3", "Take one down and pass it around, 98 bottles of beer on the wall.");
 
     client_thread.join();
 

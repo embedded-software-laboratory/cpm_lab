@@ -49,6 +49,10 @@ void ParameterServer::set_value(std::string name, double value) {
     handleSingleParamRequest(name);
 }
 
+void ParameterServer::set_value(std::string name, const char* value) {
+    set_value(name, std::string(value));
+}
+
 void ParameterServer::set_value(std::string name, std::string value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_string_mutex); 
