@@ -44,9 +44,12 @@ namespace cpm
         { }
 
         Reader(const Reader &other) 
-        :dds_reader(other.dds_reader)
-        ,ring_buffer_index(other.ring_buffer_index)
         {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            dds_reader = other.dds_reader;
+            ring_buffer_index = other.ring_buffer_index;
+
             for (size_t i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i) {
                 ring_buffer[i] = other.ring_buffer[i];
             }
