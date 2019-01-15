@@ -20,7 +20,14 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     // allow time for DDS discovery
     sleep(1);
 
-    // send
+    // send    
+    {
+        VehicleState vehicleState;
+        vehicleState.odometer_distance(123);
+        vehicleState.vehicle_id(3);
+        writer_vehicleState.write(vehicleState);
+    }
+
     {
         VehicleState vehicleState;    
         vehicleState.odometer_distance(2);
