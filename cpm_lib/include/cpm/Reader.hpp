@@ -4,7 +4,7 @@
 #include <mutex>
 #include "cpm/ParticipantSingleton.hpp"
 
-#define CPM_READER_RING_BUFFER_SIZE (32)
+#define CPM_READER_RING_BUFFER_SIZE (64)
 
 namespace cpm
 {
