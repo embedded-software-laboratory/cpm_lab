@@ -1,5 +1,11 @@
 #pragma once
 
+/**
+ * \class Reader.hpp
+ * \brief Creates a DDS Reader that, on request, returns the newest valid received sample according to the timestamp of the sample type T. Use this reader if a synchronous use of samples is desired.
+ * This reader uses a ring buffer that can hold up to 64 samples. The latest 64 received samples are thus stored. All samples of type T are required to include two timestamps: A timestamp that specifies from when on they are valid (valid_after_stamp) and a stamp for when they were created (create_stamp). These stamps can be used to find out the newest sample (using create_stamp) from all 64 samples that is already valid (using valid_after_stamp) according to the current system time. Once the Reader is created, it can be used anytime to retrieve the newest valid sample, if one exist.
+ */
+
 #include <dds/sub/ddssub.hpp>
 #include <mutex>
 #include "cpm/ParticipantSingleton.hpp"
@@ -31,18 +37,33 @@ namespace cpm
         }
 
     public:
+        /**
+         * \brief Constructor using a topic to create a Reader
+         * \param topic the topic of the communication
+         * \return The DDS Reader
+         */
         Reader(dds::topic::Topic<T> &topic)
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { }
         
+        /**
+         * \brief Constructor using a filtered topic to create a Reader
+         * \param topic the topic of the communication, filtered (e.g. by the vehicle ID)
+         * \return The DDS Reader
+         */
         Reader(dds::topic::ContentFilteredTopic<T> &topic)
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { }
 
+        /**
+         * \brief Copy constructor using another reader
+         * \param other the other reader
+         * \return The copy of the other reader
+         */
         Reader(const Reader &other) 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -55,7 +76,14 @@ namespace cpm
             }
         }
         
-
+        /**
+         * \brief get the newest valid sample that was received by the reader
+         * \param t_now current system time / function call time
+         * \param sample_out the new sample, if one exists
+         * \param sample_age_out the age of the returned sample
+         * \return This function does not directly return the sample, it is returned via the parameters
+         * 
+         */
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
