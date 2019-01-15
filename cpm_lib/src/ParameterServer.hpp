@@ -28,6 +28,8 @@ public:
     void set_value(std::string name, std::vector<double> value);
     void set_value(std::string name, std::vector<std::string> value);
 private:
+    char end_character = 0x00;
+    
     //Callback
     void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);

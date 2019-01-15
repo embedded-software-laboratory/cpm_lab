@@ -39,6 +39,8 @@ public:
 private:
     ParameterStorage();
 
+    char end_character = 0x00;
+
     //Create a string from a charArray
     std::string charToString(const charArray& array);
 

@@ -187,7 +187,7 @@ std::string ParameterStorage::charToString(const charArray& array) {
     std::string s = "";
     for (char c : array) {
         //Stop if end character was reached
-        if (c == '~') {
+        if (c == end_character) {
             break;
         }
 
