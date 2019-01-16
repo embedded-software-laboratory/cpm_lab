@@ -47,13 +47,14 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
 }
 
 template<typename T>
-cpm::Reader<T> make_reader(std::string name, uint8_t vehicle_id)
+std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
 {
     cpm::VehicleIDFilteredTopic<T> topic(
         dds::topic::Topic<T>(cpm::ParticipantSingleton::Instance(), name), 
         vehicle_id
     );
-    return cpm::Reader<T>(topic);
+
+    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
 }
 
 int main(int argc, char *argv[])
@@ -127,9 +128,9 @@ int main(int argc, char *argv[])
                 VehicleCommandTrajectory sample_CommandTrajectory;
                 uint64_t sample_CommandTrajectory_age;
 
-                reader_CommandDirect.get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
-                reader_CommandSpeedCurvature.get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
-                reader_vehicleCommandTrajectory.get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
+                reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
+                reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
+                reader_vehicleCommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
 
                 const uint64_t command_timeout = 500000000ull;
 
