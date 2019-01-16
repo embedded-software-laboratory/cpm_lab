@@ -78,11 +78,11 @@ namespace cpm
         
         /**
          * \brief get the newest valid sample that was received by the reader
-         * \param t_now current system time / function call time
+         * \param t_now current system time / function call time in nanoseconds
          * \param sample_out the new sample, if one exists
-         * \param sample_age_out the age of the returned sample
+         * \param sample_age_out the age of the returned sample in nanoseconds
          * \return This function does not directly return the sample, it is returned via the parameters
-         * 
+         * This function iterates through all recently received samples (in the buffer) and uses t_now to find out which samples are already valid. Of these samples, the newest one is chosen and returned via the parameters.
          */
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
