@@ -3,7 +3,7 @@
 #include "cpm/stamp_message.hpp"
 
 #define AXIS_THROTTLE (1)
-#define AXIS_STEERING (2)
+#define AXIS_STEERING (3)
 
 VehicleManualControl::VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant)
 :participant(participant)

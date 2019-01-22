@@ -33,7 +33,7 @@ Joystick Device</property>
           <object class="GtkEntry" id="entry_js_device">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="text" translatable="yes">/dev/input/js1</property>
+            <property name="text" translatable="yes">/dev/input/js0</property>
           </object>
           <packing>
             <property name="expand">False</property>
