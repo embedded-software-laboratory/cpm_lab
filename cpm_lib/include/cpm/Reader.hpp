@@ -49,6 +49,11 @@ namespace cpm
             }
         }
 
+        Reader(const Reader&) = delete;
+        Reader& operator=(const Reader&) = delete;
+        Reader(const Reader&&) = delete;
+        Reader& operator=(const Reader&&) = delete;
+
     public:
         /**
          * \brief Constructor using a topic to create a Reader
@@ -71,23 +76,6 @@ namespace cpm
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { }
-
-        /**
-         * \brief Copy constructor using another reader
-         * \param other the other reader
-         * \return The copy of the other reader
-         */
-        Reader(const Reader &other) 
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
-            dds_reader = other.dds_reader;
-            ring_buffer_index = other.ring_buffer_index;
-
-            for (size_t i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i) {
-                ring_buffer[i] = other.ring_buffer[i];
-            }
-        }
         
         /**
          * \brief get the newest valid sample that was received by the reader
