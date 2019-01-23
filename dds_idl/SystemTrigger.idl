@@ -1,0 +1,5 @@
+#include "TimeStamp.idl"
+
+struct SystemTrigger {
+    TimeStamp next_start;
+};

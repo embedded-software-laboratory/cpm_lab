@@ -1,0 +1,6 @@
+#include "TimeStamp.idl"
+
+struct ReadyStatus {
+    string source_id;
+    TimeStamp next_start_stamp;
+};
