@@ -25,8 +25,8 @@ function make_test_trajectory
     
     
     %% find maximum speed
-    a_max = 2;
-    speed_max = 1.5;
+    a_max = 6;
+    speed_max = 6;
     speed = min(speed_max, sqrt(a_max ./ (abs(curvature)+1e-5)));
     
     N = length(x);
@@ -44,14 +44,14 @@ function make_test_trajectory
     end
     
     
-%     clf 
-%     hold on
-%     plot(s,speed)
-%     
-%     dv = circshift(speed,-1) - speed;
-%     a = sqrt(speed.^4 .* curvature.^2 + (dv./ds .* speed).^2);
-%     plot(s,a)
-%     plot(s,curvature)
+    clf 
+    hold on
+    plot(s,speed)
+    
+    dv = circshift(speed,-1) - speed;
+    a = sqrt(speed.^4 .* curvature.^2 + (dv./ds .* speed).^2);
+    plot(s,a)
+    plot(s,curvature)
     
     %% convert to trajectory
     vx = speed .* cos(yaw);
@@ -63,8 +63,8 @@ function make_test_trajectory
     M = length(slice);
     
     s = s(slice);
-    x = x(slice);
-    y = y(slice);
+    x = x(slice) + 0.5;
+    y = y(slice) + 1.0;
     vx = vx(slice);
     vy = vy(slice);
     t = t(slice);

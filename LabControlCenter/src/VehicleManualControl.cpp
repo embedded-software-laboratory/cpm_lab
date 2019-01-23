@@ -4,6 +4,9 @@
 
 #define AXIS_THROTTLE (1)
 #define AXIS_STEERING (3)
+#define BUTTON_SPEED_1MS (0)
+#define BUTTON_SPEED_CONST (1)
+#define BUTTON_TRAJECTORY (3)
 
 VehicleManualControl::VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant)
 :participant(participant)
@@ -38,7 +41,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
         if(!joystick) return;
 
 
-        if(joystick->getButton(4) || joystick->getButton(6)) { // constant speed mode
+        if(joystick->getButton(BUTTON_SPEED_1MS) || joystick->getButton(BUTTON_SPEED_CONST)) { // constant speed mode
 
             VehicleCommandSpeedCurvature sample;
             sample.vehicle_id(vehicle_id);
@@ -48,7 +51,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
                 ref_speed += axis1 * 0.02;
             }
 
-            if(joystick->getButton(6)) {
+            if(joystick->getButton(BUTTON_SPEED_1MS)) {
                 ref_speed = 1.0;
             }
 
@@ -63,7 +66,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             writer_vehicleCommandSpeedCurvature->write(sample);
 
         }
-        else if(joystick->getButton(5)) { // trajectory mode
+        else if(joystick->getButton(BUTTON_TRAJECTORY)) { // trajectory mode
 
             VehicleCommandTrajectory sample;
             sample.vehicle_id(vehicle_id);
