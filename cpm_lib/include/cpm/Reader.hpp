@@ -2,8 +2,21 @@
 
 /**
  * \class Reader.hpp
- * \brief Creates a DDS Reader that, on request, returns the newest valid received sample according to the timestamp of the sample type T. Use this reader if a synchronous use of samples is desired.
- * This reader uses a ring buffer that can hold up to 64 samples. The latest 64 received samples are thus stored. All samples of type T are required to include two timestamps: A timestamp that specifies from when on they are valid (valid_after_stamp) and a stamp for when they were created (create_stamp). These stamps can be used to find out the newest sample (using create_stamp) from all 64 samples that is already valid (using valid_after_stamp) according to the current system time. Once the Reader is created, it can be used anytime to retrieve the newest valid sample, if one exist.
+ * \brief Creates a DDS Reader that, on request, returns 
+ * the newest valid received sample according to the 
+ * timestamp of the DDS type T. Use this reader if 
+ * a synchronous use of samples is desired.
+ * This reader uses a ring buffer that holds the latest
+ * N samples. Any used DDS type is required to 
+ * include the Header.idl: It contains timestamps that specify 
+ * from when on a sample is valid (valid_after_stamp) 
+ * and a stamp for when a sample was created (create_stamp). 
+ * These stamps are used to find the newest 
+ * sample (using create_stamp) that 
+ * is valid (using valid_after_stamp) according 
+ * to the current system time. Once the Reader is 
+ * created, it can be used anytime to retrieve the 
+ * newest valid sample, if one exist.
  */
 
 #include <dds/sub/ddssub.hpp>

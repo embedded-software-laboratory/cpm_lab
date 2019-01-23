@@ -2,8 +2,10 @@
 
 /**
  * \class Timer.hpp
- * \brief This class can be used to call a callback function periodically. It also provides a timer to obtain the current system time in nanoseconds.
- * The class is created using the create function. The returned object can be used to start the thread (once) which calls the function periodically or to call the function periodically in the calling thread, and prints a warning if a timestep was missed. It can also be used to stop the thread and to obtain the current system time in nanoseconds.
+ * This class calls a callback function periodically 
+ * based on either the system clock or a simulated 
+ * clock. The calls are synchronized in both frequency 
+ * and phase to the clock.
  */
 
 #include <string>
@@ -22,8 +24,8 @@ namespace cpm
          * \brief This function creates a Timer object and returns it via a shared pointer
          * \param node_id TODO
          * \param period_nanoseconds the callback function is called periodically each period_nanoseconds
-         * \param offset_nanoseconds initial offset for the timer used for the callback
-         * \param simulated_time_allowed set whether the object can be used when the time is only simulated
+         * \param offset_nanoseconds offset for the timer wrt the clock
+         * \param simulated_time_allowed indicate whether simulated time is allowed, false for hardware interaction
          * \return returns a shared pointer which holds the timer object
          */
         static std::shared_ptr<Timer> create(
@@ -33,12 +35,15 @@ namespace cpm
             bool simulated_time_allowed=true
         );
         /**
-         * \brief Start the periodic callback of the callback function in the calling thread. The thread is blocked until stop() is called in another thread to release it.
+         * Start the periodic callback of the callback function in the 
+         * calling thread. The thread is blocked until stop() is 
+         * called.
          * \param update_callback the callback function
          */
         virtual void start       (std::function<void(uint64_t t_now)> update_callback) = 0;
         /**
-         * \brief Start the periodic callback of the callback function in a new thread. The calling thread is not blocked.
+         * Start the periodic callback of the callback function 
+         * in a new thread. The calling thread is not blocked.
          * \param update_callback the callback function
          */
         virtual void start_async (std::function<void(uint64_t t_now)> update_callback) = 0;

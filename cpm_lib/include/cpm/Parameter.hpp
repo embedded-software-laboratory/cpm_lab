@@ -2,8 +2,13 @@
 
 /**
  * \class Parameter.hpp
- * \brief This interface can be used to receive/request constant definitions of different types
- * Parameters can be set during runtime using the parameter server. All values set are sent to all participants that are listening to the server. These parameter values are made up of a parameter name, a parameter type and the value of the parameter. This interface can be used to receive or request the current definition of a paramter (which can be of type bool, int, double, string or an array of ints or doubles). 
+ * \brief This interface can be used to receive/request parameter definitions of different types
+ * Parameters can be set during runtime using the parameter 
+ * server. All values set are sent to all participants that 
+ * are listening to the server. These parameter values are 
+ * made up of a parameter name, a parameter type and the value 
+ * of the parameter. This interface can be used to  
+ * request the current definition of a paramter. 
  */
 
 #include <string>
