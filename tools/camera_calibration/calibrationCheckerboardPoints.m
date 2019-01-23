@@ -17,7 +17,7 @@ function calibrationCheckerboardPoints
     
     for ix = 1:size(imagePoints, 2)
         for iy = 1:size(imagePoints, 1)
-            row = [(ix/10);(iy/10); squeeze(imagePoints(iy,ix,:))];
+            row = [((ix+1)/10);(iy/10); squeeze(imagePoints(iy,ix,:))];
             fprintf(f,'%3.4f; ', row);
             fprintf(f,'\n');
         end
@@ -29,7 +29,7 @@ function calibrationCheckerboardPoints
     clf
     imshow(I);
     hold on;
-    plot(imagePoints(1:10,1,1),imagePoints(1:10,1,2),'ro');
+    plot(imagePoints(1,1,1),imagePoints(1,1,2),'ro');
 
 end
 
