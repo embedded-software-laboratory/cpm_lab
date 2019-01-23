@@ -106,3 +106,10 @@ Pose2D Localization::update(
     // output latest pose
     return get_state(LOCALIZATION_BUFFER_SIZE-1).pose;
 }
+
+void Localization::reset() {
+    for (size_t i = 0; i < LOCALIZATION_BUFFER_SIZE; ++i)
+    {
+        state_buffer[i].pose = Pose2D(0,0,0);
+    }
+}

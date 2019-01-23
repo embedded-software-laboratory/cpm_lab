@@ -50,5 +50,7 @@ public:
         VehicleObservation sample_vehicleObservation,
         uint64_t sample_vehicleObservation_age
     );
+
+    void reset();
     
 };

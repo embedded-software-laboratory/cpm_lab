@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
     // Loop setup
     Localization localization;
     Controller controller;
+    int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
     auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0);
@@ -231,6 +232,13 @@ int main(int argc, char *argv[])
             else {
                 std::cerr << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
             }
+
+
+            if(loop_count == 25)
+            {
+                localization.reset();
+            }
+            loop_count++;
         }
         catch(const dds::core::Exception& e)
         {
