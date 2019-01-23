@@ -33,7 +33,7 @@ void calibration(
         1, ix1, iy1, ix2, ix1 * iy1, iy2, ix3, ix2 * iy1, ix1 * iy2, iy3,
         ix4, ix3 * iy1, ix2 * iy2, ix1 * iy3, iy4};
 
-    double calibration_x[] = {4.251151e+00, -4.863260e+00, -1.183271e-01, 1.094383e+00, 4.861627e-01, 1.418471e-01, -6.700942e-01, 3.049470e-01, -4.362105e-01, 1.852765e-01, -7.676803e-02, -7.289893e-02, -1.313038e-01, -8.945004e-02, -5.608838e-02};
+    double calibration_x[] = {4.351151e+00, -4.863260e+00, -1.183271e-01, 1.094383e+00, 4.861627e-01, 1.418471e-01, -6.700942e-01, 3.049470e-01, -4.362105e-01, 1.852765e-01, -7.676803e-02, -7.289893e-02, -1.313038e-01, -8.945004e-02, -5.608838e-02};
     double calibration_y[] = {-3.409322e-01, 5.226075e-01, 4.909991e+00, -3.901540e-01, -5.209485e-01, -1.093096e+00, 6.016393e-02, 5.101132e-01, -3.097603e-01, 5.542172e-01, -2.875253e-02, 5.073364e-02, 1.783163e-01, 1.005458e-01, 1.114947e-01};
 
 
@@ -132,25 +132,6 @@ int main() {
             vehicleObservation.pose().yaw(theta);
             cpm::stamp_message(vehicleObservation, t_now, 0);
             writer_vehicleObservation.write(vehicleObservation);
-
-            /*
-            auto rem = t_now % 3000000000ull;
-            for (uint8_t vehicle_id = 0; vehicle_id < 20; ++vehicle_id)
-            {
-                uint64_t slot = vehicle_id * 500000000ull;
-
-                if( slot <= rem && rem < slot + 250000000ull )
-                {
-                    VehicleObservation vehicleObservation;
-                    vehicleObservation.vehicle_id(vehicle_id);
-                    vehicleObservation.pose().x(position_x);
-                    vehicleObservation.pose().y(position_y);
-                    vehicleObservation.pose().yaw(theta);
-                    cpm::stamp_message(vehicleObservation, t_now, 0);
-                    writer_vehicleObservation.write(vehicleObservation);
-                    break;
-                }
-            }*/
         }
 
         // visualize
