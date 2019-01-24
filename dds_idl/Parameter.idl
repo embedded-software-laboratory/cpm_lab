@@ -6,8 +6,7 @@ enum ParameterType
     Double,
     String,
     Vector_Int32,
-    Vector_Double,
-    Vector_String
+    Vector_Double
 };
 
 struct Parameter 
@@ -19,5 +18,5 @@ struct Parameter
     boolean value_bool;
     sequence<long>   values_int32;
     sequence<double> values_double;
-    string values_string;
+    string value_string;
 };

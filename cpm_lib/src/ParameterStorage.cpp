@@ -136,7 +136,7 @@ void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
             }
             else if (parameter.type() == ParameterType::String) {
                 std::lock_guard<std::mutex> u_lock(param_string_mutex);
-                param_string[parameter.name()] = parameter.values_string();
+                param_string[parameter.name()] = parameter.value_string();
             }
             else if (parameter.type() == ParameterType::Bool) {
                 std::lock_guard<std::mutex> u_lock(param_bool_mutex);

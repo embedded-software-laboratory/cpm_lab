@@ -137,7 +137,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     std::string stringParam;
     if(find_string(name, stringParam)) {
         param.type(ParameterType::String);
-        param.values_string(stringParam);
+        param.value_string(stringParam);
         
         //Send new value
         writer.write(param);
