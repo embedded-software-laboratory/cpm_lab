@@ -10,6 +10,7 @@
 
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
+#include <dds/core/ddscore.hpp>
 
 class TimerFD : public cpm::Timer
 {

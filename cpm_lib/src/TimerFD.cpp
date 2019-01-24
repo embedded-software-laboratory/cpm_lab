@@ -70,15 +70,41 @@ void TimerFD::waitForStart() {
     dds::topic::Topic<SystemTrigger> trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger");
     dds::sub::DataReader<SystemTrigger> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic);
 
+    //Waitset to wait for data
+    // Create a WaitSet
+    dds::core::cond::WaitSet waitset;
+    // Create a GuardCondition
+    dds::core::cond::GuardCondition guard_cond;
+    // Create a StatusCondition for a given Entity
+    dds::core::cond::StatusCondition status_cond(reader);
+    status_cond.enabled_statuses(dds::core::status::StatusMask::data_available());
+    // Create a ReadCondition for a reader with a specific DataState
+    dds::sub::cond::ReadCondition read_cond(
+        reader, dds::sub::status::DataState(
+            dds::sub::status::SampleState::not_read(),
+            dds::sub::status::ViewState::any(),
+            dds::sub::status::InstanceState::any()));
+    // Attach conditions
+    waitset += guard_cond; // using += operator
+    waitset += status_cond;
+    waitset.attach_condition(read_cond); // or using attach_condition()
+
+
     //Send ready signal
     ReadyStatus ready_status;
     ready_status.next_start_stamp(TimeStamp(0));
     ready_status.source_id(node_id);
     writer.write(ready_status);
+
+    std::cout << "Signal sent" << std::endl;
     
     //Wait for start signal
     SystemTrigger trigger;
+    dds::core::cond::WaitSet::ConditionSeq active_conditions =
+        waitset.wait();
     reader.take(trigger);
+
+    std::cout << "Got system trigger " << trigger.next_start().nanoseconds() << std::endl;
 
     //Finish timer setup
     struct itimerspec its;
@@ -92,6 +118,8 @@ void TimerFD::waitForStart() {
         fflush(stderr); 
         exit(EXIT_FAILURE);
     }
+
+    std::cout << "Waiting for starting point" << std::endl;
 
     //Wait for starting point
     unsigned long long missed;
