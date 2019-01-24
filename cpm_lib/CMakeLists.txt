@@ -24,6 +24,8 @@ set(SOURCE_CPM
     src/Timer.cpp
     src/TimerFD.hpp
     src/TimerFD.cpp
+    src/TimerSimulated.hpp
+    src/TimerSimulated.cpp
     src/Subscriber.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp

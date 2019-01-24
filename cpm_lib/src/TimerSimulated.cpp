@@ -1,4 +1,4 @@
-#include "TimerFD.hpp"
+#include "TimerSimulated.hpp"
 
 #include <iostream>
 #include <cstdio>
@@ -6,7 +6,7 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
-TimerFD::TimerFD(
+TimerSimulated::TimerSimulated(
     std::string _node_id, 
     uint64_t _period_nanoseconds, 
     uint64_t _offset_nanoseconds
@@ -43,7 +43,7 @@ TimerFD::TimerFD(
     }
 }
 
-void TimerFD::wait()
+void TimerSimulated::wait()
 {
     unsigned long long missed;
     int status = read(timer_fd, &missed, sizeof(missed));
@@ -54,7 +54,7 @@ void TimerFD::wait()
     }
 }
 
-void TimerFD::waitForStart() {
+void TimerSimulated::waitForStart() {
     // Timer setup
     int timer = timerfd_create(CLOCK_REALTIME, 0);
     if (timer == -1) {
@@ -65,7 +65,7 @@ void TimerFD::waitForStart() {
     }
 
     //Reader / Writer for ready status and system trigger
-    dds::topic::Topic<ReadyStatus> ready_topic(cpm::ParticipantSingleton::Instance(), "ready");
+    dds::topic::Topic<ReadyStatus> ready_topic(cpm::ParticipantSingleton::Instance(), "system_trigger");
     dds::pub::DataWriter<ReadyStatus> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic);
     dds::topic::Topic<SystemTrigger> trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger");
     dds::sub::DataReader<SystemTrigger> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic);
@@ -103,7 +103,7 @@ void TimerFD::waitForStart() {
     }
 }
 
-void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
+void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
         std::cerr << "The cpm::Timer can not be started twice" << std::endl;
@@ -134,7 +134,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     }
 }
 
-void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
+void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_callback)
 {
     if(!runner_thread.joinable())
     {
@@ -149,7 +149,7 @@ void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
     }
 }
 
-void TimerFD::stop()
+void TimerSimulated::stop()
 {
     active = false;
     if(runner_thread.joinable())
@@ -158,7 +158,7 @@ void TimerFD::stop()
     }
 }
 
-TimerFD::~TimerFD()
+TimerSimulated::~TimerSimulated()
 {
     active = false;
     if(runner_thread.joinable())
@@ -168,7 +168,7 @@ TimerFD::~TimerFD()
 }
 
 
-uint64_t TimerFD::get_time()
+uint64_t TimerSimulated::get_time()
 {
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);

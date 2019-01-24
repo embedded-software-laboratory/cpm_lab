@@ -11,7 +11,7 @@
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 
-class TimerFD : public cpm::Timer
+class TimerSimulated : public cpm::Timer
 {
     std::string node_id;
     bool active = false;
@@ -25,8 +25,8 @@ class TimerFD : public cpm::Timer
     void waitForStart();
 
 public:
-    TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
-    ~TimerFD();
+    TimerSimulated(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
+    ~TimerSimulated();
 
     void start       (std::function<void(uint64_t t_now)> update_callback) override;
     void start_async (std::function<void(uint64_t t_now)> update_callback) override;
