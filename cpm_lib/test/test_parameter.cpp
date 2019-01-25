@@ -26,7 +26,7 @@ TEST_CASE( "parameter_strings" ) {
 
 
     const std::string str1 = "99 bottles of beer on the wall, 99 bottles of beer.";
-    const std::string str2 = "Take one down and pass it around, 98 bottles of beer on the wall.";
+    const char* str2 = "Take one down and pass it around, 98 bottles of beer on the wall.";
 
     std::string received_parameter_value;
     std::string received_parameter_value_2;
@@ -37,7 +37,7 @@ TEST_CASE( "parameter_strings" ) {
 
     ParameterServer server;
     server.set_value("my_param_name2", str1);
-    server.set_value("my_param_name3", "Take one down and pass it around, 98 bottles of beer on the wall.");
+    server.set_value("my_param_name3", str2);
 
     client_thread.join();
 
