@@ -62,6 +62,7 @@ if(NOT BUILD_ARM)
         test/catch.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
+        test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
         test/test_Reader.cpp
     )

@@ -81,8 +81,6 @@ void TimerFD::waitForStart() {
     ready_status.next_start_stamp(TimeStamp(0));
     ready_status.source_id(node_id);
     writer.write(ready_status);
-
-    std::cout << "Signal sent" << std::endl;
     
     //Wait for start signal
     SystemTrigger trigger;
@@ -94,8 +92,6 @@ void TimerFD::waitForStart() {
             break;
         }
     }
-
-    std::cout << "Got system trigger " << trigger.next_start().nanoseconds() << std::endl;
 
     //Finish timer setup
     struct itimerspec its;
@@ -109,8 +105,6 @@ void TimerFD::waitForStart() {
         fflush(stderr); 
         exit(EXIT_FAILURE);
     }
-
-    std::cout << "Waiting for starting point" << std::endl;
 
     //Wait for starting point
     unsigned long long missed;

@@ -26,11 +26,9 @@ TEST_CASE( "TimerFD_accuracy" ) {
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 1000000;
 
-    //Writer etc außerhalb des Threads erstellen?
-    //Receive ready signal / send start signal
-        //Reader / Writer for ready status and system trigger
-        dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"));
-        dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"));
+    //Reader / Writer for ready status and system trigger
+    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"));
+    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"));
 
     //Thread for start signal
     std::thread signal_thread = std::thread([&](){
@@ -90,5 +88,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
         usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime
     });
 
-    signal_thread.join();
+    if (signal_thread.joinable()) {
+        signal_thread.join();
+    }
 }
