@@ -51,10 +51,5 @@ namespace cpm {
      * \return the value of the parameter with the given name
      */
     std::vector<double> parameter_doubles(std::string parameter_name);
-    /**
-     * \brief retrieve the value of a vector-of-strings parameter
-     * \param parameter_name the name of the parameter
-     * \return the value of the parameter with the given name
-     */
-    std::vector<std::string> parameter_strings(std::string parameter_name);
+
 }

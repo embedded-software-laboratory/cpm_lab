@@ -24,7 +24,3 @@ std::vector<int32_t> cpm::parameter_ints(std::string parameter_name) {
 std::vector<double> cpm::parameter_doubles(std::string parameter_name) {
     return ParameterStorage::Instance().parameter_doubles(parameter_name);
 }
-
-std::vector<std::string> cpm::parameter_strings(std::string parameter_name) {
-    return ParameterStorage::Instance().parameter_strings(parameter_name);
-}  
