@@ -12,13 +12,13 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-TEST_CASE( "TimerFD_accuracy" ) {
+TEST_CASE( "TimerSimulated_accuracy" ) {
 
     std::cout << "Starting TimerFD test" << std::endl;
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
-    TimerSimulated timer("0", period, offset);
+    TimerSimulated timer("1", period, offset);
 
     int count = 0;
     int num_runs = 15;
@@ -40,7 +40,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
     std::thread signal_thread = std::thread([&](){
         uint64_t next_start; 
 
-        for (int i = 0; i < num_runs; ++i) {
+        for (int i = 0; i <= num_runs; ++i) {
             std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
             //Wait for ready signal
@@ -54,8 +54,8 @@ TEST_CASE( "TimerFD_accuracy" ) {
                     break;
                 }
             }
-            CHECK(status.source_id() == "0");
-            CHECK(status.next_start_stamp().nanoseconds() == offset);
+            CHECK(status.source_id() == "1");
+            CHECK(status.next_start_stamp().nanoseconds() == period * i + offset);
 
             std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
@@ -67,7 +67,6 @@ TEST_CASE( "TimerFD_accuracy" ) {
             writer.write(trigger);
 
             //Send correct start signal
-            SystemTrigger trigger;
             trigger.next_start(TimeStamp(next_start));
             writer.write(trigger);
         }
@@ -79,13 +78,8 @@ TEST_CASE( "TimerFD_accuracy" ) {
         CHECK( t_start == now );
         CHECK( (now - offset) % period == 0);
 
-        if(count > 0)
-        {
-            CHECK( ((count%3)+1)*period == t_start - t_start_prev);
-        }
-
         count++;
-        if(count > num_runs) {
+        if(count >= num_runs) {
             timer.stop();
         }
 

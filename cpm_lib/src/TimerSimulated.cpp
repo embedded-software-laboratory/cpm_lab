@@ -26,12 +26,12 @@ TimerSimulated::TimerSimulated(
 }
 
 void TimerSimulated::wait() {
-    uint64_t next_period;
+    uint64_t next_period = 0;
     if (period_number == 0) {
-        next_period = offset_nanoseconds;
+        next_period += offset_nanoseconds;
     }
     else {
-        next_period = offset_nanoseconds + period_nanoseconds;
+        next_period += offset_nanoseconds + period_number * period_nanoseconds;
     }
     ++period_number;
 
