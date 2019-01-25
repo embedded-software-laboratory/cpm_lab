@@ -27,38 +27,21 @@ TEST_CASE( "TimerFD_accuracy" ) {
     uint64_t starting_time = timer.get_time() + 1000000;
 
     //Writer etc außerhalb des Threads erstellen?
-
-    //Thread for start signal
-    std::thread signal_thread = std::thread([&](){
-        //Receive ready signal / send start signal
+    //Receive ready signal / send start signal
         //Reader / Writer for ready status and system trigger
-
-        while (dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger") == dds::core::null
-        || dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready") == dds::core::null) {
-            std::cout << "TimerFD: Topic does not yet exist..." << std::endl;
-        }
-
         dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"));
         dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"));
 
+    //Thread for start signal
+    std::thread signal_thread = std::thread([&](){
         //Waitset to wait for data
         // Create a WaitSet
         dds::core::cond::WaitSet waitset;
-        // Create a GuardCondition
-        dds::core::cond::GuardCondition guard_cond;
-        // Create a StatusCondition for a given Entity
-        dds::core::cond::StatusCondition status_cond(reader);
-        status_cond.enabled_statuses(dds::core::status::StatusMask::data_available());
         // Create a ReadCondition for a reader with a specific DataState
         dds::sub::cond::ReadCondition read_cond(
-            reader, dds::sub::status::DataState(
-                dds::sub::status::SampleState::not_read(),
-                dds::sub::status::ViewState::any(),
-                dds::sub::status::InstanceState::any()));
+            reader, dds::sub::status::DataState::any());
         // Attach conditions
-        waitset += guard_cond; // using += operator
-        waitset += status_cond;
-        waitset.attach_condition(read_cond); // or using attach_condition()
+        waitset += read_cond;
 
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
@@ -66,7 +49,13 @@ TEST_CASE( "TimerFD_accuracy" ) {
         ReadyStatus status;
         dds::core::cond::WaitSet::ConditionSeq active_conditions =
             waitset.wait();
-        reader.take(status);
+        for (auto sample : reader.take()) {
+            if (sample.info().valid()) {
+                status.next_start_stamp(sample.data().next_start_stamp());
+                status.source_id(sample.data().source_id());
+                break;
+            }
+        }
         CHECK(status.source_id() == "0");
         CHECK(status.next_start_stamp().nanoseconds() == 0);
 
@@ -100,4 +89,6 @@ TEST_CASE( "TimerFD_accuracy" ) {
 
         usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime
     });
+
+    signal_thread.join();
 }

@@ -21,6 +21,9 @@ class TimerFD : public cpm::Timer
     uint64_t offset_nanoseconds;
     std::thread runner_thread;
     std::function<void(uint64_t t_now)> m_update_callback;
+    //Topics need to be created before the test case is used (as it must be able to access the topic)
+    dds::topic::Topic<ReadyStatus> ready_topic;
+    dds::topic::Topic<SystemTrigger> trigger_topic;
 
     void wait();
     void waitForStart();

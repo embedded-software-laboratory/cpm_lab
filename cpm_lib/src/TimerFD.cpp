@@ -13,6 +13,8 @@ TimerFD::TimerFD(
 )
 :period_nanoseconds(_period_nanoseconds)
 ,offset_nanoseconds(_offset_nanoseconds)
+,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
+,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
 ,node_id(_node_id)
 {
     // Timer setup
@@ -65,30 +67,14 @@ void TimerFD::waitForStart() {
     }
 
     //Reader / Writer for ready status and system trigger
-    dds::topic::Topic<ReadyStatus> ready_topic(cpm::ParticipantSingleton::Instance(), "ready");
     dds::pub::DataWriter<ReadyStatus> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic);
-    dds::topic::Topic<SystemTrigger> trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger");
     dds::sub::DataReader<SystemTrigger> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic);
 
     //Waitset to wait for data
     // Create a WaitSet
     dds::core::cond::WaitSet waitset;
-    // Create a GuardCondition
-    dds::core::cond::GuardCondition guard_cond;
-    // Create a StatusCondition for a given Entity
-    dds::core::cond::StatusCondition status_cond(reader);
-    status_cond.enabled_statuses(dds::core::status::StatusMask::data_available());
-    // Create a ReadCondition for a reader with a specific DataState
-    dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState(
-            dds::sub::status::SampleState::not_read(),
-            dds::sub::status::ViewState::any(),
-            dds::sub::status::InstanceState::any()));
-    // Attach conditions
-    waitset += guard_cond; // using += operator
-    waitset += status_cond;
-    waitset.attach_condition(read_cond); // or using attach_condition()
-
+    dds::sub::cond::ReadCondition read_cond(reader, dds::sub::status::DataState::any());
+    waitset += read_cond;
 
     //Send ready signal
     ReadyStatus ready_status;
@@ -102,7 +88,12 @@ void TimerFD::waitForStart() {
     SystemTrigger trigger;
     dds::core::cond::WaitSet::ConditionSeq active_conditions =
         waitset.wait();
-    reader.take(trigger);
+    for (auto sample : reader.take()) {
+        if (sample.info().valid()) {
+            trigger.next_start(sample.data().next_start());
+            break;
+        }
+    }
 
     std::cout << "Got system trigger " << trigger.next_start().nanoseconds() << std::endl;
 
