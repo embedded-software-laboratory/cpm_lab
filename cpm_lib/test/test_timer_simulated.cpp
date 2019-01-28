@@ -25,8 +25,12 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     uint64_t t_start_prev = 0;
 
     //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"));
-    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"));
+    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
+        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+        dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
+        (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     //Waitset to wait for data
     // Create a WaitSet
     dds::core::cond::WaitSet waitset;
