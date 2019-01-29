@@ -17,6 +17,11 @@ TimerFD::TimerFD(
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
 ,node_id(_node_id)
 {
+    //Offset must be smaller than period
+    if (_offset_nanoseconds >= _period_nanoseconds) {
+        _offset_nanoseconds = _period_nanoseconds - 1;
+    }
+
     // Timer setup
     timer_fd = timerfd_create(CLOCK_REALTIME, 0);
     if (timer_fd == -1) {
@@ -95,7 +100,7 @@ void TimerFD::waitForStart() {
 
     //Finish timer setup
     struct itimerspec its;
-    its.it_value.tv_sec     = 0;
+    its.it_value.tv_sec     = trigger.next_start().nanoseconds() / 1000000000ull;
     its.it_value.tv_nsec    = trigger.next_start().nanoseconds() % 1000000000ull;
     its.it_interval.tv_sec  = 0;
     its.it_interval.tv_nsec = 0;

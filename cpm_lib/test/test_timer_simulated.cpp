@@ -14,7 +14,7 @@
 
 TEST_CASE( "TimerSimulated_accuracy" ) {
 
-    std::cout << "Starting TimerFD test" << std::endl;
+    std::cout << "Starting TimerFD (simulated) test" << std::endl;
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;

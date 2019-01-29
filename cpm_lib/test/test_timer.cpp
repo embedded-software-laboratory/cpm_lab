@@ -24,7 +24,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
     uint64_t t_start_prev = 0;
 
     //Starting time to check for:
-    uint64_t starting_time = timer.get_time() + 1000000;
+    uint64_t starting_time = timer.get_time() + 3000000000;
 
     //Reader / Writer for ready status and system trigger
     dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
