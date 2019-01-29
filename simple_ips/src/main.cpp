@@ -76,15 +76,16 @@ int main() {
 
         vector<cv::Point2f> detected_light_blobs = detect_light_blobs(image);
 
+        vector<std::array<double, 2>> floor_points;
+        for(auto p:detected_light_blobs)
+        {
+            double x,y;
+            calibration(p.x,p.y,x,y);
+            floor_points.push_back({x,y});
+        }
+
         if(detected_light_blobs.size() == 3)
         {
-            vector<std::array<double, 2>> floor_points;
-            for(auto p:detected_light_blobs)
-            {
-                double x,y;
-                calibration(p.x,p.y,x,y);
-                floor_points.push_back({x,y});
-            }
 
             // Calculate pose for _single_ vehicle (special case).
             double max_dist = 0;
@@ -132,6 +133,15 @@ int main() {
             vehicleObservation.pose().yaw(theta);
             cpm::stamp_message(vehicleObservation, t_now, 0);
             writer_vehicleObservation.write(vehicleObservation);
+        }
+        else
+        {
+            std::cout << "Points: ";
+            for(auto p:floor_points)
+            {
+                std::cout << "(" << p[0] << ", " << p[1] << "), ";
+            }
+            std::cout << std::endl;
         }
 
         // visualize
