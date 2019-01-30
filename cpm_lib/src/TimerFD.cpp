@@ -133,12 +133,12 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     }
 
     m_update_callback = update_callback;
-    
-    uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
-    this->active = true;
 
     //Send ready signal, wait for start signal
     waitForStart();
+    
+    uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
+    this->active = true;
 
     while(this->active) {
         this->wait();
