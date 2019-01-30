@@ -75,28 +75,28 @@ void TimerFD::waitForStart() {
     dds::pub::DataWriter<ReadyStatus> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     dds::sub::DataReader<SystemTrigger> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
 
-    //Waitset to wait for data
-    // Create a WaitSet
-    dds::core::cond::WaitSet waitset;
-    dds::sub::cond::ReadCondition read_cond(reader, dds::sub::status::DataState::any());
-    waitset += read_cond;
-
-    //Send ready signal
+    //Create ready signal
     ReadyStatus ready_status;
     ready_status.next_start_stamp(TimeStamp(0));
     ready_status.source_id(node_id);
-    writer.write(ready_status);
     
-    //Wait for start signal
+    //Poll for start signal, send ready signal every 2 seconds until the start signal has been received
+    bool noSignalReceived = true;
     SystemTrigger trigger;
-    dds::core::cond::WaitSet::ConditionSeq active_conditions =
-        waitset.wait();
-    for (auto sample : reader.take()) {
-        if (sample.info().valid()) {
-            trigger.next_start(sample.data().next_start());
-            break;
+    do {
+        writer.write(ready_status);
+
+        rti::util::sleep(dds::core::Duration(2));
+
+        for (auto sample : reader.take()) {
+            if (sample.info().valid()) {
+                trigger.next_start(sample.data().next_start());
+                noSignalReceived = false;
+                break;
+            }
         }
     }
+    while(noSignalReceived);
 
     //Finish timer setup
     struct itimerspec its;

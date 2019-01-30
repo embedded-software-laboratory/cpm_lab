@@ -27,27 +27,39 @@ TimerSimulated::TimerSimulated(
 
 void TimerSimulated::wait() {
     uint64_t next_period = 0;
+    bool noSignalReceived = false;
+    bool gotStartSignal = false;
+
     if (period_number == 0) {
         next_period += offset_nanoseconds;
+        noSignalReceived = true;
     }
     else {
         next_period += offset_nanoseconds + period_number * period_nanoseconds;
     }
-    ++period_number;
 
     //Send ready signal
     ReadyStatus ready_status;
     ready_status.next_start_stamp(TimeStamp(next_period));
     ready_status.source_id(node_id);
-    writer.write(ready_status);
-    
-    //Wait for start signal
-    bool gotStartSignal = false;
-    while (!gotStartSignal) {
-        dds::core::cond::WaitSet::ConditionSeq active_conditions =
-        waitset.wait();
+    if (!noSignalReceived) {
+        writer.write(ready_status);
+    }
+
+    //Wait for any signal (in the first period only) and for the start signal
+    do {
+        //Send the first ready signal until any signal has been received (only in the first period)
+        if (noSignalReceived) {
+            writer.write(ready_status);
+            rti::util::sleep(dds::core::Duration(2));
+        }
+        else { //Wait for the next signals until the start signal has been received
+            dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
+        }
+
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
+                noSignalReceived = false;
                 if (sample.data().next_start().nanoseconds() == next_period) {
                     gotStartSignal = true;
                     break;
@@ -59,6 +71,9 @@ void TimerSimulated::wait() {
             }
         }
     }
+    while(!gotStartSignal);
+
+    ++period_number;
 
     //Got start signal, set new time
     current_time = next_period;
