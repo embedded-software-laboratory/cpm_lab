@@ -57,6 +57,9 @@ void TimerSimulated::wait() {
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
         }
 
+        uint64_t max_time = 2;
+        max_time = max_time^64 - 1;
+
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
                 noSignalReceived = false;
@@ -64,7 +67,7 @@ void TimerSimulated::wait() {
                     gotStartSignal = true;
                     break;
                 }
-                else if (sample.data().next_start().nanoseconds() == (2^64 - 1)) {
+                else if (sample.data().next_start().nanoseconds() == max_time) {
                     //Check for stop signal
                     active = false;
                 }
@@ -93,7 +96,7 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 
     while(this->active) {
         this->wait();
-        if(this->get_time() >= deadline) {
+        if(this->get_time() >= deadline) { //Kann eigentlich hier entfernt werden, wait kümmert sich schon darum
             if(m_update_callback) m_update_callback(deadline);
 
             deadline += period_nanoseconds;

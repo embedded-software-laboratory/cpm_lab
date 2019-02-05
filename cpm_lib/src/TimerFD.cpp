@@ -20,6 +20,7 @@ TimerFD::TimerFD(
     //Offset must be smaller than period
     if (_offset_nanoseconds >= _period_nanoseconds) {
         _offset_nanoseconds = _period_nanoseconds - 1;
+        std::cerr << "Offset set higher than period" << std::endl;
     }
 
     // Timer setup
@@ -119,6 +120,8 @@ void TimerFD::waitForStart() {
         fflush(stderr); 
         exit(EXIT_FAILURE);
     }
+
+    close(timer);
 }
 
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
@@ -188,6 +191,7 @@ TimerFD::~TimerFD()
     {
         runner_thread.join();
     }
+    close(timer_fd);
 }
 
 
