@@ -132,10 +132,6 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
         std::cerr << "The cpm::Timer can not be started twice" << std::endl;
         return;
     }
-    else if (timer_fd == -1) {
-        std::cerr << "The cpm::Timer has been deleted, please create a new object" << std::endl;
-        return;
-    }
 
     m_update_callback = update_callback;
 
