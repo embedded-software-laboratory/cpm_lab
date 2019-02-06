@@ -76,7 +76,9 @@ void TimerSimulated::wait() {
                 }
                 else if (sample.data().next_start().nanoseconds() == max_time) {
                     //Received stop signal
-                    active = false;
+                    gotStartSignal = true;
+                    this->active = false;
+                    break;
                 }
             }
         }
