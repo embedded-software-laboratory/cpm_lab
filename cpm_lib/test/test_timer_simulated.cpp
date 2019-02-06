@@ -2,6 +2,7 @@
 #include "TimerSimulated.hpp"
 #include "TimerFD.hpp"
 #include <unistd.h>
+#include <cmath>
 
 #include <thread>
 
@@ -60,7 +61,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
         std::cout << period_diff << std::endl;
 
-        for (int i = 0; i <= num_runs; ++i) {
+        for (int i = 0; i < num_runs; ++i) {
             //Wait for ready signal
             ReadyStatus status;
             active_conditions = waitset.wait();
@@ -117,8 +118,9 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
         std::cout << "Sending stop signal..." << std::endl;
         uint64_t two = 2;
-        uint64_t max_time = two^63 - 1;
-        max_time += two ^63;
+        uint64_t max_time = pow(two, 63) - 1;
+
+        std::cout << max_time << std::endl;
 
         SystemTrigger stop_trigger;
         stop_trigger.next_start(TimeStamp(max_time));
@@ -130,9 +132,9 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
         uint64_t now = timer.get_time();
 
-        CHECK( t_start == now + period );
+        CHECK( t_start == now );
         CHECK( (now - offset) % period == 0);
-        CHECK( now == count * period + offset );
+        CHECK( t_start == count * period + offset );
 
         count++;
 

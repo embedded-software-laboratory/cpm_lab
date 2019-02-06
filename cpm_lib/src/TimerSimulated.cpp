@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#include <cmath>
 
 TimerSimulated::TimerSimulated(
     std::string _node_id, 
@@ -64,8 +65,7 @@ void TimerSimulated::wait() {
         }
 
         uint64_t two = 2;
-        uint64_t max_time = two^63 - 1;
-        max_time += two ^63;
+        uint64_t max_time = pow(two, 63) - 1;
 
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
@@ -75,7 +75,7 @@ void TimerSimulated::wait() {
                     break;
                 }
                 else if (sample.data().next_start().nanoseconds() == max_time) {
-                    //Check for stop signal
+                    //Received stop signal
                     active = false;
                 }
             }
@@ -100,7 +100,7 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 
     m_update_callback = update_callback;
     
-    uint64_t deadline = ((this->get_time()/period_nanoseconds))*period_nanoseconds + offset_nanoseconds;
+    uint64_t deadline = this->get_time() + offset_nanoseconds;
 
     while(this->active) {
         this->wait();
@@ -116,6 +116,8 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
             }
         }
     }
+
+    std::cout << "Timer stopped" << std::endl;
 }
 
 void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_callback)

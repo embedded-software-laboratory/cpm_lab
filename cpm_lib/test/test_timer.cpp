@@ -87,9 +87,9 @@ TEST_CASE( "TimerFD_accuracy" ) {
         uint64_t now = timer.get_time();
 
         CHECK( was_stopped == false );
-        CHECK( now >= starting_time + offset );
+        CHECK( now >= starting_time + period * (count + 1) + offset );
         if (count == 0) {
-            CHECK( now <= starting_time + offset + 1000000);
+            CHECK( now <= starting_time + period + offset + 1000000);
         }
         CHECK( t_start <= now );
         CHECK( now <= t_start + 1000000 ); // actual start time is within 1 ms of declared start time
