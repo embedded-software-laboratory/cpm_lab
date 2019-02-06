@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "TimerSimulated.hpp"
+#include "TimerFD.hpp"
 #include <unistd.h>
 
 #include <thread>
@@ -44,13 +45,25 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     std::thread signal_thread = std::thread([&](){
         uint64_t next_start; 
 
-        for (int i = 0; i <= num_runs; ++i) {
-            std::cout << "TimerFD: Receiving ready signal..." << std::endl;
+        //Check if ready signal is sent periodically
+        std::cout << "TimerFD: Receiving ready signal..." << std::endl;
+        dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
+        uint64_t time_1 = timer.get_time();
+        active_conditions = waitset.wait();
+        uint64_t time_2 = timer.get_time();
+        active_conditions = waitset.wait();
+        uint64_t time_3 = timer.get_time();
 
+        uint64_t diff_1 = time_2 - time_1;
+        uint64_t diff_2 = time_3 - time_2;
+        int64_t period_diff = diff_1 - diff_2;
+        CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
+        std::cout << period_diff << std::endl;
+
+        for (int i = 0; i <= num_runs; ++i) {
             //Wait for ready signal
             ReadyStatus status;
-            dds::core::cond::WaitSet::ConditionSeq active_conditions =
-                waitset.wait();
+            active_conditions = waitset.wait();
             for (auto sample : reader.take()) {
                 if (sample.info().valid()) {
                     status.next_start_stamp(sample.data().next_start_stamp());
@@ -65,32 +78,71 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
             next_start = status.next_start_stamp().nanoseconds();
 
+            if (i != 0) {
+                std::cout << "The timer should not start before 'X' is printed" << std::endl;
+            }
+
             //Send wrong start signal
             SystemTrigger trigger;
+            trigger.next_start(TimeStamp(next_start - 2));
+            writer.write(trigger);
+
+            //Send wrong start signal
             trigger.next_start(TimeStamp(next_start - 1));
             writer.write(trigger);
+
+            usleep(100000);
+            if (i != 0) {
+                std::cout << "X" << std::endl;
+            }
+            else {
+                //Wait for 5 seconds, no new ready signal should be received
+                struct timespec t;
+                clock_gettime(CLOCK_REALTIME, &t);
+                uint64_t t1 = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+                waitset.wait(dds::core::Duration(5, 0));
+                clock_gettime(CLOCK_REALTIME, &t);
+                uint64_t t2 = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+
+                CHECK(t2 - t1 >= 5000000000);
+            }
 
             //Send correct start signal
             trigger.next_start(TimeStamp(next_start));
             writer.write(trigger);
         }
+
+        //Send stop signal
+        active_conditions = waitset.wait();
+
+        std::cout << "Sending stop signal..." << std::endl;
+        uint64_t two = 2;
+        uint64_t max_time = two^63 - 1;
+        max_time += two ^63;
+
+        SystemTrigger stop_trigger;
+        stop_trigger.next_start(TimeStamp(max_time));
+        writer.write(stop_trigger);
     });
 
     timer.start([&](uint64_t t_start){
+        std::cout << "Next time step" << std::endl;
+
         uint64_t now = timer.get_time();
 
-        CHECK( t_start == now );
+        CHECK( t_start == now + period );
         CHECK( (now - offset) % period == 0);
+        CHECK( now == count * period + offset );
 
         count++;
-        if(count >= num_runs) {
-            timer.stop();
-        }
 
         t_start_prev = t_start;
 
-        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime
+        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime (not really useful here)
     });
+
+    //Should be obsolete because the timer was already stopped before; but: required to free resources
+    timer.stop();
 
     if (signal_thread.joinable()) {
         signal_thread.join();

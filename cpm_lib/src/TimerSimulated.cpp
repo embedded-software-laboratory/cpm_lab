@@ -21,6 +21,12 @@ TimerSimulated::TimerSimulated(
 ,period_number(0)
 ,current_time(0)
 {
+    //Offset must be smaller than period
+    if (offset_nanoseconds >= period_nanoseconds) {
+        offset_nanoseconds = period_nanoseconds - 1;
+        std::cerr << "Offset set higher than period" << std::endl;
+    }
+
     dds::sub::cond::ReadCondition read_cond(reader, dds::sub::status::DataState::any());
     waitset += read_cond;
 }
@@ -43,7 +49,7 @@ void TimerSimulated::wait() {
     ready_status.next_start_stamp(TimeStamp(next_period));
     ready_status.source_id(node_id);
     if (!noSignalReceived) {
-        writer.write(ready_status);
+        writer.write(ready_status); //Soll das ready Signal stattdessen nach jeder Abfrage des Servers geschrieben werden?
     }
 
     //Wait for any signal (in the first period only) and for the start signal
@@ -57,8 +63,9 @@ void TimerSimulated::wait() {
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
         }
 
-        uint64_t max_time = 2;
-        max_time = max_time^64 - 1;
+        uint64_t two = 2;
+        uint64_t max_time = two^63 - 1;
+        max_time += two ^63;
 
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
@@ -89,10 +96,11 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
         return;
     }
 
+    this->active = true;
+
     m_update_callback = update_callback;
     
-    uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
-    this->active = true;
+    uint64_t deadline = ((this->get_time()/period_nanoseconds))*period_nanoseconds + offset_nanoseconds;
 
     while(this->active) {
         this->wait();
