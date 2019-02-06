@@ -32,6 +32,7 @@ public:
     TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
     ~TimerFD();
 
+    void createTimer ();
     void start       (std::function<void(uint64_t t_now)> update_callback) override;
     void start_async (std::function<void(uint64_t t_now)> update_callback) override;
     void stop() override;

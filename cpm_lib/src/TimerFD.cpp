@@ -18,11 +18,13 @@ TimerFD::TimerFD(
 ,node_id(_node_id)
 {
     //Offset must be smaller than period
-    if (_offset_nanoseconds >= _period_nanoseconds) {
-        _offset_nanoseconds = _period_nanoseconds - 1;
+    if (offset_nanoseconds >= period_nanoseconds) {
+        offset_nanoseconds = period_nanoseconds - 1;
         std::cerr << "Offset set higher than period" << std::endl;
     }
+}
 
+void TimerFD::createTimer() {
     // Timer setup
     timer_fd = timerfd_create(CLOCK_REALTIME, 0);
     if (timer_fd == -1) {
@@ -139,6 +141,9 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 
     //Send ready signal, wait for start signal
     waitForStart();
+
+    //Now create the timer (so that they operate in sync)
+    createTimer();
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
     this->active = true;
