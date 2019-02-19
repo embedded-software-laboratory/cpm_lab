@@ -15,13 +15,18 @@ TimerFD::TimerFD(
 ,offset_nanoseconds(_offset_nanoseconds)
 ,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
-,node_id(_node_id)
+,node_id(_node_id),
+reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
 {
     //Offset must be smaller than period
     if (offset_nanoseconds >= period_nanoseconds) {
         offset_nanoseconds = period_nanoseconds - 1;
         std::cerr << "Offset set higher than period" << std::endl;
     }
+
+    //Max time for stop signal
+    two = 2;
+    max_time = pow(two, 63) - 1;
 }
 
 void TimerFD::createTimer() {
@@ -76,7 +81,6 @@ void TimerFD::waitForStart() {
 
     //Reader / Writer for ready status and system trigger
     dds::pub::DataWriter<ReadyStatus> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-    dds::sub::DataReader<SystemTrigger> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
 
     //Create ready signal
     ReadyStatus ready_status;
@@ -163,6 +167,10 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 
                 deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
+
+            if (got_stop_signal()) {
+                this->active = false;
+            }
         }
     }
 }
@@ -208,4 +216,16 @@ uint64_t TimerFD::get_time()
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+}
+
+bool TimerFD::got_stop_signal() {
+    dds::sub::LoanedSamples<SystemTrigger> samples = reader.take();
+
+    for (auto sample : samples) {
+        if (sample.data().next_start().nanoseconds() == max_time) {
+            return true;
+        }
+    }
+
+    return false;
 }

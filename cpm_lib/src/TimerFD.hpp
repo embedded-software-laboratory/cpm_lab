@@ -24,9 +24,13 @@ class TimerFD : public cpm::Timer
     //Topics need to be created before the test case is used (as it must be able to access the topic)
     dds::topic::Topic<ReadyStatus> ready_topic;
     dds::topic::Topic<SystemTrigger> trigger_topic;
+    dds::sub::DataReader<SystemTrigger> reader;
 
     void wait();
     void waitForStart();
+
+    uint64_t two;
+    uint64_t max_time;
 
 public:
     TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
@@ -36,5 +40,6 @@ public:
     void start       (std::function<void(uint64_t t_now)> update_callback) override;
     void start_async (std::function<void(uint64_t t_now)> update_callback) override;
     void stop() override;
+    bool got_stop_signal ();
     uint64_t get_time() override;
 };
