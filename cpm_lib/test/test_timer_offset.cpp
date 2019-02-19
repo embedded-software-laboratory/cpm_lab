@@ -23,7 +23,7 @@ TEST_CASE( "TimerFD_offset" ) {
     uint64_t t_start_prev = 0;
     bool was_stopped = false;
 
-    TimerFD timer("3", period, offset);
+    TimerFD timer("3", period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 1000000000;

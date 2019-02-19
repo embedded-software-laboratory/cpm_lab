@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "TimerFD.hpp"
+#include "ErrorTimerStart.hpp"
 #include <unistd.h>
 
 #include <thread>
@@ -23,7 +24,7 @@ TEST_CASE( "TimerFD_start_again" ) {
     uint64_t t_start_prev = 0;
     bool was_stopped = false;
 
-    TimerFD timer("2", period, offset);
+    TimerFD timer("2", period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 2000000000;
@@ -81,8 +82,24 @@ TEST_CASE( "TimerFD_start_again" ) {
     //Check that the timer cannot be used while it is running (Use return codes here?)
     usleep(1000000);
     std::cout << "Starting the timer again" << std::endl;
-    timer.start([](uint64_t t_start) {});
-    timer.start_async([](uint64_t t_start) {});
+    
+    bool exception_called = false;
+    try {
+        timer.start([](uint64_t t_start) {});
+    }
+    catch (ErrorTimerStart &e) {
+        exception_called = true;
+    }
+    CHECK(exception_called);
+
+    exception_called = false;
+    try {
+        timer.start_async([](uint64_t t_start) {});
+    }
+    catch (ErrorTimerStart &e) {
+        exception_called = true;
+    }
+    CHECK(exception_called);
 
     //Wait for above stuff to finish
     usleep(3000000);
