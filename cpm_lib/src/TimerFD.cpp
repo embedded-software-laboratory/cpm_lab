@@ -137,11 +137,11 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 
     m_update_callback = update_callback;
 
+    //Create the timer (so that they operate in sync)
+    createTimer();
+
     //Send ready signal, wait for start signal
     waitForStart();
-
-    //Now create the timer (so that they operate in sync)
-    createTimer();
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
 
@@ -152,10 +152,16 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 
             deadline += period_nanoseconds;
 
-            while(this->get_time() >= deadline)
+            uint64_t current_time = this->get_time();
+
+            //Error if deadline was missed, correction to next deadline
+            if (current_time >= deadline)
             {
-                std::cerr << "Warning, missed timestep " << deadline << std::endl;
-                deadline += period_nanoseconds;
+                std::cerr << "Deadline: " << deadline 
+                << ", current time: " << current_time 
+                << ", periods missed: " << (current_time - deadline) / period_nanoseconds;
+
+                deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
         }
     }
