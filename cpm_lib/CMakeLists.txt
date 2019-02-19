@@ -27,6 +27,8 @@ set(SOURCE_CPM
     src/Subscriber.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
+    include/cpm/Logging.hpp
+    src/Logging.cpp
 )
 
 
@@ -58,6 +60,7 @@ add_library(cpm SHARED
 if(NOT BUILD_ARM)
     add_executable(unittest 
         test/catch.cpp
+        test/test_logging.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
         test/test_VehicleIDFilteredTopic.cpp
