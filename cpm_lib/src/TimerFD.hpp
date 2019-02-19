@@ -31,9 +31,10 @@ class TimerFD : public cpm::Timer
 
     uint64_t two;
     uint64_t max_time;
+    bool wait_for_start; //If false, do not use waitForStart()
 
 public:
-    TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
+    TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool wait_for_start);
     ~TimerFD();
 
     void createTimer ();

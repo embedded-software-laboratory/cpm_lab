@@ -9,7 +9,8 @@
 TimerFD::TimerFD(
     std::string _node_id, 
     uint64_t _period_nanoseconds, 
-    uint64_t _offset_nanoseconds
+    uint64_t _offset_nanoseconds,
+    bool _wait_for_start
 )
 :period_nanoseconds(_period_nanoseconds)
 ,offset_nanoseconds(_offset_nanoseconds)
@@ -27,6 +28,8 @@ reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topi
     //Max time for stop signal
     two = 2;
     max_time = pow(two, 63) - 1;
+
+    wait_for_start = _wait_for_start;
 }
 
 void TimerFD::createTimer() {
@@ -145,7 +148,9 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     createTimer();
 
     //Send ready signal, wait for start signal
-    waitForStart();
+    if (wait_for_start) {
+        waitForStart();
+    }
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
 
