@@ -136,8 +136,7 @@ void TimerFD::waitForStart() {
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
-        std::cerr << "The cpm::Timer can not be started twice" << std::endl;
-        return;
+        throw ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 
     this->active = true;
@@ -191,7 +190,7 @@ void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
     }
     else
     {
-        std::cerr << "The cpm::Timer can not be started twice" << std::endl;
+        throw ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 }
 

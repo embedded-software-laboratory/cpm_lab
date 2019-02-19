@@ -5,6 +5,8 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+#include "ErrorTimerStart.hpp"
+
 #include <thread>
 #include <string>
 

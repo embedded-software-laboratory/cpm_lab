@@ -94,8 +94,7 @@ void TimerSimulated::wait() {
 void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
-        std::cerr << "The cpm::Timer can not be started twice" << std::endl;
-        return;
+        throw ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 
     this->active = true;
@@ -111,10 +110,16 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 
             deadline += period_nanoseconds;
 
-            while(this->get_time() >= deadline)
+            uint64_t current_time = this->get_time();
+
+            //Error if deadline was missed, correction to next deadline
+            if (current_time >= deadline)
             {
-                std::cerr << "Warning, missed timestep " << deadline << std::endl;
-                deadline += period_nanoseconds;
+                std::cerr << "Deadline: " << deadline 
+                << ", current time: " << current_time 
+                << ", periods missed: " << (current_time - deadline) / period_nanoseconds;
+
+                deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
         }
     }
@@ -133,7 +138,7 @@ void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_call
     }
     else
     {
-        std::cerr << "The cpm::Timer can not be started twice" << std::endl;
+        throw ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 }
 
