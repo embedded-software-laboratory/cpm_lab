@@ -12,19 +12,13 @@ Logging& Logging::Instance() {
     return instance;
 }
 
-void Logging::log(std::string msg) {
-    ParameterRequest request(msg);
-    logger.write(request);
-}
-
-template<typename T> Logging& Logging::operator<< (const T& log) {
-    std::stringstream sstream;
-    sstream << log;
-
+void Logging::flush() {
     file.open(filename, std::ios::app);
-	file << log << "\n";
+	file << stream.str() << "\n";
 	file.close();
 
-    ParameterRequest request(sstream.str());
+    ParameterRequest request(stream.str());
     logger.write(request);
+
+    stream.clear();
 }

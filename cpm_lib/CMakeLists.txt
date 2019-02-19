@@ -27,8 +27,8 @@ set(SOURCE_CPM
     src/Subscriber.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
-    include/cpm/Logging.hpp
     src/Logging.cpp
+    include/cpm/Logging.hpp
 )
 
 

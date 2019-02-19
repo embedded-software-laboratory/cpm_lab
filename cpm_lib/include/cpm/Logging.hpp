@@ -36,8 +36,13 @@ class Logging {
 
         Logging();
 
+        std::stringstream stream;
+
     public:
         static Logging& Instance();
-        void log(std::string msg);
-        template <typename T> Logging& operator<< (const T& log);
-}
+        void flush();
+        template <typename T> Logging& operator<< (const T& log) {
+            stream << log;
+            return *this;
+        }
+};
