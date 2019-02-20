@@ -6,6 +6,8 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
+#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
+
 TimerFD::TimerFD(
     std::string _node_id, 
     uint64_t _period_nanoseconds, 
@@ -24,10 +26,6 @@ reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topi
         offset_nanoseconds = period_nanoseconds - 1;
         std::cerr << "Offset set higher than period" << std::endl;
     }
-
-    //Max time for stop signal
-    two = 2;
-    max_time = pow(two, 63) - 1;
 
     wait_for_start = _wait_for_start;
 }
@@ -167,7 +165,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
             {
                 std::cerr << "Deadline: " << deadline 
                 << ", current time: " << current_time 
-                << ", periods missed: " << (current_time - deadline) / period_nanoseconds;
+                << ", periods missed: " << (current_time - deadline) / period_nanoseconds << std::endl;
 
                 deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
@@ -226,7 +224,7 @@ bool TimerFD::got_stop_signal() {
     dds::sub::LoanedSamples<SystemTrigger> samples = reader.take();
 
     for (auto sample : samples) {
-        if (sample.data().next_start().nanoseconds() == max_time) {
+        if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
             return true;
         }
     }

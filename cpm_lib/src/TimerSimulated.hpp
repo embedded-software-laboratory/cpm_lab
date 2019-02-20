@@ -16,24 +16,21 @@
 
 class TimerSimulated : public cpm::Timer
 {
-    std::string node_id;
-    bool active = false;
     uint64_t period_nanoseconds; 
     uint64_t offset_nanoseconds;
-    //Current period number
+    dds::topic::Topic<ReadyStatus> ready_topic;
+    dds::topic::Topic<SystemTrigger> trigger_topic;
+    dds::pub::DataWriter<ReadyStatus> writer;
+    dds::sub::DataReader<SystemTrigger> reader;
+    std::string node_id;
     uint64_t period_number;
     uint64_t current_time;
+
+    bool active = false;
 
     std::thread runner_thread;
     std::function<void(uint64_t t_now)> m_update_callback;
 
-    //Topics
-    dds::topic::Topic<ReadyStatus> ready_topic;
-    dds::topic::Topic<SystemTrigger> trigger_topic;
-    //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<ReadyStatus> writer;
-    dds::sub::DataReader<SystemTrigger> reader;
-    //WaitSet to wait for data
     dds::core::cond::WaitSet waitset;
 
     void wait();
