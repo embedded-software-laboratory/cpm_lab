@@ -21,5 +21,6 @@ void Logging::flush() {
     ParameterRequest request(stream.str());
     logger.write(request);
 
-    stream.clear();
+    //Clear the stream
+    stream.str(std::string());
 }

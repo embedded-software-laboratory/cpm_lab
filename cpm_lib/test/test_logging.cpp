@@ -34,12 +34,21 @@ TEST_CASE( "Logging" ) {
     std::stringstream actual_content;
     actual_content << "TEST";
 
+    std::string second_test = "Second test!";
+    std::string with_more = "With more!";
+
     //Thread for testing whether the logs are sent correctly via DDS
     std::thread signal_thread = std::thread([&](){
         waitset.wait();
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
                 CHECK(sample.data().name() == actual_content.str());
+            }
+        }
+        waitset.wait();
+        for (auto sample : reader.take()) {
+            if (sample.info().valid()) {
+                CHECK(sample.data().name() == second_test + with_more);
             }
         }
     });
@@ -60,6 +69,22 @@ TEST_CASE( "Logging" ) {
 
     //Compare file content with desired content
     CHECK(file_content.str() == actual_content.str());
+
+    Logging::Instance() << second_test << with_more;
+    Logging::Instance().flush();
+
+    //Check file content
+    str.clear();
+    file_content.str(std::string());
+    file.open("Log.txt");
+    while (std::getline(file, str)) {
+        //String to second stringstream
+        file_content << str << "\n";
+    }
+	file.close();
+
+    //Compare file content with desired content
+    CHECK(file_content.str() == actual_content.str() + "\n" + second_test + with_more + "\n");
 
     signal_thread.join();
 }
