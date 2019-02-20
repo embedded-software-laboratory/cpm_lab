@@ -70,7 +70,7 @@ void TimerFD::wait()
     }
 }
 
-void TimerFD::waitForStart() {
+bool TimerFD::waitForStart() {
     // Timer setup
     int timer = timerfd_create(CLOCK_REALTIME, 0);
     if (timer == -1) {
@@ -89,6 +89,7 @@ void TimerFD::waitForStart() {
     ready_status.source_id(node_id);
     
     //Poll for start signal, send ready signal every 2 seconds until the start signal has been received
+    //Break if stop signal was received
     bool noSignalReceived = true;
     SystemTrigger trigger;
     do {
@@ -98,6 +99,9 @@ void TimerFD::waitForStart() {
 
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
+                if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
+                    return false;
+                }
                 trigger.next_start(sample.data().next_start());
                 noSignalReceived = false;
                 break;
@@ -129,6 +133,7 @@ void TimerFD::waitForStart() {
     }
 
     close(timer);
+    return true;
 }
 
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
@@ -146,7 +151,11 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 
     //Send ready signal, wait for start signal
     if (wait_for_start) {
-        waitForStart();
+        bool gotStartSignal = waitForStart();
+        
+        if (!gotStartSignal) {
+            return;
+        }
     }
     
     uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;

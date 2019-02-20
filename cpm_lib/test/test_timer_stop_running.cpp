@@ -14,14 +14,19 @@
 
 #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
-TEST_CASE( "TimerFD_stop_signal" ) {
+TEST_CASE( "TimerFD_stop_signal_when_running" ) {
 
     std::cout << "Starting TimerFD test" << std::endl;
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
 
+    int count = 0;
+
     TimerFD timer("0", period, offset, true);
+
+    //Starting time to check for:
+    uint64_t starting_time = timer.get_time() + 3000000000;
 
     //Reader / Writer for ready status and system trigger
     dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
@@ -72,15 +77,23 @@ TEST_CASE( "TimerFD_stop_signal" ) {
 
         std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
-        //Send stop signal
+        //Send start signal
         SystemTrigger trigger;
+        trigger.next_start(TimeStamp(starting_time));
+        writer.write(trigger);
+
+        //Wait
+        rti::util::sleep(dds::core::Duration::from_millisecs(100));
+
+        //Send stop signal
         trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
         writer.write(trigger);
     });
 
     timer.start([&](uint64_t t_start){
-        //The timer should never start because it is stopped before that can happen (No start signal is sent)
-        CHECK(false);
+        CHECK(count <= 2); //This task should not have been called too often
+        usleep( 100000 ); // simluate variable runtime
+        ++count;
     });
 
     if (signal_thread.joinable()) {

@@ -30,7 +30,7 @@ class TimerFD : public cpm::Timer
 
 
     void wait();
-    void waitForStart();
+    bool waitForStart(); //Bool: true if start signal was received, false if stop signal was received
     
     bool wait_for_start; //If false, do not use waitForStart()
 
