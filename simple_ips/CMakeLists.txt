@@ -52,6 +52,8 @@ target_link_libraries(ips ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)
 add_executable(slow_recording
     src/CameraWrapper.cpp
     src/CameraWrapper.hpp
+    src/detect_light_blobs.cpp
+    src/detect_light_blobs.hpp
     src/main_slow_recording.cpp
 )
 target_link_libraries(slow_recording ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)

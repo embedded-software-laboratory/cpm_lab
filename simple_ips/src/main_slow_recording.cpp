@@ -1,6 +1,7 @@
 #include "default.hpp"
 #include "CameraWrapper.hpp"
 #include <opencv2/imgproc/types_c.h>
+#include "detect_light_blobs.hpp"
 #include <unistd.h>
 
 
@@ -27,10 +28,11 @@ int main() {
             return 1;
         }
 
+        vector<cv::Point2f> detected_light_blobs = detect_light_blobs(image);
 
         auto t = get_time()/1000000;
         char filename[1000];
-        snprintf(filename, 999, "img_%lu.png", t);
+        snprintf(filename, 999, "img_%02lu_%lu.png", detected_light_blobs.size(), t);
         cv::imwrite(filename, image);
         printf("image \"%s\" saved\n", filename);
 
