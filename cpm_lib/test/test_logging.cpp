@@ -63,7 +63,7 @@ TEST_CASE( "Logging" ) {
     std::ifstream file;
     std::string str;
     std::stringstream file_content;
-    file.open("Log.txt");
+    file.open("Log.csv");
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str;
@@ -71,7 +71,7 @@ TEST_CASE( "Logging" ) {
 	file.close();
 
     //Compare file content with desired content
-    CHECK(file_content.str() == actual_content.str());
+    CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
     //Some milliseconds need to pass, else order is not guaranteed
     rti::util::sleep(dds::core::Duration::from_millisecs(100));
@@ -81,7 +81,7 @@ TEST_CASE( "Logging" ) {
     //Check file content
     str.clear();
     file_content.str(std::string());
-    file.open("Log.txt");
+    file.open("Log.csv");
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str << "\n";
@@ -89,7 +89,8 @@ TEST_CASE( "Logging" ) {
 	file.close();
 
     //Compare file content with desired content
-    CHECK(file_content.str() == actual_content.str() + "\n" + second_test + with_more + "\n");
+    CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
+    CHECK(file_content.str().find(second_test + with_more) != std::string::npos);
 
     signal_thread.join();
 }

@@ -33,7 +33,7 @@ class Logging {
 
         //File for logging
         std::ofstream file;
-        std::string filename = "Log.txt";
+        std::string filename = "Log.csv";
         std::string id = "uninitialized logger (set ID!)";
 
         std::stringstream stream;

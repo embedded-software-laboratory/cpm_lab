@@ -5,6 +5,7 @@ Logging::Logging() :
     logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 {
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
+    file << "ID,Timestamp,Content" << std::endl;
     file.close();
 }
 
@@ -24,12 +25,13 @@ void Logging::set_id(std::string _id) {
 }
 
 void Logging::flush() {
+    uint64_t time_now = get_time();
+
     file.open(filename, std::ios::app);
-	file << stream.str() << "\n";
+	file << id << "," << time_now << "," << stream.str() << std::endl;
 	file.close();
 
-    uint64_t time_now = 0;
-    Log log(id, stream.str(), TimeStamp(get_time()));
+    Log log(id, stream.str(), TimeStamp(time_now));
     logger.write(log);
 
     //Clear the stream
