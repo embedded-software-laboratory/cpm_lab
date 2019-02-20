@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <type_traits>
+#include <time.h>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -36,9 +36,10 @@ class Logging {
         std::string filename = "Log.txt";
         std::string id = "uninitialized logger (set ID!)";
 
-        Logging();
-
         std::stringstream stream;
+
+        Logging();
+        uint64_t get_time();
 
     public:
         static Logging& Instance();

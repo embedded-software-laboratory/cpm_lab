@@ -13,6 +13,12 @@ Logging& Logging::Instance() {
     return instance;
 }
 
+uint64_t Logging::get_time() {
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+}
+
 void Logging::set_id(std::string _id) {
     id = _id;
 }
@@ -23,7 +29,7 @@ void Logging::flush() {
 	file.close();
 
     uint64_t time_now = 0;
-    Log log(id, stream.str(), TimeStamp(0));
+    Log log(id, stream.str(), TimeStamp(get_time()));
     logger.write(log);
 
     //Clear the stream
