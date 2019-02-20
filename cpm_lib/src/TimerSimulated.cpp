@@ -6,6 +6,7 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 #include <cmath>
+#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
 TimerSimulated::TimerSimulated(
     std::string _node_id, 
@@ -64,9 +65,6 @@ void TimerSimulated::wait() {
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
         }
 
-        uint64_t two = 2;
-        uint64_t max_time = pow(two, 63) - 1;
-
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
                 noSignalReceived = false;
@@ -74,7 +72,7 @@ void TimerSimulated::wait() {
                     gotStartSignal = true;
                     break;
                 }
-                else if (sample.data().next_start().nanoseconds() == max_time) {
+                else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
                     //Received stop signal
                     gotStartSignal = true;
                     this->active = false;

@@ -14,6 +14,8 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
+
 TEST_CASE( "TimerSimulated_accuracy" ) {
 
     std::cout << "Starting TimerFD (simulated) test" << std::endl;
@@ -117,13 +119,9 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         active_conditions = waitset.wait();
 
         std::cout << "Sending stop signal..." << std::endl;
-        uint64_t two = 2;
-        uint64_t max_time = pow(two, 63) - 1;
-
-        std::cout << max_time << std::endl;
 
         SystemTrigger stop_trigger;
-        stop_trigger.next_start(TimeStamp(max_time));
+        stop_trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
         writer.write(stop_trigger);
     });
 

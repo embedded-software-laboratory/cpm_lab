@@ -31,9 +31,7 @@ class TimerFD : public cpm::Timer
 
     void wait();
     void waitForStart();
-
-    uint64_t two;
-    uint64_t max_time;
+    
     bool wait_for_start; //If false, do not use waitForStart()
 
 public:
