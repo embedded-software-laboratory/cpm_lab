@@ -42,6 +42,8 @@ add_executable(ips
     src/CameraWrapper.hpp
     src/detect_light_blobs.cpp
     src/detect_light_blobs.hpp
+    src/calibration_floor_plane.cpp
+    src/calibration_floor_plane.hpp
     src/main.cpp
 )
 target_link_libraries(ips ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)
