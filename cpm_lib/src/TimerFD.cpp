@@ -167,7 +167,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
             {
                 std::cerr << "Deadline: " << deadline 
                 << ", current time: " << current_time 
-                << ", periods missed: " << (current_time - deadline) / period_nanoseconds;
+                << ", periods missed: " << (current_time - deadline) / period_nanoseconds << std::endl;
 
                 deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
