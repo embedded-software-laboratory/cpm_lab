@@ -59,3 +59,15 @@ add_executable(slow_recording
     src/main_slow_recording.cpp
 )
 target_link_libraries(slow_recording ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)
+
+
+
+
+add_executable(pose_calibration
+    src/detect_light_blobs.cpp
+    src/detect_light_blobs.hpp
+    src/calibration_floor_plane.cpp
+    src/calibration_floor_plane.hpp
+    src/main_pose_calibration.cpp
+)
+target_link_libraries(pose_calibration ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} cpm)
