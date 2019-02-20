@@ -34,12 +34,13 @@ class Logging {
         //File for logging
         std::ofstream file;
         std::string filename = "Log.csv";
-        std::string id = "uninitialized logger (set ID!)";
+        std::string id = "uninitialized";
 
         std::stringstream stream;
 
         Logging();
         uint64_t get_time();
+        void check_id();
 
     public:
         static Logging& Instance();
@@ -47,11 +48,13 @@ class Logging {
         void flush();
         //Overloading << to flush when using std::endl
         Logging& operator<< (std::basic_ostream<char, std::char_traits<char>>& (*endline_func) (std::basic_ostream<char, std::char_traits<char>>&)) {
+            check_id();
             flush();
             return *this;
         }
 
         template <typename T> Logging& operator<< (const T& log) {
+            check_id();
             stream << log;
             return *this;
         }

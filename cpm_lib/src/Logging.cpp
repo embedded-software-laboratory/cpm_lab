@@ -25,6 +25,8 @@ void Logging::set_id(std::string _id) {
 }
 
 void Logging::flush() {
+    check_id();
+    
     uint64_t time_now = get_time();
 
     file.open(filename, std::ios::app);
@@ -34,6 +36,16 @@ void Logging::flush() {
     Log log(id, stream.str(), TimeStamp(time_now));
     logger.write(log);
 
+    std::cerr << "Log at time " << time_now << ": " << stream.str() << std::endl;
+
     //Clear the stream
     stream.str(std::string());
+}
+
+void Logging::check_id() {
+    if (id == "uninitialized") {
+        fprintf(stderr, "Error: Logger ID was never set\n");
+        fflush(stderr); 
+        exit(EXIT_FAILURE);
+    }
 }
