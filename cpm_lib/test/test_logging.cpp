@@ -12,7 +12,7 @@
 #include <dds/core/ddscore.hpp>
 #include <dds/topic/ddstopic.hpp>
 
-#include "ParameterRequest.hpp"
+#include "Log.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"
 
@@ -20,8 +20,11 @@ TEST_CASE( "Logging" ) {
     //Make sure that the Logging topic already exists
     Logging::Instance();
 
+    std::string id = "TestID";
+    Logging::Instance().set_id(id);
+
     //Create logging reader
-    dds::sub::DataReader<ParameterRequest> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<ParameterRequest>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
+    dds::sub::DataReader<Log> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     // Create a WaitSet
     dds::core::cond::WaitSet waitset;
     // Create a ReadCondition for a reader with a specific DataState
@@ -30,7 +33,7 @@ TEST_CASE( "Logging" ) {
     // Attach conditions
     waitset += read_cond;
 
-    //Get Stringstream version
+    //Get Stringstream version to check if Logging like a stringstream (which it should)
     std::stringstream actual_content;
     actual_content << "TEST";
 
@@ -42,19 +45,19 @@ TEST_CASE( "Logging" ) {
         waitset.wait();
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
-                CHECK(sample.data().name() == actual_content.str());
+                CHECK(sample.data().content() == actual_content.str());
+                CHECK(sample.data().id() == id);
             }
         }
         waitset.wait();
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
-                CHECK(sample.data().name() == second_test + with_more);
+                CHECK(sample.data().content() == second_test + with_more);
             }
         }
     });
 
-    Logging::Instance() << "TEST";
-    Logging::Instance().flush();
+    Logging::Instance() << "TEST" << std::endl;
 
     //Check file content
     std::ifstream file;
@@ -70,8 +73,10 @@ TEST_CASE( "Logging" ) {
     //Compare file content with desired content
     CHECK(file_content.str() == actual_content.str());
 
-    Logging::Instance() << second_test << with_more;
-    Logging::Instance().flush();
+    //Some milliseconds need to pass, else order is not guaranteed
+    rti::util::sleep(dds::core::Duration::from_millisecs(100));
+
+    Logging::Instance() << second_test << with_more << std::endl;
 
     //Check file content
     str.clear();

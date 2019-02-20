@@ -1,0 +1,7 @@
+#include "TimeStamp.idl"
+
+struct Log {
+    string id; //@key
+    string content;
+    TimeStamp stamp;
+};

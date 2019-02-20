@@ -13,13 +13,18 @@ Logging& Logging::Instance() {
     return instance;
 }
 
+void Logging::set_id(std::string _id) {
+    id = _id;
+}
+
 void Logging::flush() {
     file.open(filename, std::ios::app);
 	file << stream.str() << "\n";
 	file.close();
 
-    ParameterRequest request(stream.str());
-    logger.write(request);
+    uint64_t time_now = 0;
+    Log log(id, stream.str(), TimeStamp(0));
+    logger.write(log);
 
     //Clear the stream
     stream.str(std::string());
