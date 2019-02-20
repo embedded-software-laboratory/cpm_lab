@@ -58,8 +58,8 @@ TEST_CASE( "Logging" ) {
     }
 	file.close();
 
-    std::cout << "Final check" << std::endl;
-
     //Compare file content with desired content
     CHECK(file_content.str() == actual_content.str());
+
+    signal_thread.join();
 }

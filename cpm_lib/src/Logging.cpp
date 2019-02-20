@@ -4,7 +4,8 @@ Logging::Logging() :
     loggingTopic(cpm::ParticipantSingleton::Instance(), "Logs"),
     logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 {
-
+    file.open(filename, std::ofstream::out | std::ofstream::trunc);
+    file.close();
 }
 
 Logging& Logging::Instance() {
