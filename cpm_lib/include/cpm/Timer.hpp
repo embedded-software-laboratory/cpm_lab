@@ -1,5 +1,13 @@
 #pragma once
 
+/**
+ * \class Timer.hpp
+ * This class calls a callback function periodically 
+ * based on either the system clock or a simulated 
+ * clock. The calls are synchronized in both frequency 
+ * and phase to the clock.
+ */
+
 #include <string>
 #include <functional>
 #include <memory>
@@ -27,10 +35,28 @@ namespace cpm
             bool wait_for_start=true,
             bool simulated_time_allowed=true
         );
+        /**
+         * Start the periodic callback of the callback function in the 
+         * calling thread. The thread is blocked until stop() is 
+         * called.
+         * \param update_callback the callback function
+         */
         virtual void start       (std::function<void(uint64_t t_now)> update_callback) = 0;
+        /**
+         * Start the periodic callback of the callback function 
+         * in a new thread. The calling thread is not blocked.
+         * \param update_callback the callback function
+         */
         virtual void start_async (std::function<void(uint64_t t_now)> update_callback) = 0;
+        /**
+         * \brief Stops the periodic callback and kills the thread (if it was created using start_async).
+         */
         virtual void stop() = 0;
         
+        /**
+         * \brief Can be used to obtain the current system time in nanoseconds.
+         * \return the current system time in nanoseconds
+         */
         virtual uint64_t get_time() = 0;
     };
 }
