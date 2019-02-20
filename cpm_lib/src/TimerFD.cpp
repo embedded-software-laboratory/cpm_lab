@@ -18,8 +18,9 @@ TimerFD::TimerFD(
 ,offset_nanoseconds(_offset_nanoseconds)
 ,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
-,node_id(_node_id),
-reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+,node_id(_node_id)
+,reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+,wait_for_start(_wait_for_start)
 {
     //Offset must be smaller than period
     if (offset_nanoseconds >= period_nanoseconds) {
@@ -27,7 +28,6 @@ reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topi
         std::cerr << "Offset set higher than period" << std::endl;
     }
 
-    wait_for_start = _wait_for_start;
 }
 
 void TimerFD::createTimer() {
