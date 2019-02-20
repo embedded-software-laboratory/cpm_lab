@@ -63,6 +63,7 @@ if(NOT BUILD_ARM)
         test/catch.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
+        test/test_timer_stop.cpp
         test/test_timer_offset.cpp
         test/test_timer_start_again.cpp
         test/test_timer_simulated.cpp
