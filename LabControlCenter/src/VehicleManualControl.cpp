@@ -4,8 +4,8 @@
 
 #define AXIS_THROTTLE (1)
 #define AXIS_STEERING (3)
-#define BUTTON_SPEED_1MS (0)
-#define BUTTON_SPEED_CONST (1)
+#define BUTTON_SPEED_1MS (4)
+#define BUTTON_SPEED_CONST (5)
 #define BUTTON_TRAJECTORY (3)
 
 VehicleManualControl::VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant)
