@@ -18,6 +18,11 @@ std::shared_ptr<Timer> Timer::create(
         //Use timer for simulated time
         return std::make_shared<TimerSimulated>(node_id, period_nanoseconds, offset_nanoseconds);
     }
+    else if (cpm::parameter_bool("simulated_time") && !simulated_time_allowed) {
+        fprintf(stderr, "Error: simulated time requested but not allowed\n");
+        fflush(stderr); 
+        exit(EXIT_FAILURE);
+    }
     else {
         //Use timer for real time
         return std::make_shared<TimerFD>(node_id, period_nanoseconds, offset_nanoseconds, wait_for_start);
