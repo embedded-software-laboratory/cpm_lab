@@ -24,8 +24,9 @@ TimerFD::TimerFD(
 {
     //Offset must be smaller than period
     if (offset_nanoseconds >= period_nanoseconds) {
-        offset_nanoseconds = period_nanoseconds - 1;
-        std::cerr << "Offset set higher than period" << std::endl;
+        fprintf(stderr, "Offset set higher than period\n");
+        fflush(stderr); 
+        exit(EXIT_FAILURE);
     }
 
 }

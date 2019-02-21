@@ -14,7 +14,7 @@
 
 TEST_CASE( "TimerFD_offset" ) {
 
-    std::cout << "Starting TimerFD offset test" << std::endl;
+    std::cout << "Starting TimerFD offset test - program should crash" << std::endl;
 
     const uint64_t period = 21000000;
     const uint64_t offset = period;
