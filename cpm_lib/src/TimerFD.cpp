@@ -96,7 +96,7 @@ bool TimerFD::waitForStart() {
     //Break if stop signal was received
     bool noSignalReceived = true;
     SystemTrigger trigger;
-    do {
+    while(noSignalReceived) {
         writer_ready_status.write(ready_status);
 
         waitset.wait(dds::core::Duration::from_millisecs(2000));
@@ -112,7 +112,6 @@ bool TimerFD::waitForStart() {
             }
         }
     }
-    while(noSignalReceived);
 
     //Finish timer setup
     struct itimerspec its;

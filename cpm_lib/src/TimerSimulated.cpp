@@ -56,7 +56,7 @@ void TimerSimulated::wait() {
     }
 
     //Wait for any signal (in the first period only) and for the start signal
-    do {
+    while(!gotStartSignal) {
         //Send the first ready signal until any signal has been received (only in the first period)
         if (noSignalReceived) {
             writer_ready_status.write(ready_status);
@@ -82,7 +82,6 @@ void TimerSimulated::wait() {
             }
         }
     }
-    while(!gotStartSignal);
 
     ++period_number;
 
