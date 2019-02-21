@@ -32,8 +32,8 @@ namespace cpm
             std::string node_id,
             uint64_t period_nanoseconds, 
             uint64_t offset_nanoseconds, 
-            bool wait_for_start=true,
-            bool simulated_time_allowed=true
+            bool wait_for_start,
+            bool simulated_time_allowed
         );
         /**
          * Start the periodic callback of the callback function in the 
