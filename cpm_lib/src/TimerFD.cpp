@@ -20,6 +20,7 @@ TimerFD::TimerFD(
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
 ,node_id(_node_id)
 ,reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+,readCondition(reader, dds::sub::status::DataState::any())
 ,wait_for_start(_wait_for_start)
 {
     //Offset must be smaller than period
@@ -29,6 +30,8 @@ TimerFD::TimerFD(
         exit(EXIT_FAILURE);
     }
 
+    //Add Waitset for reader
+    waitset += readCondition;
 }
 
 void TimerFD::createTimer() {
@@ -96,7 +99,7 @@ bool TimerFD::waitForStart() {
     do {
         writer.write(ready_status);
 
-        rti::util::sleep(dds::core::Duration(2));
+        waitset.wait(dds::core::Duration::from_millisecs(2000));
 
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {

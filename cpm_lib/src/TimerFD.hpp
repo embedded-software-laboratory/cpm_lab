@@ -22,6 +22,9 @@ class TimerFD : public cpm::Timer
     dds::topic::Topic<SystemTrigger> trigger_topic;
     std::string node_id;
     dds::sub::DataReader<SystemTrigger> reader;
+
+    dds::sub::cond::ReadCondition readCondition;
+    dds::core::cond::WaitSet waitset;
     
     bool active = false;
     int timer_fd = -1;

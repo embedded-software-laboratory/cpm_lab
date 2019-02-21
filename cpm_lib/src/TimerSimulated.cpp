@@ -60,7 +60,7 @@ void TimerSimulated::wait() {
         //Send the first ready signal until any signal has been received (only in the first period)
         if (noSignalReceived) {
             writer.write(ready_status);
-            rti::util::sleep(dds::core::Duration(2));
+            waitset.wait(dds::core::Duration::from_millisecs(2000));
         }
         else { //Wait for the next signals until the start signal has been received
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
