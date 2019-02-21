@@ -1,6 +1,6 @@
 #include "catch.hpp"
 #include "TimerFD.hpp"
-#include "ErrorTimerStart.hpp"
+#include "cpm/exceptions.hpp"
 #include <unistd.h>
 
 #include <thread>
@@ -87,7 +87,7 @@ TEST_CASE( "TimerFD_start_again" ) {
     try {
         timer.start([](uint64_t t_start) {});
     }
-    catch (ErrorTimerStart &e) {
+    catch (cpm::ErrorTimerStart &e) {
         exception_called = true;
     }
     CHECK(exception_called);
@@ -96,7 +96,7 @@ TEST_CASE( "TimerFD_start_again" ) {
     try {
         timer.start_async([](uint64_t t_start) {});
     }
-    catch (ErrorTimerStart &e) {
+    catch (cpm::ErrorTimerStart &e) {
         exception_called = true;
     }
     CHECK(exception_called);

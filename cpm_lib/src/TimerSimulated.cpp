@@ -92,7 +92,7 @@ void TimerSimulated::wait() {
 void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
-        throw ErrorTimerStart("The cpm::Timer can not be started twice");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 
     this->active = true;
@@ -136,7 +136,7 @@ void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_call
     }
     else
     {
-        throw ErrorTimerStart("The cpm::Timer can not be started twice");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
     }
 }
 

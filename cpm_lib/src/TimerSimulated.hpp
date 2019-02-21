@@ -5,7 +5,7 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-#include "ErrorTimerStart.hpp"
+#include "cpm/exceptions.hpp"
 
 #include <thread>
 #include <string>

@@ -12,7 +12,7 @@
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 
-#include "ErrorTimerStart.hpp"
+#include "cpm/exceptions.hpp"
 
 class TimerFD : public cpm::Timer
 {
