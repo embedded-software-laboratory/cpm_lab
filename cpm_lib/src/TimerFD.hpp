@@ -34,6 +34,7 @@ class TimerFD : public cpm::Timer
 
     void wait();
     bool waitForStart(); //Bool: true if start signal was received, false if stop signal was received
+    bool received_stop_signal ();
     
     const bool wait_for_start; //If false, do not use waitForStart()
 
@@ -45,6 +46,5 @@ public:
     void start       (std::function<void(uint64_t t_now)> update_callback) override;
     void start_async (std::function<void(uint64_t t_now)> update_callback) override;
     void stop() override;
-    bool got_stop_signal ();
     uint64_t get_time() override;
 };

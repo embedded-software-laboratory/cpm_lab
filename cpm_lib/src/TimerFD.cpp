@@ -182,7 +182,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
                 deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
 
-            if (got_stop_signal()) {
+            if (received_stop_signal()) {
                 this->active = false;
             }
         }
@@ -232,7 +232,7 @@ uint64_t TimerFD::get_time()
     return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
 }
 
-bool TimerFD::got_stop_signal() {
+bool TimerFD::received_stop_signal() {
     dds::sub::LoanedSamples<SystemTrigger> samples = reader_system_trigger.take();
 
     for (auto sample : samples) {
