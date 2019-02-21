@@ -21,7 +21,7 @@ class TimerFD : public cpm::Timer
     dds::topic::Topic<ReadyStatus> ready_topic;
     dds::topic::Topic<SystemTrigger> trigger_topic;
     std::string node_id;
-    dds::sub::DataReader<SystemTrigger> reader;
+    dds::sub::DataReader<SystemTrigger> reader_system_trigger;
 
     dds::sub::cond::ReadCondition readCondition;
     dds::core::cond::WaitSet waitset;

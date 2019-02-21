@@ -20,8 +20,8 @@ class TimerSimulated : public cpm::Timer
     uint64_t offset_nanoseconds;
     dds::topic::Topic<ReadyStatus> ready_topic;
     dds::topic::Topic<SystemTrigger> trigger_topic;
-    dds::pub::DataWriter<ReadyStatus> writer;
-    dds::sub::DataReader<SystemTrigger> reader;
+    dds::pub::DataWriter<ReadyStatus> writer_ready_status;
+    dds::sub::DataReader<SystemTrigger> reader_system_trigger;
     std::string node_id;
     uint64_t period_number;
     uint64_t current_time;

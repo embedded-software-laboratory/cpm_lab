@@ -17,8 +17,8 @@ TimerSimulated::TimerSimulated(
 ,offset_nanoseconds(_offset_nanoseconds)
 ,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
-,writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
-,reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+,writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
+,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
 ,node_id(_node_id)
 ,period_number(0)
 ,current_time(0)
@@ -30,7 +30,7 @@ TimerSimulated::TimerSimulated(
         exit(EXIT_FAILURE);
     }
 
-    dds::sub::cond::ReadCondition read_cond(reader, dds::sub::status::DataState::any());
+    dds::sub::cond::ReadCondition read_cond(reader_system_trigger, dds::sub::status::DataState::any());
     waitset += read_cond;
 }
 
@@ -52,21 +52,21 @@ void TimerSimulated::wait() {
     ready_status.next_start_stamp(TimeStamp(next_period));
     ready_status.source_id(node_id);
     if (!noSignalReceived) {
-        writer.write(ready_status); //Soll das ready Signal stattdessen nach jeder Abfrage des Servers geschrieben werden?
+        writer_ready_status.write(ready_status); //Soll das ready Signal stattdessen nach jeder Abfrage des Servers geschrieben werden?
     }
 
     //Wait for any signal (in the first period only) and for the start signal
     do {
         //Send the first ready signal until any signal has been received (only in the first period)
         if (noSignalReceived) {
-            writer.write(ready_status);
+            writer_ready_status.write(ready_status);
             waitset.wait(dds::core::Duration::from_millisecs(2000));
         }
         else { //Wait for the next signals until the start signal has been received
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
         }
 
-        for (auto sample : reader.take()) {
+        for (auto sample : reader_system_trigger.take()) {
             if (sample.info().valid()) {
                 noSignalReceived = false;
                 if (sample.data().next_start().nanoseconds() == next_period) {

@@ -19,8 +19,8 @@ TimerFD::TimerFD(
 ,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
 ,node_id(_node_id)
-,reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
-,readCondition(reader, dds::sub::status::DataState::any())
+,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+,readCondition(reader_system_trigger, dds::sub::status::DataState::any())
 ,wait_for_start(_wait_for_start)
 {
     //Offset must be smaller than period
@@ -30,7 +30,7 @@ TimerFD::TimerFD(
         exit(EXIT_FAILURE);
     }
 
-    //Add Waitset for reader
+    //Add Waitset for reader_system_trigger
     waitset += readCondition;
 }
 
@@ -85,7 +85,7 @@ bool TimerFD::waitForStart() {
     }
 
     //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<ReadyStatus> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    dds::pub::DataWriter<ReadyStatus> writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
 
     //Create ready signal
     ReadyStatus ready_status;
@@ -97,11 +97,11 @@ bool TimerFD::waitForStart() {
     bool noSignalReceived = true;
     SystemTrigger trigger;
     do {
-        writer.write(ready_status);
+        writer_ready_status.write(ready_status);
 
         waitset.wait(dds::core::Duration::from_millisecs(2000));
 
-        for (auto sample : reader.take()) {
+        for (auto sample : reader_system_trigger.take()) {
             if (sample.info().valid()) {
                 if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
                     return false;
@@ -234,7 +234,7 @@ uint64_t TimerFD::get_time()
 }
 
 bool TimerFD::got_stop_signal() {
-    dds::sub::LoanedSamples<SystemTrigger> samples = reader.take();
+    dds::sub::LoanedSamples<SystemTrigger> samples = reader_system_trigger.take();
 
     for (auto sample : samples) {
         if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
