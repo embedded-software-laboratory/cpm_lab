@@ -22,7 +22,7 @@ namespace cpm
     public:
         /**
          * \brief Create a timer that can be used for function callback
-         * \param node_id ID des Timers im DDS Netzwerk
+         * \param node_id ID of the timer in the network
          * \param period_nanoseconds The timer is called periodically with a period of period_nanoseconds
          * \param offset_nanoseconds Initial offset (from timestamp 0)
          * \param wait_for_start For the real-time timer: Set whether the timer is started only if a start signal is sent via DDS
