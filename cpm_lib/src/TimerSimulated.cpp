@@ -20,7 +20,6 @@ TimerSimulated::TimerSimulated(
 ,writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
 ,node_id(_node_id)
-,period_number(0)
 ,current_time(0)
 {
     //Offset must be smaller than period
@@ -34,61 +33,6 @@ TimerSimulated::TimerSimulated(
     waitset += read_cond;
 }
 
-void TimerSimulated::wait() {
-    uint64_t next_period = 0;
-    bool noSignalReceived = false;
-    bool gotStartSignal = false;
-
-    if (period_number == 0) {
-        next_period += offset_nanoseconds;
-        noSignalReceived = true;
-    }
-    else {
-        next_period += offset_nanoseconds + period_number * period_nanoseconds;
-    }
-
-    //Send ready signal
-    ReadyStatus ready_status;
-    ready_status.next_start_stamp(TimeStamp(next_period));
-    ready_status.source_id(node_id);
-    if (!noSignalReceived) {
-        writer_ready_status.write(ready_status); //Soll das ready Signal stattdessen nach jeder Abfrage des Servers geschrieben werden?
-    }
-
-    //Wait for any signal (in the first period only) and for the start signal
-    while(!gotStartSignal) {
-        //Send the first ready signal until any signal has been received (only in the first period)
-        if (noSignalReceived) {
-            writer_ready_status.write(ready_status);
-            waitset.wait(dds::core::Duration::from_millisecs(2000));
-        }
-        else { //Wait for the next signals until the start signal has been received
-            dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        }
-
-        for (auto sample : reader_system_trigger.take()) {
-            if (sample.info().valid()) {
-                noSignalReceived = false;
-                if (sample.data().next_start().nanoseconds() == next_period) {
-                    gotStartSignal = true;
-                    break;
-                }
-                else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                    //Received stop signal
-                    gotStartSignal = true;
-                    this->active = false;
-                    break;
-                }
-            }
-        }
-    }
-
-    ++period_number;
-
-    //Got start signal, set new time
-    current_time = next_period;
-}
-
 void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
@@ -99,30 +43,51 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 
     m_update_callback = update_callback;
     
-    uint64_t deadline = this->get_time() + offset_nanoseconds;
+    uint64_t deadline = offset_nanoseconds;
+    current_time = deadline;
+    bool noSignalReceived = true;
+    bool gotStartSignal = false;
 
     while(this->active) {
-        this->wait();
-        if(this->get_time() >= deadline) { //Kann eigentlich hier entfernt werden, wait kümmert sich schon darum
-            if(m_update_callback) m_update_callback(deadline);
+        //Send ready signal
+        ReadyStatus ready_status;
+        ready_status.next_start_stamp(TimeStamp(deadline));
+        ready_status.source_id(node_id);
+        if (!noSignalReceived) {
+            writer_ready_status.write(ready_status); 
+        }
 
-            deadline += period_nanoseconds;
+        //Wait for any signal (in the first period only) and for the start signal
+        while(!gotStartSignal) {
+            //Wait for the next signals until the start signal has been received
+            if (noSignalReceived) {
+                writer_ready_status.write(ready_status); 
+                waitset.wait(dds::core::Duration::from_millisecs(2000));
+            }
+            else {
+                dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
+            }
 
-            uint64_t current_time = this->get_time();
+            for (auto sample : reader_system_trigger.take()) {
+                if (sample.info().valid()) {
+                    noSignalReceived = false;
 
-            //Error if deadline was missed, correction to next deadline
-            if (current_time >= deadline)
-            {
-                std::cerr << "Deadline: " << deadline 
-                << ", current time: " << current_time 
-                << ", periods missed: " << (current_time - deadline) / period_nanoseconds;
+                    if (sample.data().next_start().nanoseconds() == deadline) {
+                        gotStartSignal = true;
+                        current_time = deadline;
 
-                deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
+                        if(m_update_callback) m_update_callback(deadline);
+                        deadline += period_nanoseconds;
+                    }
+                    else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
+                        //Received stop signal
+                        this->active = false;
+                        return;
+                    }
+                }
             }
         }
     }
-
-    std::cout << "Timer stopped" << std::endl;
 }
 
 void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_callback)
