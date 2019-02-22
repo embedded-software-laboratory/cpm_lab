@@ -32,6 +32,9 @@ class TimerSimulated : public cpm::Timer
 
     dds::core::cond::WaitSet waitset;
 
+    enum Answer {STOP, DEADLINE, ANY, NONE};
+    Answer handle_system_trigger(uint64_t& deadline);
+
 public:
     TimerSimulated(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds);
     ~TimerSimulated();

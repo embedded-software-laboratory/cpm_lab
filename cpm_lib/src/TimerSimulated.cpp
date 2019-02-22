@@ -33,6 +33,41 @@ TimerSimulated::TimerSimulated(
     waitset += read_cond;
 }
 
+TimerSimulated::Answer TimerSimulated::handle_system_trigger(uint64_t& deadline) {
+    bool got_valid = false;
+    bool got_new_deadline = false;
+
+    for (auto sample : reader_system_trigger.take()) {
+        if (sample.info().valid()) {
+            got_valid = true;
+
+            if (sample.data().next_start().nanoseconds() == deadline) {
+                current_time = deadline;
+
+                if(m_update_callback) m_update_callback(deadline);
+                deadline += period_nanoseconds;
+
+                got_new_deadline = true;
+            }
+            else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
+                //Received stop signal
+                this->active = false;
+                return Answer::STOP;
+            }
+        }
+    }
+
+    if (got_new_deadline) {
+        return Answer::DEADLINE;
+    }
+    else if (got_valid) {
+        return Answer::ANY;
+    }
+    else {
+        return Answer::NONE;
+    }
+}
+
 void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
@@ -45,48 +80,34 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
     
     uint64_t deadline = offset_nanoseconds;
     current_time = deadline;
-    bool noSignalReceived = true;
-    bool gotStartSignal = false;
 
-    while(this->active) {
-        //Send ready signal
+    //Send first ready signal until any signal has been received, process answer if necessary
+    Answer system_trigger = Answer::NONE;
+    while (system_trigger == Answer::NONE) {
         ReadyStatus ready_status;
         ready_status.next_start_stamp(TimeStamp(deadline));
         ready_status.source_id(node_id);
-        if (!noSignalReceived) {
-            writer_ready_status.write(ready_status); 
+        writer_ready_status.write(ready_status); 
+        waitset.wait(dds::core::Duration::from_millisecs(2000));
+
+        system_trigger = handle_system_trigger(deadline);
+    }
+
+    //Wait for the next relevant time step and call the callback function until the process has been stopped
+    while(this->active) {
+        //Send ready signal only if a new deadline could be set before
+        if (system_trigger == Answer::DEADLINE) {
+            ReadyStatus ready_status;
+            ready_status.next_start_stamp(TimeStamp(deadline));
+            ready_status.source_id(node_id);
+            writer_ready_status.write(ready_status);
         }
 
-        //Wait for any signal (in the first period only) and for the start signal
-        while(!gotStartSignal) {
-            //Wait for the next signals until the start signal has been received
-            if (noSignalReceived) {
-                writer_ready_status.write(ready_status); 
-                waitset.wait(dds::core::Duration::from_millisecs(2000));
-            }
-            else {
-                dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-            }
+        //Wait for the next signals until the next start signal has been received
+        dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
 
-            for (auto sample : reader_system_trigger.take()) {
-                if (sample.info().valid()) {
-                    noSignalReceived = false;
-
-                    if (sample.data().next_start().nanoseconds() == deadline) {
-                        gotStartSignal = true;
-                        current_time = deadline;
-
-                        if(m_update_callback) m_update_callback(deadline);
-                        deadline += period_nanoseconds;
-                    }
-                    else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                        //Received stop signal
-                        this->active = false;
-                        return;
-                    }
-                }
-            }
-        }
+        //Process new messages
+        system_trigger = handle_system_trigger(deadline);
     }
 }
 
