@@ -49,6 +49,10 @@ void ParameterServer::set_value(std::string name, double value) {
     handleSingleParamRequest(name);
 }
 
+void ParameterServer::set_value(std::string name, const char* value) {
+    set_value(name, std::string(value));
+}
+
 void ParameterServer::set_value(std::string name, std::string value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_string_mutex); 
@@ -73,16 +77,6 @@ void ParameterServer::set_value(std::string name, std::vector<double> value) {
     //Store new value
     std::unique_lock<std::mutex> s_lock(param_doubles_mutex); 
     param_doubles[name] = value;
-    s_lock.unlock();
-
-    //Fake request to send data
-    handleSingleParamRequest(name);
-}
-
-void ParameterServer::set_value(std::string name, std::vector<std::string> value) {
-    //Store new value
-    std::unique_lock<std::mutex> s_lock(param_strings_mutex); 
-    param_strings[name] = value;
     s_lock.unlock();
 
     //Fake request to send data
@@ -142,14 +136,8 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
 
     std::string stringParam;
     if(find_string(name, stringParam)) {
-        //Create data to send
-        std::vector<std::string> stdStrings;
-        stdStrings.push_back(stringParam);
-        rti::core::vector<dds::core::string> strings;
-        std::copy(strings.begin(), strings.end(), std::back_inserter(stdStrings));
-
         param.type(ParameterType::String);
-        param.values_string(strings);
+        param.value_string(stringParam);
         
         //Send new value
         writer.write(param);
@@ -177,19 +165,6 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         param.type(ParameterType::Vector_Double);
         param.values_double(doubles);
         
-        //Send new value
-        writer.write(param);
-        return;
-    }
-
-    std::vector<std::string> stringParams;
-    if(find_strings(name, stringParams)) {
-        param.type(ParameterType::Vector_String);
-        param.values_string().resize(stringParams.size());
-        for (size_t i = 0; i < stringParams.size(); ++i) {
-            param.values_string().at(i) = stringParams.at(i);
-        }
-
         //Send new value
         writer.write(param);
         return;
@@ -245,15 +220,6 @@ bool ParameterServer::find_doubles(std::string param_name, std::vector<double> &
     std::lock_guard<std::mutex> lock(param_doubles_mutex);
     if(param_doubles.find(param_name) != param_doubles.end()) {
         value_out = param_doubles.at(param_name);
-        return true;
-    }
-    return false;
-}
-
-bool ParameterServer::find_strings(std::string param_name, std::vector<std::string> &value_out) {
-    std::lock_guard<std::mutex> lock(param_strings_mutex);
-    if(param_strings.find(param_name) != param_strings.end()) {
-        value_out = param_strings.at(param_name);
         return true;
     }
     return false;

@@ -67,4 +67,10 @@ if(NOT BUILD_ARM)
     )
 
     target_link_libraries(unittest cpm)
+
+    add_executable(parameterServer
+        src/ParameterServerDummy.cpp
+    )
+
+    target_link_libraries(parameterServer cpm)
 endif()
