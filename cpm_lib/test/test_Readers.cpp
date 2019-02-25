@@ -47,6 +47,12 @@ TEST_CASE( "Readers" ) {
         cpm::stamp_message(vehicleState, t_now, expected_delay);
         writer.write(vehicleState);
 
+        //Should be ignored
+        vehicleState.odometer_distance( (t_now-t0)/second + 2 );
+        vehicleState.vehicle_id(2);
+        cpm::stamp_message(vehicleState, t_now, expected_delay);
+        writer.write(vehicleState);
+
         usleep(10000);
     }
 
@@ -69,4 +75,13 @@ TEST_CASE( "Readers" ) {
     REQUIRE( samples_age.at(2) == 900 * millisecond );
     REQUIRE( samples.at(2).odometer_distance() == 6 );
     REQUIRE( samples.at(2).vehicle_id() == 7 );
+
+    bool hasVehicleTwo = false;
+    for (VehicleState& sample : samples) {
+        if (sample.vehicle_id() == 2) {
+            hasVehicleTwo = true;
+        }
+    }
+
+    REQUIRE(!hasVehicleTwo);
 }
