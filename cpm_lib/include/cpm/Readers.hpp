@@ -19,7 +19,7 @@ namespace cpm
         std::mutex m_mutex;
 
         std::array<size_t, N> buffer_indices{};
-        std::array<std::array<T, N>, N> ring_buffers;
+        std::array<std::array<T, CPM_READER_RING_BUFFER_SIZE>, N> ring_buffers;
 
         std::vector<int> vehicle_ids;
 
@@ -48,25 +48,26 @@ namespace cpm
         )
         { 
             //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N, ++pos) {
+            for (size_t pos = 0; pos < N; ++pos) {
                 buffer_indices.at(pos) = 0;
                 vehicle_ids.push_back(pos + 1);
             }
         }
 
         Readers(dds::topic::Topic<T> &topic, std::vector<int> _vehicle_ids) : 
-            dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()),
-            vehicle_ids{_vehicle_ids}
+            dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
-        { 
+        {             
             if (_vehicle_ids.size() != N) {
                 fprintf(stderr, "Error: Readers vehicle_ids size does not match template argument\n");
                 fflush(stderr); 
                 exit(EXIT_FAILURE);
             }
 
+            vehicle_ids = _vehicle_ids;
+
             //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N, ++pos) {
+            for (size_t pos = 0; pos < N; ++pos) {
                 buffer_indices.at(pos) = 0;
             }
         }
@@ -76,7 +77,7 @@ namespace cpm
             std::lock_guard<std::mutex> lock(m_mutex);
 
             dds_reader = other.dds_reader;
-            ring_buffer_indices = other.ring_buffer_indices;
+            buffer_indices = other.buffer_indices;
             ring_buffers = other.ring_buffers;
             vehicle_ids = other.vehicle_ids;
         }
@@ -101,7 +102,7 @@ namespace cpm
             for (size_t pos = 0; pos < N; ++pos) {
                 for (int i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
                 {
-                    auto& current_sample = ring_buffers.get(pos).get((i + ring_buffer_index) % CPM_READER_RING_BUFFER_SIZE);
+                    auto& current_sample = ring_buffers.at(pos).at((i + buffer_indices.at(pos)) % CPM_READER_RING_BUFFER_SIZE);
 
                     if(current_sample.header().valid_after_stamp().nanoseconds() > t_now) 
                     {
@@ -113,7 +114,7 @@ namespace cpm
                     {
                         // Current sample has a higher timestamp, it is newer. Use it.
                         sample_out.at(pos) = current_sample;
-                        sample_age_out.at(pos) = t_now - sample_out.header().valid_after_stamp().nanoseconds();
+                        sample_age_out.at(pos) = t_now - sample_out.at(pos).header().valid_after_stamp().nanoseconds();
                     }
                 }
             }
