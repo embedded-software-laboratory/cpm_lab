@@ -70,36 +70,6 @@ namespace cpm
                 buffer_indices.at(pos) = 0;
             }
         }
-        
-        Readers(dds::topic::ContentFilteredTopic<T> &topic) : 
-            dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
-            (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
-        )
-        { 
-            //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N, ++pos) {
-                buffer_indices.at(pos) = 0;
-                vehicle_ids.push_back(pos + 1);
-            }
-        }
-
-        Readers(dds::topic::ContentFilteredTopic<T> &topic, std::vector<int> _vehicle_ids) : 
-            dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
-            (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()),
-            vehicle_ids{_vehicle_ids}
-        )
-        { 
-            if (_vehicle_ids.size() != N) {
-                fprintf(stderr, "Error: Readers vehicle_ids size does not match template argument\n");
-                fflush(stderr); 
-                exit(EXIT_FAILURE);
-            }
-
-            //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N, ++pos) {
-                buffer_indices.at(pos) = 0;
-            }
-        }
 
         Readers(const Readers &other) 
         {
