@@ -39,5 +39,5 @@ public:
     void update_command(VehicleCommandSpeedCurvature vehicleCommand);
     void update_command(VehicleCommandTrajectory vehicleCommand);
     void vehicle_emergency_stop();
-    spi_mosi_data_t get_control_signals(uint64_t stamp_now);
+    void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
 };

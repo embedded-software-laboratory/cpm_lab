@@ -162,10 +162,29 @@ int main(int argc, char *argv[])
             reader_vehicleObservation.get_sample(t_now, sample_vehicleObservation, sample_vehicleObservation_age);
 
 
+
+
+            spi_mosi_data_t spi_mosi_data;
+            memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+
+            
+            double motor_throttle = 0;
+            double steering_servo = 0;
+
             // Run controller
-            spi_mosi_data_t spi_mosi_data = controller.get_control_signals(t_now);
+            {
+                controller.get_control_signals(t_now, motor_throttle, steering_servo);
 
+                // Motor deadband, to prevent small stall currents when standing still
+                uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+                if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+                if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
 
+                // Convert to low level controller units
+                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
+                spi_mosi_data.motor_mode = motor_mode;
+            }
 
             // LED identification signal
             {
@@ -175,20 +194,8 @@ int main(int argc, char *argv[])
                 spi_mosi_data.LED2_enabled_ticks = 1;
                 spi_mosi_data.LED3_period_ticks = 1;
                 spi_mosi_data.LED3_enabled_ticks = 1;
-                spi_mosi_data.LED4_period_ticks = 1;
-                spi_mosi_data.LED4_enabled_ticks = 0;
-
-
-                auto rem = t_now % 3000000000ull;
-
-                uint64_t slot = vehicle_id * 500000000ull;
-
-                if( slot <= rem && rem < slot + 250000000ull )
-                {
-                    spi_mosi_data.LED1_enabled_ticks = 1;
-                    spi_mosi_data.LED2_enabled_ticks = 1;
-                    spi_mosi_data.LED3_enabled_ticks = 1;
-                }
+                spi_mosi_data.LED4_period_ticks = 7;
+                spi_mosi_data.LED4_enabled_ticks = 5;
             }
 
 

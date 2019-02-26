@@ -58,25 +58,13 @@ double steering_curvature_calibration(double curvature)
 }
 
 
-spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
-    spi_mosi_data_t spi_mosi_data;
-    memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo) {
 
     if(state == ControllerState::Stop) {
-        spi_mosi_data.motor_mode = SPI_MOTOR_MODE_BRAKE;
-        spi_mosi_data.LED1_period_ticks = 50;
-        spi_mosi_data.LED1_enabled_ticks = 1;
-        spi_mosi_data.LED2_period_ticks = 25;
-        spi_mosi_data.LED2_enabled_ticks = 1;
-        spi_mosi_data.LED3_period_ticks = 25;
-        spi_mosi_data.LED3_enabled_ticks = 1;
-        spi_mosi_data.LED4_period_ticks = 50;
-        spi_mosi_data.LED4_enabled_ticks = 1;
-        return spi_mosi_data;
+        motor_throttle = 0;
+        steering_servo = 0;
+        return;
     }
-
-    double motor_throttle = 0;
-    double steering_servo = 0;
 
     switch(state) {        
 
@@ -148,24 +136,14 @@ spi_mosi_data_t Controller::get_control_signals(uint64_t stamp_now) {
 
         default: // Direct
         {
-            motor_throttle = fmax(-1.0, fmin(1.0, m_vehicleCommandDirect.motor_throttle()));
-            steering_servo = fmax(-1.0, fmin(1.0, m_vehicleCommandDirect.steering_servo()));
+            motor_throttle = m_vehicleCommandDirect.motor_throttle();
+            steering_servo = m_vehicleCommandDirect.steering_servo();
         }
         break;
     }
 
-
-    // Motor deadband, to prevent small stall currents when standing still
-    uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-    if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-    if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
-
-
-    spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-    spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
-    spi_mosi_data.motor_mode = motor_mode;
-
-    return spi_mosi_data;
+    motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
+    steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
 }
 
 
