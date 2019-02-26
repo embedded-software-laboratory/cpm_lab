@@ -3,8 +3,10 @@
 /*
  * Ready signals sent from all participants in the network, e.g. HLCs and vehicles. 
  * These signals fulfill two purposes:
- * 1) Send a "ready" message that indicates that the computation can begin, meaning that the initialization of the participant is completed. The field source_id is used to uniquely identify the sender of the ready message, so that, before a "start" signal is sent, it can be assured that all participants are ready to start with the calculation afterwards. The field next_start_stamp can either have an arbitrary value, if real time is used (meaning that the participant is ready to receive a start signal anytime) or it contains the point in time when the next step of the participant's computation is supposed to be performed if simulated time is used, starting at 0.
- * 2) After a start signal has been received, ReadyStatus is only used in combination with simulated time: Given next_start_stamp, the next point in time when the participant is supposed to perform further calculations is communicated with the sender of SystemTrigger. These points depend e.g. on the period set for a program that is supposed to be called every x milliseconds. The participant needs to wait for a SystemTrigger that matches its next_start_stamp before any further computation can be performed.
+ * 1) Send a "ready" message that indicates that the computation can begin, meaning that the initialization of the participant is completed. The field source_id is used to uniquely identify the sender of the ready message, so that, before a "start" signal is sent, it can be assured that all participants are ready to start with the calculation.
+ Real time mode: The field next_start_stamp can either have an arbitrary value.
+ Simulated time mode: The field next_start_stamp must contain the initial simulated point in time of the participant's computation, i.e. the offset.
+ * 2) After a start signal has been received, ReadyStatus is only used in combination with simulated time: After a participant completes a computation step, it indicates in the field "next_start_stamp" its next expected trigger start time. The participant waits for a SystemTrigger that matches its next_start_stamp before any further computation is performed.
  */
 
 struct ReadyStatus {
