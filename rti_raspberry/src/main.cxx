@@ -225,6 +225,8 @@ int main(int argc, char *argv[])
                     sample_vehicleObservation_age
                 );
                 vehicleState.pose(new_pose);
+                vehicleState.motor_throttle(motor_throttle);
+                vehicleState.steering_servo(steering_servo);
                 vehicleState.vehicle_id(vehicle_id);
                 vehicleState.IPS_update_age_nanoseconds(sample_vehicleObservation_age);
                 cpm::stamp_message(vehicleState, t_now, 60000000ull);
