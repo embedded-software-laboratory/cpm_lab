@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
     const int vehicle_id = std::atoi(argv[1]);
 
-    if(vehicle_id < 0 || vehicle_id >= 255) {
+    if(vehicle_id <= 0 || vehicle_id > 25) {
         std::cerr << "Invalid vehicle ID." << std::endl;
         return 1;
     }
@@ -107,6 +107,9 @@ int main(int argc, char *argv[])
 #endif
 
     crcInit();
+
+    const vector<uint8_t> identification_LED_period_ticks  {1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    const vector<uint8_t> identification_LED_enabled_ticks {0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
     // Loop setup
     Localization localization;
@@ -186,6 +189,7 @@ int main(int argc, char *argv[])
                 spi_mosi_data.motor_mode = motor_mode;
             }
 
+
             // LED identification signal
             {
                 spi_mosi_data.LED1_period_ticks = 1;
@@ -194,17 +198,9 @@ int main(int argc, char *argv[])
                 spi_mosi_data.LED2_enabled_ticks = 1;
                 spi_mosi_data.LED3_period_ticks = 1;
                 spi_mosi_data.LED3_enabled_ticks = 1;
-                spi_mosi_data.LED4_period_ticks = 7;
-                spi_mosi_data.LED4_enabled_ticks = 5;
+                spi_mosi_data.LED4_period_ticks = identification_LED_period_ticks.at(vehicle_id);
+                spi_mosi_data.LED4_enabled_ticks = identification_LED_enabled_ticks.at(vehicle_id);
             }
-
-
-
-
-
-
-
-
 
             spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
 
