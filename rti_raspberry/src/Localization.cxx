@@ -60,7 +60,7 @@ Pose2D Localization::update(
     {
         LocalizationState localizationStateNew;
         localizationStateNew.t = t_now;
-        localizationStateNew.imu_yaw = vehicleState.pose().yaw();
+        localizationStateNew.imu_yaw = vehicleState.imu_yaw();
         localizationStateNew.odometer_distance = vehicleState.odometer_distance();
         write_next_state(localizationStateNew);
 
