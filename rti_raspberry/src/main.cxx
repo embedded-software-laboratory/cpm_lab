@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
 
     crcInit();
 
-    const vector<uint8_t> identification_LED_period_ticks  {1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    const vector<uint8_t> identification_LED_enabled_ticks {0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    const vector<uint8_t> identification_LED_period_ticks  {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+    const vector<uint8_t> identification_LED_enabled_ticks {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
     
     // Loop setup
     Localization localization;
