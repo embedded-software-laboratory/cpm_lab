@@ -121,20 +121,24 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     createTimer();
 
     //Send ready signal, wait for start signal
+    uint64_t start_point;
     uint64_t deadline;
     if (wait_for_start) {
-        uint64_t start_point = waitForStart();
+        start_point = waitForStart();
         
         if (start_point == TRIGGER_STOP_SYMBOL) {
             return;
         }
-
-        //Do not skip the first period if multiple
-        uint64_t add = (start_point % period_nanoseconds == 0) ? 0 : 1;
-        deadline = ((start_point / period_nanoseconds) + add) * period_nanoseconds + offset_nanoseconds;
     }
     else {
-        deadline = ((this->get_time() / period_nanoseconds) + 1)*period_nanoseconds + offset_nanoseconds;
+        start_point = this->get_time();
+    }
+
+    if ((start_point - offset_nanoseconds) % period_nanoseconds == 0) {
+        deadline = start_point;
+    }
+    else {
+        deadline = (((start_point - offset_nanoseconds) / period_nanoseconds) + 1) * period_nanoseconds + offset_nanoseconds;
     }
 
     while(this->active) {
