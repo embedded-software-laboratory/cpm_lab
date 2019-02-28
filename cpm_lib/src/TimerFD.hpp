@@ -33,7 +33,7 @@ class TimerFD : public cpm::Timer
 
 
     void wait();
-    bool waitForStart(); //Bool: true if start signal was received, false if stop signal was received
+    uint64_t waitForStart(); //Bool: true if start signal was received, false if stop signal was received
     bool received_stop_signal ();
     
     const bool wait_for_start; //If false, do not use waitForStart()

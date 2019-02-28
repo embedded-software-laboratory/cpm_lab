@@ -74,16 +74,7 @@ void TimerFD::wait()
     }
 }
 
-bool TimerFD::waitForStart() {
-    // Timer setup
-    int timer = timerfd_create(CLOCK_REALTIME, 0);
-    if (timer == -1) {
-        fprintf(stderr, "Call to timerfd_create in waitForStart failed.\n"); 
-        perror("timerfd_create");
-        fflush(stderr); 
-        exit(EXIT_FAILURE);
-    }
-
+uint64_t TimerFD::waitForStart() {
     //Reader / Writer for ready status and system trigger
     dds::pub::DataWriter<ReadyStatus> writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
 
@@ -104,7 +95,7 @@ bool TimerFD::waitForStart() {
         for (auto sample : reader_system_trigger.take()) {
             if (sample.info().valid()) {
                 if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                    return false;
+                    return TRIGGER_STOP_SYMBOL;
                 }
                 trigger.next_start(sample.data().next_start());
                 noSignalReceived = false;
@@ -113,30 +104,7 @@ bool TimerFD::waitForStart() {
         }
     }
 
-    //Finish timer setup
-    struct itimerspec its;
-    its.it_value.tv_sec     = trigger.next_start().nanoseconds() / 1000000000ull;
-    its.it_value.tv_nsec    = trigger.next_start().nanoseconds() % 1000000000ull;
-    its.it_interval.tv_sec  = 0;
-    its.it_interval.tv_nsec = 0;
-    int status = timerfd_settime(timer, TFD_TIMER_ABSTIME, &its, NULL);
-    if (status != 0) {
-        fprintf(stderr, "Call to timer_settime returned error status (%d).\n", status);
-        fflush(stderr); 
-        exit(EXIT_FAILURE);
-    }
-
-    //Wait for starting point
-    unsigned long long missed;
-    status = read(timer, &missed, sizeof(missed));
-    if(status != sizeof(missed)) {
-        fprintf(stderr, "Error: read(timer), status %d.\n", status);
-        fflush(stderr); 
-        exit(EXIT_FAILURE);
-    }
-
-    close(timer);
-    return true;
+    return trigger.next_start().nanoseconds();
 }
 
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
@@ -153,15 +121,21 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     createTimer();
 
     //Send ready signal, wait for start signal
+    uint64_t deadline;
     if (wait_for_start) {
-        bool gotStartSignal = waitForStart();
+        uint64_t start_point = waitForStart();
         
-        if (!gotStartSignal) {
+        if (start_point == TRIGGER_STOP_SYMBOL) {
             return;
         }
+
+        //Do not skip the first period if multiple
+        uint64_t add = (start_point % period_nanoseconds == 0) ? 0 : 1;
+        deadline = ((start_point / period_nanoseconds) + add) * period_nanoseconds + offset_nanoseconds;
     }
-    
-    uint64_t deadline = ((this->get_time()/period_nanoseconds)+1)*period_nanoseconds + offset_nanoseconds;
+    else {
+        deadline = ((this->get_time() / period_nanoseconds) + 1)*period_nanoseconds + offset_nanoseconds;
+    }
 
     while(this->active) {
         this->wait();
