@@ -1,5 +1,15 @@
 #include "ParameterStorage.hpp"
 
+ParameterStorage::ParameterStorage() {
+
+}
+
+ParameterStorage& ParameterStorage::Instance() {
+    // Thread-safe in C++11
+    static ParameterStorage myInstance;
+    return myInstance;
+}
+
 void ParameterStorage::loadFile() {
 
 }
