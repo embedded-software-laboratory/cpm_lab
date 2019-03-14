@@ -17,12 +17,58 @@ void ParameterStorage::loadFile() {
 
     YAML::Node params = file["parameters"];
     YAML::Node params_bool = params["bool"];
-    std::cout << params_bool << std::endl;
+    YAML::Node params_int = params["int"];
+    YAML::Node params_double = params["double"];
+    YAML::Node params_string = params["string"];
+    YAML::Node params_ints = params["ints"];
+    YAML::Node params_doubles = params["doubles"];
+    
     assert(params_bool.IsMap());
+    assert(params_int.IsMap());
+    assert(params_double.IsMap());
+    assert(params_string.IsMap());
+    assert(params_ints.IsMap());
+    assert(params_doubles.IsMap());
 
-    std::cout << "Params bool line by line" << std::endl;
     for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
-        std::cout << it->first.as<std::string>() << " " << it->second.as<bool>() << "\n";
+        set_parameter_bool(it->first.as<std::string>(), it->second.as<bool>());
+        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<bool>() << std::endl;
+    }
+    for (YAML::const_iterator it=params_int.begin();it!=params_int.end();++it) {
+        set_parameter_int(it->first.as<std::string>(), it->second.as<int32_t>());
+        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<int32_t>() << std::endl;
+    }
+    for (YAML::const_iterator it=params_double.begin();it!=params_double.end();++it) {
+        set_parameter_double(it->first.as<std::string>(), it->second.as<double>());
+        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<double>() << std::endl;
+    }
+    for (YAML::const_iterator it=params_string.begin();it!=params_string.end();++it) {
+        set_parameter_string(it->first.as<std::string>(), it->second.as<std::string>());
+        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<std::string>() << std::endl;
+    }
+    for (YAML::const_iterator outer_it=params_ints.begin();outer_it!=params_ints.end();++outer_it) {
+        std::vector<int32_t> ints;
+        assert(outer_it->second.IsSequence());
+        for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
+            ints.push_back(inner_it->as<int32_t>());
+        }
+        set_parameter_ints(outer_it->first.as<std::string>(), ints);
+        std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
+        for (auto val : ints) {
+            std::cout << "\t" << val << std::endl;
+        }
+    }
+    for (YAML::const_iterator outer_it=params_doubles.begin();outer_it!=params_doubles.end();++outer_it) {
+        std::vector<double> doubles;
+        assert(outer_it->second.IsSequence());
+        for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
+            doubles.push_back(inner_it->as<double>());
+        }
+        set_parameter_doubles(outer_it->first.as<std::string>(), doubles);
+        std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
+        for (auto val : doubles) {
+            std::cout << "\t" << val << std::endl;
+        }
     }
 }
 
@@ -32,31 +78,66 @@ void ParameterStorage::storeFile() {
 
 void ParameterStorage::set_parameter_bool(std::string name, bool value) {
     std::lock_guard<std::mutex> u_lock(param_bool_mutex);
-    param_bool[name] = value;
+    if (param_bool.find(name) != param_bool.end()) {
+        param_bool[name] = value;
+    }
+    else {
+        param_bool.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_int(std::string name, int32_t value) {
     std::lock_guard<std::mutex> u_lock(param_int_mutex);
-    param_int[name] = value;
+    if (param_int.find(name) != param_int.end()) {
+        param_int[name] = value;
+    }
+    else {
+        param_int.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_double(std::string name, double value) {
     std::lock_guard<std::mutex> u_lock(param_double_mutex);
-    param_double[name] = value;
+    if (param_double.find(name) != param_double.end()) {
+        param_double[name] = value;
+    }
+    else {
+        param_double.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_string(std::string name, std::string value) {
     std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    param_string[name] = value;
+    if (param_string.find(name) != param_string.end()) {
+        param_string[name] = value;
+    }
+    else {
+        param_string.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_string(std::string name, const char* value) {
     std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    param_string[name] = std::string(value);
+    if (param_string.find(name) != param_string.end()) {
+        param_string[name] = value;
+    }
+    else {
+        param_string.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_ints(std::string name, std::vector<int32_t> value) {
     std::lock_guard<std::mutex> u_lock(param_ints_mutex);
-    param_ints[name] = value;
+    if (param_ints.find(name) != param_ints.end()) {
+        param_ints[name] = value;
+    }
+    else {
+        param_ints.emplace(name, value);
+    }
 }
 void ParameterStorage::set_parameter_doubles(std::string name, std::vector<double> value) {
     std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
-    param_doubles[name] = value;
+    if (param_doubles.find(name) != param_doubles.end()) {
+        param_doubles[name] = value;
+    }
+    else {
+        param_doubles.emplace(name, value);
+    }
 }
 
 bool ParameterStorage::get_parameter_bool(std::string name, bool& value) {
