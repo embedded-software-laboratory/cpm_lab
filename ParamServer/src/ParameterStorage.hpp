@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <cassert>
+#include <iostream>
 
 class ParameterStorage {
 public:

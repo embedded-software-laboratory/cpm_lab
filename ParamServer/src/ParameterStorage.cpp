@@ -11,7 +11,19 @@ ParameterStorage& ParameterStorage::Instance() {
 }
 
 void ParameterStorage::loadFile() {
+    std::cout << "Trying to load file" << std::endl;
+    YAML::Node file = YAML::LoadFile("test.yaml");
+    std::cout << "File loaded" << std::endl;
 
+    YAML::Node params = file["parameters"];
+    YAML::Node params_bool = params["bool"];
+    std::cout << params_bool << std::endl;
+    assert(params_bool.IsMap());
+
+    std::cout << "Params bool line by line" << std::endl;
+    for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
+        std::cout << it->first.as<std::string>() << " " << it->second.as<bool>() << "\n";
+    }
 }
 
 void ParameterStorage::storeFile() {

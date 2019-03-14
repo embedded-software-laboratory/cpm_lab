@@ -20,13 +20,14 @@ include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
 link_directories(../cpm_base/cpm_lib/build/)
 
 # yaml-cpp
-include_directories(../yaml-cpp/include/yaml-cpp)
+find_package(yaml-cpp PATHS ../yaml-cpp/)
+include_directories(../yaml-cpp/include/)
 link_directories(../yaml-cpp/build/)
 
 add_executable(ParamServer
-    src/ParamServer.hpp
-    src/ParamServer.cpp
+    src/ParameterStorage.hpp
+    src/ParameterStorage.cpp
     src/main.cpp
 )
 
-target_link_libraries(ParamServer cpm)
+target_link_libraries(ParamServer cpm yaml-cpp)
