@@ -10,5 +10,7 @@ int main(int argc, char *argv[])
 {
     ParameterStorage::Instance().loadFile();
 
+    ParameterStorage::Instance().storeFile();
+
     return 0;
 }

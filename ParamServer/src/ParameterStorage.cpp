@@ -73,7 +73,80 @@ void ParameterStorage::loadFile() {
 }
 
 void ParameterStorage::storeFile() {
+    YAML::Emitter out;
 
+    out << YAML::BeginMap;
+    out << YAML::Key << "parameters";
+    out << YAML::Value << YAML::BeginMap;
+    
+    out << YAML::Key << "bool";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_bool()) {
+        bool value;
+        get_parameter_bool(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << value;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::Key << "int";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_int()) {
+        int32_t value;
+        get_parameter_int(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << value;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::Key << "double";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_double()) {
+        double value;
+        get_parameter_double(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << value;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::Key << "string";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_string()) {
+        std::string value;
+        get_parameter_string(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << YAML::DoubleQuoted << value;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::Key << "ints";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_ints()) {
+        std::vector<int32_t> value;
+        get_parameter_ints(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << value;
+    }
+    out << YAML::EndMap;
+    
+    out << YAML::Key << "doubles";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_doubles()) {
+        std::vector<double> value;
+        get_parameter_doubles(key, value);
+        out << YAML::Key << key;
+        out << YAML::Value << value;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::EndMap << YAML::EndMap;
+
+    std::cout << out.c_str() << std::endl;
+
+    std::ofstream file;
+    file.open("test_out.yaml", std::ofstream::out | std::ofstream::trunc);
+    file << out.c_str() << std::endl;
+    file.close();
 }
 
 void ParameterStorage::set_parameter_bool(std::string name, bool value) {

@@ -12,6 +12,7 @@
 #include <mutex>
 #include <cassert>
 #include <iostream>
+#include <fstream>
 
 class ParameterStorage {
 public:
