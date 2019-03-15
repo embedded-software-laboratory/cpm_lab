@@ -105,7 +105,7 @@ void ParameterStorage::storeFile() {
         double value;
         get_parameter_double(key, value);
         out << YAML::Key << key;
-        out << YAML::Value << value;
+        out << YAML::Value << YAML::DoublePrecision(PRECISION) << value;
     }
     out << YAML::EndMap;
 
@@ -135,7 +135,7 @@ void ParameterStorage::storeFile() {
         std::vector<double> value;
         get_parameter_doubles(key, value);
         out << YAML::Key << key;
-        out << YAML::Value << value;
+        out << YAML::Value << YAML::DoublePrecision(PRECISION) << value;
     }
     out << YAML::EndMap;
 

@@ -69,6 +69,8 @@ public:
 private:
     ParameterStorage();
 
+    int PRECISION = 32;
+
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;
     std::map<std::string, int32_t> param_int;

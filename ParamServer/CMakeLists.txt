@@ -31,3 +31,13 @@ add_executable(ParamServer
 )
 
 target_link_libraries(ParamServer cpm yaml-cpp)
+
+add_executable(unittest
+    src/ParameterStorage.hpp
+    src/ParameterStorage.cpp
+    test/catch.cpp
+    test/catch.hpp
+    test/parameterTest.cpp
+)
+
+target_link_libraries(unittest cpm yaml-cpp)
