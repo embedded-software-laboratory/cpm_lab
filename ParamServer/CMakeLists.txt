@@ -25,8 +25,11 @@ include_directories(../yaml-cpp/include/)
 link_directories(../yaml-cpp/build/)
 
 add_executable(ParamServer
+    src/Subscriber.hpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
+    src/ParameterServer.hpp
+    src/ParameterServer.cpp
     src/main.cpp
 )
 

@@ -4,13 +4,22 @@
  */
 
 #include "cpm/Parameter.hpp"
-#include "ParameterStorage.hpp"
+#include "ParameterServer.hpp"
+
+#include <dds/pub/ddspub.hpp>
 
 int main(int argc, char *argv[])
 {
-    ParameterStorage::Instance().loadFile();
+    ParameterStorage storage;
+    ParameterServer server(storage);
 
-    ParameterStorage::Instance().storeFile();
+    std::cout << "Parameter server started" << std::endl;
+
+    //Stop the program when enter is pressed
+    std::cin.get();
+    std::cout << "Exiting program" << std::endl;
+
+    //server.store_configuration();
 
     return 0;
 }

@@ -16,8 +16,8 @@
 
 class ParameterStorage {
 public:
-    //Singleton
-    static ParameterStorage& Instance();
+    //Constructor
+    ParameterStorage();
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -26,9 +26,9 @@ public:
     ParameterStorage& operator=(ParameterStorage &&) = delete;
 
     /**
-     * \brief Load YAML file into memory
+     * \brief Load YAML file into memory, use mutex
      */
-    void loadFile();
+    void reloadFile();
     /**
      * \brief Store current configuration in YAML file
      */
@@ -67,8 +67,14 @@ public:
     std::vector<std::string> list_ints();
     std::vector<std::string> list_doubles();
 private:
-    ParameterStorage();
+    /**
+     * \brief Load YAML file into memory
+     */
+    void loadFile();
 
+    /**
+     * Float / double precision for YAML
+     */
     int PRECISION = 32;
 
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty

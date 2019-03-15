@@ -1,19 +1,31 @@
 #include "ParameterStorage.hpp"
 
 ParameterStorage::ParameterStorage() {
-
+    loadFile();
 }
 
-ParameterStorage& ParameterStorage::Instance() {
-    // Thread-safe in C++11
-    static ParameterStorage myInstance;
-    return myInstance;
+void ParameterStorage::reloadFile() {
+    std::lock_guard<std::mutex> b_lock(param_bool_mutex);
+    std::lock_guard<std::mutex> i_lock(param_int_mutex);
+    std::lock_guard<std::mutex> d_lock(param_double_mutex);
+    std::lock_guard<std::mutex> s_lock(param_string_mutex);
+    std::lock_guard<std::mutex> is_lock(param_ints_mutex);
+    std::lock_guard<std::mutex> ds_lock(param_doubles_mutex);
+
+    param_bool.clear();
+    param_int.clear();
+    param_double.clear();
+    param_string.clear();
+    param_ints.clear();
+    param_doubles.clear();
+
+    loadFile();
 }
 
 void ParameterStorage::loadFile() {
-    std::cout << "Trying to load file" << std::endl;
+    std::cout << "Trying to load file..." << std::endl;
     YAML::Node file = YAML::LoadFile("test.yaml");
-    std::cout << "File loaded" << std::endl;
+    std::cout << "\tGot file" << std::endl;
 
     YAML::Node params = file["parameters"];
     YAML::Node params_bool = params["bool"];
@@ -32,19 +44,15 @@ void ParameterStorage::loadFile() {
 
     for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
         set_parameter_bool(it->first.as<std::string>(), it->second.as<bool>());
-        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<bool>() << std::endl;
     }
     for (YAML::const_iterator it=params_int.begin();it!=params_int.end();++it) {
         set_parameter_int(it->first.as<std::string>(), it->second.as<int32_t>());
-        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<int32_t>() << std::endl;
     }
     for (YAML::const_iterator it=params_double.begin();it!=params_double.end();++it) {
         set_parameter_double(it->first.as<std::string>(), it->second.as<double>());
-        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<double>() << std::endl;
     }
     for (YAML::const_iterator it=params_string.begin();it!=params_string.end();++it) {
         set_parameter_string(it->first.as<std::string>(), it->second.as<std::string>());
-        std::cout << "Loaded " << it->first.as<std::string>() << " with value " << it->second.as<std::string>() << std::endl;
     }
     for (YAML::const_iterator outer_it=params_ints.begin();outer_it!=params_ints.end();++outer_it) {
         std::vector<int32_t> ints;
@@ -53,10 +61,10 @@ void ParameterStorage::loadFile() {
             ints.push_back(inner_it->as<int32_t>());
         }
         set_parameter_ints(outer_it->first.as<std::string>(), ints);
-        std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
-        for (auto val : ints) {
-            std::cout << "\t" << val << std::endl;
-        }
+        // std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
+        // for (auto val : ints) {
+        //     std::cout << "\t" << val << std::endl;
+        // }
     }
     for (YAML::const_iterator outer_it=params_doubles.begin();outer_it!=params_doubles.end();++outer_it) {
         std::vector<double> doubles;
@@ -65,11 +73,9 @@ void ParameterStorage::loadFile() {
             doubles.push_back(inner_it->as<double>());
         }
         set_parameter_doubles(outer_it->first.as<std::string>(), doubles);
-        std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
-        for (auto val : doubles) {
-            std::cout << "\t" << val << std::endl;
-        }
     }
+
+    std::cout << "\tFile loaded" << std::endl;
 }
 
 void ParameterStorage::storeFile() {
