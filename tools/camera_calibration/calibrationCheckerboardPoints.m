@@ -3,7 +3,7 @@ function calibrationCheckerboardPoints
     if exist('checkerboardPoints.mat','file')
         load checkerboardPoints
     else
-        I=imread('/home/janis/Desktop/Image__2019-03-19__12-17-53.png');
+        I=imread('/home/janis/Desktop/Image__2019-03-19__16-12-52.png');
         [imagePoints,boardSize] = detectCheckerboardPoints(I);
         save checkerboardPoints
     end
@@ -18,7 +18,7 @@ function calibrationCheckerboardPoints
     
     for ix = 1:size(imagePoints, 2)
         for iy = 1:size(imagePoints, 1)
-            row = [((ix+1)/10);(iy/10); squeeze(imagePoints(iy,ix,:))];
+            row = [(ix/10);(iy/10); squeeze(imagePoints(iy,ix,:))];
             fprintf(f,'%3.4f; ', row);
             fprintf(f,'\n');
         end
@@ -30,6 +30,7 @@ function calibrationCheckerboardPoints
     clf
     imshow(I);
     hold on;
+    plot(imagePoints(:,:,1),imagePoints(:,:,2),'rx');
     plot(imagePoints(1,1,1),imagePoints(1,1,2),'ro');
 
 end
