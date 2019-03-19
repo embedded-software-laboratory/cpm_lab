@@ -3,14 +3,15 @@ function calibrationCheckerboardPoints
     if exist('checkerboardPoints.mat','file')
         load checkerboardPoints
     else
-        I=imread('C:\Users\janis\sciebo\CPM\Project\Lab\07_Students\18_MA_Tuelleners\06_Measurement\calibration.png');
+        I=imread('/home/janis/Desktop/Image__2019-03-19__12-17-53.png');
         [imagePoints,boardSize] = detectCheckerboardPoints(I);
         save checkerboardPoints
     end
     
     imagePoints = reshape(imagePoints, boardSize(1)-1, boardSize(2)-1, 2);
     
-    imagePoints = flipud(imagePoints);
+    %imagePoints = flipud(imagePoints);
+    imagePoints = fliplr(imagePoints);
     
     f = fopen('calibration_points.csv', 'w');
     fprintf(f,'world_x; world_y; image_x; image_y;\n');
