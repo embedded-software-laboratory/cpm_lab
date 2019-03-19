@@ -1,4 +1,4 @@
 [submodule "cpm_base"]
 	path = cpm_base
 	url = https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
-	branch = topic_utils
+	branch = master
