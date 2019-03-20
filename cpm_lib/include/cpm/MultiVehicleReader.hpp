@@ -12,15 +12,15 @@
 
 namespace cpm
 {
-    template<typename T, std::size_t N>
+    template<typename T>
     class MultiVehicleReader
     {
     private:
         dds::sub::DataReader<T> dds_reader;
         std::mutex m_mutex;
 
-        std::array<size_t, N> buffer_indices{};
-        std::array<std::array<T, CPM_READER_RING_BUFFER_SIZE>, N> ring_buffers;
+        std::vector<size_t> buffer_indices{};
+        std::vector<std::vector<T>> ring_buffers;
 
         std::vector<int> vehicle_ids;
 
@@ -44,12 +44,20 @@ namespace cpm
         }
 
     public:
-        MultiVehicleReader(dds::topic::Topic<T> &topic) : 
+        MultiVehicleReader(dds::topic::Topic<T> &topic, int num_of_vehicles) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { 
+            //Set size for buffers
+            buffer_indices.resize(num_of_vehicles);
+            ring_buffers.resize(num_of_vehicles);
+            for (std::vector<T>& buffer : ring_buffers) {
+                buffer.resize(CPM_READER_RING_BUFFER_SIZE);
+            }
+
             //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N; ++pos) {
+            //Also: Create vehicle id list from 1 to num_of_vehicles
+            for (size_t pos = 0; pos < num_of_vehicles; ++pos) {
                 buffer_indices.at(pos) = 0;
                 vehicle_ids.push_back(pos + 1);
             }
@@ -59,16 +67,18 @@ namespace cpm
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         {             
-            if (_vehicle_ids.size() != N) {
-                fprintf(stderr, "Error: MultiVehicleReader vehicle_ids size does not match template argument\n");
-                fflush(stderr); 
-                exit(EXIT_FAILURE);
+            //Set size for buffers
+            int num_of_vehicles = _vehicle_ids.size();
+            buffer_indices.resize(num_of_vehicles);
+            ring_buffers.resize(num_of_vehicles);
+            for (std::vector<T>& buffer : ring_buffers) {
+                buffer.resize(CPM_READER_RING_BUFFER_SIZE);
             }
 
             vehicle_ids = _vehicle_ids;
 
             //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < N; ++pos) {
+            for (size_t pos = 0; pos < num_of_vehicles; ++pos) {
                 buffer_indices.at(pos) = 0;
             }
         }

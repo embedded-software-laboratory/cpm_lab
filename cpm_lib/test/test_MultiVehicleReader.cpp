@@ -10,7 +10,7 @@
 #include <vector>
 #include <map>
 
-TEST_CASE( "Readers" ) {
+TEST_CASE( "MultiVehicleReader" ) {
 
     auto participant = cpm::ParticipantSingleton::Instance();
     dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "asldkjfhslakdj");
@@ -20,7 +20,7 @@ TEST_CASE( "Readers" ) {
 
     // receiver
     std::vector<int> vehicle_ids{1, 3, 7};
-    cpm::MultiVehicleReader<VehicleState, 3> reader(topic_vehicle_state, vehicle_ids);
+    cpm::MultiVehicleReader<VehicleState> reader(topic_vehicle_state, vehicle_ids);
 
 
     const uint64_t second = 1000000000ull;
