@@ -40,6 +40,7 @@ void Logging::flush() {
 
     //Clear the stream
     stream.str(std::string());
+    stream.clear();
 }
 
 void Logging::check_id() {
