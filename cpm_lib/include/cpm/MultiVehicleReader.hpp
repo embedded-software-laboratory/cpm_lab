@@ -4,6 +4,7 @@
 #include <mutex>
 #include <array>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include "cpm/ParticipantSingleton.hpp"
 
@@ -12,7 +13,7 @@
 namespace cpm
 {
     template<typename T, std::size_t N>
-    class Readers
+    class MultiVehicleReader
     {
     private:
         dds::sub::DataReader<T> dds_reader;
@@ -43,7 +44,7 @@ namespace cpm
         }
 
     public:
-        Readers(dds::topic::Topic<T> &topic) : 
+        MultiVehicleReader(dds::topic::Topic<T> &topic) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { 
@@ -54,12 +55,12 @@ namespace cpm
             }
         }
 
-        Readers(dds::topic::Topic<T> &topic, std::vector<int> _vehicle_ids) : 
+        MultiVehicleReader(dds::topic::Topic<T> &topic, std::vector<int> _vehicle_ids) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         {             
             if (_vehicle_ids.size() != N) {
-                fprintf(stderr, "Error: Readers vehicle_ids size does not match template argument\n");
+                fprintf(stderr, "Error: MultiVehicleReader vehicle_ids size does not match template argument\n");
                 fflush(stderr); 
                 exit(EXIT_FAILURE);
             }
@@ -72,7 +73,7 @@ namespace cpm
             }
         }
 
-        Readers(const Readers &other) 
+        MultiVehicleReader(const MultiVehicleReader &other) 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -83,7 +84,7 @@ namespace cpm
         }
         
 
-        void get_samples(const uint64_t t_now, std::vector<T>& sample_out, std::vector<uint64_t>& sample_age_out)
+        void get_samples(const uint64_t t_now, std::map<int, T>& sample_out, std::map<int, uint64_t>& sample_age_out)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             flush_dds_reader();
@@ -91,15 +92,15 @@ namespace cpm
             sample_out.clear();
             sample_age_out.clear();
 
-            for (size_t pos = 0; pos < N; ++pos) {
+            for (int i = 0; i < vehicle_ids.size(); ++i) {
                 T sample = T();
                 sample.header().create_stamp().nanoseconds(0);
-                sample_out.push_back(sample);
-                sample_age_out.push_back(t_now);
+                sample_out[vehicle_ids.at(i)] = sample;
+                sample_age_out[vehicle_ids.at(i)] = t_now;
             }
 
             // select samples
-            for (size_t pos = 0; pos < N; ++pos) {
+            for (int pos = 0; pos < vehicle_ids.size(); ++pos) {
                 for (int i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
                 {
                     auto& current_sample = ring_buffers.at(pos).at((i + buffer_indices.at(pos)) % CPM_READER_RING_BUFFER_SIZE);
@@ -110,11 +111,11 @@ namespace cpm
                         continue;
                     }
 
-                    if(sample_out.at(pos).header().create_stamp().nanoseconds() <= current_sample.header().create_stamp().nanoseconds())
+                    if(sample_out[vehicle_ids.at(pos)].header().create_stamp().nanoseconds() <= current_sample.header().create_stamp().nanoseconds())
                     {
                         // Current sample has a higher timestamp, it is newer. Use it.
-                        sample_out.at(pos) = current_sample;
-                        sample_age_out.at(pos) = t_now - sample_out.at(pos).header().valid_after_stamp().nanoseconds();
+                        sample_out[vehicle_ids.at(pos)] = current_sample;
+                        sample_age_out[vehicle_ids.at(pos)] = t_now - current_sample.header().valid_after_stamp().nanoseconds();
                     }
                 }
             }
