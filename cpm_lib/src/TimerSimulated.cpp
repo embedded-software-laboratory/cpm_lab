@@ -48,6 +48,12 @@ TimerSimulated::Answer TimerSimulated::handle_system_trigger(uint64_t& deadline)
                 deadline += period_nanoseconds;
 
                 got_new_deadline = true;
+
+                //Send ready signal only if a new deadline could be set before
+                ReadyStatus ready_status;
+                ready_status.next_start_stamp(TimeStamp(deadline));
+                ready_status.source_id(node_id);
+                writer_ready_status.write(ready_status);
             }
             else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
                 //Received stop signal
@@ -95,14 +101,6 @@ void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 
     //Wait for the next relevant time step and call the callback function until the process has been stopped
     while(this->active) {
-        //Send ready signal only if a new deadline could be set before
-        if (system_trigger == Answer::DEADLINE) {
-            ReadyStatus ready_status;
-            ready_status.next_start_stamp(TimeStamp(deadline));
-            ready_status.source_id(node_id);
-            writer_ready_status.write(ready_status);
-        }
-
         //Wait for the next signals until the next start signal has been received
         dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
 

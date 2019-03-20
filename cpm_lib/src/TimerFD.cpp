@@ -74,7 +74,7 @@ void TimerFD::wait()
     }
 }
 
-uint64_t TimerFD::waitForStart() {
+uint64_t TimerFD::receiveStartTime() {
     //Reader / Writer for ready status and system trigger
     dds::pub::DataWriter<ReadyStatus> writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
 
@@ -85,9 +85,7 @@ uint64_t TimerFD::waitForStart() {
     
     //Poll for start signal, send ready signal every 2 seconds until the start signal has been received
     //Break if stop signal was received
-    bool noSignalReceived = true;
-    SystemTrigger trigger;
-    while(noSignalReceived) {
+    while(true) {
         writer_ready_status.write(ready_status);
 
         waitset.wait(dds::core::Duration::from_millisecs(2000));
@@ -97,14 +95,10 @@ uint64_t TimerFD::waitForStart() {
                 if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
                     return TRIGGER_STOP_SYMBOL;
                 }
-                trigger.next_start(sample.data().next_start());
-                noSignalReceived = false;
-                break;
+                return sample.data().next_start().nanoseconds();
             }
         }
     }
-
-    return trigger.next_start().nanoseconds();
 }
 
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
@@ -124,7 +118,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     uint64_t start_point;
     uint64_t deadline;
     if (wait_for_start) {
-        start_point = waitForStart();
+        start_point = receiveStartTime();
         
         if (start_point == TRIGGER_STOP_SYMBOL) {
             return;

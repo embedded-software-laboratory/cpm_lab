@@ -33,6 +33,10 @@ class TimerSimulated : public cpm::Timer
     dds::core::cond::WaitSet waitset;
 
     enum Answer {STOP, DEADLINE, ANY, NONE};
+    /**
+     * \brief Takes all received messages (since the last function call) from reader_system_trigger. If new messages could be received, checks whether they are significant (stop signal or signal matching the current deadline). If so, react accordingly: Stop the system when a stop signal has been received, refresh the current time and the deadline and call the callback function if the new deadline has been reached + send a new ready signal afterwards.
+     * \param deadline Current deadline of the system / the next time step when the system should be activated
+     */
     Answer handle_system_trigger(uint64_t& deadline);
 
 public:
