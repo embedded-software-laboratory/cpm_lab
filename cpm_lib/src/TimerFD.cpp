@@ -92,9 +92,6 @@ uint64_t TimerFD::receiveStartTime() {
 
         for (auto sample : reader_system_trigger.take()) {
             if (sample.info().valid()) {
-                if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                    return TRIGGER_STOP_SYMBOL;
-                }
                 return sample.data().next_start().nanoseconds();
             }
         }
