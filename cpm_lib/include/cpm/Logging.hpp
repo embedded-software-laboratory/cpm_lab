@@ -33,7 +33,7 @@ class Logging {
 
         //File for logging
         std::ofstream file;
-        std::string filename = "Log.csv";
+        std::string filename = ""; //Is changed in Instance creation: Current timestamp added
         std::string id = "uninitialized";
 
         std::stringstream stream;
@@ -45,6 +45,7 @@ class Logging {
     public:
         static Logging& Instance();
         void set_id(std::string id);
+        std::string get_filename();
         void flush();
         //Overloading << to flush when using std::endl
         Logging& operator<< (std::basic_ostream<char, std::char_traits<char>>& (*endline_func) (std::basic_ostream<char, std::char_traits<char>>&)) {

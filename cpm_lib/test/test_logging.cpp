@@ -40,19 +40,23 @@ TEST_CASE( "Logging" ) {
     std::string second_test = "Second test!";
     std::string with_more = "With more!";
 
+    std::string thread_content_1;
+    std::string thread_id;
+    std::string thread_content_2;
+
     //Thread for testing whether the logs are sent correctly via DDS
     std::thread signal_thread = std::thread([&](){
         waitset.wait();
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
-                CHECK(sample.data().content() == actual_content.str());
-                CHECK(sample.data().id() == id);
+                thread_content_1 = sample.data().content();
+                thread_id = sample.data().id();
             }
         }
         waitset.wait();
         for (auto sample : reader.take()) {
             if (sample.info().valid()) {
-                CHECK(sample.data().content() == second_test + with_more);
+                thread_content_2 = sample.data().content();
             }
         }
     });
@@ -63,7 +67,7 @@ TEST_CASE( "Logging" ) {
     std::ifstream file;
     std::string str;
     std::stringstream file_content;
-    file.open("Log.csv");
+    file.open(Logging::Instance().get_filename());
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str;
@@ -81,7 +85,7 @@ TEST_CASE( "Logging" ) {
     //Check file content
     str.clear();
     file_content.str(std::string());
-    file.open("Log.csv");
+    file.open(Logging::Instance().get_filename());
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str << "\n";
@@ -93,4 +97,8 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(second_test + with_more) != std::string::npos);
 
     signal_thread.join();
+
+    CHECK(thread_content_1 == actual_content.str());
+    CHECK(thread_id == id);
+    CHECK(thread_content_2 == second_test + with_more);
 }

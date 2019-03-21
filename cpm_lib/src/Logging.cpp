@@ -4,6 +4,10 @@ Logging::Logging() :
     loggingTopic(cpm::ParticipantSingleton::Instance(), "Logs"),
     logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 {
+    filename = "Log_";
+    filename += std::to_string(get_time());
+    filename += ".csv";
+
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
     file << "ID,Timestamp,Content" << std::endl;
     file.close();
@@ -22,6 +26,10 @@ uint64_t Logging::get_time() {
 
 void Logging::set_id(std::string _id) {
     id = _id;
+}
+
+std::string Logging::get_filename() {
+    return filename;
 }
 
 void Logging::flush() {
