@@ -17,7 +17,7 @@
 class ParameterStorage {
 public:
     //Constructor
-    ParameterStorage();
+    ParameterStorage(std::string _file);
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -92,4 +92,7 @@ private:
     std::mutex param_string_mutex;
     std::mutex param_ints_mutex;
     std::mutex param_doubles_mutex;
+
+    //File name of the YAML file + path
+    std::string file;
 };

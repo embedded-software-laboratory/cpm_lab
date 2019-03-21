@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[])
 {
-    ParameterStorage storage;
+    ParameterStorage storage("test.yaml");
     ParameterServer server(storage);
 
     std::cout << "Parameter server started" << std::endl;

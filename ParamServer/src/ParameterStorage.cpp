@@ -1,6 +1,8 @@
 #include "ParameterStorage.hpp"
 
-ParameterStorage::ParameterStorage() {
+ParameterStorage::ParameterStorage(std::string _file) :
+    file(_file)
+{
     loadFile();
 }
 
@@ -23,11 +25,9 @@ void ParameterStorage::reloadFile() {
 }
 
 void ParameterStorage::loadFile() {
-    std::cout << "Trying to load file..." << std::endl;
-    YAML::Node file = YAML::LoadFile("test.yaml");
-    std::cout << "\tGot file" << std::endl;
+    YAML::Node parsedFile = YAML::LoadFile(file);
 
-    YAML::Node params = file["parameters"];
+    YAML::Node params = parsedFile["parameters"];
     YAML::Node params_bool = params["bool"];
     YAML::Node params_int = params["int"];
     YAML::Node params_double = params["double"];
@@ -74,8 +74,6 @@ void ParameterStorage::loadFile() {
         }
         set_parameter_doubles(outer_it->first.as<std::string>(), doubles);
     }
-
-    std::cout << "\tFile loaded" << std::endl;
 }
 
 void ParameterStorage::storeFile() {
@@ -149,10 +147,10 @@ void ParameterStorage::storeFile() {
 
     std::cout << out.c_str() << std::endl;
 
-    std::ofstream file;
-    file.open("test_out.yaml", std::ofstream::out | std::ofstream::trunc);
-    file << out.c_str() << std::endl;
-    file.close();
+    std::ofstream fileStream;
+    fileStream.open("test_out.yaml", std::ofstream::out | std::ofstream::trunc);
+    fileStream << out.c_str() << std::endl;
+    fileStream.close();
 }
 
 void ParameterStorage::set_parameter_bool(std::string name, bool value) {
