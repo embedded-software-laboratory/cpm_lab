@@ -35,12 +35,15 @@ void ParameterStorage::loadFile() {
     YAML::Node params_ints = params["ints"];
     YAML::Node params_doubles = params["doubles"];
     
-    assert(params_bool.IsMap());
-    assert(params_int.IsMap());
-    assert(params_double.IsMap());
-    assert(params_string.IsMap());
-    assert(params_ints.IsMap());
-    assert(params_doubles.IsMap());
+    if (!(params_bool.IsMap() 
+        && params_int.IsMap() 
+        && params_double.IsMap() 
+        && params_string.IsMap() 
+        && params_ints.IsMap() 
+        && params_doubles.IsMap())) 
+    {
+        throw std::domain_error("The input file is not conformant with the specification - all types must be stored in maps");
+    }
 
     for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
         set_parameter_bool(it->first.as<std::string>(), it->second.as<bool>());
@@ -56,7 +59,11 @@ void ParameterStorage::loadFile() {
     }
     for (YAML::const_iterator outer_it=params_ints.begin();outer_it!=params_ints.end();++outer_it) {
         std::vector<int32_t> ints;
-        assert(outer_it->second.IsSequence());
+
+        if (!outer_it->second.IsSequence()) {
+            throw std::domain_error("The input file is not conformant with the specification - ints must contain sequences");
+        }
+
         for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
             ints.push_back(inner_it->as<int32_t>());
         }
@@ -68,7 +75,11 @@ void ParameterStorage::loadFile() {
     }
     for (YAML::const_iterator outer_it=params_doubles.begin();outer_it!=params_doubles.end();++outer_it) {
         std::vector<double> doubles;
-        assert(outer_it->second.IsSequence());
+
+        if (!outer_it->second.IsSequence()) {
+            throw std::domain_error("The input file is not conformant with the specification - doubles must contain sequences");
+        }
+
         for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
             doubles.push_back(inner_it->as<double>());
         }

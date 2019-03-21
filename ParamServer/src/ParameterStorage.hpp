@@ -13,6 +13,7 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <exception>
 
 class ParameterStorage {
 public:
