@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include <thread>
+#include <string>
 
 #include "cpm/ParticipantSingleton.hpp"
 #include <dds/pub/ddspub.hpp>
@@ -43,6 +44,11 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     // Attach conditions
     waitset += read_cond;
 
+    //Variables for CHECKs
+    int64_t period_diff;
+    std::string source_id;
+    uint64_t start_stamp;
+
     //Thread for start signal
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
@@ -57,9 +63,7 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
 
         uint64_t diff_1 = time_2 - time_1;
         uint64_t diff_2 = time_3 - time_2;
-        int64_t period_diff = diff_1 - diff_2;
-        CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
-        std::cout << period_diff << std::endl;
+        period_diff = diff_1 - diff_2;
 
 
         //Wait for ready signal
@@ -72,8 +76,8 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
                 break;
             }
         }
-        CHECK(status.source_id() == "0");
-        CHECK(status.next_start_stamp().nanoseconds() == 0);
+        source_id = status.source_id();
+        start_stamp = status.next_start_stamp().nanoseconds();
 
         std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
@@ -91,7 +95,7 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     });
 
     timer.start([&](uint64_t t_start){
-        CHECK(count <= 2); //This task should not have been called too often
+        CHECK(count <= 2); //This task should not be called too often
         usleep( 100000 ); // simluate variable runtime
         ++count;
     });
@@ -99,4 +103,10 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     if (signal_thread.joinable()) {
         signal_thread.join();
     }
+
+    //CHECKs from the thread
+    CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 3ms)
+    //Check that the ready signal matches the expected ready signal
+    CHECK(source_id == "0");
+    CHECK(start_stamp == 0);
 }
