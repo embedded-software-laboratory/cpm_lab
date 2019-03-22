@@ -152,6 +152,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         }
     }
     for (int i = 0; i < get_time_timestamps.size(); ++i) {
+        //Check if the thread times match the current time + if the current timestamp is correct
         CHECK( t_start_timestamps.at(i) == get_time_timestamps.at(i) );
         CHECK( (get_time_timestamps.at(i) - offset) % period == 0);
         CHECK( t_start_timestamps.at(i) == i * period + offset );

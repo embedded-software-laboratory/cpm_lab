@@ -4,6 +4,8 @@
 #include <unistd.h>
 
 #include <thread>
+#include <string>
+#include <vector>
 
 #include "cpm/ParticipantSingleton.hpp"
 #include <dds/pub/ddspub.hpp>
@@ -44,6 +46,12 @@ TEST_CASE( "TimerFD_start_again" ) {
     // Attach conditions
     waitset += read_cond;
 
+    //Data for CHECKS / ASSERTS
+    std::string source_id;
+    uint64_t start_stamp;
+    std::vector<uint64_t> get_time_timestamps;
+    std::vector<uint64_t> t_start_timestamps;
+
     //Thread for start signal
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
@@ -58,8 +66,8 @@ TEST_CASE( "TimerFD_start_again" ) {
                 break;
             }
         }
-        CHECK(status.source_id() == "2");
-        CHECK(status.next_start_stamp().nanoseconds() == 0);
+        source_id = status.source_id();
+        start_stamp = status.next_start_stamp().nanoseconds();
 
         std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
@@ -71,12 +79,8 @@ TEST_CASE( "TimerFD_start_again" ) {
 
     //Check if start_async works as expected as well
     timer.start_async([&](uint64_t t_start){
-        uint64_t now = timer.get_time();
-
-        CHECK( now >= starting_time + 1 );
-        CHECK( t_start <= now );
-        CHECK( now <= t_start + 1000000 ); // actual start time is within 1 ms of declared start time
-        CHECK( t_start % period == offset ); // start time corresponds to timer definition
+        get_time_timestamps.push_back(timer.get_time());
+        t_start_timestamps.push_back(t_start);
     });
 
     //Check that the timer cannot be used while it is running (Use return codes here?)
@@ -107,4 +111,16 @@ TEST_CASE( "TimerFD_start_again" ) {
         signal_thread.join();
     }
     timer.stop();
+
+    //Checks / assertions from threads
+    //Check whether the ready signal is correct
+    CHECK(source_id == "2");
+    CHECK(start_stamp == 0);
+    //Check if the starting time was obeyed and if period + offset were set correctly
+    for (int i = 0; i < get_time_timestamps.size(); ++i) {
+        CHECK( get_time_timestamps.at(i) >= starting_time + 1 ); //Was started after the initial starting time
+        CHECK( t_start_timestamps.at(i) <= get_time_timestamps.at(i) ); //t_start should be smaller than the current time
+        CHECK( get_time_timestamps.at(i) <= t_start_timestamps.at(i) + 1000000 ); // actual start time is within 1 ms of declared start time
+        CHECK( t_start_timestamps.at(i) % period == offset ); // start time corresponds to timer definition
+    }
 }
