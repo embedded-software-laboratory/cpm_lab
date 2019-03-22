@@ -5,6 +5,8 @@
 #include <cmath>
 
 #include <thread>
+#include <vector>
+#include <string>
 
 #include "cpm/ParticipantSingleton.hpp"
 #include <dds/pub/ddspub.hpp>
@@ -44,6 +46,13 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     // Attach conditions
     waitset += read_cond;
 
+    //Assertion / check data for both threads, to be checked after the execution
+    int64_t period_diff;
+    std::vector<ReadyStatus> status_ready;
+    std::vector<std::vector<ReadyStatus>> status_wrong_start_signal;
+    std::vector<uint64_t> get_time_timestamps;
+    std::vector<uint64_t> t_start_timestamps;
+
     //Thread for start signal
     std::thread signal_thread = std::thread([&](){
         uint64_t next_start; 
@@ -59,9 +68,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
         uint64_t diff_1 = time_2 - time_1;
         uint64_t diff_2 = time_3 - time_2;
-        int64_t period_diff = diff_1 - diff_2;
-        CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
-        std::cout << period_diff << std::endl;
+        period_diff = diff_1 - diff_2;
 
         for (int i = 0; i < num_runs; ++i) {
             //Wait for ready signal
@@ -74,16 +81,12 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
                     break;
                 }
             }
-            CHECK(status.source_id() == "1");
-            CHECK(status.next_start_stamp().nanoseconds() == period * i + offset);
+
+            status_ready.push_back(status);
 
             std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
             next_start = status.next_start_stamp().nanoseconds();
-
-            if (i != 0) {
-                std::cout << "The timer should not start before 'X' is printed" << std::endl;
-            }
 
             //Send wrong start signal
             SystemTrigger trigger;
@@ -94,21 +97,15 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
             trigger.next_start(TimeStamp(next_start - 1));
             writer.write(trigger);
 
-            usleep(100000);
-            if (i != 0) {
-                std::cout << "X" << std::endl;
+            //Wait for up to 2 seconds, no new ready signal should be received
+            waitset.wait(dds::core::Duration(2, 0)); //Wait either for 2 seconds or for a new signal
+            std::vector<ReadyStatus> signals;
+            for (auto sample : reader.take()) {
+                if (sample.info().valid()) {
+                    signals.push_back(sample.data());
+                }
             }
-            else {
-                //Wait for 5 seconds, no new ready signal should be received
-                struct timespec t;
-                clock_gettime(CLOCK_REALTIME, &t);
-                uint64_t t1 = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-                waitset.wait(dds::core::Duration(5, 0));
-                clock_gettime(CLOCK_REALTIME, &t);
-                uint64_t t2 = uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-
-                CHECK(t2 - t1 >= 5000000000);
-            }
+            status_wrong_start_signal.push_back(signals);
 
             //Send correct start signal
             trigger.next_start(TimeStamp(next_start));
@@ -128,15 +125,10 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     timer.start([&](uint64_t t_start){
         std::cout << "Next time step" << std::endl;
 
-        uint64_t now = timer.get_time();
-
-        CHECK( t_start == now );
-        CHECK( (now - offset) % period == 0);
-        CHECK( t_start == count * period + offset );
+        get_time_timestamps.push_back(timer.get_time());
+        t_start_timestamps.push_back(t_start);
 
         count++;
-
-        t_start_prev = t_start;
 
         usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime (not really useful here)
     });
@@ -146,5 +138,22 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
     if (signal_thread.joinable()) {
         signal_thread.join();
+    }
+
+    //Checks and assertions
+    CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
+    for (int i = 0; i < status_ready.size(); ++i) {
+        CHECK(status_ready.at(i).source_id() == "1"); //The source id should always match the id set for the timer
+        CHECK(status_ready.at(i).next_start_stamp().nanoseconds() == period * i + offset); //The ready stamps should match the settings for period and offset
+    }
+    for (int i = 0; i < status_wrong_start_signal.size(); ++i) {
+        for (auto signal : status_wrong_start_signal.at(i)) {
+            CHECK(signal.next_start_stamp().nanoseconds() == period * i + offset); //After "wrong" start signals have been sent, the ready signal should remain unchanged
+        }
+    }
+    for (int i = 0; i < get_time_timestamps.size(); ++i) {
+        CHECK( t_start_timestamps.at(i) == get_time_timestamps.at(i) );
+        CHECK( (get_time_timestamps.at(i) - offset) % period == 0);
+        CHECK( t_start_timestamps.at(i) == i * period + offset );
     }
 }
