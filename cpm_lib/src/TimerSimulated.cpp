@@ -49,7 +49,7 @@ TimerSimulated::Answer TimerSimulated::handle_system_trigger(uint64_t& deadline)
 
                 got_new_deadline = true;
 
-                //Send ready signal only if a new deadline could be set before
+                // Current period finished -> Send next ready signal
                 ReadyStatus ready_status;
                 ready_status.next_start_stamp(TimeStamp(deadline));
                 ready_status.source_id(node_id);
