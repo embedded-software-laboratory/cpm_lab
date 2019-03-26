@@ -7,7 +7,9 @@ if [ ! -d "build" ]; then
     mkdir build
 fi
 
-./rtigen.bash
+if [ ! -d "dds" ]; then
+    ./rtigen.bash
+fi
 
 
 cd build
