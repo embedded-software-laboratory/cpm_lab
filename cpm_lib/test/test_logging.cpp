@@ -23,47 +23,50 @@ TEST_CASE( "Logging" ) {
     std::string id = "TestID";
     Logging::Instance().set_id(id);
 
-    //Create logging reader
-    dds::sub::DataReader<Log> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
-    // Create a WaitSet
+    //Create logging logs_reader
+    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
+
+    // Create a WaitSet that waits for any data
     dds::core::cond::WaitSet waitset;
-    // Create a ReadCondition for a reader with a specific DataState
     dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState::any());
-    // Attach conditions
+        logs_reader, dds::sub::status::DataState::any());
     waitset += read_cond;
 
-    //Get Stringstream version to check if Logging like a stringstream (which it should)
+    //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
-    actual_content << "TEST";
-
+    std::string first_test = "TEST";
     std::string second_test = "Second test!";
     std::string with_more = "With more!";
 
+    //Data from the threads for later checks - CHECK does not support concurrency
     std::string thread_content_1;
     std::string thread_id;
     std::string thread_content_2;
 
     //Thread for testing whether the logs are sent correctly via DDS
+    //The thread waits for the log signals and stores them in thread_content_1 and thread_content_2 for later checks
     std::thread signal_thread = std::thread([&](){
         waitset.wait();
-        for (auto sample : reader.take()) {
+        for (auto sample : logs_reader.take()) {
             if (sample.info().valid()) {
                 thread_content_1 = sample.data().content();
                 thread_id = sample.data().id();
             }
         }
         waitset.wait();
-        for (auto sample : reader.take()) {
+        for (auto sample : logs_reader.take()) {
             if (sample.info().valid()) {
                 thread_content_2 = sample.data().content();
             }
         }
     });
 
-    Logging::Instance() << "TEST" << std::endl;
+    //Log first test data and write it to the stringstream for comparison
+    actual_content << first_test;
+    Logging::Instance() << first_test << std::endl;
 
-    //Check file content
+    //Store the current file content of the log file - it should match the actual_content stringstream
+    usleep(10000); //Sleep 10ms to let the Logger access the file first
     std::ifstream file;
     std::string str;
     std::stringstream file_content;
@@ -77,12 +80,13 @@ TEST_CASE( "Logging" ) {
     //Compare file content with desired content
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
-    //Some milliseconds need to pass, else order is not guaranteed
+    //Some milliseconds need to pass, else the order of the logs is not guaranteed
     rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
     Logging::Instance() << second_test << with_more << std::endl;
 
-    //Check file content
+    //Store the (now changed) file content of the log file
+    usleep(10000); //Sleep 10ms to let the Logger access the file first
     str.clear();
     file_content.str(std::string());
     file.open(Logging::Instance().get_filename());
@@ -98,6 +102,7 @@ TEST_CASE( "Logging" ) {
 
     signal_thread.join();
 
+    //Compare thread content (received messages) with desired content
     CHECK(thread_content_1 == actual_content.str());
     CHECK(thread_id == id);
     CHECK(thread_content_2 == second_test + with_more);
