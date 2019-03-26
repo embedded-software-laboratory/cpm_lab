@@ -20,9 +20,9 @@ include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
 link_directories(../cpm_base/cpm_lib/build/)
 
 # yaml-cpp
-find_package(yaml-cpp PATHS ../yaml-cpp/)
-include_directories(../yaml-cpp/include/)
-link_directories(../yaml-cpp/build/)
+find_package(yaml-cpp PATHS ./yaml-cpp/)
+include_directories(./yaml-cpp/include/)
+link_directories(./yaml-cpp/build/)
 
 add_executable(ParamServer
     src/Subscriber.hpp

@@ -2,6 +2,3 @@
 	path = cpm_base
 	url = https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
 	branch = master
-[submodule "yaml-cpp"]
-	path = yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
