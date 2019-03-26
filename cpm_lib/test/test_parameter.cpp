@@ -5,6 +5,13 @@
 #include <memory>
 #include <chrono>
 
+/**
+ * Tests:
+ * - If parameter requests are processed correctly by the lib
+ * - If the ParameterServer answers correctly
+ * - If different types are supported
+ */
+
 TEST_CASE( "parameter_double" ) {
 
     double received_parameter_value = 0;

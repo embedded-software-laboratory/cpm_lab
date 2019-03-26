@@ -18,6 +18,15 @@
 
 #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
+/**
+ * Tests:
+ * - Does the source ID match the sender ID (data remains unchanged, no other data was received during the test)
+ * - Do the ready signals match the expectation (offset and period are correct, increase by period in each step)
+ * - Are start signals that do not match the ready signal ignored
+ * - Is the current time stamp correct (regarding offset and period)
+ * - Does the thread time match the current time (the simulated timestamp should be the same as t_now)
+ */
+
 TEST_CASE( "TimerSimulated_accuracy" ) {
 
     std::cout << "Starting TimerFD (simulated) test" << std::endl;
@@ -26,62 +35,45 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     const uint64_t offset =  5000000;
     TimerSimulated timer("1", period, offset);
 
-    int count = 0;
-    int num_runs = 15;
-    uint64_t t_start_prev = 0;
+    int count = 0; //Count how often the timer callback was called
+    int num_runs = 15; //Run the timer for 15 periods
 
-    //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    //Writer to send system triggers to the timer 
+    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    //Reader to receive ready signals from the timer
+    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
-    //Waitset to wait for data
-    // Create a WaitSet
+
+    //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    // Create a ReadCondition for a reader with a specific DataState
     dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState::any());
-    // Attach conditions
+        timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
     //Assertion / check data for both threads, to be checked after the execution
-    int64_t period_diff;
-    std::vector<ReadyStatus> status_ready;
-    std::vector<std::vector<ReadyStatus>> status_wrong_start_signal;
-    std::vector<uint64_t> get_time_timestamps;
-    std::vector<uint64_t> t_start_timestamps;
+    std::vector<ReadyStatus> status_ready; //All ready status signals received from the timer in each run
+    std::vector<std::vector<ReadyStatus>> status_wrong_start_signal; //All ready status signals received from the timer after a wrong start signal was sent
+    std::vector<uint64_t> get_time_timestamps; //Timestamps from timer.get_time() in each call of the callback function
+    std::vector<uint64_t> t_start_timestamps; //Timestamps t_now in each call of the callback function
 
-    //Thread for start signal
+    //Thread that handles the simulated time - it receives ready signals by the timer and sends system triggers
     std::thread signal_thread = std::thread([&](){
         uint64_t next_start; 
-
-        //Check if ready signal is sent periodically
-        std::cout << "TimerFD: Receiving ready signal..." << std::endl;
-        dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        uint64_t time_1 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_2 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_3 = timer.get_time();
-
-        uint64_t diff_1 = time_2 - time_1;
-        uint64_t diff_2 = time_3 - time_2;
-        period_diff = diff_1 - diff_2;
 
         for (int i = 0; i < num_runs; ++i) {
             //Wait for ready signal
             ReadyStatus status;
-            active_conditions = waitset.wait();
-            for (auto sample : reader.take()) {
+            waitset.wait();
+            for (auto sample : timer_ready_signal_ready.take()) {
                 if (sample.info().valid()) {
                     status.next_start_stamp(sample.data().next_start_stamp());
                     status.source_id(sample.data().source_id());
                     break;
                 }
             }
-
             status_ready.push_back(status);
 
             std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
@@ -91,16 +83,16 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
             //Send wrong start signal
             SystemTrigger trigger;
             trigger.next_start(TimeStamp(next_start - 2));
-            writer.write(trigger);
+            timer_system_trigger_writer.write(trigger);
 
             //Send wrong start signal
             trigger.next_start(TimeStamp(next_start - 1));
-            writer.write(trigger);
+            timer_system_trigger_writer.write(trigger);
 
             //Wait for up to 2 seconds, no new ready signal should be received
             waitset.wait(dds::core::Duration(2, 0)); //Wait either for 2 seconds or for a new signal
             std::vector<ReadyStatus> signals;
-            for (auto sample : reader.take()) {
+            for (auto sample : timer_ready_signal_ready.take()) {
                 if (sample.info().valid()) {
                     signals.push_back(sample.data());
                 }
@@ -109,19 +101,20 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
             //Send correct start signal
             trigger.next_start(TimeStamp(next_start));
-            writer.write(trigger);
+            timer_system_trigger_writer.write(trigger);
         }
 
-        //Send stop signal
-        active_conditions = waitset.wait();
+        //Send stop signal - after num_runs, the callback function should not be called again
+        waitset.wait();
 
         std::cout << "Sending stop signal..." << std::endl;
 
         SystemTrigger stop_trigger;
         stop_trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
-        writer.write(stop_trigger);
+        timer_system_trigger_writer.write(stop_trigger);
     });
 
+    //Registering callback function for the timer - Just simulate a variable runtime and save the timestamps in each run as well as the number of runs
     timer.start([&](uint64_t t_start){
         std::cout << "Next time step" << std::endl;
 
@@ -133,15 +126,11 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime (not really useful here)
     });
 
-    //Should be obsolete because the timer was already stopped before; but: required to free resources
-    timer.stop();
-
     if (signal_thread.joinable()) {
         signal_thread.join();
     }
 
     //Checks and assertions
-    CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
     for (int i = 0; i < status_ready.size(); ++i) {
         CHECK(status_ready.at(i).source_id() == "1"); //The source id should always match the id set for the timer
         CHECK(status_ready.at(i).next_start_stamp().nanoseconds() == period * i + offset); //The ready stamps should match the settings for period and offset
@@ -157,4 +146,6 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         CHECK( (get_time_timestamps.at(i) - offset) % period == 0);
         CHECK( t_start_timestamps.at(i) == i * period + offset );
     }
+    //No more than num_runs runs should have taken place
+    REQUIRE(count == num_runs);
 }
