@@ -12,7 +12,7 @@ TEST_CASE( "parameter_yaml" ) {
     std::string s_val = "\t~i1339@77\n33sfg*#'''";
     std::vector<double> d_vals = std::vector<double>({1.1, 1.11222333444, 7.9238349});
 
-    ParameterStorage storage1("test_out.yaml");
+    ParameterStorage storage1("test.yaml");
     storage1.set_parameter_bool("b1", true);
     storage1.set_parameter_bool("b1", b_val);
     storage1.set_parameter_double("d1", d_val);
@@ -45,7 +45,7 @@ TEST_CASE( "parameter_yaml" ) {
 
     storage1.storeFile();
 
-    ParameterStorage storage2("test_out.yaml");
+    ParameterStorage storage2("test.yaml");
 
     storage2.get_parameter_bool("b1", bool_value);
     CHECK(bool_value == b_val);
