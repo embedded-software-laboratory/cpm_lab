@@ -156,6 +156,8 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
             }
         }
     }
+
+    close(timer_fd);
 }
 
 void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
@@ -180,7 +182,6 @@ void TimerFD::stop()
     {
         runner_thread.join();
     }
-    close(timer_fd);
 }
 
 TimerFD::~TimerFD()
