@@ -66,7 +66,6 @@ if(NOT BUILD_ARM)
         test/test_timer.cpp
         test/test_timer_stop.cpp
         test/test_timer_stop_running.cpp
-        test/test_timer_offset.cpp
         test/test_timer_start_again.cpp
         test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
