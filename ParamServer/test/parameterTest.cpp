@@ -6,13 +6,15 @@
 #include <algorithm>
 
 TEST_CASE( "parameter_yaml" ) {
+    std::string path_to_file = "../test.yaml";
+
     bool b_val = false;
     double d_val = 1.1110001012;
     int i_val = 1119992839;
     std::string s_val = "\t~i1339@77\n33sfg*#'''";
     std::vector<double> d_vals = std::vector<double>({1.1, 1.11222333444, 7.9238349});
 
-    ParameterStorage storage1("test.yaml");
+    ParameterStorage storage1(path_to_file);
     storage1.set_parameter_bool("b1", true);
     storage1.set_parameter_bool("b1", b_val);
     storage1.set_parameter_double("d1", d_val);
@@ -45,7 +47,7 @@ TEST_CASE( "parameter_yaml" ) {
 
     storage1.storeFile();
 
-    ParameterStorage storage2("test.yaml");
+    ParameterStorage storage2(path_to_file);
 
     storage2.get_parameter_bool("b1", bool_value);
     CHECK(bool_value == b_val);
