@@ -4,8 +4,20 @@ Logging::Logging() :
     loggingTopic(cpm::ParticipantSingleton::Instance(), "Logs"),
     logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 {
+
+    // Formatted start time for log filename
+    char time_format_buffer[100];
+    {
+        struct tm* tm_info;
+        time_t timer;
+        time(&timer);
+        tm_info = gmtime(&timer);
+        strftime(time_format_buffer, 100, "%Y_%m_%d_%H_%M_%S", tm_info);
+    }
+
+
     filename = "Log_";
-    filename += std::to_string(get_time());
+    filename += time_format_buffer;
     filename += ".csv";
 
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
