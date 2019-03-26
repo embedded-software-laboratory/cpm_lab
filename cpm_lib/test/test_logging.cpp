@@ -65,6 +65,8 @@ TEST_CASE( "Logging" ) {
     actual_content << first_test;
     Logging::Instance() << first_test << std::endl;
 
+    TODO nimm die richtige Version der print version (vsnprintf)
+
     //Store the current file content of the log file - it should match the actual_content stringstream
     usleep(10000); //Sleep 10ms to let the Logger access the file first
     std::ifstream file;
