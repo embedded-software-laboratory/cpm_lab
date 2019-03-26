@@ -17,7 +17,8 @@
 
 /**
  * Tests:
- * - 
+ * - Tests if the timer can be stopped by sending a stop signal
+ * - Also checks if the timer id matches the received id
  */
 
 TEST_CASE( "TimerFD_stop_signal_when_running" ) {
@@ -26,55 +27,38 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
-
-    int count = 0;
-
     TimerFD timer("0", period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 3000000000;
 
-    //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    //Writer to send system triggers to the timer 
+    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    //Reader to receive ready signals from the timer
+    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
-    // Create a WaitSet
+    
+    //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    // Create a ReadCondition for a reader with a specific DataState
-    dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState::any());
-    // Attach conditions
+    dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
     //Variables for CHECKs
-    int64_t period_diff;
-    std::string source_id;
-    uint64_t start_stamp;
+    std::string source_id; //To check whether the received message was really sent from the timer
+    uint64_t start_stamp; //The start stamp should be 0 as a real time timer is used
+    int count = 0; //The thread should be stopped before it is called three times
 
-    //Thread for start signal
+    //Thread to receive the ready signal, send a start signal and then a stop signal after 100ms
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
-        //Check if ready signal is sent periodically
-        dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        uint64_t time_1 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_2 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_3 = timer.get_time();
-
-        uint64_t diff_1 = time_2 - time_1;
-        uint64_t diff_2 = time_3 - time_2;
-        period_diff = diff_1 - diff_2;
-
-
         //Wait for ready signal
         ReadyStatus status;
-        active_conditions = waitset.wait();
-        for (auto sample : reader.take()) {
+        waitset.wait();
+        for (auto sample : timer_ready_signal_ready.take()) {
             if (sample.info().valid()) {
                 status.next_start_stamp(sample.data().next_start_stamp());
                 status.source_id(sample.data().source_id());
@@ -89,16 +73,17 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
         //Send start signal
         SystemTrigger trigger;
         trigger.next_start(TimeStamp(starting_time));
-        writer.write(trigger);
+        timer_system_trigger_writer.write(trigger);
 
         //Wait
         rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
         //Send stop signal
         trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
-        writer.write(trigger);
+        timer_system_trigger_writer.write(trigger);
     });
 
+    //Callback function of the timer
     timer.start([&](uint64_t t_start){
         CHECK(count <= 2); //This task should not be called too often
         usleep( 100000 ); // simluate variable runtime
@@ -109,8 +94,6 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
         signal_thread.join();
     }
 
-    //CHECKs from the thread
-    CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 3ms)
     //Check that the ready signal matches the expected ready signal
     CHECK(source_id == "0");
     CHECK(start_stamp == 0);

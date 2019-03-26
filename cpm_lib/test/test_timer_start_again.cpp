@@ -17,7 +17,9 @@
 
 /**
  * Tests:
- * - 
+ * - Checks if the starting time, period and offset were obeyed when the timer is started asynchronously
+ * - Calls start(_async) after the timer has been started -> exceptions should be thrown
+ * - Checks if the timer id matches the received id
  */
 
 TEST_CASE( "TimerFD_start_again" ) {
@@ -27,44 +29,40 @@ TEST_CASE( "TimerFD_start_again" ) {
     const uint64_t period = 21000000;
     const uint64_t offset =  0; //This time check offset = 0
 
-    int count = 0;
-    uint64_t t_start_prev = 0;
-    bool was_stopped = false;
-
-    TimerFD timer("2", period, offset, true);
+    std::string timer_id = "2";
+    TimerFD timer(timer_id, period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 2000000000;
 
-    //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    //Writer to send system triggers to the timer 
+    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    //Reader to receive ready signals from the timer
+    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
-    // Create a WaitSet
+    
+    //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    // Create a ReadCondition for a reader with a specific DataState
-    dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState::any());
-    // Attach conditions
+    dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
     //Data for CHECKS / ASSERTS
-    std::string source_id;
-    uint64_t start_stamp;
-    std::vector<uint64_t> get_time_timestamps;
-    std::vector<uint64_t> t_start_timestamps;
+    std::string source_id; //To check whether the source ID of a message is the same as the sender id
+    uint64_t start_stamp; //The initial stamp sent by the timer should be zero, as stamps are only required to be used by the simulated timer (signals "I'm ready")
+    std::vector<uint64_t> get_time_timestamps; //Timestamps from timer.get_time() in each call of the callback function
+    std::vector<uint64_t> t_start_timestamps; //Timestamps t_now in each call of the callback function
 
-    //Thread for start signal
+    //Thread that handles the start signal - it receives the ready signal by the timer and sends a system trigger (start signal)
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
         //Wait for ready signal
         ReadyStatus status;
         dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        for (auto sample : reader.take()) {
+        for (auto sample : timer_ready_signal_ready.take()) {
             if (sample.info().valid()) {
                 status.next_start_stamp(sample.data().next_start_stamp());
                 status.source_id(sample.data().source_id());
@@ -79,36 +77,20 @@ TEST_CASE( "TimerFD_start_again" ) {
         //Send start signal
         SystemTrigger trigger;
         trigger.next_start(TimeStamp(starting_time));
-        writer.write(trigger);
+        timer_system_trigger_writer.write(trigger);
     });
 
-    //Check if start_async works as expected as well
+    //Check if start_async works as expected as well and store timestamps
     timer.start_async([&](uint64_t t_start){
         get_time_timestamps.push_back(timer.get_time());
         t_start_timestamps.push_back(t_start);
     });
 
-    //Check that the timer cannot be used while it is running (Use return codes here?)
+    //Check that the timer cannot be used while it is running
     usleep(1000000);
     std::cout << "Starting the timer again" << std::endl;
-    
-    bool exception_called = false;
-    try {
-        timer.start([](uint64_t t_start) {});
-    }
-    catch (cpm::ErrorTimerStart &e) {
-        exception_called = true;
-    }
-    CHECK(exception_called);
-
-    exception_called = false;
-    try {
-        timer.start_async([](uint64_t t_start) {});
-    }
-    catch (cpm::ErrorTimerStart &e) {
-        exception_called = true;
-    }
-    CHECK(exception_called);
+    CHECK_THROWS_AS(timer.start([](uint64_t t_start) {}), cpm::ErrorTimerStart);
+    CHECK_THROWS_AS(timer.start_async([](uint64_t t_start) {}), cpm::ErrorTimerStart);
 
     //Wait for above stuff to finish
     usleep(3000000);
@@ -119,7 +101,7 @@ TEST_CASE( "TimerFD_start_again" ) {
 
     //Checks / assertions from threads
     //Check whether the ready signal is correct
-    CHECK(source_id == "2");
+    CHECK(source_id == timer_id);
     CHECK(start_stamp == 0);
     //Check if the starting time was obeyed and if period + offset were set correctly
     for (int i = 0; i < get_time_timestamps.size(); ++i) {

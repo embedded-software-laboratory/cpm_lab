@@ -14,7 +14,11 @@
 
 /**
  * Tests:
- * - 
+ * - Is the timer started after the initial starting time
+ * - Does t_now match the expectation regarding offset, period and start values
+ * - Is the callback function called shortly after t_now
+ * - Is the timer actually stopped when it should be stopped
+ * - If the callback function takes longer than period to finish, is this handled correctly
  */
 
 TEST_CASE( "TimerFD_accuracy" ) {
@@ -24,6 +28,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
 
+    //Variables for the callback function
     int count = 0;
     uint64_t t_start_prev = 0;
     bool was_stopped = false;
@@ -33,47 +38,32 @@ TEST_CASE( "TimerFD_accuracy" ) {
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 3000000000;
 
-    //Reader / Writer for ready status and system trigger
-    dds::pub::DataWriter<SystemTrigger> writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    //Writer to send system triggers to the timer 
+    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-    dds::sub::DataReader<ReadyStatus> reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    //Reader to receive ready signals from the timer
+    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
-    // Create a WaitSet
+    
+    //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    // Create a ReadCondition for a reader with a specific DataState
-    dds::sub::cond::ReadCondition read_cond(
-        reader, dds::sub::status::DataState::any());
-    // Attach conditions
+    dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
-    //Variables for CHECKs
-    int64_t period_diff;
+    //Variables for CHECKs - only to identify the timer by its id and to check if the start stamp was correct
     std::string source_id;
     uint64_t start_stamp;
 
-    //Thread for start signal
+    //Thread to receive the ready signal and send a start signal afterwards
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
-        //Check if ready signal is sent periodically
-        dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        uint64_t time_1 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_2 = timer.get_time();
-        active_conditions = waitset.wait();
-        uint64_t time_3 = timer.get_time();
-
-        uint64_t diff_1 = time_2 - time_1;
-        uint64_t diff_2 = time_3 - time_2;
-        period_diff = diff_1 - diff_2;
-
-
         //Wait for ready signal
         ReadyStatus status;
-        active_conditions = waitset.wait();
-        for (auto sample : reader.take()) {
+        waitset.wait();
+        for (auto sample : timer_ready_signal_ready.take()) {
             if (sample.info().valid()) {
                 status.next_start_stamp(sample.data().next_start_stamp());
                 status.source_id(sample.data().source_id());
@@ -88,24 +78,24 @@ TEST_CASE( "TimerFD_accuracy" ) {
         //Send start signal
         SystemTrigger trigger;
         trigger.next_start(TimeStamp(starting_time));
-        writer.write(trigger);
+        timer_system_trigger_writer.write(trigger);
     });
 
     timer.start([&](uint64_t t_start){
         uint64_t now = timer.get_time();
 
-        CHECK( was_stopped == false );
-        CHECK( now >= starting_time + period * count);
+        CHECK( was_stopped == false ); //Should never be called if it was stopped
+        CHECK( now >= starting_time + period * count); //Curent timer should match the expectation regarding starting time and period
         if (count == 0) {
             CHECK( t_start <= starting_time + period + 1000000); // actual start time is within 1 ms of initial start time
         }
-        CHECK( t_start <= now );
+        CHECK( t_start <= now ); //Callback should not be called before t_now
         CHECK( now <= t_start + 1000000 ); // actual start time is within 1 ms of declared start time
         CHECK( t_start % period == offset ); // start time corresponds to timer definition
 
         if(count > 0)
         {
-            CHECK( ((count%3)+1)*period == t_start - t_start_prev);
+            CHECK( ((count%3)+1)*period == t_start - t_start_prev); //Fitting to the sleep behaviour, the difference between the periods should match this expression
         }
 
         count++;
@@ -116,15 +106,13 @@ TEST_CASE( "TimerFD_accuracy" ) {
 
         t_start_prev = t_start;
 
-        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime
+        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime that can be greater than period
     });
 
     if (signal_thread.joinable()) {
         signal_thread.join();
     }
 
-    //CHECKs of the thread
-    CHECK(((period_diff >= - 1000000) && (period_diff <= 1000000))); //Ready signal sent periodically (within 1ms)
     //Check that the ready signal matches the expected ready signal
     CHECK(source_id == "0");
     CHECK(start_stamp == 0);

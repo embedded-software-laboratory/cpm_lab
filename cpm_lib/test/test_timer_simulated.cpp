@@ -33,7 +33,8 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
-    TimerSimulated timer("1", period, offset);
+    std::string timer_id = "1";
+    TimerSimulated timer(timer_id, period, offset);
 
     int count = 0; //Count how often the timer callback was called
     int num_runs = 15; //Run the timer for 15 periods
@@ -132,7 +133,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
     //Checks and assertions
     for (int i = 0; i < status_ready.size(); ++i) {
-        CHECK(status_ready.at(i).source_id() == "1"); //The source id should always match the id set for the timer
+        CHECK(status_ready.at(i).source_id() == timer_id); //The source id should always match the id set for the timer
         CHECK(status_ready.at(i).next_start_stamp().nanoseconds() == period * i + offset); //The ready stamps should match the settings for period and offset
     }
     for (int i = 0; i < status_wrong_start_signal.size(); ++i) {
