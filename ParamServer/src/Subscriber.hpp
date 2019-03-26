@@ -37,7 +37,7 @@ template<class MessageType> Subscriber<MessageType>::Subscriber(
     dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
 )
 :sub(_participant)
-,reader(sub, topic)
+,reader(sub, topic, dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable())
 ,read_condition(reader)
 {
     read_condition.enabled_statuses(dds::core::status::StatusMask::data_available());

@@ -3,14 +3,15 @@
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(ParameterStorage& _storage):
-    parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter2"),
-    parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest2"),
+    parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
+    parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
     writer(
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        parameterTopic
+        parameterTopic,
+        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
     ),
     subscriber(
-        "parameterRequest2", 
+        "parameterRequest", 
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
         parameterRequestTopic
@@ -28,6 +29,8 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
 }
 
 void ParameterServer::handleSingleParamRequest(std::string name) {
+    std::cout << "Got request: " << name << std::endl;
+
     Parameter param = Parameter();
     param.name(name);
 
