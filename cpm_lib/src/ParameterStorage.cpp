@@ -7,7 +7,7 @@ using namespace std::placeholders;
 ParameterStorage::ParameterStorage():
     parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
     parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
-    writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic),
+    writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic, dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
     subscriber("parameter", std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
 {
 
