@@ -15,7 +15,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
     window->add(*drawingArea);
 
 
-    update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0);
+    update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0, false, false);
     update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
 
     update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
