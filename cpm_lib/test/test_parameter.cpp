@@ -24,12 +24,12 @@ class ParameterServer {
         ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
                 dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-                ParameterReceiver::Instance().parameterTopic
+                cpm::ParameterReceiver::Instance().parameterTopic
             ),
             parameter_request_subscriber(
                 std::bind(callback, parameter_writer, _1), 
                 cpm::ParticipantSingleton::Instance(), 
-                ParameterReceiver::Instance().parameterRequestTopic
+                cpm::ParameterReceiver::Instance().parameterRequestTopic
             )
         {
 
