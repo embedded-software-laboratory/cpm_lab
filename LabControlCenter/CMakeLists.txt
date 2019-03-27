@@ -25,6 +25,9 @@ link_directories(../cpm_base/cpm_lib/build/)
 
 
 
+# yaml-cpp
+include_directories(../../yaml-cpp/include/)
+link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter
@@ -44,9 +47,13 @@ add_executable(LabControlCenter
     src/defaults.hpp
     src/Joystick.cpp
     src/Joystick.hpp
+    src/ParameterServer.cpp
+    src/ParameterServer.hpp
+    src/ParameterStorage.cpp
+    src/ParameterStorage.hpp
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter cpm ${GTKMM_LIBRARIES})
+target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
