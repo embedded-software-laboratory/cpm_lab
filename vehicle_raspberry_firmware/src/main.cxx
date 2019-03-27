@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
-    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0);
+    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, false);
 
     // Control loop
     update_loop->start([&](uint64_t t_now) {
