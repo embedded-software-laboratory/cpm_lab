@@ -11,7 +11,6 @@ file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
     include/cpm/Parameter.hpp
-    src/ParameterDistribution.cpp
     src/ParameterReceiver.hpp
     src/ParameterReceiver.cpp
     include/cpm/ParticipantSingleton.hpp
