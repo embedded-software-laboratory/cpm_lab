@@ -15,7 +15,7 @@
 #include "ParameterStorage.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
-#include "Subscriber.hpp"
+#include "cpm/AsyncReader.hpp"
 #include <dds/pub/ddspub.hpp>
 
 class ParameterServer {
@@ -31,7 +31,7 @@ private:
     dds::topic::Topic<ParameterRequest> parameterRequestTopic;
     dds::topic::Topic<Parameter> parameterTopic;
     dds::pub::DataWriter<Parameter> writer;
-    Subscriber<ParameterRequest> subscriber;
+    cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
     //Storage
     ParameterStorage& storage;

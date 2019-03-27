@@ -10,7 +10,7 @@ ParameterServer::ParameterServer(ParameterStorage& _storage):
         parameterTopic,
         dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
     ),
-    subscriber(
+    readerParameterRequest(
         "parameterRequest", 
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
