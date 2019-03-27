@@ -1,0 +1,23 @@
+---
+parameters:
+  bool:
+    test1: true
+    simulated_time: false
+  int:
+    test3: 0
+    test4: 199
+  double:
+    test5: 0.1
+    test6: 1918829939.984733
+  string:
+    test7: 'TEHST@#+-//\\??'
+  ints:
+    test8:
+      - 0
+      - 200000
+  doubles:
+    test9:
+      - 0.12313213123123123
+      - 12932193.54069
+    test10:
+      - 29342424

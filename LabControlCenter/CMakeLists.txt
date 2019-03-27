@@ -44,6 +44,10 @@ add_executable(LabControlCenter
     src/defaults.hpp
     src/Joystick.cpp
     src/Joystick.hpp
+    src/ParameterServer.cpp
+    src/ParameterServer.hpp
+    src/ParameterStorage.cpp
+    src/ParameterStorage.hpp
     src/main.cpp
 )
 

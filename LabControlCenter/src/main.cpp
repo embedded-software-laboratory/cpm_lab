@@ -11,6 +11,13 @@
 
 int main(int argc, char *argv[])
 {
+
+    ParameterStorage storage("parameters.yaml");
+    ParameterServer server(storage);
+
+
+
+
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
     cssProvider->load_from_path("ui/style.css");
