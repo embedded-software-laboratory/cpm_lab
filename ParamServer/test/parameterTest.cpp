@@ -45,9 +45,9 @@ TEST_CASE( "parameter_yaml" ) {
         CHECK(std::find(doubles_value.begin(), doubles_value.end(), d) != doubles_value.end());
     }
 
-    storage1.storeFile();
+    storage1.storeFile("test_out.yaml");
 
-    ParameterStorage storage2(path_to_file);
+    ParameterStorage storage2("test_out.yaml");
 
     storage2.get_parameter_bool("b1", bool_value);
     CHECK(bool_value == b_val);
@@ -67,5 +67,5 @@ TEST_CASE( "parameter_yaml" ) {
         CHECK(std::find(doubles_value.begin(), doubles_value.end(), d) != doubles_value.end());
     }
 
-    storage2.storeFile();
+    storage2.storeFile("test_out2.yaml");
 }

@@ -1,12 +1,11 @@
 #include "ParameterStorage.hpp"
 
-ParameterStorage::ParameterStorage(std::string _file) :
-    file(_file)
+ParameterStorage::ParameterStorage(std::string _filename)
 {
-    loadFile();
+    loadFile(_filename);
 }
 
-void ParameterStorage::reloadFile() {
+void ParameterStorage::reloadFile(std::string _filename) {
     std::lock_guard<std::mutex> b_lock(param_bool_mutex);
     std::lock_guard<std::mutex> i_lock(param_int_mutex);
     std::lock_guard<std::mutex> d_lock(param_double_mutex);
@@ -21,11 +20,11 @@ void ParameterStorage::reloadFile() {
     param_ints.clear();
     param_doubles.clear();
 
-    loadFile();
+    loadFile(_filename);
 }
 
-void ParameterStorage::loadFile() {
-    YAML::Node parsedFile = YAML::LoadFile(file);
+void ParameterStorage::loadFile(std::string _filename) {
+    YAML::Node parsedFile = YAML::LoadFile(_filename);
 
     YAML::Node params = parsedFile["parameters"];
     YAML::Node params_bool = params["bool"];
@@ -87,7 +86,7 @@ void ParameterStorage::loadFile() {
     }
 }
 
-void ParameterStorage::storeFile() {
+void ParameterStorage::storeFile(std::string _filename) {
     YAML::Emitter out;
 
     out << YAML::BeginMap;
@@ -156,10 +155,8 @@ void ParameterStorage::storeFile() {
 
     out << YAML::EndMap << YAML::EndMap;
 
-    std::cout << out.c_str() << std::endl;
-
     std::ofstream fileStream;
-    fileStream.open("test_out.yaml", std::ofstream::out | std::ofstream::trunc);
+    fileStream.open(_filename, std::ofstream::out | std::ofstream::trunc);
     fileStream << out.c_str() << std::endl;
     fileStream.close();
 }

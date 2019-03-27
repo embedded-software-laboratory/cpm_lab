@@ -18,7 +18,7 @@
 class ParameterStorage {
 public:
     //Constructor
-    ParameterStorage(std::string _file);
+    ParameterStorage(std::string _filename);
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -29,11 +29,11 @@ public:
     /**
      * \brief Load YAML file into memory, use mutex
      */
-    void reloadFile();
+    void reloadFile(std::string _filename);
     /**
      * \brief Store current configuration in YAML file
      */
-    void storeFile();
+    void storeFile(std::string _filename);
     /**
      * \brief Set the value of a parameter
      * \param name name of the parameter
@@ -71,7 +71,7 @@ private:
     /**
      * \brief Load YAML file into memory
      */
-    void loadFile();
+    void loadFile(std::string _filename);
 
     /**
      * Float / double precision for YAML
@@ -93,7 +93,4 @@ private:
     std::mutex param_string_mutex;
     std::mutex param_ints_mutex;
     std::mutex param_doubles_mutex;
-
-    //File name of the YAML file + path
-    std::string file;
 };
