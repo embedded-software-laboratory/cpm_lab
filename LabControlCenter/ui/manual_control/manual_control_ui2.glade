@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.18.3 -->
+<interface>
+  <requires lib="gtk+" version="3.12"/>
+  <object class="GtkBox" id="box1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkLabel" id="label2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="xpad">6</property>
+        <property name="ypad">6</property>
+        <property name="label" translatable="yes">
+Joystick Device</property>
+        <property name="ellipsize">start</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkEntry" id="entry_js_device">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="text" translatable="yes">/dev/input/js0</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="label3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="xpad">6</property>
+        <property name="ypad">6</property>
+        <property name="label" translatable="yes">
+Vehicle ID</property>
+        <property name="ellipsize">start</property>
+        <property name="xalign">0</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkEntry" id="entry_vehicle_id">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="text" translatable="yes">4</property>
+        <property name="input_purpose">digits</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_restart">
+        <property name="label" translatable="yes">(re)start</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="yalign">0.46000000834465027</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="button_stop">
+        <property name="label" translatable="yes">stop</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">5</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkProgressBar" id="progressbar_throttle">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">20</property>
+        <property name="text" translatable="yes">Throttle</property>
+        <property name="show_text">True</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkProgressBar" id="progressbar_steering">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="text" translatable="yes">Steering</property>
+        <property name="show_text">True</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">7</property>
+      </packing>
+    </child>
+  </object>
+</interface>
