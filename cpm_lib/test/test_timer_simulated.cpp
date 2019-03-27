@@ -29,15 +29,12 @@
 
 TEST_CASE( "TimerSimulated_accuracy" ) {
 
-    std::cout << "Starting TimerFD (simulated) test" << std::endl;
-
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
-    std::string timer_id = "1";
+    std::string timer_id = "qwertzy";
     TimerSimulated timer(timer_id, period, offset);
 
-    int count = 0; //Count how often the timer callback was called
-    int num_runs = 15; //Run the timer for 15 periods
+    const int num_runs = 15;
 
     //Writer to send system triggers to the timer 
     dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
@@ -54,11 +51,22 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
-    //Assertion / check data for both threads, to be checked after the execution
-    std::vector<ReadyStatus> status_ready; //All ready status signals received from the timer in each run
-    std::vector<std::vector<ReadyStatus>> status_wrong_start_signal; //All ready status signals received from the timer after a wrong start signal was sent
-    std::vector<uint64_t> get_time_timestamps; //Timestamps from timer.get_time() in each call of the callback function
-    std::vector<uint64_t> t_start_timestamps; //Timestamps t_now in each call of the callback function
+
+    /** Test result values **/
+
+    // All ready status signals received from the timer in each run
+    std::vector<ReadyStatus> status_ready; 
+
+    // All ready status signals received from the timer after a wrong start signal was sent
+    std::vector<std::vector<ReadyStatus>> status_wrong_start_signal; 
+
+    // Timestamps from timer.get_time() in each call of the callback function
+    std::vector<uint64_t> get_time_timestamps;
+
+    // Timestamps t_now in each call of the callback function 
+    std::vector<uint64_t> t_start_timestamps; 
+
+
 
     //Thread that handles the simulated time - it receives ready signals by the timer and sends system triggers
     std::thread signal_thread = std::thread([&](){
@@ -115,16 +123,22 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         timer_system_trigger_writer.write(stop_trigger);
     });
 
-    //Registering callback function for the timer - Just simulate a variable runtime and save the timestamps in each run as well as the number of runs
+
+    int timer_loop_count = 0; //timer_loop_count how often the timer callback was called
+
+    // Registering callback function for the timer
+    // Just simulate a variable runtime and save the 
+    // timestamps in each run as well as the number of runs
     timer.start([&](uint64_t t_start){
         std::cout << "Next time step" << std::endl;
 
         get_time_timestamps.push_back(timer.get_time());
         t_start_timestamps.push_back(t_start);
 
-        count++;
+        timer_loop_count++;
 
-        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime (not really useful here)
+        // simluate variable runtime (not really useful here)
+        usleep( ((timer_loop_count%3)*period + period/3) / 1000 ); 
     });
 
     if (signal_thread.joinable()) {
@@ -132,21 +146,25 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
     }
 
     //Checks and assertions
-    for (int i = 0; i < status_ready.size(); ++i) {
-        CHECK(status_ready.at(i).source_id() == timer_id); //The source id should always match the id set for the timer
-        CHECK(status_ready.at(i).next_start_stamp().nanoseconds() == period * i + offset); //The ready stamps should match the settings for period and offset
+    for (size_t i = 0; i < status_ready.size(); ++i) {
+        //The source id should always match the id set for the timer
+        CHECK(status_ready.at(i).source_id() == timer_id); 
+        //The ready stamps should match the settings for period and offset
+        CHECK(status_ready.at(i).next_start_stamp().nanoseconds() == period * i + offset); 
     }
-    for (int i = 0; i < status_wrong_start_signal.size(); ++i) {
+    for (size_t i = 0; i < status_wrong_start_signal.size(); ++i) {
         for (auto signal : status_wrong_start_signal.at(i)) {
-            CHECK(signal.next_start_stamp().nanoseconds() == period * i + offset); //After "wrong" start signals have been sent, the ready signal should remain unchanged
+            //After "wrong" start signals have been sent, the ready signal should remain unchanged
+            CHECK(signal.next_start_stamp().nanoseconds() == period * i + offset); 
         }
     }
-    for (int i = 0; i < get_time_timestamps.size(); ++i) {
+    for (size_t i = 0; i < get_time_timestamps.size(); ++i) {
         //Check if the thread times match the current time + if the current timestamp is correct
         CHECK( t_start_timestamps.at(i) == get_time_timestamps.at(i) );
         CHECK( (get_time_timestamps.at(i) - offset) % period == 0);
         CHECK( t_start_timestamps.at(i) == i * period + offset );
     }
+
     //No more than num_runs runs should have taken place
-    REQUIRE(count == num_runs);
+    REQUIRE(timer_loop_count == num_runs);
 }
