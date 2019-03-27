@@ -19,20 +19,19 @@
 #include <dds/pub/ddspub.hpp>
 
 class ParameterServer {
-public:
-    ParameterServer(ParameterStorage& _storage);
-    
-    ParameterStorage& storage;
-
 private:    
     //Callback
     void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);
 
     //Communication
-    dds::topic::Topic<ParameterRequest> parameterRequestTopic;
     dds::topic::Topic<Parameter> parameterTopic;
+    dds::topic::Topic<ParameterRequest> parameterRequestTopic;
     dds::pub::DataWriter<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
+public:
+    ParameterServer(ParameterStorage& _storage);
+    
+    ParameterStorage& storage;
 };

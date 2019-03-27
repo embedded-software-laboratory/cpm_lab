@@ -1,17 +1,17 @@
 #include "ParameterServer.hpp"
+#include "cpm/get_topic.hpp"
 
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(ParameterStorage& _storage):
-    parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
-    parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
+    parameterTopic(cpm::get_topic<Parameter>("parameter")),
+    parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
     writer(
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         parameterTopic,
         dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
     ),
     readerParameterRequest(
-        "parameterRequest", 
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
         parameterRequestTopic
