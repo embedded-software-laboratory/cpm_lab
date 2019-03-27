@@ -28,28 +28,27 @@ TEST_CASE( "TimerFD_stop_signal" ) {
     TimerFD timer(timer_id, period, offset, true);
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     //Reader to receive ready signals from the timer
-    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    dds::sub::DataReader<ReadyStatus> reader_ReadyStatus(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
+    dds::sub::cond::ReadCondition read_cond(reader_ReadyStatus, dds::sub::status::DataState::any());
     waitset += read_cond;
 
 
     //Thread to send a stop signal after the ready signal was received
     std::thread signal_thread = std::thread([&](){
-        std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
         //Wait for ready signal
         ReadyStatus status;
         waitset.wait();
-        for (auto sample : timer_ready_signal_ready.take()) {
+        for (auto sample : reader_ReadyStatus.take()) {
             if (sample.info().valid()) {
                 break;
             }
@@ -58,7 +57,7 @@ TEST_CASE( "TimerFD_stop_signal" ) {
         //Send stop signal
         SystemTrigger trigger;
         trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
-        timer_system_trigger_writer.write(trigger);
+        writer_SystemTrigger.write(trigger);
     });
 
     timer.start([&](uint64_t t_start){

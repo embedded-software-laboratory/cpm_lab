@@ -80,9 +80,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
                 }
             }
             status_ready.push_back(status);
-
-            std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
-
+            
             uint64_t next_start = status.next_start_stamp().nanoseconds();
 
             //Send wrong start signal
@@ -107,8 +105,6 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
         //Send stop signal - after num_runs, the callback function should not be called again
         waitset.wait();
-
-        std::cout << "Sending stop signal..." << std::endl;
 
         SystemTrigger stop_trigger;
         stop_trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
