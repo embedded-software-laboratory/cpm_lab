@@ -10,7 +10,7 @@
 
 class VehicleManualControl
 {
-    shared_ptr<dds::domain::DomainParticipant> participant;
+    dds::domain::DomainParticipant& participant;
     shared_ptr<Joystick> joystick = nullptr;
     std::shared_ptr<cpm::Timer> update_loop = nullptr;
     uint8_t vehicle_id = 0;
@@ -32,7 +32,7 @@ class VehicleManualControl
     std::function<void()> m_update_callback;
 
 public:
-    VehicleManualControl(shared_ptr<dds::domain::DomainParticipant> participant);
+    VehicleManualControl();
     void start(uint8_t vehicleId, string joystick_device_file);
     void stop();
     void set_callback(std::function<void()> update_callback) { m_update_callback = update_callback; }
