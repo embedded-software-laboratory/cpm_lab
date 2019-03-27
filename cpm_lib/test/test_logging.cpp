@@ -63,9 +63,7 @@ TEST_CASE( "Logging" ) {
 
     //Log first test data and write it to the stringstream for comparison
     actual_content << first_test;
-    Logging::Instance() << first_test << std::endl;
-
-    TODO nimm die richtige Version der print version (vsnprintf)
+    Logging::Instance().write(first_test.c_str());
 
     //Store the current file content of the log file - it should match the actual_content stringstream
     usleep(10000); //Sleep 10ms to let the Logger access the file first
@@ -85,7 +83,10 @@ TEST_CASE( "Logging" ) {
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
     rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
-    Logging::Instance() << second_test << with_more << std::endl;
+    std::stringstream stream;
+    stream << second_test << with_more;
+    Logging::Instance().write(stream.str().c_str());
+    stream.clear();
 
     //Store the (now changed) file content of the log file
     usleep(10000); //Sleep 10ms to let the Logger access the file first

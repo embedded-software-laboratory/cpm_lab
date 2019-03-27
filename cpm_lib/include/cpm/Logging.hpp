@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <stdio.h>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -36,8 +37,6 @@ class Logging {
         std::string filename = ""; //Is changed in Instance creation: Current timestamp added
         std::string id = "uninitialized";
 
-        std::stringstream stream;
-
         Logging();
         uint64_t get_time();
         void check_id();
@@ -46,17 +45,15 @@ class Logging {
         static Logging& Instance();
         void set_id(std::string id);
         std::string get_filename();
-        void flush();
-        //Overloading << to flush when using std::endl
-        Logging& operator<< (std::basic_ostream<char, std::char_traits<char>>& (*endline_func) (std::basic_ostream<char, std::char_traits<char>>&)) {
-            check_id();
-            flush();
-            return *this;
-        }
+        void flush(std::string &str);
+        /**
+         * Allows for a C-style use of the logger, like printf, using snprintf
+         */
+        template<class ...Args> void write(const char* f, Args&& ...args) {
+            int size = snprintf(nullptr, 0, f, args...); //Determine the size of the resulting string without actually writing it
+            std::string str(size, ' ');
+            snprintf(& str[0], size + 1, f, args...);
 
-        template <typename T> Logging& operator<< (const T& log) {
-            check_id();
-            stream << log;
-            return *this;
+            flush(str);
         }
 };

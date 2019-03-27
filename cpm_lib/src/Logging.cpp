@@ -44,23 +44,19 @@ std::string Logging::get_filename() {
     return filename;
 }
 
-void Logging::flush() {
+void Logging::flush(std::string &str) {
     check_id();
     
     uint64_t time_now = get_time();
 
     file.open(filename, std::ios::app);
-	file << id << "," << time_now << "," << stream.str() << std::endl;
+	file << id << "," << time_now << "," << str << std::endl;
 	file.close();
 
-    Log log(id, stream.str(), TimeStamp(time_now));
+    Log log(id, str, TimeStamp(time_now));
     logger.write(log);
 
-    std::cerr << "Log at time " << time_now << ": " << stream.str() << std::endl;
-
-    //Clear the stream
-    stream.str(std::string());
-    stream.clear();
+    std::cerr << "Log at time " << time_now << ": " << str << std::endl;
 }
 
 void Logging::check_id() {
