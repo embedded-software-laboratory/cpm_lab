@@ -11,8 +11,8 @@
 #include <map>
 #include <mutex>
 
-#include "Parameter.hpp"
-#include "ParameterRequest.hpp"
+#include "dds/Parameter.hpp"
+#include "dds/ParameterRequest.hpp"
 
 #include "cpm/AsyncReader.hpp"
 #include <dds/pub/ddspub.hpp>

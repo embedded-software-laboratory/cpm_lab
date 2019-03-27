@@ -2,7 +2,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/AsyncReader.hpp"
 #include "cpm/Parameter.hpp"
-#include "../src/ParameterReceiver.hpp"
+#include "cpm/ParameterReceiver.hpp"
 #include <thread>
 #include <memory>
 #include <chrono>
