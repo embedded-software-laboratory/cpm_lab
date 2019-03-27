@@ -13,7 +13,7 @@
 #include "Parameter.hpp"
 #include "ParameterRequest.hpp"
 
-#include "Subscriber.hpp"
+#include "cpm/AsyncReader.hpp"
 #include <dds/pub/ddspub.hpp>
 
 class ParameterServer {
@@ -57,5 +57,5 @@ private:
     std::mutex param_doubles_mutex;
 
     dds::pub::DataWriter<Parameter> writer;
-    Subscriber<ParameterRequest> subscriber;
+    cpm::AsyncReader<ParameterRequest> subscriber;
 };

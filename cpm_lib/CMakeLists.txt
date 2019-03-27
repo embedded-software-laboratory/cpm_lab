@@ -28,7 +28,7 @@ set(SOURCE_CPM
     src/TimerSimulated.cpp
     include/cpm/exceptions.hpp
     src/exceptions.cpp
-    src/Subscriber.hpp
+    include/cpm/AsyncReader.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
     src/Logging.cpp
