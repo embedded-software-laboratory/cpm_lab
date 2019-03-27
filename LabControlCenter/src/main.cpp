@@ -13,11 +13,8 @@
 
 int main(int argc, char *argv[])
 {
-
     ParameterStorage storage("parameters.yaml");
     ParameterServer server(storage);
-
-
 
 
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);

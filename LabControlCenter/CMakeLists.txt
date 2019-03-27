@@ -54,6 +54,6 @@ add_executable(LabControlCenter
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter cpm ${GTKMM_LIBRARIES})
+target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
