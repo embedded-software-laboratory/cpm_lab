@@ -8,7 +8,7 @@ ParameterStorage::ParameterStorage():
     parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
     parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
     writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic),
-    subscriber("parameter", std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
+    subscriber(std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
 {
 
 }

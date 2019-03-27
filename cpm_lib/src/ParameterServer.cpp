@@ -10,7 +10,6 @@ ParameterServer::ParameterServer():
         ParameterStorage::Instance().parameterTopic
     ),
     subscriber(
-        "parameterRequest", 
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
         ParameterStorage::Instance().parameterRequestTopic
