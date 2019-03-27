@@ -2,7 +2,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/AsyncReader.hpp"
 #include "cpm/Parameter.hpp"
-#include "../src/ParameterStorage.hpp"
+#include "../src/ParameterReceiver.hpp"
 #include <thread>
 #include <memory>
 #include <chrono>
@@ -24,12 +24,12 @@ class ParameterServer {
         ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
                 dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-                ParameterStorage::Instance().parameterTopic
+                ParameterReceiver::Instance().parameterTopic
             ),
             parameter_request_subscriber(
                 std::bind(callback, parameter_writer, _1), 
                 cpm::ParticipantSingleton::Instance(), 
-                ParameterStorage::Instance().parameterRequestTopic
+                ParameterReceiver::Instance().parameterRequestTopic
             )
         {
 

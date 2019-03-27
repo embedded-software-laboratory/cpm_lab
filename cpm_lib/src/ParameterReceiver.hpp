@@ -17,15 +17,15 @@
 #include "cpm/AsyncReader.hpp"
 #include <dds/pub/ddspub.hpp>
 
-class ParameterStorage {
+class ParameterReceiver {
 public:
-    static ParameterStorage& Instance();
+    static ParameterReceiver& Instance();
 
     //Delete move and copy op
-    ParameterStorage(ParameterStorage const&) = delete;
-    ParameterStorage(ParameterStorage&&) = delete; 
-    ParameterStorage& operator=(ParameterStorage const&) = delete;
-    ParameterStorage& operator=(ParameterStorage &&) = delete;
+    ParameterReceiver(ParameterReceiver const&) = delete;
+    ParameterReceiver(ParameterReceiver&&) = delete; 
+    ParameterReceiver& operator=(ParameterReceiver const&) = delete;
+    ParameterReceiver& operator=(ParameterReceiver &&) = delete;
 
     //Provide access similar to the interface
     bool parameter_bool(std::string parameter_name);
@@ -36,7 +36,7 @@ public:
     std::vector<double> parameter_doubles(std::string parameter_name);
 
 private:
-    ParameterStorage();
+    ParameterReceiver();
 
     //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
     std::map<std::string, bool> param_bool;

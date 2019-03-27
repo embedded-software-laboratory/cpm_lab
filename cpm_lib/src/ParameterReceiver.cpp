@@ -1,25 +1,25 @@
-#include "ParameterStorage.hpp"
+#include "ParameterReceiver.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
 
 using namespace std::placeholders;
 
-ParameterStorage::ParameterStorage():
+ParameterReceiver::ParameterReceiver():
     parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
     parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
     writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic),
-    subscriber(std::bind(&ParameterStorage::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
+    subscriber(std::bind(&ParameterReceiver::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
 {
 
 }
 
-ParameterStorage& ParameterStorage::Instance() {
+ParameterReceiver& ParameterReceiver::Instance() {
     // Thread-safe in C++11
-    static ParameterStorage myInstance;
+    static ParameterReceiver myInstance;
     return myInstance;
 }
 
-bool ParameterStorage::parameter_bool(std::string parameter_name) {
+bool ParameterReceiver::parameter_bool(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_bool_mutex); 
 
     while (param_bool.find(parameter_name) == param_bool.end()) {
@@ -35,7 +35,7 @@ bool ParameterStorage::parameter_bool(std::string parameter_name) {
     return retValue;
 }
 
-int32_t ParameterStorage::parameter_int(std::string parameter_name) {
+int32_t ParameterReceiver::parameter_int(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_int_mutex); 
 
     while (param_int.find(parameter_name) == param_int.end()) {
@@ -51,7 +51,7 @@ int32_t ParameterStorage::parameter_int(std::string parameter_name) {
     return retValue;
 }
 
-double ParameterStorage::parameter_double(std::string parameter_name) {
+double ParameterReceiver::parameter_double(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_double_mutex); 
 
     while (param_double.find(parameter_name) == param_double.end()) {
@@ -67,7 +67,7 @@ double ParameterStorage::parameter_double(std::string parameter_name) {
     return retValue;
 }
 
-std::string ParameterStorage::parameter_string(std::string parameter_name) {
+std::string ParameterReceiver::parameter_string(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_string_mutex); 
 
     while (param_string.find(parameter_name) == param_string.end()) {
@@ -83,7 +83,7 @@ std::string ParameterStorage::parameter_string(std::string parameter_name) {
     return retValue;
 }
 
-std::vector<int32_t> ParameterStorage::parameter_ints(std::string parameter_name) {
+std::vector<int32_t> ParameterReceiver::parameter_ints(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_ints_mutex); 
 
     while (param_ints.find(parameter_name) == param_ints.end()) {
@@ -99,7 +99,7 @@ std::vector<int32_t> ParameterStorage::parameter_ints(std::string parameter_name
     return retValue;
 }
 
-std::vector<double> ParameterStorage::parameter_doubles(std::string parameter_name) {
+std::vector<double> ParameterReceiver::parameter_doubles(std::string parameter_name) {
     std::unique_lock<std::mutex> s_lock(param_doubles_mutex); 
 
     while (param_doubles.find(parameter_name) == param_doubles.end()) {
@@ -115,13 +115,13 @@ std::vector<double> ParameterStorage::parameter_doubles(std::string parameter_na
     return retValue;
 }
 
-void ParameterStorage::requestParam(std::string parameter_name) {
+void ParameterReceiver::requestParam(std::string parameter_name) {
     ParameterRequest request;
     request.name(parameter_name);
     writer.write(request);
 }
 
-void ParameterStorage::callback(dds::sub::LoanedSamples<Parameter>& samples) {
+void ParameterReceiver::callback(dds::sub::LoanedSamples<Parameter>& samples) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
             const auto& parameter = sample.data();
