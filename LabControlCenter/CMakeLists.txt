@@ -25,6 +25,9 @@ link_directories(../cpm_base/cpm_lib/build/)
 
 
 
+# yaml-cpp
+include_directories(../../yaml-cpp/include/)
+link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter

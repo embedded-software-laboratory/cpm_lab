@@ -8,6 +8,8 @@
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ParameterServer.hpp"
+#include "ParameterStorage.hpp"
 
 int main(int argc, char *argv[])
 {
