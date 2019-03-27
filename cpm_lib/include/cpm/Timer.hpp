@@ -21,18 +21,19 @@ namespace cpm
 
     public:
         /**
-         * \brief This function creates a Timer object and returns it via a shared pointer
-         * \param node_id TODO
-         * \param period_nanoseconds the callback function is called periodically each period_nanoseconds
-         * \param offset_nanoseconds offset for the timer wrt the clock
-         * \param simulated_time_allowed indicate whether simulated time is allowed, false for hardware interaction
-         * \return returns a shared pointer which holds the timer object
+         * \brief Create a timer that can be used for function callback
+         * \param node_id ID of the timer in the network
+         * \param period_nanoseconds The timer is called periodically with a period of period_nanoseconds
+         * \param offset_nanoseconds Initial offset (from timestamp 0)
+         * \param wait_for_start For the real-time timer: Set whether the timer is started only if a start signal is sent via DDS
+         * \param simulated_time_allowed Decide whether the timer can run with simulated time
          */
         static std::shared_ptr<Timer> create(
             std::string node_id,
             uint64_t period_nanoseconds, 
             uint64_t offset_nanoseconds, 
-            bool simulated_time_allowed=true
+            bool wait_for_start,
+            bool simulated_time_allowed
         );
         /**
          * Start the periodic callback of the callback function in the 

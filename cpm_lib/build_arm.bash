@@ -7,7 +7,9 @@ if [ ! -d "build_arm" ]; then
     mkdir build_arm
 fi
 
-./rtigen.bash
+if [ ! -d "dds" ]; then
+    ./rtigen.bash
+fi
 
 
 cd build_arm

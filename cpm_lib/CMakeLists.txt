@@ -24,6 +24,10 @@ set(SOURCE_CPM
     src/Timer.cpp
     src/TimerFD.hpp
     src/TimerFD.cpp
+    src/TimerSimulated.hpp
+    src/TimerSimulated.cpp
+    include/cpm/exceptions.hpp
+    src/exceptions.cpp
     src/Subscriber.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
@@ -63,15 +67,13 @@ if(NOT BUILD_ARM)
         test/test_logging.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
+        test/test_timer_stop.cpp
+        test/test_timer_stop_running.cpp
+        test/test_timer_start_again.cpp
+        test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
         test/test_Reader.cpp
     )
 
     target_link_libraries(unittest cpm)
-
-    add_executable(parameterServer
-        src/ParameterServerDummy.cpp
-    )
-
-    target_link_libraries(parameterServer cpm)
 endif()

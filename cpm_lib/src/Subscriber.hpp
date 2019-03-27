@@ -10,9 +10,6 @@
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <rti/core/cond/AsyncWaitSet.hpp>
-#include <rti/core/ListenerBinder.hpp>
-#include <dds/dds.hpp>
-#include "dds/sub/DataReaderListener.hpp"
 
 template<class MessageType> class Subscriber
 {
