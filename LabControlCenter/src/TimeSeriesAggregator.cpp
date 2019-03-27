@@ -1,13 +1,16 @@
 #include "TimeSeriesAggregator.hpp"
+#include "cpm/get_topic.hpp"
+#include "cpm/ParticipantSingleton.hpp"
 
-TimeSeriesAggregator::TimeSeriesAggregator(shared_ptr<dds::domain::DomainParticipant> _participant)
-:participant(_participant)
+TimeSeriesAggregator::TimeSeriesAggregator()
 {
-    dds::topic::Topic<VehicleState> topic_VehicleState (*participant, "vehicleState");
-    reader_VehicleState = make_shared<dds::sub::DataReader<VehicleState>>(dds::sub::Subscriber(*participant), topic_VehicleState);
-    
-    reader_VehicleState->listener(this, dds::core::status::StatusMask::data_available());
-
+    vehicle_state_reader = make_shared<cpm::AsyncReader<VehicleState>>(
+        [this](dds::sub::LoanedSamples<VehicleState>& samples){
+            handle_new_vehicleState_samples(samples);
+        },
+        cpm::ParticipantSingleton::Instance(),
+        cpm::get_topic<VehicleState>("vehicleState")
+    );
 }
 
 
@@ -47,39 +50,31 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 }
 
 
-void TimeSeriesAggregator::on_data_available(dds::sub::DataReader<VehicleState> &reader)
+void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSamples<VehicleState>& samples)
 {
     const uint64_t now = clock_gettime_nanoseconds();
-
-    vector<dds::sub::Sample<VehicleState>> new_states_sample;
-    vector<VehicleState> new_states;
-    reader.take(std::back_inserter(new_states_sample));
-    for(auto state : new_states_sample)
+    for(auto sample : samples)
     {
-        try { new_states.push_back(state.data()); }
-        catch(...){}
-    }
-
-    for(auto state : new_states) 
-    {
-        if(timeseries_vehicleState.count(state.vehicle_id()) == 0)
+        if(sample.info().valid())
         {
-            create_vehicle_timeseries(state.vehicle_id());
+            VehicleState state = sample.data();
+            if(timeseries_vehicleState.count(state.vehicle_id()) == 0)
+            {
+                create_vehicle_timeseries(state.vehicle_id());
+            }
+
+            timeseries_vehicleState[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
+            timeseries_vehicleState[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
+            timeseries_vehicleState[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());
+            timeseries_vehicleState[state.vehicle_id()]["odometer_distance"]        ->push_sample(now, state.odometer_distance());
+            timeseries_vehicleState[state.vehicle_id()]["imu_acceleration_forward"] ->push_sample(now, state.imu_acceleration_forward());
+            timeseries_vehicleState[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
+            timeseries_vehicleState[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
+            timeseries_vehicleState[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
+            timeseries_vehicleState[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
+
+            timeseries_vehicleState[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(now - state.header().create_stamp().nanoseconds())/1e6 );
+
         }
-
-        timeseries_vehicleState[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
-        timeseries_vehicleState[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
-        timeseries_vehicleState[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());
-        timeseries_vehicleState[state.vehicle_id()]["odometer_distance"]        ->push_sample(now, state.odometer_distance());
-        timeseries_vehicleState[state.vehicle_id()]["imu_acceleration_forward"] ->push_sample(now, state.imu_acceleration_forward());
-        timeseries_vehicleState[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
-        timeseries_vehicleState[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
-        timeseries_vehicleState[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
-        timeseries_vehicleState[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
-
-        timeseries_vehicleState[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(now - state.header().create_stamp().nanoseconds())/1e6 );
-
-
     }
-
 }

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     auto participant = make_shared<dds::domain::DomainParticipant>(0);
     auto vehicleManualControl = make_shared<VehicleManualControl>(participant);
 
-    TimeSeriesAggregator timeSeriesAggregator(participant);
+    TimeSeriesAggregator timeSeriesAggregator;
 
 
     MapViewUi mapViewUi(timeSeriesAggregator.get_vehicle_data());
