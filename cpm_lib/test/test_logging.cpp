@@ -83,10 +83,14 @@ TEST_CASE( "Logging" ) {
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
     rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
+    //Write second message to Logger
     std::stringstream stream;
     stream << second_test << with_more;
     Logging::Instance().write(stream.str().c_str());
     stream.clear();
+
+    //Write C-style message
+    Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
 
     //Store the (now changed) file content of the log file
     usleep(10000); //Sleep 10ms to let the Logger access the file first
@@ -102,6 +106,7 @@ TEST_CASE( "Logging" ) {
     //Compare file content with desired content
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
     CHECK(file_content.str().find(second_test + with_more) != std::string::npos);
+    CHECK(file_content.str().find("Die Zahl 5 nennt sich auch fünf") != std::string::npos);
 
     signal_thread.join();
 
