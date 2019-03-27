@@ -36,33 +36,43 @@ TEST_CASE( "TimerFD_start_again" ) {
     uint64_t starting_time = timer.get_time() + 2000000000;
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
+    dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
         dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     //Reader to receive ready signals from the timer
-    dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    dds::sub::DataReader<ReadyStatus> reader_ReadyStatus(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data
     dds::core::cond::WaitSet waitset;
-    dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
+    dds::sub::cond::ReadCondition read_cond(reader_ReadyStatus, dds::sub::status::DataState::any());
     waitset += read_cond;
 
     //Data for CHECKS / ASSERTS
-    std::string source_id; //To check whether the source ID of a message is the same as the sender id
-    uint64_t start_stamp; //The initial stamp sent by the timer should be zero, as stamps are only required to be used by the simulated timer (signals "I'm ready")
-    std::vector<uint64_t> get_time_timestamps; //Timestamps from timer.get_time() in each call of the callback function
-    std::vector<uint64_t> t_start_timestamps; //Timestamps t_now in each call of the callback function
 
-    //Thread that handles the start signal - it receives the ready signal by the timer and sends a system trigger (start signal)
+    // To check whether the source ID of a message is the same as the sender id
+    std::string source_id; 
+
+    // The initial stamp sent by the timer should be zero, 
+    // as stamps are only required to be used by the simulated timer (signals "I'm ready")
+    uint64_t start_stamp; 
+
+    //Timestamps from timer.get_time() in each call of the callback function
+    std::vector<uint64_t> get_time_timestamps;
+
+    //Timestamps t_now in each call of the callback function 
+    std::vector<uint64_t> t_start_timestamps; 
+
+    //Thread that handles the start signal - it receives 
+    // the ready signal by the timer and sends a system trigger (start signal)
     std::thread signal_thread = std::thread([&](){
         std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
         //Wait for ready signal
         ReadyStatus status;
         dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
-        for (auto sample : timer_ready_signal_ready.take()) {
+        for (auto sample : reader_ReadyStatus.take()) {
             if (sample.info().valid()) {
                 status.next_start_stamp(sample.data().next_start_stamp());
                 status.source_id(sample.data().source_id());
@@ -77,7 +87,7 @@ TEST_CASE( "TimerFD_start_again" ) {
         //Send start signal
         SystemTrigger trigger;
         trigger.next_start(TimeStamp(starting_time));
-        timer_system_trigger_writer.write(trigger);
+        writer_SystemTrigger.write(trigger);
     });
 
     //Check if start_async works as expected as well and store timestamps
@@ -99,15 +109,23 @@ TEST_CASE( "TimerFD_start_again" ) {
     }
     timer.stop();
 
-    //Checks / assertions from threads
-    //Check whether the ready signal is correct
+    // Checks / assertions from threads
+    // Check whether the ready signal is correct
     CHECK(source_id == timer_id);
     CHECK(start_stamp == 0);
-    //Check if the starting time was obeyed and if period + offset were set correctly
+
+    // Check if the starting time was obeyed and if period + offset were set correctly
     for (int i = 0; i < get_time_timestamps.size(); ++i) {
-        CHECK( get_time_timestamps.at(i) >= starting_time + 1 ); //Was started after the initial starting time
-        CHECK( t_start_timestamps.at(i) <= get_time_timestamps.at(i) ); //t_start should be smaller than the current time
-        CHECK( get_time_timestamps.at(i) <= t_start_timestamps.at(i) + 1000000 ); // actual start time is within 1 ms of declared start time
-        CHECK( t_start_timestamps.at(i) % period == offset ); // start time corresponds to timer definition
+        // Was started after the initial starting time
+        CHECK( get_time_timestamps.at(i) >= starting_time + 1 ); 
+
+        //t_start should be smaller than the current time
+        CHECK( t_start_timestamps.at(i) <= get_time_timestamps.at(i) ); 
+
+        // actual start time is within 1 ms of declared start time
+        CHECK( get_time_timestamps.at(i) <= t_start_timestamps.at(i) + 1000000 ); 
+
+        // start time corresponds to timer definition
+        CHECK( t_start_timestamps.at(i) % period == offset );         
     }
 }
