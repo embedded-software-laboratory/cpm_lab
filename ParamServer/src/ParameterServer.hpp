@@ -21,6 +21,8 @@
 class ParameterServer {
 public:
     ParameterServer(ParameterStorage& _storage);
+    
+    ParameterStorage& storage;
 
 private:    
     //Callback
@@ -33,6 +35,4 @@ private:
     dds::pub::DataWriter<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
-    //Storage
-    ParameterStorage& storage;
 };
