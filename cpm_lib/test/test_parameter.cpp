@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/AsyncReader.hpp"
 #include "cpm/Parameter.hpp"
 #include "../src/ParameterStorage.hpp"
 #include <thread>
@@ -18,7 +19,7 @@ using namespace std::placeholders;
 class ParameterServer {
     private:
         dds::pub::DataWriter<Parameter> parameter_writer;
-        Subscriber<ParameterRequest> parameter_request_subscriber;
+        cpm::AsyncReader<ParameterRequest> parameter_request_subscriber;
     public:
         ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
@@ -26,7 +27,6 @@ class ParameterServer {
                 ParameterStorage::Instance().parameterTopic
             ),
             parameter_request_subscriber(
-                "parameterRequest", 
                 std::bind(callback, parameter_writer, _1), 
                 cpm::ParticipantSingleton::Instance(), 
                 ParameterStorage::Instance().parameterRequestTopic
