@@ -22,8 +22,6 @@
 
 TEST_CASE( "TimerFD_stop_signal" ) {
 
-    std::cout << "Starting TimerFD test" << std::endl;
-
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
     std::string timer_id = "0";
@@ -43,9 +41,6 @@ TEST_CASE( "TimerFD_stop_signal" ) {
     dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
-    //Variables for CHECKs - only to identify the timer by its id and to check if the start stamp was correct
-    std::string source_id;
-    uint64_t start_stamp;
 
     //Thread to send a stop signal after the ready signal was received
     std::thread signal_thread = std::thread([&](){
@@ -56,15 +51,9 @@ TEST_CASE( "TimerFD_stop_signal" ) {
         waitset.wait();
         for (auto sample : timer_ready_signal_ready.take()) {
             if (sample.info().valid()) {
-                status.next_start_stamp(sample.data().next_start_stamp());
-                status.source_id(sample.data().source_id());
                 break;
             }
         }
-        source_id = status.source_id();
-        start_stamp = status.next_start_stamp().nanoseconds();
-
-        std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
         //Send stop signal
         SystemTrigger trigger;
@@ -81,7 +70,4 @@ TEST_CASE( "TimerFD_stop_signal" ) {
         signal_thread.join();
     }
 
-    //Check that the ready signal matches the expected ready signal
-    CHECK(source_id == timer_id);
-    CHECK(start_stamp == 0);
 }
