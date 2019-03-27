@@ -61,10 +61,17 @@ namespace cpm
     ,reader(sub, topic)
     ,read_condition(reader)
     {
-        read_condition.enabled_statuses(dds::core::status::StatusMask::data_available()); //Call the callback function whenever any new data is available
-        read_condition->handler(std::bind(&AsyncReader::handler, this, func)); //Register the callback function
-        waitset.attach_condition(read_condition); //Attach the read condition
-        waitset.start(); //Start the waitset; from now on, whenever data is received the callback function is called
+        //Call the callback function whenever any new data is available
+        read_condition.enabled_statuses(dds::core::status::StatusMask::data_available()); 
+
+        //Register the callback function
+        read_condition->handler(std::bind(&AsyncReader::handler, this, func));
+        
+        //Attach the read condition
+        waitset.attach_condition(read_condition);
+        
+        //Start the waitset; from now on, whenever data is received the callback function is called
+        waitset.start();
 
         t_name = topic_name;
     }
