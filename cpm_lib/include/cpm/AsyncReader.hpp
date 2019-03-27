@@ -28,7 +28,6 @@ namespace cpm
         dds::sub::DataReader<MessageType> reader;
         dds::core::cond::StatusCondition read_condition;
         rti::core::cond::AsyncWaitSet waitset;
-        std::string t_name;
 
         /*
          * \brief Handler that takes unread samples, releases the waitset and calls the callback function provided by the user
@@ -37,14 +36,12 @@ namespace cpm
         void handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func);
     public:
         /*
-         * \brief Constructor for the AsynReader. Participant, topic and topic name need to be provided by the user, as well as the callback function for the reader.
-         * \param topic_name The name of the topic that is supposed to be used by the reader
+         * \brief Constructor for the AsynReader. Participant and topic need to be provided by the user, as well as the callback function for the reader.
          * \param func Callback function that is called by the reader if new data is available. LoanedSamples are passed to the function to be processed further.
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic The topic that is supposed to be used by the reader
          */
         AsyncReader(
-            std::string topic_name, 
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
             dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
     };
@@ -53,7 +50,6 @@ namespace cpm
 
     template<class MessageType> 
     AsyncReader<MessageType>::AsyncReader(
-        std::string topic_name, 
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
         dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
     )
@@ -72,8 +68,6 @@ namespace cpm
         
         //Start the waitset; from now on, whenever data is received the callback function is called
         waitset.start();
-
-        t_name = topic_name;
     }
 
 
