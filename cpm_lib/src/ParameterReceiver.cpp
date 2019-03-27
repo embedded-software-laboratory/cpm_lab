@@ -1,7 +1,6 @@
-#include "ParameterReceiver.hpp"
+#include "cpm/ParameterReceiver.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Parameter.hpp"
-#include "ParameterReceiver.hpp"
 
 using namespace std::placeholders;
 
