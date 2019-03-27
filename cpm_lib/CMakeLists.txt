@@ -14,8 +14,6 @@ set(SOURCE_CPM
     src/ParameterDistribution.cpp
     src/ParameterStorage.hpp
     src/ParameterStorage.cpp
-    src/ParameterServer.hpp
-    src/ParameterServer.cpp
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
     include/cpm/Reader.hpp
