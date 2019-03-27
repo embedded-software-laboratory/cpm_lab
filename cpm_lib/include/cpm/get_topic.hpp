@@ -8,7 +8,9 @@ namespace cpm
     template<typename T>
     dds::topic::Topic<T> get_topic(const dds::domain::DomainParticipant& participant, std::string topic_name)
     {
-        return dds::topic::find<dds::topic::Topic<T>>(participant, topic_name);
+        auto topic = dds::topic::find<dds::topic::Topic<T>>(participant, topic_name);
+        if(!(topic == dds::core::null)) return topic;
+        return dds::topic::Topic<T>(participant, topic_name);
     }
 
 

@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#include "cpm/get_topic.hpp"
 
 #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
@@ -16,7 +17,7 @@ TimerFD::TimerFD(
 )
 :period_nanoseconds(_period_nanoseconds)
 ,offset_nanoseconds(_offset_nanoseconds)
-,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
+,ready_topic(cpm::get_topic<ReadyStatus>("ready"))
 ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
 ,node_id(_node_id)
 ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
