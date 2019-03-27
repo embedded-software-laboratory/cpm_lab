@@ -28,12 +28,10 @@ TEST_CASE( "TimerFD_accuracy" ) {
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
 
-    //Variables for the callback function
-    int count = 0;
-    uint64_t t_start_prev = 0;
-    bool was_stopped = false;
+    const std::string time_name = "asdfg";
 
-    TimerFD timer("0", period, offset, true);
+
+    TimerFD timer(time_name, period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 3000000000;
@@ -52,28 +50,20 @@ TEST_CASE( "TimerFD_accuracy" ) {
     dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
 
-    //Variables for CHECKs - only to identify the timer by its id and to check if the start stamp was correct
+    //Variables for CHECKs - only to identify the timer by its id
     std::string source_id;
-    uint64_t start_stamp;
 
     //Thread to receive the ready signal and send a start signal afterwards
     std::thread signal_thread = std::thread([&](){
-        std::cout << "TimerFD: Receiving ready signal..." << std::endl;
 
         //Wait for ready signal
-        ReadyStatus status;
         waitset.wait();
         for (auto sample : timer_ready_signal_ready.take()) {
             if (sample.info().valid()) {
-                status.next_start_stamp(sample.data().next_start_stamp());
-                status.source_id(sample.data().source_id());
+                source_id = sample.data().source_id();
                 break;
             }
         }
-        source_id = status.source_id();
-        start_stamp = status.next_start_stamp().nanoseconds();
-
-        std::cout << "TimerFD: Received ready signal: " << status.source_id() << " " << status.next_start_stamp() << std::endl;
 
         //Send start signal
         SystemTrigger trigger;
@@ -81,39 +71,46 @@ TEST_CASE( "TimerFD_accuracy" ) {
         timer_system_trigger_writer.write(trigger);
     });
 
+
+    //Variables for the callback function
+    int timer_loop_count = 0;
+    uint64_t t_start_prev = 0;
+
     timer.start([&](uint64_t t_start){
         uint64_t now = timer.get_time();
 
-        CHECK( was_stopped == false ); //Should never be called if it was stopped
-        CHECK( now >= starting_time + period * count); //Curent timer should match the expectation regarding starting time and period
-        if (count == 0) {
-            CHECK( t_start <= starting_time + period + 1000000); // actual start time is within 1 ms of initial start time
+        //Curent timer should match the expectation regarding starting time and period
+        CHECK( now >= starting_time + period * timer_loop_count); 
+
+        if (timer_loop_count == 0) {
+            // actual start time is within 1 ms of initial start time
+            CHECK( t_start <= starting_time + period + 1000000); 
         }
-        CHECK( t_start <= now ); //Callback should not be called before t_now
+        CHECK( t_start <= now ); //Callback should not be called before t_start
         CHECK( now <= t_start + 1000000 ); // actual start time is within 1 ms of declared start time
         CHECK( t_start % period == offset ); // start time corresponds to timer definition
 
-        if(count > 0)
+        if(timer_loop_count > 0)
         {
-            CHECK( ((count%3)+1)*period == t_start - t_start_prev); //Fitting to the sleep behaviour, the difference between the periods should match this expression
+            //Fitting to the sleep behaviour, the difference between the periods should match this expression
+            CHECK( ((timer_loop_count%3)+1)*period == t_start - t_start_prev); 
         }
 
-        count++;
-        if(count > 15) {
+        timer_loop_count++;
+        if(timer_loop_count > 15) {
             timer.stop();
-            was_stopped = true;
         }
 
         t_start_prev = t_start;
 
-        usleep( ((count%3)*period + period/3) / 1000 ); // simluate variable runtime that can be greater than period
+        // simluate variable runtime that can be greater than period
+        usleep( ((timer_loop_count%3)*period + period/3) / 1000 ); 
     });
 
     if (signal_thread.joinable()) {
         signal_thread.join();
     }
 
-    //Check that the ready signal matches the expected ready signal
-    CHECK(source_id == "0");
-    CHECK(start_stamp == 0);
+    // Check that the ready signal matches the expected ready signal
+    CHECK(source_id == time_name);
 }
