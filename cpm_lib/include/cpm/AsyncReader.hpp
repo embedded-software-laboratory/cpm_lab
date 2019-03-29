@@ -29,13 +29,13 @@ namespace cpm
         dds::core::cond::StatusCondition read_condition;
         rti::core::cond::AsyncWaitSet waitset;
 
-        /*
+        /**
          * \brief Handler that takes unread samples, releases the waitset and calls the callback function provided by the user
          * \param func The callback function provided by the user
          */
         void handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func);
     public:
-        /*
+        /**
          * \brief Constructor for the AsynReader. Participant and topic need to be provided by the user, as well as the callback function for the reader.
          * \param func Callback function that is called by the reader if new data is available. LoanedSamples are passed to the function to be processed further.
          * \param participant Domain participant to specify in which domain the reader should operate
@@ -43,7 +43,7 @@ namespace cpm
          */
         AsyncReader(
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
-            dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
+            dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic, bool is_reliable = false);
     };
 
 
@@ -51,10 +51,11 @@ namespace cpm
     template<class MessageType> 
     AsyncReader<MessageType>::AsyncReader(
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
-        dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
+        dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic,
+        bool is_reliable
     )
     :sub(_participant)
-    ,reader(sub, topic)
+    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort()))
     ,read_condition(reader)
     {
         //Call the callback function whenever any new data is available

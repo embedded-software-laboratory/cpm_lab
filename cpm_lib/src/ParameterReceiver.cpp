@@ -36,7 +36,7 @@ namespace cpm
         parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
         parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
         writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic, dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
-        subscriber(std::bind(&ParameterReceiver::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic)
+        subscriber(std::bind(&ParameterReceiver::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic, true)
     {
 
     }
