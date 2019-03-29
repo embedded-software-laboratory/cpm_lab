@@ -11,11 +11,8 @@ file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
     include/cpm/Parameter.hpp
-    src/ParameterDistribution.cpp
-    src/ParameterStorage.hpp
-    src/ParameterStorage.cpp
-    src/ParameterServer.hpp
-    src/ParameterServer.cpp
+    include/cpm/ParameterReceiver.hpp
+    src/ParameterReceiver.cpp
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
     include/cpm/Reader.hpp
@@ -28,7 +25,7 @@ set(SOURCE_CPM
     src/TimerSimulated.cpp
     include/cpm/exceptions.hpp
     src/exceptions.cpp
-    src/Subscriber.hpp
+    include/cpm/AsyncReader.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
     src/Logging.cpp
