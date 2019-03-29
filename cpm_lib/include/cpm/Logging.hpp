@@ -45,7 +45,6 @@ class Logging {
         static Logging& Instance();
         void set_id(std::string id);
         std::string get_filename();
-        void flush(std::string &str);
         /**
          * Allows for a C-style use of the logger, like printf, using snprintf
          */
@@ -54,6 +53,22 @@ class Logging {
             std::string str(size, ' ');
             snprintf(& str[0], size + 1, f, args...);
 
-            flush(str);
+            //Before flushing make sure that the Logger was initialized properly / that its ID was set
+            check_id();
+    
+            //Get the current time, use this timestamp for logging purposes
+            uint64_t time_now = get_time();
+
+            //Add the message to the log file
+            file.open(filename, std::ios::app);
+            file << id << "," << time_now << "," << str << std::endl;
+            file.close();
+
+            //Send the log message via RTI
+            Log log(id, str, TimeStamp(time_now));
+            logger.write(log);
+
+            //Show the log message on the console
+            std::cerr << "Log at time " << time_now << ": " << str << std::endl;
         }
 };
