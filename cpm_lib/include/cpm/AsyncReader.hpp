@@ -40,6 +40,7 @@ namespace cpm
          * \param func Callback function that is called by the reader if new data is available. LoanedSamples are passed to the function to be processed further.
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic The topic that is supposed to be used by the reader
+         * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
          */
         AsyncReader(
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
