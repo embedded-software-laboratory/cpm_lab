@@ -11,11 +11,8 @@ file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
     include/cpm/Parameter.hpp
-    src/ParameterDistribution.cpp
-    src/ParameterStorage.hpp
-    src/ParameterStorage.cpp
-    src/ParameterServer.hpp
-    src/ParameterServer.cpp
+    include/cpm/ParameterReceiver.hpp
+    src/ParameterReceiver.cpp
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
     include/cpm/Reader.hpp
@@ -24,7 +21,11 @@ set(SOURCE_CPM
     src/Timer.cpp
     src/TimerFD.hpp
     src/TimerFD.cpp
-    src/Subscriber.hpp
+    src/TimerSimulated.hpp
+    src/TimerSimulated.cpp
+    include/cpm/exceptions.hpp
+    src/exceptions.cpp
+    include/cpm/AsyncReader.hpp
     src/ParticipantSingleton.cpp
     include/cpm/ParticipantSingleton.hpp
     src/Logging.cpp
@@ -63,15 +64,13 @@ if(NOT BUILD_ARM)
         test/test_logging.cpp
         test/test_parameter.cpp
         test/test_timer.cpp
+        test/test_timer_stop.cpp
+        test/test_timer_stop_running.cpp
+        test/test_timer_start_again.cpp
+        test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
         test/test_Reader.cpp
     )
 
     target_link_libraries(unittest cpm)
-
-    add_executable(parameterServer
-        src/ParameterServerDummy.cpp
-    )
-
-    target_link_libraries(parameterServer cpm)
 endif()
