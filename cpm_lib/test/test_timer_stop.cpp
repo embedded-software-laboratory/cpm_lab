@@ -21,6 +21,8 @@
  */
 
 TEST_CASE( "TimerFD_stop_signal" ) {
+    //Set the Logger ID
+    Logging::Instance().set_id("test_timerfd_stop_signal");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;

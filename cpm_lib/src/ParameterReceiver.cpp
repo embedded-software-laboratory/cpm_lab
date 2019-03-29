@@ -53,7 +53,7 @@ namespace cpm
         while (param_bool.find(parameter_name) == param_bool.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -69,7 +69,7 @@ namespace cpm
         while (param_int.find(parameter_name) == param_int.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -85,7 +85,7 @@ namespace cpm
         while (param_double.find(parameter_name) == param_double.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -101,7 +101,7 @@ namespace cpm
         while (param_string.find(parameter_name) == param_string.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -117,7 +117,7 @@ namespace cpm
         while (param_ints.find(parameter_name) == param_ints.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -133,7 +133,7 @@ namespace cpm
         while (param_doubles.find(parameter_name) == param_doubles.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            std::cout << "Waiting for parameter " << parameter_name << std::endl;
+            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }

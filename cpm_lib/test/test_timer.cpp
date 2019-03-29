@@ -22,6 +22,8 @@
  */
 
 TEST_CASE( "TimerFD_accuracy" ) {
+    //Set the Logger ID
+    Logging::Instance().set_id("test_timerfd_accuracy");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;

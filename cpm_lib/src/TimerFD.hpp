@@ -2,6 +2,7 @@
 
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Logging.hpp"
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 

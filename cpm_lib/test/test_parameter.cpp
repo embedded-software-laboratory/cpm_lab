@@ -37,6 +37,8 @@ class ParameterServer {
 };
 
 TEST_CASE( "parameter_double" ) {
+    //Set the Logger ID
+    Logging::Instance().set_id("test_parameter_double");
 
     //Define the parameter that should be received upon request; also make sure that no wrong data was sent
     std::string param_name = "my_param_name";
@@ -81,6 +83,9 @@ TEST_CASE( "parameter_double" ) {
 
 
 TEST_CASE( "parameter_strings" ) {
+    //Set the Logger ID
+    Logging::Instance().set_id("test_parameter_strings");
+
     //Test two different string types to test both overloads of cpm::parameter_string
     std::string param_name_1 = "param_name_1";
     const std::string string_param_1 = "99 bottles of beer on the wall, 99 bottles of beer.";
@@ -124,6 +129,9 @@ TEST_CASE( "parameter_strings" ) {
 }
 
 TEST_CASE( "parameter_bool" ) {
+    //Set the Logger ID
+    Logging::Instance().set_id("test_parameter_bool");
+
     //Bool parameters that are supposed to be tested; initialized with the opposite of their desired value
     std::string param_name_1 = "my_param_true";
     bool received_parameter_value_true = false;
