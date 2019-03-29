@@ -44,21 +44,6 @@ std::string Logging::get_filename() {
     return filename;
 }
 
-void Logging::flush(std::string &str) {
-    check_id();
-    
-    uint64_t time_now = get_time();
-
-    file.open(filename, std::ios::app);
-	file << id << "," << time_now << "," << str << std::endl;
-	file.close();
-
-    Log log(id, str, TimeStamp(time_now));
-    logger.write(log);
-
-    std::cerr << "Log at time " << time_now << ": " << str << std::endl;
-}
-
 void Logging::check_id() {
     if (id == "uninitialized") {
         fprintf(stderr, "Error: Logger ID was never set\n");
