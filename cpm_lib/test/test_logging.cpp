@@ -66,7 +66,7 @@ TEST_CASE( "Logging" ) {
     Logging::Instance().write(first_test.c_str());
 
     //Store the current file content of the log file - it should match the actual_content stringstream
-    usleep(10000); //Sleep 10ms to let the Logger access the file first
+    usleep(100000); //Sleep 100ms to let the Logger access the file first
     std::ifstream file;
     std::string str;
     std::stringstream file_content;
@@ -81,7 +81,7 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
-    rti::util::sleep(dds::core::Duration::from_millisecs(100));
+    rti::util::sleep(dds::core::Duration::from_millisecs(250));
 
     //Write second message to Logger
     std::stringstream stream;
