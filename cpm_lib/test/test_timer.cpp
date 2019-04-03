@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
@@ -38,11 +39,11 @@ TEST_CASE( "TimerFD_accuracy" ) {
 
     //Writer to send system triggers to the timer 
     dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
+        cpm::get_topic<SystemTrigger>("system_trigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-        dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "ready"), 
+        cpm::get_topic<ReadyStatus>("ready"),
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data

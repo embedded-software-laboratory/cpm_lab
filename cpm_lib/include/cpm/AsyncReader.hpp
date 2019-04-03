@@ -43,7 +43,7 @@ namespace cpm
          */
         AsyncReader(
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
-            dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic);
+            dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType> topic);
     };
 
 
@@ -51,7 +51,7 @@ namespace cpm
     template<class MessageType> 
     AsyncReader<MessageType>::AsyncReader(
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
-        dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType>& topic
+        dds::domain::DomainParticipant & _participant, dds::topic::Topic<MessageType> topic
     )
     :sub(_participant)
     ,reader(sub, topic)
