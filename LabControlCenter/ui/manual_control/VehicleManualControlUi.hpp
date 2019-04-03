@@ -8,7 +8,6 @@
 
 class VehicleManualControlUi
 {
-public:
     Glib::RefPtr<Gtk::Builder> builder;
 
     Gtk::Widget* parent = nullptr;
@@ -25,7 +24,6 @@ public:
 public:
     VehicleManualControlUi(shared_ptr<VehicleManualControl> vehicleManualControl);
 
-    //Gtk::Window& get_window();
     Gtk::Widget* get_parent();
     void update();
 };

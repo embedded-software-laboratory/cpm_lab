@@ -65,10 +65,6 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
 }
 
 
-/*Gtk::Window& VehicleManualControlUi::get_window() 
-{
-    return *window;
-}*/
 
 Gtk::Widget* VehicleManualControlUi::get_parent()
 {
