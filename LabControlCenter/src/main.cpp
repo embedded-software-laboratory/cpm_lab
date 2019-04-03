@@ -81,8 +81,9 @@ int main(int argc, char *argv[])
 
     Glib::RefPtr<Gtk::Builder> builder_manual_control_ui = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui2.glade");
 
-    Gtk::Box* box1 = nullptr;
-    builder_manual_control_ui->get_widget("box1", box1);
+    Gtk::Widget* box1 = nullptr;
+    //vehicleManualControlUi.builder->get_widget("box1", box1);
+    box1 = vehicleManualControlUi.get_parent();
     box_manual_control->pack_start(*box1,true,true);
     box1->show();
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
 
     /********* Start App **********/
     app->signal_startup().connect([&]{
-        app->add_window(vehicleManualControlUi.get_window());
+        //app->add_window(vehicleManualControlUi.get_window());
         //app->add_window(monitoringUi.get_window());
         app->add_window(mapViewUi.get_window());
         app->add_window(*window_LCC);
