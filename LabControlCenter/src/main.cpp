@@ -27,37 +27,26 @@ int main(int argc, char *argv[])
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
+
     auto vehicleManualControl = make_shared<VehicleManualControl>();
-
-    TimeSeriesAggregator timeSeriesAggregator;
-
-
-    MapViewUi mapViewUi(timeSeriesAggregator.get_vehicle_data());
-    MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
-
-
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto mapViewUi = make_shared<MapViewUi>(timeSeriesAggregator->get_vehicle_data());
+    auto monitoringUi = make_shared<MonitoringUi>(timeSeriesAggregator->get_vehicle_data());
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
+    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi);
 
-    //VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 
 
 
-
-    MainWindow mainWindow(vehicleManualControlUi);
-
-
-
     /********* Start App **********/
     app->signal_startup().connect([&]{
-        //app->add_window(vehicleManualControlUi.get_window());
-        //app->add_window(monitoringUi.get_window());
-        app->add_window(mapViewUi.get_window());
-        app->add_window(mainWindow.get_window());
+        app->add_window(mapViewUi->get_window());
+        app->add_window(monitoringUi->get_window());
     });
 
 
 
-    return app->run(monitoringUi.get_window());
+    return app->run(mainWindow->get_window());
 }

@@ -35,6 +35,7 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
     pane2->pack2(*(_vehicleManualControlUi->get_parent()),true,true);
 
 
+
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
         exit(0);
         return false;
