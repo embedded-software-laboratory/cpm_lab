@@ -1,6 +1,7 @@
 #include "cpm/ParameterReceiver.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Parameter.hpp"
+#include "cpm/get_topic.hpp"
 
 using namespace std::placeholders;
 
@@ -33,8 +34,8 @@ namespace cpm
     }
 
     ParameterReceiver::ParameterReceiver():
-        parameterTopic(cpm::ParticipantSingleton::Instance(), "parameter"),
-        parameterRequestTopic(cpm::ParticipantSingleton::Instance(), "parameterRequest"),
+        parameterTopic(cpm::get_topic<Parameter>("parameter")),
+        parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
         writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic, dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
         subscriber(std::bind(&ParameterReceiver::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic, true)
     {

@@ -7,6 +7,7 @@
 #include <memory>
 #include <chrono>
 #include <functional>
+#include "cpm/get_topic.hpp"
 
 /**
  * Tests:
@@ -23,14 +24,14 @@ class ParameterServer {
     public:
         ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
-                dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-                cpm::ParameterReceiver::Instance().parameterTopic,
+                dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+                cpm::get_topic<Parameter>("parameter"),
                 dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
             ),
             parameter_request_subscriber(
                 std::bind(callback, parameter_writer, _1), 
-                cpm::ParticipantSingleton::Instance(), 
-                cpm::ParameterReceiver::Instance().parameterRequestTopic,
+                cpm::ParticipantSingleton::Instance(),
+                cpm::get_topic<ParameterRequest>("parameterRequest"),
                 true
             )
         {
