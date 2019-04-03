@@ -92,17 +92,15 @@ int main(int argc, char *argv[])
 
     /********* Start App **********/
     app->signal_startup().connect([&]{
-        app->add_window(monitoringUi.get_window());
+        app->add_window(vehicleManualControlUi.get_window());
+        //app->add_window(monitoringUi.get_window());
         app->add_window(mapViewUi.get_window());
         app->add_window(*window_LCC);
-    });
-
-
-    app->signal_activate().connect([&]{
         pane1->set_position(400);
         pane2->set_position(400);
     });
 
 
-    return app->run(vehicleManualControlUi.get_window());
+
+    return app->run(monitoringUi.get_window());
 }
