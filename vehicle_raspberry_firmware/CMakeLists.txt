@@ -15,8 +15,8 @@ include_directories(src)
 
 
 # CPM lib
-include_directories(../cpm_base/cpm_lib/include/)
-include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
+include_directories(../../cpm_base/cpm_lib/include/)
+include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
 
 
 
@@ -43,7 +43,7 @@ set(SOURCE
 
 
 if(BUILD_SIMULATION) # x64 options
-    link_directories(../cpm_base/cpm_lib/build/)
+    link_directories(../../cpm_base/cpm_lib/build/)
 
     link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
     add_executable(vehicle_rpi_firmware
@@ -58,7 +58,7 @@ if(BUILD_SIMULATION) # x64 options
     target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
     SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 else() # ARM/Raspberry options
-    link_directories(../cpm_base/cpm_lib/build_arm/)
+    link_directories(../../cpm_base/cpm_lib/build_arm/)
 
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
     add_executable(vehicle_rpi_firmware 
