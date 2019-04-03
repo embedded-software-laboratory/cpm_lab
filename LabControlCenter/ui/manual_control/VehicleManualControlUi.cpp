@@ -6,7 +6,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
 {
     assert(vehicleManualControl);
 
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui.glade");
+    builder = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui.glade");
 
     builder->get_widget("window1", window);
     builder->get_widget("button_restart", button_restart);
