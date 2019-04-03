@@ -24,13 +24,15 @@ class ParameterServer {
     public:
         ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
-                dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-                cpm::get_topic<Parameter>("parameter")
+                dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+                cpm::get_topic<Parameter>("parameter"),
+                dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
             ),
             parameter_request_subscriber(
                 std::bind(callback, parameter_writer, _1), 
-                cpm::ParticipantSingleton::Instance(), 
-                cpm::get_topic<ParameterRequest>("parameterRequest")
+                cpm::ParticipantSingleton::Instance(),
+                cpm::get_topic<ParameterRequest>("parameterRequest"),
+                true
             )
         {
 
