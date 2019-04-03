@@ -2,8 +2,7 @@
 
 /*
  * Singleton that receives and stores constants, e.g. for configuration
- * Is used by ParameterDistribution to get data for the user
- * domain_id, parameterTopic and publisherTopic can be set before the singleton is used
+ * Is used by to get data for the user (requests data from the param server or uses stored data if available)
  */
 
 #include <string>
@@ -39,6 +38,9 @@ namespace cpm
         std::vector<double> parameter_doubles(std::string parameter_name);
 
     private:
+        /**
+         * \brief Constructor. Creates a reliable DataWriter and uses the "is_reliable" parameter of the AsyncReader to create a reliable DataReader as well. Also binds the callback function / passes it to the AsyncReader.
+         */
         ParameterReceiver();
 
         //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
@@ -57,7 +59,16 @@ namespace cpm
         std::mutex param_ints_mutex;
         std::mutex param_doubles_mutex;
 
+        /**
+         * \brief Sends a param request to the param server with the given parameter name
+         * \param parameter_name Name of the requested param
+         */
         void requestParam(std::string parameter_name);
+
+        /**
+         * \brief Callback function that handles incoming parameter definitions. Parameters are stored in maps depending on their type and name for later access.
+         * \param samples Samples to be processed by the callback function (received messages)
+         */
         void callback(dds::sub::LoanedSamples<Parameter>& samples);
 
     public:
