@@ -10,6 +10,7 @@
 #include "ui/map_view/MapViewUi.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
+#include "ui/MainWindow.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -33,61 +34,18 @@ int main(int argc, char *argv[])
 
     MapViewUi mapViewUi(timeSeriesAggregator.get_vehicle_data());
     MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
-    VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
-
-    vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
 
 
+    auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
 
-    /******** Main Window *******/
-    Glib::RefPtr<Gtk::Builder> builder_master_layout = Gtk::Builder::create_from_file("ui/master_layout.glade");
+    //VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
 
-    Gtk::Window* window_LCC = nullptr;
-    Gtk::Box* box_manual_control = nullptr;
-    Gtk::Box* box_map = nullptr;
-    Gtk::Box* box_data_grid = nullptr;
-    Gtk::Paned* pane1 = nullptr;
-    Gtk::Paned* pane2 = nullptr;
-    builder_master_layout->get_widget("window_LCC", window_LCC);
-    builder_master_layout->get_widget("box_manual_control", box_manual_control);
-    builder_master_layout->get_widget("box_map", box_map);
-    builder_master_layout->get_widget("box_data_grid", box_data_grid);
-    builder_master_layout->get_widget("paned1", pane1);
-    builder_master_layout->get_widget("paned2", pane2);
+    vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 
 
-    assert(window_LCC);
-    assert(box_manual_control);
-    assert(box_map);
-    assert(box_data_grid);
-    assert(pane1);
-    assert(pane2);
-
-    window_LCC->show();
-    window_LCC->set_size_request(800, 600);
 
 
-    Gtk::Label* label = Gtk::manage(new Gtk::Label());
-
-    box_map->pack_start(*label,true,true);
-    box_data_grid->pack_start(*label,true,true);
-
-    label->set_text("asdasd");
-
-    label->set_width_chars(10);
-    label->set_xalign(1);
-    label->show_all();
-
-
-    Glib::RefPtr<Gtk::Builder> builder_manual_control_ui = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui2.glade");
-
-    Gtk::Widget* box1 = nullptr;
-    //vehicleManualControlUi.builder->get_widget("box1", box1);
-    box1 = vehicleManualControlUi.get_parent();
-    box_manual_control->pack_start(*box1,true,true);
-    box1->show();
-
-
+    MainWindow mainWindow(vehicleManualControlUi);
 
 
 
@@ -96,9 +54,7 @@ int main(int argc, char *argv[])
         //app->add_window(vehicleManualControlUi.get_window());
         //app->add_window(monitoringUi.get_window());
         app->add_window(mapViewUi.get_window());
-        app->add_window(*window_LCC);
-        pane1->set_position(400);
-        pane2->set_position(400);
+        app->add_window(*(mainWindow.window_LCC));
     });
 
 

@@ -23,8 +23,6 @@ include_directories(../../cpm_base/cpm_lib/include/)
 include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
 link_directories(../../cpm_base/cpm_lib/build/)
 
-
-
 # yaml-cpp
 include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
@@ -43,6 +41,8 @@ add_executable(LabControlCenter
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
     ui/map_view/MapViewUi.hpp
+    ui/MainWindow.cpp
+    ui/MainWindow.hpp
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
