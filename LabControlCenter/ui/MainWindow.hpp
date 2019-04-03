@@ -9,7 +9,6 @@
 
 class MainWindow
 {
-public:
     Glib::RefPtr<Gtk::Builder> builder_master_layout;
 
     Gtk::Window* window_LCC = nullptr;
@@ -20,5 +19,6 @@ public:
     Gtk::Paned* pane2 = nullptr;
 
 public:
+    Gtk::Window& get_window(); 
     MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualControlUi);
 };

@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         //app->add_window(vehicleManualControlUi.get_window());
         //app->add_window(monitoringUi.get_window());
         app->add_window(mapViewUi.get_window());
-        app->add_window(*(mainWindow.window_LCC));
+        app->add_window(mainWindow.get_window());
     });
 
 

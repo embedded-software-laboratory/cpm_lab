@@ -26,9 +26,6 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
     window_LCC->show();
     window_LCC->set_size_request(800, 600);
 
-    pane1->set_position(400);
-    pane2->set_position(400);
-
 
     Gtk::Label* label = Gtk::manage(new Gtk::Label());
 
@@ -42,9 +39,23 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
     label->show_all();
 
 
-    Gtk::Widget* box1 = nullptr;
-    box1 = _vehicleManualControlUi->get_parent();
-    box_manual_control->pack_start(*box1,true,true);
-    box1->show();
+    box_manual_control->pack_start(*(_vehicleManualControlUi->get_parent()),true,true);
+
+
+    window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
+        exit(0);
+        return false;
+    });
+
+    Glib::signal_timeout().connect([&]()->bool{
+        pane1->set_position(400);
+        pane2->set_position(400);
+        return false;
+    }, 500);
 }
 
+
+Gtk::Window& MainWindow::get_window()
+{
+    return *window_LCC;
+}
