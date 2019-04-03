@@ -3,14 +3,18 @@
 
 MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
 :vehicle_data(_vehicle_data)
-{    
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
+{
+    window = Gtk::manage(new Gtk::Window());
+    grid_vehicle_monitor = Gtk::manage(new Gtk::Grid()); 
 
-    builder->get_widget("window1", window);
-    builder->get_widget("grid_vehicle_monitor", grid_vehicle_monitor);
 
     assert(window);
     assert(grid_vehicle_monitor);
+
+    grid_vehicle_monitor->set_name("grid_vehicle_monitor");
+
+    window->add(*grid_vehicle_monitor);
+
 
 
     window->set_size_request(500, 300);

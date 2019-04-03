@@ -8,7 +8,6 @@
 
 class MonitoringUi
 {
-    Glib::RefPtr<Gtk::Builder> builder;
     Gtk::Window* window;
     Gtk::Grid* grid_vehicle_monitor;
     Glib::Dispatcher update_dispatcher;
