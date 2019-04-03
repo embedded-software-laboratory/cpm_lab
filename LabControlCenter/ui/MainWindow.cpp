@@ -9,17 +9,11 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
 
 
     builder_master_layout->get_widget("window_LCC", window_LCC);
-    //builder_master_layout->get_widget("box_manual_control", box_manual_control);
-    //builder_master_layout->get_widget("box_map", box_map);
-    //builder_master_layout->get_widget("box_data_grid", box_data_grid);
     builder_master_layout->get_widget("paned1", pane1);
     builder_master_layout->get_widget("paned2", pane2);
 
 
     assert(window_LCC);
-    //assert(box_manual_control);
-    //assert(box_map);
-    //assert(box_data_grid);
     assert(pane1);
     assert(pane2);
 
@@ -50,7 +44,7 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
         pane1->set_position(400);
         pane2->set_position(400);
         return false;
-    }, 500);
+    }, 200);
 }
 
 
