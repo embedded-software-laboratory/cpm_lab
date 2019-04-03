@@ -4,6 +4,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "ui/manual_control/VehicleManualControlUi.hpp"
+#include "ui/monitoring/MonitoringUi.hpp"
 
 
 
@@ -17,5 +18,9 @@ class MainWindow
 
 public:
     Gtk::Window& get_window(); 
-    MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualControlUi);
+
+    MainWindow(
+        std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
+        std::shared_ptr<MonitoringUi> monitoringUi
+    );
 };

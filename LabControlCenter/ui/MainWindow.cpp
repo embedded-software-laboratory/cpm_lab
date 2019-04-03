@@ -2,7 +2,10 @@
 
 
 
-MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualControlUi)
+MainWindow::MainWindow(
+    std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
+    std::shared_ptr<MonitoringUi> monitoringUi
+)
 {
     builder_master_layout = Gtk::Builder::create_from_file("ui/master_layout.glade");
 
@@ -32,7 +35,7 @@ MainWindow::MainWindow(std::shared_ptr<VehicleManualControlUi> _vehicleManualCon
     label->show_all();
 
 
-    pane2->pack2(*(_vehicleManualControlUi->get_parent()),true,true);
+    pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
 
 
 
