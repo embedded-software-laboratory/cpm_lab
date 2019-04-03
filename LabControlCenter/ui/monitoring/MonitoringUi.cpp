@@ -4,7 +4,7 @@
 MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
 :vehicle_data(_vehicle_data)
 {
-    window = Gtk::manage(new Gtk::Window());
+    window = new Gtk::Window();
     grid_vehicle_monitor = Gtk::manage(new Gtk::Grid()); 
 
 
