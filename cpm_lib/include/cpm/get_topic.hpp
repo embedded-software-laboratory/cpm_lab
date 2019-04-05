@@ -1,3 +1,5 @@
+#pragma once
+
 #include <dds/topic/Topic.hpp>
 #include <dds/topic/ddstopic.hpp>
 #include <string>
