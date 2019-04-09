@@ -11,6 +11,7 @@
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "ui/MainWindow.hpp"
+#include "cpm/Logging.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -18,6 +19,8 @@
 
 int main(int argc, char *argv[])
 {
+    Logging::Instance().set_id("LabControlCenter");
+
     ParameterStorage storage("parameters.yaml");
     ParameterServer server(storage);
 
