@@ -101,9 +101,11 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     spi_init();
+    const bool allow_simulated_time = false;
 #else
     SimulationIPS simulationIPS(topic_vehicleObservation);
     SimulationVehicle simulationVehicle(simulationIPS);
+    const bool allow_simulated_time = true;
 #endif
 
     crcInit();
@@ -117,7 +119,7 @@ int main(int argc, char *argv[])
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
-    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, false);
+    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
 
     // Control loop
     update_loop->start([&](uint64_t t_now) {
