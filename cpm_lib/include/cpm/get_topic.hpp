@@ -20,11 +20,16 @@ namespace cpm
 
         try
         {
-            return dds::topic::Topic<T>(participant, topic_name);
+            dds::topic::Topic<T> topic = dds::topic::find<dds::topic::Topic<T>>(participant, topic_name);
+            if (topic == dds::core::null) {
+                topic = dds::topic::Topic<T>(participant, topic_name);
+            }
+
+            return topic;
         }
         catch(...)
         {
-            return dds::topic::find<dds::topic::Topic<T>>(participant, topic_name);
+            return dds::topic::Topic<T>(participant, topic_name);
         }
     }
 
