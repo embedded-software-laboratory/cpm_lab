@@ -5,24 +5,15 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
 {
     this->get_vehicle_data = get_vehicle_data_callback;
 
-    window = new Gtk::Window();
     grid_vehicle_monitor = Gtk::manage(new Gtk::Grid()); 
 
-
-    assert(window);
     assert(grid_vehicle_monitor);
 
     grid_vehicle_monitor->set_name("grid_vehicle_monitor");
     grid_vehicle_monitor->show();
 
-    //window->add(*grid_vehicle_monitor);
 
 
-
-
-    window->set_size_request(500, 300);
-    //window->maximize();
-    window->show_all();
 
     update_loop = cpm::Timer::create("LabControlCenterMonitor",100000000ull, 0, false, false);
     update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
@@ -140,17 +131,9 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     });
 
 
-    window->signal_delete_event().connect([&](GdkEventAny*)->bool{
-        exit(0);
-        return false;
-    });
 }
 
 
-Gtk::Window& MonitoringUi::get_window()
-{
-    return *window;
-}
 
 Gtk::Grid* MonitoringUi::get_parent()
 {

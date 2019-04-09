@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
     /********* Start App **********/
     app->signal_startup().connect([&]{
         app->add_window(mapViewUi->get_window());
-        app->add_window(monitoringUi->get_window());
     });
 
 

@@ -24,20 +24,8 @@ MainWindow::MainWindow(
     window_LCC->set_size_request(800, 600);
 
 
-    Gtk::Label* label = Gtk::manage(new Gtk::Label());
-
-    //pane2->pack1(*label,true,true);
-
-    label->set_text("asdasd");
-
-    label->set_width_chars(10);
-    label->set_xalign(1);
-    label->show_all();
-
-
-    pane2->pack1(*(vehicleManualControlUi->get_parent()),true,true);
-    pane2->pack2(*(monitoringUi->get_parent()),true,true);
-
+    pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
+    pane2->pack1(*(monitoringUi->get_parent()),true,true);
 
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
