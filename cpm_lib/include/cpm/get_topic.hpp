@@ -7,7 +7,16 @@
 #include "cpm/ParticipantSingleton.hpp"
 
 /**
- * \brief Always use this class to create a DDS topic that is supposed to be used by more than one class: In RTI DDS, a topic can only be created once for each domain participant. Thus, if multiple classes need to use the same topic at some point, the topic object might need to be shared between them. These functions rely on topic creation and the dds::topic::find function. If a topic already exists, find is used, else a new topic is created. They allow to avoid unnecessary programming as the user does not need to manage the topic object in any way.
+ * Always use this class to create a DDS topic that 
+ * is supposed to be used by more than one class: In RTI DDS, 
+ * a topic can only be created once for each domain participant. 
+ * Thus, if multiple classes need to use the same topic at some 
+ * point, the topic object might need to be shared between 
+ * them. These functions rely on topic creation and the 
+ * dds::topic::find function. If a topic already exists, 
+ * find is used, else a new topic is created. They allow to 
+ * avoid unnecessary programming as the user does not need 
+ * to manage the topic object in any way.
  */
 
 namespace cpm
