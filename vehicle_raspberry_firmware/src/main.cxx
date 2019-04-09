@@ -22,6 +22,7 @@ using std::vector;
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
 #include "cpm/stamp_message.hpp"
+#include "cpm/Logging.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -72,6 +73,8 @@ int main(int argc, char *argv[])
     }
     std::cout << "vehicle_id " << vehicle_id << std::endl;
 
+
+    Logging::Instance().set_id("vehicle_raspberry_" + std::to_string(vehicle_id));
 
     // DDS setup
     auto& participant = cpm::ParticipantSingleton::Instance();
