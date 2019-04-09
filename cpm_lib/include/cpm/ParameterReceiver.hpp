@@ -12,6 +12,7 @@
 
 #include "dds/Parameter.hpp"
 #include "dds/ParameterRequest.hpp"
+#include "cpm/Logging.hpp"
 
 #include "cpm/AsyncReader.hpp"
 #include <dds/pub/ddspub.hpp>

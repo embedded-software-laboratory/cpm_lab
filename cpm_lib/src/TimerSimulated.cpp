@@ -24,7 +24,8 @@ TimerSimulated::TimerSimulated(
 {
     //Offset must be smaller than period
     if (offset_nanoseconds >= period_nanoseconds) {
-        fprintf(stderr, "Offset set higher than period\n");
+        Logging::Instance().write("TimerSimulated: Offset set higher than period.");
+        fprintf(stderr, "Offset set higher than period.\n");
         fflush(stderr); 
         exit(EXIT_FAILURE);
     }
@@ -77,7 +78,8 @@ TimerSimulated::Answer TimerSimulated::handle_system_trigger(uint64_t& deadline)
 void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
-        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
+        Logging::Instance().write("TimerSimulated: The cpm::Timer can not be started twice.");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
     }
 
     this->active = true;
@@ -120,7 +122,8 @@ void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_call
     }
     else
     {
-        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
+        Logging::Instance().write("TimerSimulated: The cpm::Timer can not be started twice.");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
     }
 }
 

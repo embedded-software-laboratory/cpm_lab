@@ -1,7 +1,7 @@
 #include "cpm/Logging.hpp"
 
 Logging::Logging() :
-    loggingTopic(cpm::ParticipantSingleton::Instance(), "Logs"),
+    loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "Logs")),
     logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
 {
 
@@ -37,6 +37,9 @@ uint64_t Logging::get_time() {
 }
 
 void Logging::set_id(std::string _id) {
+    //Mutex bc value could be set by different threads at once
+    std::lock_guard<std::mutex> lock(log_mutex);
+
     id = _id;
 }
 
@@ -44,26 +47,10 @@ std::string Logging::get_filename() {
     return filename;
 }
 
-void Logging::flush() {
-    check_id();
-    
-    uint64_t time_now = get_time();
-
-    file.open(filename, std::ios::app);
-	file << id << "," << time_now << "," << stream.str() << std::endl;
-	file.close();
-
-    Log log(id, stream.str(), TimeStamp(time_now));
-    logger.write(log);
-
-    std::cerr << "Log at time " << time_now << ": " << stream.str() << std::endl;
-
-    //Clear the stream
-    stream.str(std::string());
-    stream.clear();
-}
-
 void Logging::check_id() {
+    //Mutex bc value could be set by different threads at once (id could be set with set_id while it is read)
+    std::lock_guard<std::mutex> lock(log_mutex);
+
     if (id == "uninitialized") {
         fprintf(stderr, "Error: Logger ID was never set\n");
         fflush(stderr); 

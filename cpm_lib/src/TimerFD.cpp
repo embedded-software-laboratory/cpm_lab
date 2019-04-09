@@ -26,7 +26,8 @@ TimerFD::TimerFD(
 {
     //Offset must be smaller than period
     if (offset_nanoseconds >= period_nanoseconds) {
-        fprintf(stderr, "Offset set higher than period\n");
+        Logging::Instance().write("TimerFD: Offset set higher than period.");
+        fprintf(stderr, "Offset set higher than period.\n");
         fflush(stderr); 
         exit(EXIT_FAILURE);
     }
@@ -39,6 +40,7 @@ void TimerFD::createTimer() {
     // Timer setup
     timer_fd = timerfd_create(CLOCK_REALTIME, 0);
     if (timer_fd == -1) {
+        Logging::Instance().write("TimerFD: Call to timerfd_create failed.");
         fprintf(stderr, "Call to timerfd_create failed.\n"); 
         perror("timerfd_create");
         fflush(stderr); 
@@ -58,6 +60,7 @@ void TimerFD::createTimer() {
     its.it_interval.tv_nsec = period_nanoseconds % 1000000000ull;
     int status = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &its, NULL);
     if (status != 0) {
+        Logging::Instance().write("TimerFD: Call to timer_settime returned error status (%d).", status);
         fprintf(stderr, "Call to timer_settime returned error status (%d).\n", status);
         fflush(stderr); 
         exit(EXIT_FAILURE);
@@ -69,6 +72,7 @@ void TimerFD::wait()
     unsigned long long missed;
     int status = read(timer_fd, &missed, sizeof(missed));
     if(status != sizeof(missed)) {
+        Logging::Instance().write("TimerFD: Error: read(timerfd), status %d.", status);
         fprintf(stderr, "Error: read(timerfd), status %d.\n", status);
         fflush(stderr); 
         exit(EXIT_FAILURE);
@@ -102,7 +106,8 @@ uint64_t TimerFD::receiveStartTime() {
 void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
 {
     if(this->active) {
-        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
+        Logging::Instance().write("TimerFD: The cpm::Timer can not be started twice.");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
     }
 
     this->active = true;
@@ -145,9 +150,7 @@ void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
             //Error if deadline was missed, correction to next deadline
             if (current_time >= deadline)
             {
-                std::cerr << "Deadline: " << deadline 
-                << ", current time: " << current_time 
-                << ", periods missed: " << (current_time - deadline) / period_nanoseconds << std::endl;
+                Logging::Instance().write("TimerFD: Deadline: %llu, current time: %llu, periods missed %llu", deadline, current_time, (current_time - deadline) / period_nanoseconds);
 
                 deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
             }
@@ -172,7 +175,8 @@ void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
     }
     else
     {
-        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice");
+        Logging::Instance().write("TimerFD: The cpm::Timer can not be started twice.");
+        throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
     }
 }
 

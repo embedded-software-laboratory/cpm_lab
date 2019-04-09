@@ -10,6 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <stdio.h>
+#include <mutex>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -19,6 +21,7 @@
 #include "Log.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
 
 class Logging {
     Logging(Logging const&) = delete;
@@ -36,7 +39,8 @@ class Logging {
         std::string filename = ""; //Is changed in Instance creation: Current timestamp added
         std::string id = "uninitialized";
 
-        std::stringstream stream;
+        //Mutex s.t. only one thread has access to the file and the writer
+        std::mutex log_mutex;
 
         Logging();
         uint64_t get_time();
@@ -46,17 +50,33 @@ class Logging {
         static Logging& Instance();
         void set_id(std::string id);
         std::string get_filename();
-        void flush();
-        //Overloading << to flush when using std::endl
-        Logging& operator<< (std::basic_ostream<char, std::char_traits<char>>& (*endline_func) (std::basic_ostream<char, std::char_traits<char>>&)) {
-            check_id();
-            flush();
-            return *this;
-        }
+        /**
+         * Allows for a C-style use of the logger, like printf, using snprintf
+         */
+        template<class ...Args> void write(const char* f, Args&& ...args) {
+            int size = snprintf(nullptr, 0, f, args...); //Determine the size of the resulting string without actually writing it
+            std::string str(size, ' ');
+            snprintf(& str[0], size + 1, f, args...);
 
-        template <typename T> Logging& operator<< (const T& log) {
+            //Before flushing make sure that the Logger was initialized properly / that its ID was set
             check_id();
-            stream << log;
-            return *this;
+    
+            //Get the current time, use this timestamp for logging purposes
+            uint64_t time_now = get_time();
+
+            //Mutex for writing the message (file, writer) - is released when going out of scope
+            std::lock_guard<std::mutex> lock(log_mutex);
+
+            //Add the message to the log file
+            file.open(filename, std::ios::app);
+            file << id << "," << time_now << "," << str << std::endl;
+            file.close();
+
+            //Send the log message via RTI
+            Log log(id, str, TimeStamp(time_now));
+            logger.write(log);
+
+            //Show the log message on the console
+            std::cerr << "Log at time " << time_now << ": " << str << std::endl;
         }
 };
