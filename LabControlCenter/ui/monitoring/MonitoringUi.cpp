@@ -1,9 +1,10 @@
 #include "MonitoringUi.hpp"
 #include <cassert>
 
-MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
-:vehicle_data(_vehicle_data)
+MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback)
 {
+    this->get_vehicle_data = get_vehicle_data_callback;
+
     window = new Gtk::Window();
     grid_vehicle_monitor = Gtk::manage(new Gtk::Grid()); 
 
@@ -25,6 +26,8 @@ MonitoringUi::MonitoringUi(const map<uint8_t, map<string, shared_ptr<TimeSeries>
     update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
 
     update_dispatcher.connect([&](){
+
+        auto vehicle_data = this->get_vehicle_data();
 
         // Top header
         for(const auto& entry : vehicle_data) {

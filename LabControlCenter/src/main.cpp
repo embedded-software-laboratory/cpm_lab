@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     TimeSeriesAggregator timeSeriesAggregator;
 
     auto mapViewUi = make_shared<MapViewUi>([&](){return timeSeriesAggregator.get_vehicle_data();});
-    auto monitoringUi = make_shared<MonitoringUi>(timeSeriesAggregator.get_vehicle_data());
+    auto monitoringUi = make_shared<MonitoringUi>([&](){return timeSeriesAggregator.get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi);
 

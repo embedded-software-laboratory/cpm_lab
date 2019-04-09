@@ -5,6 +5,7 @@
 #include "VehicleObservation.hpp"
 #include "TimeSeries.hpp"
 #include "cpm/AsyncReader.hpp"
+#include <mutex>
 
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
@@ -19,7 +20,9 @@ class TimeSeriesAggregator
     shared_ptr<cpm::AsyncReader<VehicleState>> vehicle_state_reader;
     shared_ptr<cpm::AsyncReader<VehicleObservation>> vehicle_observation_reader;
 
+    std::mutex _mutex;
+
 public:
     TimeSeriesAggregator();
-    VehicleData& get_vehicle_data() { return timeseries_vehicles; }
+    VehicleData get_vehicle_data();
 };
