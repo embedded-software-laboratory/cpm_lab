@@ -21,11 +21,12 @@ MainWindow::MainWindow(
     assert(pane2);
 
     window_LCC->show();
-    window_LCC->set_size_request(800, 600);
+    window_LCC->set_size_request(1800, 900);
+    window_LCC->maximize();
 
 
     pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
-    pane2->pack1(*(monitoringUi->get_parent()),true,true);
+    pane1->pack2(*(monitoringUi->get_parent()),true,true);
 
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
