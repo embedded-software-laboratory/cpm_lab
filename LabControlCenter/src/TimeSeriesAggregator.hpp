@@ -6,6 +6,9 @@
 #include "TimeSeries.hpp"
 #include "cpm/AsyncReader.hpp"
 
+
+using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
+
 class TimeSeriesAggregator
 {
     map<uint8_t, map<string, shared_ptr<TimeSeries> > > timeseries_vehicles;
@@ -18,5 +21,5 @@ class TimeSeriesAggregator
 
 public:
     TimeSeriesAggregator();
-    const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& get_vehicle_data() { return timeseries_vehicles; }
+    VehicleData& get_vehicle_data() { return timeseries_vehicles; }
 };

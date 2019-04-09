@@ -2,9 +2,9 @@
 #include <cassert>
 #include <glibmm/main.h>
 
-MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
-:vehicle_data(_vehicle_data)
+MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 {
+    this->get_vehicle_data = get_vehicle_data_callback;
 
     window = make_shared<Gtk::Window>();
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
@@ -97,6 +97,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
             ctx->restore();
 
 
+            auto vehicle_data = this->get_vehicle_data();
             for(const auto& entry : vehicle_data) {
                 const auto vehicle_id = entry.first;
                 const auto& vehicle_sensor_timeseries = entry.second;

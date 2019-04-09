@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     TimeSeriesAggregator timeSeriesAggregator;
-    auto mapViewUi = make_shared<MapViewUi>(timeSeriesAggregator.get_vehicle_data());
+
+    auto mapViewUi = make_shared<MapViewUi>([&](){return timeSeriesAggregator.get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>(timeSeriesAggregator.get_vehicle_data());
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi);
