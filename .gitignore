@@ -22,3 +22,4 @@ rtidds/
 /tools/map_print2/*.mat
 /.vscode
 /ParamServer/yaml-cpp
+Log_*.csv
