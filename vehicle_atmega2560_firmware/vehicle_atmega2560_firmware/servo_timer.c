@@ -19,7 +19,7 @@ static volatile uint8_t tick_flag = 0;
 void set_servo_pwm(uint16_t pwm) {	
 	if(pwm > 4000) pwm = 4000;
 	else if (pwm < 2000) pwm = 2000;
-	OCR3C = pwm;	
+	OCR3C = pwm;
 }
 
 uint32_t get_tick() { return tick_counter; }
@@ -37,7 +37,6 @@ ISR(TIMER3_OVF_vect) {
 void servo_timer_setup() {
 	// Using timer 3
 	
-	
 	// Fast PWM
 	SET_BIT(TCCR3B, WGM33);
 	SET_BIT(TCCR3B, WGM32);
@@ -47,6 +46,7 @@ void servo_timer_setup() {
 	// Output on Pin 7 / OC3C / PE5
 	SET_BIT(DDRE, 5);
 	SET_BIT(TCCR3A, COM3C1);
+	
 	
 	// prescaler /8 => 2 MHz
 	SET_BIT(TCCR3B, CS31);
