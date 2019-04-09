@@ -89,6 +89,8 @@ TEST_CASE( "Logging" ) {
     Logging::Instance().write(stream.str().c_str());
     stream.clear();
 
+    rti::util::sleep(dds::core::Duration::from_millisecs(250));
+
     //Write C-style message
     Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
 
