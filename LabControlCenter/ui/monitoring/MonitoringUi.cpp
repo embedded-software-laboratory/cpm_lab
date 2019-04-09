@@ -13,8 +13,10 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     assert(grid_vehicle_monitor);
 
     grid_vehicle_monitor->set_name("grid_vehicle_monitor");
+    grid_vehicle_monitor->show();
 
-    window->add(*grid_vehicle_monitor);
+    //window->add(*grid_vehicle_monitor);
+
 
 
 
@@ -148,4 +150,9 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
 Gtk::Window& MonitoringUi::get_window()
 {
     return *window;
+}
+
+Gtk::Grid* MonitoringUi::get_parent()
+{
+    return grid_vehicle_monitor;
 }

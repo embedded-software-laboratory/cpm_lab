@@ -21,5 +21,6 @@ public:
     
 public:
     explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback);
-    Gtk::Window& get_window();    
+    Gtk::Window& get_window();
+    Gtk::Grid* get_parent();
 };

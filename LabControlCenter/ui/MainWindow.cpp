@@ -26,7 +26,7 @@ MainWindow::MainWindow(
 
     Gtk::Label* label = Gtk::manage(new Gtk::Label());
 
-    pane2->pack1(*label,true,true);
+    //pane2->pack1(*label,true,true);
 
     label->set_text("asdasd");
 
@@ -35,7 +35,8 @@ MainWindow::MainWindow(
     label->show_all();
 
 
-    pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
+    pane2->pack1(*(vehicleManualControlUi->get_parent()),true,true);
+    pane2->pack2(*(monitoringUi->get_parent()),true,true);
 
 
 
