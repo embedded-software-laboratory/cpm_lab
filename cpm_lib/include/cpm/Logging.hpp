@@ -11,6 +11,7 @@
 #include <fstream>
 #include <time.h>
 #include <stdio.h>
+#include <mutex>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -38,6 +39,9 @@ class Logging {
         std::string filename = ""; //Is changed in Instance creation: Current timestamp added
         std::string id = "uninitialized";
 
+        //Mutex s.t. only one thread has access to the file and the writer
+        std::mutex log_mutex;
+
         Logging();
         uint64_t get_time();
         void check_id();
@@ -59,6 +63,9 @@ class Logging {
     
             //Get the current time, use this timestamp for logging purposes
             uint64_t time_now = get_time();
+
+            //Mutex for writing the message (file, writer) - is released when going out of scope
+            std::lock_guard<std::mutex> lock(log_mutex);
 
             //Add the message to the log file
             file.open(filename, std::ios::app);

@@ -37,6 +37,9 @@ uint64_t Logging::get_time() {
 }
 
 void Logging::set_id(std::string _id) {
+    //Mutex bc value could be set by different threads at once
+    std::lock_guard<std::mutex> lock(log_mutex);
+
     id = _id;
 }
 
@@ -45,6 +48,9 @@ std::string Logging::get_filename() {
 }
 
 void Logging::check_id() {
+    //Mutex bc value could be set by different threads at once (id could be set with set_id while it is read)
+    std::lock_guard<std::mutex> lock(log_mutex);
+
     if (id == "uninitialized") {
         fprintf(stderr, "Error: Logger ID was never set\n");
         fflush(stderr); 
