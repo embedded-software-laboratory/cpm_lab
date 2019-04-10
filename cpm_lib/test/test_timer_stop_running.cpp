@@ -22,11 +22,11 @@
 
 TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     //Set the Logger ID
-    Logging::Instance().set_id("test_timerfd_stop_signal_when_running");
+    cpm::Logging::Instance().set_id("test_timerfd_stop_signal_when_running");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
-    TimerFD timer("xcvbn", period, offset, true);
+    cpm::TimerFD timer("xcvbn", period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 3000000000;
