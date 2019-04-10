@@ -12,6 +12,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <mutex>
+#include <algorithm>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -64,12 +65,17 @@ class Logging {
             //Get the current time, use this timestamp for logging purposes
             uint64_t time_now = get_time();
 
+            //For the log file: csv, so eliminate commas and semicolons
+            std::string log_string = std::string(str);
+            std::replace(log_string.begin(), log_string.end(), ',', '|');
+            std::replace(log_string.begin(), log_string.end(), ';', '|');
+
             //Mutex for writing the message (file, writer) - is released when going out of scope
             std::lock_guard<std::mutex> lock(log_mutex);
 
             //Add the message to the log file
             file.open(filename, std::ios::app);
-            file << id << "," << time_now << "," << str << std::endl;
+            file << id << "," << time_now << "," << log_string << std::endl;
             file.close();
 
             //Send the log message via RTI
