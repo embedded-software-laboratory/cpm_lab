@@ -9,16 +9,19 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
+    drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     
-    drawingArea->show();
-
-
-    update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0, false, false);
-    update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
-
     update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
+
+    draw_loop_thread = std::thread([&](){
+        while(1)
+        {
+            usleep(40000);
+            update_dispatcher.emit();
+        }
+    });
 
     drawingArea->add_events(Gdk::SCROLL_MASK);
 

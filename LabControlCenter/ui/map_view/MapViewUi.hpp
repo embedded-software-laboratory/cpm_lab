@@ -3,7 +3,7 @@
 #include <gtkmm.h>
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
-#include "cpm/Timer.hpp"
+#include <thread>
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
@@ -14,14 +14,14 @@ class MapViewUi
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     Glib::Dispatcher update_dispatcher;
-    shared_ptr<cpm::Timer> update_loop;
+    std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
     double zoom = 200.5;
     double pan_x = 318.2;
     double pan_y = 819;
 
     void draw(const DrawingContext& ctx);
-    
+
     void draw_grid(const DrawingContext& ctx);
 
     void draw_vehicle_past_trajectory(
