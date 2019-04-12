@@ -22,12 +22,12 @@
 
 TEST_CASE( "TimerFD_stop_signal" ) {
     //Set the Logger ID
-    Logging::Instance().set_id("test_timerfd_stop_signal");
+    cpm::Logging::Instance().set_id("test_timerfd_stop_signal");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
     std::string timer_id = "0";
-    TimerFD timer(timer_id, period, offset, true);
+    cpm::TimerFD timer(timer_id, period, offset, true);
 
     //Writer to send system triggers to the timer 
     dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          

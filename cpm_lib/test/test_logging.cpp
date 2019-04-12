@@ -18,10 +18,10 @@
 
 TEST_CASE( "Logging" ) {
     //Make sure that the Logging topic already exists
-    Logging::Instance();
+    cpm::Logging::Instance();
 
     std::string id = "TestID";
-    Logging::Instance().set_id(id);
+    cpm::Logging::Instance().set_id(id);
 
     //Create logging logs_reader
     dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
@@ -63,14 +63,14 @@ TEST_CASE( "Logging" ) {
 
     //Log first test data and write it to the stringstream for comparison
     actual_content << first_test;
-    Logging::Instance().write(first_test.c_str());
+    cpm::Logging::Instance().write(first_test.c_str());
 
     //Store the current file content of the log file - it should match the actual_content stringstream
     usleep(100000); //Sleep 100ms to let the Logger access the file first
     std::ifstream file;
     std::string str;
     std::stringstream file_content;
-    file.open(Logging::Instance().get_filename());
+    file.open(cpm::Logging::Instance().get_filename());
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str;
@@ -86,19 +86,19 @@ TEST_CASE( "Logging" ) {
     //Write second message to Logger
     std::stringstream stream;
     stream << second_test << with_more;
-    Logging::Instance().write(stream.str().c_str());
+    cpm::Logging::Instance().write(stream.str().c_str());
     stream.clear();
 
     rti::util::sleep(dds::core::Duration::from_millisecs(250));
 
     //Write C-style message
-    Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
+    cpm::Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
 
     //Store the (now changed) file content of the log file
     usleep(10000); //Sleep 10ms to let the Logger access the file first
     str.clear();
     file_content.str(std::string());
-    file.open(Logging::Instance().get_filename());
+    file.open(cpm::Logging::Instance().get_filename());
     while (std::getline(file, str)) {
         //String to second stringstream
         file_content << str << "\n";
