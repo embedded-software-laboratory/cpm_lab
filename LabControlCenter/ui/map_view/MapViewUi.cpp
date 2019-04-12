@@ -21,13 +21,6 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
     drawingArea->add_events(Gdk::SCROLL_MASK);
 
-    // initialize pan offset
-    Glib::signal_timeout().connect([&](){
-        pan_x = drawingArea->get_allocated_width()/2;
-        pan_y = drawingArea->get_allocated_height()/2;
-        return false;
-    }, 100);
-
 
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
@@ -35,12 +28,12 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
         if(event->direction == GDK_SCROLL_DOWN && zoom > 30) 
         {
-            zoom_speed = 1.0/1.2;
+            zoom_speed = 1.0/1.1;
         }
 
         if(event->direction == GDK_SCROLL_UP && zoom < 900)
         {
-            zoom_speed = 1.2;            
+            zoom_speed = 1.1;            
         } 
 
         if(zoom_speed != 1)
@@ -49,6 +42,8 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
             pan_y = event->y - zoom_speed * (event->y - pan_y);
             zoom *= zoom_speed;
         }
+
+        std::cout << pan_x << "  " << pan_y << "  " << zoom << std::endl;
 
         return true; 
     });
@@ -65,9 +60,8 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
             // Draw grid
             ctx->save();
             {
-                ctx->scale(.1, .1);
-                const int n_grid = 100;
-                for (int i = -n_grid; i <= n_grid; ++i)
+                ctx->scale(.1, -.1);
+                for (int i = 0; i <= 45; ++i)
                 {
                     if(i == 0) {
                         ctx->set_line_width(0.15);
@@ -79,13 +73,16 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
                         ctx->set_line_width(0.01);
                     }
 
-                    ctx->move_to(i,-n_grid);
-                    ctx->line_to(i,n_grid);
+                    ctx->move_to(i,0);
+                    ctx->line_to(i,40);
                     ctx->stroke();
 
-                    ctx->move_to(-n_grid,i);
-                    ctx->line_to(n_grid,i);
-                    ctx->stroke();
+                    if(i <= 40)
+                    {
+                        ctx->move_to(0,i);
+                        ctx->line_to(45,i);
+                        ctx->stroke();
+                    }
                 }    
             }
             ctx->restore();

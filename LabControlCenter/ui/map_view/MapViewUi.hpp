@@ -14,9 +14,9 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     shared_ptr<cpm::Timer> update_loop;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
-    double zoom = 300.0;
-    double pan_x = 0;
-    double pan_y = 0;
+    double zoom = 200.5;
+    double pan_x = 318.2;
+    double pan_y = 819;
 
 public:
     explicit MapViewUi(std::function<VehicleData()> get_vehicle_data_callback);
