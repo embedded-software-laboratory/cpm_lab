@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(
     std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
-    std::shared_ptr<MonitoringUi> monitoringUi
+    std::shared_ptr<MonitoringUi> monitoringUi,
+    std::shared_ptr<MapViewUi> mapViewUi
 )
 {
     builder_master_layout = Gtk::Builder::create_from_file("ui/master_layout.glade");
@@ -27,6 +28,7 @@ MainWindow::MainWindow(
 
     pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
     pane1->pack2(*(monitoringUi->get_parent()),true,true);
+    pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
@@ -35,8 +37,13 @@ MainWindow::MainWindow(
     });
 
     Glib::signal_timeout().connect([&]()->bool{
-        pane1->set_position(400);
-        pane2->set_position(400);
+        int width = 0;
+        int height = 0;
+        window_LCC->get_size(width, height);
+
+
+        pane1->set_position(height-300);
+        pane2->set_position(width-300);
         return false;
     }, 200);
 }

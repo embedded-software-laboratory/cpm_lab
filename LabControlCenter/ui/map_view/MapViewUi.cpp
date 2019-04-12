@@ -12,7 +12,7 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     
-    window->add(*drawingArea);
+    drawingArea->show();
 
 
     update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0, false, false);
@@ -191,4 +191,10 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 Gtk::Window& MapViewUi::get_window()
 {
     return *window;
+}
+
+
+Gtk::DrawingArea* MapViewUi::get_parent()
+{
+    return drawingArea;
 }

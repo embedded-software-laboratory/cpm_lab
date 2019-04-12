@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
+#include "ui/map_view/MapViewUi.hpp"
 
 
 
@@ -21,6 +22,7 @@ public:
 
     MainWindow(
         std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
-        std::shared_ptr<MonitoringUi> monitoringUi
+        std::shared_ptr<MonitoringUi> monitoringUi,
+        std::shared_ptr<MapViewUi> mapViewUi
     );
 };

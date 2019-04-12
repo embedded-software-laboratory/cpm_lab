@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi);
+    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi, mapViewUi);
 
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});

@@ -21,5 +21,6 @@ class MapViewUi
 
 public:
     explicit MapViewUi(std::function<VehicleData()> get_vehicle_data_callback);
-    Gtk::Window& get_window();    
+    Gtk::Window& get_window();
+    Gtk::DrawingArea* get_parent();
 };
