@@ -60,7 +60,7 @@ class MapViewUi
         uint8_t vehicle_id
     );
 
-
+    bool is_valid_point_for_path(double x, double y);
     int find_vehicle_id_in_focus();
 
 public:
