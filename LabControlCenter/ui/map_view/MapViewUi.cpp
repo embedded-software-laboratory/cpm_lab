@@ -58,10 +58,22 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
     drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = true;
 
-
+        // start path drawing mode
         if(mouse_left_button)
         {
-            //path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
+            path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
+            if(path_painting_in_progress_vehicle_id >= 0)
+            {
+                path_painting_in_progress.clear();
+                auto vehicle_timeseries = vehicle_data.at(path_painting_in_progress_vehicle_id);
+
+                path_painting_in_progress_yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
+                Point start_point(
+                    vehicle_timeseries.at("pose_x")->get_latest_value(),
+                    vehicle_timeseries.at("pose_y")->get_latest_value()
+                );
+                path_painting_in_progress.push_back(start_point);
+            }
         }
 
         return true;
@@ -119,9 +131,9 @@ void MapViewUi::draw(const DrawingContext& ctx)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
 
-
         draw_grid(ctx);
 
+        // TODO! clean this up
         if(mouse_left_button)
         {
             ctx->set_source_rgb(0,.6,0);
@@ -131,7 +143,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         if(vehicle_in_focus >= 0)
         {
-            ctx->set_source_rgb(0,0,1);
+            ctx->set_source_rgba(0,1,1,0.5);
             ctx->arc(
                 vehicle_data.at(vehicle_in_focus).at("pose_x")->get_latest_value(),
                 vehicle_data.at(vehicle_in_focus).at("pose_y")->get_latest_value(),
@@ -139,6 +151,26 @@ void MapViewUi::draw(const DrawingContext& ctx)
             );
             ctx->fill();
         }
+
+        if(!path_painting_in_progress.empty() && path_painting_in_progress_vehicle_id >= 0)
+        {
+            ctx->set_source_rgba(0,0,1,0.5);
+            ctx->arc(
+                path_painting_in_progress.back().x,
+                path_painting_in_progress.back().y,
+                path_segment_length, 
+                path_painting_in_progress_yaw - path_segment_max_angle, 
+                path_painting_in_progress_yaw + path_segment_max_angle
+            );
+            ctx->line_to(
+                path_painting_in_progress.back().x,
+                path_painting_in_progress.back().y
+            );
+            ctx->fill();
+
+        }
+
+
 
 
         for(const auto& entry : vehicle_data) {
@@ -219,6 +251,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
         // Draw car image
         ctx->save();
         {
+            // TODO vehicle coordinate system definition changed, fix here accordingly
             const double scale = 0.224/image_car->get_width();
             ctx->translate( (LF+LR)/2-LR ,0);
             ctx->scale(scale, scale);

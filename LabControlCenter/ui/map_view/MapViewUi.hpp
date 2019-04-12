@@ -26,9 +26,12 @@ class MapViewUi
     VehicleData vehicle_data;
 
 
-    // holds the path temporarily, while the user draws with the mouse
+    // holds the path and related values temporarily, while the user draws with the mouse
     std::vector<Point> path_painting_in_progress;
     int path_painting_in_progress_vehicle_id = -1;
+    double path_painting_in_progress_yaw = 0; // radian
+    const double path_segment_length = 0.3; // meter
+    const double path_segment_max_angle = 0.7; // radian
 
 
     int vehicle_in_focus = -1;
