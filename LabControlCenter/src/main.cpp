@@ -19,7 +19,7 @@
 
 int main(int argc, char *argv[])
 {
-    Logging::Instance().set_id("LabControlCenter");
+    cpm::Logging::Instance().set_id("LabControlCenter");
 
     ParameterStorage storage("parameters.yaml");
     ParameterServer server(storage);
