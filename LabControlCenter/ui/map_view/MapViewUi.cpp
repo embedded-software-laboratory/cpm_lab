@@ -6,7 +6,6 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 {
     this->get_vehicle_data = get_vehicle_data_callback;
 
-    window = make_shared<Gtk::Window>();
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
 
@@ -20,13 +19,7 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
     update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
 
-
-    window->set_title("Map View");
-    window->set_size_request(1280, 720);
-    window->maximize();
-    window->show_all();
-
-    window->add_events(Gdk::SCROLL_MASK);
+    drawingArea->add_events(Gdk::SCROLL_MASK);
 
     // initialize pan offset
     Glib::signal_timeout().connect([&](){
@@ -36,7 +29,7 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
     }, 100);
 
 
-    window->signal_scroll_event().connect([&](GdkEventScroll* event){
+    drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
         double zoom_speed = 1;
 
@@ -180,19 +173,7 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
         return true;
     });
-
-    window->signal_delete_event().connect([&](GdkEventAny*)->bool{
-        exit(0);
-        return false;
-    });
 }
-
-
-Gtk::Window& MapViewUi::get_window()
-{
-    return *window;
-}
-
 
 Gtk::DrawingArea* MapViewUi::get_parent()
 {

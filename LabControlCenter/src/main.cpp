@@ -43,12 +43,11 @@ int main(int argc, char *argv[])
 
 
 
-    /********* Start App **********/
+
     app->signal_startup().connect([&]{
-        app->add_window(mapViewUi->get_window());
+        // A second window can be added like this:
+        //app->add_window(mapViewUi->get_window());
     });
-
-
 
     return app->run(mainWindow->get_window());
 }

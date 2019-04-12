@@ -24,6 +24,7 @@ MainWindow::MainWindow(
     window_LCC->show();
     window_LCC->set_size_request(1800, 900);
     window_LCC->maximize();
+    window_LCC->add_events(Gdk::SCROLL_MASK);
 
 
     pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);

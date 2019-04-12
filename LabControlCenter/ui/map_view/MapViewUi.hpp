@@ -9,7 +9,6 @@ using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 
 class MapViewUi
 {
-    shared_ptr<Gtk::Window> window;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     Glib::Dispatcher update_dispatcher;
@@ -21,6 +20,5 @@ class MapViewUi
 
 public:
     explicit MapViewUi(std::function<VehicleData()> get_vehicle_data_callback);
-    Gtk::Window& get_window();
     Gtk::DrawingArea* get_parent();
 };
