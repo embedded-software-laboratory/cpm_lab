@@ -52,6 +52,7 @@ add_executable(LabControlCenter
     src/ParameterServer.hpp
     src/ParameterStorage.cpp
     src/ParameterStorage.hpp
+    src/CommandLineReader.hpp
     src/main.cpp
 )
 
