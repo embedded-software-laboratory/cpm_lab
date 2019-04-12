@@ -24,6 +24,8 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
     });
 
     drawingArea->add_events(Gdk::SCROLL_MASK);
+    drawingArea->add_events(Gdk::BUTTON_PRESS_MASK);
+    drawingArea->add_events(Gdk::BUTTON_RELEASE_MASK);
 
 
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
@@ -48,6 +50,16 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
         }
 
         return true; 
+    });
+
+    drawingArea->signal_button_press_event().connect([&](GdkEventButton* event){
+        cout << "click" << endl;
+        return true;
+    });
+
+    drawingArea->signal_button_release_event().connect([&](GdkEventButton* event){
+        cout << "clack" << endl;
+        return true;
     });
 
 
