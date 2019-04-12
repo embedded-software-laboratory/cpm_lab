@@ -169,6 +169,7 @@ bool MapViewUi::is_valid_point_for_path(double x, double y)
 }
 
 
+
 void MapViewUi::draw(const DrawingContext& ctx)
 {
     ctx->save();
@@ -178,11 +179,10 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_grid(ctx);
 
-
-        // TODO! clean this up
+        // Draw vehicle focus disk
         if(vehicle_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
         {
-            ctx->set_source_rgba(0,0,1,0.5);
+            ctx->set_source_rgba(0,0,1,0.4);
             ctx->arc(
                 vehicle_data.at(vehicle_in_focus).at("pose_x")->get_latest_value(),
                 vehicle_data.at(vehicle_in_focus).at("pose_y")->get_latest_value(),
@@ -191,49 +191,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
             ctx->fill();
         }
 
-        if(!path_painting_in_progress.empty() && path_painting_in_progress_vehicle_id >= 0)
-        {
-            ctx->set_source_rgba(0,0,1,0.5);
-            ctx->arc(
-                path_painting_in_progress.back().x,
-                path_painting_in_progress.back().y,
-                path_segment_length, 
-                path_painting_in_progress_yaw - path_segment_max_angle, 
-                path_painting_in_progress_yaw + path_segment_max_angle
-            );
-            ctx->line_to(
-                path_painting_in_progress.back().x,
-                path_painting_in_progress.back().y
-            );
-            ctx->fill();
-
-            if(is_valid_point_for_path(mouse_x, mouse_y))
-            {
-                ctx->set_source_rgb(0,.6,0);
-                ctx->arc(mouse_x, mouse_y, 0.1, 0.0, 2 * M_PI);
-                ctx->fill();
-
-            }
-
-            for (size_t i = 0; i < path_painting_in_progress.size()-1; ++i)
-            {
-                ctx->set_source_rgb(0.6,0,0);
-                ctx->move_to(path_painting_in_progress[i].x, path_painting_in_progress[i].y);
-                ctx->line_to(path_painting_in_progress[i+1].x, path_painting_in_progress[i+1].y);
-                ctx->set_line_width(0.005);
-                ctx->stroke();
-            }
-
-            for (size_t i = 0; i < path_painting_in_progress.size(); ++i)
-            {
-                ctx->set_source_rgb(0.6,0,0);
-                ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.01, 0.0, 2 * M_PI);
-                ctx->fill();
-            }
-
-        }
-
-
+        draw_path_painting(ctx);
 
 
         for(const auto& entry : vehicle_data) {
@@ -249,6 +207,47 @@ void MapViewUi::draw(const DrawingContext& ctx)
     }
     ctx->restore();
 }
+
+
+void MapViewUi::draw_path_painting(const DrawingContext& ctx)
+{
+    if(!path_painting_in_progress.empty() && path_painting_in_progress_vehicle_id >= 0)
+    {
+        // Draw cone of valid directions
+        ctx->set_source_rgba(0,0,1,0.5);
+        ctx->arc(
+            path_painting_in_progress.back().x,
+            path_painting_in_progress.back().y,
+            path_segment_length, 
+            path_painting_in_progress_yaw - path_segment_max_angle, 
+            path_painting_in_progress_yaw + path_segment_max_angle
+        );
+        ctx->line_to(
+            path_painting_in_progress.back().x,
+            path_painting_in_progress.back().y
+        );
+        ctx->fill();
+
+        // Draw path lines
+        for (size_t i = 0; i < path_painting_in_progress.size()-1; ++i)
+        {
+            ctx->set_source_rgb(0.6,0,0);
+            ctx->move_to(path_painting_in_progress[i].x, path_painting_in_progress[i].y);
+            ctx->line_to(path_painting_in_progress[i+1].x, path_painting_in_progress[i+1].y);
+            ctx->set_line_width(0.01);
+            ctx->stroke();
+        }
+
+        // Draw path nodes
+        for (size_t i = 0; i < path_painting_in_progress.size(); ++i)
+        {
+            ctx->set_source_rgb(0.6,0,0);
+            ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.02, 0.0, 2 * M_PI);
+            ctx->fill();
+        }
+    }
+}
+
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
@@ -314,7 +313,6 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
         // Draw car image
         ctx->save();
         {
-            // TODO vehicle coordinate system definition changed, fix here accordingly
             const double scale = 0.224/image_car->get_width();
             ctx->translate( (LF+LR)/2-LR ,0);
             ctx->scale(scale, scale);

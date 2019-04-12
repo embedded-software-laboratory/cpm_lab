@@ -31,7 +31,7 @@ class MapViewUi
     int path_painting_in_progress_vehicle_id = -1;
     double path_painting_in_progress_yaw = 0; // radian
     const double path_segment_length = 0.3; // meter
-    const double path_segment_max_angle = 0.7; // radian
+    const double path_segment_max_angle = 0.9; // radian
 
 
     int vehicle_in_focus = -1;
@@ -59,6 +59,7 @@ class MapViewUi
         const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries, 
         uint8_t vehicle_id
     );
+    void draw_path_painting(const DrawingContext& ctx);
 
     bool is_valid_point_for_path(double x, double y);
     int find_vehicle_id_in_focus();
