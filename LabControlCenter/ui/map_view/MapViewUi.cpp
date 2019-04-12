@@ -2,57 +2,6 @@
 #include <cassert>
 #include <glibmm/main.h>
 
-using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
-
-
-void draw_grid(const DrawingContext& ctx)
-{
-    ctx->save();
-    {
-        ctx->scale(.1, .1);
-        for (int i = 0; i <= 45; ++i)
-        {
-            if(i == 0) {
-                ctx->set_line_width(0.15);
-            }
-            else if(i % 10 == 0) {
-                ctx->set_line_width(0.05);
-            }
-            else {
-                ctx->set_line_width(0.01);
-            }
-
-            ctx->move_to(i,0);
-            ctx->line_to(i,40);
-            ctx->stroke();
-
-            if(i <= 40)
-            {
-                ctx->move_to(0,i);
-                ctx->line_to(45,i);
-                ctx->stroke();
-            }
-        }    
-    }
-    ctx->restore();
-}
-
-void draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
-{
-    // Draw vehicle trajectory
-    {
-        vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
-        vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
-        for (size_t i = 1; i < trajectory_x.size(); ++i)
-        {
-            if(i == 1) ctx->move_to(trajectory_x[i], trajectory_y[i]);
-            else ctx->line_to(trajectory_x[i], trajectory_y[i]);
-        }
-        ctx->set_source_rgb(1,0,0);
-        ctx->set_line_width(0.01);
-        ctx->stroke();
-    }
-}
 
 MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 {
@@ -117,63 +66,8 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
                 if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
                 {
-
                     draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
-
-                    // Draw vehicle
-                    ctx->save();
-                    {                        
-                        const double x = vehicle_timeseries.at("pose_x")->get_latest_value();
-                        const double y = vehicle_timeseries.at("pose_y")->get_latest_value();
-                        const double yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
-
-                        ctx->translate(x,y);
-                        ctx->rotate(yaw);
-
-                        const double LF = 0.196;
-                        const double LR = 0.028;
-                        const double WH = 0.054;
-
-                        ctx->save();
-                        {
-                            const double scale = 0.224/image_car->get_width();
-                            ctx->translate( (LF+LR)/2-LR ,0);
-                            ctx->scale(scale, scale);
-                            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
-                            ctx->set_source(image_car,0,0);
-                            ctx->paint();
-                        }
-                        ctx->restore();
-
-
-                        ctx->save();
-                        {
-                            ctx->translate(0.04, 0);
-                            const double scale = 0.01;
-                            ctx->rotate(-yaw);
-                            ctx->scale(scale, -scale);
-                            ctx->move_to(0,0);
-                            Cairo::TextExtents extents;
-                            ctx->get_text_extents(to_string(vehicle_id), extents);
-
-                            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
-                            ctx->set_source_rgb(1,1,1);
-                            ctx->show_text(to_string(vehicle_id));
-
-                            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-                            ctx->set_source_rgb(1,.1,.1);
-                            ctx->show_text(to_string(vehicle_id));
-                        }
-                        ctx->restore();
-
-                        /*ctx->move_to(-LR, WH);
-                        ctx->line_to(LF, WH);
-                        ctx->line_to(LF, -WH);
-                        ctx->line_to(-LR, -WH);
-                        ctx->line_to(-LR, WH);
-                        ctx->stroke();*/
-                    }
-                    ctx->restore();
+                    draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
                 }
             }
         }
@@ -183,6 +77,112 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
     });
 }
 
+
+
+void MapViewUi::draw_grid(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        ctx->scale(.1, .1);
+        for (int i = 0; i <= 45; ++i)
+        {
+            if(i == 0) {
+                ctx->set_line_width(0.15);
+            }
+            else if(i % 10 == 0) {
+                ctx->set_line_width(0.05);
+            }
+            else {
+                ctx->set_line_width(0.01);
+            }
+
+            ctx->move_to(i,0);
+            ctx->line_to(i,40);
+            ctx->stroke();
+
+            if(i <= 40)
+            {
+                ctx->move_to(0,i);
+                ctx->line_to(45,i);
+                ctx->stroke();
+            }
+        }    
+    }
+    ctx->restore();
+}
+
+void MapViewUi::draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
+{
+    vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
+    vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
+    for (size_t i = 1; i < trajectory_x.size(); ++i)
+    {
+        if(i == 1) ctx->move_to(trajectory_x[i], trajectory_y[i]);
+        else ctx->line_to(trajectory_x[i], trajectory_y[i]);
+    }
+    ctx->set_source_rgb(1,0,0);
+    ctx->set_line_width(0.01);
+    ctx->stroke();
+}
+
+void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries, uint8_t vehicle_id)
+{
+    ctx->save();
+    {                        
+        const double x = vehicle_timeseries.at("pose_x")->get_latest_value();
+        const double y = vehicle_timeseries.at("pose_y")->get_latest_value();
+        const double yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
+
+        ctx->translate(x,y);
+        ctx->rotate(yaw);
+
+        const double LF = 0.196;
+        const double LR = 0.028;
+        const double WH = 0.054;
+
+        // Draw car image
+        ctx->save();
+        {
+            const double scale = 0.224/image_car->get_width();
+            ctx->translate( (LF+LR)/2-LR ,0);
+            ctx->scale(scale, scale);
+            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
+            ctx->set_source(image_car,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
+
+        // Draw vehicle ID
+        ctx->save();
+        {
+            ctx->translate(0.04, 0);
+            const double scale = 0.01;
+            ctx->rotate(-yaw);
+            ctx->scale(scale, -scale);
+            ctx->move_to(0,0);
+            Cairo::TextExtents extents;
+            ctx->get_text_extents(to_string(vehicle_id), extents);
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
+            ctx->set_source_rgb(1,1,1);
+            ctx->show_text(to_string(vehicle_id));
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+            ctx->set_source_rgb(1,.1,.1);
+            ctx->show_text(to_string(vehicle_id));
+        }
+        ctx->restore();
+
+        // Draw vehicle box
+        /*ctx->move_to(-LR, WH);
+        ctx->line_to(LF, WH);
+        ctx->line_to(LF, -WH);
+        ctx->line_to(-LR, -WH);
+        ctx->line_to(-LR, WH);
+        ctx->stroke();*/
+    }
+    ctx->restore();
+}
 
 
 
