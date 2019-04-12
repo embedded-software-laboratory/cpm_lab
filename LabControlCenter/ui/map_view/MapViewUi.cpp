@@ -43,8 +43,6 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
             zoom *= zoom_speed;
         }
 
-        std::cout << pan_x << "  " << pan_y << "  " << zoom << std::endl;
-
         return true; 
     });
 
