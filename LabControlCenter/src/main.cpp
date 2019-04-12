@@ -24,8 +24,7 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().set_id("LabControlCenter");
 
     //Read command line parameters
-    CommandLineReader reader;
-    reader.construct(argc, argv);
+    CommandLineReader reader(argc, argv);
 
     std::cout << "Set autostart to " << reader.auto_start << " and file to " << reader.config_file << std::endl;
 

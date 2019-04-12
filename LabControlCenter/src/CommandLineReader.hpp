@@ -11,7 +11,7 @@ struct CommandLineReader {
     bool auto_start = false;
     std::string config_file = "";
 
-    void constr(int argc, char *argv[])
+    CommandLineReader(int argc, char *argv[])
     {
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
@@ -21,11 +21,9 @@ struct CommandLineReader {
                     this->config_file = std::string(argv[i]);
                 }
             }
-            else {
-                if (param.find("-autostart") != std::string::npos) {
-                    ++i;
-                    this->auto_start = true;
-                }
+
+            if (param.find("-autostart") != std::string::npos) {
+                this->auto_start = true;
             }
         }
     }
