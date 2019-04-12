@@ -20,6 +20,8 @@ class MapViewUi
     double pan_x = 318.2;
     double pan_y = 819;
 
+    void draw(const DrawingContext& ctx);
+    
     void draw_grid(const DrawingContext& ctx);
 
     void draw_vehicle_past_trajectory(

@@ -49,35 +49,37 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
 
     drawingArea->signal_draw().connect([&](const DrawingContext& ctx)->bool {
-
-        ctx->save();
-        {
-            ctx->translate(pan_x, pan_y);
-            ctx->scale(zoom, -zoom);
-
-
-            draw_grid(ctx);
-
-
-            auto vehicle_data = this->get_vehicle_data();
-            for(const auto& entry : vehicle_data) {
-                const auto vehicle_id = entry.first;
-                const auto& vehicle_timeseries = entry.second;
-
-                if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
-                {
-                    draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
-                    draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
-                }
-            }
-        }
-        ctx->restore();
-
+        this->draw(ctx); 
         return true;
     });
 }
 
 
+void MapViewUi::draw(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        ctx->translate(pan_x, pan_y);
+        ctx->scale(zoom, -zoom);
+
+
+        draw_grid(ctx);
+
+
+        auto vehicle_data = this->get_vehicle_data();
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+            const auto& vehicle_timeseries = entry.second;
+
+            if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
+            {
+                draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
+                draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
+            }
+        }
+    }
+    ctx->restore();
+}
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
