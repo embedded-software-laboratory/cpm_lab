@@ -2,17 +2,16 @@
 #include <cassert>
 #include <glibmm/main.h>
 
-MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& _vehicle_data) 
-:vehicle_data(_vehicle_data)
+MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 {
+    this->get_vehicle_data = get_vehicle_data_callback;
 
-    window = make_shared<Gtk::Window>();
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     
-    window->add(*drawingArea);
+    drawingArea->show();
 
 
     update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0, false, false);
@@ -20,13 +19,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
     update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
 
-
-    window->set_title("Map View");
-    window->set_size_request(1280, 720);
-    window->maximize();
-    window->show_all();
-
-    window->add_events(Gdk::SCROLL_MASK);
+    drawingArea->add_events(Gdk::SCROLL_MASK);
 
     // initialize pan offset
     Glib::signal_timeout().connect([&](){
@@ -36,16 +29,16 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
     }, 100);
 
 
-    window->signal_scroll_event().connect([&](GdkEventScroll* event){
+    drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
         double zoom_speed = 1;
 
-        if(event->delta_y > 0 && zoom > 30) 
+        if(event->direction == GDK_SCROLL_DOWN && zoom > 30) 
         {
             zoom_speed = 1.0/1.2;
         }
 
-        if(event->delta_y < 0 && zoom < 900)
+        if(event->direction == GDK_SCROLL_UP && zoom < 900)
         {
             zoom_speed = 1.2;            
         } 
@@ -62,6 +55,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
 
     drawingArea->signal_draw().connect([&](const ::Cairo::RefPtr< ::Cairo::Context >& ctx)->bool {
+
         ctx->save();
         {
             ctx->translate(pan_x, pan_y);
@@ -97,6 +91,7 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
             ctx->restore();
 
 
+            auto vehicle_data = this->get_vehicle_data();
             for(const auto& entry : vehicle_data) {
                 const auto vehicle_id = entry.first;
                 const auto& vehicle_sensor_timeseries = entry.second;
@@ -179,15 +174,9 @@ MapViewUi::MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& 
 
         return true;
     });
-
-    window->signal_delete_event().connect([&](GdkEventAny*)->bool{
-        exit(0);
-        return false;
-    });
 }
 
-
-Gtk::Window& MapViewUi::get_window()
+Gtk::DrawingArea* MapViewUi::get_parent()
 {
-    return *window;
+    return drawingArea;
 }

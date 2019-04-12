@@ -70,6 +70,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
 void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSamples<VehicleState>& samples)
 {
+    std::lock_guard<std::mutex> lock(_mutex); 
     const uint64_t now = clock_gettime_nanoseconds();
     for(auto sample : samples)
     {
@@ -100,6 +101,7 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
 
 void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::LoanedSamples<VehicleObservation>& samples)
 {
+    std::lock_guard<std::mutex> lock(_mutex); 
     const uint64_t now = clock_gettime_nanoseconds();
     for(auto sample : samples)
     {
@@ -117,4 +119,12 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::Loane
 
         }
     }
+}
+
+
+
+
+VehicleData TimeSeriesAggregator::get_vehicle_data() {
+    std::lock_guard<std::mutex> lock(_mutex); 
+    return timeseries_vehicles; 
 }

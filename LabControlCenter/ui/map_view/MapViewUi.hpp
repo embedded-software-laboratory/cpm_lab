@@ -5,11 +5,12 @@
 #include "TimeSeries.hpp"
 #include "cpm/Timer.hpp"
 
+using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
+
 class MapViewUi
 {
-    shared_ptr<Gtk::Window> window;
     Gtk::DrawingArea* drawingArea;
-    const map<uint8_t, map<string, shared_ptr<TimeSeries> > >& vehicle_data;
+    std::function<VehicleData()> get_vehicle_data;
     Glib::Dispatcher update_dispatcher;
     shared_ptr<cpm::Timer> update_loop;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
@@ -18,6 +19,6 @@ class MapViewUi
     double pan_y = 0;
 
 public:
-    explicit MapViewUi(const map<uint8_t, map<string, shared_ptr<TimeSeries> > >&);
-    Gtk::Window& get_window();    
+    explicit MapViewUi(std::function<VehicleData()> get_vehicle_data_callback);
+    Gtk::DrawingArea* get_parent();
 };
