@@ -33,12 +33,12 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
         double zoom_speed = 1;
 
-        if(event->delta_y > 0 && zoom > 30) 
+        if(event->direction == GDK_SCROLL_DOWN && zoom > 30) 
         {
             zoom_speed = 1.0/1.2;
         }
 
-        if(event->delta_y < 0 && zoom < 900)
+        if(event->direction == GDK_SCROLL_UP && zoom < 900)
         {
             zoom_speed = 1.2;            
         } 
@@ -55,6 +55,7 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
 
     drawingArea->signal_draw().connect([&](const ::Cairo::RefPtr< ::Cairo::Context >& ctx)->bool {
+
         ctx->save();
         {
             ctx->translate(pan_x, pan_y);
