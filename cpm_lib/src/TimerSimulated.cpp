@@ -7,9 +7,10 @@
 #include <unistd.h>
 #include <cmath>
 
+#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
+
 namespace cpm {
 
-    #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
     TimerSimulated::TimerSimulated(
         std::string _node_id, 

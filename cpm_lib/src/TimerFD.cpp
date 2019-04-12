@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include "cpm/get_topic.hpp"
 
-namespace cpm {
-
 #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
+
+namespace cpm {
 
     TimerFD::TimerFD(
         std::string _node_id, 
