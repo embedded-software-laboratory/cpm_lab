@@ -53,18 +53,19 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
         return true; 
     });
 
-    drawingArea->signal_button_press_event().connect([&](GdkEventButton* event){
+    drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
         cout << "click" << endl;
         return true;
     });
 
-    drawingArea->signal_button_release_event().connect([&](GdkEventButton* event){
+    drawingArea->signal_button_release_event().connect([&](GdkEventButton* event) {
         cout << "clack" << endl;
         return true;
     });
 
-    drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event){
-        cout << event->x << "  " << event->y << endl;
+    drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
+        mouse_x = (event->x - pan_x) / zoom;
+        mouse_y = -(event->y - pan_y) / zoom;
         return true;
     });
 
@@ -85,6 +86,11 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
 
         draw_grid(ctx);
+
+
+        ctx->set_source_rgb(0,.6,0);
+        ctx->arc(mouse_x, mouse_y, 0.1, 0.0, 2 * M_PI);
+        ctx->fill();
 
 
         auto vehicle_data = this->get_vehicle_data();
