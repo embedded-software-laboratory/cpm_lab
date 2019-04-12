@@ -21,7 +21,7 @@
 int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
-    Logging::Instance().set_id("LabControlCenter");
+    cpm::Logging::Instance().set_id("LabControlCenter");
 
     //Read command line parameters
     CommandLineReader reader;
