@@ -13,11 +13,13 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     
-    update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
+    update_dispatcher.connect([&](){ 
+        vehicle_data = this->get_vehicle_data();
+        drawingArea->queue_draw(); 
+    });
 
     draw_loop_thread = std::thread([&](){
-        while(1)
-        {
+        while(1) {
             usleep(40000);
             update_dispatcher.emit();
         }
@@ -54,18 +56,27 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
     });
 
     drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
-        cout << "click" << endl;
+        if(event->button == 1) mouse_left_button = true;
+
+
+        if(mouse_left_button)
+        {
+            //path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
+        }
+
         return true;
     });
 
     drawingArea->signal_button_release_event().connect([&](GdkEventButton* event) {
-        cout << "clack" << endl;
+        if(event->button == 1) mouse_left_button = false;
         return true;
     });
 
     drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
         mouse_x = (event->x - pan_x) / zoom;
         mouse_y = -(event->y - pan_y) / zoom;
+
+        vehicle_in_focus = find_vehicle_id_in_focus();
         return true;
     });
 
@@ -74,6 +85,30 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
         this->draw(ctx); 
         return true;
     });
+}
+
+int MapViewUi::find_vehicle_id_in_focus()
+{
+    int id = -1;
+    double dist_sq_min = 1e300;
+
+    for(const auto& entry : vehicle_data) {
+        const auto vehicle_id = entry.first;
+        const auto& vehicle_timeseries = entry.second;
+
+        if(!vehicle_timeseries.at("pose_x")->has_new_data(1.0)) continue;
+
+        double dx = mouse_x - vehicle_timeseries.at("pose_x")->get_latest_value();
+        double dy = mouse_y - vehicle_timeseries.at("pose_y")->get_latest_value();
+
+        double dist_sq = dx*dx + dy*dy;
+        if(dist_sq < 0.04 && dist_sq < dist_sq_min)
+        {
+            id = vehicle_id;
+            dist_sq_min = dist_sq;
+        }
+    }
+    return id;
 }
 
 
@@ -87,13 +122,25 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_grid(ctx);
 
+        if(mouse_left_button)
+        {
+            ctx->set_source_rgb(0,.6,0);
+            ctx->arc(mouse_x, mouse_y, 0.1, 0.0, 2 * M_PI);
+            ctx->fill();
+        }
 
-        ctx->set_source_rgb(0,.6,0);
-        ctx->arc(mouse_x, mouse_y, 0.1, 0.0, 2 * M_PI);
-        ctx->fill();
+        if(vehicle_in_focus >= 0)
+        {
+            ctx->set_source_rgb(0,0,1);
+            ctx->arc(
+                vehicle_data.at(vehicle_in_focus).at("pose_x")->get_latest_value(),
+                vehicle_data.at(vehicle_in_focus).at("pose_y")->get_latest_value(),
+                0.2, 0.0, 2 * M_PI
+            );
+            ctx->fill();
+        }
 
 
-        auto vehicle_data = this->get_vehicle_data();
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
