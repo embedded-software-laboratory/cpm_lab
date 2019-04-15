@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().set_id("LabControlCenter");
 
     //Read command line parameters (current params: auto_start and config_file)
+    //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready
     CommandLineReader reader(argc, argv, "parameters.yaml");
 
     ParameterStorage storage(reader.config_file);
