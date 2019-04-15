@@ -14,6 +14,8 @@ class MainWindow
     Glib::RefPtr<Gtk::Builder> builder_master_layout;
 
     Gtk::Window* window_LCC = nullptr;
+    Gtk::MenuBar* menu_bar = nullptr;
+    Gtk::Paned* pane0 = nullptr;
     Gtk::Paned* pane1 = nullptr;
     Gtk::Paned* pane2 = nullptr;
 
