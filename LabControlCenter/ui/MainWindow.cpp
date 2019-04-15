@@ -29,7 +29,7 @@ MainWindow::MainWindow(
     window_LCC->show();
     int screen_width = window_LCC->get_screen()->get_width();
     int screen_height = window_LCC->get_screen()->get_height();
-    window_LCC->set_default_size(3/4 * width, 3/4 * height);
+    window_LCC->set_default_size(3/4 * screen_width, 3/4 * screen_height);
     window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
 
