@@ -65,10 +65,17 @@ class Logging {
             //Get the current time, use this timestamp for logging purposes
             uint64_t time_now = get_time();
 
-            //For the log file: csv, so eliminate commas and semicolons
+            //For the log file: csv, so escape '"'
             std::string log_string = std::string(str);
-            std::replace(log_string.begin(), log_string.end(), ',', '|');
-            std::replace(log_string.begin(), log_string.end(), ';', '|');
+            std::string escaped_quote = std::string("\"\"");
+            int pos = 0;
+            while ((pos = log_string.find('"', pos)) != std::string::npos) {
+                log_string.replace(pos, 1, escaped_quote);
+                pos += escaped_quote.size();
+            }
+            //Also put the whole string in quotes
+            log_string.insert(0, "\"");
+            log_string += "\"";
 
             //Mutex for writing the message (file, writer) - is released when going out of scope
             std::lock_guard<std::mutex> lock(log_mutex);
