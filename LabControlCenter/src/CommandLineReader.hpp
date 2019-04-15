@@ -11,7 +11,7 @@ struct CommandLineReader {
     bool auto_start = false;
     std::string config_file = "";
 
-    CommandLineReader(int argc, char *argv[])
+    CommandLineReader(int argc, char *argv[], std::string default_config)
     {
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
