@@ -5,12 +5,10 @@
   <object class="GtkWindow" id="window_LCC">
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkPaned" id="paned0">
+      <object class="GtkBox" id="box">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
+        <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
-        <property name="position">20</property>
-        <property name="position_set">True</property>
         <child>
           <object class="GtkMenuBar" id="menu_bar">
             <property name="visible">True</property>
@@ -164,8 +162,9 @@
             </child>
           </object>
           <packing>
-            <property name="resize">True</property>
-            <property name="shrink">True</property>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -193,8 +192,9 @@
             </child>
           </object>
           <packing>
-            <property name="resize">False</property>
-            <property name="shrink">True</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>
