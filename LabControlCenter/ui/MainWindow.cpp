@@ -25,8 +25,11 @@ MainWindow::MainWindow(
     assert(pane1);
     assert(pane2);
 
+    //Show window, set size depending on monitor resolution
     window_LCC->show();
-    window_LCC->set_size_request(1800, 900);
+    int screen_width = window_LCC->get_screen()->get_width();
+    int screen_height = window_LCC->get_screen()->get_height();
+    window_LCC->set_default_size(3/4 * width, 3/4 * height);
     window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
 
@@ -46,7 +49,7 @@ MainWindow::MainWindow(
         int height = 0;
         window_LCC->get_size(width, height);
 
-        pane0->set_position(20);
+        pane0->set_position(20); //Set height of the menu bar (rather: set height of slider, which should be fixed btw)
         pane1->set_position(height-300);
         pane2->set_position(width-300);
         return false;
