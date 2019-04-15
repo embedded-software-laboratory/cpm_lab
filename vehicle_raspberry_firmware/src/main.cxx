@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     std::cout << "vehicle_id " << vehicle_id << std::endl;
 
 
-    Logging::Instance().set_id("vehicle_raspberry_" + std::to_string(vehicle_id));
+    cpm::Logging::Instance().set_id("vehicle_raspberry_" + std::to_string(vehicle_id));
 
     // DDS setup
     auto& participant = cpm::ParticipantSingleton::Instance();
