@@ -3,7 +3,6 @@
 #include "defaults.hpp"
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
-#include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
 

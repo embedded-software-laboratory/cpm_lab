@@ -3,7 +3,7 @@
 
 
 MainWindow::MainWindow(
-    std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
+    std::shared_ptr<TabsViewUI> tabsViewUI,
     std::shared_ptr<MonitoringUi> monitoringUi,
     std::shared_ptr<MapViewUi> mapViewUi
 )
@@ -34,7 +34,7 @@ MainWindow::MainWindow(
     window_LCC->add_events(Gdk::SCROLL_MASK);
 
 
-    pane2->pack2(*(vehicleManualControlUi->get_parent()),true,true);
+    pane2->pack2(*(tabsViewUI->get_parent()),true,true);
     pane1->pack2(*(monitoringUi->get_parent()),true,true);
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 

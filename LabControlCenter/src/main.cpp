@@ -8,6 +8,8 @@
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ui/right_tabs/TabsViewUI.hpp"
+#include "ui/params/ParamViewUI.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "ui/MainWindow.hpp"
@@ -36,7 +38,9 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi, mapViewUi);
+    auto paramViewUi = make_shared<TabsViewUI>();
+    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
+    auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});

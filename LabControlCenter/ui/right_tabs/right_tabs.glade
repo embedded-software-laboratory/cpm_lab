@@ -9,7 +9,7 @@
       <placeholder/>
     </child>
     <child type="tab">
-      <object class="GtkLabel">
+      <object class="GtkLabel" id="manual_control_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Manual Control</property>
@@ -19,23 +19,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="notebook_box">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-      <packing>
-        <property name="position">1</property>
-      </packing>
+      <placeholder/>
     </child>
     <child type="tab">
-      <object class="GtkLabel">
+      <object class="GtkLabel" id="parameters_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Parameters</property>

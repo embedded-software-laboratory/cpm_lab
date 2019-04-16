@@ -42,6 +42,10 @@ add_executable(LabControlCenter
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
     ui/map_view/MapViewUi.hpp
+    ui/params/ParamViewUI.hpp
+    ui/params/ParamViewUI.cpp
+    ui/right_tabs/TabsViewUI.hpp
+    ui/right_tabs/TabsViewUI.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp
