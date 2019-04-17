@@ -1,9 +1,12 @@
 #pragma once
 
 #include "defaults.hpp"
+#include "ParamModel.hpp"
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <gtkmm/liststore.h>
 #include <cassert>
+#include <string>
 
 class ParamViewUI {
 private:
@@ -12,17 +15,14 @@ private:
     Gtk::Widget* parent;
 
     //Top box: search bar and filter
-    Gtk::Box* parameters_box_top;
     Gtk::FlowBox* parameters_flow_top;
     Gtk::SearchEntry* parameters_search;
     Gtk::Box* parameters_box_filter;
     Gtk::Label* parameters_filter_description;
     Gtk::ComboBoxText* parameters_filter;
-    Gtk::Box* parameters_box_top_names;
 
     //Middle box: Parameter list
     Gtk::ScrolledWindow* parameters_list_scroll_window;
-    Gtk::Viewport* parameters_list_viewport;
     Gtk::TreeView* parameters_list_tree;
 
     //Bottom box: Buttons like edit, delete, new
@@ -35,8 +35,13 @@ private:
     Gtk::Button* parameters_button_create;
 
     //TreeView Layout, Parameters storage
-    //Gtk::ListStore* parameter_list_storage;
+    ParamModel model;
+    Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
 public:
     ParamViewUI();
     Gtk::Widget* get_parent();
+    
+    //Manipulate rows
+    void get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
+    void delete_selected_row();
 };

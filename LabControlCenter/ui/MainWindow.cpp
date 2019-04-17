@@ -32,12 +32,11 @@ MainWindow::MainWindow(
     window_LCC->set_default_size(3/4 * screen_width, 3/4 * screen_height);
     window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
+    
 
-    std::cout << "Trying to pack..." << std::endl;
     pane2->pack2(*(tabsViewUI->get_parent()),true,true);
     pane1->pack2(*(monitoringUi->get_parent()),true,true);
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
-    std::cout << "Packed" << std::endl;
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
         exit(0);
