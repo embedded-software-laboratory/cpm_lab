@@ -44,6 +44,8 @@ add_executable(LabControlCenter
     ui/map_view/MapViewUi.hpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.cpp
+    ui/params/ParamsCreateView.hpp
+    ui/params/ParamsCreateView.cpp
     ui/params/ParamModelRecord.hpp
     ui/right_tabs/TabsViewUI.hpp
     ui/right_tabs/TabsViewUI.cpp

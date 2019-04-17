@@ -2,6 +2,8 @@
 
 #include "defaults.hpp"
 #include "ParamModelRecord.hpp"
+#include "ParamsCreateView.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <gtkmm/liststore.h>
@@ -37,6 +39,9 @@ private:
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
+
+    //Edit / create window
+    ParamsCreateView* create_window = nullptr;
 public:
     ParamViewUI();
     Gtk::Widget* get_parent();
@@ -45,4 +50,6 @@ public:
     bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
     //"Callback" function: Delete the row selected by the user if the delete button was clicked
     void delete_selected_row();
+    //Open edit / create window
+    //TODO: Properly destroy window, rewrite ParamsCreateView (callback übergeben? sonst ParamsCreateView selbst alles managen lassen (create() Fkt.))
 };
