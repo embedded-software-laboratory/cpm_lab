@@ -1,7 +1,7 @@
 #pragma once
 
 #include "defaults.hpp"
-#include "ParamModel.hpp"
+#include "ParamModelRecord.hpp"
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <gtkmm/liststore.h>
@@ -35,13 +35,14 @@ private:
     Gtk::Button* parameters_button_create;
 
     //TreeView Layout, Parameters storage
-    ParamModel model;
+    ParamModelRecord model_record;
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
 public:
     ParamViewUI();
     Gtk::Widget* get_parent();
     
     //Manipulate rows
-    void get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
+    bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
+    //"Callback" function: Delete the row selected by the user if the delete button was clicked
     void delete_selected_row();
 };

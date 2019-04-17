@@ -35,34 +35,34 @@ ParamViewUI::ParamViewUI() {
     assert(parameters_box_create);
     assert(parameters_button_create);
 
-    //Create data model for parameters
-    parameter_list_storage = Gtk::ListStore::create(model);
+    //Create data model_record for parameters
+    parameter_list_storage = Gtk::ListStore::create(model_record);
     parameters_list_tree->set_model(parameter_list_storage);
 
-    //Create some sample rows for model
+    //Create some sample rows for model_record
     Gtk::TreeModel::Row row = *(parameter_list_storage->append());
-    row[model.column_name] = "some_bool";
-    row[model.column_type] = "bool";
-    row[model.column_value] = "true";
-    row[model.column_info] = "does things";
+    row[model_record.column_name] = "some_bool";
+    row[model_record.column_type] = "bool";
+    row[model_record.column_value] = "true";
+    row[model_record.column_info] = "does things";
 
     row = *(parameter_list_storage->append());
-    row[model.column_name] = "an_int";
-    row[model.column_type] = "int";
-    row[model.column_value] = "1231234";
-    row[model.column_info] = "does other things";
+    row[model_record.column_name] = "an_int";
+    row[model_record.column_type] = "int";
+    row[model_record.column_value] = "1231234";
+    row[model_record.column_info] = "does other things";
 
     row = *(parameter_list_storage->append());
-    row[model.column_name] = "hey_a_list";
-    row[model.column_type] = "int list";
-    row[model.column_value] = "[3,2,6,8,2,1,5,6,222,444,555,777,111,12334554656253]";
-    row[model.column_info] = "does listy things";
+    row[model_record.column_name] = "hey_a_list";
+    row[model_record.column_type] = "int list";
+    row[model_record.column_value] = "[3,2,6,8,2,1,5,6,222,444,555,777,111,12334554656253]";
+    row[model_record.column_info] = "does listy things";
 
-    //Use model, add it to the view
-    parameters_list_tree->append_column("Name", model.column_name);
-    parameters_list_tree->append_column("Type", model.column_type);
-    parameters_list_tree->append_column("Value", model.column_value);
-    parameters_list_tree->append_column("Info", model.column_info);
+    //Use model_record, add it to the view
+    parameters_list_tree->append_column("Name", model_record.column_name);
+    parameters_list_tree->append_column("Type", model_record.column_type);
+    parameters_list_tree->append_column("Value", model_record.column_value);
+    parameters_list_tree->append_column("Info", model_record.column_info);
 
     //Set equal width for all columns
     for (int i = 0; i < 4; ++i) {
@@ -71,8 +71,50 @@ ParamViewUI::ParamViewUI() {
         parameters_list_tree->get_column(i)->set_fixed_width(50);
         parameters_list_tree->get_column(i)->set_expand(true);
     }
+
+
+    //Button listener
+    parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {
     return parent;
+}
+
+bool ParamViewUI::get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info) {
+    Gtk::TreeModel::iterator iter = parameters_list_tree->get_selection()->get_selected();
+    if(iter) //If anything is selected
+    {
+        Gtk::TreeModel::Row row = *iter;
+        Glib::ustring name_ustring(row[model_record.column_name]);
+        Glib::ustring type_ustring(row[model_record.column_type]);
+        Glib::ustring value_ustring(row[model_record.column_value]);
+        Glib::ustring info_ustring(row[model_record.column_info]);
+        name = name_ustring;
+        type = type_ustring;
+        value = value_ustring;
+        info = info_ustring;
+
+        return true;
+    }
+    else return false;
+}
+
+void ParamViewUI::delete_selected_row() {
+    Glib::RefPtr<Gtk::TreeSelection> selection = parameters_list_tree->get_selection();
+    std::vector<Gtk::TreeModel::Path> paths = selection->get_selected_rows();
+
+    // convert all of the paths to RowReferences
+    std::vector<Gtk::TreeModel::RowReference> rows;
+    for (Gtk::TreeModel::Path path : paths)
+    {
+        rows.push_back(Gtk::TreeModel::RowReference(parameter_list_storage, path));
+    }
+
+    // remove the rows from the treemodel
+    for (std::vector<Gtk::TreeModel::RowReference>::iterator i = rows.begin(); i != rows.end(); i++)
+    {
+        Gtk::TreeModel::iterator treeiter = parameter_list_storage->get_iter(i->get_path());
+        parameter_list_storage->erase(treeiter);
+    }
 }

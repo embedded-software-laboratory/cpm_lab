@@ -3,9 +3,9 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
-class ParamModel : public Gtk::TreeModelColumnRecord {
+class ParamModelRecord : public Gtk::TreeModelColumnRecord {
 public:
-  ParamModel() { 
+  ParamModelRecord() { 
       add(column_name);
       add(column_type);
       add(column_value);
