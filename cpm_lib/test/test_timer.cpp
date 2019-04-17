@@ -24,7 +24,7 @@
 
 TEST_CASE( "TimerFD_accuracy" ) {
     //Set the Logger ID
-    Logging::Instance().set_id("test_timerfd_accuracy");
+    cpm::Logging::Instance().set_id("test_timerfd_accuracy");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  5000000;
@@ -32,7 +32,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
     const std::string time_name = "asdfg";
 
 
-    TimerFD timer(time_name, period, offset, true);
+    cpm::TimerFD timer(time_name, period, offset, true);
 
     //Starting time to check for:
     uint64_t starting_time = timer.get_time() + 3000000000;

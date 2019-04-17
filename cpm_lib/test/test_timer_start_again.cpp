@@ -22,13 +22,13 @@
 
 TEST_CASE( "TimerFD_start_again" ) {
     //Set the Logger ID
-    Logging::Instance().set_id("test_timerfd_start_again");
+    cpm::Logging::Instance().set_id("test_timerfd_start_again");
 
     const uint64_t period = 21000000;
     const uint64_t offset =  0;
 
     std::string timer_id = "2";
-    TimerFD timer(timer_id, period, offset, false);
+    cpm::TimerFD timer(timer_id, period, offset, false);
 
 
     //Check if start_async works as expected as well and store timestamps
