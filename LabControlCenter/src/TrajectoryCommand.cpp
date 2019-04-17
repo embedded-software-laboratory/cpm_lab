@@ -1,6 +1,11 @@
 #include "TrajectoryCommand.hpp"
 
 TrajectoryCommand::TrajectoryCommand()
+:topic_vehicleCommandTrajectory(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
+,writer_vehicleCommandTrajectory(dds::pub::DataWriter<VehicleCommandTrajectory>(
+    dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+    topic_vehicleCommandTrajectory)
+)
 {
     timer = cpm::Timer::create("LabControlCenter_TrajectoryCommand",40000000ull, 0, false,true);
 
@@ -67,7 +72,7 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Point> path, in
     int path_index = 0;
     while(1)
     {
-        if(path_index >= path.size()) // path end reached? -> loop around
+        if(path_index >= int(path.size())) // path end reached? -> loop around
         {
             path_index = loop_start_index;
             n_loop--;
@@ -171,9 +176,11 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
                 command.vehicle_id(vehicle_id);
                 command.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
                 cpm::stamp_message(command, t_now, 20000000ull);
-                //writer_vehicleCommandTrajectory->write(command);
+                writer_vehicleCommandTrajectory.write(command);
                 break;
             }
+
+            // TODO delete trajectory if it is in the past
         }
 
     }

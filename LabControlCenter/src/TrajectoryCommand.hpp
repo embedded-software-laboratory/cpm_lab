@@ -5,6 +5,8 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/stamp_message.hpp"
+#include "cpm/get_topic.hpp"
+#include <dds/pub/ddspub.hpp>
 
 class TrajectoryCommand
 {
@@ -12,7 +14,9 @@ class TrajectoryCommand
     map<uint8_t, vector<TrajectoryPoint>> vehicle_trajectories;
     std::shared_ptr<cpm::Timer> timer;
 
-    //shared_ptr<dds::pub::DataWriter<VehicleCommandTrajectory>> writer_vehicleCommandTrajectory;
+    dds::topic::Topic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory;
+
 
     void send_trajectory(uint64_t t_now);
 

@@ -2,6 +2,7 @@
 #include "example_trajectory.hpp"
 #include "cpm/stamp_message.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
 
 #define AXIS_THROTTLE (1)
 #define AXIS_STEERING (3)
@@ -11,6 +12,9 @@
 
 VehicleManualControl::VehicleManualControl()
 :participant(cpm::ParticipantSingleton::Instance())
+,topic_vehicleCommandDirect(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"))
+,topic_vehicleCommandSpeedCurvature(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"))
+,topic_vehicleCommandTrajectory(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
 {
     auto QoS = dds::pub::qos::DataWriterQos();
     auto reliability = dds::core::policy::Reliability::BestEffort();
@@ -20,14 +24,9 @@ VehicleManualControl::VehicleManualControl()
     publisher.default_datawriter_qos(QoS);
 
 
-    topic_vehicleCommandDirect = make_shared<dds::topic::Topic<VehicleCommandDirect>>(participant, "vehicleCommandDirect");
-    writer_vehicleCommandDirect = make_shared<dds::pub::DataWriter<VehicleCommandDirect>>(publisher, *topic_vehicleCommandDirect);
-
-    topic_vehicleCommandSpeedCurvature = make_shared<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, "vehicleCommandSpeedCurvature");
-    writer_vehicleCommandSpeedCurvature = make_shared<dds::pub::DataWriter<VehicleCommandSpeedCurvature>>(publisher, *topic_vehicleCommandSpeedCurvature);
-
-    topic_vehicleCommandTrajectory = make_shared<dds::topic::Topic<VehicleCommandTrajectory>>(participant, "vehicleCommandTrajectory");
-    writer_vehicleCommandTrajectory = make_shared<dds::pub::DataWriter<VehicleCommandTrajectory>>(publisher, *topic_vehicleCommandTrajectory);
+    writer_vehicleCommandDirect = make_shared<dds::pub::DataWriter<VehicleCommandDirect>>(publisher, topic_vehicleCommandDirect);
+    writer_vehicleCommandSpeedCurvature = make_shared<dds::pub::DataWriter<VehicleCommandSpeedCurvature>>(publisher, topic_vehicleCommandSpeedCurvature);
+    writer_vehicleCommandTrajectory = make_shared<dds::pub::DataWriter<VehicleCommandTrajectory>>(publisher, topic_vehicleCommandTrajectory);
 }
 
 void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file) 
