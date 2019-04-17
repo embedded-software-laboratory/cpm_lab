@@ -3,10 +3,13 @@
 #include <glibmm/main.h>
 
 
-MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
+MapViewUi::MapViewUi(
+    shared_ptr<TrajectoryCommand> _trajectoryCommand,
+    std::function<VehicleData()> get_vehicle_data_callback
+)
+:trajectoryCommand(_trajectoryCommand)
+,get_vehicle_data(get_vehicle_data_callback)
 {
-    this->get_vehicle_data = get_vehicle_data_callback;
-
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
     drawingArea->show();

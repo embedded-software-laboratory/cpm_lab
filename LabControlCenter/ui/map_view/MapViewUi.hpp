@@ -3,14 +3,9 @@
 #include <gtkmm.h>
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
+#include "Point.hpp"
 #include <thread>
-
-struct Point
-{
-    double x = 0;
-    double y = 0;
-    Point(double x,double y):x(x),y(y){}
-};
+#include "TrajectoryCommand.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
@@ -18,6 +13,7 @@ using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 
 class MapViewUi
 {
+    shared_ptr<TrajectoryCommand> trajectoryCommand;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     Glib::Dispatcher update_dispatcher;
@@ -26,7 +22,7 @@ class MapViewUi
     VehicleData vehicle_data;
 
 
-    // holds the path and related values temporarily, while the user draws with the mouse
+    // hold the path and related values temporarily, while the user draws with the mouse
     std::vector<Point> path_painting_in_progress;
     int path_painting_in_progress_vehicle_id = -1;
     double path_painting_in_progress_yaw = 0; // radian
@@ -34,7 +30,7 @@ class MapViewUi
     const double path_segment_max_angle = 0.9; // radian
 
 
-    int vehicle_in_focus = -1;
+    int vehicle_id_in_focus = -1;
 
     double zoom = 200.5;
     double pan_x = 318.2;
@@ -44,6 +40,8 @@ class MapViewUi
     double mouse_y = 0;
 
     bool mouse_left_button = false;
+
+
 
     void draw(const DrawingContext& ctx);
 
@@ -65,6 +63,9 @@ class MapViewUi
     int find_vehicle_id_in_focus();
 
 public:
-    explicit MapViewUi(std::function<VehicleData()> get_vehicle_data_callback);
+    MapViewUi(
+        shared_ptr<TrajectoryCommand> _trajectoryCommand,
+        std::function<VehicleData()> get_vehicle_data_callback
+    );
     Gtk::DrawingArea* get_parent();
 };
