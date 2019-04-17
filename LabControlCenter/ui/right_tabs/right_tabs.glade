@@ -5,32 +5,5 @@
   <object class="GtkNotebook" id="right_notebook">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
-    <child>
-      <placeholder/>
-    </child>
-    <child type="tab">
-      <object class="GtkLabel" id="manual_control_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Manual Control</property>
-      </object>
-      <packing>
-        <property name="tab_fill">False</property>
-      </packing>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child type="tab">
-      <object class="GtkLabel" id="parameters_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Parameters</property>
-      </object>
-      <packing>
-        <property name="position">1</property>
-        <property name="tab_fill">False</property>
-      </packing>
-    </child>
   </object>
 </interface>

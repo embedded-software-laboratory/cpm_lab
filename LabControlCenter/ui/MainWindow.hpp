@@ -3,6 +3,8 @@
 #include "defaults.hpp"
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include "ui/manual_control/VehicleManualControlUi.hpp"
+#include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
 
@@ -22,7 +24,7 @@ public:
     Gtk::Window& get_window(); 
 
     MainWindow(
-        std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi,
+        std::shared_ptr<TabsViewUI> tabsViewUI,
         std::shared_ptr<MonitoringUi> monitoringUi,
         std::shared_ptr<MapViewUi> mapViewUi
     );
