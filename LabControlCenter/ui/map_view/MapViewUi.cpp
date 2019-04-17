@@ -89,7 +89,7 @@ MapViewUi::MapViewUi(
         // end path drawing mode
         if(!mouse_left_button)
         {
-            trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 3);
+            trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 0);
 
             path_painting_in_progress.clear();
             path_painting_in_progress_vehicle_id = -1;
