@@ -89,7 +89,8 @@ MapViewUi::MapViewUi(
         // end path drawing mode
         if(!mouse_left_button)
         {
-            // TODO use path_painting_in_progress for vehicle control
+            trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 3);
+
             path_painting_in_progress.clear();
             path_painting_in_progress_vehicle_id = -1;
         }
@@ -100,7 +101,7 @@ MapViewUi::MapViewUi(
         mouse_x = (event->x - pan_x) / zoom;
         mouse_y = -(event->y - pan_y) / zoom;
 
-        vehicle_in_focus = find_vehicle_id_in_focus();
+        vehicle_id_in_focus = find_vehicle_id_in_focus();
 
 
         // if in path drawing mode
@@ -154,6 +155,9 @@ int MapViewUi::find_vehicle_id_in_focus()
 
 bool MapViewUi::is_valid_point_for_path(double x, double y)
 {
+    // Test if the point is inside a forward pointing cone, and at a particular distance.
+    // This limits the maximum curvature of the path, and makes it driveable.
+
     double dx = x - path_painting_in_progress.back().x;
     double dy = y - path_painting_in_progress.back().y;
     double dist_sq = dx*dx + dy*dy;
@@ -183,12 +187,12 @@ void MapViewUi::draw(const DrawingContext& ctx)
         draw_grid(ctx);
 
         // Draw vehicle focus disk
-        if(vehicle_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
+        if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
         {
             ctx->set_source_rgba(0,0,1,0.4);
             ctx->arc(
-                vehicle_data.at(vehicle_in_focus).at("pose_x")->get_latest_value(),
-                vehicle_data.at(vehicle_in_focus).at("pose_y")->get_latest_value(),
+                vehicle_data.at(vehicle_id_in_focus).at("pose_x")->get_latest_value(),
+                vehicle_data.at(vehicle_id_in_focus).at("pose_y")->get_latest_value(),
                 0.2, 0.0, 2 * M_PI
             );
             ctx->fill();
