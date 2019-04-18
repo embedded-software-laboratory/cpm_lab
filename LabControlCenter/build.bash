@@ -1,6 +1,5 @@
 #!/bin/bash
 
-clear
 
 # Get yaml
 pushd ../..

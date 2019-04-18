@@ -1,8 +1,5 @@
 #!/bin/bash
 
-clear
-
-rm -rf build build_sim
 
 mkdir build
 mkdir build_sim
