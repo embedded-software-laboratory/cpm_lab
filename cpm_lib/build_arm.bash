@@ -1,8 +1,5 @@
 #!/bin/bash
 
-clear
-clear
-
 if [ ! -d "build_arm" ]; then
     mkdir build_arm
 fi
