@@ -172,51 +172,6 @@ void CommunicationAPI_LED::cleanUp() {
 	camera->close();
 
     std::cout << "close camera" << std::endl;
-
-    std::string filename = "Latenz.txt";
-    std::ofstream outputFile(filename);
-
-    outputFile << "recognizedTargets = " << numImagesTargets << "\n";
-
-    for (size_t i = 1; i < newSituation.size(); i++) {
-        timePointDistances.push_back((newSituation[i]/1000.0) - (newSituation[i - 1]/1000.0));
-    }  
-
-    double min, max, mean, stdDev;
-    if (!timePointDistances.empty()) {
-        outputFile << "\nTimePoints Distance \n";
-
-        ImageProcessingHelper::getInstance().calculateMinMaxMeanStdDev(timePointDistances, min, max, mean, stdDev);
-        outputFile << "   Min = " << min << "\n";
-        outputFile << "   Max = " << max << "\n";
-        outputFile << "   Mean= " << mean << "\n";
-        outputFile << "   Stddev = " << stdDev << "\n";
-    }
-
-    std::vector<double> latences;
-    int notInTime = 0;
-    for (size_t i = 0; i < situations.size(); i++) {
-        double latenz = (newSituation[i] - situations[i]) / 1000.0;
-        latences.push_back(latenz);
-        if(latenz > 20000) {
-            notInTime++;
-            std::cout<< i << std::endl;
-        }
-    }
-
-    if (!latences.empty()) {
-       outputFile << "\nLatences \n";
-
-        ImageProcessingHelper::getInstance().calculateMinMaxMeanStdDev(latences, min, max, mean, stdDev);
-        outputFile << "   Min = " << min << "\n";
-        outputFile << "   Max = " << max << "\n";
-        outputFile << "   Mean= " << mean << "\n";
-        outputFile << "   Stddev = " << stdDev << "\n";
-
-        outputFile << "   Real Time = " << 1.0 - ((double)notInTime/situations.size()) << "\n";
-    }
-
-    GlobalDataHelper::getInstance().evaluateDurations(outputFile);
 }
 
 bool CommunicationAPI_LED::setCamera() {

@@ -158,24 +158,17 @@ int main() {
     dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation(dds::pub::Publisher(dds_participant), topic_vehicleObservation);
 
 
-    std::string filename = "Kreis.txt";
-    std::ofstream outputFile(filename);
-
-
     while(continueLoop) {
         Situation situation;
       
         api->getCurrentSituation(situation);
 
        // std::cout << "Situation at " << situation.timestamp << ":" << std::endl;
-        outputFile << "Situation at " << situation.timestamp << ": \n";
+
         for (auto it = situation.mapping.begin(); it != situation.mapping.end(); it++) {
           /*  std::cout << "  id = " << it->first << std::endl;
             std::cout << "  position = " << it->second.position << std::endl;
             std::cout << "  orientation = " << it->second.orientation << std::endl << std::endl;*/
-            outputFile << "  id = " << it->first << "\n";
-            outputFile << "  position = " << it->second.position << "\n";
-            outputFile << "  orientation = " << it->second.orientation << "\n\n";
 
 
             /// DDS broadcast
