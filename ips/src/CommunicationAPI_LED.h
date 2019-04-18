@@ -6,8 +6,6 @@
 #include "SortedObjects.h"
 #include "DetectedObjects.h"
 
-#include "Evaluation.h"
-
 class CommunicationAPI_LED :
 	public CommunicationAPI
 {

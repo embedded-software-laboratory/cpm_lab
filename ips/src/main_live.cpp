@@ -6,7 +6,6 @@
 #include "default.h"
 #include "CommunicationAPI.h"
 #include "CommunicationAPI_LED.h"
-#include "Evaluation.h"
 #include "VehicleObservation.hpp"
 #include <dds/pub/ddspub.hpp>
 

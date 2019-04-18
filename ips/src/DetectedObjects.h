@@ -4,8 +4,6 @@
 #include "VehicleMapping.h"
 #include "RemainingPoints.h"
 
-#include "IllustrationHelper.h"
-
 class DetectedObjects
 {
 public:

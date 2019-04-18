@@ -40,43 +40,41 @@ link_directories(../../cpm_base/cpm_lib/build/)
 
 
 set(SOURCE
-	src/Camera.cpp
-	src/CameraFileWrapper.cpp
-	src/CameraFileWrapper.h
-	src/Camera.h
-	src/CameraParameter.cpp
-	src/CameraParameter.h
-	src/CameraStream.cpp
-	src/CameraStream.h
-	src/CommunicationAPI.cpp
-	src/CommunicationAPI.h
-	src/CommunicationAPI_LED.cpp
-	src/CommunicationAPI_LED.h
-	src/Constants.h
-	src/default.h
-	src/DetectedObjectsBuffer.h
-	src/DetectedObjects.cpp
-	src/DetectedObjects.h
-	src/FileReaderHelper.cpp
-	src/FileReaderHelper.h
-	src/GlobalDataHelper.cpp
-	src/GlobalDataHelper.h
-	src/IllustrationHelper.cpp
-	src/IllustrationHelper.h
-	src/ImageHolderLED.cpp
-	src/ImageHolderLED.h
-	src/ImageProcessingHelper.cpp
-	src/ImageProcessingHelper.h
+    src/Camera.cpp
+    src/CameraFileWrapper.cpp
+    src/CameraFileWrapper.h
+    src/Camera.h
+    src/CameraParameter.cpp
+    src/CameraParameter.h
+    src/CameraStream.cpp
+    src/CameraStream.h
+    src/CommunicationAPI.cpp
+    src/CommunicationAPI.h
+    src/CommunicationAPI_LED.cpp
+    src/CommunicationAPI_LED.h
+    src/Constants.h
+    src/default.h
+    src/DetectedObjectsBuffer.h
+    src/DetectedObjects.cpp
+    src/DetectedObjects.h
+    src/FileReaderHelper.cpp
+    src/FileReaderHelper.h
+    src/GlobalDataHelper.cpp
+    src/GlobalDataHelper.h
+    src/ImageHolderLED.cpp
+    src/ImageHolderLED.h
+    src/ImageProcessingHelper.cpp
+    src/ImageProcessingHelper.h
     src/RemainingPoints.h
     src/RemainingPoints.cpp
-	src/SortedObjects.cpp
-	src/SortedObjects.h
-	src/VehicleMapping.cpp
-	src/VehicleMapping.h
-	src/Target.h
-	src/TargetLED.cpp
-	src/TargetLED.h
-	src/ThreadSafeQueue.h
+    src/SortedObjects.cpp
+    src/SortedObjects.h
+    src/VehicleMapping.cpp
+    src/VehicleMapping.h
+    src/Target.h
+    src/TargetLED.cpp
+    src/TargetLED.h
+    src/ThreadSafeQueue.h
     src/VehicleMapping.h
     src/VehicleMapping.cpp
 )
