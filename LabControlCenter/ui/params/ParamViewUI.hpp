@@ -9,6 +9,8 @@
 #include <gtkmm/liststore.h>
 #include <cassert>
 #include <string>
+#include <atomic>
+#include <memory>
 
 class ParamViewUI {
 private:
@@ -41,15 +43,22 @@ private:
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
 
     //Edit / create window
-    ParamsCreateView* create_window = nullptr;
-public:
-    ParamViewUI();
-    Gtk::Widget* get_parent();
-    
+    std::shared_ptr<ParamsCreateView> create_window;
+    std::atomic<bool> parameter_view_unchangeable; //If true, another window is opened that might modify parameters, thus other modification is not allowed
+    bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
+
     //Manipulate rows
     bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
     //"Callback" function: Delete the row selected by the user if the delete button was clicked
     void delete_selected_row();
     //Open edit / create window
     //TODO: Properly destroy window, rewrite ParamsCreateView (callback übergeben? sonst ParamsCreateView selbst alles managen lassen (create() Fkt.))
+    void open_param_create_window();
+public:
+    ParamViewUI();
+    Gtk::Widget* get_parent();
+    
+    //Callback: Allow to only create another create window when the former window was closed
+    //Handles callback for close and for create operations
+    void window_on_close_callback(std::string name = "", std::string type = "", std::string value = "", std::string info = "");
 };

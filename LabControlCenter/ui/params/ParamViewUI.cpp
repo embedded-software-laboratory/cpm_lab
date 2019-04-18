@@ -1,6 +1,7 @@
 #include "ParamViewUI.hpp"
 
-ParamViewUI::ParamViewUI() {
+ParamViewUI::ParamViewUI()
+{
     params_builder = Gtk::Builder::create_from_file("ui/params/params.glade");
 
     params_builder->get_widget("parameters_box", parent);
@@ -73,8 +74,12 @@ ParamViewUI::ParamViewUI() {
     }
 
 
-    //Button listener
+    //Delete button listener
     parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
+
+    //Create button listener
+    parameter_view_unchangeable.store(false); //Window for creation should only exist once
+    parameters_button_create->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_create_window));
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {
@@ -101,20 +106,69 @@ bool ParamViewUI::get_selected_row(std::string &name, std::string &type, std::st
 }
 
 void ParamViewUI::delete_selected_row() {
-    Glib::RefPtr<Gtk::TreeSelection> selection = parameters_list_tree->get_selection();
-    std::vector<Gtk::TreeModel::Path> paths = selection->get_selected_rows();
+    //Parameters cannot be deleted when the edit/create window is opened
+    if (! parameter_view_unchangeable.exchange(true)) {
+        Glib::RefPtr<Gtk::TreeSelection> selection = parameters_list_tree->get_selection();
+        std::vector<Gtk::TreeModel::Path> paths = selection->get_selected_rows();
 
-    // convert all of the paths to RowReferences
-    std::vector<Gtk::TreeModel::RowReference> rows;
-    for (Gtk::TreeModel::Path path : paths)
-    {
-        rows.push_back(Gtk::TreeModel::RowReference(parameter_list_storage, path));
+        // convert all of the paths to RowReferences
+        std::vector<Gtk::TreeModel::RowReference> rows;
+        for (Gtk::TreeModel::Path path : paths)
+        {
+            rows.push_back(Gtk::TreeModel::RowReference(parameter_list_storage, path));
+        }
+
+        // remove the rows from the treemodel
+        for (std::vector<Gtk::TreeModel::RowReference>::iterator i = rows.begin(); i != rows.end(); i++)
+        {
+            Gtk::TreeModel::iterator treeiter = parameter_list_storage->get_iter(i->get_path());
+            parameter_list_storage->erase(treeiter);
+        }
+
+        parameter_view_unchangeable.store(false);
+    }
+}
+
+using namespace std::placeholders;
+void ParamViewUI::open_param_create_window() {
+    //Get a "lock" for the window if it does not already exist, else ignore the user request
+    if(! parameter_view_unchangeable.exchange(true)) {
+        create_window_open = true;
+        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4));
+        parent->set_sensitive(false);
+    } 
+}
+
+void ParamViewUI::window_on_close_callback(std::string name, std::string type, std::string value, std::string info) {
+    if (name != "" && type != "" && value != "") {
+        Glib::ustring name_ustring = name;
+        Glib::ustring type_ustring = type;
+        Glib::ustring value_ustring = value;
+        Glib::ustring info_ustring = info;
+
+        Gtk::TreeModel::Row row;
+
+        //If a parameter was modified, get its current row or else create a new row
+        Gtk::TreeModel::iterator iter = parameters_list_tree->get_selection()->get_selected();
+        if(iter && !create_window_open) //If anything is selected and if param modification
+        {
+            Gtk::TreeModel::Row row = *iter;
+        }
+        else if (create_window_open) { //Create a new parameter
+            row = *(parameter_list_storage->append());
+        }
+
+        if (create_window_open || iter) {
+            row[model_record.column_name] = name_ustring;
+            row[model_record.column_type] = type_ustring;
+            row[model_record.column_value] = value_ustring;
+            row[model_record.column_info] = info_ustring;
+        }
     }
 
-    // remove the rows from the treemodel
-    for (std::vector<Gtk::TreeModel::RowReference>::iterator i = rows.begin(); i != rows.end(); i++)
-    {
-        Gtk::TreeModel::iterator treeiter = parameter_list_storage->get_iter(i->get_path());
-        parameter_list_storage->erase(treeiter);
-    }
+    //Reset variables so that new windows can be opened etc
+    create_window.reset(); //No one manages the shared pointer, delete the object
+    parameter_view_unchangeable.store(false);
+    create_window_open = false;
+    parent->set_sensitive(true);
 }
