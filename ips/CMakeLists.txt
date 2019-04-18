@@ -78,9 +78,6 @@ set(SOURCE
 	VehicleDetection/Target.h
 	VehicleDetection/TargetLED.cpp
 	VehicleDetection/TargetLED.h
-	VehicleDetection/Targets.h
-	VehicleDetection/TargetTag.cpp
-	VehicleDetection/TargetTag.h
 	VehicleDetection/ThreadSafeQueue.h
     VehicleDetection/VehicleMapping.h
     VehicleDetection/VehicleMapping.cpp
@@ -91,12 +88,12 @@ set(SOURCE
 
 
 
-add_executable(VehicleDetection
-    ${SOURCE}
-    VehicleDetection/main.cpp
-)
+#add_executable(VehicleDetection
+#    ${SOURCE}
+#    VehicleDetection/main.cpp
+#)
 
-target_link_libraries(VehicleDetection ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp)
+#target_link_libraries(VehicleDetection ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp)
 
 
 
