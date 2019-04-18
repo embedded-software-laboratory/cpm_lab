@@ -40,47 +40,47 @@ link_directories(../../cpm_base/cpm_lib/build/)
 
 
 set(SOURCE
-	VehicleDetection/Camera.cpp
-	VehicleDetection/CameraFileWrapper.cpp
-	VehicleDetection/CameraFileWrapper.h
-	VehicleDetection/Camera.h
-	VehicleDetection/CameraParameter.cpp
-	VehicleDetection/CameraParameter.h
-	VehicleDetection/CameraStream.cpp
-	VehicleDetection/CameraStream.h
-	VehicleDetection/CommunicationAPI.cpp
-	VehicleDetection/CommunicationAPI.h
-	VehicleDetection/CommunicationAPI_LED.cpp
-	VehicleDetection/CommunicationAPI_LED.h
-	VehicleDetection/Constants.h
-	VehicleDetection/default.h
-	VehicleDetection/DetectedObjectsBuffer.h
-	VehicleDetection/DetectedObjects.cpp
-	VehicleDetection/DetectedObjects.h
-	VehicleDetection/Evaluation.cpp
-	VehicleDetection/Evaluation.h
-	VehicleDetection/FileReaderHelper.cpp
-	VehicleDetection/FileReaderHelper.h
-	VehicleDetection/GlobalDataHelper.cpp
-	VehicleDetection/GlobalDataHelper.h
-	VehicleDetection/IllustrationHelper.cpp
-	VehicleDetection/IllustrationHelper.h
-	VehicleDetection/ImageHolderLED.cpp
-	VehicleDetection/ImageHolderLED.h
-	VehicleDetection/ImageProcessingHelper.cpp
-	VehicleDetection/ImageProcessingHelper.h
-    VehicleDetection/RemainingPoints.h
-    VehicleDetection/RemainingPoints.cpp
-	VehicleDetection/SortedObjects.cpp
-	VehicleDetection/SortedObjects.h
-	VehicleDetection/VehicleMapping.cpp
-	VehicleDetection/VehicleMapping.h
-	VehicleDetection/Target.h
-	VehicleDetection/TargetLED.cpp
-	VehicleDetection/TargetLED.h
-	VehicleDetection/ThreadSafeQueue.h
-    VehicleDetection/VehicleMapping.h
-    VehicleDetection/VehicleMapping.cpp
+	src/Camera.cpp
+	src/CameraFileWrapper.cpp
+	src/CameraFileWrapper.h
+	src/Camera.h
+	src/CameraParameter.cpp
+	src/CameraParameter.h
+	src/CameraStream.cpp
+	src/CameraStream.h
+	src/CommunicationAPI.cpp
+	src/CommunicationAPI.h
+	src/CommunicationAPI_LED.cpp
+	src/CommunicationAPI_LED.h
+	src/Constants.h
+	src/default.h
+	src/DetectedObjectsBuffer.h
+	src/DetectedObjects.cpp
+	src/DetectedObjects.h
+	src/Evaluation.cpp
+	src/Evaluation.h
+	src/FileReaderHelper.cpp
+	src/FileReaderHelper.h
+	src/GlobalDataHelper.cpp
+	src/GlobalDataHelper.h
+	src/IllustrationHelper.cpp
+	src/IllustrationHelper.h
+	src/ImageHolderLED.cpp
+	src/ImageHolderLED.h
+	src/ImageProcessingHelper.cpp
+	src/ImageProcessingHelper.h
+    src/RemainingPoints.h
+    src/RemainingPoints.cpp
+	src/SortedObjects.cpp
+	src/SortedObjects.h
+	src/VehicleMapping.cpp
+	src/VehicleMapping.h
+	src/Target.h
+	src/TargetLED.cpp
+	src/TargetLED.h
+	src/ThreadSafeQueue.h
+    src/VehicleMapping.h
+    src/VehicleMapping.cpp
 )
 
 
@@ -90,7 +90,7 @@ set(SOURCE
 
 #add_executable(VehicleDetection
 #    ${SOURCE}
-#    VehicleDetection/main.cpp
+#    src/main.cpp
 #)
 
 #target_link_libraries(VehicleDetection ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp)
@@ -99,7 +99,7 @@ set(SOURCE
 
 add_executable(VehicleDetection_live
     ${SOURCE}
-    VehicleDetection/main_live.cpp
+    src/main_live.cpp
 )
 
 target_link_libraries(VehicleDetection_live ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp cpm)
