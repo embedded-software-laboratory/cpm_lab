@@ -83,23 +83,9 @@ set(SOURCE
     src/VehicleMapping.cpp
 )
 
-
-
-
-
-
-#add_executable(VehicleDetection
-#    ${SOURCE}
-#    src/main.cpp
-#)
-
-#target_link_libraries(VehicleDetection ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp)
-
-
-
-add_executable(VehicleDetection_live
+add_executable(ips
     ${SOURCE}
     src/main_live.cpp
 )
 
-target_link_libraries(VehicleDetection_live ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp cpm)
+target_link_libraries(ips ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES} yaml-cpp cpm)
