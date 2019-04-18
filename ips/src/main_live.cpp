@@ -179,15 +179,18 @@ int main() {
             int64_t tick = situation.timestamp / 20000000;
             int64_t stamp = tick * 20000000;
 
-            VehicleObservation vehicleObservation;
-            vehicleObservation.vehicle_id(it->first);
-            vehicleObservation.pose().x(it->second.position.x);
-            vehicleObservation.pose().y(it->second.position.y);
-            vehicleObservation.pose().yaw(it->second.orientation);
-            vehicleObservation.header().create_stamp().nanoseconds(stamp);
-            vehicleObservation.header().valid_after_stamp().nanoseconds(stamp);
+            if(it->first > 0) // ID=0 is invalid, ignore
+            {
+                VehicleObservation vehicleObservation;
+                vehicleObservation.vehicle_id(it->first);
+                vehicleObservation.pose().x(it->second.position.x);
+                vehicleObservation.pose().y(it->second.position.y);
+                vehicleObservation.pose().yaw(it->second.orientation);
+                vehicleObservation.header().create_stamp().nanoseconds(stamp);
+                vehicleObservation.header().valid_after_stamp().nanoseconds(stamp);
 
-            writer_vehicleObservation.write(vehicleObservation);
+                writer_vehicleObservation.write(vehicleObservation);
+            }
         }
         
       //  std::cout << std::endl;
