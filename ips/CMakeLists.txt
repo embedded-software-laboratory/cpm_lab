@@ -57,8 +57,6 @@ set(SOURCE
 	src/DetectedObjectsBuffer.h
 	src/DetectedObjects.cpp
 	src/DetectedObjects.h
-	src/Evaluation.cpp
-	src/Evaluation.h
 	src/FileReaderHelper.cpp
 	src/FileReaderHelper.h
 	src/GlobalDataHelper.cpp
