@@ -24,6 +24,15 @@ private:
     std::string value = "";
     std::string info = "";
 
+    //Custom fields that allow to edit data
+    Gtk::Entry* name_entry;
+    Gtk::Entry* type_entry;
+    Gtk::Entry* value_entry;
+    Gtk::Entry* info_entry;
+
+    //Function used by both constructors
+    void init_members();
+
     //Callback function on close (must always be called!)
     std::function<void(std::string, std::string, std::string, std::string)> on_close_callback;
 
@@ -32,4 +41,5 @@ private:
     void on_add();
 public:
     ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> on_close_callback);
+    ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> on_close_callback, std::string _name, std::string _type, std::string _value, std::string _info);
 };

@@ -77,9 +77,10 @@ ParamViewUI::ParamViewUI()
     //Delete button listener
     parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
 
-    //Create button listener
+    //Create and edit button listener
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
     parameters_button_create->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_create_window));
+    parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {
@@ -133,9 +134,26 @@ using namespace std::placeholders;
 void ParamViewUI::open_param_create_window() {
     //Get a "lock" for the window if it does not already exist, else ignore the user request
     if(! parameter_view_unchangeable.exchange(true)) {
+        parent->set_sensitive(false);
         create_window_open = true;
         create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4));
+    } 
+}
+
+void ParamViewUI::open_param_edit_window() {
+    //Get a "lock" for the window if it does not already exist, else ignore the user request
+    if(! parameter_view_unchangeable.exchange(true)) {
         parent->set_sensitive(false);
+        create_window_open = true;
+
+        //Get currently selected data
+        std::string name;
+        std::string type;
+        std::string value;
+        std::string info;
+        get_selected_row(name, type, value, info);
+
+        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), name, type, value, info);
     } 
 }
 
