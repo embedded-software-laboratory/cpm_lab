@@ -152,7 +152,7 @@ void ParameterStorage::storeFile(std::string _filename) {
 }
 
 void ParameterStorage::set_parameter(std::string name, ParameterWithDescription param) {
-    std::lock_guard<std::mutex> u_lock(param_storage);
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         param_storage[name] = param;
     }
@@ -164,7 +164,7 @@ void ParameterStorage::set_parameter(std::string name, ParameterWithDescription 
 void ParameterStorage::set_parameter_bool(std::string name, bool value, std::string info) {
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::Bool);
     param.parameter_data.value_bool(value);
@@ -174,12 +174,12 @@ void ParameterStorage::set_parameter_bool(std::string name, bool value, std::str
 }
 void ParameterStorage::set_parameter_int(std::string name, int32_t value, std::string info) {
     std::vector<int32_t> stdInts;
-    stdInts.push_back(intParam);
+    stdInts.push_back(value);
     rti::core::vector<int32_t> ints(stdInts);
 
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::Int32);
     param.parameter_data.values_int32(ints);
@@ -189,12 +189,12 @@ void ParameterStorage::set_parameter_int(std::string name, int32_t value, std::s
 }
 void ParameterStorage::set_parameter_double(std::string name, double value, std::string info) {
     std::vector<double> stdDoubles;
-    stdDoubles.push_back(doubleParam);
+    stdDoubles.push_back(value);
     rti::core::vector<double> doubles(stdDoubles);
 
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::Double);
     param.parameter_data.values_double(doubles);
@@ -205,7 +205,7 @@ void ParameterStorage::set_parameter_double(std::string name, double value, std:
 void ParameterStorage::set_parameter_string(std::string name, std::string value, std::string info) {
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::String);
     param.parameter_data.value_string(value);
@@ -216,7 +216,7 @@ void ParameterStorage::set_parameter_string(std::string name, std::string value,
 void ParameterStorage::set_parameter_string(std::string name, const char* value, std::string info) {
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::String);
     param.parameter_data.value_string(value);
@@ -227,7 +227,7 @@ void ParameterStorage::set_parameter_string(std::string name, const char* value,
 void ParameterStorage::set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info) {
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::Vector_Int32);
     param.parameter_data.values_int32(value);
@@ -238,7 +238,7 @@ void ParameterStorage::set_parameter_ints(std::string name, std::vector<int32_t>
 void ParameterStorage::set_parameter_doubles(std::string name, std::vector<double> value, std::string info) {
     //Create parameter object
     ParameterWithDescription param;
-    param.description = info;
+    param.parameter_description = info;
     param.parameter_data.name(name);
     param.parameter_data.type(ParameterType::Vector_Double);
     param.parameter_data.values_double(value);
@@ -261,7 +261,7 @@ bool ParameterStorage::get_parameter_int(std::string name, int32_t& value) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         if ((param_storage[name]).parameter_data.type() == ParameterType::Int32) {
-            value = (param_storage[name]).parameter_data.values_int().get(0);
+            value = (param_storage[name]).parameter_data.values_int32().at(0);
             return true;
         }
     }
@@ -271,7 +271,7 @@ bool ParameterStorage::get_parameter_double(std::string name, double& value) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         if ((param_storage[name]).parameter_data.type() == ParameterType::Double) {
-            value = (param_storage[name]).parameter_data.values_double().get(0);
+            value = (param_storage[name]).parameter_data.values_double().at(0);
             return true;
         }
     }
@@ -291,7 +291,7 @@ bool ParameterStorage::get_parameter_ints(std::string name, std::vector<int32_t>
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         if ((param_storage[name]).parameter_data.type() == ParameterType::Vector_Int32) {
-            rti::core::vector<int32_t>& rti_vector = (param_storage[name]).parameter_data.values_int();
+            rti::core::vector<int32_t>& rti_vector = (param_storage[name]).parameter_data.values_int32();
             value.clear();
             for (int32_t val : rti_vector) {
                 value.push_back(val);
@@ -305,7 +305,7 @@ bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<doubl
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         if ((param_storage[name]).parameter_data.type() == ParameterType::Vector_Double) {
-            rti::core::vector<double>& rti_vector = (param_storage[name]).parameter_data.values_int();
+            rti::core::vector<double>& rti_vector = (param_storage[name]).parameter_data.values_double();
             value.clear();
             for (double val : rti_vector) {
                 value.push_back(val);
@@ -317,50 +317,31 @@ bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<doubl
 }
 
 std::vector<std::string> ParameterStorage::list_bool() {
-    std::lock_guard<std::mutex> u_lock(param_bool_mutex);
-    std::vector<std::string> param_names;
-    for (auto const& entry : param_bool) {
-        param_names.push_back(entry.first);
-    }
-    return param_names;
+    return list_names(ParameterType::Bool);
 }
 std::vector<std::string> ParameterStorage::list_int() {
-    std::lock_guard<std::mutex> u_lock(param_int_mutex);
-    std::vector<std::string> param_names;
-    for (auto const& entry : param_int) {
-        param_names.push_back(entry.first);
-    }
-    return param_names;
+    return list_names(ParameterType::Int32);
 }
 std::vector<std::string> ParameterStorage::list_double() {
-    std::lock_guard<std::mutex> u_lock(param_double_mutex);
-    std::vector<std::string> param_names;
-    for (auto const& entry : param_double) {
-        param_names.push_back(entry.first);
-    }
-    return param_names;
+    return list_names(ParameterType::Double);
 }
 std::vector<std::string> ParameterStorage::list_string() {
-    std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    std::vector<std::string> param_names;
-    for (auto const& entry : param_string) {
-        param_names.push_back(entry.first);
-    }
-    return param_names;
+    return list_names(ParameterType::String);
 }
 std::vector<std::string> ParameterStorage::list_ints() {
-    std::lock_guard<std::mutex> u_lock(param_ints_mutex);
-    std::vector<std::string> param_names;
-    for (auto const& entry : param_ints) {
-        param_names.push_back(entry.first);
-    }
-    return param_names;
+    return list_names(ParameterType::Vector_Int32);
 }
 std::vector<std::string> ParameterStorage::list_doubles() {
-    std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
+    return list_names(ParameterType::Vector_Double);
+}
+
+std::vector<std::string> ParameterStorage::list_names(ParameterType type) {
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     std::vector<std::string> param_names;
-    for (auto const& entry : param_doubles) {
-        param_names.push_back(entry.first);
+    for (auto const& entry : param_storage) {
+        if (entry.second.parameter_data.type() == type) {
+            param_names.push_back(entry.first);
+        }
     }
     return param_names;
 }

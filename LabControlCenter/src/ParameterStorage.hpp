@@ -41,13 +41,13 @@ public:
      * \param name name of the parameter
      * \param value new value of the parameter
      */
-    void set_parameter_bool(std::string name, bool value, std::string info);
-    void set_parameter_int(std::string name, int32_t value, std::string info);
-    void set_parameter_double(std::string name, double value, std::string info);
-    void set_parameter_string(std::string name, std::string value, std::string info);
-    void set_parameter_string(std::string name, const char* value, std::string info);
-    void set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info);
-    void set_parameter_doubles(std::string name, std::vector<double> value, std::string info);
+    void set_parameter_bool(std::string name, bool value, std::string info = "");
+    void set_parameter_int(std::string name, int32_t value, std::string info = "");
+    void set_parameter_double(std::string name, double value, std::string info = "");
+    void set_parameter_string(std::string name, std::string value, std::string info = "");
+    void set_parameter_string(std::string name, const char* value, std::string info = "");
+    void set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info = "");
+    void set_parameter_doubles(std::string name, std::vector<double> value, std::string info = "");
     void set_parameter(std::string name, ParameterWithDescription param);
     /**
      * \brief Get the value of a parameter
@@ -62,7 +62,7 @@ public:
     bool get_parameter_ints(std::string name, std::vector<int32_t>& value);
     bool get_parameter_doubles(std::string name, std::vector<double>& value);
     /**
-     * \brief List all existing parameters of that type
+     * \brief List all existing parameter names of that type
      */
     std::vector<std::string> list_bool();
     std::vector<std::string> list_int();
@@ -70,6 +70,7 @@ public:
     std::vector<std::string> list_string();
     std::vector<std::string> list_ints();
     std::vector<std::string> list_doubles();
+    std::vector<std::string> list_names(ParameterType type);
 private:
     /**
      * \brief Load YAML file into memory

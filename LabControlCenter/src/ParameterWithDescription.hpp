@@ -8,4 +8,4 @@
 struct ParameterWithDescription {
     Parameter parameter_data;
     std::string parameter_description;
-}
+};
