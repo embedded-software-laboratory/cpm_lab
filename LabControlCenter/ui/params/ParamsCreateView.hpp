@@ -5,6 +5,7 @@
 #include <cassert>
 #include <string>
 #include <functional>
+#include <iostream>
 
 class ParamsCreateView {
 private:
@@ -18,12 +19,6 @@ private:
     Gtk::Button* params_create_add_button;
     Gtk::Grid* params_create_values_grid;
 
-    //Data to modify
-    std::string name = "";
-    std::string type = "";
-    std::string value = "";
-    std::string info = "";
-
     //Custom fields that allow to edit data
     Gtk::Entry* name_entry;
     Gtk::Entry* type_entry;
@@ -32,6 +27,7 @@ private:
 
     //Function used by both constructors
     void init_members();
+    void create_inputs(std::string name, std::string type, std::string value, std::string info);
 
     //Callback function on close (must always be called!)
     std::function<void(std::string, std::string, std::string, std::string)> on_close_callback;

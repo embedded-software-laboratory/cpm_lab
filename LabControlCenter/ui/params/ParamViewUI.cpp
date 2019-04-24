@@ -144,16 +144,21 @@ void ParamViewUI::open_param_edit_window() {
     //Get a "lock" for the window if it does not already exist, else ignore the user request
     if(! parameter_view_unchangeable.exchange(true)) {
         parent->set_sensitive(false);
-        create_window_open = true;
 
         //Get currently selected data
         std::string name;
         std::string type;
         std::string value;
         std::string info;
-        get_selected_row(name, type, value, info);
 
-        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), name, type, value, info);
+        //Only create an edit window if a row was selected
+        if (get_selected_row(name, type, value, info)) {
+            create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), name, type, value, info);
+        }
+        else {
+            parent->set_sensitive(true);
+            parameter_view_unchangeable.store(false);
+        }
     } 
 }
 
@@ -168,15 +173,18 @@ void ParamViewUI::window_on_close_callback(std::string name, std::string type, s
 
         //If a parameter was modified, get its current row or else create a new row
         Gtk::TreeModel::iterator iter = parameters_list_tree->get_selection()->get_selected();
-        if(iter && !create_window_open) //If anything is selected and if param modification
+        if(iter && !create_window_open) //If anything is selected and if param modification window was opened
         {
-            Gtk::TreeModel::Row row = *iter;
+            std::cout << "Getting the row..." << std::endl;
+            row = *iter;
         }
         else if (create_window_open) { //Create a new parameter
             row = *(parameter_list_storage->append());
         }
 
         if (create_window_open || iter) {
+            std::cout << "Trying to store the new data " << name_ustring << std::endl;
+
             row[model_record.column_name] = name_ustring;
             row[model_record.column_type] = type_ustring;
             row[model_record.column_value] = value_ustring;

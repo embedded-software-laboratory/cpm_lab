@@ -6,45 +6,48 @@ ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, 
     init_members();
 
     //Create empty fields - TODO field types depend on input type, listener for type change, also TODO: unify with other constructor when final structure is known
-    name_entry = Gtk::manage(new Gtk::Entry());
-    type_entry = Gtk::manage(new Gtk::Entry());
-    value_entry = Gtk::manage(new Gtk::Entry());
-    info_entry = Gtk::manage(new Gtk::Entry());
-    
-    params_create_values_grid->attach(*name_entry, 1, 0);
-    params_create_values_grid->attach(*type_entry, 1, 1);
-    params_create_values_grid->attach(*value_entry, 1, 2);
-    params_create_values_grid->attach(*info_entry, 1, 3);
+    create_inputs("","","","");
 }
 
-ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> _on_close_callback, std::string _name, std::string _type, std::string _value, std::string _info) :
-    on_close_callback(_on_close_callback),
-    name(_name),
-    type(_type),
-    value(_value),
-    info(_info)
+ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> _on_close_callback, std::string name, std::string type, std::string value, std::string info) :
+    on_close_callback(_on_close_callback)
 {
     init_members();
 
+    //Create fields with given values - TODO field types depend on input type, listener for type change
+    create_inputs(name, type, value, info);
+}
+
+void ParamsCreateView::create_inputs(std::string name, std::string type, std::string value, std::string info) {
     Glib::ustring name_ustring = name;
     Glib::ustring type_ustring = type;
     Glib::ustring value_ustring = value;
     Glib::ustring info_ustring = info;
 
-    //Create fields with given values - TODO field types depend on input type, listener for type change
     name_entry = Gtk::manage(new Gtk::Entry());
-    name_entry.set_text(name_ustring);
     type_entry = Gtk::manage(new Gtk::Entry());
-    type_entry.set_text(type_ustring);
     value_entry = Gtk::manage(new Gtk::Entry());
-    value_entry.set_text(value_ustring);
     info_entry = Gtk::manage(new Gtk::Entry());
-    info_entry.set_text(info_ustring);
+    
+    name_entry->set_hexpand(true);
+    name_entry->set_vexpand(true);
+    type_entry->set_hexpand(true);
+    type_entry->set_vexpand(true);
+    value_entry->set_hexpand(true);
+    value_entry->set_vexpand(true);
+    info_entry->set_hexpand(true);
+    info_entry->set_vexpand(true);
 
-    params_create_values_grid->attach(*name_entry, 1, 0);
-    params_create_values_grid->attach(*type_entry, 1, 1);
-    params_create_values_grid->attach(*value_entry, 1, 2);
-    params_create_values_grid->attach(*info_entry, 1, 3);
+    name_entry->set_text(name_ustring);
+    type_entry->set_text(type_ustring);
+    value_entry->set_text(value_ustring);
+    info_entry->set_text(info_ustring);
+
+    params_create_values_grid->attach(*name_entry, 1, 0, 1, 1);
+    params_create_values_grid->attach(*type_entry, 1, 1, 1, 1);
+    params_create_values_grid->attach(*value_entry, 1, 2, 1, 1);
+    params_create_values_grid->attach(*info_entry, 1, 3, 1, 1);
+    params_create_values_grid->show_all_children();
 }
 
 void ParamsCreateView::init_members() {
@@ -80,6 +83,11 @@ void ParamsCreateView::on_abort() {
 }
 
 void ParamsCreateView::on_add() {
+    std::string name = name_entry->get_text();
+    std::string type = type_entry->get_text();
+    std::string value = value_entry->get_text();
+    std::string info = info_entry->get_text();
+
     window->close();
-    on_close_callback("test","test","test","test");
+    on_close_callback(name, type, value, info);
 }
