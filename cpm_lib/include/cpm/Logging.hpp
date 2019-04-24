@@ -12,6 +12,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <mutex>
+#include <algorithm>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -65,12 +66,24 @@ namespace cpm {
                 //Get the current time, use this timestamp for logging purposes
                 uint64_t time_now = get_time();
 
+                //For the log file: csv, so escape '"'
+                std::string log_string = std::string(str);
+                std::string escaped_quote = std::string("\"\"");
+                int pos = 0;
+                while ((pos = log_string.find('"', pos)) != std::string::npos) {
+                    log_string.replace(pos, 1, escaped_quote);
+                    pos += escaped_quote.size();
+                }
+                //Also put the whole string in quotes
+                log_string.insert(0, "\"");
+                log_string += "\"";
+
                 //Mutex for writing the message (file, writer) - is released when going out of scope
                 std::lock_guard<std::mutex> lock(log_mutex);
 
                 //Add the message to the log file
                 file.open(filename, std::ios::app);
-                file << id << "," << time_now << "," << str << std::endl;
+                file << id << "," << time_now << "," << log_string << std::endl;
                 file.close();
 
                 //Send the log message via RTI

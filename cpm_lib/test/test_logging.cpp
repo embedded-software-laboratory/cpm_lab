@@ -35,8 +35,8 @@ TEST_CASE( "Logging" ) {
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
     std::string first_test = "TEST";
-    std::string second_test = "Second test!";
-    std::string with_more = "With more!";
+    std::string second_test = "Second\" test!";
+    std::string with_more = "With \"m\"ore!";
 
     //Data from the threads for later checks - CHECK does not support concurrency
     std::string thread_content_1;
@@ -106,8 +106,20 @@ TEST_CASE( "Logging" ) {
 	file.close();
 
     //Compare file content with desired content
+    std::string second_test_escaped = std::string(second_test);
+    second_test_escaped += with_more;
+    std::string escaped_quote = std::string("\"\"");
+    int pos = 0;
+    while ((pos = second_test_escaped.find('"', pos)) != std::string::npos) {
+        second_test_escaped.replace(pos, 1, escaped_quote);
+        pos += escaped_quote.size();
+    }
+    //Also put the whole string in quotes
+    second_test_escaped.insert(0, "\"");
+    second_test_escaped += "\"";
+
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
-    CHECK(file_content.str().find(second_test + with_more) != std::string::npos);
+    CHECK(file_content.str().find(second_test_escaped) != std::string::npos);
     CHECK(file_content.str().find("Die Zahl 5 nennt sich auch fünf") != std::string::npos);
 
     signal_thread.join();
