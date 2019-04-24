@@ -20,10 +20,6 @@
     background-image: linear-gradient(#f00);
 }
 
-#grid_vehicle_monitor .label.zebra {
-    background-image: linear-gradient(#fff);
-}
-
 .pane-separator {
     background-image: linear-gradient(#888);
 }

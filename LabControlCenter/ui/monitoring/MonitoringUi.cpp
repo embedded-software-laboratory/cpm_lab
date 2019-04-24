@@ -57,11 +57,6 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                     );
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
-
-                    if(i % 2 == 1) 
-                    {
-                        label->get_style_context()->add_class("zebra");
-                    }
                 }
             }
         }
@@ -83,10 +78,6 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                         label->set_width_chars(10);
                         label->set_xalign(1);
                         label->show_all();
-                        if(i % 2 == 1) 
-                        {
-                            label->get_style_context()->add_class("zebra");
-                        }
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                     }
 
@@ -97,34 +88,22 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                         const auto value = sensor_timeseries->get_latest_value();
                         label->set_text(sensor_timeseries->format_value(value));
 
+                        label->get_style_context()->remove_class("ok");
+                        label->get_style_context()->remove_class("warn");
+                        label->get_style_context()->remove_class("alert");
 
 
                         if(rows[i] == "battery_voltage")
                         {
-                            label->get_style_context()->remove_class("ok");
-                            label->get_style_context()->remove_class("warn");
-                            label->get_style_context()->remove_class("alert");
-                            label->get_style_context()->remove_class("zebra");
-
                             if     (value > 6.6) label->get_style_context()->add_class("ok");
                             else if(value > 6.3) label->get_style_context()->add_class("warn");
                             else                 label->get_style_context()->add_class("alert");
                         }
                         else if(rows[i] == "clock_delta") 
                         {
-                            label->get_style_context()->remove_class("ok");
-                            label->get_style_context()->remove_class("warn");
-                            label->get_style_context()->remove_class("alert");
-                            label->get_style_context()->remove_class("zebra");
-
                             if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
                             else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
                             else                       label->get_style_context()->add_class("alert");
-                        }
-                        else if(rows[i].substr(0,3) == "ips") 
-                        {
-                            label->get_style_context()->remove_class("alert");
-                            if(i % 2 == 1) label->get_style_context()->add_class("zebra");
                         }
 
                     }
@@ -132,11 +111,9 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                     {
                         label->set_text("---");
 
-                        if(rows[i].substr(0,3) == "ips") 
-                        {
-                            label->get_style_context()->add_class("alert");
-                            label->get_style_context()->remove_class("zebra");
-                        }
+                        label->get_style_context()->remove_class("ok");
+                        label->get_style_context()->remove_class("warn");
+                        label->get_style_context()->add_class("alert");
                     }
                 }
             }
