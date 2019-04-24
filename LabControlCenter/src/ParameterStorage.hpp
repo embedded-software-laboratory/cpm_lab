@@ -40,6 +40,7 @@ public:
      * \brief Set the value of a parameter
      * \param name name of the parameter
      * \param value new value of the parameter
+     * \param info description of the parameter's purpose
      */
     void set_parameter_bool(std::string name, bool value, std::string info = "");
     void set_parameter_int(std::string name, int32_t value, std::string info = "");
@@ -61,6 +62,13 @@ public:
     bool get_parameter_string(std::string name, std::string& value);
     bool get_parameter_ints(std::string name, std::vector<int32_t>& value);
     bool get_parameter_doubles(std::string name, std::vector<double>& value);
+
+    /**
+     * \brief Delete a parameter
+     * \param The parameter's name
+     */
+    void delete_parameter(std::string name);
+
     /**
      * \brief List all existing parameter names of that type
      */

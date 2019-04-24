@@ -312,6 +312,14 @@ bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<doubl
     return false;
 }
 
+void ParameterStorage::delete_parameter(std::string name) {
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        param_storage.erase(name);
+        std::cout << "Successfully deleted " << name << std::endl;
+    }
+}
+
 std::vector<std::string> ParameterStorage::list_bool() {
     return list_names(ParameterType::Bool);
 }

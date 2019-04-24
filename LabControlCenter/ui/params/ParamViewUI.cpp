@@ -144,9 +144,16 @@ bool ParamViewUI::get_selected_row(std::string &name, std::string &type, std::st
 }
 
 void ParamViewUI::delete_selected_row() {
-    //Parameters cannot be deleted when the edit/create window is opened
+    //Parameters cannot be deleted when the edit/create window is opened (or when another parameter has not yet been deleted)
     if (! parameter_view_unchangeable.exchange(true)) {
         Glib::RefPtr<Gtk::TreeSelection> selection = parameters_list_tree->get_selection();
+        //Also get the name of the deleted parameter to delete it in the storage object
+        std::string name;
+        if (selection->get_selected()) {
+            Gtk::TreeModel::Row row = *(selection->get_selected());
+            Glib::ustring name_ustring(row[model_record.column_name]); //Access name of row
+            name = name_ustring;
+        }
         std::vector<Gtk::TreeModel::Path> paths = selection->get_selected_rows();
 
         // convert all of the paths to RowReferences
@@ -162,6 +169,9 @@ void ParamViewUI::delete_selected_row() {
             Gtk::TreeModel::iterator treeiter = parameter_list_storage->get_iter(i->get_path());
             parameter_list_storage->erase(treeiter);
         }
+
+        //Remove data from parameter storage
+        parameter_storage->delete_parameter(name);
 
         parameter_view_unchangeable.store(false);
     }
