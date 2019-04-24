@@ -1,3 +1,5 @@
+#pragma once
+
 #include "cpm/dds/Parameter.hpp"
 #include <string>
 

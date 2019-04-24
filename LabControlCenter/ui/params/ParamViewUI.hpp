@@ -4,6 +4,7 @@
 #include "ParamModelRecord.hpp"
 #include "ParamsCreateView.hpp"
 #include "ParameterStorage.hpp"
+#include "ParameterWithDescription.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -12,6 +13,7 @@
 #include <string>
 #include <atomic>
 #include <memory>
+#include <sstream>
 
 class ParamViewUI {
 private:
@@ -50,6 +52,9 @@ private:
     std::shared_ptr<ParamsCreateView> create_window;
     std::atomic<bool> parameter_view_unchangeable; //If true, another window is opened that might modify parameters, thus other modification is not allowed
     bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
+
+    //Read data from parameter storage
+    void read_storage_data();
 
     //Manipulate rows
     bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);

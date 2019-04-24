@@ -41,25 +41,6 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage) :
     parameter_list_storage = Gtk::ListStore::create(model_record);
     parameters_list_tree->set_model(parameter_list_storage);
 
-    //Create some sample rows for model_record
-    Gtk::TreeModel::Row row = *(parameter_list_storage->append());
-    row[model_record.column_name] = "some_bool";
-    row[model_record.column_type] = "bool";
-    row[model_record.column_value] = "true";
-    row[model_record.column_info] = "does things";
-
-    row = *(parameter_list_storage->append());
-    row[model_record.column_name] = "an_int";
-    row[model_record.column_type] = "int";
-    row[model_record.column_value] = "1231234";
-    row[model_record.column_info] = "does other things";
-
-    row = *(parameter_list_storage->append());
-    row[model_record.column_name] = "hey_a_list";
-    row[model_record.column_type] = "int list";
-    row[model_record.column_value] = "[3,2,6,8,2,1,5,6,222,444,555,777,111,12334554656253]";
-    row[model_record.column_info] = "does listy things";
-
     //Use model_record, add it to the view
     parameters_list_tree->append_column("Name", model_record.column_name);
     parameters_list_tree->append_column("Type", model_record.column_type);
@@ -74,6 +55,8 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage) :
         parameters_list_tree->get_column(i)->set_expand(true);
     }
 
+    //Read all param data
+    read_storage_data();
 
     //Delete button listener
     parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
@@ -82,6 +65,59 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage) :
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
     parameters_button_create->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_create_window));
     parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
+}
+
+void ParamViewUI::read_storage_data() {
+    //Read all rows
+    for (ParameterWithDescription param : parameter_storage->get_all_parameters()) {
+        Gtk::TreeModel::Row row = *(parameter_list_storage->append());
+
+        Glib::ustring name_ustring(param.parameter_data.name());
+        Glib::ustring type_ustring;
+        Glib::ustring value_ustring;
+
+        if (param.parameter_data.type() == ParameterType::Bool) {
+            type_ustring = "Bool";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.value_bool();
+            value_ustring = value_stream.str();
+        }
+        else if (param.parameter_data.type() == ParameterType::Int32) {
+            type_ustring = "Int32";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.values_int32().at(0);
+            value_ustring = value_stream.str();
+        }
+        else if (param.parameter_data.type() == ParameterType::Double) {
+            type_ustring = "Double";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.values_double().at(0);
+            value_ustring = value_stream.str();
+        }
+        else if (param.parameter_data.type() == ParameterType::String) {
+            type_ustring = "String";
+            value_ustring = param.parameter_data.value_string();
+        }
+        else if (param.parameter_data.type() == ParameterType::Vector_Int32) {
+            type_ustring = "Vector_Int32";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.values_int32();
+            value_ustring = value_stream.str();
+        }
+        else if (param.parameter_data.type() == ParameterType::Vector_Double) {
+            type_ustring = "Vector_Double";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.values_double();
+            value_ustring = value_stream.str();
+        }
+
+        Glib::ustring info_ustring(param.parameter_description);
+
+        row[model_record.column_name] = name_ustring;
+        row[model_record.column_type] = type_ustring;
+        row[model_record.column_value] = value_ustring;
+        row[model_record.column_info] = info_ustring;
+    }
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {

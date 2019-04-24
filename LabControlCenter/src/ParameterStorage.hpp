@@ -70,6 +70,8 @@ public:
     std::vector<std::string> list_string();
     std::vector<std::string> list_ints();
     std::vector<std::string> list_doubles();
+
+    std::vector<ParameterWithDescription> get_all_parameters();
 private:
     std::vector<std::string> list_names(ParameterType type);
 

@@ -6,9 +6,9 @@ ParameterStorage::ParameterStorage(std::string _filename)
 }
 
 void ParameterStorage::loadFile(std::string _filename) {
-    std::lock_guard<std::mutex> lock(param_storage_mutex);
-
+    std::unique_lock<std::mutex> lock(param_storage_mutex);
     param_storage.clear();
+    lock.unlock();
 
     YAML::Node parsedFile = YAML::LoadFile(_filename);
 
@@ -340,4 +340,13 @@ std::vector<std::string> ParameterStorage::list_names(ParameterType type) {
         }
     }
     return param_names;
+}
+
+std::vector<ParameterWithDescription> ParameterStorage::get_all_parameters() {
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    std::vector<ParameterWithDescription> params;
+    for (auto const& entry : param_storage) {
+        params.push_back(entry.second);
+    }
+    return params;
 }
