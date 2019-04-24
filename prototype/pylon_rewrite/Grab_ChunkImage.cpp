@@ -55,10 +55,23 @@ int main(int argc, char* argv[])
         camera.ChunkSelector.SetValue(ChunkSelector_Timestamp);
         camera.ChunkEnable.SetValue(true);
 
-
         // Enable CRC checksum chunks.
         camera.ChunkSelector.SetValue(ChunkSelector_PayloadCRC16);
         camera.ChunkEnable.SetValue(true);
+
+        // Set fixed FPS
+        camera.AcquisitionFrameRateEnable.SetValue(true);
+        camera.AcquisitionFrameRate.SetValue(90);
+        camera.DeviceLinkThroughputLimitMode.SetValue(DeviceLinkThroughputLimitMode_Off);
+
+
+        // Set lowest gain, results in lowest image noise
+        camera.GainAuto.SetValue(GainAuto_Off);
+        camera.Gain.SetValue(camera.Gain.GetMin());
+
+        // Set exposure
+        camera.ExposureAuto.SetValue(ExposureAuto_Off);
+        camera.ExposureTime.SetValue(1000);
 
 
         camera.StartGrabbing();
