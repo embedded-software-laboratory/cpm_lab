@@ -1,5 +1,8 @@
 #include "CameraStream.h"
 
+#include <pylon/usb/BaslerUsbInstantCamera.h>
+using namespace Pylon;
+using namespace Basler_UsbCameraParams;
 
 CameraStream::CameraStream(const std::string &serial_number)
 	: Camera(serial_number)
@@ -47,8 +50,6 @@ void CameraStream::addToQueue(Pylon::GrabResult &result) {
 void CameraStream::grabbingImages() {
 	Pylon::PylonAutoInitTerm autoInitTerm;
 
-	double error_tolerance = 10;
-	double num_error = 0;
 
 	try
 	{
@@ -79,6 +80,11 @@ void CameraStream::grabbingImages() {
 		camera.Width.SetValue(camera.Width.GetMax());
 		camera.Height.SetValue(camera.Height.GetMax());
 
+
+        // Set lowest gain, results in lowest image noise
+        camera.GainAuto.SetValue(GainAuto_Off);
+        camera.Gain.SetValue(camera.Gain.GetMin());
+
 		// Continuous mode, no external trigger used
 		camera.TriggerSelector.SetValue(Basler_UsbCameraParams::TriggerSelector_FrameStart);
 		camera.TriggerMode.SetValue(Basler_UsbCameraParams::TriggerMode_Off);
@@ -88,6 +94,11 @@ void CameraStream::grabbingImages() {
 		camera.ExposureMode.SetValue(Basler_UsbCameraParams::ExposureMode_Timed);
 		camera.ExposureAuto.FromString("Off");
 		camera.ExposureTime.SetValue(GlobalDataHelper::getInstance().getGlobalConst().EXPOSURE_TIME);
+
+        // Set fixed FPS
+        camera.AcquisitionFrameRateEnable.SetValue(true);
+        camera.AcquisitionFrameRate.SetValue(50);
+        camera.DeviceLinkThroughputLimitMode.SetValue(DeviceLinkThroughputLimitMode_Off);
 
 		
 		// check whether stream grabbers are avalaible
@@ -138,13 +149,6 @@ void CameraStream::grabbingImages() {
 					// Get an item from the grabber's output queue
 					if (!StreamGrabber.RetrieveResult(Result)) {
 						std::cerr << "Failed to retrieve an item from the output queue" << std::endl;
-						num_error++;
-						if (num_error >= error_tolerance) {
-							break;
-						}
-						else {
-							continue;
-						}
 					}
 					if (Result.Succeeded()) {
 						// Grabbing was successful. Process the image.
@@ -152,26 +156,12 @@ void CameraStream::grabbingImages() {
 					}
 					else {
 						std::cerr << "Grab failed: " << Result.GetErrorDescription() << std::endl;
-						num_error++;
-						if (num_error >= error_tolerance) {
-							break;
-						}
-						else {
-							continue;
-						}
 					}
 					// Requeue the buffer
 					StreamGrabber.QueueBuffer(Result.Handle(), Result.Context());
 				}
 				else {
 					std::cerr << "timeout occurred when waiting for a grabbed image" << std::endl;
-					num_error++;
-					if (num_error >= error_tolerance) {
-						break;
-					}
-					else {
-						continue;
-					}
 				}
 			}
 

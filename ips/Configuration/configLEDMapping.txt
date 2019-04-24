@@ -1,7 +1,7 @@
 "reference Line": [0, 0, 0] [3.1, 0, 0]
 "HEIGHT_VEHICLE": 0.06
 "HEIGHT_VEHICLE_ROOF": 0.075
-"Exposure Time": 200
+"Exposure Time": 100
 
 "Camera Frequency": 50.58
 "Vehicle Geometrie": [-0.082, 0.017, HEIGHT_VEHICLE], [-0.082, -0.017, HEIGHT_VEHICLE], [0.082, 0.0, HEIGHT_VEHICLE]; [-0.01, 0.0, HEIGHT_VEHICLE_ROOF]

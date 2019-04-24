@@ -74,6 +74,8 @@ TimedPoints ImageHolderLED::getPointsInImage(const TimedImage &image) {
 		}
 	}
 
+	std::cout << "Found " << points.size() << " LEDs in image" << std::endl;
+
 	if (simulation) {
 		undistortedPoints = points;
 	}

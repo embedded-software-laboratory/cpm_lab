@@ -65,7 +65,7 @@ bool TargetLED::addNewImage(const TimedPoints &points) {
 
 void TargetLED::adaptCounters(const TimedPoints &points) {
 	//check if following image
-	if (counter != 0 && points.timestamp - timestamp > 20000000) {
+	if (counter != 0 && points.timestamp - timestamp > 22000000) {
 		std::cout << "not following image " << points.timestamp - timestamp << std::endl;
 		//distance more than 20ms -> one image is missing
 		bool ledState = points.points.size() != GlobalDataHelper::getInstance().getGeometrie().getNumberOfPositionPoints();
