@@ -43,7 +43,7 @@ MainWindow::MainWindow(
         window_LCC->get_size(width, height);
 
 
-        pane1->set_position(height-300);
+        pane1->set_position(height-380);
         pane2->set_position(width-300);
         return false;
     }, 200);

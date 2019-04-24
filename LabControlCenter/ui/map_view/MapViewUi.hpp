@@ -32,9 +32,9 @@ class MapViewUi
 
     int vehicle_id_in_focus = -1;
 
-    double zoom = 200.5;
-    double pan_x = 318.2;
-    double pan_y = 819;
+    double zoom = 190.5;
+    double pan_x = 321.28;
+    double pan_y = 770.15;
 
     double mouse_x = 0;
     double mouse_y = 0;

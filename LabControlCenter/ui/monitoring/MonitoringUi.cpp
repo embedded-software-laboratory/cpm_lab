@@ -110,7 +110,8 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                             else if(value > 6.3) label->get_style_context()->add_class("warn");
                             else                 label->get_style_context()->add_class("alert");
                         }
-                        else if(rows[i] == "clock_delta") {
+                        else if(rows[i] == "clock_delta") 
+                        {
                             label->get_style_context()->remove_class("ok");
                             label->get_style_context()->remove_class("warn");
                             label->get_style_context()->remove_class("alert");
@@ -120,10 +121,22 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
                             else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
                             else                       label->get_style_context()->add_class("alert");
                         }
+                        else if(rows[i].substr(0,3) == "ips") 
+                        {
+                            label->get_style_context()->remove_class("alert");
+                            if(i % 2 == 1) label->get_style_context()->add_class("zebra");
+                        }
+
                     }
                     else 
                     {
                         label->set_text("---");
+
+                        if(rows[i].substr(0,3) == "ips") 
+                        {
+                            label->get_style_context()->add_class("alert");
+                            label->get_style_context()->remove_class("zebra");
+                        }
                     }
                 }
             }

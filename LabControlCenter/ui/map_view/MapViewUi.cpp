@@ -55,6 +55,8 @@ MapViewUi::MapViewUi(
             zoom *= zoom_speed;
         }
 
+        //std::cout << pan_x << " " << pan_y << " " << zoom << std::endl;
+
         return true; 
     });
 
