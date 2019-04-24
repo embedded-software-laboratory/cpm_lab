@@ -153,7 +153,7 @@ namespace cpm {
                 //Error if deadline was missed, correction to next deadline
                 if (current_time >= deadline)
                 {
-                    Logging::Instance().write("TimerFD: Deadline: %" PRIu64 ", current time: %" PRIu64 ", periods missed: %" PRIu64, deadline, current_time, (current_time - deadline) / period_nanoseconds);
+                    Logging::Instance().write("TimerFD: Deadline: %" PRIu64 ", current time: %" PRIu64 ", periods missed: %" PRIu64, deadline, current_time, ((current_time - deadline) / period_nanoseconds) + 1);
 
                     deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
                 }
