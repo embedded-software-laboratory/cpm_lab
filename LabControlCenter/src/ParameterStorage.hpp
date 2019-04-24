@@ -31,7 +31,7 @@ public:
     /**
      * \brief Load YAML file into memory, use mutex
      */
-    void reloadFile(std::string _filename);
+    void loadFile(std::string _filename);
     /**
      * \brief Store current configuration in YAML file
      */
@@ -70,12 +70,8 @@ public:
     std::vector<std::string> list_string();
     std::vector<std::string> list_ints();
     std::vector<std::string> list_doubles();
-    std::vector<std::string> list_names(ParameterType type);
 private:
-    /**
-     * \brief Load YAML file into memory
-     */
-    void loadFile(std::string _filename);
+    std::vector<std::string> list_names(ParameterType type);
 
     /**
      * Float / double precision for YAML

@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <mutex>
+#include <memory>
 
 #include "Parameter.hpp"
 #include "ParameterRequest.hpp"
@@ -31,7 +32,7 @@ private:
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
 public:
-    ParameterServer(ParameterStorage& _storage);
+    ParameterServer(std::shared_ptr<ParameterStorage> _storage);
     
-    ParameterStorage& storage;
+    std::shared_ptr<ParameterStorage> storage;
 };

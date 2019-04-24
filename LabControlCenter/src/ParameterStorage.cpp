@@ -5,15 +5,11 @@ ParameterStorage::ParameterStorage(std::string _filename)
     loadFile(_filename);
 }
 
-void ParameterStorage::reloadFile(std::string _filename) {
+void ParameterStorage::loadFile(std::string _filename) {
     std::lock_guard<std::mutex> lock(param_storage_mutex);
 
     param_storage.clear();
 
-    loadFile(_filename);
-}
-
-void ParameterStorage::loadFile(std::string _filename) {
     YAML::Node parsedFile = YAML::LoadFile(_filename);
 
     YAML::Node params = parsedFile["parameters"];

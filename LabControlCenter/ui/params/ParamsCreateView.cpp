@@ -14,6 +14,8 @@ ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, 
 {
     init_members();
 
+    params_create_add_button->set_label("Save");
+
     //Create fields with given values - TODO field types depend on input type, listener for type change
     create_inputs(name, type, value, info);
 }

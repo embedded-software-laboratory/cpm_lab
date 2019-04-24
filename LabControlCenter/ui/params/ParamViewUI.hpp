@@ -3,6 +3,7 @@
 #include "defaults.hpp"
 #include "ParamModelRecord.hpp"
 #include "ParamsCreateView.hpp"
+#include "ParameterStorage.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -14,6 +15,9 @@
 
 class ParamViewUI {
 private:
+    //Storage for all parameters
+    std::shared_ptr<ParameterStorage> parameter_storage;
+
     Glib::RefPtr<Gtk::Builder> params_builder;
 
     Gtk::Widget* parent;
@@ -55,7 +59,7 @@ private:
     void open_param_create_window();
     void open_param_edit_window();
 public:
-    ParamViewUI();
+    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage);
     Gtk::Widget* get_parent();
     
     //Callback: Allow to only create another create window when the former window was closed

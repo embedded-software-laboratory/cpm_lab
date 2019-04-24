@@ -1,6 +1,7 @@
 #include "ParamViewUI.hpp"
 
-ParamViewUI::ParamViewUI()
+ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage) :
+    parameter_storage(_parameter_storage)
 {
     params_builder = Gtk::Builder::create_from_file("ui/params/params.glade");
 

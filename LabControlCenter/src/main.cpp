@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     cpm::Logging::Instance().set_id("LabControlCenter");
 
-    ParameterStorage storage("parameters.yaml");
+    auto storage = make_shared<ParameterStorage>("parameters.yaml");
     ParameterServer server(storage);
 
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto paramViewUi = make_shared<ParamViewUI>();
+    auto paramViewUi = make_shared<ParamViewUI>(storage);
     auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
