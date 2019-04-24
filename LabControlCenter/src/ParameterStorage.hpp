@@ -5,6 +5,8 @@
  * \brief This class can be used in combination with yaml files and the parameter server. Do not confuse this class with the class in the cpm lib! That class is used on the client's side.
  */
 
+#include "ParameterWithDescription.hpp"
+
 #include <yaml-cpp/yaml.h>
 #include <vector>
 #include <string>
@@ -39,13 +41,14 @@ public:
      * \param name name of the parameter
      * \param value new value of the parameter
      */
-    void set_parameter_bool(std::string name, bool value);
-    void set_parameter_int(std::string name, int32_t value);
-    void set_parameter_double(std::string name, double value);
-    void set_parameter_string(std::string name, std::string value);
-    void set_parameter_string(std::string name, const char* value);
-    void set_parameter_ints(std::string name, std::vector<int32_t> value);
-    void set_parameter_doubles(std::string name, std::vector<double> value);
+    void set_parameter_bool(std::string name, bool value, std::string info);
+    void set_parameter_int(std::string name, int32_t value, std::string info);
+    void set_parameter_double(std::string name, double value, std::string info);
+    void set_parameter_string(std::string name, std::string value, std::string info);
+    void set_parameter_string(std::string name, const char* value, std::string info);
+    void set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info);
+    void set_parameter_doubles(std::string name, std::vector<double> value, std::string info);
+    void set_parameter(std::string name, ParameterWithDescription param);
     /**
      * \brief Get the value of a parameter
      * \param name name of the parameter
@@ -78,19 +81,9 @@ private:
      */
     int PRECISION = 32;
 
-    //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
-    std::map<std::string, bool> param_bool;
-    std::map<std::string, int32_t> param_int;
-    std::map<std::string, double> param_double;
-    std::map<std::string, std::string> param_string;
-    std::map<std::string, std::vector<int32_t>> param_ints;
-    std::map<std::string, std::vector<double>> param_doubles;
+    //Parameter storage
+    std::map<std::string, ParameterWithDescription> param_storage;
 
-    //Mutex for each map
-    std::mutex param_bool_mutex;
-    std::mutex param_int_mutex;
-    std::mutex param_double_mutex;
-    std::mutex param_string_mutex;
-    std::mutex param_ints_mutex;
-    std::mutex param_doubles_mutex;
+    //Mutex for the map
+    std::mutex param_storage_mutex;
 };

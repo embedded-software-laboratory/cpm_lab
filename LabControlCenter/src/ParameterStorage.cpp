@@ -6,19 +6,9 @@ ParameterStorage::ParameterStorage(std::string _filename)
 }
 
 void ParameterStorage::reloadFile(std::string _filename) {
-    std::lock_guard<std::mutex> b_lock(param_bool_mutex);
-    std::lock_guard<std::mutex> i_lock(param_int_mutex);
-    std::lock_guard<std::mutex> d_lock(param_double_mutex);
-    std::lock_guard<std::mutex> s_lock(param_string_mutex);
-    std::lock_guard<std::mutex> is_lock(param_ints_mutex);
-    std::lock_guard<std::mutex> ds_lock(param_doubles_mutex);
+    std::lock_guard<std::mutex> lock(param_storage_mutex);
 
-    param_bool.clear();
-    param_int.clear();
-    param_double.clear();
-    param_string.clear();
-    param_ints.clear();
-    param_doubles.clear();
+    param_storage.clear();
 
     loadFile(_filename);
 }
@@ -161,115 +151,167 @@ void ParameterStorage::storeFile(std::string _filename) {
     fileStream.close();
 }
 
-void ParameterStorage::set_parameter_bool(std::string name, bool value) {
-    std::lock_guard<std::mutex> u_lock(param_bool_mutex);
-    if (param_bool.find(name) != param_bool.end()) {
-        param_bool[name] = value;
+void ParameterStorage::set_parameter(std::string name, ParameterWithDescription param) {
+    std::lock_guard<std::mutex> u_lock(param_storage);
+    if (param_storage.find(name) != param_storage.end()) {
+        param_storage[name] = param;
     }
     else {
-        param_bool.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_int(std::string name, int32_t value) {
-    std::lock_guard<std::mutex> u_lock(param_int_mutex);
-    if (param_int.find(name) != param_int.end()) {
-        param_int[name] = value;
-    }
-    else {
-        param_int.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_double(std::string name, double value) {
-    std::lock_guard<std::mutex> u_lock(param_double_mutex);
-    if (param_double.find(name) != param_double.end()) {
-        param_double[name] = value;
-    }
-    else {
-        param_double.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_string(std::string name, std::string value) {
-    std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    if (param_string.find(name) != param_string.end()) {
-        param_string[name] = value;
-    }
-    else {
-        param_string.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_string(std::string name, const char* value) {
-    std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    if (param_string.find(name) != param_string.end()) {
-        param_string[name] = value;
-    }
-    else {
-        param_string.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_ints(std::string name, std::vector<int32_t> value) {
-    std::lock_guard<std::mutex> u_lock(param_ints_mutex);
-    if (param_ints.find(name) != param_ints.end()) {
-        param_ints[name] = value;
-    }
-    else {
-        param_ints.emplace(name, value);
-    }
-}
-void ParameterStorage::set_parameter_doubles(std::string name, std::vector<double> value) {
-    std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
-    if (param_doubles.find(name) != param_doubles.end()) {
-        param_doubles[name] = value;
-    }
-    else {
-        param_doubles.emplace(name, value);
+        param_storage.emplace(name, param);
     }
 }
 
+void ParameterStorage::set_parameter_bool(std::string name, bool value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::Bool);
+    param.parameter_data.value_bool(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_int(std::string name, int32_t value, std::string info) {
+    std::vector<int32_t> stdInts;
+    stdInts.push_back(intParam);
+    rti::core::vector<int32_t> ints(stdInts);
+
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::Int32);
+    param.parameter_data.values_int32(ints);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_double(std::string name, double value, std::string info) {
+    std::vector<double> stdDoubles;
+    stdDoubles.push_back(doubleParam);
+    rti::core::vector<double> doubles(stdDoubles);
+
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::Double);
+    param.parameter_data.values_double(doubles);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_string(std::string name, std::string value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::String);
+    param.parameter_data.value_string(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_string(std::string name, const char* value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::String);
+    param.parameter_data.value_string(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::Vector_Int32);
+    param.parameter_data.values_int32(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
+void ParameterStorage::set_parameter_doubles(std::string name, std::vector<double> value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::Vector_Double);
+    param.parameter_data.values_double(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
+
 bool ParameterStorage::get_parameter_bool(std::string name, bool& value) {
-    std::lock_guard<std::mutex> u_lock(param_bool_mutex);
-    if (param_bool.find(name) != param_bool.end()) {
-        value = param_bool[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::Bool) {
+            value = (param_storage[name]).parameter_data.value_bool();
+            return true;
+        }
     }
     return false;
 }
 bool ParameterStorage::get_parameter_int(std::string name, int32_t& value) {
-    std::lock_guard<std::mutex> u_lock(param_int_mutex);
-    if (param_int.find(name) != param_int.end()) {
-        value = param_int[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::Int32) {
+            value = (param_storage[name]).parameter_data.values_int().get(0);
+            return true;
+        }
     }
     return false;
 }
 bool ParameterStorage::get_parameter_double(std::string name, double& value) {
-    std::lock_guard<std::mutex> u_lock(param_double_mutex);
-    if (param_double.find(name) != param_double.end()) {
-        value = param_double[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::Double) {
+            value = (param_storage[name]).parameter_data.values_double().get(0);
+            return true;
+        }
     }
     return false;
 }
 bool ParameterStorage::get_parameter_string(std::string name, std::string& value) {
-    std::lock_guard<std::mutex> u_lock(param_string_mutex);
-    if (param_string.find(name) != param_string.end()) {
-        value = param_string[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::String) {
+            value = (param_storage[name]).parameter_data.value_string();
+            return true;
+        }
     }
     return false;
 }
 bool ParameterStorage::get_parameter_ints(std::string name, std::vector<int32_t>& value) {
-    std::lock_guard<std::mutex> u_lock(param_ints_mutex);
-    if (param_ints.find(name) != param_ints.end()) {
-        value = param_ints[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::Vector_Int32) {
+            rti::core::vector<int32_t>& rti_vector = (param_storage[name]).parameter_data.values_int();
+            value.clear();
+            for (int32_t val : rti_vector) {
+                value.push_back(val);
+            }
+            return true;
+        }
     }
     return false;
 }
 bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<double>& value) {
-    std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
-    if (param_doubles.find(name) != param_doubles.end()) {
-        value = param_doubles[name];
-        return true;
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::Vector_Double) {
+            rti::core::vector<double>& rti_vector = (param_storage[name]).parameter_data.values_int();
+            value.clear();
+            for (double val : rti_vector) {
+                value.push_back(val);
+            }
+            return true;
+        }
     }
     return false;
 }
