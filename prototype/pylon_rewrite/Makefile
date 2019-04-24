@@ -15,16 +15,14 @@ LDFLAGS    := $(shell $(PYLON_ROOT)/bin/pylon-config --libs-rpath)
 LDLIBS     := $(shell $(PYLON_ROOT)/bin/pylon-config --libs)
 
 # Rules for building
-all: $(NAME)_GigE $(NAME)_Usb
+all: $(NAME)_Usb
 
 %: %.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-$(NAME)_GigE.o: $(NAME).cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -DUSE_GIGE -c -o $@ $<
 
 $(NAME)_Usb.o: $(NAME).cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -DUSE_USB -c -o $@ $<
 
 clean:
-	$(RM) $(NAME)_GigE.o $(NAME)_Usb.o $(NAME)_GigE $(NAME)_Usb
+	$(RM) $(NAME)_Usb.o $(NAME)_Usb
