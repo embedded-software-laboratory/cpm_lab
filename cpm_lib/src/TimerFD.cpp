@@ -209,12 +209,18 @@ namespace cpm {
         return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
     }
 
-    bool TimerFD::received_stop_signal() {
+    bool TimerFD::received_stop_signal() 
+    {
         dds::sub::LoanedSamples<SystemTrigger> samples = reader_system_trigger.take();
 
-        for (auto sample : samples) {
-            if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                return true;
+        for (auto sample : samples) 
+        {
+            if(sample.info().valid())
+            {
+                if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) 
+                {
+                    return true;
+                }
             }
         }
 
