@@ -78,7 +78,7 @@ public:
 };
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 5;
+static const uint32_t c_countOfImagesToGrab = 90;
 
 int main(int argc, char* argv[])
 {
@@ -160,28 +160,31 @@ int main(int argc, char* argv[])
 
             cout << "GrabSucceeded: " << ptrGrabResult->GrabSucceeded() << endl;
 
-            // The result data is automatically filled with received chunk data.
-            // (Note:  This is not the case when using the low-level API)
-            cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
-            cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
-            const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
-            cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl;
-
-            // Check to see if a buffer containing chunk data has been received.
-            if (PayloadType_ChunkData != ptrGrabResult->GetPayloadType())
+            if(ptrGrabResult->GrabSucceeded())
             {
-                throw RUNTIME_EXCEPTION( "Unexpected payload type received.");
-            }
 
-            // Since we have activated the CRC Checksum feature, we can check
-            // the integrity of the buffer first.
-            // Note: Enabling the CRC Checksum feature is not a prerequisite for using
-            // chunks. Chunks can also be handled when the CRC Checksum feature is deactivated.
-            if (ptrGrabResult->HasCRC() && ptrGrabResult->CheckCRC() == false)
-            {
-                throw RUNTIME_EXCEPTION( "Image was damaged!");
-            }
+                // The result data is automatically filled with received chunk data.
+                // (Note:  This is not the case when using the low-level API)
+                cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
+                cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
+                const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
+                cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl;
 
+                // Check to see if a buffer containing chunk data has been received.
+                if (PayloadType_ChunkData != ptrGrabResult->GetPayloadType())
+                {
+                    throw RUNTIME_EXCEPTION( "Unexpected payload type received.");
+                }
+
+                // Since we have activated the CRC Checksum feature, we can check
+                // the integrity of the buffer first.
+                // Note: Enabling the CRC Checksum feature is not a prerequisite for using
+                // chunks. Chunks can also be handled when the CRC Checksum feature is deactivated.
+                if (ptrGrabResult->HasCRC() && ptrGrabResult->CheckCRC() == false)
+                {
+                    throw RUNTIME_EXCEPTION( "Image was damaged!");
+                }
+            }           
             // Access the chunk data attached to the result.
             // Before accessing the chunk data, you should check to see
             // if the chunk is readable. When it is readable, the buffer
@@ -207,10 +210,6 @@ int main(int argc, char* argv[])
         << e.GetDescription() << endl;
         exitCode = 1;
     }
-
-    // Comment the following two lines to disable waiting on exit.
-    cerr << endl << "Press Enter to exit." << endl;
-    while( cin.get() != '\n');
 
     // Releases all pylon resources. 
     PylonTerminate(); 
