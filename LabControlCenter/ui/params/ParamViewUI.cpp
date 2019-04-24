@@ -72,52 +72,64 @@ void ParamViewUI::read_storage_data() {
     for (ParameterWithDescription param : parameter_storage->get_all_parameters()) {
         Gtk::TreeModel::Row row = *(parameter_list_storage->append());
 
-        Glib::ustring name_ustring(param.parameter_data.name());
-        Glib::ustring type_ustring;
-        Glib::ustring value_ustring;
+        std::string name;
+        std::string type;
+        std::string value;
+        std::string info;
 
-        if (param.parameter_data.type() == ParameterType::Bool) {
-            type_ustring = "Bool";
-            std::stringstream value_stream;
-            value_stream << param.parameter_data.value_bool();
-            value_ustring = value_stream.str();
-        }
-        else if (param.parameter_data.type() == ParameterType::Int32) {
-            type_ustring = "Int32";
-            std::stringstream value_stream;
-            value_stream << param.parameter_data.values_int32().at(0);
-            value_ustring = value_stream.str();
-        }
-        else if (param.parameter_data.type() == ParameterType::Double) {
-            type_ustring = "Double";
-            std::stringstream value_stream;
-            value_stream << param.parameter_data.values_double().at(0);
-            value_ustring = value_stream.str();
-        }
-        else if (param.parameter_data.type() == ParameterType::String) {
-            type_ustring = "String";
-            value_ustring = param.parameter_data.value_string();
-        }
-        else if (param.parameter_data.type() == ParameterType::Vector_Int32) {
-            type_ustring = "Vector_Int32";
-            std::stringstream value_stream;
-            value_stream << param.parameter_data.values_int32();
-            value_ustring = value_stream.str();
-        }
-        else if (param.parameter_data.type() == ParameterType::Vector_Double) {
-            type_ustring = "Vector_Double";
-            std::stringstream value_stream;
-            value_stream << param.parameter_data.values_double();
-            value_ustring = value_stream.str();
-        }
+        parameter_to_string(param, name, type, value, info);
 
-        Glib::ustring info_ustring(param.parameter_description);
+        Glib::ustring name_ustring(name);
+        Glib::ustring type_ustring(type);
+        Glib::ustring value_ustring(value);
+        Glib::ustring info_ustring(info);
 
         row[model_record.column_name] = name_ustring;
         row[model_record.column_type] = type_ustring;
         row[model_record.column_value] = value_ustring;
         row[model_record.column_info] = info_ustring;
     }
+}
+
+void ParamViewUI::parameter_to_string(ParameterWithDescription& param, std::string &name, std::string &type, std::string &value, std::string &info) {
+    name = param.parameter_data.name();
+    
+    if (param.parameter_data.type() == ParameterType::Bool) {
+        type = "Bool";
+        std::stringstream value_stream;
+        value_stream << param.parameter_data.value_bool();
+        value = value_stream.str();
+    }
+    else if (param.parameter_data.type() == ParameterType::Int32) {
+        type = "Int32";
+        std::stringstream value_stream;
+        value_stream << param.parameter_data.values_int32().at(0);
+        value = value_stream.str();
+    }
+    else if (param.parameter_data.type() == ParameterType::Double) {
+        type = "Double";
+        std::stringstream value_stream;
+        value_stream << param.parameter_data.values_double().at(0);
+        value = value_stream.str();
+    }
+    else if (param.parameter_data.type() == ParameterType::String) {
+        type = "String";
+        value = param.parameter_data.value_string();
+    }
+    else if (param.parameter_data.type() == ParameterType::Vector_Int32) {
+        type = "Vector_Int32";
+        std::stringstream value_stream;
+        value_stream << param.parameter_data.values_int32();
+        value = value_stream.str();
+    }
+    else if (param.parameter_data.type() == ParameterType::Vector_Double) {
+        type = "Vector_Double";
+        std::stringstream value_stream;
+        value_stream << param.parameter_data.values_double();
+        value = value_stream.str();
+    }
+
+    info = param.parameter_description;
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {
@@ -209,8 +221,15 @@ void ParamViewUI::open_param_edit_window() {
     } 
 }
 
-void ParamViewUI::window_on_close_callback(std::string name, std::string type, std::string value, std::string info) {
-    if (name != "" && type != "" && value != "") {
+void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool valid_parameter) {
+    if (valid_parameter) {
+        std::string name;
+        std::string type;
+        std::string value;
+        std::string info;
+
+        parameter_to_string(param)
+
         Glib::ustring name_ustring = name;
         Glib::ustring type_ustring = type;
         Glib::ustring value_ustring = value;
@@ -222,7 +241,6 @@ void ParamViewUI::window_on_close_callback(std::string name, std::string type, s
         Gtk::TreeModel::iterator iter = parameters_list_tree->get_selection()->get_selected();
         if(iter && !create_window_open) //If anything is selected and if param modification window was opened
         {
-            std::cout << "Getting the row..." << std::endl;
             row = *iter;
         }
         else if (create_window_open) { //Create a new parameter
@@ -230,12 +248,12 @@ void ParamViewUI::window_on_close_callback(std::string name, std::string type, s
         }
 
         if (create_window_open || iter) {
-            std::cout << "Trying to store the new data " << name_ustring << std::endl;
-
             row[model_record.column_name] = name_ustring;
             row[model_record.column_type] = type_ustring;
             row[model_record.column_value] = value_ustring;
             row[model_record.column_info] = info_ustring;
+
+            param_storage->set_parameter(name, param);
         }
     }
 

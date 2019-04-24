@@ -20,7 +20,7 @@
 class ParameterStorage {
 public:
     //Constructor
-    ParameterStorage(std::string _filename);
+    ParameterStorage(std::string _filename, int precision);
 
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
@@ -80,6 +80,8 @@ public:
     std::vector<std::string> list_doubles();
 
     std::vector<ParameterWithDescription> get_all_parameters();
+
+    int get_precision();
 private:
     std::vector<std::string> list_names(ParameterType type);
 

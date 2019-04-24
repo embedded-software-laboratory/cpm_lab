@@ -1,6 +1,7 @@
 #include "ParameterStorage.hpp"
 
-ParameterStorage::ParameterStorage(std::string _filename)
+ParameterStorage::ParameterStorage(std::string _filename, int precision) :
+    PRECISION(precision)
 {
     loadFile(_filename);
 }
@@ -70,6 +71,10 @@ void ParameterStorage::loadFile(std::string _filename) {
         }
         set_parameter_doubles(outer_it->first.as<std::string>(), doubles);
     }
+}
+
+int ParameterStorage::get_precision() {
+    return PRECISION;
 }
 
 void ParameterStorage::storeFile(std::string _filename) {

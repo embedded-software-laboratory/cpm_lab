@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 {
     cpm::Logging::Instance().set_id("LabControlCenter");
 
-    auto storage = make_shared<ParameterStorage>("parameters.yaml");
+    auto storage = make_shared<ParameterStorage>("parameters.yaml", 32);
     ParameterServer server(storage);
 
 

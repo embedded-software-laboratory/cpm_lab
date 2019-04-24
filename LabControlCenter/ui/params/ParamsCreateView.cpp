@@ -1,6 +1,6 @@
 #include "ParamsCreateView.hpp"
 
-ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> _on_close_callback) :
+ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
     init_members();
@@ -9,7 +9,7 @@ ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, 
     create_inputs("","","","");
 }
 
-ParamsCreateView::ParamsCreateView(std::function<void(std::string, std::string, std::string, std::string)> _on_close_callback, std::string name, std::string type, std::string value, std::string info) :
+ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::string name, std::string type, std::string value, std::string info) :
     on_close_callback(_on_close_callback)
 {
     init_members();
@@ -92,4 +92,27 @@ void ParamsCreateView::on_add() {
 
     window->close();
     on_close_callback(name, type, value, info);
+}
+
+bool ParamViewUI::string_to_bool(std::string str) {
+    if (str == "1" || str == "true") {
+        return true;
+    }
+    return false;
+}
+
+bool ParamViewUI::string_to_int(std::string str) {
+
+}
+
+bool ParamViewUI::string_to_double(std::string str) {
+
+}
+
+bool ParamViewUI::string_to_int_vector(std::string str) {
+
+}
+
+bool ParamViewUI::string_to_double_vector(std::string str) {
+
 }

@@ -55,6 +55,7 @@ private:
 
     //Read data from parameter storage
     void read_storage_data();
+    void parameter_to_string(ParameterWithDescription& param, std::string &name, std::string &type, std::string &value, std::string &info);
 
     //Manipulate rows
     bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
@@ -69,5 +70,5 @@ public:
     
     //Callback: Allow to only create another create window when the former window was closed
     //Handles callback for close and for create operations
-    void window_on_close_callback(std::string name = "", std::string type = "", std::string value = "", std::string info = "");
+    void window_on_close_callback(ParameterWithDescription param, bool valid_parameter);
 };
