@@ -22,14 +22,15 @@ private:
 
     //Custom fields that allow to edit data
     Gtk::Entry* name_entry;
-    Gtk::Entry* type_entry;
-    Gtk::Entry* value_entry;
+    Gtk::ComboBoxText* type_entry;
+    Gtk::Entry* value_entry = nullptr;
+    Gtk::Switch* value_switch = nullptr;
     Gtk::Entry* info_entry;
 
     //Function used by both constructors
     void init_members();
     void create_inputs();
-    void create_value_input();
+    void on_type_changed(); //Changes the value input
 
     //Callback function on close (must always be called!)
     std::function<void(ParameterWithDescription, bool)> on_close_callback;
@@ -47,7 +48,8 @@ private:
 
     //Parameter object that is created or modified
     ParameterWithDescription param;
+    int float_precision; //Precision of floats
 public:
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback);
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, ParameterWithDescription param);
+    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, int float_precision);
+    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, ParameterWithDescription param, int float_precision);
 };

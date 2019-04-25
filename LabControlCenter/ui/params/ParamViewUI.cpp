@@ -1,7 +1,8 @@
 #include "ParamViewUI.hpp"
 
-ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage) :
-    parameter_storage(_parameter_storage)
+ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, int _float_precision) :
+    parameter_storage(_parameter_storage),
+    float_precision(_float_precision)
 {
     params_builder = Gtk::Builder::create_from_file("ui/params/params.glade");
 
@@ -77,7 +78,7 @@ void ParamViewUI::read_storage_data() {
         std::string value;
         std::string info;
 
-        ParameterWithDescription::parameter_to_string(param, name, type, value, info);
+        ParameterWithDescription::parameter_to_string(param, name, type, value, info, float_precision);
 
         Glib::ustring name_ustring(name);
         Glib::ustring type_ustring(type);
@@ -154,7 +155,7 @@ void ParamViewUI::open_param_create_window() {
     if(! parameter_view_unchangeable.exchange(true)) {
         parent->set_sensitive(false);
         create_window_open = true;
-        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2));
+        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), float_precision);
     } 
 }
 
@@ -174,7 +175,7 @@ void ParamViewUI::open_param_edit_window() {
             ParameterWithDescription param;
             //Get the parameter
             if (parameter_storage->get_parameter(name, param)) {
-                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), param);
+                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), param, float_precision);
             }
         }
         else {
@@ -191,7 +192,7 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
         std::string value;
         std::string info;
 
-        ParameterWithDescription::parameter_to_string(param, name, type, value, info);
+        ParameterWithDescription::parameter_to_string(param, name, type, value, info, float_precision);
 
         Glib::ustring name_ustring = name;
         Glib::ustring type_ustring = type;

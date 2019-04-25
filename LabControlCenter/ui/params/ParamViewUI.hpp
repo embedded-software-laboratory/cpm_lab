@@ -63,8 +63,11 @@ private:
     //Open edit / create window
     void open_param_create_window();
     void open_param_edit_window();
+
+    //Precision of floats
+    int float_precision;
 public:
-    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage);
+    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
     Gtk::Widget* get_parent();
     
     //Callback: Allow to only create another create window when the former window was closed

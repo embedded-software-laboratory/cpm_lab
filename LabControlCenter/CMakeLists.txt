@@ -6,9 +6,9 @@ link_libraries(dl nsl m pthread rt)
 
 # RTI DDS
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
-include_directories($ENV{NDDSHOME}/include)
-include_directories($ENV{NDDSHOME}/include/ndds)
-include_directories($ENV{NDDSHOME}/include/ndds/hpp)
+include_directories(SYSTEM $ENV{NDDSHOME}/include)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
 link_libraries(nddscpp2z nddscz nddscorez)
 link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 include_directories(src)
@@ -20,9 +20,9 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 # CPM lib
-include_directories(../../cpm_base/cpm_lib/include/)
-include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
-link_directories(../../cpm_base/cpm_lib/build/)
+include_directories(SYSTEM ../../cpm_base/cpm_lib/include/)
+include_directories(SYSTEM ../../cpm_base/cpm_lib/include/cpm/dds/)
+link_directories(SYSTEM ../../cpm_base/cpm_lib/build/)
 
 # yaml-cpp
 include_directories(../../yaml-cpp/include/)
