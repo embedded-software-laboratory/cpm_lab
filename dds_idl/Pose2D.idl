@@ -1,5 +1,0 @@
-struct Pose2D {
-    double x;    // meter
-    double y;    // meter
-    double yaw;  // radian
-};
