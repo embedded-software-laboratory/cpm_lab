@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include "ParameterWithDescription.hpp"
 
 class ParamsCreateView {
 private:

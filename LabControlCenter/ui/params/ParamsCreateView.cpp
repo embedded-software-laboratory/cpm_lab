@@ -60,7 +60,7 @@ void ParamsCreateView::create_inputs() {
 }
 
 void create_value_input() {
-    
+
 }
 
 void ParamsCreateView::init_members() {
@@ -105,7 +105,7 @@ void ParamsCreateView::on_add() {
     //on_close_callback(name, type, value, info); TODO
 }
 
-bool ParamViewUI::string_to_bool(std::string str) {
+bool ParamsCreateView::string_to_bool(std::string str) {
     if (str == "1" || str == "true") {
         return true;
     }
@@ -115,18 +115,18 @@ bool ParamViewUI::string_to_bool(std::string str) {
     return false;
 }
 
-bool ParamViewUI::string_to_int(std::string str) {
-
+bool ParamsCreateView::string_to_int(std::string str) {
+    return true;
 }
 
-bool ParamViewUI::string_to_double(std::string str) {
-
+bool ParamsCreateView::string_to_double(std::string str) {
+    return true;
 }
 
-bool ParamViewUI::string_to_int_vector(std::string str) {
-
+bool ParamsCreateView::string_to_int_vector(std::string str) {
+    return true;
 }
 
-bool ParamViewUI::string_to_double_vector(std::string str) {
-
+bool ParamsCreateView::string_to_double_vector(std::string str) {
+    return true;
 }

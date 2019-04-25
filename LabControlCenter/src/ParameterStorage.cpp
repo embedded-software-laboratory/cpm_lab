@@ -317,7 +317,7 @@ bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<doubl
     return false;
 }
 
-bool get_parameter(std::string name, ParameterWithDescription& param) {
+bool ParameterStorage::get_parameter(std::string name, ParameterWithDescription& param) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         //Copy parameter

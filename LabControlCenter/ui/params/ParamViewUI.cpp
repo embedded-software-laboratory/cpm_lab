@@ -154,7 +154,7 @@ void ParamViewUI::open_param_create_window() {
     if(! parameter_view_unchangeable.exchange(true)) {
         parent->set_sensitive(false);
         create_window_open = true;
-        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4));
+        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2));
     } 
 }
 
@@ -174,7 +174,7 @@ void ParamViewUI::open_param_edit_window() {
             ParameterWithDescription param;
             //Get the parameter
             if (parameter_storage->get_parameter(name, param)) {
-                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), param);
+                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), param);
             }
         }
         else {
@@ -216,7 +216,7 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
             row[model_record.column_value] = value_ustring;
             row[model_record.column_info] = info_ustring;
 
-            param_storage->set_parameter(name, param);
+            parameter_storage->set_parameter(name, param);
         }
     }
 
