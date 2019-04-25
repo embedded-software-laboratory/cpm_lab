@@ -19,6 +19,11 @@ set(Pylon_LIBRARIES GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pyl
 
 
 
+
+include_directories(src)
+link_libraries(dl nsl m pthread rt)
+
+
 add_executable(BaslerLedDetection
     src/main_led_detection.cpp
 )
