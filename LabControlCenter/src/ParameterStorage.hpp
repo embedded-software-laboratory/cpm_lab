@@ -62,6 +62,7 @@ public:
     bool get_parameter_string(std::string name, std::string& value);
     bool get_parameter_ints(std::string name, std::vector<int32_t>& value);
     bool get_parameter_doubles(std::string name, std::vector<double>& value);
+    bool get_parameter(std::string name, ParameterWithDescription& param);
 
     /**
      * \brief Delete a parameter

@@ -6,10 +6,10 @@ ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, 
     init_members();
 
     //Create empty fields - TODO field types depend on input type, listener for type change, also TODO: unify with other constructor when final structure is known
-    create_inputs("","","","");
+    create_inputs();
 }
 
-ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::string name, std::string type, std::string value, std::string info) :
+ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, ParameterWithDescription param) :
     on_close_callback(_on_close_callback)
 {
     init_members();
@@ -17,10 +17,17 @@ ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, 
     params_create_add_button->set_label("Save");
 
     //Create fields with given values - TODO field types depend on input type, listener for type change
-    create_inputs(name, type, value, info);
+    create_inputs();
 }
 
-void ParamsCreateView::create_inputs(std::string name, std::string type, std::string value, std::string info) {
+void ParamsCreateView::create_inputs() {
+    std::string name;
+    std::string type;
+    std::string value;
+    std::string info;
+
+    ParameterWithDescription::parameter_to_string(param, name, type, value, info);
+
     Glib::ustring name_ustring = name;
     Glib::ustring type_ustring = type;
     Glib::ustring value_ustring = value;
@@ -52,6 +59,10 @@ void ParamsCreateView::create_inputs(std::string name, std::string type, std::st
     params_create_values_grid->show_all_children();
 }
 
+void create_value_input() {
+    
+}
+
 void ParamsCreateView::init_members() {
     params_create_builder = Gtk::Builder::create_from_file("ui/params/params_create.glade");
 
@@ -81,7 +92,7 @@ void ParamsCreateView::init_members() {
 
 void ParamsCreateView::on_abort() {
     window->close();
-    on_close_callback("","","","");
+    //on_close_callback("","","",""); TODO
 }
 
 void ParamsCreateView::on_add() {
@@ -91,12 +102,15 @@ void ParamsCreateView::on_add() {
     std::string info = info_entry->get_text();
 
     window->close();
-    on_close_callback(name, type, value, info);
+    //on_close_callback(name, type, value, info); TODO
 }
 
 bool ParamViewUI::string_to_bool(std::string str) {
     if (str == "1" || str == "true") {
         return true;
+    }
+    else if (str == "0" || str == "false") {
+        return false;
     }
     return false;
 }

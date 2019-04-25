@@ -27,7 +27,8 @@ private:
 
     //Function used by both constructors
     void init_members();
-    void create_inputs(std::string name, std::string type, std::string value, std::string info);
+    void create_inputs();
+    void create_value_input();
 
     //Callback function on close (must always be called!)
     std::function<void(ParameterWithDescription, bool)> on_close_callback;
@@ -42,7 +43,10 @@ private:
     bool string_to_double(std::string str);
     bool string_to_int_vector(std::string str);
     bool string_to_double_vector(std::string str);
+
+    //Parameter object that is created or modified
+    ParameterWithDescription param;
 public:
     ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback);
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, std::string _name, std::string _type, std::string _value, std::string _info);
+    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, ParameterWithDescription param);
 };

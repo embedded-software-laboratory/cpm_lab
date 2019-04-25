@@ -317,6 +317,23 @@ bool ParameterStorage::get_parameter_doubles(std::string name, std::vector<doubl
     return false;
 }
 
+bool get_parameter(std::string name, ParameterWithDescription& param) {
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        //Copy parameter
+        param.parameter_data.name(param_storage[name].parameter_data.name());
+        param.parameter_data.type(param_storage[name].parameter_data.type());
+        param.parameter_data.value_bool(param_storage[name].parameter_data.value_bool());
+        param.parameter_data.value_string(param_storage[name].parameter_data.value_string());
+        param.parameter_data.values_int32(param_storage[name].parameter_data.values_int32());
+        param.parameter_data.values_double(param_storage[name].parameter_data.values_double());
+        param.parameter_description = param_storage[name].parameter_description;
+
+        return true;
+    }
+    return false;
+}
+
 void ParameterStorage::delete_parameter(std::string name) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {

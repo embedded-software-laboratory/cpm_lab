@@ -55,7 +55,6 @@ private:
 
     //Read data from parameter storage
     void read_storage_data();
-    void parameter_to_string(ParameterWithDescription& param, std::string &name, std::string &type, std::string &value, std::string &info);
 
     //Manipulate rows
     bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);

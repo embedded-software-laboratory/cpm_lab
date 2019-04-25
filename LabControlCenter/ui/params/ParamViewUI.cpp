@@ -77,7 +77,7 @@ void ParamViewUI::read_storage_data() {
         std::string value;
         std::string info;
 
-        parameter_to_string(param, name, type, value, info);
+        ParameterWithDescription::parameter_to_string(param, name, type, value, info);
 
         Glib::ustring name_ustring(name);
         Glib::ustring type_ustring(type);
@@ -89,47 +89,6 @@ void ParamViewUI::read_storage_data() {
         row[model_record.column_value] = value_ustring;
         row[model_record.column_info] = info_ustring;
     }
-}
-
-void ParamViewUI::parameter_to_string(ParameterWithDescription& param, std::string &name, std::string &type, std::string &value, std::string &info) {
-    name = param.parameter_data.name();
-    
-    if (param.parameter_data.type() == ParameterType::Bool) {
-        type = "Bool";
-        std::stringstream value_stream;
-        value_stream << param.parameter_data.value_bool();
-        value = value_stream.str();
-    }
-    else if (param.parameter_data.type() == ParameterType::Int32) {
-        type = "Int32";
-        std::stringstream value_stream;
-        value_stream << param.parameter_data.values_int32().at(0);
-        value = value_stream.str();
-    }
-    else if (param.parameter_data.type() == ParameterType::Double) {
-        type = "Double";
-        std::stringstream value_stream;
-        value_stream << param.parameter_data.values_double().at(0);
-        value = value_stream.str();
-    }
-    else if (param.parameter_data.type() == ParameterType::String) {
-        type = "String";
-        value = param.parameter_data.value_string();
-    }
-    else if (param.parameter_data.type() == ParameterType::Vector_Int32) {
-        type = "Vector_Int32";
-        std::stringstream value_stream;
-        value_stream << param.parameter_data.values_int32();
-        value = value_stream.str();
-    }
-    else if (param.parameter_data.type() == ParameterType::Vector_Double) {
-        type = "Vector_Double";
-        std::stringstream value_stream;
-        value_stream << param.parameter_data.values_double();
-        value = value_stream.str();
-    }
-
-    info = param.parameter_description;
 }
 
 Gtk::Widget* ParamViewUI::get_parent() {
@@ -212,7 +171,11 @@ void ParamViewUI::open_param_edit_window() {
 
         //Only create an edit window if a row was selected
         if (get_selected_row(name, type, value, info)) {
-            create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), name, type, value, info);
+            ParameterWithDescription param;
+            //Get the parameter
+            if (parameter_storage->get_parameter(name, param)) {
+                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2, _3, _4), param);
+            }
         }
         else {
             parent->set_sensitive(true);
@@ -228,7 +191,7 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
         std::string value;
         std::string info;
 
-        parameter_to_string(param)
+        ParameterWithDescription::parameter_to_string(param, name, type, value, info);
 
         Glib::ustring name_ustring = name;
         Glib::ustring type_ustring = type;
