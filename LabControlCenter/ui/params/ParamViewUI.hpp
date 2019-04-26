@@ -53,7 +53,10 @@ private:
     std::atomic<bool> parameter_view_unchangeable; //If true, another window is opened that might modify parameters, thus other modification is not allowed
     bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
 
-    //Read data from parameter storage
+    //Warning window
+    Gtk::MessageDialog warning_window;
+
+    //Read all data from parameter storage
     void read_storage_data();
 
     //Manipulate rows

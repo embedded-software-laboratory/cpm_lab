@@ -206,9 +206,20 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
         if(iter && !create_window_open) //If anything is selected and if param modification window was opened
         {
             row = *iter;
+            parameter_storage->set_parameter(name, param);
         }
-        else if (create_window_open) { //Create a new parameter
+        else if (create_window_open) { //Create a new parameter only if it does not already exist
             row = *(parameter_list_storage->append());
+
+            if (parameter_storage->get_parameter(name, param) == false) {
+                parameter_storage->set_parameter(name, param);
+            }
+            else {
+                //Parameter already exists, trigger warning
+                Glib::ustring msg("Parameter " + name + " already exists");
+                warning_window = Gtk::MessageDialog(msg, false, Gtk::MessageType::MESSAGE_WARNING, Gtk::ButtonsType::BUTTONS_CLOSE, false);
+                warning_window.show_all();
+            }
         }
 
         if (create_window_open || iter) {
