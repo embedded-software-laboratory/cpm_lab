@@ -25,7 +25,10 @@ int main(int argc, char* argv[])
         cpm::get_topic<LedPoints>("ipsLedPoints")
     );
 
+    // stop previous replay
+    system("killall rtireplay");
+
     // start replay
-    system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");    
+    system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");
     return 0;
 }
