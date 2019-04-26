@@ -2,6 +2,7 @@
 #include <pylon/usb/BaslerUsbInstantCamera.h>
 #include <thread>
 #include <mutex>
+#include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -15,7 +16,19 @@ typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 typedef Pylon::CBaslerUsbImageEventHandler ImageEventHandler_t; // Or use Camera_t::ImageEventHandler_t
 typedef Pylon::CBaslerUsbGrabResultPtr GrabResultPtr_t; // Or use Camera_t::GrabResultPtr_t
 
-ThreadSafeQueue<cv::Mat> queue_images;
+struct FrameInfo
+{
+    cv::Mat image;
+    uint64_t timestamp;
+    std::vector<double> points_x;
+    std::vector<double> points_y;
+};
+
+
+
+
+ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
+ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
 
 uint64_t get_time_ns()
 {
@@ -28,12 +41,12 @@ void worker_led_detection()
 {
     while (1)
     {
-        cv::Mat img;
-        queue_images.pop(img);
+        std::shared_ptr<FrameInfo> frame;
+        queue_frames.pop(frame);
 
 
         cv::Mat img_binary;
-        cv::threshold(img, img_binary, 127, 255, cv::THRESH_BINARY);
+        cv::threshold(frame->image, img_binary, 127, 255, cv::THRESH_BINARY);
 
         std::vector<double> points_x;
         std::vector<double> points_y;
@@ -45,27 +58,37 @@ void worker_led_detection()
             double size = cv::contourArea(contour);
             if (size < 50 && size > 6) {
                 cv::Moments M = cv::moments(contour);
-                points_x.push_back((M.m10 / (M.m00 + 1e-5)));
-                points_y.push_back((M.m01 / (M.m00 + 1e-5)));
+                frame->points_x.push_back((M.m10 / (M.m00 + 1e-5)));
+                frame->points_y.push_back((M.m01 / (M.m00 + 1e-5)));
             }
         }
 
+        // TODO: DDS publish the points
 
-        // Visualization    
+        queue_visualization.push(frame);
+    }
+}
+
+
+void worker_visualization()
+{
+    while (1)
+    {
+        std::shared_ptr<FrameInfo> frame;
+        queue_visualization.pop(frame);
+
+        cv::Mat img_small;
+        cv::resize(frame->image, img_small, cv::Size(), 0.5, 0.5);
+        cv::Mat img_small_BGR;
+        cv::cvtColor(img_small, img_small_BGR, cv::COLOR_GRAY2BGR);
+
+        for (size_t i = 0; i < frame->points_x.size(); ++i)
         {
-            cv::Mat img_small;
-            cv::resize(img, img_small, cv::Size(), 0.5, 0.5);
-            cv::Mat img_small_BGR;
-            cv::cvtColor(img_small, img_small_BGR, cv::COLOR_GRAY2BGR);
-
-            for (size_t i = 0; i < points_x.size(); ++i)
-            {
-                cv::circle(img_small_BGR, cv::Point(points_x[i]/2, points_y[i]/2), 7, cv::Scalar(0,0,255));
-            }
-
-            cv::imshow( "", img_small_BGR ); 
-            cv::waitKey(1);
+            cv::circle(img_small_BGR, cv::Point(frame->points_x[i]/2, frame->points_y[i]/2), 7, cv::Scalar(0,0,255));
         }
+
+        cv::imshow( "BaslerLedDetection", img_small_BGR ); 
+        cv::waitKey(1);
     }
 }
 
@@ -126,7 +149,7 @@ void worker_grab_image()
 
         // Set exposure
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(500);
+        camera.ExposureTime.SetValue(100);
 
 
         camera.StartGrabbing();
@@ -173,8 +196,9 @@ void worker_grab_image()
                 //    cout << "TimeStamp (Result): " << ptrGrabResult->ChunkTimestamp.GetValue() << endl;
 
 
-                cv::Mat img = (cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC1, pImageBuffer)).clone();
-                queue_images.push(img);
+                auto frame = std::make_shared<FrameInfo>();
+                frame->image = (cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC1, pImageBuffer)).clone();
+                queue_frames.push(frame);
 
                 // report actual FPS
                 if(frameCount % 100 == 0)
@@ -204,6 +228,7 @@ void worker_grab_image()
 int main(int argc, char* argv[])
 {
     std::thread thread_led_detection([](){worker_led_detection();});
+    std::thread thread_visualization([](){worker_visualization();});
     worker_grab_image();
     return 0;
 }
