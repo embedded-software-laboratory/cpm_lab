@@ -20,8 +20,8 @@ https://s3.amazonaws.com/RTI/Bundles/5.3.1/Evaluation/rti_connext_dds_secure-5.3
 
 https://community.rti.com/content/forum-topic/howto-run-rti-connext-dds-raspberry-pi
 
-wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz  
-tar xvzf raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
+`wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz`  
+`tar xvzf raspbian-toolchain-gcc-4.7.2-linux64.tar.gz`
 
 Raspberry PI RTI Libraries
 
