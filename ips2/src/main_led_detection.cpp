@@ -7,6 +7,10 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <ThreadSafeQueue.hpp>
+#include "LedPoints.hpp"
+#include "cpm/get_topic.hpp"
+#include <dds/pub/ddspub.hpp>
+
 
 using namespace Pylon;
 using namespace Basler_UsbCameraParams;
@@ -39,6 +43,11 @@ uint64_t get_time_ns()
 
 void worker_led_detection()
 {
+
+    auto LED_topic = cpm::get_topic<LedPoints>("ipsLedPoints");
+    dds::pub::DataWriter<LedPoints> LED_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), LED_topic);
+
+
     while (1)
     {
         std::shared_ptr<FrameInfo> frame;
@@ -63,7 +72,15 @@ void worker_led_detection()
             }
         }
 
-        // TODO: DDS publish the points
+        // publish the points to DDS
+        LedPoints myledPoints;
+        myledPoints.time_stamp().nanoseconds(frame->timestamp);
+        myledPoints.led_points().resize(frame->points_x.size());
+        for (size_t i = 0; i < frame->points_x.size(); ++i)
+        {
+            myledPoints.led_points().at(i) = ImagePoint(frame->points_x[i], frame->points_y[i]);
+        }
+        LED_writer.write(myledPoints);
 
         queue_visualization.push(frame);
     }
