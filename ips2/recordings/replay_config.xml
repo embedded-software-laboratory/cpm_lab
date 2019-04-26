@@ -59,7 +59,7 @@
             <filename>recordings/recording_single_vehicle_manual_driving.dat_0_0</filename>
             <!-- Set the database file as writable. This is necessary when the
                  SQLite indexes of the database haven't been created yet -->
-            <readonly>false</readonly>
+            <readonly>true</readonly>
             <!-- Configuration for the output participant -->
             <participant>
                 <!-- Replay everything on domain 0 -->
