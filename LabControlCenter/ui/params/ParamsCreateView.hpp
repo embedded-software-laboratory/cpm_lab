@@ -23,8 +23,8 @@ private:
     //Custom fields that allow to edit data
     Gtk::Entry* name_entry;
     Gtk::ComboBoxText* type_entry;
-    Gtk::Entry* value_entry = nullptr;
-    Gtk::Switch* value_switch = nullptr;
+    Gtk::Entry value_entry;
+    Gtk::Switch value_switch;
     Gtk::Entry* info_entry;
 
     //Function used by both constructors
@@ -34,10 +34,15 @@ private:
 
     //Callback function on close (must always be called!)
     std::function<void(ParameterWithDescription, bool)> on_close_callback;
+    std::function<bool(std::string)> check_param_exists;
 
     //Callback functions for buttons
     void on_abort();
     void on_add();
+
+    //Callback functions for signals emitted by entries (when the user changes the input)
+    void on_value_entry_changed();
+    void on_name_entry_changed();
 
     //Helper conversion functions - also used to check data correctness? TODO
     bool string_to_bool(std::string str, bool& value); //Returns false if the argument is invalid
@@ -48,8 +53,9 @@ private:
 
     //Parameter object that is created or modified
     ParameterWithDescription param;
+    bool is_edit_window; //Behaviour different if new param created or old param edited
     int float_precision; //Precision of floats
 public:
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, int float_precision);
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, ParameterWithDescription param, int float_precision);
+    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, int float_precision);
+    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, ParameterWithDescription param, int float_precision);
 };

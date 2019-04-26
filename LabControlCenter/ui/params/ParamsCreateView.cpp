@@ -1,8 +1,10 @@
 #include "ParamsCreateView.hpp"
 
-ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, int _float_precision) :
+ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
-    float_precision(_float_precision)
+    check_param_exists(_check_param_exists),
+    float_precision(_float_precision),
+    is_edit_window(false)
 {
     init_members();
 
@@ -10,10 +12,12 @@ ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, 
     create_inputs();
 }
 
-ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, ParameterWithDescription _param, int _float_precision) :
+ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, ParameterWithDescription _param, int _float_precision) :
     on_close_callback(_on_close_callback),
+    check_param_exists(_check_param_exists),
     float_precision(_float_precision),
-    param(_param)
+    param(_param),
+    is_edit_window(true)
 {
     init_members();
 
@@ -59,6 +63,8 @@ void ParamsCreateView::create_inputs() {
     type_entry->signal_changed().connect(sigc::mem_fun(*this, &ParamsCreateView::on_type_changed) );
 
     name_entry->set_text(name_ustring);
+    name_entry->signal_changed().connect(sigc::mem_fun(this, &ParamsCreateView::on_value_entry_changed));
+
     info_entry->set_text(info_ustring);
 
     params_create_values_grid->attach(*name_entry, 1, 0, 1, 1);
@@ -80,33 +86,24 @@ void ParamsCreateView::on_type_changed() {
 
     Glib::ustring value_ustring = value;
 
-    //Delete all input fields that currently exist
-    if (value_entry != nullptr) {
-        params_create_values_grid->remove(*value_entry);
-        delete value_entry;
-        value_entry = nullptr;
-    }
-    if (value_switch != nullptr) {
-        params_create_values_grid->remove(*value_switch);
-        delete value_switch;
-        value_switch = nullptr;
-    }
+    //"Delete" all input fields that currently exist
+    params_create_values_grid->remove(value_entry);
+    params_create_values_grid->remove(value_switch);
 
     //Add "optimal" input fields depending on the chosen data types
     if (type_entry->get_active_text() == "Bool") {
-        value_switch = Gtk::manage(new Gtk::Switch());
-        value_switch->set_hexpand(true);
-        value_switch->set_vexpand(true);
-        value_switch->set_active(param.parameter_data.value_bool());
-        params_create_values_grid->attach(*value_switch, 1, 2, 1, 1);
+        value_switch.set_hexpand(true);
+        value_switch.set_vexpand(true);
+        value_switch.set_active(param.parameter_data.value_bool());
+        params_create_values_grid->attach(value_switch, 1, 2, 1, 1);
         params_create_values_grid->show_all_children();
     }
     else {
-        value_entry = Gtk::manage(new Gtk::Entry());
-        value_entry->set_hexpand(true);
-        value_entry->set_vexpand(true);
-        value_entry->set_text(value_ustring);
-        params_create_values_grid->attach(*value_entry, 1, 2, 1, 1);
+        value_entry.set_hexpand(true);
+        value_entry.set_vexpand(true);
+        value_entry.set_text(value_ustring);
+        value_entry.signal_changed().connect(sigc::mem_fun(this, &ParamsCreateView::on_value_entry_changed));
+        params_create_values_grid->attach(value_entry, 1, 2, 1, 1);
         params_create_values_grid->show_all_children();
     }
 }
@@ -147,12 +144,24 @@ void ParamsCreateView::on_add() {
     std::string name = name_entry->get_text();
     std::string type = type_entry->get_active_text();
     std::string info = info_entry->get_text();
+
+    //If the parameter already exists and is not the parameter that should be edited, do not allow to save it
+    bool param_exists = false;
+    if (param.parameter_data.name() != name || !is_edit_window) {
+        param_exists = check_param_exists(name);
+    }
+
+    ParameterWithDescription param;
+    param.parameter_data.name(name);
+    param.parameter_description = info;
     
     //If false, the param value is invalid, the window is not closed and some kind of element or color shows the user what he did wrong
     bool value_conversion_valid = false;
 
     if (type == "Bool") {
-
+        param.parameter_data.type(ParameterType::Bool);
+        param.parameter_data.value_bool(value_switch.get_active());
+        value_conversion_valid = true;
     }
     else if (type == "Integer") {
 
@@ -172,15 +181,26 @@ void ParamsCreateView::on_add() {
 
     //std::string value = value_entry->get_text();
 
-    if (value_conversion_valid) {
+    if (value_conversion_valid && !param_exists) {
         window->close();
-        //on_close_callback(param, true); TODO
+        on_close_callback(param, true);
     }
     else {
-        if (value_entry != nullptr) {
-            value_entry->get_style_context()->add_class("error");
+        if (!value_conversion_valid) {
+            value_entry.get_style_context()->add_class("error");
+        }
+        if (param_exists) {
+            name_entry->get_style_context()->add_class("error");
         }
     }
+}
+
+void ParamsCreateView::on_value_entry_changed() {
+    value_entry.get_style_context()->remove_class("error");
+}
+
+void ParamsCreateView::on_name_entry_changed() {
+    name_entry->get_style_context()->remove_class("error");
 }
 
 bool ParamsCreateView::string_to_bool(std::string str, bool& value) {

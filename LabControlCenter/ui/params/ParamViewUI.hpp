@@ -53,9 +53,6 @@ private:
     std::atomic<bool> parameter_view_unchangeable; //If true, another window is opened that might modify parameters, thus other modification is not allowed
     bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
 
-    //Warning window
-    std::shared_ptr<Gtk::MessageDialog> warning_window = nullptr;
-
     //Read all data from parameter storage
     void read_storage_data();
 
@@ -67,13 +64,14 @@ private:
     void open_param_create_window();
     void open_param_edit_window();
 
+    //Callback: Allow to only create another create window when the former window was closed
+    //Handles callback for close and for create operations
+    void window_on_close_callback(ParameterWithDescription param, bool valid_parameter);
+    bool check_param_exists_callback(std::string name);
+
     //Precision of floats
     int float_precision;
 public:
     ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
     Gtk::Widget* get_parent();
-    
-    //Callback: Allow to only create another create window when the former window was closed
-    //Handles callback for close and for create operations
-    void window_on_close_callback(ParameterWithDescription param, bool valid_parameter);
 };
