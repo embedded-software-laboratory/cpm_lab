@@ -3,15 +3,16 @@
 
 IpsPipeline::IpsPipeline()
 {
-
+	undistortPointsFn = std::make_shared<UndistortPoints>(
+        std::vector<double>{4.351151e+00, -4.863260e+00, -1.183271e-01, 1.094383e+00, 4.861627e-01, 1.418471e-01, -6.700942e-01, 3.049470e-01, -4.362105e-01, 1.852765e-01, -7.676803e-02, -7.289893e-02, -1.313038e-01, -8.945004e-02, -5.608838e-02},
+        std::vector<double>{-3.409322e-01, 5.226075e-01, 4.909991e+00, -3.901540e-01, -5.209485e-01, -1.093096e+00, 6.016393e-02, 5.101132e-01, -3.097603e-01, 5.542172e-01, -2.875253e-02, 5.073364e-02, 1.783163e-01, 1.005458e-01, 1.114947e-01}
+	);
 }
 
 
 void IpsPipeline::apply(LedPoints led_points)
 {
-
     std::cout << "recvd " << led_points.led_points().size() << " LEDs" << std::endl;
 
-    VehiclePointTimeseries asd;
-
+	FloorPoints floorPoints = undistortPointsFn->apply(led_points);
 }
