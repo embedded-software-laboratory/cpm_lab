@@ -158,6 +158,14 @@ void worker_grab_image()
         int frameCount = 0;
         uint64_t lastFrameReportTime = get_time_ns();
 
+
+        // The camera counts time in nanoseconds, from an arbitrary starting point.
+        // Record the camera and computer clock at the same time.
+        // Use the difference to correct the timestamps.
+        camera.TimestampLatch();
+        const uint64_t startTime = get_time_ns();
+        const int64_t startTicks = camera.TimestampLatchValue.GetValue();
+
         while(camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -191,12 +199,10 @@ void worker_grab_image()
                     throw RUNTIME_EXCEPTION( "Image was damaged!");
                 }
 
-
-                //if (IsReadable(ptrGrabResult->ChunkTimestamp))
-                //    cout << "TimeStamp (Result): " << ptrGrabResult->ChunkTimestamp.GetValue() << endl;
-
+                assert(IsReadable(ptrGrabResult->ChunkTimestamp));
 
                 auto frame = std::make_shared<FrameInfo>();
+                frame->timestamp = (ptrGrabResult->ChunkTimestamp.GetValue() - startTicks) + startTime;
                 frame->image = (cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC1, pImageBuffer)).clone();
                 queue_frames.push(frame);
 
