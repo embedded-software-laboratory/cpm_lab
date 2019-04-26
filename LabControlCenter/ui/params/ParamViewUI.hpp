@@ -54,7 +54,7 @@ private:
     bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
 
     //Warning window
-    Gtk::MessageDialog warning_window;
+    std::shared_ptr<Gtk::MessageDialog> warning_window = nullptr;
 
     //Read all data from parameter storage
     void read_storage_data();

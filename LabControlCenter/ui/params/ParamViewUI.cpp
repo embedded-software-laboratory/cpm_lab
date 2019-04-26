@@ -217,8 +217,9 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
             else {
                 //Parameter already exists, trigger warning
                 Glib::ustring msg("Parameter " + name + " already exists");
-                warning_window = Gtk::MessageDialog(msg, false, Gtk::MessageType::MESSAGE_WARNING, Gtk::ButtonsType::BUTTONS_CLOSE, false);
-                warning_window.show_all();
+                warning_window.reset();
+                warning_window = std::make_shared<Gtk::MessageDialog>(msg, false, Gtk::MessageType::MESSAGE_WARNING, Gtk::ButtonsType::BUTTONS_CLOSE, false);
+                warning_window->show_all();
             }
         }
 

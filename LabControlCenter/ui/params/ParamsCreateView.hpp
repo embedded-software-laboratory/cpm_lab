@@ -40,11 +40,11 @@ private:
     void on_add();
 
     //Helper conversion functions - also used to check data correctness? TODO
-    bool string_to_bool(std::string str); //Returns false if the argument is invalid
-    bool string_to_int(std::string str);
-    bool string_to_double(std::string str);
-    bool string_to_int_vector(std::string str);
-    bool string_to_double_vector(std::string str);
+    bool string_to_bool(std::string str, bool& value); //Returns false if the argument is invalid
+    bool string_to_int(std::string str, int32_t& value);
+    bool string_to_double(std::string str, double& value);
+    bool string_to_int_vector(std::string str, std::vector<int32_t>& value);
+    bool string_to_double_vector(std::string str, std::vector<double>& value);
 
     //Parameter object that is created or modified
     ParameterWithDescription param;

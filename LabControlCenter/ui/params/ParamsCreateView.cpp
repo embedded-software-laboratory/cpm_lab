@@ -146,35 +146,71 @@ void ParamsCreateView::on_abort() {
 void ParamsCreateView::on_add() {
     std::string name = name_entry->get_text();
     std::string type = type_entry->get_active_text();
-    //std::string value = value_entry->get_text();
     std::string info = info_entry->get_text();
+    
+    //If false, the param value is invalid, the window is not closed and some kind of element or color shows the user what he did wrong
+    bool value_conversion_valid = false;
 
-    window->close();
-    //on_close_callback(name, type, value, info); TODO
+    if (type == "Bool") {
+
+    }
+    else if (type == "Integer") {
+
+    }
+    else if (type == "Double") {
+        
+    }
+    else if (type == "String") {
+        
+    }
+    else if (type == "Integer List") {
+        
+    }
+    else if (type == "Double List") {
+        
+    }
+
+    //std::string value = value_entry->get_text();
+
+    if (value_conversion_valid) {
+        window->close();
+        //on_close_callback(param, true); TODO
+    }
+    else {
+        if (value_entry != nullptr) {
+            value_entry->get_style_context()->add_class("error");
+        }
+    }
 }
 
-bool ParamsCreateView::string_to_bool(std::string str) {
+bool ParamsCreateView::string_to_bool(std::string str, bool& value) {
     if (str == "1" || str == "true") {
+        value = true;
         return true;
     }
     else if (str == "0" || str == "false") {
-        return false;
+        value = false;
+        return true;
     }
     return false;
 }
 
-bool ParamsCreateView::string_to_int(std::string str) {
+bool ParamsCreateView::string_to_int(std::string str, int32_t& value) {
+    value = 0;
     return true;
 }
 
-bool ParamsCreateView::string_to_double(std::string str) {
+bool ParamsCreateView::string_to_double(std::string str, double& value) {
+    value = 0.0;
     return true;
 }
 
-bool ParamsCreateView::string_to_int_vector(std::string str) {
+bool ParamsCreateView::string_to_int_vector(std::string str, std::vector<int32_t>& value) {
+    value.clear();
     return true;
 }
 
-bool ParamsCreateView::string_to_double_vector(std::string str) {
+bool ParamsCreateView::string_to_double_vector(std::string str, std::vector<double>& value) {
+    value.clear();
     return true;
 }
