@@ -6,11 +6,14 @@
 #include "LedPoints.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
+#include "types.hpp"
 
 
 void process_LedPoints(LedPoints led_points)
 {
     std::cout << "recvd " << led_points.led_points().size() << " LEDs" << std::endl;
+
+    VehiclePointTimeseries asd;
 }
 
 
