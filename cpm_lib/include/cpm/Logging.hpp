@@ -69,7 +69,7 @@ namespace cpm {
                 //For the log file: csv, so escape '"'
                 std::string log_string = std::string(str);
                 std::string escaped_quote = std::string("\"\"");
-                int pos = 0;
+                size_t pos = 0;
                 while ((pos = log_string.find('"', pos)) != std::string::npos) {
                     log_string.replace(pos, 1, escaped_quote);
                     pos += escaped_quote.size();
