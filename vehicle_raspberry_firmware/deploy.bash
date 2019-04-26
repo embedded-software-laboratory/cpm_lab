@@ -12,7 +12,7 @@ sleep 0.1
 
 echo "Uploading"
 sshpass -p t4nxAdDwrgqn scp -o StrictHostKeyChecking=no build/vehicle_rpi_firmware pi@$1:/tmp
-sshpass -p t4nxAdDwrgqn scp -o StrictHostKeyChecking=no ../cpm_base/cpm_lib/build_arm/libcpm.so pi@$1:/tmp
+sshpass -p t4nxAdDwrgqn scp -o StrictHostKeyChecking=no ../../cpm_base/cpm_lib/build_arm/libcpm.so pi@$1:/tmp
 sleep 0.1
 
 echo "Running"

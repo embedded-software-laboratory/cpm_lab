@@ -53,12 +53,15 @@ add_executable(LabControlCenter
     ui/MainWindow.hpp
     src/defaults.cpp
     src/defaults.hpp
+    src/Point.hpp
     src/Joystick.cpp
     src/Joystick.hpp
     src/ParameterServer.cpp
     src/ParameterServer.hpp
     src/ParameterStorage.cpp
     src/ParameterStorage.hpp
+    src/TrajectoryCommand.cpp
+    src/TrajectoryCommand.hpp
     src/main.cpp
 )
 

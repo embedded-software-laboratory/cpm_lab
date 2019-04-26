@@ -12,6 +12,7 @@
 #include "ui/params/ParamViewUI.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
+#include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
 
@@ -34,8 +35,9 @@ int main(int argc, char *argv[])
 
 
     auto vehicleManualControl = make_shared<VehicleManualControl>();
+    auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
-    auto mapViewUi = make_shared<MapViewUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
+    auto mapViewUi = make_shared<MapViewUi>(trajectoryCommand, [=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 32);

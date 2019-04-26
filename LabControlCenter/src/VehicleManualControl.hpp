@@ -20,13 +20,12 @@ class VehicleManualControl
     int ref_trajectory_index = 0;
 
 
-    shared_ptr<dds::topic::Topic<VehicleCommandDirect>> topic_vehicleCommandDirect = nullptr;
+    dds::topic::Topic<VehicleCommandDirect> topic_vehicleCommandDirect;
+    dds::topic::Topic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature;
+    dds::topic::Topic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
+
     shared_ptr<dds::pub::DataWriter<VehicleCommandDirect>> writer_vehicleCommandDirect = nullptr;
-
-    shared_ptr<dds::topic::Topic<VehicleCommandSpeedCurvature>> topic_vehicleCommandSpeedCurvature = nullptr;
     shared_ptr<dds::pub::DataWriter<VehicleCommandSpeedCurvature>> writer_vehicleCommandSpeedCurvature = nullptr;
-
-    shared_ptr<dds::topic::Topic<VehicleCommandTrajectory>> topic_vehicleCommandTrajectory = nullptr;
     shared_ptr<dds::pub::DataWriter<VehicleCommandTrajectory>> writer_vehicleCommandTrajectory = nullptr;
 
     std::function<void()> m_update_callback;

@@ -2,24 +2,36 @@
 #include <cassert>
 #include <glibmm/main.h>
 
-MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
-{
-    this->get_vehicle_data = get_vehicle_data_callback;
 
+MapViewUi::MapViewUi(
+    shared_ptr<TrajectoryCommand> _trajectoryCommand,
+    std::function<VehicleData()> get_vehicle_data_callback
+)
+:trajectoryCommand(_trajectoryCommand)
+,get_vehicle_data(get_vehicle_data_callback)
+{
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
+    drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     
-    drawingArea->show();
+    update_dispatcher.connect([&](){ 
+        vehicle_data = this->get_vehicle_data();
+        drawingArea->queue_draw(); 
+    });
 
-
-    update_loop = cpm::Timer::create("LabControlCenterMap",40000000ull, 0, false, false);
-    update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
-
-    update_dispatcher.connect([&](){ drawingArea->queue_draw(); });
+    draw_loop_thread = std::thread([&](){
+        while(1) {
+            usleep(40000);
+            update_dispatcher.emit();
+        }
+    });
 
     drawingArea->add_events(Gdk::SCROLL_MASK);
+    drawingArea->add_events(Gdk::BUTTON_PRESS_MASK);
+    drawingArea->add_events(Gdk::BUTTON_RELEASE_MASK);
+    drawingArea->add_events(Gdk::POINTER_MOTION_MASK);
 
 
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
@@ -43,133 +55,316 @@ MapViewUi::MapViewUi(std::function<VehicleData()> get_vehicle_data_callback)
             zoom *= zoom_speed;
         }
 
+        //std::cout << pan_x << " " << pan_y << " " << zoom << std::endl;
+
         return true; 
     });
 
+    drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
+        if(event->button == 1) mouse_left_button = true;
 
-    drawingArea->signal_draw().connect([&](const ::Cairo::RefPtr< ::Cairo::Context >& ctx)->bool {
-
-        ctx->save();
+        // start path drawing mode
+        if(mouse_left_button)
         {
-            ctx->translate(pan_x, pan_y);
-            ctx->scale(zoom, zoom);
-
-
-            // Draw grid
-            ctx->save();
+            path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
+            if(path_painting_in_progress_vehicle_id >= 0)
             {
-                ctx->scale(.1, -.1);
-                for (int i = 0; i <= 45; ++i)
-                {
-                    if(i == 0) {
-                        ctx->set_line_width(0.15);
-                    }
-                    else if(i % 10 == 0) {
-                        ctx->set_line_width(0.05);
-                    }
-                    else {
-                        ctx->set_line_width(0.01);
-                    }
+                path_painting_in_progress.clear();
+                auto vehicle_timeseries = vehicle_data.at(path_painting_in_progress_vehicle_id);
 
-                    ctx->move_to(i,0);
-                    ctx->line_to(i,40);
-                    ctx->stroke();
-
-                    if(i <= 40)
-                    {
-                        ctx->move_to(0,i);
-                        ctx->line_to(45,i);
-                        ctx->stroke();
-                    }
-                }    
-            }
-            ctx->restore();
-
-
-            auto vehicle_data = this->get_vehicle_data();
-            for(const auto& entry : vehicle_data) {
-                const auto vehicle_id = entry.first;
-                const auto& vehicle_sensor_timeseries = entry.second;
-
-                if(vehicle_sensor_timeseries.at("pose_x")->has_new_data(1.0))
-                {
-
-                    // Draw vehicle trajectory
-                    {
-                        vector<double> trajectory_x = vehicle_sensor_timeseries.at("pose_x")->get_last_n_values(100);
-                        vector<double> trajectory_y = vehicle_sensor_timeseries.at("pose_y")->get_last_n_values(100);
-                        for (size_t i = 1; i < trajectory_x.size(); ++i)
-                        {
-                            if(i == 1) ctx->move_to(trajectory_x[i], -trajectory_y[i]);
-                            else ctx->line_to(trajectory_x[i], -trajectory_y[i]);
-                        }
-                        ctx->set_source_rgb(1,0,0);
-                        ctx->set_line_width(0.01);
-                        ctx->stroke();
-                    }
-
-                    // Draw vehicle
-                    ctx->save();
-                    {                        
-                        const double x = vehicle_sensor_timeseries.at("pose_x")->get_latest_value();
-                        const double y = vehicle_sensor_timeseries.at("pose_y")->get_latest_value();
-                        const double yaw = vehicle_sensor_timeseries.at("pose_yaw")->get_latest_value();
-
-                        ctx->translate(x,-y);
-                        ctx->rotate(-yaw);
-
-                        const double LF = 0.196;
-                        const double LR = 0.028;
-                        //const double WH = 0.054;
-
-                        ctx->save();
-                        {
-                            const double scale = 0.224/image_car->get_width();
-                            ctx->translate( (LF+LR)/2-LR ,0);
-                            ctx->scale(scale, scale);
-                            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
-                            ctx->set_source(image_car,0,0);
-                            ctx->paint();
-                        }
-                        ctx->restore();
-
-
-                        ctx->save();
-                        {
-                            ctx->translate(0.04, 0);
-                            const double scale = 0.01;
-                            ctx->rotate(yaw);
-                            ctx->scale(scale, scale);
-                            ctx->move_to(0,0);
-                            Cairo::TextExtents extents;
-                            ctx->get_text_extents(to_string(vehicle_id), extents);
-
-                            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
-                            ctx->set_source_rgb(1,1,1);
-                            ctx->show_text(to_string(vehicle_id));
-
-                            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-                            ctx->set_source_rgb(1,.1,.1);
-                            ctx->show_text(to_string(vehicle_id));
-                        }
-                        ctx->restore();
-
-                        /*ctx->move_to(-LR, WH);
-                        ctx->line_to(LF, WH);
-                        ctx->line_to(LF, -WH);
-                        ctx->line_to(-LR, -WH);
-                        ctx->line_to(-LR, WH);
-                        ctx->stroke();*/
-                    }
-                    ctx->restore();
-                }
+                path_painting_in_progress_yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
+                Point start_point(
+                    vehicle_timeseries.at("pose_x")->get_latest_value(),
+                    vehicle_timeseries.at("pose_y")->get_latest_value()
+                );
+                path_painting_in_progress.push_back(start_point);
             }
         }
-        ctx->restore();
 
         return true;
     });
+
+    drawingArea->signal_button_release_event().connect([&](GdkEventButton* event) {
+        if(event->button == 1) mouse_left_button = false;
+
+
+        // end path drawing mode
+        if(!mouse_left_button)
+        {
+            trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 0);
+
+            path_painting_in_progress.clear();
+            path_painting_in_progress_vehicle_id = -1;
+        }
+        return true;
+    });
+
+    drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
+        mouse_x = (event->x - pan_x) / zoom;
+        mouse_y = -(event->y - pan_y) / zoom;
+
+        vehicle_id_in_focus = find_vehicle_id_in_focus();
+
+
+        // if in path drawing mode
+        if(mouse_left_button)
+        {
+            if(is_valid_point_for_path(mouse_x, mouse_y))
+            {
+                // add new point to path
+                path_painting_in_progress.emplace_back(mouse_x, mouse_y);
+                assert(path_painting_in_progress.size() >= 2);
+
+                auto p2 = path_painting_in_progress.at(path_painting_in_progress.size()-1);
+                auto p1 = path_painting_in_progress.at(path_painting_in_progress.size()-2);
+                path_painting_in_progress_yaw = atan2(p2.y-p1.y, p2.x-p1.x);
+            }
+        }
+
+        return true;
+    });
+
+
+    drawingArea->signal_draw().connect([&](const DrawingContext& ctx)->bool {
+        this->draw(ctx); 
+        return true;
+    });
 }
+
+int MapViewUi::find_vehicle_id_in_focus()
+{
+    int id = -1;
+    double dist_sq_min = 1e300;
+
+    for(const auto& entry : vehicle_data) {
+        const auto vehicle_id = entry.first;
+        const auto& vehicle_timeseries = entry.second;
+
+        if(!vehicle_timeseries.at("pose_x")->has_new_data(1.0)) continue;
+
+        double dx = mouse_x - vehicle_timeseries.at("pose_x")->get_latest_value();
+        double dy = mouse_y - vehicle_timeseries.at("pose_y")->get_latest_value();
+
+        double dist_sq = dx*dx + dy*dy;
+        if(dist_sq < 0.04 && dist_sq < dist_sq_min)
+        {
+            id = vehicle_id;
+            dist_sq_min = dist_sq;
+        }
+    }
+    return id;
+}
+
+bool MapViewUi::is_valid_point_for_path(double x, double y)
+{
+    // Test if the point is inside a forward pointing cone, and at a particular distance.
+    // This limits the maximum curvature of the path, and makes it driveable.
+
+    double dx = x - path_painting_in_progress.back().x;
+    double dy = y - path_painting_in_progress.back().y;
+    double dist_sq = dx*dx + dy*dy;
+    if(dist_sq < (path_segment_length*path_segment_length)) return false;
+    if(dist_sq > ((path_segment_length+0.1)*(path_segment_length+0.1))) return false;
+
+    double c1 = cos(path_painting_in_progress_yaw + path_segment_max_angle);
+    double s1 = sin(path_painting_in_progress_yaw + path_segment_max_angle);
+
+    double c2 = cos(path_painting_in_progress_yaw - path_segment_max_angle);
+    double s2 = sin(path_painting_in_progress_yaw - path_segment_max_angle);
+
+    if(dx * s1 - dy * c1 < 0) return false;
+    if(dx * s2 - dy * c2 > 0) return false;
+    return true;
+}
+
+
+
+void MapViewUi::draw(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        ctx->translate(pan_x, pan_y);
+        ctx->scale(zoom, -zoom);
+
+        draw_grid(ctx);
+
+        // Draw vehicle focus disk
+        if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
+        {
+            ctx->set_source_rgba(0,0,1,0.4);
+            ctx->arc(
+                vehicle_data.at(vehicle_id_in_focus).at("pose_x")->get_latest_value(),
+                vehicle_data.at(vehicle_id_in_focus).at("pose_y")->get_latest_value(),
+                0.2, 0.0, 2 * M_PI
+            );
+            ctx->fill();
+        }
+
+        draw_path_painting(ctx);
+
+
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+            const auto& vehicle_timeseries = entry.second;
+
+            if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
+            {
+                draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
+                draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
+            }
+        }
+    }
+    ctx->restore();
+}
+
+
+void MapViewUi::draw_path_painting(const DrawingContext& ctx)
+{
+    if(!path_painting_in_progress.empty() && path_painting_in_progress_vehicle_id >= 0)
+    {
+        // Draw cone of valid directions
+        ctx->set_source_rgba(0,0,1,0.5);
+        ctx->arc(
+            path_painting_in_progress.back().x,
+            path_painting_in_progress.back().y,
+            path_segment_length, 
+            path_painting_in_progress_yaw - path_segment_max_angle, 
+            path_painting_in_progress_yaw + path_segment_max_angle
+        );
+        ctx->line_to(
+            path_painting_in_progress.back().x,
+            path_painting_in_progress.back().y
+        );
+        ctx->fill();
+
+        // Draw path lines
+        for (size_t i = 0; i < path_painting_in_progress.size()-1; ++i)
+        {
+            ctx->set_source_rgb(0.6,0,0);
+            ctx->move_to(path_painting_in_progress[i].x, path_painting_in_progress[i].y);
+            ctx->line_to(path_painting_in_progress[i+1].x, path_painting_in_progress[i+1].y);
+            ctx->set_line_width(0.01);
+            ctx->stroke();
+        }
+
+        // Draw path nodes
+        for (size_t i = 0; i < path_painting_in_progress.size(); ++i)
+        {
+            ctx->set_source_rgb(0.6,0,0);
+            ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.02, 0.0, 2 * M_PI);
+            ctx->fill();
+        }
+    }
+}
+
+
+void MapViewUi::draw_grid(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        ctx->scale(.1, .1);
+        for (int i = 0; i <= 45; ++i)
+        {
+            if(i == 0) {
+                ctx->set_line_width(0.15);
+            }
+            else if(i % 10 == 0) {
+                ctx->set_line_width(0.05);
+            }
+            else {
+                ctx->set_line_width(0.01);
+            }
+
+            ctx->move_to(i,0);
+            ctx->line_to(i,40);
+            ctx->stroke();
+
+            if(i <= 40)
+            {
+                ctx->move_to(0,i);
+                ctx->line_to(45,i);
+                ctx->stroke();
+            }
+        }    
+    }
+    ctx->restore();
+}
+
+void MapViewUi::draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
+{
+    vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
+    vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
+    for (size_t i = 1; i < trajectory_x.size(); ++i)
+    {
+        if(i == 1) ctx->move_to(trajectory_x[i], trajectory_y[i]);
+        else ctx->line_to(trajectory_x[i], trajectory_y[i]);
+    }
+    ctx->set_source_rgb(1,0,0);
+    ctx->set_line_width(0.01);
+    ctx->stroke();
+}
+
+void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries, uint8_t vehicle_id)
+{
+    ctx->save();
+    {                        
+        const double x = vehicle_timeseries.at("pose_x")->get_latest_value();
+        const double y = vehicle_timeseries.at("pose_y")->get_latest_value();
+        const double yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
+
+        ctx->translate(x,y);
+        ctx->rotate(yaw);
+
+        const double LF = 0.115;
+        const double LR = 0.102;
+        const double WH = 0.054;
+
+        // Draw car image
+        ctx->save();
+        {
+            const double scale = 0.224/image_car->get_width();
+            ctx->translate( (LF+LR)/2-LR ,0);
+            ctx->scale(scale, scale);
+            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
+            ctx->set_source(image_car,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
+
+        // Draw vehicle ID
+        ctx->save();
+        {
+            ctx->translate(-0.03, 0);
+            const double scale = 0.01;
+            ctx->rotate(-yaw);
+            ctx->scale(scale, -scale);
+            ctx->move_to(0,0);
+            Cairo::TextExtents extents;
+            ctx->get_text_extents(to_string(vehicle_id), extents);
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
+            ctx->set_source_rgb(1,1,1);
+            ctx->show_text(to_string(vehicle_id));
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+            ctx->set_source_rgb(1,.1,.1);
+            ctx->show_text(to_string(vehicle_id));
+        }
+        ctx->restore();
+
+        // Draw vehicle box
+        /*ctx->move_to(-LR, WH);
+        ctx->line_to(LF, WH);
+        ctx->line_to(LF, -WH);
+        ctx->line_to(-LR, -WH);
+        ctx->line_to(-LR, WH);
+        ctx->stroke();*/
+    }
+    ctx->restore();
+}
+
+
+
 
 Gtk::DrawingArea* MapViewUi::get_parent()
 {
