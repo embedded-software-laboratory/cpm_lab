@@ -39,13 +39,15 @@ include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
 
+
 add_executable(BaslerLedDetection
     src/main_led_detection.cpp
 )
-
-
-
 target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 
 
-#target_link_libraries(LabControlCenter cpm )
+
+add_executable(ips_manual_test
+    src/main_ips_manual_test.cpp
+)
+target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
