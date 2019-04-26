@@ -65,7 +65,7 @@ void worker_led_detection()
 
         for (std::vector<cv::Point> contour : contours) {
             double size = cv::contourArea(contour);
-            if (size < 50 && size > 6) {
+            if (size < 50 && size > 3) {
                 cv::Moments M = cv::moments(contour);
                 frame->points_x.push_back((M.m10 / (M.m00 + 1e-5)));
                 frame->points_y.push_back((M.m01 / (M.m00 + 1e-5)));
@@ -166,7 +166,7 @@ void worker_grab_image()
 
         // Set exposure
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(100);
+        camera.ExposureTime.SetValue(120);
 
 
         camera.StartGrabbing();
