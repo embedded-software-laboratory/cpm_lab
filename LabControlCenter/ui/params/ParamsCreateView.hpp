@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <vector>
 #include "ParameterWithDescription.hpp"
 
 class ParamsCreateView {

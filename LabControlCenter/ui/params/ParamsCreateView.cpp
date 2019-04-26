@@ -143,6 +143,7 @@ void ParamsCreateView::on_abort() {
 void ParamsCreateView::on_add() {
     std::string name = name_entry->get_text();
     std::string type = type_entry->get_active_text();
+    std::string value_string = value_entry.get_text();
     std::string info = info_entry->get_text();
 
     //If the parameter already exists and is not the parameter that should be edited, do not allow to save it
@@ -164,19 +165,44 @@ void ParamsCreateView::on_add() {
         value_conversion_valid = true;
     }
     else if (type == "Integer") {
+        int32_t value;
+        value_conversion_valid = string_to_int(value_string, value);
 
+        std::vector<int32_t> stdInts;
+        stdInts.push_back(value);
+        rti::core::vector<int32_t> ints(stdInts);
+
+        param.parameter_data.type(ParameterType::Int32);
+        param.parameter_data.values_int32(ints);
     }
     else if (type == "Double") {
-        
+        double value;
+        value_conversion_valid = string_to_double(value_string, value);
+
+        std::vector<double> stdDoubles;
+        stdDoubles.push_back(value);
+        rti::core::vector<double> doubles(stdDoubles);
+
+        param.parameter_data.type(ParameterType::Double);
+        param.parameter_data.values_double(doubles);
     }
     else if (type == "String") {
-        
+        param.parameter_data.type(ParameterType::String);
+        param.parameter_data.value_string(value_string);
     }
     else if (type == "Integer List") {
-        
+        std::vector<int32_t> value;
+        value_conversion_valid = string_to_int_vector(value_string, value);
+
+        param.parameter_data.type(ParameterType::Vector_Int32);
+        param.parameter_data.values_int32(value);
     }
     else if (type == "Double List") {
-        
+        std::vector<double> value;
+        value_conversion_valid = string_to_double_vector(value_string, value);
+
+        param.parameter_data.type(ParameterType::Vector_Double);
+        param.parameter_data.values_double(value);
     }
 
     //std::string value = value_entry->get_text();
