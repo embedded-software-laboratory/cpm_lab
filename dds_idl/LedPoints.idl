@@ -1,13 +1,16 @@
 #include "TimeStamp.idl"
 
-struct imagePoint
+struct ImagePoint
 {
     double x;    // image coordinates in x direction
     double y;    // image coordinates in y direction
 };
 
+
+// LED points that are detected in the IPS camera image.
+// Using raw pixel coordiantes, no calibration.
 struct LedPoints 
 {
     TimeStamp time_stamp;                // timestamp when the image was recorded
-    sequence<imagePoint> led_points;     // image coordinates of detected led points
+    sequence<ImagePoint> led_points;     // image coordinates of detected led points
 };
