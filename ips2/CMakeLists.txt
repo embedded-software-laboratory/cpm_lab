@@ -49,5 +49,9 @@ target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARI
 
 add_executable(ips_manual_test
     src/main_ips_manual_test.cpp
+    src/UndistortPoints.cpp
+    src/UndistortPoints.hpp
+    src/IpsPipeline.cpp
+    src/IpsPipeline.hpp
 )
 target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})

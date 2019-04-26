@@ -6,24 +6,20 @@
 #include "LedPoints.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
-#include "types.hpp"
+#include "IpsPipeline.hpp"
 
-
-void process_LedPoints(LedPoints led_points)
-{
-    std::cout << "recvd " << led_points.led_points().size() << " LEDs" << std::endl;
-
-    VehiclePointTimeseries asd;
-}
 
 
 int main(int argc, char* argv[])
 {
+    IpsPipeline ipsPipeline;
+
+
     cpm::AsyncReader<LedPoints> ipsLedPoints_reader(
-        [](dds::sub::LoanedSamples<LedPoints>& samples){
+        [&](dds::sub::LoanedSamples<LedPoints>& samples){
             for(auto sample : samples) 
                 if(sample.info().valid()) 
-                    process_LedPoints(sample.data());
+                    ipsPipeline.apply(sample.data());
         }, 
         cpm::ParticipantSingleton::Instance(), 
         cpm::get_topic<LedPoints>("ipsLedPoints")
