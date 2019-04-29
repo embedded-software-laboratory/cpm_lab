@@ -43,6 +43,8 @@ private:
     Gtk::Button* parameters_button_edit;
     Gtk::FlowBoxChild* parameters_box_create;
     Gtk::Button* parameters_button_create;
+    Gtk::FlowBoxChild* parameters_box_save_all;
+    Gtk::Button* parameters_button_save_all;
 
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
@@ -63,6 +65,8 @@ private:
     //Open edit / create window
     void open_param_create_window();
     void open_param_edit_window();
+    //Save current state to yaml
+    void save_configuration();
 
     //Callback: Allow to only create another create window when the former window was closed
     //Handles callback for close and for create operations

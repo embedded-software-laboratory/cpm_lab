@@ -9,6 +9,9 @@
 #include <vector>
 #include "ParameterWithDescription.hpp"
 
+#define MAX_INT32_SYMBOL (2147483647l)
+#define MIN_INT32_SYMBOL (-2147483648l)
+
 class ParamsCreateView {
 private:
     Glib::RefPtr<Gtk::Builder> params_create_builder;
@@ -45,8 +48,7 @@ private:
     void on_value_entry_changed();
     void on_name_entry_changed();
 
-    //Helper conversion functions - also used to check data correctness? TODO
-    bool string_to_bool(std::string str, bool& value); //Returns false if the argument is invalid
+    //Helper conversion functions - also used to check data correctness; return false if the argument is invalid
     bool string_to_int(std::string str, int32_t& value);
     bool string_to_double(std::string str, double& value);
     bool string_to_int_vector(std::string str, std::vector<int32_t>& value);

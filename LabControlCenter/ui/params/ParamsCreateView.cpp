@@ -187,6 +187,7 @@ void ParamsCreateView::on_add() {
         param.parameter_data.values_double(doubles);
     }
     else if (type == "String") {
+        value_conversion_valid = true;
         param.parameter_data.type(ParameterType::String);
         param.parameter_data.value_string(value_string);
     }
@@ -204,8 +205,6 @@ void ParamsCreateView::on_add() {
         param.parameter_data.type(ParameterType::Vector_Double);
         param.parameter_data.values_double(value);
     }
-
-    //std::string value = value_entry->get_text();
 
     if (value_conversion_valid && !param_exists) {
         window->close();
@@ -229,20 +228,25 @@ void ParamsCreateView::on_name_entry_changed() {
     name_entry->get_style_context()->remove_class("error");
 }
 
-bool ParamsCreateView::string_to_bool(std::string str, bool& value) {
-    if (str == "1" || str == "true") {
-        value = true;
-        return true;
-    }
-    else if (str == "0" || str == "false") {
-        value = false;
-        return true;
-    }
-    return false;
-}
-
 bool ParamsCreateView::string_to_int(std::string str, int32_t& value) {
     value = 0;
+    long long_value = 0;
+    try {
+        long_value = std::stol(str);
+    }
+    catch (std::invalid_argument const &e) {
+        return false;
+    }
+    catch (std::out_of_range const &e) {
+        return false;
+    }
+
+    //In case long is "wider" than int32_t
+    if (long_value > MAX_INT32_SYMBOL || long_value < MIN_INT32_SYMBOL) {
+        return false;
+    }
+
+    value = static_cast<int32_t>(long_value);
     return true;
 }
 

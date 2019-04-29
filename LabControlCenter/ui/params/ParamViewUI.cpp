@@ -21,6 +21,8 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     params_builder->get_widget("parameters_button_edit", parameters_button_edit);
     params_builder->get_widget("parameters_box_create", parameters_box_create);
     params_builder->get_widget("parameters_button_create", parameters_button_create);
+    params_builder->get_widget("parameters_box_save_all", parameters_box_save_all);
+    params_builder->get_widget("parameters_button_save_all", parameters_button_save_all);
 
     assert(parent);
     assert(parameters_flow_top);
@@ -37,6 +39,8 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     assert(parameters_button_edit);
     assert(parameters_box_create);
     assert(parameters_button_create);
+    assert(parameters_box_save_all);
+    assert(parameters_button_save_all);
 
     //Create data model_record for parameters
     parameter_list_storage = Gtk::ListStore::create(model_record);
@@ -66,6 +70,9 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
     parameters_button_create->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_create_window));
     parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
+
+    //Save all button listener (save the currently visible configuration to the currently open yaml file)
+    parameters_button_save_all->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
 }
 
 void ParamViewUI::read_storage_data() {
@@ -226,6 +233,10 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     parameter_view_unchangeable.store(false);
     create_window_open = false;
     parent->set_sensitive(true);
+}
+
+void ParamViewUI::save_configuration() {
+    parameter_storage->storeFile("lab_yaml_test_out.yaml");
 }
 
 bool ParamViewUI::check_param_exists_callback(std::string name) {
