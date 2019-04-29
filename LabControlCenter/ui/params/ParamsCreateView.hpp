@@ -4,9 +4,10 @@
 #include <gtkmm.h>
 #include <algorithm>
 #include <cassert>
-#include <string>
 #include <functional>
 #include <iostream>
+#include <locale>
+#include <string>
 #include <vector>
 #include "ParameterWithDescription.hpp"
 
