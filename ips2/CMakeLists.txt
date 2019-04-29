@@ -4,9 +4,9 @@ set (CMAKE_CXX_STANDARD 11)
 
 
 # OpenCV
-set(PYLON_ROOT /opt/opencv400)
-include_directories(${PYLON_ROOT}/include/opencv4)
-link_directories(${PYLON_ROOT}/lib)
+set(OPENCV_ROOT /opt/opencv400)
+include_directories(${OPENCV_ROOT}/include/opencv4)
+link_directories(${OPENCV_ROOT}/lib)
 set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_dnn opencv_features2d opencv_flann opencv_gapi opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
 
 
