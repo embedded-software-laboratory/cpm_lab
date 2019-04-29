@@ -252,7 +252,37 @@ bool ParamsCreateView::string_to_int(std::string str, int32_t& value) {
 
 bool ParamsCreateView::string_to_double(std::string str, double& value) {
     value = 0.0;
+    double conversion_value = 0;
+    try {
+        conversion_value = std::stod(str); //TODO: Set precision?
+    }
+    catch (std::invalid_argument const &e) {
+        return false;
+    }
+    catch (std::out_of_range const &e) {
+        return false;
+    }
+
+    value = conversion_value;
     return true;
+
+    // double temp_value = 0.0;
+    // std::stringstream conversion_stream;
+    // conversion_stream << str;
+    // try {
+    //     conversion_stream >> temp_value; //TODO: Set precision?
+    // }
+    // catch (...) {
+    //     return false;
+    // }
+
+    // if (! conversion_stream.good()) {
+    //     std::cout << "Conversion stream BAD - currently only german locale supported (use ',' instead of '.')" << std::endl;
+    //     return false;
+    // }
+
+    // value = temp_value;
+    // return true;
 }
 
 bool ParamsCreateView::string_to_int_vector(std::string str, std::vector<int32_t>& value) {
