@@ -151,6 +151,10 @@ void ParamsCreateView::on_add() {
     if (param.parameter_data.name() != name || !is_edit_window) {
         param_exists = check_param_exists(name);
     }
+    //Do not allow to use empty names
+    if (name.find_first_not_of(' ') == std::string::npos) {
+        param_exists = true;
+    }
 
     ParameterWithDescription param;
     param.parameter_data.name(name);
@@ -252,37 +256,38 @@ bool ParamsCreateView::string_to_int(std::string str, int32_t& value) {
 
 bool ParamsCreateView::string_to_double(std::string str, double& value) {
     value = 0.0;
-    double conversion_value = 0;
-    try {
-        conversion_value = std::stod(str); //TODO: Set precision?
-    }
-    catch (std::invalid_argument const &e) {
-        return false;
-    }
-    catch (std::out_of_range const &e) {
-        return false;
-    }
-
-    value = conversion_value;
-    return true;
-
-    // double temp_value = 0.0;
-    // std::stringstream conversion_stream;
-    // conversion_stream << str;
+    // double conversion_value = 0;
     // try {
-    //     conversion_stream >> temp_value; //TODO: Set precision?
+    //     conversion_value = std::stod(str); //TODO: Set precision?
     // }
-    // catch (...) {
+    // catch (std::invalid_argument const &e) {
+    //     return false;
+    // }
+    // catch (std::out_of_range const &e) {
     //     return false;
     // }
 
-    // if (! conversion_stream.good()) {
-    //     std::cout << "Conversion stream BAD - currently only german locale supported (use ',' instead of '.')" << std::endl;
-    //     return false;
-    // }
-
-    // value = temp_value;
+    // value = conversion_value;
     // return true;
+
+    double temp_value = 0.0;
+    std::stringstream conversion_stream;
+    conversion_stream.imbue(std::locale::classic());
+    conversion_stream << str;
+    try {
+        conversion_stream >> temp_value; //TODO: Set precision?
+    }
+    catch (...) {
+        return false;
+    }
+
+    if (! conversion_stream.good()) {
+        std::cout << "Conversion stream BAD - currently only german locale supported (use ',' instead of '.')" << std::endl;
+        return false;
+    }
+
+    value = temp_value;
+    return true;
 }
 
 bool ParamsCreateView::string_to_int_vector(std::string str, std::vector<int32_t>& value) {
