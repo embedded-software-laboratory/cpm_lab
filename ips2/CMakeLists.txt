@@ -49,9 +49,18 @@ target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARI
 
 add_executable(ips_manual_test
     src/main_ips_manual_test.cpp
-    src/UndistortPoints.cpp
-    src/UndistortPoints.hpp
     src/IpsPipeline.cpp
     src/IpsPipeline.hpp
+    src/UndistortPoints.cpp
+    src/UndistortPoints.hpp
+    src/DetectVehicles.cpp
+    src/DetectVehicles.hpp
 )
 target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+
+
+add_executable(unittest 
+        test/catch.cpp
+        test/test_DetectVehicles.cpp
+    )
+target_link_libraries(unittest cpm)
