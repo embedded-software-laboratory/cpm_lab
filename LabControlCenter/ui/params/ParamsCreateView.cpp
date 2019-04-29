@@ -287,10 +287,44 @@ bool ParamsCreateView::string_to_double(std::string str, double& value) {
 
 bool ParamsCreateView::string_to_int_vector(std::string str, std::vector<int32_t>& value) {
     value.clear();
+
+    str.erase(std::remove(str.begin(), str.end(), '{'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '}'), str.end());
+
+    std::stringstream comma_stream(str);
+    std::string item;
+    while(std::getline(comma_stream, item, ',')) {
+        int32_t val;
+        if (string_to_int(item, val)) {
+            value.push_back(val);
+        }
+        else {
+            value.clear();
+            return false;
+        }
+    }
+
     return true;
 }
 
 bool ParamsCreateView::string_to_double_vector(std::string str, std::vector<double>& value) {
     value.clear();
+
+    str.erase(std::remove(str.begin(), str.end(), '{'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '}'), str.end());
+
+    std::stringstream comma_stream(str);
+    std::string item;
+    while(std::getline(comma_stream, item, ',')) {
+        double val;
+        if (string_to_double(item, val)) {
+            value.push_back(val);
+        }
+        else {
+            value.clear();
+            return false;
+        }
+    }
+
     return true;
 }

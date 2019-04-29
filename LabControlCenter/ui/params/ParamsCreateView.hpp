@@ -2,6 +2,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <algorithm>
 #include <cassert>
 #include <string>
 #include <functional>
