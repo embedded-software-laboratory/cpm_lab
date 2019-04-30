@@ -4,7 +4,7 @@
 class DetectVehicles
 {
 public:
-    DetectVehicles(VehiclePointSet &vehicle_point_set);
+    DetectVehicles(const VehiclePointSet &vehicle_point_geometry);
 
     VehiclePoints apply(const FloorPoints &floor_points);
 
@@ -24,6 +24,6 @@ private:
      *      o
      *  back_right
      */
-    VehiclePointSet vehicle_point_set;
-    double point_distance_tolerance = 0.1;
+    const VehiclePointSet vehicle_point_geometry;
+    const double point_distance_tolerance = 0.1;
 };
