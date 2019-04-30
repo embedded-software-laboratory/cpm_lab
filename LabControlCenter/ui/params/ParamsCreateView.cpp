@@ -270,7 +270,6 @@ bool ParamsCreateView::string_to_double(std::string str, double& value) {
     // value = conversion_value;
     // return true;
 
-    std::setlocale(LC_NUMERIC, "C");
     double temp_value = 0.0;
     try {
         temp_value = strtod(str.c_str(), nullptr);

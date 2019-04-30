@@ -73,6 +73,9 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
 
     //Save all button listener (save the currently visible configuration to the currently open yaml file)
     parameters_button_save_all->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
+
+    //For commas in doubles, also for conversion in ParamsCreateView
+    std::setlocale(LC_NUMERIC, "C");
 }
 
 void ParamViewUI::read_storage_data() {
