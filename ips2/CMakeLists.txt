@@ -60,8 +60,11 @@ target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES}
 
 
 add_executable(unittest 
-        test/catch.cpp
-        test/test_DetectVehicles.cpp
-        src/DetectVehicles.cpp
-    )
+    test/catch.cpp
+    test/test_DetectVehicles.cpp
+    test/test_DetectVehicleID.cpp
+    src/DetectVehicles.cpp
+    src/DetectVehicleID.cpp
+    src/DetectVehicleID.hpp
+)
 target_link_libraries(unittest cpm)
