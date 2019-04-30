@@ -12,16 +12,30 @@ IpsPipeline::IpsPipeline()
 
     VehiclePointSet dummy;
     detectVehiclesFn = std::make_shared<DetectVehicles>(dummy);
+
+
+    detectVehicleIDfn = std::make_shared<DetectVehicleID>(
+        std::vector<uint8_t> { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 },
+        std::vector<uint8_t>{ 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 }
+    );
 }
 
 
 void IpsPipeline::apply(LedPoints led_points)
 {
-    std::cout << "recvd " << led_points.led_points().size() << " LEDs" << std::endl;
+
+    VehiclePoints identifiedVehicles;
+
 
     FloorPoints floorPoints = undistortPointsFn->apply(led_points);
-
     VehiclePoints vehiclePoints = detectVehiclesFn->apply(floorPoints);
+    vehiclePointTimeseries.push_back(vehiclePoints);
+    if(vehiclePointTimeseries.size() > 50)
+    {
+        vehiclePointTimeseries.pop_front();
+        identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
+    }
+
 
 
 
@@ -71,6 +85,20 @@ void IpsPipeline::apply(LedPoints led_points)
             cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
             cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
             cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+        }
+
+        // Draw vehcle IDs
+        for(auto vehicle:identifiedVehicles.vehicles)
+        {
+            cv::putText(
+                image,
+                std::to_string(vehicle.id),
+                transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
+                cv::FONT_HERSHEY_SIMPLEX,
+                2,
+                cv::Scalar(0,180,0),
+                3
+            );
         }
 
 

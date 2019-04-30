@@ -23,7 +23,7 @@ struct SignalEdge
     bool is_rising;
 };
 
-VehiclePoints DetectVehicleID::apply(VehiclePointTimeseries vehiclePointTimeseries)
+VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointTimeseries)
 {
     assert(vehiclePointTimeseries.size() > 30);
 

@@ -13,6 +13,6 @@ public:
         std::vector<uint8_t> _identification_LED_period_ticks,
         std::vector<uint8_t> _identification_LED_enabled_ticks
     );
-    VehiclePoints apply(VehiclePointTimeseries vehiclePointTimeseries);
+    VehiclePoints apply(const VehiclePointTimeseries &vehiclePointTimeseries);
     
 };

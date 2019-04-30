@@ -55,6 +55,8 @@ add_executable(ips_manual_test
     src/UndistortPoints.hpp
     src/DetectVehicles.cpp
     src/DetectVehicles.hpp
+    src/DetectVehicleID.cpp
+    src/DetectVehicleID.hpp
 )
 target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 
