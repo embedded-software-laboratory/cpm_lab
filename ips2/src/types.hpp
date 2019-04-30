@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <list>
 #include <cstdint>
 #include <opencv2/core.hpp>
 
@@ -28,4 +29,4 @@ struct VehiclePoints
     std::vector<VehiclePointSet> vehicles;
 };
 
-using VehiclePointTimeseries = std::vector<VehiclePoints>;
+using VehiclePointTimeseries = std::list<VehiclePoints>;
