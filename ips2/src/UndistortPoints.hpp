@@ -15,6 +15,8 @@ public:
         std::vector<double> _calibration_x, 
         std::vector<double> _calibration_y
     );
+
+    // Converts the vehicle LED points from image coordinates to floor coordiantes
     FloorPoints apply(LedPoints led_points);
     
     
