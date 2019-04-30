@@ -4,9 +4,9 @@ set (CMAKE_CXX_STANDARD 11)
 
 
 # OpenCV
-set(PYLON_ROOT /opt/opencv400)
-include_directories(${PYLON_ROOT}/include/opencv4)
-link_directories(${PYLON_ROOT}/lib)
+set(OPENCV_ROOT /opt/opencv400)
+include_directories(${OPENCV_ROOT}/include/opencv4)
+link_directories(${OPENCV_ROOT}/lib)
 set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_dnn opencv_features2d opencv_flann opencv_gapi opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
 
 
@@ -49,9 +49,19 @@ target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARI
 
 add_executable(ips_manual_test
     src/main_ips_manual_test.cpp
-    src/UndistortPoints.cpp
-    src/UndistortPoints.hpp
     src/IpsPipeline.cpp
     src/IpsPipeline.hpp
+    src/UndistortPoints.cpp
+    src/UndistortPoints.hpp
+    src/DetectVehicles.cpp
+    src/DetectVehicles.hpp
 )
 target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+
+
+add_executable(unittest 
+        test/catch.cpp
+        test/test_DetectVehicles.cpp
+        src/DetectVehicles.cpp
+    )
+target_link_libraries(unittest cpm)
