@@ -29,15 +29,16 @@ void IpsPipeline::apply(LedPoints led_points)
     // Visualization
     {
         const int vis_img_width = 1700;
-        const int vis_img_height = 1000;
+        const int vis_img_height = 1200;
+        const double image_zoom_factor = 290;
         cv::Mat image(vis_img_height, vis_img_width, CV_8UC3, cv::Scalar(255,255,255));
 
         // Transformation from floor coordinates
         // to visualization image coordiantes.
-        auto transform = [](cv::Point2d floor_point)->cv::Point{
+        auto transform = [=](cv::Point2d floor_point)->cv::Point{
             return cv::Point(
-                (floor_point.x - 2.25) * 220 + vis_img_width/2,
-                vis_img_height/2 - ((floor_point.y - 2.0) * 220)
+                (floor_point.x - 2.25) * image_zoom_factor + vis_img_width/2,
+                vis_img_height/2 - ((floor_point.y - 2.0) * image_zoom_factor)
             );
         };
 
@@ -54,11 +55,30 @@ void IpsPipeline::apply(LedPoints led_points)
             cv::circle(image,transform(point),3,cv::Scalar(0,0,255),-1,cv::LINE_AA);
         }
 
+        // Draw circles around detected vehicles
+        for(auto vehicle:vehiclePoints.vehicles)
+        {
+            cv::circle(image,transform(
+                0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right
+                ),0.1 * image_zoom_factor,cv::Scalar(0,128,255),1,cv::LINE_AA);
+        }
+
+
+        // Draw detected vehicle points
+        for(auto vehicle:vehiclePoints.vehicles)
+        {
+            cv::putText(image,"L",transform(vehicle.back_left) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+            cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+            cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+            cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+        }
+
 
         // Show image
         cv::imshow("IPS Visualization", image);
         if(cv::waitKey(1) == 27) // close on escape key
         {
+            system("killall rtireplay");
             exit(0);
         }
 

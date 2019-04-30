@@ -43,7 +43,7 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points)
 
         if(rear_edge_pair.size() == 1 && longitudinal_edge_pair.size() == 2)
         {
-            std::cout << "YAY!" << std::endl;
+            //std::cout << "YAY!" << std::endl;
 
             int index_front = -1;
             for(auto i:std::vector<int>{0,1})
@@ -119,7 +119,7 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points)
 
 
         }
-        std::cout << "=============================" << std::endl;
+        //std::cout << "=============================" << std::endl;
     }
 
     return vehicle_points;
