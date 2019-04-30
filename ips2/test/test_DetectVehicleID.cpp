@@ -40,6 +40,7 @@ TEST_CASE("test_DetectVehicleID")
             vehicles.vehicles.push_back(vehicle_id_9);
             vehicles.vehicles.push_back(vehicle_id_4);
         }
+        input.push_back(vehicles);
     }
 
 
@@ -53,5 +54,7 @@ TEST_CASE("test_DetectVehicleID")
 
     // Assert
     REQUIRE(result.vehicles.size() == 2);
+    CHECK(((result.vehicles[0].id == 9 && result.vehicles[1].id == 4) 
+        || (result.vehicles[0].id == 4 && result.vehicles[1].id == 9)));
 
 }
