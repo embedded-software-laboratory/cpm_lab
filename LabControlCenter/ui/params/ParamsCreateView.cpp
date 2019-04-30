@@ -270,19 +270,17 @@ bool ParamsCreateView::string_to_double(std::string str, double& value) {
     // value = conversion_value;
     // return true;
 
+    std::setlocale(LC_NUMERIC, "C");
     double temp_value = 0.0;
-    std::stringstream conversion_stream;
-    conversion_stream.imbue(std::locale::classic());
-    conversion_stream << str;
     try {
-        conversion_stream >> temp_value; //TODO: Set precision?
+        temp_value = strtod(str.c_str(), nullptr);
     }
     catch (...) {
         return false;
     }
 
-    if (! conversion_stream.good()) {
-        std::cout << "Conversion stream BAD - currently only german locale supported (use ',' instead of '.')" << std::endl;
+    if (errno == ERANGE || (temp_value == 0.0 && !(str == "0" || str == "0.0")) || str.find_first_of(",") != std::string::npos) {
+        std::cout << "Could not convert " << str << " (for 0 type 0 or 0.0)" << std::endl;
         return false;
     }
 

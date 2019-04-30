@@ -4,6 +4,8 @@
 #include <gtkmm.h>
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <locale>
