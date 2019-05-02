@@ -57,6 +57,8 @@ add_executable(ips_manual_test
     src/DetectVehicles.hpp
     src/DetectVehicleID.cpp
     src/DetectVehicleID.hpp
+    src/PoseCalculation.cpp
+    src/PoseCalculation.hpp
 )
 target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 

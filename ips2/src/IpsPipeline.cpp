@@ -18,6 +18,8 @@ IpsPipeline::IpsPipeline()
         std::vector<uint8_t> { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 },
         std::vector<uint8_t>{ 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 }
     );
+
+    poseCalculationFn = std::make_shared<PoseCalculation>( );
 }
 
 
@@ -25,6 +27,7 @@ void IpsPipeline::apply(LedPoints led_points)
 {
 
     VehiclePoints identifiedVehicles;
+    std::vector<VehicleObservation> vehicleObservations;
 
 
     FloorPoints floorPoints = undistortPointsFn->apply(led_points);
@@ -34,6 +37,7 @@ void IpsPipeline::apply(LedPoints led_points)
     {
         vehiclePointTimeseries.pop_front();
         identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
+        vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
     }
 
 
