@@ -10,8 +10,7 @@ IpsPipeline::IpsPipeline()
         std::vector<double>{-5.985142e-01, 6.235073e-01, 5.412047e+00, -6.668763e-01, -1.038656e+00, -1.593830e+00, 2.284258e-01, 1.090997e+00, 9.839002e-02, 1.065165e+00, -8.319799e-02, -8.929741e-02, -5.524760e-02, -2.687517e-02, -5.680051e-02}
     );
 
-    VehiclePointSet dummy;
-    detectVehiclesFn = std::make_shared<DetectVehicles>(dummy);
+    detectVehiclesFn = std::make_shared<DetectVehicles>(0.164530613, 0.034);
 
 
     detectVehicleIDfn = std::make_shared<DetectVehicleID>(
