@@ -67,6 +67,31 @@ void IpsPipeline::apply(LedPoints led_points)
         cv::line(image, transform(cv::Point2d(0,0)), transform(cv::Point2d(0, 4.0)),cv::Scalar(0,0,0),3);
 
 
+        // Draw vehicle coordinate system
+        for(const auto &vehicleObservation:vehicleObservations)
+        {
+            const double c = cos(vehicleObservation.pose().yaw());
+            const double s = sin(vehicleObservation.pose().yaw());
+            const double x = vehicleObservation.pose().x();
+            const double y = vehicleObservation.pose().y();
+
+            cv::arrowedLine(image,
+                transform(cv::Point2d(x,y)),
+                transform(cv::Point2d(x+0.2*c,y+0.2*s)),
+                cv::Scalar(255,0,255),
+                2,
+                cv::LINE_AA
+            );
+
+            cv::arrowedLine(image,
+                transform(cv::Point2d(x,y)),
+                transform(cv::Point2d(x-0.2*s,y+0.2*c)),
+                cv::Scalar(255,0,255),
+                2,
+                cv::LINE_AA
+            );
+        }
+
         // Draw floor points
         for(auto point : floorPoints.points)
         {
@@ -90,6 +115,7 @@ void IpsPipeline::apply(LedPoints led_points)
             cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
             cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
         }
+
 
         // Draw vehcle IDs
         for(auto vehicle:identifiedVehicles.vehicles)

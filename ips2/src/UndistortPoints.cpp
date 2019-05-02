@@ -56,7 +56,7 @@ FloorPoints UndistortPoints::apply(LedPoints led_points)
 
         // The following calculation corrects for the error that is introduced, because
         // the LEDs are not on the ground, but a small distance above it.
-        // This calibration does not need to be very precise, since another measurment based
+        // This calibration does not need to be very precise, since another measurement based
         // calibration for the poses will correct small errors.
         const double camera_x = 2.27;
         const double camera_y = 1.94;

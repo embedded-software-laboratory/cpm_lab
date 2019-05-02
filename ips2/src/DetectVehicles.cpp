@@ -8,7 +8,7 @@ DetectVehicles::DetectVehicles(const VehiclePointSet &vehicle_point_geometry)
 
 }
 
-double length(cv::Point2d p)
+static inline double length(cv::Point2d p)
 {
     return sqrt(p.dot(p));
 }
@@ -32,11 +32,11 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points)
                 const double dist = length(floor_points.points[i] - floor_points.points[j]);
                 if (fabs(dist - 0.033) < 0.004)
                 {
-                    rear_edge_pair.emplace_back(std::vector<size_t>{i,j});
+                    rear_edge_pair.push_back(std::vector<size_t>{i,j});
                 }
                 else if (fabs(dist - 0.164) < 0.012)
                 {
-                    longitudinal_edge_pair.emplace_back(std::vector<size_t>{i,j});
+                    longitudinal_edge_pair.push_back(std::vector<size_t>{i,j});
                 }
             }
         }
