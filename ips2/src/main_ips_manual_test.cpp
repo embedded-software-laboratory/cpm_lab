@@ -30,5 +30,6 @@ int main(int argc, char* argv[])
 
     // start replay
     system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");
+    exit(0);
     return 0;
 }

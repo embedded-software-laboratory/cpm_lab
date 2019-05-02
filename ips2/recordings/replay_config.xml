@@ -44,8 +44,8 @@
             </distributed_logger>
         </administration>
         
-        <!-- Do not exit automatically when all samples have been replayed --> 
-        <auto_exit>false</auto_exit>
+        
+        <auto_exit>true</auto_exit>
         <!-- Time control settings: normal replay rate and automatically start
              replaying upon start of the service --> 
         <time_control>
