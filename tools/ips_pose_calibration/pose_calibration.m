@@ -29,13 +29,7 @@ function pose_calibration
     expected_direction_y = [];
     for y = [0.6, 3.4]
         for x = [0.6, 3.9]
-            for a = (0:7)
-                
-                % Missed one measurement in the recording, skip it for now
-                if x == 3.9 && y == 0.6 && a == 3
-                    continue;
-                end
-                
+            for a = (0:7)                
                 expected_position_x(1,end+1) = x;
                 expected_position_y(1,end+1) = y;
                 expected_direction_x(1,end+1) = cos(a * (45/180*pi));
