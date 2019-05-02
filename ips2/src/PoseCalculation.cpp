@@ -38,6 +38,13 @@ std::vector<VehicleObservation> PoseCalculation::apply(const VehiclePoints &vehi
         };
 
 
+        // Uncomment this when creating a new pose calibration
+        std::cout << "pose_features ";
+        for (int i = 0; i < N_POSE_CALIBRATION_TERMS; ++i) std::cout << features[i] << ",  ";
+        std::cout << std::endl;
+
+    
+
         double ref_position_x = 0;
         double ref_position_y = 0;
         double ref_direction_x = 0;
@@ -48,6 +55,7 @@ std::vector<VehicleObservation> PoseCalculation::apply(const VehiclePoints &vehi
             ref_position_y += features[i] * calibration_py[i];
             ref_direction_x += features[i] * calibration_dx[i];
             ref_direction_y += features[i] * calibration_dy[i];
+
         }
 
         VehicleObservation vehicleObservation;
