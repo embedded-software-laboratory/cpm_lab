@@ -49,7 +49,7 @@
         <!-- Time control settings: normal replay rate and automatically start
              replaying upon start of the service --> 
         <time_control>
-            <rate>0.5</rate>
+            <rate>2</rate>
             <start_mode>AUTOMATIC</start_mode>
         </time_control>
 

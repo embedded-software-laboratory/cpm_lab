@@ -6,6 +6,8 @@
 #include "DetectVehicleID.hpp"
 #include "PoseCalculation.hpp"
 #include <memory>
+#include <mutex>
+#include <thread>
 
 struct IpsVisualizationInput
 {
@@ -25,10 +27,17 @@ class IpsPipeline
 
     VehiclePointTimeseries vehiclePointTimeseries;
 
+
+    // Temporary copy, for the visualization in another thread
+    IpsVisualizationInput ipsVisualizationInput_buffer;
+    std::mutex ipsVisualizationInput_buffer_mutex;
+    std::thread visualization_thread;
+
 public:
     IpsPipeline();
     void apply(LedPoints led_points);
     cv::Mat visualization(const IpsVisualizationInput &input);
+    void visualization_loop();
     
     
 };

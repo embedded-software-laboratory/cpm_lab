@@ -19,6 +19,8 @@ IpsPipeline::IpsPipeline()
     );
 
     poseCalculationFn = std::make_shared<PoseCalculation>( );
+
+    visualization_thread = std::thread([this](){ visualization_loop(); });
 }
 
 
@@ -49,17 +51,36 @@ void IpsPipeline::apply(LedPoints led_points)
     visualizationInput.floorPoints = floorPoints;
     visualizationInput.vehiclePoints = vehiclePoints;
 
-    cv::Mat image = visualization(visualizationInput);
-
-    // Show image
-    cv::imshow("IPS Visualization", image);
-    if(cv::waitKey(1) == 27) // close on escape key
+    // Save a copy of the pipeline data for the visualization thread
     {
-        system("killall rtireplay");
-        exit(0);
+        std::lock_guard<std::mutex> lock(ipsVisualizationInput_buffer_mutex);
+        ipsVisualizationInput_buffer = visualizationInput;
     }
+}
 
 
+void IpsPipeline::visualization_loop()
+{
+    while(1)
+    {
+        IpsVisualizationInput visualizationInput;
+
+        // Get a copy of the most recent visualization data
+        {
+            std::lock_guard<std::mutex> lock(ipsVisualizationInput_buffer_mutex);
+            visualizationInput = ipsVisualizationInput_buffer;
+        }
+
+        cv::Mat image = visualization(visualizationInput);
+
+        // Show image
+        cv::imshow("IPS Visualization", image);
+        if(cv::waitKey(10) == 27) // close on escape key
+        {
+            system("killall rtireplay");
+            exit(0);
+        }
+    }
 }
 
 cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
