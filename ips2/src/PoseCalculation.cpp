@@ -5,10 +5,10 @@
 
 
 PoseCalculation::PoseCalculation()
-:calibration_px({1.0, 0.0, 0.08, 0.0, 0.0})
-,calibration_py({0.0, 1.0, 0.0, 0.08, 0.0})
-,calibration_dx({0.0, 0.0, 1.0, 0.0, 0.0})
-,calibration_dy({0.0, 0.0, 0.0, 1.0, 0.0})
+:calibration_px({1.0033,     0.0,   0.0792,      0.0,     0.0})
+,calibration_py({   0.0,  1.0033,      0.0,   0.0792,     0.0})
+,calibration_dx({   0.0,     0.0,      1.0,   0.0038,     0.0})
+,calibration_dy({   0.0,     0.0,  -0.0054,      1.0,     0.0})
 {
     assert(calibration_px.size() == N_POSE_CALIBRATION_TERMS);
     assert(calibration_py.size() == N_POSE_CALIBRATION_TERMS);
