@@ -57,20 +57,30 @@ void worker_led_detection()
         cv::Mat img_binary;
         cv::threshold(frame->image, img_binary, 127, 255, cv::THRESH_BINARY);
 
-        std::vector<double> points_x;
-        std::vector<double> points_y;
         std::vector<std::vector<cv::Point> > contours;
 
         cv::findContours(img_binary, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
         for (std::vector<cv::Point> contour : contours) {
             double size = cv::contourArea(contour);
-            if (size < 50 && size > 3) {
+            if (size < 60 && size > 3) {
                 cv::Moments M = cv::moments(contour);
                 frame->points_x.push_back((M.m10 / (M.m00 + 1e-5)));
                 frame->points_y.push_back((M.m01 / (M.m00 + 1e-5)));
             }
         }
+
+        // Debug output
+        /*
+        if( frame->points_x.size() != 3 )
+        {
+            std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
+            auto t =  std::to_string(get_time_ns());
+            cv::imwrite("debug_" + t + "_raw.png",frame->image);
+            cv::imwrite("debug_" + t + "_thresh.png",img_binary);
+        }
+        */
+        
 
         // publish the points to DDS
         LedPoints myledPoints;
