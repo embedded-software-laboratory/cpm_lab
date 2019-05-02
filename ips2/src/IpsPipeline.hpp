@@ -7,6 +7,14 @@
 #include "PoseCalculation.hpp"
 #include <memory>
 
+struct IpsVisualizationInput
+{
+    VehiclePoints identifiedVehicles;
+    std::vector<VehicleObservation> vehicleObservations;
+    FloorPoints floorPoints;
+    VehiclePoints vehiclePoints;
+};
+
 class IpsPipeline
 {
 
@@ -20,6 +28,7 @@ class IpsPipeline
 public:
     IpsPipeline();
     void apply(LedPoints led_points);
+    cv::Mat visualization(const IpsVisualizationInput &input);
     
     
 };

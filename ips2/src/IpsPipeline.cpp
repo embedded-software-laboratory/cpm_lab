@@ -38,107 +38,117 @@ void IpsPipeline::apply(LedPoints led_points)
         vehiclePointTimeseries.pop_front();
         identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
         vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
+
+        // TODO send on DDS
     }
 
 
 
+    IpsVisualizationInput visualizationInput;
+    visualizationInput.identifiedVehicles = identifiedVehicles;
+    visualizationInput.vehicleObservations = vehicleObservations;
+    visualizationInput.floorPoints = floorPoints;
+    visualizationInput.vehiclePoints = vehiclePoints;
 
+    cv::Mat image = visualization(visualizationInput);
 
-    // Visualization
+    // Show image
+    cv::imshow("IPS Visualization", image);
+    if(cv::waitKey(1) == 27) // close on escape key
     {
-        const int vis_img_width = 1700;
-        const int vis_img_height = 1200;
-        const double image_zoom_factor = 290;
-        cv::Mat image(vis_img_height, vis_img_width, CV_8UC3, cv::Scalar(255,255,255));
-
-        // Transformation from floor coordinates
-        // to visualization image coordiantes.
-        auto transform = [=](cv::Point2d floor_point)->cv::Point{
-            return cv::Point(
-                (floor_point.x - 2.25) * image_zoom_factor + vis_img_width/2,
-                vis_img_height/2 - ((floor_point.y - 2.0) * image_zoom_factor)
-            );
-        };
-
-        // Draw outline box
-        cv::line(image, transform(cv::Point2d(0, 0)), transform(cv::Point2d(4.5, 0)),cv::Scalar(0,0,0),3);
-        cv::line(image, transform(cv::Point2d(4.5, 4.0)), transform(cv::Point2d(4.5, 0)),cv::Scalar(0,0,0),3);
-        cv::line(image, transform(cv::Point2d(4.5, 4.0)), transform(cv::Point2d(0, 4.0)),cv::Scalar(0,0,0),3);
-        cv::line(image, transform(cv::Point2d(0,0)), transform(cv::Point2d(0, 4.0)),cv::Scalar(0,0,0),3);
-
-
-        // Draw vehicle coordinate system
-        for(const auto &vehicleObservation:vehicleObservations)
-        {
-            const double c = cos(vehicleObservation.pose().yaw());
-            const double s = sin(vehicleObservation.pose().yaw());
-            const double x = vehicleObservation.pose().x();
-            const double y = vehicleObservation.pose().y();
-
-            cv::arrowedLine(image,
-                transform(cv::Point2d(x,y)),
-                transform(cv::Point2d(x+0.2*c,y+0.2*s)),
-                cv::Scalar(255,0,255),
-                2,
-                cv::LINE_AA
-            );
-
-            cv::arrowedLine(image,
-                transform(cv::Point2d(x,y)),
-                transform(cv::Point2d(x-0.2*s,y+0.2*c)),
-                cv::Scalar(255,0,255),
-                2,
-                cv::LINE_AA
-            );
-        }
-
-        // Draw floor points
-        for(auto point : floorPoints.points)
-        {
-            cv::circle(image,transform(point),3,cv::Scalar(0,0,255),-1,cv::LINE_AA);
-        }
-
-        // Draw circles around detected vehicles
-        for(auto vehicle:vehiclePoints.vehicles)
-        {
-            cv::circle(image,transform(
-                0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right
-                ),0.1 * image_zoom_factor,cv::Scalar(0,128,255),1,cv::LINE_AA);
-        }
-
-
-        // Draw detected vehicle points
-        for(auto vehicle:vehiclePoints.vehicles)
-        {
-            cv::putText(image,"L",transform(vehicle.back_left) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-            cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-            cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-            cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-        }
-
-
-        // Draw vehcle IDs
-        for(auto vehicle:identifiedVehicles.vehicles)
-        {
-            cv::putText(
-                image,
-                std::to_string(vehicle.id),
-                transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
-                cv::FONT_HERSHEY_SIMPLEX,
-                2,
-                cv::Scalar(0,180,0),
-                3
-            );
-        }
-
-
-        // Show image
-        cv::imshow("IPS Visualization", image);
-        if(cv::waitKey(1) == 27) // close on escape key
-        {
-            system("killall rtireplay");
-            exit(0);
-        }
-
+        system("killall rtireplay");
+        exit(0);
     }
+
+
+}
+
+cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
+{
+    const int vis_img_width = 1700;
+    const int vis_img_height = 1200;
+    const double image_zoom_factor = 290;
+    cv::Mat image(vis_img_height, vis_img_width, CV_8UC3, cv::Scalar(255,255,255));
+
+    // Transformation from floor coordinates
+    // to visualization image coordiantes.
+    auto transform = [=](cv::Point2d floor_point)->cv::Point{
+        return cv::Point(
+            (floor_point.x - 2.25) * image_zoom_factor + vis_img_width/2,
+            vis_img_height/2 - ((floor_point.y - 2.0) * image_zoom_factor)
+        );
+    };
+
+    // Draw outline box
+    cv::line(image, transform(cv::Point2d(0, 0)), transform(cv::Point2d(4.5, 0)),cv::Scalar(0,0,0),3);
+    cv::line(image, transform(cv::Point2d(4.5, 4.0)), transform(cv::Point2d(4.5, 0)),cv::Scalar(0,0,0),3);
+    cv::line(image, transform(cv::Point2d(4.5, 4.0)), transform(cv::Point2d(0, 4.0)),cv::Scalar(0,0,0),3);
+    cv::line(image, transform(cv::Point2d(0,0)), transform(cv::Point2d(0, 4.0)),cv::Scalar(0,0,0),3);
+
+
+    // Draw vehicle coordinate system
+    for(const auto &vehicleObservation:input.vehicleObservations)
+    {
+        const double c = cos(vehicleObservation.pose().yaw());
+        const double s = sin(vehicleObservation.pose().yaw());
+        const double x = vehicleObservation.pose().x();
+        const double y = vehicleObservation.pose().y();
+
+        cv::arrowedLine(image,
+            transform(cv::Point2d(x,y)),
+            transform(cv::Point2d(x+0.2*c,y+0.2*s)),
+            cv::Scalar(255,0,255),
+            2,
+            cv::LINE_AA
+        );
+
+        cv::arrowedLine(image,
+            transform(cv::Point2d(x,y)),
+            transform(cv::Point2d(x-0.2*s,y+0.2*c)),
+            cv::Scalar(255,0,255),
+            2,
+            cv::LINE_AA
+        );
+    }
+
+    // Draw floor points
+    for(auto point : input.floorPoints.points)
+    {
+        cv::circle(image,transform(point),3,cv::Scalar(0,0,255),-1,cv::LINE_AA);
+    }
+
+    // Draw circles around detected vehicles
+    for(auto vehicle:input.vehiclePoints.vehicles)
+    {
+        cv::circle(image,transform(
+            0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right
+            ),0.1 * image_zoom_factor,cv::Scalar(0,128,255),1,cv::LINE_AA);
+    }
+
+
+    // Draw detected vehicle points
+    for(auto vehicle:input.vehiclePoints.vehicles)
+    {
+        cv::putText(image,"L",transform(vehicle.back_left) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+        cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+        cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+        cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
+    }
+
+
+    // Draw vehcle IDs
+    for(auto vehicle:input.identifiedVehicles.vehicles)
+    {
+        cv::putText(
+            image,
+            std::to_string(vehicle.id),
+            transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
+            cv::FONT_HERSHEY_SIMPLEX,
+            2,
+            cv::Scalar(0,180,0),
+            3
+        );
+    }
+
+    return image;
 }
