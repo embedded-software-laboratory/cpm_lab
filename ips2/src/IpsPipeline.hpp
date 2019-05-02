@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <dds/pub/ddspub.hpp>
 
 struct IpsVisualizationInput
 {
@@ -19,6 +20,7 @@ struct IpsVisualizationInput
 
 class IpsPipeline
 {
+    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation;
 
     std::shared_ptr<UndistortPoints> undistortPointsFn;
     std::shared_ptr<DetectVehicles> detectVehiclesFn;

@@ -1,9 +1,12 @@
 #include "IpsPipeline.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
 
 
 IpsPipeline::IpsPipeline()
+:writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleObservation>("vehicleObservation"))
 {
     undistortPointsFn = std::make_shared<UndistortPoints>(
         std::vector<double>{4.641747e+00, -5.379232e+00, -3.469735e-01, 1.598328e+00, 9.661605e-01, 3.870296e-01, -1.125387e+00, -1.264416e-01, -9.323793e-01, 5.223107e-02, 5.771384e-02, 7.367979e-02, 5.512993e-02, 3.857936e-02, -2.401879e-02},
@@ -40,7 +43,14 @@ void IpsPipeline::apply(LedPoints led_points)
         identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
         vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
 
-        // TODO send on DDS
+        // Send via DDS
+        for(const auto &vehicleObservation:vehicleObservations)
+        {
+            if(vehicleObservation.vehicle_id() > 0)
+            {
+                writer_vehicleObservation.write(vehicleObservation);
+            }
+        }
     }
 
 

@@ -14,7 +14,7 @@ struct FloorPoints
 
 struct VehiclePointSet
 {
-    int id = -1;
+    int id = 0;
     bool center_present = false;
 
     cv::Point2d front;
