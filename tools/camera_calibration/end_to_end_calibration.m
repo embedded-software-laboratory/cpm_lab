@@ -19,8 +19,8 @@ function end_to_end_calibration
     
     
     format compact
-    reprojection_error_x = median(abs(feature_matrix * calibration_x - wx))
-    reprojection_error_y = median(abs(feature_matrix * calibration_y - wy))
+    reprojection_error_x = max(abs(feature_matrix * calibration_x - wx))
+    reprojection_error_y = max(abs(feature_matrix * calibration_y - wy))
     
     
     
@@ -36,9 +36,9 @@ function end_to_end_calibration
     
     %% Result
     % reprojection_error_x =
-    %    0.002018268326013
+    %     0.0214
     % reprojection_error_y =
-    %    0.001769547445660
+    %     0.0197
     % calibration_x: 
     % 4.641747e+00, -5.379232e+00, -3.469735e-01, 1.598328e+00, 9.661605e-01, 3.870296e-01, -1.125387e+00, -1.264416e-01, -9.323793e-01, 5.223107e-02, 5.771384e-02, 7.367979e-02, 5.512993e-02, 3.857936e-02, -2.401879e-02, 
     % calibration_y: 
