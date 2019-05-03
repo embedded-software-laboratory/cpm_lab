@@ -115,7 +115,10 @@ void worker_visualization()
         }
 
         cv::imshow( "BaslerLedDetection", img_small_BGR ); 
-        cv::waitKey(1);
+        if(cv::waitKey(1) == 27) // close on escape key
+        {
+            exit(0);
+        }
     }
 }
 

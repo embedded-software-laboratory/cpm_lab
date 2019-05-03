@@ -142,6 +142,20 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
         );
     }
 
+    // Draw vehcle IDs
+    for(auto vehicle:input.identifiedVehicles.vehicles)
+    {
+        cv::putText(
+            image,
+            std::to_string(vehicle.id),
+            transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
+            cv::FONT_HERSHEY_SIMPLEX,
+            2,
+            cv::Scalar(0,180,0),
+            3
+        );
+    }
+
     // Draw floor points
     for(auto point : input.floorPoints.points)
     {
@@ -156,7 +170,6 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
             ),0.1 * image_zoom_factor,cv::Scalar(0,128,255),1,cv::LINE_AA);
     }
 
-
     // Draw detected vehicle points
     for(auto vehicle:input.vehiclePoints.vehicles)
     {
@@ -164,21 +177,6 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
         cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
         cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
         cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-    }
-
-
-    // Draw vehcle IDs
-    for(auto vehicle:input.identifiedVehicles.vehicles)
-    {
-        cv::putText(
-            image,
-            std::to_string(vehicle.id),
-            transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
-            cv::FONT_HERSHEY_SIMPLEX,
-            2,
-            cv::Scalar(0,180,0),
-            3
-        );
     }
 
     return image;
