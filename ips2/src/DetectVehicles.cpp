@@ -230,7 +230,7 @@ void DetectVehicles::find_center_point(VehiclePointSet &vehicle_point_set,
                                + 0.459016393 * vehicle_point_set.front;
     for (auto it = remaining_points.begin(); it != remaining_points.end(); ++it)
     {
-        if (fabs(length(*it - point_center)) < 0.01)
+        if (fabs(length(*it - point_center)) < 0.03)
         {
             vehicle_point_set.center_present = 1;
             vehicle_point_set.center = *it;
