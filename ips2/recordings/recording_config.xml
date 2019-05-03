@@ -1,0 +1,55 @@
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_record.xsd">
+
+
+    <recorder name="mydefault">
+        
+        <verbosity> 1 </verbosity>
+        
+        <remote_access>
+            <enabled> false </enabled>
+        </remote_access>
+
+        <!-- Specify where to store the recorded data. -->
+        <recorder_database>
+            <database_name> recordings/new_recording.dat </database_name>
+        </recorder_database>
+
+        <!-- Create a DDS DomainParticipant in domain 0 with default QoS. 
+             This domain will be used for remote administration and Distributed
+             Logger too. -->
+        <domain name="domain0">
+            <domain_id> 0 </domain_id>
+            <deserialize_mode>RTIDDS_DESERIALIZEMODE_ALWAYS</deserialize_mode>
+        </domain>
+
+        <!-- Create a TopicGroup. A TopicGroup is a collection of Topics 
+         whose names match the topic_expr. The field_expr specifies 
+         which fields in the Topics to record. Note that a TopicGroup is 
+         not bound to a particular domain yet. 
+         In this example, the TopicGroup All means all fields in all Topics -->
+        <topic_group name="All">
+            <topics>
+                <topic_expr> ipsLedPoints </topic_expr>
+            </topics>
+            <field_expr> * </field_expr>
+        </topic_group>
+
+        <!-- Create a RecordGroup. A RecordGroup controls which TopicGroups
+         are recorded for a set of domains. Each recorded Topic is stored in 
+         a table with the format "record_group.domain.Topic" 
+         In this example, we want to record data from topics in TopicGroup "All"
+         from "domain0." -->
+        <record_group name="RecordAll">
+            <!-- specify which domains to record from -->
+            <domain_ref>
+                <element> domain0 </element>
+            </domain_ref>
+            <!-- specify which topics to record -->
+            <topic_ref>
+                <element> All </element>
+            </topic_ref>
+        </record_group>
+    </recorder>
+    
+</dds>
