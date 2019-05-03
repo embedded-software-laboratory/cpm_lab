@@ -25,11 +25,19 @@ int main(int argc, char* argv[])
         cpm::get_topic<LedPoints>("ipsLedPoints")
     );
 
-    // stop previous replay
-    system("killall -9 rtireplay");
+    if(argc > 1 && std::string(argv[1]) == "replay")
+    {
+        // stop previous replay
+        system("killall -9 rtireplay");
 
-    // start replay
-    system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");
+        // start replay
+        system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");
+    }
+    else
+    {
+        while(1) sleep(1);
+    }
+
     exit(0);
     return 0;
 }
