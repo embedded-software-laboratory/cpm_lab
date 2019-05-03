@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     );
 
     // stop previous replay
-    system("killall rtireplay");
+    system("killall -9 rtireplay");
 
     // start replay
     system("rtireplay -cfgName mydefault -cfgFile recordings/replay_config.xml");

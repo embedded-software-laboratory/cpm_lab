@@ -85,11 +85,12 @@ void IpsPipeline::visualization_loop()
 
         // Show image
         cv::imshow("IPS Visualization", image);
-        if(cv::waitKey(10) == 27) // close on escape key
+        if(cv::waitKey(1) == 27) // close on escape key
         {
-            system("killall rtireplay");
+            system("killall -9 rtireplay");
             exit(0);
         }
+        //cv::imwrite("debug_" + std::to_string(visualizationInput.floorPoints.timestamp) + ".jpg",image);
     }
 }
 
