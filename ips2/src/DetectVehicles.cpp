@@ -61,6 +61,8 @@ cv::Mat_<double> DetectVehicles::calc_point_distances(const std::vector<cv::Poin
 std::vector< std::array<std::size_t, 3> > DetectVehicles::find_vehicle_candidates(const std::vector<cv::Point2d> &points,
                                                                                   const cv::Mat_<double> &point_distances) const
 {
+    if(points.size() < 3) return {};
+
     std::vector< std::array<std::size_t, 3> > vehicle_candidates;
     for (std::size_t i = 0; i < points.size()-2; ++i)
     {
