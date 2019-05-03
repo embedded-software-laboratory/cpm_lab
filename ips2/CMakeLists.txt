@@ -47,7 +47,7 @@ target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARI
 
 
 
-add_executable(ips_manual_test
+add_executable(ips_pipeline
     src/main_ips_manual_test.cpp
     src/IpsPipeline.cpp
     src/IpsPipeline.hpp
@@ -60,7 +60,7 @@ add_executable(ips_manual_test
     src/PoseCalculation.cpp
     src/PoseCalculation.hpp
 )
-target_link_libraries(ips_manual_test cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+target_link_libraries(ips_pipeline cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
 
 
 add_executable(unittest
