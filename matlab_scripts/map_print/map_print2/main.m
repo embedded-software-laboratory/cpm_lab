@@ -1,7 +1,7 @@
 function main
     
-    %% The map is made from 10*4 = 10 segments.
-    %% The 10 segments are labeled A-K in "map-sketch.jpg".
+    %% The map is made from 9*4 = 36 segments.
+    %% The 9 segments are shown in "map-sketch.jpg". (disregard segment "K")
     %% The map has mirror symmetry around the vertical 
     %% and horizontal axis, centered on the intersection, 
     %% giving 4x the segments.
