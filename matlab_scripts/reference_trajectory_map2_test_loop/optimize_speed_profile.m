@@ -1,8 +1,9 @@
 function optimize_speed_profile
     
-    collision_map = load_collision_map();
+    [collision_map, collision_dist_sq] = load_collision_map();
     p = struct;
     p.dt = 0.01;
+    p.ds = 0.01;
     p.Hp = 3000;
     p.nVeh = 15;
     p.delta_H_veh = 200;
@@ -17,74 +18,90 @@ function optimize_speed_profile
     p.idx_v = (1:p.Hp) + p.Hp;
     p.idx_a = (1:p.Hp) + 2 * p.Hp;
     
+    %% Initial guess
+    if exist('optimization_checkpoint.mat','file')
+        tmp = load('optimization_checkpoint.mat');
+        Y_init = tmp.Y_0;
+    else
+        Y_init = nan(p.Hp, 1);
+        Y_init(p.idx_s) = linspace(p.s_min, p.s_max, p.Hp);
+        Y_init(p.idx_v) = p.v_ref;
+        Y_init(p.idx_a) = 0;
+    end
     
-    Y_init = nan(p.Hp, 1);
-    Y_init(p.idx_s) = linspace(p.s_min, p.s_max, p.Hp);
-    Y_init(p.idx_v) = p.v_ref;
-    Y_init(p.idx_a) = 0;
-    
+    %% Finite differences
     D = -diag(ones(p.Hp,1)) + diag(ones(p.Hp-1,1),1);
     D = sparse(D(1:end-1,:));
     D = D / p.dt;
     
+    %% Equation system
     Aeq = [];
     beq = [];
     
+    % dot x == v
     Aeq = [Aeq; [D -speye(p.Hp-1,p.Hp) sparse(p.Hp-1,p.Hp)]];
     beq = [beq; sparse(p.Hp-1,1)];
     
+    % dot v == a
     Aeq = [Aeq; [sparse(p.Hp-1,p.Hp) D -speye(p.Hp-1,p.Hp) ]];
     beq = [beq; sparse(p.Hp-1,1)];
     
+    % s(0) == s_min
     Aeq(end+1,p.idx_s(1)) = 1;
     beq(end+1,1) = p.s_min;
     
+    % s(end) == s_max
     Aeq(end+1,p.idx_s(end)) = 1;
     beq(end+1,1) = p.s_max;
     
+    % v(0) == v_ref
     Aeq(end+1,p.idx_v(1)) = 1;
     beq(end+1,1) = p.v_ref;
     
+    % v(end) == v_ref
     Aeq(end+1,p.idx_v(end)) = 1;
     beq(end+1,1) = p.v_ref;
     
-    KKT_mat = [speye(size(Aeq,2), size(Aeq,2)) Aeq'; Aeq speye(size(Aeq,1), size(Aeq,1))];
+    
+    %% KKT system for reprojecting to the equation system
+    kkt_mat = [speye(size(Aeq,2), size(Aeq,2)) Aeq'; Aeq sparse(size(Aeq,1), size(Aeq,1))];
     
     
+    Y_0 = Y_init;
+    objective_0 = objective_fn(Y_0, collision_map, collision_dist_sq, p);
     
-    Y_new_A = Y_init + 1e-5 * randn(size(Y_init));
-    
-    kkt_soln = KKT_mat \ [Y_new_A;beq];
-    Y_new_B = kkt_soln(1:size(Aeq,2));
-    
-    kkt_soln = KKT_mat \ [Y_new_B;beq];
-    Y_new_B = kkt_soln(1:size(Aeq,2));
-    
-    plot(Aeq*Y_init-beq,'o-')
-    plot(Aeq*Y_new_A-beq,'o-')
-    plot(Aeq*Y_new_B-beq,'o-')
-    
-    
-    %o=objective_fn(Y_init, collision_map, p);
-    
-    %Y_soln = fmincon(@(Y) objective_fn(Y, collision_map, p) , Y_init, [], []);
-    
-    format long
-    format compact 
-    
-%     lb = [];
-%     ub = [];
-%     options = optimoptions('fmincon', ...
-%         'Display','iter-detailed', ...
-%         'DiffMinChange',2*p.ds, ...
-%         'FiniteDifferenceStepSize',2*p.ds ...
-%     );
-%     
-%     Y_soln = fmincon(@(Y) objective_fn(Y, collision_map, p) , Y_init, [], [], Aeq, beq, lb, ub, [], options);
+    while true
+        for i = 1:100
+            Y_new = Y_0 + 1e-4 * randn(size(Y_0));
+            
+            % smooth acceleration
+            accel = Y_new(p.idx_a);
+            accel(2:end-1) = (accel(1:end-2) + accel(2:end-1) + accel(3:end)) / 3;
+            Y_new(p.idx_a) = accel;
+            
+            
+            kkt_soln = kkt_mat \ [Y_new;beq];
+            Y_new = kkt_soln(1:size(Aeq,2));
+            [objective_new, min_dist] = objective_fn(Y_new, collision_map, collision_dist_sq, p);
+
+            if objective_new < objective_0
+                objective_0 = objective_new;
+                Y_0 = Y_new;
+                fprintf('%f, %f\n', objective_0, min_dist);
+            end
+        end
+
+        plot(Y_0);
+
+        s = Y_0(p.idx_s);
+        save('optimization_checkpoint','Y_0','s','p');
+        drawnow
+        pause(0.01);
+    end
     
 end
 
-function objective = objective_fn(Y, collision_map, p)
+function [objective, min_dist] = objective_fn(Y, collision_map, collision_dist_sq, p)
 
     assert(size(Y,2) == 1);
 
@@ -92,7 +109,7 @@ function objective = objective_fn(Y, collision_map, p)
     v = Y(p.idx_v);
     a = Y(p.idx_a);
     
-    objective = mean(a.^2);
+    objective = 10*mean(a.^2);
     objective = objective + mean((v - p.v_ref).^2);
     
     s1q = [];
@@ -104,6 +121,8 @@ function objective = objective_fn(Y, collision_map, p)
     end
     
     collision_penalties = interp2(collision_map, s1q / p.ds + 1, s2q / p.ds + 1);
+    collision_dists_sq_interp = interp2(collision_dist_sq, s1q / p.ds + 1, s2q / p.ds + 1);
+    min_dist = sqrt(min(collision_dists_sq_interp));
     objective = objective + 100 * mean(collision_penalties);
 end
 
