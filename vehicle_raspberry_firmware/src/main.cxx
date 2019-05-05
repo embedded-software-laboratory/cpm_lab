@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.update(
                     t_now,
+                    period_nanoseconds,
                     vehicleState,
                     sample_vehicleObservation, 
                     sample_vehicleObservation_age

@@ -26,6 +26,6 @@ popd
 
 
 
-pushd ips
+pushd ips2
 bash build.bash
 popd
