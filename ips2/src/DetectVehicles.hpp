@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm> // std::sort
-#include <iostream> // debug
 #include <list>
 #include <vector>
 #include "types.hpp"
@@ -9,12 +8,24 @@
 class DetectVehicles
 {
 public:
+    /**
+     * @brief Construct a new Detect Vehicles object
+     * 
+     * @param d_front_rear Distance between front and rear point
+     * @param d_rear_rear Distance between rear points
+     */
     DetectVehicles(const double &d_front_rear, const double &d_rear_rear);
 
+    /**
+     * @brief Search %FloorPoints and identify %VehiclePoints
+     * 
+     * @param floor_points 
+     * @return VehiclePoints 
+     */
     VehiclePoints apply(const FloorPoints &floor_points) const;
 
 private:
-    /** TODO: Move to appropriate file
+    /** TODO: Move coordinate frame to appropriate file
      * @brief Point set defining LED geometry [m]
      * 
      * Point set defining the positions of the LEDs on a vehicle in [m]
@@ -38,37 +49,85 @@ private:
      */
 
     /**
-     * @brief 
+     * @brief This factor times the actual point distance gives the tolerance 
      * 
-     * distance front to back
-     * actual:   0.1628 - 0.1649
-     * expected: 0.1645
-     * deviation of factor 0.01
-     * 
-     * distance back left to back right
-     * actual:   
-     * expected: 0.034
      */
     const double point_distance_tolerance = 0.1;
 
+    /**
+     * @brief Tolerance [m] between front and rear point
+     * 
+     */
     const double tolerance_front_rear;
+
+    /**
+     * @brief Tolerance [m] between rear points
+     * 
+     */
     const double tolerance_rear_rear;
+    
+    /**
+     * @brief Distance between front and rear point
+     * 
+     */
     const double d_front_rear;
+
+    /**
+     * @brief Distance between rear points
+     * 
+     */
     const double d_rear_rear;
 
     /**
-     * @brief Calculate distances between points
+     * @brief Calculate distances between point pairs and store in matrix
      * 
      * @param points 
      * @return cv::Mat_<double> 
      */
-    cv::Mat_<double> calc_point_distances(const std::vector<cv::Point2d> &points) const;
+    cv::Mat_<double>
+    calc_point_distances
+    (
+        const std::vector<cv::Point2d> &points
+    ) const;
 
+    /**
+     * @brief Find point tripel satisfying the distances defined for a vehicle
+     * 
+     * @param points 
+     * @param point_distances 
+     * @return std::vector< std::array<std::size_t, 3> > 
+     */
+    std::vector< std::array<std::size_t, 3> >
+    find_vehicle_candidates
+    (
+        const std::vector<cv::Point2d> &points,
+        const cv::Mat_<double> &point_distances
+    ) const;
 
-    std::vector< std::array<std::size_t, 3> > find_vehicle_candidates(const std::vector<cv::Point2d> &points,
-                                                            const cv::Mat_<double> &point_distances) const;
+    /**
+     * @brief 
+     * 
+     * @param vehicle_candidates 
+     * @return std::vector< std::array<std::size_t, 3> > 
+     */
+    std::vector< std::array<std::size_t, 3> >
+    resolve_conflicts
+    (
+        std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    ) const;
 
-    cv::Mat_<int> determine_conflicts(const std::vector< std::array<std::size_t, 3> > &vehicle_candidates) const;
+    /**
+     * @brief Determine conflicts between vehicle candidate pairs,
+     * i.e. when a pair shares the same point
+     * 
+     * @param vehicle_candidates 
+     * @return cv::Mat_<int> 
+     */
+    cv::Mat_<int>
+    determine_conflicts
+    (
+        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    ) const;
 
     /**
      * @brief Check if two arrays have an element in common
@@ -78,13 +137,42 @@ private:
      * @return true 
      * @return false 
      */
-    bool arrays_with_common_element(const std::array<std::size_t, 3> &array_1, const std::array<std::size_t, 3> &array_2) const;
+    bool
+    arrays_with_common_element
+    (
+        const std::array<std::size_t, 3> &array_1,
+        const std::array<std::size_t, 3> &array_2
+    ) const;
 
-    std::list<cv::Point2d> find_remaining_points(const std::vector<cv::Point2d> &floor_points,
-                                                 const std::vector< std::array<std::size_t, 3> > &vehicle_candidates) const;
+    /**
+     * @brief Remove points assigned to vehicles from input floor_points
+     * 
+     * assumes no point is assigned to multiple vehicles
+     * 
+     * @param floor_points 
+     * @param vehicle_candidates 
+     * @return std::list<cv::Point2d> 
+     */
+    std::list<cv::Point2d>
+    find_remaining_points
+    (
+        const std::vector<cv::Point2d> &floor_points,
+        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    ) const;
 
-    VehiclePointSet assign_vehicle_points(const std::vector<cv::Point2d> &floor_points,
-                                          const std::array<std::size_t, 3> &vehicle_candidate) const;
+    /**
+     * @brief Assign point tripel to a %VehiclePointSet
+     * 
+     * @param floor_points 
+     * @param vehicle_candidate 
+     * @return VehiclePointSet 
+     */
+    VehiclePointSet
+    assign_vehicle_points
+    (
+        const std::vector<cv::Point2d> &floor_points,
+        const std::array<std::size_t, 3> &vehicle_candidate
+    ) const;
 
     /**
      * @brief Find center point and remove from remaining point list
