@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>(trajectoryCommand, [=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto paramViewUi = make_shared<ParamViewUI>(storage, 32);
+    auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

@@ -5,21 +5,13 @@ parameters:
   int:
     test3: 0
     test4: 199
-    testi: -2147483648
-    testi2: 2147483647
-    testi3: 0
   double:
     test5: 0.10000000000000001
     test6: 1918829939.9847331
   string:
     test7: "TEHST@#+-//\\\\??"
   ints:
-    test8:
-      - 0
-      - 200000
+    {}
   doubles:
     test10:
       - 29342424
-    test9:
-      - 0.12313213123123123
-      - 12932193.540689999

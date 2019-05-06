@@ -43,8 +43,8 @@ private:
     Gtk::Button* parameters_button_edit;
     Gtk::FlowBoxChild* parameters_box_create;
     Gtk::Button* parameters_button_create;
-    Gtk::FlowBoxChild* parameters_box_save_all;
-    Gtk::Button* parameters_button_save_all;
+    Gtk::FlowBoxChild* parameters_box_show;
+    Gtk::Button* parameters_button_show;
 
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
@@ -59,14 +59,15 @@ private:
     void read_storage_data();
 
     //Manipulate rows
-    bool get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info);
+    bool get_selected_row(std::string &name);
     //"Callback" function: Delete the row selected by the user if the delete button was clicked
     void delete_selected_row();
     //Open edit / create window
     void open_param_create_window();
     void open_param_edit_window();
-    //Save current state to yaml
-    void save_configuration();
+
+    //Key events - act depending on which button was released
+    bool handle_button_released(GdkEventKey* event);
 
     //Callback: Allow to only create another create window when the former window was closed
     //Handles callback for close and for create operations
@@ -76,6 +77,19 @@ private:
     //Precision of floats
     int float_precision;
 public:
+    /**
+     * \brief constructor
+     * \param parameter_storage The data storage that needs to be accessed from the UI to present data and store/modify it if the user does so
+     * \param float_precision precision of floats shown by the UI
+     */
     ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
     Gtk::Widget* get_parent();
+
+    //Callbacks for button presses on menu items
+    void params_reload_handler();
+    void params_save_handler();
+    void params_save_as_handler();
+    void params_load_file_handler();
+    void params_load_multiple_files_handler();
+    void params_load_params_handler();
 };

@@ -158,14 +158,14 @@
           </object>
         </child>
         <child>
-          <object class="GtkFlowBoxChild" id="parameters_box_save_all">
+          <object class="GtkFlowBoxChild" id="parameters_box_show">
             <property name="width_request">100</property>
             <property name="height_request">80</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkButton" id="parameters_button_save_all">
-                <property name="label" translatable="yes">Save All</property>
+              <object class="GtkButton" id="parameters_button_show">
+                <property name="label" translatable="yes">Show</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

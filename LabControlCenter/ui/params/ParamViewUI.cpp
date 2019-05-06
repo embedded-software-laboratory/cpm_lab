@@ -21,8 +21,8 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     params_builder->get_widget("parameters_button_edit", parameters_button_edit);
     params_builder->get_widget("parameters_box_create", parameters_box_create);
     params_builder->get_widget("parameters_button_create", parameters_button_create);
-    params_builder->get_widget("parameters_box_save_all", parameters_box_save_all);
-    params_builder->get_widget("parameters_button_save_all", parameters_button_save_all);
+    params_builder->get_widget("parameters_box_show", parameters_box_show);
+    params_builder->get_widget("parameters_button_show", parameters_button_show);
 
     assert(parent);
     assert(parameters_flow_top);
@@ -39,8 +39,8 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     assert(parameters_button_edit);
     assert(parameters_box_create);
     assert(parameters_button_create);
-    assert(parameters_box_save_all);
-    assert(parameters_button_save_all);
+    assert(parameters_box_show);
+    assert(parameters_button_show);
 
     //Create data model_record for parameters
     parameter_list_storage = Gtk::ListStore::create(model_record);
@@ -63,8 +63,10 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     //Read all param data
     read_storage_data();
 
-    //Delete button listener
+    //Delete button listener (also keyboard: del)
     parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
+    parameters_list_scroll_window->signal_key_release_event().connect(sigc::mem_fun(this, &ParamViewUI::handle_button_released));
+    parameters_list_scroll_window->add_events(Gdk::KEY_RELEASE_MASK);
 
     //Create and edit button listener
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
@@ -72,7 +74,7 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
 
     //Save all button listener (save the currently visible configuration to the currently open yaml file)
-    parameters_button_save_all->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
+    //parameters_button_show->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
 
     //For commas in doubles, also for conversion in ParamsCreateView
     std::setlocale(LC_NUMERIC, "C");
@@ -106,23 +108,26 @@ Gtk::Widget* ParamViewUI::get_parent() {
     return parent;
 }
 
-bool ParamViewUI::get_selected_row(std::string &name, std::string &type, std::string &value, std::string &info) {
+bool ParamViewUI::get_selected_row(std::string &name) {
     Gtk::TreeModel::iterator iter = parameters_list_tree->get_selection()->get_selected();
     if(iter) //If anything is selected
     {
         Gtk::TreeModel::Row row = *iter;
         Glib::ustring name_ustring(row[model_record.column_name]);
-        Glib::ustring type_ustring(row[model_record.column_type]);
-        Glib::ustring value_ustring(row[model_record.column_value]);
-        Glib::ustring info_ustring(row[model_record.column_info]);
         name = name_ustring;
-        type = type_ustring;
-        value = value_ustring;
-        info = info_ustring;
 
         return true;
     }
     else return false;
+}
+
+bool ParamViewUI::handle_button_released(GdkEventKey* event) {
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Delete)
+    {
+        delete_selected_row();
+        return true;
+    }
+    return false;
 }
 
 void ParamViewUI::delete_selected_row() {
@@ -181,7 +186,7 @@ void ParamViewUI::open_param_edit_window() {
         std::string info;
 
         //Only create an edit window if a row was selected
-        if (get_selected_row(name, type, value, info)) {
+        if (get_selected_row(name)) {
             ParameterWithDescription param;
             //Get the parameter
             if (parameter_storage->get_parameter(name, param)) {
@@ -238,11 +243,33 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     parent->set_sensitive(true);
 }
 
-void ParamViewUI::save_configuration() {
-    parameter_storage->storeFile("lab_yaml_test_out.yaml");
-}
-
 bool ParamViewUI::check_param_exists_callback(std::string name) {
     ParameterWithDescription param;
     return parameter_storage->get_parameter(name, param);
+}
+
+//Menu bar item handlers
+
+void ParamViewUI::params_reload_handler() {
+
+}
+
+void ParamViewUI::params_save_handler() {
+    parameter_storage->storeFile("lab_yaml_test_out.yaml"); //TODO
+}
+
+void ParamViewUI::params_save_as_handler() {
+
+}
+
+void ParamViewUI::params_load_file_handler() {
+
+}
+
+void ParamViewUI::params_load_multiple_files_handler() {
+
+}
+
+void ParamViewUI::params_load_params_handler() {
+
 }
