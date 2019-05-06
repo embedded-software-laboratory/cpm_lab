@@ -3,11 +3,13 @@
 static inline void get_test_loop_trajectory(
     std::vector<TrajectoryPoint> &points,
     uint64_t &loop_period_nanoseconds,
+    uint64_t &point_period_nanoseconds,
     uint64_t &vehicle_time_gap_nanoseconds,
     int &n_max_vehicles
 )
 {
     loop_period_nanoseconds = 30000000000ull;
+    point_period_nanoseconds = 250000000ull;
     vehicle_time_gap_nanoseconds = 2000000000ull;
     n_max_vehicles = 15;
     points = 

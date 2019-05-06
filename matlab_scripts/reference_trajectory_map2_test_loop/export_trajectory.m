@@ -46,11 +46,13 @@ function export_trajectory
     fprintf(cpp_file, 'static inline void get_test_loop_trajectory(\n');
     fprintf(cpp_file, '    std::vector<TrajectoryPoint> &points,\n');
     fprintf(cpp_file, '    uint64_t &loop_period_nanoseconds,\n');
+    fprintf(cpp_file, '    uint64_t &point_period_nanoseconds,\n');
     fprintf(cpp_file, '    uint64_t &vehicle_time_gap_nanoseconds,\n');
     fprintf(cpp_file, '    int &n_max_vehicles\n');
     fprintf(cpp_file, ')\n');
     fprintf(cpp_file, '{\n');
     fprintf(cpp_file, '    loop_period_nanoseconds = %uull;\n', uint64(T_loop*1e9));
+    fprintf(cpp_file, '    point_period_nanoseconds = %uull;\n', uint64(dt_new*1e9));
     fprintf(cpp_file, '    vehicle_time_gap_nanoseconds = %uull;\n', uint64(T_gap*1e9));
     fprintf(cpp_file, '    n_max_vehicles = %i;\n', opt_result.p.nVeh);
     fprintf(cpp_file, '    points = \n');
