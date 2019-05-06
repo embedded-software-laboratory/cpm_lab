@@ -47,6 +47,9 @@ void worker_led_detection()
     auto LED_topic = cpm::get_topic<LedPoints>("ipsLedPoints");
     dds::pub::DataWriter<LedPoints> LED_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), LED_topic);
 
+    // Number of points in the previous frame.
+    // Used for debug trigger.
+    size_t n_points_previous = 0;
 
     while (1)
     {
@@ -71,15 +74,16 @@ void worker_led_detection()
         }
 
         // Debug output
-        /*
-        if( frame->points_x.size() != 3 )
+        // Save the image for analysis, when the last vehicle disappears.
+        if( frame->points_x.size() < 3 && n_points_previous >= 3 )
         {
             std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
             auto t =  std::to_string(get_time_ns());
             cv::imwrite("debug_" + t + "_raw.png",frame->image);
             cv::imwrite("debug_" + t + "_thresh.png",img_binary);
         }
-        */
+        n_points_previous = frame->points_x.size();
+        
         
 
         // publish the points to DDS
@@ -115,7 +119,10 @@ void worker_visualization()
         }
 
         cv::imshow( "BaslerLedDetection", img_small_BGR ); 
-        cv::waitKey(1);
+        if(cv::waitKey(1) == 27) // close on escape key
+        {
+            exit(0);
+        }
     }
 }
 

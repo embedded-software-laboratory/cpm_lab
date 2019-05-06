@@ -1,9 +1,12 @@
 #include "IpsPipeline.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
 
 
 IpsPipeline::IpsPipeline()
+:writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleObservation>("vehicleObservation"))
 {
     undistortPointsFn = std::make_shared<UndistortPoints>(
         std::vector<double>{4.641747e+00, -5.379232e+00, -3.469735e-01, 1.598328e+00, 9.661605e-01, 3.870296e-01, -1.125387e+00, -1.264416e-01, -9.323793e-01, 5.223107e-02, 5.771384e-02, 7.367979e-02, 5.512993e-02, 3.857936e-02, -2.401879e-02},
@@ -19,6 +22,8 @@ IpsPipeline::IpsPipeline()
     );
 
     poseCalculationFn = std::make_shared<PoseCalculation>( );
+
+    visualization_thread = std::thread([this](){ visualization_loop(); });
 }
 
 
@@ -38,7 +43,14 @@ void IpsPipeline::apply(LedPoints led_points)
         identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
         vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
 
-        // TODO send on DDS
+        // Send via DDS
+        for(const auto &vehicleObservation:vehicleObservations)
+        {
+            if(vehicleObservation.vehicle_id() > 0)
+            {
+                writer_vehicleObservation.write(vehicleObservation);
+            }
+        }
     }
 
 
@@ -49,17 +61,37 @@ void IpsPipeline::apply(LedPoints led_points)
     visualizationInput.floorPoints = floorPoints;
     visualizationInput.vehiclePoints = vehiclePoints;
 
-    cv::Mat image = visualization(visualizationInput);
-
-    // Show image
-    cv::imshow("IPS Visualization", image);
-    if(cv::waitKey(1) == 27) // close on escape key
+    // Save a copy of the pipeline data for the visualization thread
     {
-        system("killall rtireplay");
-        exit(0);
+        std::lock_guard<std::mutex> lock(ipsVisualizationInput_buffer_mutex);
+        ipsVisualizationInput_buffer = visualizationInput;
     }
+}
 
 
+void IpsPipeline::visualization_loop()
+{
+    while(1)
+    {
+        IpsVisualizationInput visualizationInput;
+
+        // Get a copy of the most recent visualization data
+        {
+            std::lock_guard<std::mutex> lock(ipsVisualizationInput_buffer_mutex);
+            visualizationInput = ipsVisualizationInput_buffer;
+        }
+
+        cv::Mat image = visualization(visualizationInput);
+
+        // Show image
+        cv::imshow("IPS Visualization", image);
+        if(cv::waitKey(1) == 27) // close on escape key
+        {
+            system("killall -9 rtireplay");
+            exit(0);
+        }
+        //cv::imwrite("debug_" + std::to_string(visualizationInput.floorPoints.timestamp) + ".jpg",image);
+    }
 }
 
 cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
@@ -110,6 +142,20 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
         );
     }
 
+    // Draw vehcle IDs
+    for(auto vehicle:input.identifiedVehicles.vehicles)
+    {
+        cv::putText(
+            image,
+            std::to_string(vehicle.id),
+            transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
+            cv::FONT_HERSHEY_SIMPLEX,
+            2,
+            cv::Scalar(0,180,0),
+            3
+        );
+    }
+
     // Draw floor points
     for(auto point : input.floorPoints.points)
     {
@@ -124,7 +170,6 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
             ),0.1 * image_zoom_factor,cv::Scalar(0,128,255),1,cv::LINE_AA);
     }
 
-
     // Draw detected vehicle points
     for(auto vehicle:input.vehiclePoints.vehicles)
     {
@@ -132,21 +177,6 @@ cv::Mat IpsPipeline::visualization(const IpsVisualizationInput &input)
         cv::putText(image,"R",transform(vehicle.back_right) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
         cv::putText(image,"C",transform(vehicle.center) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
         cv::putText(image,"F",transform(vehicle.front) + cv::Point(-3,5),cv::FONT_HERSHEY_PLAIN,0.8,cv::Scalar(0,0,0),1);
-    }
-
-
-    // Draw vehcle IDs
-    for(auto vehicle:input.identifiedVehicles.vehicles)
-    {
-        cv::putText(
-            image,
-            std::to_string(vehicle.id),
-            transform(0.5*vehicle.front + 0.25*vehicle.back_left + 0.25*vehicle.back_right) + cv::Point(-20,10),
-            cv::FONT_HERSHEY_SIMPLEX,
-            2,
-            cv::Scalar(0,180,0),
-            3
-        );
     }
 
     return image;

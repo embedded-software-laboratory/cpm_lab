@@ -6,6 +6,9 @@
 #include "DetectVehicleID.hpp"
 #include "PoseCalculation.hpp"
 #include <memory>
+#include <mutex>
+#include <thread>
+#include <dds/pub/ddspub.hpp>
 
 struct IpsVisualizationInput
 {
@@ -17,6 +20,7 @@ struct IpsVisualizationInput
 
 class IpsPipeline
 {
+    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation;
 
     std::shared_ptr<UndistortPoints> undistortPointsFn;
     std::shared_ptr<DetectVehicles> detectVehiclesFn;
@@ -25,10 +29,17 @@ class IpsPipeline
 
     VehiclePointTimeseries vehiclePointTimeseries;
 
+
+    // Temporary copy, for the visualization in another thread
+    IpsVisualizationInput ipsVisualizationInput_buffer;
+    std::mutex ipsVisualizationInput_buffer_mutex;
+    std::thread visualization_thread;
+
 public:
     IpsPipeline();
     void apply(LedPoints led_points);
     cv::Mat visualization(const IpsVisualizationInput &input);
+    void visualization_loop();
     
     
 };
