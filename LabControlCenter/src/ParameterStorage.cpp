@@ -1,12 +1,18 @@
 #include "ParameterStorage.hpp"
 
 ParameterStorage::ParameterStorage(std::string _filename, int precision) :
-    PRECISION(precision)
+    PRECISION(precision),
+    filename(_filename)
 {
-    loadFile(_filename);
+    loadFile();
 }
 
+void ParameterStorage::loadFile() {
+    loadFile(filename);
+}
 void ParameterStorage::loadFile(std::string _filename) {
+    filename = _filename;
+
     std::unique_lock<std::mutex> lock(param_storage_mutex);
     param_storage.clear();
     lock.unlock();
@@ -77,7 +83,12 @@ int ParameterStorage::get_precision() {
     return PRECISION;
 }
 
+void ParameterStorage::storeFile() {
+    storeFile(filename);
+}
 void ParameterStorage::storeFile(std::string _filename) {
+    filename = _filename;
+    
     YAML::Emitter out;
 
     out << YAML::BeginMap;

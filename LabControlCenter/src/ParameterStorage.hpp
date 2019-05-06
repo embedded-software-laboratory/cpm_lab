@@ -30,12 +30,16 @@ public:
 
     /**
      * \brief Load YAML file into memory, use mutex
+     * \param _filename Change the current filename and use the given parameter for that, thus switch to the new file
      */
     void loadFile(std::string _filename);
+    void loadFile();
     /**
      * \brief Store current configuration in YAML file
+     * \param _filename Change the current filename and use the given parameter for that, thus switch to the new file
      */
     void storeFile(std::string _filename);
+    void storeFile();
     /**
      * \brief Set the value of a parameter
      * \param name name of the parameter
@@ -90,6 +94,8 @@ private:
      * Float / double precision for YAML
      */
     int PRECISION = 32;
+
+    std::string filename;
 
     //Parameter storage
     std::map<std::string, ParameterWithDescription> param_storage;

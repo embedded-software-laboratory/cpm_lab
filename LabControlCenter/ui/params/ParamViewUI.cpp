@@ -81,6 +81,9 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
 }
 
 void ParamViewUI::read_storage_data() {
+    //Clear previously set data
+    parameter_list_storage->clear();
+
     //Read all rows
     for (ParameterWithDescription param : parameter_storage->get_all_parameters()) {
         Gtk::TreeModel::Row row = *(parameter_list_storage->append());
@@ -251,7 +254,8 @@ bool ParamViewUI::check_param_exists_callback(std::string name) {
 //Menu bar item handlers
 
 void ParamViewUI::params_reload_handler() {
-
+    parameter_storage->loadFile();
+    read_storage_data();
 }
 
 void ParamViewUI::params_save_handler() {
