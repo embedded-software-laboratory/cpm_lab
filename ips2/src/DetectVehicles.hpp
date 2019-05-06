@@ -113,7 +113,7 @@ private:
     std::vector< std::array<std::size_t, 3> >
     resolve_conflicts
     (
-        std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
     ) const;
 
     /**
@@ -121,9 +121,9 @@ private:
      * i.e. when a pair shares the same point
      * 
      * @param vehicle_candidates 
-     * @return cv::Mat_<int> 
+     * @return cv::Mat_<bool> 
      */
-    cv::Mat_<int>
+    cv::Mat_<bool>
     determine_conflicts
     (
         const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
@@ -138,7 +138,7 @@ private:
      * @return false 
      */
     bool
-    arrays_with_common_element
+    arrays_have_common_element
     (
         const std::array<std::size_t, 3> &array_1,
         const std::array<std::size_t, 3> &array_2
