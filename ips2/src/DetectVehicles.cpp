@@ -123,7 +123,7 @@ DetectVehicles::find_vehicle_candidates
 std::vector< std::array<std::size_t, 3> >
 DetectVehicles::resolve_conflicts
 (
-    std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
 ) const
 {
     // Matrix stores conflicts between vehicle candidates, i.e. when a point is used by both
@@ -187,12 +187,12 @@ DetectVehicles::resolve_conflicts
 }
 
 
-cv::Mat_<int> DetectVehicles::determine_conflicts
+cv::Mat_<bool> DetectVehicles::determine_conflicts
 (
     const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
 ) const
 {
-    cv::Mat_<int> mat_conflicts = cv::Mat_<int>::zeros(vehicle_candidates.size(),
+    cv::Mat_<bool> mat_conflicts = cv::Mat_<bool>::zeros(vehicle_candidates.size(),
                                                        vehicle_candidates.size());
     
     if (vehicle_candidates.size() <= 1) return mat_conflicts;
@@ -202,7 +202,7 @@ cv::Mat_<int> DetectVehicles::determine_conflicts
         for (std::size_t j = i+1; j < vehicle_candidates.size(); ++j)
         {
             // check if vehicle combination shares led point
-            if (arrays_with_common_element(vehicle_candidates[i], vehicle_candidates[j]))
+            if (arrays_have_common_element(vehicle_candidates[i], vehicle_candidates[j]))
             {
                 mat_conflicts(i, j) = 1;
                 mat_conflicts(j, i) = 1;
@@ -212,7 +212,7 @@ cv::Mat_<int> DetectVehicles::determine_conflicts
     return mat_conflicts;
 }
 
-bool DetectVehicles::arrays_with_common_element
+bool DetectVehicles::arrays_have_common_element
 (
     const std::array<std::size_t, 3> &array_1,
     const std::array<std::size_t, 3> &array_2
@@ -238,7 +238,7 @@ std::list<cv::Point2d> DetectVehicles::find_remaining_points
     const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
 ) const
 {
-    // determine indices belonging to vehicles
+    // determine all indices of floor points that belong to vehicles
     std::vector<std::size_t> all_vehicle_indices;
     for (const auto &vehicle_candidate : vehicle_candidates)
     {
@@ -247,22 +247,18 @@ std::list<cv::Point2d> DetectVehicles::find_remaining_points
             all_vehicle_indices.push_back(idx);
         }
     }
-    std::sort(all_vehicle_indices.begin(), all_vehicle_indices.end());
-    std::size_t vehicle_idx = 0;
+    // find points that do not belong to vehicles
     std::list<cv::Point2d> remaining_points;
     for (std::size_t i = 0; i < floor_points.size(); ++i)
     {
-        // current index is assigned to a vehicle
-        if (vehicle_idx < all_vehicle_indices.size() &&
-            i == all_vehicle_indices[vehicle_idx])
-        {
-            ++vehicle_idx;
-        }
-        // current index is NOT assigned to a vehicle
-        else
+        // current index is not assigned to a vehicle
+        if (std::find(all_vehicle_indices.begin(),
+                      all_vehicle_indices.end(),
+                      i)
+                == all_vehicle_indices.end())
         {
             remaining_points.push_back(floor_points[i]);
-        }        
+        }
     }
     return remaining_points;
 }
