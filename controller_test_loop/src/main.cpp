@@ -56,7 +56,11 @@ int main(int argc, char* argv[])
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(vehicleObservations_mutex);
 
+        const uint64_t loop_count = t_now / loop_period_nanoseconds;
+        const uint64_t loop_offset_time = t_now % loop_period_nanoseconds;
+        const uint64_t loop_start_time = loop_count * loop_period_nanoseconds;
 
+        trajectory_index == (t_now + slot_id * vehicle_time_gap_nanoseconds) / point_period_nanoseconds
     });
 
     return 0;
