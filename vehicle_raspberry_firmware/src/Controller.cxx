@@ -117,19 +117,25 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
                 double lateral_error      = -sin(yaw_ref) * (x-x_ref)  + cos(yaw_ref) * (y-y_ref);
                 const double yaw_error = sin(yaw - yaw_ref);
 
-                lateral_error = fmin(0.9,fmax(-0.9, lateral_error));
-                longitudinal_error = fmin(0.9,fmax(-0.9, longitudinal_error));
 
+                std::cout << 
+                "lateral_error " << lateral_error << "  " << 
+                "longitudinal_error " << longitudinal_error << "  " << 
+                "yaw_error " << yaw_error << "  " << 
+                std::endl;
 
-                // Linear lateral controller
-                const double curvature = trajectory_interpolation.curvature - 1.0000 * lateral_error - 2.2650 * yaw_error;
+                if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
+                {
+                    // Linear lateral controller
+                    const double curvature = trajectory_interpolation.curvature - 1.0000 * lateral_error - 2.2650 * yaw_error;
 
-                // Linear longitudinal controller
-                const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
+                    // Linear longitudinal controller
+                    const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
 
-                const double speed_measured = m_vehicleState.speed();
-                steering_servo = steering_curvature_calibration(curvature);
-                motor_throttle = speed_controller(speed_measured, speed_target);
+                    const double speed_measured = m_vehicleState.speed();
+                    steering_servo = steering_curvature_calibration(curvature);
+                    motor_throttle = speed_controller(speed_measured, speed_target);
+                }
             }
         }
         break;

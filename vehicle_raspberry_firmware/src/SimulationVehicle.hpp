@@ -15,7 +15,7 @@ class SimulationVehicle
     double x = 3.003895e+00;
     double y = 4.219198e-01;
     double distance = 0;
-    double yaw = 0.78;
+    double yaw = 2;
     double yaw_measured = 0;
     double speed = 0;
     double curvature = 0;
