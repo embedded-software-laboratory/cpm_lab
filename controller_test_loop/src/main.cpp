@@ -68,7 +68,13 @@ int main()
     // If the slot ID is zero, the slot is unused.
     std::vector<uint8_t> slot_vehicle_ids(n_max_vehicles, 0);
 
-    slot_vehicle_ids[3] = 5;
+
+    // TODO better, dynamic slot assignment
+    for (int i = 0; i < n_max_vehicles; ++i)
+    {
+        slot_vehicle_ids[i] = i+1;
+    }
+
 
 
     // Control loop, which sends trajectory commands to the vehicles
@@ -102,9 +108,6 @@ int main()
             }
         }
 
-
-
-        //trajectory_index == (t_now + slot_id * vehicle_time_gap_nanoseconds) / point_period_nanoseconds
     });
 
     return 0;
