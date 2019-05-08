@@ -3,17 +3,23 @@
 #include <map>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dds/pub/ddspub.hpp>
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
 #include "VehicleObservation.hpp"
 #include "test_loop_trajectory.hpp"
+#include "VehicleCommandTrajectory.hpp"
+#include "cpm/stamp_message.hpp"
+#include "cpm/Logging.hpp"
 
 
 
-int main(int argc, char* argv[])
+int main()
 {
+    cpm::Logging::Instance().set_id("controller_test_loop");
+    
     // Receive IPS DDS data
     std::map<uint8_t, VehicleObservation> vehicleObservations;
     std::mutex vehicleObservations_mutex;
@@ -35,6 +41,14 @@ int main(int argc, char* argv[])
     );
 
 
+    // Writer for sending trajectory commands
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
+    (
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
+    );
+
+
     // Load trajectory data
     std::vector<TrajectoryPoint> trajectory_points;
     uint64_t loop_period_nanoseconds;
@@ -49,18 +63,46 @@ int main(int argc, char* argv[])
         vehicle_time_gap_nanoseconds,
         n_max_vehicles
     );
- 
 
-    // Control loop, which sends commands to the vehicles
+    // There are 'n_max_vehicles' slots for vehicles in the reference trajectory.
+    // If the slot ID is zero, the slot is unused.
+    std::vector<uint8_t> slot_vehicle_ids(n_max_vehicles, 0);
+
+    slot_vehicle_ids[3] = 5;
+
+
+    // Control loop, which sends trajectory commands to the vehicles
     auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, 0, false, true);
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(vehicleObservations_mutex);
 
-        const uint64_t loop_count = t_now / loop_period_nanoseconds;
-        const uint64_t loop_offset_time = t_now % loop_period_nanoseconds;
-        const uint64_t loop_start_time = loop_count * loop_period_nanoseconds;
 
-        trajectory_index == (t_now + slot_id * vehicle_time_gap_nanoseconds) / point_period_nanoseconds
+        for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
+        {
+            const uint8_t vehicle_id = slot_vehicle_ids.at(slot_idx);
+
+            if(vehicle_id > 0)
+            {
+                uint64_t trajectory_index = 
+                    (t_now + slot_idx * vehicle_time_gap_nanoseconds) / point_period_nanoseconds;
+
+                trajectory_index = trajectory_index % trajectory_points.size();
+
+                auto trajectory_point = trajectory_points.at(trajectory_index);
+                trajectory_point.t().nanoseconds(t_now + 500000000ull);
+
+                // Send trajectory point on DDS
+                VehicleCommandTrajectory vehicleCommandTrajectory;
+                vehicleCommandTrajectory.vehicle_id(vehicle_id);
+                vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
+                cpm::stamp_message(vehicleCommandTrajectory, t_now, 0);
+                writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
+            }
+        }
+
+
+
+        //trajectory_index == (t_now + slot_id * vehicle_time_gap_nanoseconds) / point_period_nanoseconds
     });
 
     return 0;
