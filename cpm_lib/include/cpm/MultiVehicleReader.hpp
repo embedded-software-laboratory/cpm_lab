@@ -22,7 +22,7 @@ namespace cpm
         std::vector<size_t> buffer_indices{};
         std::vector<std::vector<T>> ring_buffers;
 
-        std::vector<int> vehicle_ids;
+        std::vector<uint8_t> vehicle_ids;
 
 
         void flush_dds_reader()
@@ -32,7 +32,7 @@ namespace cpm
             {
                 if(sample.info().valid()) 
                 {
-                    int vehicle = sample.data().vehicle_id();
+                    uint8_t vehicle = sample.data().vehicle_id();
                     auto pos = std::distance(vehicle_ids.begin(), std::find(vehicle_ids.begin(), vehicle_ids.end(), vehicle));
 
                     if (pos < vehicle_ids.size() && pos >= 0) {
@@ -94,7 +94,11 @@ namespace cpm
         }
         
 
-        void get_samples(const uint64_t t_now, std::map<int, T>& sample_out, std::map<int, uint64_t>& sample_age_out)
+        void get_samples(
+            const uint64_t t_now, 
+            std::map<uint8_t, T>& sample_out, 
+            std::map<uint8_t, uint64_t>& sample_age_out
+        )
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             flush_dds_reader();
@@ -102,7 +106,7 @@ namespace cpm
             sample_out.clear();
             sample_age_out.clear();
 
-            for (int i = 0; i < vehicle_ids.size(); ++i) {
+            for (size_t i = 0; i < vehicle_ids.size(); ++i) {
                 T sample = T();
                 sample.header().create_stamp().nanoseconds(0);
                 sample_out[vehicle_ids.at(i)] = sample;
@@ -110,10 +114,15 @@ namespace cpm
             }
 
             // select samples
-            for (int pos = 0; pos < vehicle_ids.size(); ++pos) {
-                for (int i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
+            for (size_t pos = 0; pos < vehicle_ids.size(); ++pos) {
+                for (size_t i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
                 {
-                    auto& current_sample = ring_buffers.at(pos).at((i + buffer_indices.at(pos)) % CPM_READER_RING_BUFFER_SIZE);
+                    auto& current_sample = 
+                        ring_buffers
+                        .at(pos)
+                        .at(
+                            (i + buffer_indices.at(pos)) % CPM_READER_RING_BUFFER_SIZE
+                        );
 
                     if(current_sample.header().valid_after_stamp().nanoseconds() > t_now) 
                     {
@@ -121,11 +130,13 @@ namespace cpm
                         continue;
                     }
 
-                    if(sample_out[vehicle_ids.at(pos)].header().create_stamp().nanoseconds() <= current_sample.header().create_stamp().nanoseconds())
+                    if(sample_out[vehicle_ids.at(pos)].header().create_stamp().nanoseconds() 
+                                     <= current_sample.header().create_stamp().nanoseconds())
                     {
                         // Current sample has a higher timestamp, it is newer. Use it.
                         sample_out[vehicle_ids.at(pos)] = current_sample;
-                        sample_age_out[vehicle_ids.at(pos)] = t_now - current_sample.header().valid_after_stamp().nanoseconds();
+                        sample_age_out[vehicle_ids.at(pos)] = 
+                            t_now - current_sample.header().valid_after_stamp().nanoseconds();
                     }
                 }
             }
