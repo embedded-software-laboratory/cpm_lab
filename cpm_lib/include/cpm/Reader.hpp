@@ -60,7 +60,7 @@ namespace cpm
          * \param topic the topic of the communication
          * \return The DDS Reader
          */
-        Reader(dds::topic::Topic<T> &topic)
+        Reader(dds::topic::Topic<T> topic)
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
@@ -71,7 +71,7 @@ namespace cpm
          * \param topic the topic of the communication, filtered (e.g. by the vehicle ID)
          * \return The DDS Reader
          */
-        Reader(dds::topic::ContentFilteredTopic<T> &topic)
+        Reader(dds::topic::ContentFilteredTopic<T> topic)
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )

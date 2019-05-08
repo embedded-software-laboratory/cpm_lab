@@ -44,7 +44,7 @@ namespace cpm
         }
 
     public:
-        MultiVehicleReader(dds::topic::Topic<T> &topic, int num_of_vehicles) : 
+        MultiVehicleReader(dds::topic::Topic<T> topic, int num_of_vehicles) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { 
@@ -63,7 +63,7 @@ namespace cpm
             }
         }
 
-        MultiVehicleReader(dds::topic::Topic<T> &topic, std::vector<int> _vehicle_ids) : 
+        MultiVehicleReader(dds::topic::Topic<T> topic, std::vector<int> _vehicle_ids) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         {             
