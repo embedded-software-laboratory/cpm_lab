@@ -19,7 +19,7 @@ TEST_CASE( "MultiVehicleReader" ) {
     dds::pub::DataWriter<VehicleState> writer(dds::pub::Publisher(participant), topic_vehicle_state);
 
     // receiver
-    std::vector<int> vehicle_ids{1, 3, 7};
+    std::vector<uint8_t> vehicle_ids{1, 3, 7};
     cpm::MultiVehicleReader<VehicleState> reader(topic_vehicle_state, vehicle_ids);
 
 
@@ -59,8 +59,8 @@ TEST_CASE( "MultiVehicleReader" ) {
     sleep(1);
 
     // example read
-    std::map<int, VehicleState> samples;
-    std::map<int, uint64_t> samples_age;
+    std::map<uint8_t, VehicleState> samples;
+    std::map<uint8_t, uint64_t> samples_age;
     const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
     reader.get_samples(t_now, samples, samples_age);
 
