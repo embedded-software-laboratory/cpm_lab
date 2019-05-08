@@ -19,7 +19,7 @@
 int main()
 {
     cpm::Logging::Instance().set_id("controller_test_loop");
-    
+
     // Receive IPS DDS data
     std::map<uint8_t, VehicleObservation> vehicleObservations;
     std::mutex vehicleObservations_mutex;
@@ -76,6 +76,8 @@ int main()
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(vehicleObservations_mutex);
 
+        const uint64_t t_eval = ((t_now + 500000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
+
 
         for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
         {
@@ -84,12 +86,12 @@ int main()
             if(vehicle_id > 0)
             {
                 uint64_t trajectory_index = 
-                    (t_now + slot_idx * vehicle_time_gap_nanoseconds) / point_period_nanoseconds;
+                    (t_eval + slot_idx * vehicle_time_gap_nanoseconds) / point_period_nanoseconds;
 
                 trajectory_index = trajectory_index % trajectory_points.size();
 
                 auto trajectory_point = trajectory_points.at(trajectory_index);
-                trajectory_point.t().nanoseconds(t_now + 500000000ull);
+                trajectory_point.t().nanoseconds(t_eval);
 
                 // Send trajectory point on DDS
                 VehicleCommandTrajectory vehicleCommandTrajectory;
