@@ -24,7 +24,7 @@ TimeSeriesAggregator::TimeSeriesAggregator()
 
     vehicle_commandTrajectory_reader = make_shared<cpm::AsyncReader<VehicleCommandTrajectory>>(
         [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples){
-            //handle_new_commandTrajectory_samples(samples);
+            handle_new_commandTrajectory_samples(samples);
         },
         cpm::ParticipantSingleton::Instance(),
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
@@ -108,7 +108,9 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
 }
 
 
-void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::LoanedSamples<VehicleObservation>& samples)
+void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
+    dds::sub::LoanedSamples<VehicleObservation>& samples
+)
 {
     std::lock_guard<std::mutex> lock(_mutex); 
     const uint64_t now = clock_gettime_nanoseconds();
@@ -131,7 +133,19 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::Loane
 }
 
 
-
+void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
+    dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples
+)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    for(auto sample : samples)
+    {
+        if(sample.info().valid())
+        {
+            
+        }
+    }
+}
 
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
