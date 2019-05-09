@@ -10,8 +10,6 @@ extern "C" {
 }
 
 
-static inline double frand() { return (double(rand()))/RAND_MAX; }
-
 
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
 :topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")

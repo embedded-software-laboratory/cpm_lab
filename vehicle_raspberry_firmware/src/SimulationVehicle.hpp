@@ -9,13 +9,15 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
+static inline double frand() { return (double(rand()))/RAND_MAX; }
+
 
 class SimulationVehicle
 {
-    double x = 3.003895e+00;
-    double y = 4.219198e-01;
+    double x = frand()*4;
+    double y = frand()*4;
     double distance = 0;
-    double yaw = 2;
+    double yaw = frand()*20;
     double yaw_measured = 0;
     double speed = 0;
     double curvature = 0;
