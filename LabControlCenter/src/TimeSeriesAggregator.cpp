@@ -1,7 +1,6 @@
 #include "TimeSeriesAggregator.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include "VehicleCommandTrajectory.hpp"
 
 TimeSeriesAggregator::TimeSeriesAggregator()
 {
