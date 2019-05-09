@@ -18,6 +18,7 @@ class MapViewUi
     shared_ptr<TrajectoryCommand> trajectoryCommand;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
+    std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
@@ -60,6 +61,7 @@ class MapViewUi
         uint8_t vehicle_id
     );
     void draw_path_painting(const DrawingContext& ctx);
+    void draw_received_trajectory_commands(const DrawingContext& ctx);
 
     bool is_valid_point_for_path(double x, double y);
     int find_vehicle_id_in_focus();
@@ -68,7 +70,7 @@ public:
     MapViewUi(
         shared_ptr<TrajectoryCommand> _trajectoryCommand,
         std::function<VehicleData()> get_vehicle_data_callback,
-        std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback
+        std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
     );
     Gtk::DrawingArea* get_parent();
 };
