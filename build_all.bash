@@ -25,6 +25,11 @@ bash build.bash
 popd
 
 
+pushd controller_test_loop
+bash build.bash
+popd
+
+
 
 pushd ips2
 bash build.bash
