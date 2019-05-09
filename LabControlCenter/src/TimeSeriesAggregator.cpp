@@ -142,7 +142,23 @@ void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
     {
         if(sample.info().valid())
         {
-            
+            const uint8_t vehicle_id = sample.data().vehicle_id();
+            if(vehicle_reference_trajectories.count(vehicle_id) == 0)
+            {
+                vehicle_reference_trajectories[vehicle_id] = 
+                    make_shared<TimeSeries_TrajectoryPoint>("","","");
+            }
+
+
+            for(const TrajectoryPoint &point : sample.data().trajectory_points())
+            {
+                const uint64_t t = point.t().nanoseconds();
+                if(vehicle_reference_trajectories[vehicle_id]->get_latest_time() < t)
+                {
+                    vehicle_reference_trajectories[vehicle_id]->push_sample(t, point);
+                }
+
+            }
         }
     }
 }
