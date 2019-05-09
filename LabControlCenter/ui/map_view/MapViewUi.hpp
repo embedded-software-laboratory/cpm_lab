@@ -6,10 +6,12 @@
 #include "Point.hpp"
 #include <thread>
 #include "TrajectoryCommand.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
+using VehicleTrajectories = map<uint8_t, shared_ptr<TimeSeries_TrajectoryPoint>  >;
 
 class MapViewUi
 {
@@ -65,7 +67,8 @@ class MapViewUi
 public:
     MapViewUi(
         shared_ptr<TrajectoryCommand> _trajectoryCommand,
-        std::function<VehicleData()> get_vehicle_data_callback
+        std::function<VehicleData()> get_vehicle_data_callback,
+        std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback
     );
     Gtk::DrawingArea* get_parent();
 };

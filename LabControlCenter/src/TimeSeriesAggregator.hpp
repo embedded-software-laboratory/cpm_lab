@@ -31,4 +31,5 @@ class TimeSeriesAggregator
 public:
     TimeSeriesAggregator();
     VehicleData get_vehicle_data();
+    VehicleTrajectories get_vehicle_trajectory_commands();
 };

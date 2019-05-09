@@ -167,3 +167,8 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
     return timeseries_vehicles; 
 }
+
+VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
+    std::lock_guard<std::mutex> lock(_mutex); 
+    return vehicle_reference_trajectories; 
+}

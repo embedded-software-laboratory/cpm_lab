@@ -1,11 +1,13 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
+using VehicleTrajectories = map<uint8_t, shared_ptr<TimeSeries_TrajectoryPoint>  >;
 
 
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
-    std::function<VehicleData()> get_vehicle_data_callback
+    std::function<VehicleData()> get_vehicle_data_callback,
+    std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback
 )
 :trajectoryCommand(_trajectoryCommand)
 ,get_vehicle_data(get_vehicle_data_callback)
