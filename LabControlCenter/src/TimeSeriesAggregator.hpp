@@ -4,6 +4,7 @@
 #include "VehicleState.hpp"
 #include "VehicleObservation.hpp"
 #include "TimeSeries.hpp"
+#include "VehicleCommandTrajectory.hpp"
 #include "cpm/AsyncReader.hpp"
 #include <mutex>
 
@@ -19,6 +20,7 @@ class TimeSeriesAggregator
 
     shared_ptr<cpm::AsyncReader<VehicleState>> vehicle_state_reader;
     shared_ptr<cpm::AsyncReader<VehicleObservation>> vehicle_observation_reader;
+    shared_ptr<cpm::AsyncReader<VehicleCommandTrajectory>> vehicle_commandTrajectory_reader;
 
     std::mutex _mutex;
 

@@ -1,6 +1,7 @@
 #include "TimeSeriesAggregator.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
 TimeSeriesAggregator::TimeSeriesAggregator()
 {
@@ -19,6 +20,15 @@ TimeSeriesAggregator::TimeSeriesAggregator()
         },
         cpm::ParticipantSingleton::Instance(),
         cpm::get_topic<VehicleObservation>("vehicleObservation")
+    );
+
+
+    vehicle_commandTrajectory_reader = make_shared<cpm::AsyncReader<VehicleCommandTrajectory>>(
+        [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples){
+            //handle_new_commandTrajectory_samples(samples);
+        },
+        cpm::ParticipantSingleton::Instance(),
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
 }
 
