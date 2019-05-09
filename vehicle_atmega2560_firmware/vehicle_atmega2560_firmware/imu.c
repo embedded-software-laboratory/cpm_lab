@@ -20,6 +20,8 @@
 #define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR  0X28
 #define BNO055_ACCEL_DATA_X_LSB_ADDR         0X08
 #define BNO055_GYRO_DATA_X_LSB_ADDR         0X14
+#define BNO055_GYRO_DATA_Y_LSB_ADDR         0X16
+#define BNO055_GYRO_DATA_Z_LSB_ADDR         0X18
 #define BNO055_SYS_TRIGGER_ADDR              0X3F
 #define BNO055_SYS_TRIGGER_RESET_SYSTEM  0b00100000
 
@@ -98,7 +100,7 @@ bool imu_read(
 	_delay_us(50);
 	
 	// read yaw rate
-	buffer[0] = BNO055_GYRO_DATA_X_LSB_ADDR;
+	buffer[0] = BNO055_GYRO_DATA_Z_LSB_ADDR;
 	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
 	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) success_flag = false;
 	*imu_yaw_rate = *((int16_t*)(buffer));
