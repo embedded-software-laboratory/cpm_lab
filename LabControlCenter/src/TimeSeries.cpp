@@ -7,7 +7,7 @@ _TimeSeries<T>::_TimeSeries(string _name, string _format, string _unit)
 ,unit(_unit)
 {
     times.push_back(0);
-    values.push_back(0);
+    values.push_back(T());
 }
 
 
@@ -68,3 +68,4 @@ vector<T> _TimeSeries<T>::get_last_n_values(size_t n) const
 }
 
 template class _TimeSeries<double>;
+template class _TimeSeries<TrajectoryPoint>;
