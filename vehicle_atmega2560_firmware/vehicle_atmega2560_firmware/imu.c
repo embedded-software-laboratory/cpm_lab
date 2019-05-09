@@ -16,8 +16,10 @@
 #define BNO055_PWR_MODE_ADDR     0X3E
 #define BNO055_POWER_MODE_NORMAL        0X00
 #define BNO055_OPERATION_MODE_NDOF      0X0C
+#define BNO055_OPERATION_MODE_IMU      0b00001000
 #define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR  0X28
 #define BNO055_ACCEL_DATA_X_LSB_ADDR         0X08
+#define BNO055_GYRO_DATA_X_LSB_ADDR         0X14
 #define BNO055_SYS_TRIGGER_ADDR              0X3F
 #define BNO055_SYS_TRIGGER_RESET_SYSTEM  0b00100000
 
@@ -50,7 +52,7 @@ bool imu_setup() {
 	status = twi_writeTo(BNO055_ADDRESS, buffer, 2, true, true);
 	if(status != 0) {
 		return false;
-	}	
+	}
 	_delay_ms(650); // Wait for the IMU to boot
 		
 		
@@ -60,13 +62,13 @@ bool imu_setup() {
 	status = twi_writeTo(BNO055_ADDRESS, buffer, 2, true, true);
 	if(status != 0) {
 		return false;
-	}	
+	}
 	_delay_ms(10);
 	
 	
 	// set operation mode
 	buffer[0] = BNO055_OPR_MODE_ADDR;
-	buffer[1] = BNO055_OPERATION_MODE_NDOF;
+	buffer[1] = BNO055_OPERATION_MODE_IMU;
 	status = twi_writeTo(BNO055_ADDRESS, buffer, 2, true, true);
 	if(status != 0) {
 		return false;
@@ -75,7 +77,14 @@ bool imu_setup() {
 	return true;	
 }
 
-bool imu_read(uint16_t* imu_yaw, int16_t* imu_acceleration_forward, int16_t* imu_acceleration_left) {
+bool imu_read(
+	uint16_t* imu_yaw,
+	int16_t* imu_yaw_rate, 
+	int16_t* imu_acceleration_forward,
+	int16_t* imu_acceleration_left,
+	int16_t* imu_acceleration_up
+)
+{
 	
 	bool success_flag = true;
 	uint8_t buffer[10];
@@ -85,16 +94,25 @@ bool imu_read(uint16_t* imu_yaw, int16_t* imu_acceleration_forward, int16_t* imu
 	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
 	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) success_flag = false;
 	*imu_yaw = *((uint16_t*)(buffer));
-	 
+	
+	_delay_us(50);
+	
+	// read yaw rate
+	buffer[0] = BNO055_GYRO_DATA_X_LSB_ADDR;
+	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) success_flag = false;
+	*imu_yaw_rate = *((int16_t*)(buffer));
+	
 	_delay_us(50);
 	
 	// read acceleration
 	buffer[0] = BNO055_ACCEL_DATA_X_LSB_ADDR;
 	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
-	if(twi_readFrom(BNO055_ADDRESS, buffer, 4, true) != 4) success_flag = false;
+	if(twi_readFrom(BNO055_ADDRESS, buffer, 6, true) != 6) success_flag = false;
 	
-	*imu_acceleration_left = *((int16_t*)(buffer)); // TODO update axis mapping when the PCB arrives
+	*imu_acceleration_left = *((int16_t*)(buffer));
 	*imu_acceleration_forward = -*((int16_t*)(buffer+2));
+	*imu_acceleration_up = *((int16_t*)(buffer+4));
 	
 	return success_flag;
 }
