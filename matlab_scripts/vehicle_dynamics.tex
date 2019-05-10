@@ -1,0 +1,12 @@
+\begin{align}
+\boldsymbol{x} &= [p_x, p_y, \psi, v, \delta] \\
+\boldsymbol{u} &= [f, \delta_{ref}] \\
+\end{align}
+
+\begin{align}
+\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \cos(\psi + p_3 \cdot \delta) \\
+\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \sin(\psi + p_3 \cdot \delta) \\
+\dot{\psi} &= p_4 \cdot v \cdot \delta \\
+\dot{v} &= p_5 \cdot \text{sign}(f) \cdot |f|^{p_6} \\
+\dot{\delta} &= p_7 \cdot (-\delta + \delta_{ref} + p_8)
+\end{align}
