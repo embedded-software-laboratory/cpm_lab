@@ -166,6 +166,8 @@ bool MapViewUi::is_valid_point_for_path(double x, double y)
     // Test if the point is inside a forward pointing cone, and at a particular distance.
     // This limits the maximum curvature of the path, and makes it driveable.
 
+    if(path_painting_in_progress.empty()) return false;
+
     double dx = x - path_painting_in_progress.back().x;
     double dy = y - path_painting_in_progress.back().y;
     double dist_sq = dx*dx + dy*dy;
