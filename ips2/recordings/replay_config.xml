@@ -49,14 +49,14 @@
         <!-- Time control settings: normal replay rate and automatically start
              replaying upon start of the service --> 
         <time_control>
-            <rate>2</rate>
+            <rate>1</rate>
             <start_mode>AUTOMATIC</start_mode>
         </time_control>
 
         <!-- Database, participant and session information -->
         <replay_database name="SimpleConfig">
             <!-- The name of the file to be replayed -->
-            <filename>recordings/recording_single_vehicle_manual_driving.dat_0_0</filename>
+            <filename>recordings/recording_multiple_vehicles_manual_driving.dat_0_0</filename>
             <!-- Set the database file as writable. This is necessary when the
                  SQLite indexes of the database haven't been created yet -->
             <readonly>true</readonly>
