@@ -26,7 +26,9 @@ struct VehicleState {
     double odometer_distance;                         // meter
     double imu_acceleration_forward;                  // m/s^2
     double imu_acceleration_left;                     // m/s^2
+    double imu_acceleration_up;                       // m/s^2
     double imu_yaw;                                   // radian, unfiltered yaw signal from IMU
+    double imu_yaw_rate;                              // radian per second
     double speed;                                     // m/s
     double battery_voltage;                           // volt
     double motor_current;                             // ampere
