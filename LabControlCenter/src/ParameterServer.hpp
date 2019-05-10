@@ -10,6 +10,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 #include "Parameter.hpp"
 #include "ParameterRequest.hpp"
@@ -24,12 +25,15 @@ private:
     //Callback
     void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);
+    void set_active_callback(bool active);
 
     //Communication
     dds::topic::Topic<Parameter> parameterTopic;
     dds::topic::Topic<ParameterRequest> parameterRequestTopic;
     dds::pub::DataWriter<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
+
+    std::atomic<bool> is_active;
 
 public:
     ParameterServer(std::shared_ptr<ParameterStorage> _storage);
