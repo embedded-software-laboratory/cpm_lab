@@ -1,7 +1,16 @@
 function manual_parameter_fit
+
+    % Run 'recording_to_csv.bash' before this script!
     
-    ips = read_rti_csv('output/recordingvehicle3bdat00_vehicleObservation_RecordAll_domain0.csv');
-    state = read_rti_csv('output/recordingvehicle3bdat00_vehicleState_RecordAll_domain0.csv');
+    % This is a first experiment and sanity check for the parameter
+    % identification. The model is simulated with real command 
+    % input values and manually estimated parameters.
+    % This should show that the model produces somewhat sensible
+    % trajectories and not complete nonsense.
+    % These parameters server as the initialization for the optimization.
+    
+    ips = read_rti_csv('output/recording_vehicle_3_bdat_0_0_vehicleObservation_RecordAll_domain0.csv');
+    state = read_rti_csv('output/recording_vehicle_3_bdat_0_0_vehicleState_RecordAll_domain0.csv');
     
     t_ips = ips.header_create_stamp_nanoseconds * 1e-9;
     t_state = state.header_create_stamp_nanoseconds * 1e-9;
