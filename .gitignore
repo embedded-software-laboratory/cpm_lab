@@ -24,3 +24,4 @@ rtidds/
 /ParamServer/yaml-cpp
 Log_*.csv
 *.txt
+ips2/debug*.png
