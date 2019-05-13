@@ -15,6 +15,7 @@
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
+#include "CommandLineReader.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -22,11 +23,15 @@
 
 int main(int argc, char *argv[])
 {
+    //Must be done first, s.t. no class using the logger produces an error
     cpm::Logging::Instance().set_id("LabControlCenter");
+
+    //Read command line parameters (current params: auto_start and config_file)
+    //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready
+    CommandLineReader reader(argc, argv, "parameters.yaml");
 
     auto storage = make_shared<ParameterStorage>("parameters.yaml", 32);
     ParameterServer server(storage);
-
 
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();

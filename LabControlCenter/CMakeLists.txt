@@ -62,6 +62,7 @@ add_executable(LabControlCenter
     src/ParameterStorage.hpp
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
+    src/CommandLineReader.hpp
     src/main.cpp
 )
 
