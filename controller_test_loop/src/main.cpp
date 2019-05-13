@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <thread>
 #include <map>
 #include <stdlib.h>
@@ -70,7 +71,11 @@ int main()
                     }
                     if(!vehicle_has_slot) 
                     {
-                        unassigned_vehicle_ids.push_back(data.vehicle_id());
+                        if(std::find(unassigned_vehicle_ids.begin(), unassigned_vehicle_ids.end(), data.vehicle_id()) 
+                            == unassigned_vehicle_ids.end()) 
+                        {
+                            unassigned_vehicle_ids.push_back(data.vehicle_id());
+                        }
                     }
                 }
             }
@@ -138,6 +143,12 @@ int main()
                     && fabs(trajectory_point.py() - observation.pose().y()) < 0.8
                     && fabs(sin(0.5*(ref_yaw - observation.pose().yaw()))) < 0.3)
                     {
+                        for (size_t k = 0; k < slot_vehicle_ids.size(); ++k)
+                        {
+                            assert(slot_vehicle_ids[k] != unassigned_vehicle_id);
+                        }
+
+
                         slot_vehicle_ids[slot_idx] = unassigned_vehicle_id;
                         unassigned_vehicle_ids[i] = 0;
                         break;
