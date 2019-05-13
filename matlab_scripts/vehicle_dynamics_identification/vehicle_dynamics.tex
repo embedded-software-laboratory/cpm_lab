@@ -20,8 +20,8 @@
 
 
 \begin{align}
-\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \cos(\psi + p_3 \cdot \delta) \\
-\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \sin(\psi + p_3 \cdot \delta) \\
+\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \cos(\psi + p_3 \cdot \delta + p_{11}) \\
+\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \sin(\psi + p_3 \cdot \delta + p_{11}) \\
 \dot{\psi} &= p_4 \cdot v \cdot \delta \\
 \dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8} \\
 \dot{\delta} &= p_9 \cdot (-\delta + \delta_{ref} + p_{10})

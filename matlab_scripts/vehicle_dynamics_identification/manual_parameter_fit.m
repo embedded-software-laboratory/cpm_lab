@@ -54,7 +54,7 @@ function manual_parameter_fit
         state.speed(idx_state(1))  ...
         .3 ...
     ];
-    params = zeros(1,10);
+    params = zeros(1,11);
     T_v = 0.4;
     params(1) = 0.94;
     params(4) = 1/0.34;
