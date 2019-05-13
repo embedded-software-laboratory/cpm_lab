@@ -1,12 +1,28 @@
 \begin{align}
 \boldsymbol{x} &= [p_x, p_y, \psi, v, \delta] \\
-\boldsymbol{u} &= [f, \delta_{ref}] \\
+\boldsymbol{u} &= [f, \delta_{ref}, V] \\ 
 \end{align}
+
+
+
+\begin{center}
+\begin{tabular}{ r | l }
+ $p_x$ & IPS x-position  \\ 
+ $p_y$ & IPS y-position   \\ 
+ $\psi$ & IPS yaw angle  \\ 
+ $v$ & Odometer Speed  \\ 
+ $\delta$ & Dimensionless steering state \\ 
+ $f$ & Dimensionless motor command  \\ 
+ $\delta_{ref}$ & Dimensionless steering command  \\ 
+ $V$ & Battery voltage  \\ 
+\end{tabular}
+\end{center}
+
 
 \begin{align}
 \dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \cos(\psi + p_3 \cdot \delta) \\
 \dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \sin(\psi + p_3 \cdot \delta) \\
 \dot{\psi} &= p_4 \cdot v \cdot \delta \\
-\dot{v} &= p_5 \cdot \text{sign}(f) \cdot |f|^{p_6} \\
-\dot{\delta} &= p_7 \cdot (-\delta + \delta_{ref} + p_8)
+\dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8} \\
+\dot{\delta} &= p_9 \cdot (-\delta + \delta_{ref} + p_{10})
 \end{align}
