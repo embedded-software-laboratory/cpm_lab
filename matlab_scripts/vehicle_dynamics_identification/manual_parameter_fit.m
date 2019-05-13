@@ -9,7 +9,7 @@ function manual_parameter_fit
     t_0 = max(t_state(1), t_ips(1)) + 2;
     t_f = min(t_state(end), t_ips(end)) - 2;
     
-    t_f = min(t_f, t_0 + 10); % show only 10 sec
+    t_f = min(t_f, t_0 + 10); % crop time period
     
     freq = 50;
     
@@ -38,17 +38,33 @@ function manual_parameter_fit
     assert(~any(isnan(idx_state)));
     
     % Simulate
-    X0 = [...
+    X = [...
         ips.pose_x(idx_ips(1))  ...
         ips.pose_y(idx_ips(1))  ...
         ips.pose_yaw(idx_ips(1))  ...
         state.speed(idx_state(1))  ...
-        0 ...
+        .3 ...
     ];
     params = zeros(1,10);
-    params(1) = 1;
-    params(4) = 1/0.24;
+    T_v = 0.4;
+    params(1) = 0.94;
+    params(4) = 1/0.34;
+    params(5) = -1/T_v;
+    params(6) = 6.6/T_v;
+    params(8) = 1.62;
+    params(9) = 1/0.18;
     
+    for i = 2:length(t_grid)
+        
+        u = [state.motor_throttle(idx_state(i-1)) ...
+             state.steering_servo(idx_state(i-1)) ...    
+             state.battery_voltage(idx_state(i-1))];
+        
+        dx = vehicle_dynamics(X(i-1,:),u,params);
+        
+        X(i,:) = X(i-1,:) + dt * dx;
+        
+    end
     
     
     % Visualize
@@ -60,7 +76,7 @@ function manual_parameter_fit
     
     
     plot(ips.pose_x(idx_ips), ips.pose_y(idx_ips))
-    
+    plot(X(:,1), X(:,2))
     
     
 end
