@@ -3,7 +3,8 @@
 
 using namespace std::placeholders;
 
-ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
+ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage, bool init_active_value):
+    is_active(init_active_value),
     parameterTopic(cpm::get_topic<Parameter>("parameter")),
     parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
     writer(
@@ -20,12 +21,17 @@ ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
 {
 }
 
-
+void ParameterServer::set_active_callback(bool active) {
+    is_active.store(active);
+}
 
 void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples) {
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            handleSingleParamRequest(sample.data().name());
+    //Only reply to requests if the parameter server is currently supposed to be active
+    if (is_active.load()) {
+        for (auto sample : samples) {
+            if (sample.info().valid()) {
+                handleSingleParamRequest(sample.data().name());
+            }
         }
     }
 }

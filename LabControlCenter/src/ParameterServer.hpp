@@ -25,7 +25,6 @@ private:
     //Callback
     void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);
-    void set_active_callback(bool active);
 
     //Communication
     dds::topic::Topic<Parameter> parameterTopic;
@@ -36,7 +35,9 @@ private:
     std::atomic<bool> is_active;
 
 public:
-    ParameterServer(std::shared_ptr<ParameterStorage> _storage);
+    ParameterServer(std::shared_ptr<ParameterStorage> _storage, bool init_active_value);
+
+    void set_active_callback(bool active);
     
     std::shared_ptr<ParameterStorage> storage;
 };

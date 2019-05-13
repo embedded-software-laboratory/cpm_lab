@@ -5,6 +5,7 @@
 #include "ParamsCreateView.hpp"
 #include "ParameterStorage.hpp"
 #include "ParameterWithDescription.hpp"
+#include "cpm/Logging.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -14,6 +15,7 @@
 #include <atomic>
 #include <memory>
 #include <sstream>
+#include <functional>
 
 class ParamViewUI {
 private:
@@ -46,6 +48,9 @@ private:
     Gtk::FlowBoxChild* parameters_box_show;
     Gtk::Button* parameters_button_show;
 
+    //Toggle button to start / stop the parameter server
+    Gtk::Switch* parameters_start_server_toggle;
+
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
@@ -69,6 +74,10 @@ private:
     //Key events - act depending on which button was released
     bool handle_button_released(GdkEventKey* event);
 
+    //Event handler for toggle/switch for parameter server
+    bool on_param_server_active_changed(bool new_value);
+    std::function<void(bool)> param_server_active_callback;
+
     //Callback: Allow to only create another create window when the former window was closed
     //Handles callback for close and for create operations
     void window_on_close_callback(ParameterWithDescription param, bool valid_parameter);
@@ -82,7 +91,7 @@ public:
      * \param parameter_storage The data storage that needs to be accessed from the UI to present data and store/modify it if the user does so
      * \param float_precision precision of floats shown by the UI
      */
-    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
+    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision, std::function<void(bool)> param_server_active_callback);
     Gtk::Widget* get_parent();
 
     //Callbacks for button presses on menu items

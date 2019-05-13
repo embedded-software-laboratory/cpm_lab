@@ -8,11 +8,14 @@
 
 struct CommandLineReader {
 
-    bool auto_start = false;
+    bool command_auto_start = false;
+    bool param_server_auto_start = false;
     std::string config_file = "";
 
     CommandLineReader(int argc, char *argv[], std::string default_config)
     {
+        config_file = default_config;
+        
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
             if (i + 1 < argc) {
@@ -22,8 +25,12 @@ struct CommandLineReader {
                 }
             }
 
-            if (param.find("-autostart") != std::string::npos) {
-                this->auto_start = true;
+            if (param.find("-autostart_command") != std::string::npos) {
+                this->command_auto_start = true;
+            }
+
+            if (param.find("-autostart_param") != std::string::npos) {
+                this->param_server_auto_start = true;
             }
         }
     }

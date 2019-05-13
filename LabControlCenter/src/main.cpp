@@ -20,6 +20,9 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <functional>
+
+using namespace std::placeholders;
 
 int main(int argc, char *argv[])
 {
@@ -30,8 +33,8 @@ int main(int argc, char *argv[])
     //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready
     CommandLineReader reader(argc, argv, "parameters.yaml");
 
-    auto storage = make_shared<ParameterStorage>("parameters.yaml", 32);
-    ParameterServer server(storage);
+    auto storage = make_shared<ParameterStorage>(reader.config_file, 32);
+    ParameterServer server(storage, reader.param_server_auto_start);
 
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
@@ -45,7 +48,7 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>(trajectoryCommand, [=](){return timeSeriesAggregator->get_vehicle_data();});
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
+    auto paramViewUi = make_shared<ParamViewUI>(storage, 5, std::bind(&ParameterServer::set_active_callback, &server, _1));
     auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
