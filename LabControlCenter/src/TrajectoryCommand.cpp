@@ -16,7 +16,7 @@ TrajectoryCommand::~TrajectoryCommand()
     timer->stop();
 }
 
-TrajectoryCommand::init() {
+void TrajectoryCommand::init() {
     timer = cpm::Timer::create("LabControlCenter_TrajectoryCommand",40000000ull, 0, false,true);
 
     timer->start_async([this](uint64_t t_now){
