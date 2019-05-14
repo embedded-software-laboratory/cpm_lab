@@ -26,3 +26,4 @@ Log_*.csv
 *.txt
 ips2/debug*.png
 matlab_scripts/vehicle_dynamics_identification/output
+*.mat

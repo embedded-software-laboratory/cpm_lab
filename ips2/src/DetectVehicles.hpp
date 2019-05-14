@@ -2,6 +2,7 @@
 #include <algorithm> // std::sort
 #include <list>
 #include <vector>
+#include <array>
 #include "types.hpp"
 #include <opencv2/core.hpp>
 

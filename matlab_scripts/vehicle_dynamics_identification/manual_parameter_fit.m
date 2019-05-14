@@ -7,7 +7,7 @@ function manual_parameter_fit
     % input values and manually estimated parameters.
     % This should show that the model produces somewhat sensible
     % trajectories and not complete nonsense.
-    % These parameters server as the initialization for the optimization.
+    % These parameters serve as the initialization for the optimization.
     
     ips = read_rti_csv('output/recording_vehicle_3_bdat_0_0_vehicleObservation_RecordAll_domain0.csv');
     state = read_rti_csv('output/recording_vehicle_3_bdat_0_0_vehicleState_RecordAll_domain0.csv');
