@@ -75,7 +75,7 @@ private:
     bool handle_button_released(GdkEventKey* event);
 
     //Event handler for toggle/switch for parameter server
-    bool on_param_server_active_changed(bool new_value);
+    void on_param_server_active_changed(Gtk::StateType previous_state);
     std::function<void(bool)> param_server_active_callback;
 
     //Callback: Allow to only create another create window when the former window was closed

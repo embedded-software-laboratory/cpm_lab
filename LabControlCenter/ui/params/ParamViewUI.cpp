@@ -77,7 +77,7 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
 
     //State change of 'param server active' switch listener
-    parameters_start_server_toggle->signal_state_set().connect(sigc::mem_fun(this, &ParamViewUI::on_param_server_active_changed));
+    parameters_start_server_toggle->signal_state_changed().connect(sigc::mem_fun(this, &ParamViewUI::on_param_server_active_changed));
 
     //Save all button listener (save the currently visible configuration to the currently open yaml file)
     //parameters_button_show->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
@@ -139,7 +139,10 @@ bool ParamViewUI::handle_button_released(GdkEventKey* event) {
     return false;
 }
 
-bool ParamViewUI::on_param_server_active_changed(bool new_value) {
+void ParamViewUI::on_param_server_active_changed(Gtk::StateType previous_state) {
+    std::cout << "Trying out callback..." << previous_state << std::endl;
+    bool new_value = true;
+
     if (param_server_active_callback) {
         param_server_active_callback(new_value);
     }
@@ -148,8 +151,8 @@ bool ParamViewUI::on_param_server_active_changed(bool new_value) {
     }
 
     //UI change after the other changes have been performed
-    parameters_start_server_toggle->set_active(new_value);
-    return true;
+    //parameters_start_server_toggle->set_active(new_value);
+    //return true;
 }
 
 void ParamViewUI::delete_selected_row() {
