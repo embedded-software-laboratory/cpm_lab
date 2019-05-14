@@ -24,6 +24,7 @@ public:
     TrajectoryCommand();
     ~TrajectoryCommand();
     void set_path(uint8_t vehicle_id, std::vector<Point> path, int n_loop);
+    void init();
     void stop(uint8_t vehicle_id);
     void stop_all();
     
