@@ -7,17 +7,23 @@ function optimize_parameters
     
     % use random subset for testing
     sequences = sequences(randperm(length(sequences)));
-    sequences = sequences(1:6);
+    %sequences = sequences(1:20);
     
     
-    init_parameters = [    0.9400         0         0    2.9412   -2.5000   16.5000         0    1.6200    5.5556         0         0]';
+    init_parameters = [  0.940000, 0.000000, 0.000000, 2.941200, -2.500000, 16.500000, 0.000000, 1.620000, 5.555600, 0.000000, 0.000000, ]';
+    init_parameters = [  1.002971, -0.136922, 0.235773, 3.857093, -1.167893, 10.345707, -0.796048, 1.114689, 11.214041, 0.053628, 0.018592 ]';
+    init_parameters = [  0.993031, -0.125480, 0.254318, 3.420219, -1.809237, 5.068506, 0.301489, 1.258333, 8.322000, 0.001451, 0.031261 ]';
+    init_parameters = [  0.975630, -0.025596, 0.254035, 3.221276, -1.644736, 7.105890, 0.118146, 1.442459, 9.033599, 0.018313, 0.022002 ]';
+    init_parameters = [  0.976820, -0.031865, 0.257054, 3.239819, -1.690282, 7.508750, 0.098089, 1.456106, 9.947812, 0.011501, 0.027306 ]';
+    init_parameters = [ 0.967812, 0.060636, 0.394950, 3.373651, -1.522835, 8.858272, -0.154539, 1.483766, 6.929098, 0.012479, 0.051342 ]';
+    
+    
+
     
     %% TODO: discrete signal delays
     
     n_sequences = length(sequences);
     n_sequence_length = length(sequences(1).x);
-    n_states = 5;
-    n_inputs = 3;
     
     %% Casadi Variables
     P = SX.sym('p',length(init_parameters), 1);
@@ -54,7 +60,7 @@ function optimize_parameters
         x0 = x(1:end-1,:);
         u0 = u(1:end-1,:);
         
-        defect = x1 - dt * vehicle_dynamics(x0,u0,P);
+        defect = x1 - x0 - dt * vehicle_dynamics(x0,u0,P);
         defects = [defects; defect(:)];
     end
     
@@ -68,43 +74,82 @@ function optimize_parameters
         error_speed = X{i_sequence}(:,4) - sequences(i_sequence).speed;
         
         objective = objective ...
-            + sumsqr(error_x) ...
-            + sumsqr(error_y) ...
+            + 50*sumsqr(error_x) ...
+            + 50*sumsqr(error_y) ...
             + sumsqr(error_yaw) ...
             + sumsqr(error_speed);
     end
     
     
-    %% Measured states for the initialization
+    %% Simulate for a feasible initialization
     X_init = {};
     for i_sequence = 1:n_sequences
-        X_init{i_sequence} = [ ...
-            sequences(i_sequence).x ...
-            sequences(i_sequence).y ...
-            sequences(i_sequence).yaw ...
-            sequences(i_sequence).speed ...
-            zeros(size(sequences(i_sequence).x)) ...
+        
+        X_sim = nan(size(X{i_sequence}));
+        
+        X_sim(1,:) = [...
+            sequences(i_sequence).x(1) ...
+            sequences(i_sequence).y(1) ...
+            sequences(i_sequence).yaw(1) ...
+            sequences(i_sequence).speed(1) ...
+            sequences(i_sequence).steering_command(1) ...
         ];
+    
+        U_sim = [ ...
+            sequences(i_sequence).motor_command ...
+            sequences(i_sequence).steering_command ...
+            sequences(i_sequence).battery_voltage ...
+        ];
+    
+        for k = 2:size(X_sim,1)
+            X_sim(k,:) = X_sim(k-1,:) + dt * vehicle_dynamics(X_sim(k-1,:), U_sim(k-1,:), init_parameters);
+        end
+        X_init{i_sequence} = X_sim;
     end
     
     
     %% Initialization
     init_flat = pack_fn(init_parameters, X_init{:});
+    init_flat_first = init_flat;
     
-    
-    
-    %% Optimization
-    nlp = struct('x', variables_flat, 'f', objective, 'g', defects);
-    nlpsolver = nlpsol('nlpsolver', 'ipopt', nlp);
-    nlp_result = nlpsolver(...
-        'x0', init_flat, ...
-        'lbg', zeros(size(defects)), ...
-        'ubg', zeros(size(defects)) ...
-    );
+    %% Feasibility check
+    defects_fn = casadi.Function('defects_fn', {variables_flat}, {defects});
+    assert(all(abs(full(defects_fn(init_flat_first))) < 1e-6));
 
     
+    %% Optimization
+    n_iter = 5;
+    for i = 1:n_iter
+        if i < n_iter
+            objective_trust_region = objective + (0.25^i) * sumsqr(init_flat-variables_flat);
+        else
+            objective_trust_region = objective;
+        end
+
+        nlp = struct('x', variables_flat, 'f', objective_trust_region, 'g', defects);
+        nlpsolver = nlpsol('nlpsolver', 'ipopt', nlp);
+        nlp_result = nlpsolver(...
+            'x0', init_flat, ...
+            'lbg', zeros(size(defects)), ...
+            'ubg', zeros(size(defects)) ...
+        );
+        init_flat = nlp_result.x;
+    end
     
+    
+    [result_primal{1:(length(sequences)+1)}] = unpack_fn(nlp_result.x);
+    parameters_soln = full(result_primal{1});
+
+    fprintf('New Parameters:\n')
+    fprintf('%f, ', parameters_soln)
+    fprintf('\n')
+    
+    clf
+    hold on
+    plot(full(init_flat_first))
+    plot(full(nlp_result.x))
         
+    save dump
     
 end
 

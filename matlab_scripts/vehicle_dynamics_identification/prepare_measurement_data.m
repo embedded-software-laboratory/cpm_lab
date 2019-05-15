@@ -6,7 +6,7 @@ function prepare_measurement_data
     % preparation for the optimization.
     
     % Number of consecutive samples in a sequence (at 50Hz)
-    n_sequence_samples = 20;
+    n_sequence_samples = 100;
     
     % The optimization is done individually for each vehicle
     vehicle_id = 3;
@@ -83,8 +83,9 @@ function prepare_measurement_data
         
         % Collect data for each interval
         for j = 1:length(t_interval_short_start)
-            filter_ips = and(t_interval_short_start(j) <= t_ips, t_ips < t_interval_short_end(j));
-            filter_state = and(t_interval_short_start(j) <= t_state, t_state < t_interval_short_end(j));
+            t_offset = 1e-5;
+            filter_ips = and(t_interval_short_start(j) - t_offset <= t_ips, t_ips < t_interval_short_end(j) - t_offset);
+            filter_state = and(t_interval_short_start(j) - t_offset <= t_state, t_state < t_interval_short_end(j) - t_offset);
             
             assert(nnz(filter_ips) == n_sequence_samples)
             assert(nnz(filter_state) == n_sequence_samples)
