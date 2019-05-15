@@ -6,6 +6,7 @@
 #include <memory>
 #include <cstdint>
 #include <stdexcept>
+#include <functional>
 #include <map>
 #include <cstdio>
 #include <mutex>

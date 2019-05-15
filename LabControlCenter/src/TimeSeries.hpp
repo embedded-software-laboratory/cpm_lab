@@ -1,12 +1,14 @@
 #pragma once
 #include "defaults.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
-class TimeSeries
+template<typename T>
+class _TimeSeries
 {
-    vector<function<void(TimeSeries&, uint64_t time, double value)>> new_sample_callbacks;
+    vector<function<void(_TimeSeries&, uint64_t time, T value)>> new_sample_callbacks;
 
     vector<uint64_t> times;
-    vector<double> values;
+    vector<T> values;
 
     const string name;
     const string format;
@@ -16,15 +18,17 @@ class TimeSeries
 
 public:
 
-    TimeSeries(string _name, string _format, string _unit);
-    void push_sample(uint64_t time, double value);
+    _TimeSeries(string _name, string _format, string _unit);
+    void push_sample(uint64_t time, T value);
     string format_value(double value);
-    double get_latest_value() const;
+    T get_latest_value() const;
     uint64_t get_latest_time() const;
     bool has_new_data(double dt) const;
-    void add_new_sample_callback(function<void(TimeSeries&, uint64_t time, double value)> callback);
     string get_name() const {return name;}
     string get_unit() const {return unit;}
-    vector<double> get_last_n_values(size_t n) const;
+    vector<T> get_last_n_values(size_t n) const;
 
 };
+
+using TimeSeries = _TimeSeries<double>;
+using TimeSeries_TrajectoryPoint = _TimeSeries<TrajectoryPoint>;

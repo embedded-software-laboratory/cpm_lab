@@ -1,0 +1,29 @@
+
+
+void IPS_pseudo_code()
+{
+    vehicle_point_buffer = {};
+
+    while(1)
+    {
+        image_points = receive_image_points_dds();
+
+        floor_points = undistort_points(image_points);
+        vehicle_points = detect_vehicles(floor_points);
+        vehicle_point_buffer.add(vehicle_points);
+        vehicle_points_timeseries = vehicle_point_buffer.get_last_n(50);
+        identified_vehicles = find_vehicle_ids(vehicle_points_timeseries);
+        vehicle_poses = calculate_vehicle_poses(identified_vehicles);
+
+        dss_broadcast(vehicle_poses);
+
+        draw_visualization(
+            floor_points,
+            vehicle_points,
+            identified_vehicles,
+            vehicle_poses
+        );
+
+    }
+
+}

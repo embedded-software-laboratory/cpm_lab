@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!-- 
+   (c) Copyright, Real-Time Innovations, Inc. 2015.  All rights reserved.
+   No duplications, whole or partial, manual or electronic, may be made
+   without prior written permission.  Any such copies, or
+   revisions thereof, must display this notice unaltered.
+   This code contains trade secrets of Real-Time Innovations, Inc.
+-->
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_replay.xsd">
+        
+    <!-- ******************************************************************* -->
+    <!-- Default configuration file for RTI Replay Service                   -->
+    <!-- ******************************************************************* -->
+
+    <!-- Configuration name: default -->
+    <!-- This configuration replays every table in the database (any topic or
+         type, any record group and any domain name) on domain 0, at the speed
+         the data was recorded.
+         Remote administration of the service is enabled on domain 0. 
+         Distributed Logger is enabled with filter level set to warning. -->
+         
+    <replay_service name="mydefault">
+        <annotation>
+            <documentation>
+                Replay service configuration to replay everything at the 
+                recorded rate, on domain 0.
+                This configuration has remote administration enabled in domain 0
+                with Distributed Logger active and set to warning level.
+            </documentation>
+        </annotation>
+
+        <!-- Configuration for remote administration --> 
+        <administration>
+            <domain_id>0</domain_id>
+            <status_period>
+                <sec>1</sec>
+                <nanosec>0</nanosec>
+            </status_period>
+            <distributed_logger>
+                <enabled>true</enabled>
+                <filter_level>WARNING</filter_level>
+                <echo_to_stdout>true</echo_to_stdout>
+            </distributed_logger>
+        </administration>
+        
+        
+        <auto_exit>true</auto_exit>
+        <!-- Time control settings: normal replay rate and automatically start
+             replaying upon start of the service --> 
+        <time_control>
+            <rate>1</rate>
+            <start_mode>AUTOMATIC</start_mode>
+        </time_control>
+
+        <!-- Database, participant and session information -->
+        <replay_database name="SimpleConfig">
+            <!-- The name of the file to be replayed -->
+            <filename>recordings/recording_multiple_vehicles_manual_driving.dat_0_0</filename>
+            <!-- Set the database file as writable. This is necessary when the
+                 SQLite indexes of the database haven't been created yet -->
+            <readonly>true</readonly>
+            <!-- Configuration for the output participant -->
+            <participant>
+                <!-- Replay everything on domain 0 -->
+                <domain_id> 0 </domain_id>
+            </participant>
+            <!-- Main replay session. Replays all the topics recorded in the 
+                 database -->
+            <session name="MainSession">
+                <!-- Create a Replay topic entity for every topic or type, any
+                     record group and any domain name -->
+                <replay_topic name="Everything">
+                    <input>
+                        <topic_name>*</topic_name>
+                        <type_name>*</type_name>
+                        <record_group_name>*</record_group_name>
+                        <domain_name>*</domain_name>
+                    </input>
+                </replay_topic>
+            </session>
+        </replay_database>
+    </replay_service>
+</dds>

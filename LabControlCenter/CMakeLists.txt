@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
 link_libraries(dl nsl m pthread rt)
@@ -19,12 +20,13 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 # CPM lib
-include_directories(../cpm_base/cpm_lib/include/)
-include_directories(../cpm_base/cpm_lib/include/cpm/dds/)
-link_directories(../cpm_base/cpm_lib/build/)
+include_directories(../../cpm_base/cpm_lib/include/)
+include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
+link_directories(../../cpm_base/cpm_lib/build/)
 
-
-
+# yaml-cpp
+include_directories(../../yaml-cpp/include/)
+link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter
@@ -40,13 +42,22 @@ add_executable(LabControlCenter
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
     ui/map_view/MapViewUi.hpp
+    ui/MainWindow.cpp
+    ui/MainWindow.hpp
     src/defaults.cpp
     src/defaults.hpp
+    src/Point.hpp
     src/Joystick.cpp
     src/Joystick.hpp
+    src/ParameterServer.cpp
+    src/ParameterServer.hpp
+    src/ParameterStorage.cpp
+    src/ParameterStorage.hpp
+    src/TrajectoryCommand.cpp
+    src/TrajectoryCommand.hpp
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter cpm ${GTKMM_LIBRARIES})
+target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})

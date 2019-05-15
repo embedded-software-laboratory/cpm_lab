@@ -6,9 +6,9 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
 {
     assert(vehicleManualControl);
 
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui.glade");
+    builder = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui2.glade");
 
-    builder->get_widget("window1", window);
+    builder->get_widget("box1", parent);
     builder->get_widget("button_restart", button_restart);
     builder->get_widget("button_stop", button_stop);
     builder->get_widget("entry_js_device", entry_js_device);
@@ -16,7 +16,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
     builder->get_widget("progressbar_throttle", progressbar_throttle);
     builder->get_widget("progressbar_steering", progressbar_steering);
 
-    assert(window);
+    assert(parent);
     assert(button_restart);
     assert(button_stop);
     assert(entry_js_device);
@@ -24,8 +24,6 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
     assert(progressbar_throttle);
     assert(progressbar_steering);
 
-    window->show();
-    window->set_size_request(350, 200);
 
     button_restart->signal_clicked().connect([&]()
     {
@@ -58,20 +56,20 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
         }
     });
 
-    window->signal_delete_event().connect([&](GdkEventAny*)->bool{
+    /*window->signal_delete_event().connect([&](GdkEventAny*)->bool{
         vehicleManualControl->stop();
         exit(0);
         return false;
-    });
+    });*/
 
 }
 
 
-Gtk::Window& VehicleManualControlUi::get_window() 
+
+Gtk::Widget* VehicleManualControlUi::get_parent()
 {
-    return *window;
+    return parent;
 }
-
 
 void VehicleManualControlUi::update() 
 {

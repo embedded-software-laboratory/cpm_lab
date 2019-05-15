@@ -8,30 +8,44 @@
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ParameterServer.hpp"
+#include "ParameterStorage.hpp"
+#include "TrajectoryCommand.hpp"
+#include "ui/MainWindow.hpp"
+#include "cpm/Logging.hpp"
+
+
+#include <gtkmm/builder.h>
+#include <gtkmm.h>
 
 int main(int argc, char *argv[])
 {
+    cpm::Logging::Instance().set_id("LabControlCenter");
+
+    ParameterStorage storage("parameters.yaml");
+    ParameterServer server(storage);
+
+
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
 
-    auto participant = make_shared<dds::domain::DomainParticipant>(0);
-    auto vehicleManualControl = make_shared<VehicleManualControl>(participant);
+    auto vehicleManualControl = make_shared<VehicleManualControl>();
+    auto trajectoryCommand = make_shared<TrajectoryCommand>();
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto mapViewUi = make_shared<MapViewUi>(
+        trajectoryCommand, 
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
+        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();}
+    );
+    auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
+    auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
+    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi, mapViewUi);
 
-    TimeSeriesAggregator timeSeriesAggregator(participant);
 
+    vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 
-    MapViewUi mapViewUi(timeSeriesAggregator.get_vehicle_data());
-    MonitoringUi monitoringUi(timeSeriesAggregator.get_vehicle_data());
-    VehicleManualControlUi vehicleManualControlUi(vehicleManualControl);
-
-    vehicleManualControl->set_callback([&](){vehicleManualControlUi.update();});
-
-    app->signal_startup().connect([&]{
-        app->add_window(monitoringUi.get_window());
-        app->add_window(mapViewUi.get_window());
-    });
-    return app->run(vehicleManualControlUi.get_window());
+    return app->run(mainWindow->get_window());
 }
