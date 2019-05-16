@@ -96,6 +96,42 @@ void MainWindow::on_menu_params_save_as_pressed() {
 }
 
 void MainWindow::on_menu_params_load_file_pressed() {
+    //Code taken from official gtkmm example, modified
+    Gtk::FileChooserDialog dialog("Please choose a parameter file", Gtk::FILE_CHOOSER_ACTION_OPEN);
+    dialog.set_transient_for(*window_LCC);
+
+    //Add response buttons the the dialog:
+    dialog.add_button("Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button("Open", Gtk::RESPONSE_OK);
+
+    //Add filters, so that only certain file types can be selected:
+    auto filter_cpp = Gtk::FileFilter::create();
+    filter_cpp->set_name("yaml files");
+    filter_cpp->add_mime_type("text/yaml");
+    dialog.add_filter(filter_cpp);
+
+    //Show the dialog and wait for a user response:
+    int result = dialog.run();
+
+    //Handle the response:
+    std::string filename = "";
+    switch(result)
+    {
+        case Gtk::RESPONSE_OK:
+            std::cout << "Open clicked." << std::endl;
+
+            //Notice that this is a std::string, not a Glib::ustring.
+            filename = dialog.get_filename();
+            std::cout << "File selected: " <<  filename << std::endl;
+            break;
+        case Gtk::RESPONSE_CANCEL:
+            std::cout << "Cancel clicked." << std::endl;
+            break;
+        default:
+            std::cout << "Unexpected button clicked." << std::endl;
+            break;
+    }
+
     tabs_view_ui->get_param_view()->params_load_file_handler();
 }
 
