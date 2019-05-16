@@ -1,5 +1,7 @@
 function optimize_parameters
 
+    %% See 'optimize_parameters.png/tex' for documentation.
+
     addpath('~/casadi-linux-matlabR2014b-v3.4.5')
     import casadi.*
     sequences = load('sequences.mat');

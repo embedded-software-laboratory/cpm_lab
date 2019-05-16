@@ -1,4 +1,6 @@
 function dx = vehicle_dynamics(x,u,p)
+
+    %% See 'vehicle_dynamics.png/tex' for documentation.
     
     px    = x(:,1);
     py    = x(:,2);
