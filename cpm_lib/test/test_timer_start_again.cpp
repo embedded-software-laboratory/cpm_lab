@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "TimerFD.hpp"
+#include "cpm/TimerFD.hpp"
 #include "cpm/exceptions.hpp"
 #include <unistd.h>
 

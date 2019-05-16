@@ -21,7 +21,7 @@ set(SOURCE_CPM
     include/cpm/Timer.hpp
     include/cpm/stamp_message.hpp
     src/Timer.cpp
-    src/TimerFD.hpp
+    include/cpm/TimerFD.hpp
     src/TimerFD.cpp
     src/TimerSimulated.hpp
     src/TimerSimulated.cpp
