@@ -18,6 +18,7 @@ function optimize_parameters
     init_parameters = [ 0.967812, 0.060636, 0.394950, 3.373651, -1.522835, 8.858272, -0.154539, 1.483766, 6.929098, 0.012479, 0.051342 ]';
     init_parameters = [ 0.989017, -0.096090, 0.244079, 3.482601, -1.589433, 1.337974, 0.759202, 1.343048, 8.717094, 0.021072, 0.023359 ]';
     init_parameters = [ 0.990848, -0.112469, 0.206194, 3.469654, -1.623418, 0.851647, 0.829819, 1.329458, 9.466841, 0.021178, 0.018267 ]';
+    init_parameters = [ 1.007092, -0.192156, 0.196791, 3.578965, -1.824687, -64.212418, 9.083594, 1.369818, 12.023127, 0.033166, -0.013745 ]';
     
     
 
@@ -145,17 +146,29 @@ function optimize_parameters
     X_soln = cellfun(@(e) full(e), X_soln,  'UniformOutput',false);
     X_soln = cat(3,X_soln{:});
     
+    save('dump','parameters_soln','X_soln','sequences');
+    
     fprintf('New Parameters:\n')
     fprintf('%f, ', parameters_soln)
     fprintf('\n')
     
+    
+    
+    figure(1)
     clf
     hold on
     plot(full(init_flat_first))
     plot(full(nlp_result.x))
     
-    save('dump','parameters_soln','X_soln','sequences');
-
+    
+    
+    
+    dx = ([sequences.x] - squeeze(X_soln(:,1,:)));
+    dy = ([sequences.y] - squeeze(X_soln(:,2,:)));    
+    dist = sqrt(dx.^2 + dy.^2);
+    figure(2)
+    clf
+    histogram(dist(:))
     
 end
 
