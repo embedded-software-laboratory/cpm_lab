@@ -25,14 +25,15 @@ function mpc_test
     
     
     dt = 1/50;
+    dt_MPC = 1/10;
     
     state = [2, 3.8, 0, 1, 0];
     
     parameters = [ 1.007419, -0.191607, 0.199668, 3.590788, -1.816570, -9.134298, 2.269441, 1.365857, 12.233076, 0.033411, -0.012818 ]';
     
-    Hp = 50;
-    Hu = 25;
-    mpcController = MpcController(parameters, Hp, Hu);
+    Hp = 10;
+    Hu = 10;
+    mpcController = MpcController(parameters, Hp, Hu, dt_MPC);
     
     for t_now = (0:dt:10)+1e-6
         
@@ -44,7 +45,7 @@ function mpc_test
         reference_trajectory_y = [];
         for i_inter = 1:Hp
             
-            t_interp = i_inter*dt + t_now;
+            t_interp = i_inter*dt_MPC + t_now;
             I = find(t_interp < t_ref);
             I = I(1);
             interp = TrajectoryInterpolation(t_interp, test_trajectory(I-1), test_trajectory(I));

@@ -8,20 +8,20 @@ classdef MpcController
         Hp
         Hu
         mpc_fn
+        dt
     end
     
     methods
-        function obj = MpcController(parameters, Hp, Hu)
+        function obj = MpcController(parameters, Hp, Hu, dt)
             obj.parameters = parameters;
             obj.Hp = Hp;
             obj.Hu = Hu;
+            obj.dt = dt;
             u_idx = ceil((1:Hp)/Hp*Hu);
             
 
             addpath('~/casadi-linux-matlabR2014b-v3.4.5')
             import casadi.*
-            
-            dt = 1/50;
             
             var_x0 = SX.sym('x', 1, 5);
             var_u = SX.sym('ui', Hu, 3);
@@ -46,8 +46,6 @@ classdef MpcController
             
             g = gradient(objective, opt_vars);
             %H = hessian(objective, opt_vars);
-            %step = -H\g;
-            %step_u = [reshape(step,Hu,2) zeros(Hu,1)];
             step_u = [reshape(-g,Hu,2) zeros(Hu,1)];
             
             
@@ -61,12 +59,18 @@ classdef MpcController
         
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
             
-            for j = 1:150
+            for j = 1:100
                 [trajectory_x, trajectory_y, objective, step_u] = ...
                     obj.mpc_fn(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
 
-                obj.u_soln = obj.u_soln + 0.03*full(step_u);
-                %obj.u_soln = [1,0,8] .* [1;1];
+                obj.u_soln = obj.u_soln + 0.09*full(step_u);
+                
+%                 d = full(H\g);                
+%                 step_u = [reshape(-d,obj.Hu,2) zeros(obj.Hu,1)];                
+%                 obj.u_soln = obj.u_soln + 0.9*full(step_u);
+                
+                
+                obj.u_soln(:,1:2) = min(1,max(-1,obj.u_soln(:,1:2)));
             end
             fprintf('%.7f\n',full(objective));
             
