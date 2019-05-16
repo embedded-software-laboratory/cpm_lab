@@ -14,8 +14,8 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
 
 
 
+    update_loop = make_shared<cpm::TimerFD>("LabControlCenterMonitor", 100000000ull, 0, false);
 
-    update_loop = cpm::Timer::create("LabControlCenterMonitor",100000000ull, 0, false, false, false);
     update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
 
     update_dispatcher.connect([&](){

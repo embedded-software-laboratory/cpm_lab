@@ -1,7 +1,7 @@
 #pragma once
 #include "defaults.hpp"
 #include <dds/pub/ddspub.hpp>
-#include "cpm/Timer.hpp"
+#include "cpm/TimerFD.hpp"
 #include "Joystick.hpp"
 #include "VehicleCommandDirect.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
@@ -12,7 +12,7 @@ class VehicleManualControl
 {
     dds::domain::DomainParticipant& participant;
     shared_ptr<Joystick> joystick = nullptr;
-    std::shared_ptr<cpm::Timer> update_loop = nullptr;
+    std::shared_ptr<cpm::TimerFD> update_loop = nullptr;
     uint8_t vehicle_id = 0;
     
     double ref_speed = 0;
