@@ -9,10 +9,10 @@ function prepare_measurement_data
     n_sequence_samples = 100;
     
     % The optimization is done individually for each vehicle
-    vehicle_id = 3;
+    vehicle_id = 2;
     
     %recording_file_prefixes = {'recording_vehicle_3_a', 'recording_vehicle_3_b', 'recording_vehicle_3_c'};
-    recording_file_prefixes = {'recording_vehicles_2_3_test_loop', 'recording_vehicle_3_b', 'recording_vehicle_3_c'};
+    recording_file_prefixes = {'recording_vehicles_2_3_test_loop', 'recording_vehicles_2_3_test_loop_b'};
     
     freq = 50; % assume data comes at 50Hz
     sequence_duration = n_sequence_samples / freq;
