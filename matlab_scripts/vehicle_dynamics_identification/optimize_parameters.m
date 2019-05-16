@@ -16,6 +16,8 @@ function optimize_parameters
     init_parameters = [  0.975630, -0.025596, 0.254035, 3.221276, -1.644736, 7.105890, 0.118146, 1.442459, 9.033599, 0.018313, 0.022002 ]';
     init_parameters = [  0.976820, -0.031865, 0.257054, 3.239819, -1.690282, 7.508750, 0.098089, 1.456106, 9.947812, 0.011501, 0.027306 ]';
     init_parameters = [ 0.967812, 0.060636, 0.394950, 3.373651, -1.522835, 8.858272, -0.154539, 1.483766, 6.929098, 0.012479, 0.051342 ]';
+    init_parameters = [ 0.989017, -0.096090, 0.244079, 3.482601, -1.589433, 1.337974, 0.759202, 1.343048, 8.717094, 0.021072, 0.023359 ]';
+    init_parameters = [ 0.990848, -0.112469, 0.206194, 3.469654, -1.623418, 0.851647, 0.829819, 1.329458, 9.466841, 0.021178, 0.018267 ]';
     
     
 
@@ -74,8 +76,8 @@ function optimize_parameters
         error_speed = X{i_sequence}(:,4) - sequences(i_sequence).speed;
         
         objective = objective ...
-            + 50*sumsqr(error_x) ...
-            + 50*sumsqr(error_y) ...
+            + 10*sumsqr(error_x) ...
+            + 10*sumsqr(error_y) ...
             + sumsqr(error_yaw) ...
             + sumsqr(error_speed);
     end
@@ -136,10 +138,13 @@ function optimize_parameters
         init_flat = nlp_result.x;
     end
     
-    
-    [result_primal{1:(length(sequences)+1)}] = unpack_fn(nlp_result.x);
+    result_primal = cell(1,length(sequences)+1);
+    [result_primal{:}] = unpack_fn(nlp_result.x);
     parameters_soln = full(result_primal{1});
-
+    X_soln = result_primal(2:end);
+    X_soln = cellfun(@(e) full(e), X_soln,  'UniformOutput',false);
+    X_soln = cat(3,X_soln{:});
+    
     fprintf('New Parameters:\n')
     fprintf('%f, ', parameters_soln)
     fprintf('\n')
@@ -148,8 +153,9 @@ function optimize_parameters
     hold on
     plot(full(init_flat_first))
     plot(full(nlp_result.x))
-        
-    save dump
+    
+    save('dump','parameters_soln','X_soln','sequences');
+
     
 end
 
