@@ -23,3 +23,13 @@
 .pane-separator {
     background-image: linear-gradient(#888);
 }
+
+#parameters_start_server_toggle{
+    background-color: #B71C1C;
+    color: white;
+}
+
+#parameters_start_server_toggle:checked{
+    background-color: #33691E;
+    color: white;
+}

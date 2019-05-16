@@ -184,38 +184,18 @@
       <object class="GtkFlowBox" id="parameters_flowbox_bottom_start">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <child>
-          <object class="GtkFlowBoxChild" id="parameters_flowbox_bottom_start_label">
-            <property name="width_request">100</property>
-            <property name="height_request">80</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="halign">start</property>
-            <property name="valign">center</property>
-            <child>
-              <object class="GtkLabel" id="parameters_start_server_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="valign">center</property>
-                <property name="label" translatable="yes">Parameter server running:</property>
-              </object>
-            </child>
-          </object>
-        </child>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkFlowBoxChild" id="parameters_flowbox_bottom_start_toggle">
-            <property name="width_request">100</property>
-            <property name="height_request">80</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="halign">end</property>
-            <property name="valign">center</property>
             <child>
-              <object class="GtkSwitch" id="parameters_start_server_toggle">
+              <object class="GtkToggleButton" id="parameters_start_server_toggle">
+                <property name="label" translatable="yes">Toggle parameter server (inactive)</property>
+                <property name="name">parameters_start_server_toggle</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="halign">center</property>
+                <property name="receives_default">True</property>
                 <property name="valign">center</property>
               </object>
             </child>

@@ -22,7 +22,6 @@ ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage, boo
 }
 
 void ParameterServer::set_active_callback(bool active) {
-    std::cout << "Callback called" << std::endl;
     is_active.store(active);
 }
 

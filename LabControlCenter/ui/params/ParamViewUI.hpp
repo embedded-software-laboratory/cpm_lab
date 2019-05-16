@@ -49,7 +49,7 @@ private:
     Gtk::Button* parameters_button_show;
 
     //Toggle button to start / stop the parameter server
-    Gtk::Switch* parameters_start_server_toggle;
+    Gtk::ToggleButton* parameters_start_server_toggle;
 
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
@@ -75,7 +75,7 @@ private:
     bool handle_button_released(GdkEventKey* event);
 
     //Event handler for toggle/switch for parameter server
-    void on_param_server_active_changed(Gtk::StateType previous_state);
+    void on_param_server_active_changed();
     std::function<void(bool)> param_server_active_callback;
 
     //Callback: Allow to only create another create window when the former window was closed
