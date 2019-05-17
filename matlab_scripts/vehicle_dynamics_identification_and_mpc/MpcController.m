@@ -10,6 +10,7 @@ classdef MpcController
         mpc_fn
         dt
         momentum
+        mpc_fn_compiled
     end
     
     methods
@@ -21,6 +22,8 @@ classdef MpcController
             u_idx = ceil((1:Hp)/Hp*Hu);
             
 
+            
+            % setenv('PATH', [getenv('PATH') ':/home/janis/casadi-linux-matlabR2014b-v3.4.5'])
             addpath('~/casadi-linux-matlabR2014b-v3.4.5')
             import casadi.*
             
@@ -50,9 +53,14 @@ classdef MpcController
             step_u = [reshape(-g,Hu,2) zeros(Hu,1)];
             
             
-            obj.mpc_fn = casadi.Function('mpc_fn', ...
+            obj.mpc_fn = casadi.Function('casadi_mpc_fn', ...
                 {var_x0, var_u, var_params, var_reference_trajectory_x, var_reference_trajectory_y},...
                 {trajectory_x, trajectory_y, objective, step_u});
+            
+            obj.mpc_fn.generate('casadi_mpc_fn.c',struct('with_header',true));
+            
+            C = Importer('casadi_mpc_fn.c','clang');
+            obj.mpc_fn_compiled = external('casadi_mpc_fn',C);
             
             
             obj.u_soln = [0.01,0.01,8] .* ones(Hu,3);
@@ -65,7 +73,7 @@ classdef MpcController
             tic
             for j = 1:50
                 [trajectory_x, trajectory_y, objective, step_u] = ...
-                    obj.mpc_fn(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
+                    obj.mpc_fn_compiled(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
 
                 obj.momentum = 0.7 * obj.momentum + full(step_u);
                 
