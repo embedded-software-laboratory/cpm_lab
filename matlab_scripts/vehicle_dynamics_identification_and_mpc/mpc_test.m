@@ -25,13 +25,13 @@ function mpc_test
     
     
     dt = 1/50;
-    dt_MPC = 1/10;
+    dt_MPC = 1/20;
     
     state = [2, 3.8, 0, 1, 0];
     
     parameters = [ 1.007419, -0.191607, 0.199668, 3.590788, -1.816570, -9.134298, 2.269441, 1.365857, 12.233076, 0.033411, -0.012818 ]';
     
-    Hp = 10;
+    Hp = 20;
     Hu = 10;
     mpcController = MpcController(parameters, Hp, Hu, dt_MPC);
     

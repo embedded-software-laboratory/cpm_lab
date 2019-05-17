@@ -9,6 +9,7 @@ classdef MpcController
         Hu
         mpc_fn
         dt
+        momentum
     end
     
     methods
@@ -55,6 +56,8 @@ classdef MpcController
             
             
             obj.u_soln = [0.01,0.01,8] .* ones(Hu,3);
+            
+            obj.momentum = 0*obj.u_soln;
         end
         
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
@@ -63,7 +66,9 @@ classdef MpcController
                 [trajectory_x, trajectory_y, objective, step_u] = ...
                     obj.mpc_fn(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
 
-                obj.u_soln = obj.u_soln + 0.09*full(step_u);
+                obj.momentum = 0.5 * obj.momentum + full(step_u);
+                
+                obj.u_soln = obj.u_soln + 0.06 * obj.momentum;
                 
 %                 d = full(H\g);                
 %                 step_u = [reshape(-d,obj.Hu,2) zeros(obj.Hu,1)];                
