@@ -62,13 +62,14 @@ classdef MpcController
         
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
             
-            for j = 1:100
+            tic
+            for j = 1:50
                 [trajectory_x, trajectory_y, objective, step_u] = ...
                     obj.mpc_fn(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
 
-                obj.momentum = 0.5 * obj.momentum + full(step_u);
+                obj.momentum = 0.7 * obj.momentum + full(step_u);
                 
-                obj.u_soln = obj.u_soln + 0.06 * obj.momentum;
+                obj.u_soln = obj.u_soln + 0.07 * obj.momentum;
                 
 %                 d = full(H\g);                
 %                 step_u = [reshape(-d,obj.Hu,2) zeros(obj.Hu,1)];                
@@ -77,6 +78,7 @@ classdef MpcController
                 
                 obj.u_soln(:,1:2) = min(1,max(-1,obj.u_soln(:,1:2)));
             end
+            toc
             fprintf('%.7f\n',full(objective));
             
             trajectory_pred_x = full(trajectory_x);

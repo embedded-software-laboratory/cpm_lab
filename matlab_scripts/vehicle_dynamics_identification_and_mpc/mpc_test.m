@@ -35,10 +35,9 @@ function mpc_test
     Hu = 10;
     mpcController = MpcController(parameters, Hp, Hu, dt_MPC);
     
-    for t_now = (0:dt:10)+1e-6
+    for t_now = (0:dt:27)+1e-6        
         
-        
-        t_ref = [test_trajectory.t]* 1e-9;
+        t_ref = [test_trajectory.t] * 1e-9;
         
         %% Interpolate reference trajectory
         reference_trajectory_x = [];
