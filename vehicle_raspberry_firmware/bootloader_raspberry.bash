@@ -6,10 +6,10 @@
 
 
 # Add the following line to "/etc/rc.local" to enable auto start. Install tmux first.
-# tmux new-session -d -s "bootloader_raspberry" "/root/bootloader_raspberry.bash"
+# tmux new-session -d -s "bootloader_raspberry" "bash /root/bootloader_raspberry.bash"
 
 
-
+sleep 5
 cd /tmp
 rm package.tar.gz
 wget http://192.168.1.249/raspberry/package.tar.gz
