@@ -53,7 +53,7 @@ double Controller::speed_controller(const double speed_measured, const double sp
 double steering_curvature_calibration(double curvature) 
 {
     // steady-state curve, from curve fitting
-    double steering_servo = (0.241857) * curvature + (-0.035501);   
+    double steering_servo = (0.241857) * curvature;
     return steering_servo;
 }
 
@@ -118,16 +118,13 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
                 const double yaw_error = sin(yaw - yaw_ref);
 
 
-                std::cout << 
-                "lateral_error " << lateral_error << "  " << 
-                "longitudinal_error " << longitudinal_error << "  " << 
-                "yaw_error " << yaw_error << "  " << 
-                std::endl;
 
                 if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
                 {
                     // Linear lateral controller
-                    const double curvature = trajectory_interpolation.curvature - 1.0000 * lateral_error - 2.2650 * yaw_error;
+                    const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
+                    //const double ref_curvature = trajectory_interpolation.curvature;
+                    const double curvature = ref_curvature - 7.0 * lateral_error - 4.0 * yaw_error;
 
                     // Linear longitudinal controller
                     const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
@@ -135,6 +132,15 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
                     const double speed_measured = m_vehicleState.speed();
                     steering_servo = steering_curvature_calibration(curvature);
                     motor_throttle = speed_controller(speed_measured, speed_target);
+
+
+                    std::cout << 
+                    "lateral_error " << lateral_error << "  " << 
+                    "longitudinal_error " << longitudinal_error << "  " << 
+                    "yaw_error " << yaw_error << "  " << 
+                    "ref_curvature " << trajectory_interpolation.curvature << "  " << 
+                    "curvature_cmd " << curvature << "  " << 
+                    std::endl;
                 }
             }
         }
