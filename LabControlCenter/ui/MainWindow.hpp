@@ -7,6 +7,7 @@
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ui/file_chooser/FileChooserUI.hpp"
 
 
 
@@ -36,6 +37,10 @@ private:
     void on_menu_params_load_file_pressed();
     void on_menu_params_load_multiple_files_pressed();
     void on_menu_params_load_params_pressed();
+
+    //File chooser window
+    std::shared_ptr<FileChooserUI> file_chooser_window;
+    void file_chooser_callback(std::string file_string, bool has_file);
 
     std::shared_ptr<TabsViewUI> tabs_view_ui;
     std::shared_ptr<MonitoringUi> monitoring_ui;

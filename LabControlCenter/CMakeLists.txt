@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+set(CMAKE_CXX_FLAGS_DEBUG  "-g")
 set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
@@ -42,6 +43,9 @@ add_executable(LabControlCenter
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
     ui/map_view/MapViewUi.hpp
+    ui/file_chooser/FileChooserUI.hpp
+    ui/file_chooser/FileChooserUI.cpp
+    ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.cpp
     ui/params/ParamsCreateView.hpp
