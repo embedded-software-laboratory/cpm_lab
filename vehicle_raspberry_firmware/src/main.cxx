@@ -103,12 +103,13 @@ int main(int argc, char *argv[])
     const vector<uint8_t> identification_LED_enabled_ticks { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
     
     // Loop setup
-    Localization localization;
-    Controller controller(vehicle_id);
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
     auto update_loop = cpm::Timer::create("vehicle_raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
+
+    Localization localization;
+    Controller controller(vehicle_id, [&](){return update_loop->get_time();});
 
     /*
     // Timing / profiling helper
