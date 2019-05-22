@@ -44,7 +44,8 @@ private:
     std::function<void(ParameterWithDescription, bool)> on_close_callback;
     std::function<bool(std::string)> check_param_exists;
 
-    //Callback functions for buttons
+    //Callback functions for buttons / delete event
+    bool on_delete(GdkEventAny* any_event);
     void on_abort();
     void on_add();
 

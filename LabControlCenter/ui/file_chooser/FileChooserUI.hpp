@@ -24,9 +24,13 @@ private:
     //Callback function on close (must always be called!)
     std::function<void(std::string, bool)> on_close_callback;
 
-    //Callback functions for buttons
+    //Callback functions for buttons and delete event
+    bool on_delete(GdkEventAny* any_event);
     void on_abort();
     void on_load();
+
+    //Key events - act depending on which button was released
+    bool handle_button_released(GdkEventKey* event);
 public:
     FileChooserUI(std::function<void(std::string, bool)> on_close_callback);
 };

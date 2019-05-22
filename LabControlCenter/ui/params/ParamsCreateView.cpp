@@ -128,16 +128,23 @@ void ParamsCreateView::init_members() {
     assert(params_create_values_grid);
 
     //Set values so that the other cannot be used until the parameter is set
-    window->set_deletable(false); //No close button, user must use "abort" or "add"
+    window->set_deletable(true); //No close button, user must use "abort" or "add"
     window->show();
 
     params_create_abort_button->signal_clicked().connect(sigc::mem_fun(this, &ParamsCreateView::on_abort));
     params_create_add_button->signal_clicked().connect(sigc::mem_fun(this, &ParamsCreateView::on_add));
+
+    //Listen for delete event - so that callback function is always called properly
+    window->signal_delete_event().connect(sigc::mem_fun(this, &ParamsCreateView::on_delete));
+}
+
+bool ParamsCreateView::on_delete(GdkEventAny* any_event) {
+    on_close_callback(param, false); //false -> do not save changes
+    return false;
 }
 
 void ParamsCreateView::on_abort() {
     window->close();
-    on_close_callback(param, false); //false -> do not save changes
 }
 
 void ParamsCreateView::on_add() {

@@ -29,11 +29,36 @@ FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_ca
     file_chooser_dialog->add_filter(filter_yaml);
 
     file_chooser_dialog->set_select_multiple(false);
+
+    file_chooser_dialog->signal_key_release_event().connect(sigc::mem_fun(this, &FileChooserUI::handle_button_released));
+    file_chooser_dialog->add_events(Gdk::KEY_RELEASE_MASK);
+
+    //Listen for delete event - so that callback function is always called properly
+    window->signal_delete_event().connect(sigc::mem_fun(this, &FileChooserUI::on_delete));
+}
+
+bool FileChooserUI::handle_button_released(GdkEventKey* event) {
+    if (event->type == GDK_KEY_RELEASE)
+    {
+        if(event->keyval == GDK_KEY_Return) {
+            on_load();
+            return true;
+        }
+        else if (event->keyval == GDK_KEY_Escape) {
+            on_abort();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool FileChooserUI::on_delete(GdkEventAny* any_event) {
+    on_close_callback("", false); //false -> do not save changes
+    return false;
 }
 
 void FileChooserUI::on_abort() {
     window->close();
-    on_close_callback("", false); //false -> do not save changes
 }
 
 void FileChooserUI::on_load() {

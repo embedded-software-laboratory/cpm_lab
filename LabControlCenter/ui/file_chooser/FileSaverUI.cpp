@@ -29,11 +29,36 @@ FileSaverUI::FileSaverUI(std::function<void(std::string, bool)> _on_close_callba
     file_saver_dialog->add_filter(filter_yaml);
 
     file_saver_dialog->set_select_multiple(false);
+
+    file_saver_dialog->signal_key_release_event().connect(sigc::mem_fun(this, &FileSaverUI::handle_button_released));
+    file_saver_dialog->add_events(Gdk::KEY_RELEASE_MASK);
+
+    //Listen for delete event - so that callback function is always called properly
+    window->signal_delete_event().connect(sigc::mem_fun(this, &FileSaverUI::on_delete));
+}
+
+bool FileSaverUI::handle_button_released(GdkEventKey* event) {
+    if (event->type == GDK_KEY_RELEASE)
+    {
+        if(event->keyval == GDK_KEY_Return) {
+            on_save();
+            return true;
+        }
+        else if (event->keyval == GDK_KEY_Escape) {
+            on_abort();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool FileSaverUI::on_delete(GdkEventAny* any_event) {
+    on_close_callback("", false); //false -> do not save changes
+    return false;
 }
 
 void FileSaverUI::on_abort() {
     window->close();
-    on_close_callback("", false); //false -> do not save changes
 }
 
 void FileSaverUI::on_save() {
