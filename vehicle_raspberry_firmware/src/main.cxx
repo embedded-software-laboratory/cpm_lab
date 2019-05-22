@@ -166,7 +166,8 @@ int main(int argc, char *argv[])
      
 
             // Process sensor data
-            if(check_CRC_miso(spi_miso_data)) {
+            if(check_CRC_miso(spi_miso_data)) 
+            {
                 // TODO rethink this. What should be skipped when there is a SPI error?
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
@@ -187,8 +188,11 @@ int main(int argc, char *argv[])
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
             }
-            else {
-                std::cerr << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
+            else 
+            {
+                std::cerr 
+                << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 
+                <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
             }
 
 
