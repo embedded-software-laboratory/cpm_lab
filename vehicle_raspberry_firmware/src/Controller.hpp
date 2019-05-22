@@ -6,11 +6,13 @@
 #include "VehicleState.hpp"
 #include <map>
 #include <memory>
+#include <mutex>
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 #include "cpm/VehicleIDFilteredTopic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
+#include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 
 extern "C" {
@@ -30,7 +32,9 @@ class Controller
 
     std::unique_ptr< cpm::Reader<VehicleCommandDirect> > reader_CommandDirect;
     std::unique_ptr< cpm::Reader<VehicleCommandSpeedCurvature> > reader_CommandSpeedCurvature;
-    std::unique_ptr< cpm::Reader<VehicleCommandTrajectory> > reader_vehicleCommandTrajectory;
+    //std::unique_ptr< cpm::Reader<VehicleCommandTrajectory> > reader_vehicleCommandTrajectory;
+
+    std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> > asyncReader_vehicleCommandTrajectory;
 
     VehicleState m_vehicleState;
 
@@ -39,9 +43,15 @@ class Controller
     VehicleCommandTrajectory m_vehicleCommandTrajectory;
 
     ControllerState state = ControllerState::Stop;
+    
+    const uint64_t command_timeout = 500000000ull;
+
+    uint64_t latest_command_receive_time = 0;
 
     double speed_throttle_error_integral = 0;
+
     std::map<uint64_t, TrajectoryPoint> trajectory_points;
+    std::mutex command_receive_mutex;
 
     double speed_controller(const double speed_measured, const double speed_target);
 
@@ -50,9 +60,5 @@ class Controller
 public:
     Controller(uint8_t vehicle_id);
     void update_vehicle_state(VehicleState vehicleState);
-    /*void update_command(VehicleCommandDirect vehicleCommand);
-    void update_command(VehicleCommandSpeedCurvature vehicleCommand);
-    void update_command(VehicleCommandTrajectory vehicleCommand);
-    void vehicle_emergency_stop();*/
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
 };
