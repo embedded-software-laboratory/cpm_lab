@@ -48,6 +48,12 @@ namespace cpm
             dds::topic::Topic<MessageType> topic, 
             bool is_reliable = false
         );
+        AsyncReader(
+            std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+            dds::domain::DomainParticipant& _participant, 
+            dds::topic::ContentFilteredTopic<MessageType> topic, 
+            bool is_reliable = false
+        );
 
     };
 
@@ -58,6 +64,31 @@ namespace cpm
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
         dds::domain::DomainParticipant & _participant, 
         dds::topic::Topic<MessageType> topic,
+        bool is_reliable
+    )
+    :sub(_participant)
+    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort()))
+    ,read_condition(reader)
+    {
+        //Call the callback function whenever any new data is available
+        read_condition.enabled_statuses(dds::core::status::StatusMask::data_available()); 
+
+        //Register the callback function
+        read_condition->handler(std::bind(&AsyncReader::handler, this, func));
+        
+        //Attach the read condition
+        waitset.attach_condition(read_condition);
+        
+        //Start the waitset; from now on, whenever data is received the callback function is called
+        waitset.start();
+    }
+
+    
+    template<class MessageType> 
+    AsyncReader<MessageType>::AsyncReader(
+        std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+        dds::domain::DomainParticipant & _participant, 
+        dds::topic::ContentFilteredTopic<MessageType> topic,
         bool is_reliable
     )
     :sub(_participant)
