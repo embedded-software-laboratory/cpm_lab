@@ -16,11 +16,17 @@ FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_ca
     assert(button_load);
 
     //Set values so that the other cannot be used until the parameter is set
-    window->set_deletable(false); //No close button, user must use "abort" or "add"
+    window->set_deletable(true); //No close button, user must use "abort" or "add"
     window->show();
 
     button_abort->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_abort));
     button_load->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_load));
+
+    //Set filter
+    auto filter_yaml = Gtk::FileFilter::create();
+    filter_yaml->set_name("YAML files");
+    filter_yaml->add_mime_type("text/yaml");
+    file_chooser_dialog->add_filter(filter_yaml);
 }
 
 void FileChooserUI::on_abort() {

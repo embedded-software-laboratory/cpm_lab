@@ -33,3 +33,13 @@
     background-color: #33691E;
     color: white;
 }
+
+#file_chooser_abort{
+    background-color: #B71C1C;
+    color: white;
+}
+
+#file_chooser_load{
+    background-color: #33691E;
+    color: white;
+}

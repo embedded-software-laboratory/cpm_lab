@@ -17,6 +17,7 @@
             <child>
               <object class="GtkButton" id="button_abort">
                 <property name="label" translatable="yes">Abort</property>
+                <property name="name">file_chooser_abort</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -30,6 +31,7 @@
             <child>
               <object class="GtkButton" id="button_load">
                 <property name="label" translatable="yes">Load</property>
+                <property name="name">file_chooser_load</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
