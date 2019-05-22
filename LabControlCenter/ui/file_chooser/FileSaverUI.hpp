@@ -17,7 +17,7 @@ private:
     Glib::RefPtr<Gtk::Builder> params_create_builder;
 
     Gtk::Window* window;
-    Gtk::FileChooserDialog* file_chooser_dialog;
+    Gtk::FileChooserDialog* file_saver_dialog;
     Gtk::Button* button_abort;
     Gtk::Button* button_save;
 

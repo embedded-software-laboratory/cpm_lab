@@ -43,3 +43,13 @@
     background-color: #33691E;
     color: white;
 }
+
+#file_saver_abort{
+    background-color: #B71C1C;
+    color: white;
+}
+
+#file_saver_save{
+    background-color: #33691E;
+    color: white;
+}

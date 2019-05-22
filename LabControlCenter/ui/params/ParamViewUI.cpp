@@ -289,11 +289,11 @@ void ParamViewUI::params_reload_handler() {
 }
 
 void ParamViewUI::params_save_handler() {
-    parameter_storage->storeFile("lab_yaml_test_out.yaml"); //TODO
+    parameter_storage->storeFile();
 }
 
-void ParamViewUI::params_save_as_handler() {
-
+void ParamViewUI::params_save_as_handler(std::string filename) {
+    parameter_storage->storeFile(filename);
 }
 
 void ParamViewUI::params_load_file_handler(std::string filename) {

@@ -17,7 +17,8 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button_abort">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Abort</property>
+                <property name="name">file_saver_abort</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -30,7 +31,8 @@
             </child>
             <child>
               <object class="GtkButton" id="button_save">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Save</property>
+                <property name="name">file_saver_save</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
