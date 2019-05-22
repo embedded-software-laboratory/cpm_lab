@@ -31,6 +31,7 @@ private:
 
     //Key events - act depending on which button was released
     bool handle_button_released(GdkEventKey* event);
+    bool called_callback = false;
 public:
     FileSaverUI(std::function<void(std::string, bool)> on_close_callback);
 };

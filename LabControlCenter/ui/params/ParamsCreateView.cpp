@@ -139,7 +139,9 @@ void ParamsCreateView::init_members() {
 }
 
 bool ParamsCreateView::on_delete(GdkEventAny* any_event) {
-    on_close_callback(param, false); //false -> do not save changes
+    if (!called_callback) {
+        on_close_callback(param, false); //false -> do not save changes
+    }
     return false;
 }
 
@@ -218,6 +220,7 @@ void ParamsCreateView::on_add() {
     }
 
     if (value_conversion_valid && !param_exists) {
+        called_callback = true;
         window->close();
         on_close_callback(param, true);
     }

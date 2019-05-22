@@ -53,7 +53,10 @@ bool FileChooserUI::handle_button_released(GdkEventKey* event) {
 }
 
 bool FileChooserUI::on_delete(GdkEventAny* any_event) {
-    on_close_callback("", false); //false -> do not save changes
+    if (!called_callback) {
+        on_close_callback("", false); //false -> do not save changes
+    }
+    std::cout << "on delete" << std::endl;
     return false;
 }
 
@@ -72,7 +75,9 @@ void FileChooserUI::on_load() {
     }
 
     if (is_yaml) {
+        called_callback = true;
         window->close();
+        std::cout << "calling callback" << std::endl;
         on_close_callback(filename, true);
     }
 }

@@ -48,6 +48,7 @@ private:
     bool on_delete(GdkEventAny* any_event);
     void on_abort();
     void on_add();
+    bool called_callback = false;
 
     //Callback functions for signals emitted by entries (when the user changes the input)
     void on_value_entry_changed();

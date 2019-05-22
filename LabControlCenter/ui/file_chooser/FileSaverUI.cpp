@@ -53,7 +53,9 @@ bool FileSaverUI::handle_button_released(GdkEventKey* event) {
 }
 
 bool FileSaverUI::on_delete(GdkEventAny* any_event) {
-    on_close_callback("", false); //false -> do not save changes
+    if (!called_callback) {
+        on_close_callback("", false); //false -> do not save changes
+    }
     return false;
 }
 
@@ -82,6 +84,7 @@ void FileSaverUI::on_save() {
     if (is_yaml) {
         std::string path = file_saver_dialog->get_current_folder();
         filename = path + "/" + filename;
+        called_callback = true;
         window->close();
         on_close_callback(filename, true);
     }
