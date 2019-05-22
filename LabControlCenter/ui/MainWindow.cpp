@@ -1,6 +1,6 @@
 #include "MainWindow.hpp"
 
-
+using namespace std::placeholders;
 
 MainWindow::MainWindow(
     std::shared_ptr<TabsViewUI> tabsViewUI,
@@ -92,10 +92,18 @@ void MainWindow::on_menu_params_save_pressed() {
 }
 
 void MainWindow::on_menu_params_save_as_pressed() {
-    tabs_view_ui->get_param_view()->params_save_as_handler();
+    //Make according buttons unusable until the ui is closed; also grey out param tab / treeview content
+    menu_bar_params_reload->set_sensitive(false);
+    menu_bar_params_save->set_sensitive(false);
+    menu_bar_params_save_as->set_sensitive(false);
+    menu_bar_params_load_file->set_sensitive(false);
+    menu_bar_params_load_multiple_files->set_sensitive(false);
+    menu_bar_params_load_params->set_sensitive(false);
+    tabs_view_ui->get_param_view()->make_insensitive();
+
+    file_saver_window = make_shared<FileSaverUI>(std::bind(&MainWindow::file_saver_callback, this, _1, _2));
 }
 
-using namespace std::placeholders;
 void MainWindow::on_menu_params_load_file_pressed() {
     //Make according buttons unusable until the ui is closed; also grey out param tab / treeview content
     menu_bar_params_reload->set_sensitive(false);
@@ -133,6 +141,24 @@ void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
     }
 
     file_chooser_window.reset();
+}
+
+void MainWindow::file_saver_callback(std::string file_string, bool has_file) {
+    //Make according buttons usable as the ui is closed, also for treeview content from param ui
+    menu_bar_params_reload->set_sensitive(true);
+    menu_bar_params_save->set_sensitive(true);
+    menu_bar_params_save_as->set_sensitive(true);
+    menu_bar_params_load_file->set_sensitive(true);
+    menu_bar_params_load_multiple_files->set_sensitive(true);
+    menu_bar_params_load_params->set_sensitive(true);
+    tabs_view_ui->get_param_view()->make_sensitive();
+
+    //Call Param UI to process changes
+    if (has_file) {
+        tabs_view_ui->get_param_view()->params_save_as_handler(file_string);
+    }
+
+    file_saver_window.reset();
 }
 
 Gtk::Window& MainWindow::get_window()
