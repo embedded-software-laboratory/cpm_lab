@@ -110,8 +110,19 @@ int main(int argc, char *argv[])
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
     auto update_loop = cpm::Timer::create("vehicle_raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
 
+    /*
+    // Timing / profiling helper
+    uint64_t t_prev = update_loop->get_time();
+    auto log_fn = [&](int line){
+        uint64_t now = update_loop->get_time();
+        std::cerr << "PERF L " << line << " DT " << (now-t_prev) << std::endl;
+        t_prev = now;
+    };
+    */
+
     // Control loop
-    update_loop->start([&](uint64_t t_now) {
+    update_loop->start([&](uint64_t t_now) 
+    {
         try 
         {
             // get IPS observation
@@ -169,7 +180,7 @@ int main(int argc, char *argv[])
             if(check_CRC_miso(spi_miso_data)) 
             {
                 // TODO rethink this. What should be skipped when there is a SPI error?
-
+            
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.update(
                     t_now,
@@ -187,6 +198,7 @@ int main(int argc, char *argv[])
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
+            
             }
             else 
             {
