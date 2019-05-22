@@ -35,8 +35,6 @@ FileSaverUI::FileSaverUI(std::function<void(std::string, bool)> _on_close_callba
 
     //Listen for delete event - so that callback function is always called properly
     window->signal_delete_event().connect(sigc::mem_fun(this, &FileSaverUI::on_delete));
-
-    std::cout << "dubi" << std::endl;
 }
 
 bool FileSaverUI::handle_button_released(GdkEventKey* event) {
