@@ -99,7 +99,6 @@ using namespace std::placeholders;
 void MainWindow::on_menu_params_load_file_pressed() {
     //TODO: Make according buttons unusable until the ui is closed; also grey out param tab / treeview content
     file_chooser_window = make_shared<FileChooserUI>(std::bind(&MainWindow::file_chooser_callback, this, _1, _2));
-    std::cout << "Works so far" << std::endl;
 }
 
 void MainWindow::on_menu_params_load_multiple_files_pressed() {
@@ -111,7 +110,7 @@ void MainWindow::on_menu_params_load_params_pressed() {
 }
 
 void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
-    std::cout << "Called callback" << std::endl; //TODO
+    //TODO
     file_chooser_window.reset();
 }
 
