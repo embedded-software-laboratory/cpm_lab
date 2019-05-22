@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
-    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
+    auto update_loop = cpm::Timer::create("vehicle_raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
 
     // Control loop
     update_loop->start([&](uint64_t t_now) {
@@ -190,9 +190,11 @@ int main(int argc, char *argv[])
             }
             else 
             {
-                std::cerr 
+                /*std::cerr 
                 << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 
-                <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
+                <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;*/
+
+                cpm::Logging::Instance().write("%s", "Data corruption on ATmega SPI bus. CRC mismatch.");
             }
 
 
@@ -204,7 +206,9 @@ int main(int argc, char *argv[])
         }
         catch(const dds::core::Exception& e)
         {
-            std::cerr << "Exception: " << e.what() << std::endl;
+            //std::cerr << "Exception: " << e.what() << std::endl;
+            std::string err_message = e.what();
+            cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
         }
     });
     
