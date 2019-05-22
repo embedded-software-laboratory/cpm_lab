@@ -98,6 +98,7 @@ MapViewUi::MapViewUi(
         if(!mouse_left_button)
         {
             trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 0);
+            std::cout << "smth";
 
             path_painting_in_progress.clear();
             path_painting_in_progress_vehicle_id = -1;
