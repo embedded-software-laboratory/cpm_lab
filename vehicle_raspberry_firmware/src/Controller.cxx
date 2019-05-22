@@ -3,34 +3,74 @@
 #include "TrajectoryInterpolation.hpp"
 
 
-void Controller::update_vehicle_state(VehicleState vehicleState) {
+template<typename T>
+std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
+{
+    cpm::VehicleIDFilteredTopic<T> topic(cpm::get_topic<T>(name), vehicle_id);
+    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
+}
+
+Controller::Controller(uint8_t vehicle_id)
+{
+    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
+    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+    reader_vehicleCommandTrajectory = make_reader<VehicleCommandTrajectory>("vehicleCommandTrajectory", vehicle_id);
+}
+
+
+void Controller::update_vehicle_state(VehicleState vehicleState) 
+{
     m_vehicleState = vehicleState;
+
+    if(vehicleState.IPS_update_age_nanoseconds() > 3000000000ull)
+    {
+        state = ControllerState::Stop;
+    }
 }
 
-void Controller::update_command(VehicleCommandDirect vehicleCommand)
+
+void Controller::receive_commands(uint64_t t_now)
 {
-    m_vehicleCommandDirect = vehicleCommand;
-    state = ControllerState::Direct;
+    VehicleCommandDirect sample_CommandDirect;
+    uint64_t sample_CommandDirect_age;
+    VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
+    uint64_t sample_CommandSpeedCurvature_age;
+    VehicleCommandTrajectory sample_CommandTrajectory;
+    uint64_t sample_CommandTrajectory_age;
+
+    reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
+    reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
+    reader_vehicleCommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
+
+    const uint64_t command_timeout = 500000000ull;
+
+    if(    sample_CommandDirect_age         > command_timeout
+        && sample_CommandSpeedCurvature_age > command_timeout
+        && sample_CommandTrajectory_age     > command_timeout)
+    {
+        state = ControllerState::Stop;
+    }
+    else if(sample_CommandDirect_age <= sample_CommandSpeedCurvature_age
+         && sample_CommandDirect_age <= sample_CommandTrajectory_age)
+    {
+        m_vehicleCommandDirect = sample_CommandDirect;
+        state = ControllerState::Direct;
+    }
+    else if(sample_CommandSpeedCurvature_age <= sample_CommandTrajectory_age)
+    {
+        m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;
+        state = ControllerState::SpeedCurvature;
+    }
+    else
+    {
+        m_vehicleCommandTrajectory = sample_CommandTrajectory;
+        state = ControllerState::Trajectory;
+    }
+
 }
 
-void Controller::update_command(VehicleCommandSpeedCurvature vehicleCommand)
+double Controller::speed_controller(const double speed_measured, const double speed_target) 
 {
-    m_vehicleCommandSpeedCurvature = vehicleCommand;
-    state = ControllerState::SpeedCurvature;
-}
-
-void Controller::update_command(VehicleCommandTrajectory vehicleCommand)
-{
-    m_vehicleCommandTrajectory = vehicleCommand;
-    state = ControllerState::Trajectory;
-}
-
-void Controller::vehicle_emergency_stop() 
-{
-    state = ControllerState::Stop;
-}
-
-double Controller::speed_controller(const double speed_measured, const double speed_target) {
 
     // steady-state curve, from curve fitting
     double motor_throttle = ((speed_target>=0)?(1.0):(-1.0)) * pow(fabs(0.152744 * speed_target),(0.627910));
@@ -58,7 +98,9 @@ double steering_curvature_calibration(double curvature)
 }
 
 
-void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo) {
+void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo) 
+{
+    receive_commands(stamp_now);
 
     if(state == ControllerState::Stop) {
         motor_throttle = 0;
