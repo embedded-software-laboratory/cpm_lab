@@ -7,7 +7,11 @@ TrajectoryCommand::TrajectoryCommand()
     topic_vehicleCommandTrajectory)
 )
 {
-    timer = nullptr;
+    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand",40000000ull, 0, false);
+
+    timer->start_async([this](uint64_t t_now){
+        send_trajectory(t_now);
+    });
 }
 
 

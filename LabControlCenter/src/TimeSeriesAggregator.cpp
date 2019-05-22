@@ -20,6 +20,15 @@ TimeSeriesAggregator::TimeSeriesAggregator()
         cpm::ParticipantSingleton::Instance(),
         cpm::get_topic<VehicleObservation>("vehicleObservation")
     );
+
+
+    vehicle_commandTrajectory_reader = make_shared<cpm::AsyncReader<VehicleCommandTrajectory>>(
+        [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples){
+            handle_new_commandTrajectory_samples(samples);
+        },
+        cpm::ParticipantSingleton::Instance(),
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
+    );
 }
 
 
@@ -99,7 +108,9 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
 }
 
 
-void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::LoanedSamples<VehicleObservation>& samples)
+void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
+    dds::sub::LoanedSamples<VehicleObservation>& samples
+)
 {
     std::lock_guard<std::mutex> lock(_mutex); 
     const uint64_t now = clock_gettime_nanoseconds();
@@ -122,9 +133,42 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(dds::sub::Loane
 }
 
 
+void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
+    dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples
+)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    for(auto sample : samples)
+    {
+        if(sample.info().valid())
+        {
+            const uint8_t vehicle_id = sample.data().vehicle_id();
+            if(vehicle_reference_trajectories.count(vehicle_id) == 0)
+            {
+                vehicle_reference_trajectories[vehicle_id] = 
+                    make_shared<TimeSeries_TrajectoryPoint>("","","");
+            }
 
+
+            for(const TrajectoryPoint &point : sample.data().trajectory_points())
+            {
+                const uint64_t t = point.t().nanoseconds();
+                if(vehicle_reference_trajectories[vehicle_id]->get_latest_time() < t)
+                {
+                    vehicle_reference_trajectories[vehicle_id]->push_sample(t, point);
+                }
+
+            }
+        }
+    }
+}
 
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
     return timeseries_vehicles; 
+}
+
+VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
+    std::lock_guard<std::mutex> lock(_mutex); 
+    return vehicle_reference_trajectories; 
 }

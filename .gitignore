@@ -24,3 +24,9 @@ rtidds/
 /ParamServer/yaml-cpp
 Log_*.csv
 core
+*.txt
+ips2/debug*.png
+output/
+*.mat
+package.tar.gz
+vehicle_raspberry_firmware/package/

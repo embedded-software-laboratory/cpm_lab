@@ -45,7 +45,11 @@ int main(int argc, char *argv[])
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
-    auto mapViewUi = make_shared<MapViewUi>(trajectoryCommand, [=](){return timeSeriesAggregator->get_vehicle_data();});
+    auto mapViewUi = make_shared<MapViewUi>(
+        trajectoryCommand, 
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
+        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();}
+    );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5, std::bind(&ParameterServer::set_active_callback, &server, _1));
@@ -54,14 +58,6 @@ int main(int argc, char *argv[])
 
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
-
-
-
-
-    app->signal_startup().connect([&]{
-        // A second window can be added like this:
-        //app->add_window(mapViewUi->get_window());
-    });
 
     return app->run(mainWindow->get_window());
 }

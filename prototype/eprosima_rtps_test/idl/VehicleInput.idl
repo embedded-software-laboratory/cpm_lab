@@ -1,5 +1,0 @@
-struct VehicleInput
-{
-    double curvature;
-    double throttle;
-};

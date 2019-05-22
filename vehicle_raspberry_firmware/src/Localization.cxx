@@ -50,6 +50,7 @@ void filter_update_step(const LocalizationState& previous, LocalizationState& cu
 
 Pose2D Localization::update(
     uint64_t t_now,
+    uint64_t period,
     VehicleState vehicleState,
     VehicleObservation sample_vehicleObservation,
     uint64_t sample_vehicleObservation_age
@@ -78,7 +79,8 @@ Pose2D Localization::update(
             LocalizationState& state_i = get_state(i);
 
             // found the corresponding state
-            if(state_i.t == sample_vehicleObservation.header().create_stamp().nanoseconds())
+            if(state_i.t <= sample_vehicleObservation.header().create_stamp().nanoseconds()
+                && sample_vehicleObservation.header().create_stamp().nanoseconds() < (state_i.t + period))
             {
                 // have we already done this on a previous update()? then skip it
                 if(state_i.has_valid_observation) break;

@@ -47,16 +47,6 @@ bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
     return mosi_CRC == crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 }
 
-template<typename T>
-std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
-{
-    cpm::VehicleIDFilteredTopic<T> topic(
-        dds::topic::Topic<T>(cpm::ParticipantSingleton::Instance(), name), 
-        vehicle_id
-    );
-
-    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
-}
 
 int main(int argc, char *argv[])
 {
@@ -86,10 +76,6 @@ int main(int argc, char *argv[])
     QoS.policy(reliability);
     dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
 
-    auto reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
-    auto reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
-    auto reader_vehicleCommandTrajectory = make_reader<VehicleCommandTrajectory>("vehicleCommandTrajectory", vehicle_id);
-
     dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), "vehicleObservation");
     cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
     cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
@@ -118,59 +104,31 @@ int main(int argc, char *argv[])
     
     // Loop setup
     Localization localization;
-    Controller controller;
+    Controller controller(vehicle_id);
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
-    auto update_loop = cpm::Timer::create("Raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
+    auto update_loop = cpm::Timer::create("vehicle_raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
+
+    /*
+    // Timing / profiling helper
+    uint64_t t_prev = update_loop->get_time();
+    auto log_fn = [&](int line){
+        uint64_t now = update_loop->get_time();
+        std::cerr << "PERF L " << line << " DT " << (now-t_prev) << std::endl;
+        t_prev = now;
+    };
+    */
 
     // Control loop
-    update_loop->start([&](uint64_t t_now) {
+    update_loop->start([&](uint64_t t_now) 
+    {
         try 
         {
-            // Read new commands
-            {
-                VehicleCommandDirect sample_CommandDirect;
-                uint64_t sample_CommandDirect_age;
-                VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
-                uint64_t sample_CommandSpeedCurvature_age;
-                VehicleCommandTrajectory sample_CommandTrajectory;
-                uint64_t sample_CommandTrajectory_age;
-
-                reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
-                reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
-                reader_vehicleCommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
-
-                const uint64_t command_timeout = 500000000ull;
-
-                if(    sample_CommandDirect_age         > command_timeout
-                    && sample_CommandSpeedCurvature_age > command_timeout
-                    && sample_CommandTrajectory_age     > command_timeout)
-                {
-                    controller.vehicle_emergency_stop();
-                }
-                else if(sample_CommandDirect_age <= sample_CommandSpeedCurvature_age
-                     && sample_CommandDirect_age <= sample_CommandTrajectory_age)
-                {
-                    controller.update_command(sample_CommandDirect);
-                }
-                else if(sample_CommandSpeedCurvature_age <= sample_CommandTrajectory_age)
-                {
-                    controller.update_command(sample_CommandSpeedCurvature);
-                }
-                else
-                {
-                    controller.update_command(sample_CommandTrajectory);
-                }
-            }
-
             // get IPS observation
             VehicleObservation sample_vehicleObservation;
             uint64_t sample_vehicleObservation_age;
             reader_vehicleObservation.get_sample(t_now, sample_vehicleObservation, sample_vehicleObservation_age);
-
-
-
 
             spi_mosi_data_t spi_mosi_data;
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
@@ -219,12 +177,14 @@ int main(int argc, char *argv[])
      
 
             // Process sensor data
-            if(check_CRC_miso(spi_miso_data)) {
+            if(check_CRC_miso(spi_miso_data)) 
+            {
                 // TODO rethink this. What should be skipped when there is a SPI error?
-
+            
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.update(
                     t_now,
+                    period_nanoseconds,
                     vehicleState,
                     sample_vehicleObservation, 
                     sample_vehicleObservation_age
@@ -238,9 +198,15 @@ int main(int argc, char *argv[])
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
+            
             }
-            else {
-                std::cerr << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;
+            else 
+            {
+                /*std::cerr 
+                << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 
+                <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;*/
+
+                cpm::Logging::Instance().write("%s", "Data corruption on ATmega SPI bus. CRC mismatch.");
             }
 
 
@@ -252,7 +218,9 @@ int main(int argc, char *argv[])
         }
         catch(const dds::core::Exception& e)
         {
-            std::cerr << "Exception: " << e.what() << std::endl;
+            //std::cerr << "Exception: " << e.what() << std::endl;
+            std::string err_message = e.what();
+            cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
         }
     });
     

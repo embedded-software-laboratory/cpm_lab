@@ -16,7 +16,7 @@
 #define SPI_MOTOR_MODE_FORWARD 1
 #define SPI_MOTOR_MODE_REVERSE 2
 
-#define SPI_BUFFER_SIZE 24
+#define SPI_BUFFER_SIZE 28
 
 typedef struct
 {
@@ -40,8 +40,10 @@ typedef struct
 	uint32_t tick;
 	int32_t odometer_steps;
 	uint16_t imu_yaw;
+	int16_t imu_yaw_rate;
 	int16_t imu_acceleration_forward;
 	int16_t imu_acceleration_left;
+	int16_t imu_acceleration_up;
 	int16_t speed;
 	uint16_t battery_voltage;
 	uint16_t motor_current;
@@ -64,12 +66,12 @@ typedef struct
 
 #ifdef __cplusplus
 static_assert(sizeof(spi_mosi_data_t) == 15, "spi_mosi_data_t unexpected size, not packed?");
-static_assert(sizeof(spi_miso_data_t) == 23, "spi_miso_data_t unexpected size, not packed?");
+static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
 static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 static_assert(sizeof(spi_miso_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 #else
 _Static_assert(sizeof(spi_mosi_data_t) == 15, "spi_mosi_data_t unexpected size, not packed?");
-_Static_assert(sizeof(spi_miso_data_t) == 23, "spi_miso_data_t unexpected size, not packed?");
+_Static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
 _Static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 _Static_assert(sizeof(spi_miso_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 #endif

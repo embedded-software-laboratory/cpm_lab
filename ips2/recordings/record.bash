@@ -1,0 +1,1 @@
+rtirecord -cfgFile recordings/recording_config.xml -cfgName mydefault

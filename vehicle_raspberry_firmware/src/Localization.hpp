@@ -46,6 +46,7 @@ public:
      */
     Pose2D update(
         uint64_t t_now,
+        uint64_t period,
         VehicleState vehicleState,
         VehicleObservation sample_vehicleObservation,
         uint64_t sample_vehicleObservation_age

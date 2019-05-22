@@ -1,14 +1,20 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
+using VehicleTrajectories = map<uint8_t, shared_ptr<TimeSeries_TrajectoryPoint>  >;
+
+#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
+#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
 
 
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
-    std::function<VehicleData()> get_vehicle_data_callback
+    std::function<VehicleData()> get_vehicle_data_callback,
+    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
 )
 :trajectoryCommand(_trajectoryCommand)
 ,get_vehicle_data(get_vehicle_data_callback)
+,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
@@ -160,6 +166,8 @@ bool MapViewUi::is_valid_point_for_path(double x, double y)
     // Test if the point is inside a forward pointing cone, and at a particular distance.
     // This limits the maximum curvature of the path, and makes it driveable.
 
+    if(path_painting_in_progress.empty()) return false;
+
     double dx = x - path_painting_in_progress.back().x;
     double dy = y - path_painting_in_progress.back().y;
     double dist_sq = dx*dx + dy*dy;
@@ -200,6 +208,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
             ctx->fill();
         }
 
+        draw_received_trajectory_commands(ctx);
+
         draw_path_painting(ctx);
 
 
@@ -217,6 +227,61 @@ void MapViewUi::draw(const DrawingContext& ctx)
     ctx->restore();
 }
 
+void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
+{
+    VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory_command_callback();
+
+
+    for(const auto& entry : vehicleTrajectories) 
+    {
+        const auto vehicle_id = entry.first;
+        const auto& trajectory = entry.second;
+
+        auto trajectory_segment = trajectory->get_last_n_values(6);
+
+        if(trajectory_segment.size() > 1)
+        {
+            // Draw trajectory interpolation
+            for (int i = 2; i < int(trajectory_segment.size()); ++i)
+            {
+                const int n_interp = 20;
+                ctx->set_source_rgb(0,0,0.8);
+                ctx->move_to(trajectory_segment[i-1].px(), trajectory_segment[i-1].py());
+
+                for (int interp_step = 1; interp_step < n_interp; ++interp_step)
+                {
+                    const uint64_t delta_t = 
+                          trajectory_segment[i].t().nanoseconds() 
+                        - trajectory_segment[i-1].t().nanoseconds();
+
+                    TrajectoryInterpolation interp(
+                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
+                        trajectory_segment[i-1],  
+                        trajectory_segment[i]
+                    );
+                    
+                    ctx->line_to(interp.position_x,interp.position_y);
+                }
+
+                ctx->line_to(trajectory_segment[i].px(), trajectory_segment[i].py());
+                ctx->set_line_width(0.01);
+                ctx->stroke();
+            }
+
+            // Draw trajectory points
+            for(size_t i = 1; i < trajectory_segment.size(); ++i)
+            {
+                ctx->set_source_rgb(0,0,0.8);
+                ctx->arc(
+                    trajectory_segment[i].px(),
+                    trajectory_segment[i].py(),
+                    0.02, 0.0, 2 * M_PI
+                );
+                ctx->fill();
+            }
+        }
+    }
+}
 
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
 {
