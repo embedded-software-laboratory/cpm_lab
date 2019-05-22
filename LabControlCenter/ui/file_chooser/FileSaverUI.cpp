@@ -1,6 +1,6 @@
-#include "FileChooserUI.hpp"
+#include "FileSaverUI.hpp"
 
-FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_callback) :
+FileSaverUI::FileSaverUI(std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileChooserDialog.glade");
@@ -8,19 +8,19 @@ FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_ca
     params_create_builder->get_widget("file_chooser_dialog", file_chooser_dialog);
     params_create_builder->get_widget("file_chooser_dialog", window);
     params_create_builder->get_widget("button_abort", button_abort);
-    params_create_builder->get_widget("button_load", button_load);
+    params_create_builder->get_widget("button_save", button_save);
 
     assert(file_chooser_dialog);
     assert(window);
     assert(button_abort);
-    assert(button_load);
+    assert(button_save);
 
     //Set values so that the other cannot be used until the parameter is set
     window->set_deletable(true); //No close button, user must use "abort" or "add"
     window->show();
 
-    button_abort->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_abort));
-    button_load->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_load));
+    button_abort->signal_clicked().connect(sigc::mem_fun(this, &FileSaverUI::on_abort));
+    button_save->signal_clicked().connect(sigc::mem_fun(this, &FileSaverUI::on_load));
 
     //Set filter
     auto filter_yaml = Gtk::FileFilter::create();
@@ -31,12 +31,12 @@ FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_ca
     file_chooser_dialog->set_select_multiple(false);
 }
 
-void FileChooserUI::on_abort() {
+void FileSaverUI::on_abort() {
     window->close();
     on_close_callback("", false); //false -> do not save changes
 }
 
-void FileChooserUI::on_load() {
+void FileSaverUI::on_save() {
     std::string filename = file_chooser_dialog->get_filename();
     std::string end = ".yaml";
 

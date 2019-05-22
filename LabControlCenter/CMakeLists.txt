@@ -45,6 +45,8 @@ add_executable(LabControlCenter
     ui/map_view/MapViewUi.hpp
     ui/file_chooser/FileChooserUI.hpp
     ui/file_chooser/FileChooserUI.cpp
+    ui/file_chooser/FileSaverUI.hpp
+    ui/file_chooser/FileSaverUI.cpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.cpp

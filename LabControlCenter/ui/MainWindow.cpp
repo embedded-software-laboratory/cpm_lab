@@ -97,7 +97,15 @@ void MainWindow::on_menu_params_save_as_pressed() {
 
 using namespace std::placeholders;
 void MainWindow::on_menu_params_load_file_pressed() {
-    //TODO: Make according buttons unusable until the ui is closed; also grey out param tab / treeview content
+    //Make according buttons unusable until the ui is closed; also grey out param tab / treeview content
+    menu_bar_params_reload->set_sensitive(false);
+    menu_bar_params_save->set_sensitive(false);
+    menu_bar_params_save_as->set_sensitive(false);
+    menu_bar_params_load_file->set_sensitive(false);
+    menu_bar_params_load_multiple_files->set_sensitive(false);
+    menu_bar_params_load_params->set_sensitive(false);
+    tabs_view_ui->get_param_view()->make_insensitive();
+
     file_chooser_window = make_shared<FileChooserUI>(std::bind(&MainWindow::file_chooser_callback, this, _1, _2));
 }
 
@@ -110,7 +118,20 @@ void MainWindow::on_menu_params_load_params_pressed() {
 }
 
 void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
-    //TODO
+    //Make according buttons usable as the ui is closed, also for treeview content from param ui
+    menu_bar_params_reload->set_sensitive(true);
+    menu_bar_params_save->set_sensitive(true);
+    menu_bar_params_save_as->set_sensitive(true);
+    menu_bar_params_load_file->set_sensitive(true);
+    menu_bar_params_load_multiple_files->set_sensitive(true);
+    menu_bar_params_load_params->set_sensitive(true);
+    tabs_view_ui->get_param_view()->make_sensitive();
+
+    //Call Param UI to process changes
+    if (has_file) {
+        tabs_view_ui->get_param_view()->params_load_file_handler(file_string);
+    }
+
     file_chooser_window.reset();
 }
 

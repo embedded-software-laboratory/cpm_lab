@@ -98,7 +98,11 @@ public:
     void params_reload_handler();
     void params_save_handler();
     void params_save_as_handler();
-    void params_load_file_handler();
+    void params_load_file_handler(std::string filename);
     void params_load_multiple_files_handler();
     void params_load_params_handler();
+
+    //Calls to make the UI (in)sensitive during changes
+    void make_sensitive();
+    void make_insensitive();
 };
