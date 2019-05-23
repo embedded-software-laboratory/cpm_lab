@@ -1,6 +1,7 @@
 #include "Controller.hpp"
 #include <iostream>
 #include "TrajectoryInterpolation.hpp"
+#include "cpm/Parameter.hpp"
 
 
 template<typename T>
@@ -185,10 +186,14 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
 
                 if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
                 {
+                    const double P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+                    const double D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+
+
                     // Linear lateral controller
                     const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
                     //const double ref_curvature = trajectory_interpolation.curvature;
-                    const double curvature = ref_curvature - 7.0 * lateral_error - 4.0 * yaw_error;
+                    const double curvature = ref_curvature - P_gain * lateral_error - D_gain * yaw_error;
 
                     // Linear longitudinal controller
                     const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
