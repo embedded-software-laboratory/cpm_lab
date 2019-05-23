@@ -4,7 +4,6 @@
 #include "Point.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/TimerFD.hpp"
-#include "cpm/stamp_message.hpp"
 #include "cpm/get_topic.hpp"
 #include <dds/pub/ddspub.hpp>
 

@@ -10,63 +10,77 @@ std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id
     return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
 }
 
-Controller::Controller(uint8_t vehicle_id)
+Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
+:m_get_time(_get_time)
 {
     reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
     reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
-    reader_vehicleCommandTrajectory = make_reader<VehicleCommandTrajectory>("vehicleCommandTrajectory", vehicle_id);
+
+    asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
+    (
+        new cpm::AsyncReader<VehicleCommandTrajectory>
+        (
+            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+            {
+                reveice_trajectory_callback(samples);
+            }, 
+            cpm::ParticipantSingleton::Instance(), 
+            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+        )
+    );
+}
+
+void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+{
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
+    for(auto sample : samples) 
+    {
+        if(sample.info().valid())
+        {
+            auto dds_trajectory_points = sample.data().trajectory_points();                                    
+            for(auto trajectory_point : dds_trajectory_points) 
+            {
+                m_trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
+            }
+            state = ControllerState::Trajectory;
+            latest_command_receive_time = m_get_time();
+        }
+    }
 }
 
 
 void Controller::update_vehicle_state(VehicleState vehicleState) 
 {
     m_vehicleState = vehicleState;
-
-    if(vehicleState.IPS_update_age_nanoseconds() > 3000000000ull)
-    {
-        state = ControllerState::Stop;
-    }
 }
 
 
 void Controller::receive_commands(uint64_t t_now)
 {
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
+
     VehicleCommandDirect sample_CommandDirect;
     uint64_t sample_CommandDirect_age;
+
     VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
     uint64_t sample_CommandSpeedCurvature_age;
-    VehicleCommandTrajectory sample_CommandTrajectory;
-    uint64_t sample_CommandTrajectory_age;
 
     reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
     reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
-    reader_vehicleCommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
 
-    const uint64_t command_timeout = 500000000ull;
 
-    if(    sample_CommandDirect_age         > command_timeout
-        && sample_CommandSpeedCurvature_age > command_timeout
-        && sample_CommandTrajectory_age     > command_timeout)
-    {
-        state = ControllerState::Stop;
-    }
-    else if(sample_CommandDirect_age <= sample_CommandSpeedCurvature_age
-         && sample_CommandDirect_age <= sample_CommandTrajectory_age)
+    if(sample_CommandDirect_age < command_timeout)
     {
         m_vehicleCommandDirect = sample_CommandDirect;
         state = ControllerState::Direct;
+        latest_command_receive_time = t_now;
     }
-    else if(sample_CommandSpeedCurvature_age <= sample_CommandTrajectory_age)
+    else if(sample_CommandSpeedCurvature_age < command_timeout)
     {
-        m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;
+        m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;  
         state = ControllerState::SpeedCurvature;
+        latest_command_receive_time = t_now;
     }
-    else
-    {
-        m_vehicleCommandTrajectory = sample_CommandTrajectory;
-        state = ControllerState::Trajectory;
-    }
-
 }
 
 double Controller::speed_controller(const double speed_measured, const double speed_target) 
@@ -102,6 +116,17 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
 {
     receive_commands(stamp_now);
 
+    if(latest_command_receive_time + command_timeout < stamp_now)
+    {
+        state = ControllerState::Stop;
+    }
+
+    if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
+    && state == ControllerState::Trajectory)
+    {
+        state = ControllerState::Stop;
+    }
+
     if(state == ControllerState::Stop) {
         motor_throttle = 0;
         steering_servo = 0;
@@ -122,18 +147,15 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
         break;
 
         case ControllerState::Trajectory:
-        {
-            for(TrajectoryPoint trajectory_point : m_vehicleCommandTrajectory.trajectory_points()) {
-                trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
-            }            
+        {        
 
             //std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
             //    << " --- total nodes: " << trajectory_points.size() << std::endl;
 
             // Find active segment
-            auto iterator_segment_end = trajectory_points.lower_bound(stamp_now);
-            if(iterator_segment_end != trajectory_points.end()
-                && iterator_segment_end != trajectory_points.begin()) 
+            auto iterator_segment_end = m_trajectory_points.lower_bound(stamp_now);
+            if(iterator_segment_end != m_trajectory_points.end()
+                && iterator_segment_end != m_trajectory_points.begin()) 
             {
                 auto iterator_segment_start = iterator_segment_end;
                 iterator_segment_start--;
