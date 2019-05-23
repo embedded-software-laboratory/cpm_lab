@@ -98,9 +98,6 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             trajectoryPoint.vy(example_trajectory_vy[ref_trajectory_index]);
 
             sample.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
-            
-
-            cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandTrajectory->write(sample);
         }
         else { // direct control
@@ -113,11 +110,6 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
 
             cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandDirect->write(sample);
-
-            //printf("motor_throttle %12.4f  steering_servo %12.4f\n", 
-            //    sample.data().direct_control().motor_throttle(), 
-            //    sample.data().direct_control().steering_servo());
-
 
             // mode resets
             ref_speed = 0;
