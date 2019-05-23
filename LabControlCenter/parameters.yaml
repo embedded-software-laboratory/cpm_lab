@@ -6,6 +6,8 @@ parameters:
     test3: 0
     test4: 199
   double:
+    'trajectory_controller/lateral_P_gain': 7.0
+    'trajectory_controller/lateral_D_gain': 4.0
     test5: 0.10000000000000001
     test6: 1918829939.9847331
   string:
