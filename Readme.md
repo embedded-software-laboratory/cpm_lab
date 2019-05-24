@@ -5,8 +5,23 @@
 
 ## Apt
 
-sudo apt install git tree screen sublime-text cmake libgtkmm-3.0-dev
+sudo apt install git tmux screen cmake libgtkmm-3.0-dev sshpass ntp
 
+## NTP
+
+    sudo nano /etc/ntp.conf
+
+Add the lines
+
+    pool ntp1.rwth-aachen.de iburst
+    pool ntp2.rwth-aachen.de iburst
+
+Run
+
+    sudo service ntp restart
+    ntpq -p
+
+Under the column "st" there should be a 1 for the RWTH NTP servers.
 
 ## RTI Connext
 
