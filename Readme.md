@@ -5,7 +5,7 @@
 
 ## Apt
 
-sudo apt install git tmux screen cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk
+sudo apt install build-essential git tmux cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk
 
 ## NTP
 
