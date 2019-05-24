@@ -1,4 +1,8 @@
 #pragma once
+#include "casadi_mpc_fn.h"
+#include <map>
+#include <string>
+#include <vector>
 
 
 
@@ -12,6 +16,13 @@
 
 class MpcController
 {
+
+    std::map< std::string, std::vector<casadi_real> > casadi_vars;
+
+    std::vector<casadi_real*> casadi_arguments;
+    std::vector<casadi_real*> casadi_results;
+
+
 public:
     MpcController();
     
