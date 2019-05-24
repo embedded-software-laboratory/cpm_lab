@@ -5,7 +5,7 @@
 
 ## Apt
 
-sudo apt install git tmux screen cmake libgtkmm-3.0-dev sshpass ntp
+sudo apt install git tmux screen cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk
 
 ## NTP
 
@@ -22,6 +22,12 @@ Run
     ntpq -p
 
 Under the column "st" there should be a 1 for the RWTH NTP servers.
+
+## Joystick / Gamepad
+
+Run `jstest-gtk`, perform calibration.
+
+Then run `sudo jscal-store /dev/input/js0`.
 
 ## RTI Connext
 
