@@ -9,7 +9,7 @@
 struct CommandLineReader {
 
     bool command_auto_start = false;
-    bool param_server_auto_start = false;
+    bool param_server_auto_start = true;
     std::string config_file = "";
 
     CommandLineReader(int argc, char *argv[], std::string default_config)
