@@ -175,7 +175,6 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
                 VehicleCommandTrajectory command;
                 command.vehicle_id(vehicle_id);
                 command.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
-                cpm::stamp_message(command, t_now, 20000000ull);
                 writer_vehicleCommandTrajectory.write(command);
                 break;
             }

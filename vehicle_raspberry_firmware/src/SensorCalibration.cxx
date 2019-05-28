@@ -4,7 +4,7 @@
 VehicleState SensorCalibration::convert(spi_miso_data_t spi_miso_data) {
     const double odometer_meter_per_step = 0.0031225604996;
     const double speed_meter_per_second_per_step = odometer_meter_per_step * 0.2384185791;
-    const double imu_yaw_radian_per_step = -0.00109083078249645598;
+    const double imu_yaw_radian_per_step = (0.00109083078249645598/50*32);
     const double imu_yaw_rate_radian_per_second_per_step = 0.00109083078249645598;
     const double battery_volt_per_step = 0.0116669;
     const double imu_meter_per_second_per_second_per_step = 0.01;

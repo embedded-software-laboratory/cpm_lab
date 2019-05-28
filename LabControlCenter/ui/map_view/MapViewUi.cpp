@@ -342,6 +342,7 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
 
             ctx->move_to(i,0);
             ctx->line_to(i,40);
+            ctx->set_source_rgb(0,0,0);
             ctx->stroke();
 
             if(i <= 40)

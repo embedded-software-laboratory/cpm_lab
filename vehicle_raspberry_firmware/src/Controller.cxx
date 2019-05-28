@@ -3,34 +3,88 @@
 #include "TrajectoryInterpolation.hpp"
 
 
-void Controller::update_vehicle_state(VehicleState vehicleState) {
+template<typename T>
+std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
+{
+    cpm::VehicleIDFilteredTopic<T> topic(cpm::get_topic<T>(name), vehicle_id);
+    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
+}
+
+Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
+:m_get_time(_get_time)
+{
+    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
+    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+
+    asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
+    (
+        new cpm::AsyncReader<VehicleCommandTrajectory>
+        (
+            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+            {
+                reveice_trajectory_callback(samples);
+            }, 
+            cpm::ParticipantSingleton::Instance(), 
+            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+        )
+    );
+}
+
+void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+{
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
+    for(auto sample : samples) 
+    {
+        if(sample.info().valid())
+        {
+            auto dds_trajectory_points = sample.data().trajectory_points();                                    
+            for(auto trajectory_point : dds_trajectory_points) 
+            {
+                m_trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
+            }
+            state = ControllerState::Trajectory;
+            latest_command_receive_time = m_get_time();
+        }
+    }
+}
+
+
+void Controller::update_vehicle_state(VehicleState vehicleState) 
+{
     m_vehicleState = vehicleState;
 }
 
-void Controller::update_command(VehicleCommandDirect vehicleCommand)
+
+void Controller::receive_commands(uint64_t t_now)
 {
-    m_vehicleCommandDirect = vehicleCommand;
-    state = ControllerState::Direct;
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
+
+    VehicleCommandDirect sample_CommandDirect;
+    uint64_t sample_CommandDirect_age;
+
+    VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
+    uint64_t sample_CommandSpeedCurvature_age;
+
+    reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
+    reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
+
+
+    if(sample_CommandDirect_age < command_timeout)
+    {
+        m_vehicleCommandDirect = sample_CommandDirect;
+        state = ControllerState::Direct;
+        latest_command_receive_time = t_now;
+    }
+    else if(sample_CommandSpeedCurvature_age < command_timeout)
+    {
+        m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;  
+        state = ControllerState::SpeedCurvature;
+        latest_command_receive_time = t_now;
+    }
 }
 
-void Controller::update_command(VehicleCommandSpeedCurvature vehicleCommand)
+double Controller::speed_controller(const double speed_measured, const double speed_target) 
 {
-    m_vehicleCommandSpeedCurvature = vehicleCommand;
-    state = ControllerState::SpeedCurvature;
-}
-
-void Controller::update_command(VehicleCommandTrajectory vehicleCommand)
-{
-    m_vehicleCommandTrajectory = vehicleCommand;
-    state = ControllerState::Trajectory;
-}
-
-void Controller::vehicle_emergency_stop() 
-{
-    state = ControllerState::Stop;
-}
-
-double Controller::speed_controller(const double speed_measured, const double speed_target) {
 
     // steady-state curve, from curve fitting
     double motor_throttle = ((speed_target>=0)?(1.0):(-1.0)) * pow(fabs(0.152744 * speed_target),(0.627910));
@@ -53,12 +107,25 @@ double Controller::speed_controller(const double speed_measured, const double sp
 double steering_curvature_calibration(double curvature) 
 {
     // steady-state curve, from curve fitting
-    double steering_servo = (0.241857) * curvature + (-0.035501);   
+    double steering_servo = (0.241857) * curvature;
     return steering_servo;
 }
 
 
-void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo) {
+void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo) 
+{
+    receive_commands(stamp_now);
+
+    if(latest_command_receive_time + command_timeout < stamp_now)
+    {
+        state = ControllerState::Stop;
+    }
+
+    if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
+    && state == ControllerState::Trajectory)
+    {
+        state = ControllerState::Stop;
+    }
 
     if(state == ControllerState::Stop) {
         motor_throttle = 0;
@@ -80,18 +147,15 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
         break;
 
         case ControllerState::Trajectory:
-        {
-            for(TrajectoryPoint trajectory_point : m_vehicleCommandTrajectory.trajectory_points()) {
-                trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
-            }            
+        {        
 
             //std::cout << "trajectory_point stamp: " << trajectory_point.t().nanoseconds()
             //    << " --- total nodes: " << trajectory_points.size() << std::endl;
 
             // Find active segment
-            auto iterator_segment_end = trajectory_points.lower_bound(stamp_now);
-            if(iterator_segment_end != trajectory_points.end()
-                && iterator_segment_end != trajectory_points.begin()) 
+            auto iterator_segment_end = m_trajectory_points.lower_bound(stamp_now);
+            if(iterator_segment_end != m_trajectory_points.end()
+                && iterator_segment_end != m_trajectory_points.begin()) 
             {
                 auto iterator_segment_start = iterator_segment_end;
                 iterator_segment_start--;
@@ -118,16 +182,13 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
                 const double yaw_error = sin(yaw - yaw_ref);
 
 
-                std::cout << 
-                "lateral_error " << lateral_error << "  " << 
-                "longitudinal_error " << longitudinal_error << "  " << 
-                "yaw_error " << yaw_error << "  " << 
-                std::endl;
 
                 if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
                 {
                     // Linear lateral controller
-                    const double curvature = trajectory_interpolation.curvature - 1.0000 * lateral_error - 2.2650 * yaw_error;
+                    const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
+                    //const double ref_curvature = trajectory_interpolation.curvature;
+                    const double curvature = ref_curvature - 7.0 * lateral_error - 4.0 * yaw_error;
 
                     // Linear longitudinal controller
                     const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
@@ -135,6 +196,15 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
                     const double speed_measured = m_vehicleState.speed();
                     steering_servo = steering_curvature_calibration(curvature);
                     motor_throttle = speed_controller(speed_measured, speed_target);
+
+
+                    std::cout << 
+                    "lateral_error " << lateral_error << "  " << 
+                    "longitudinal_error " << longitudinal_error << "  " << 
+                    "yaw_error " << yaw_error << "  " << 
+                    "ref_curvature " << trajectory_interpolation.curvature << "  " << 
+                    "curvature_cmd " << curvature << "  " << 
+                    std::endl;
                 }
             }
         }

@@ -12,7 +12,6 @@
 #include "VehicleObservation.hpp"
 #include "test_loop_trajectory.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include "cpm/stamp_message.hpp"
 #include "cpm/Logging.hpp"
 
 
@@ -123,7 +122,6 @@ int main()
                 VehicleCommandTrajectory vehicleCommandTrajectory;
                 vehicleCommandTrajectory.vehicle_id(vehicle_id);
                 vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
-                cpm::stamp_message(vehicleCommandTrajectory, t_now, 0);
                 writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
             }
             // Slot is unassigned, maybe it can be matched with an unassigned vehicle

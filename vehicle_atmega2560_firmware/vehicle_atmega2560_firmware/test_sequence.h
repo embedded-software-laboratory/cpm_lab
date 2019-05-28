@@ -34,9 +34,9 @@ static inline void test_sequence(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t
 	
 	// steer against yaw
 	int32_t yaw = (int32_t)(spi_miso_data->imu_yaw);
-	if(yaw > 2880) yaw -= 5760;
+	if(yaw > 4500) yaw -= 9000;
 	
-	spi_mosi_data->servo_command = -2*yaw;
+	spi_mosi_data->servo_command = 2*yaw;
 	
 	if(spi_mosi_data->servo_command >  400) spi_mosi_data->servo_command =  400;
 	if(spi_mosi_data->servo_command < -400) spi_mosi_data->servo_command = -400;
