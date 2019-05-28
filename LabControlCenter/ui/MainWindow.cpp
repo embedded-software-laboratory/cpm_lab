@@ -48,7 +48,8 @@ MainWindow::MainWindow(
     window_LCC->show();
     int screen_width = window_LCC->get_screen()->get_width();
     int screen_height = window_LCC->get_screen()->get_height();
-    window_LCC->set_default_size(3/4 * screen_width, 3/4 * screen_height);
+    window_LCC->set_default_size((3 * screen_width)/4, (3 * screen_height)/4);
+    window_LCC->resize((3 * screen_width)/4, (3 * screen_height)/4);
     window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
     
@@ -67,8 +68,8 @@ MainWindow::MainWindow(
         int height = 0;
         window_LCC->get_size(width, height);
 
-        pane1->set_position(height-300);
-        pane2->set_position(width-300);
+        pane1->set_position(height-380);
+        pane2->set_position(width-600);
         return false;
     }, 200);
 
