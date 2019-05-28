@@ -117,6 +117,11 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
 {
     receive_commands(stamp_now);
 
+
+    const double trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+    const double trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+
+
     if(latest_command_receive_time + command_timeout < stamp_now)
     {
         state = ControllerState::Stop;
@@ -186,14 +191,13 @@ void Controller::get_control_signals(uint64_t stamp_now, double &motor_throttle,
 
                 if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
                 {
-                    const double P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
-                    const double D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
-
 
                     // Linear lateral controller
                     const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
                     //const double ref_curvature = trajectory_interpolation.curvature;
-                    const double curvature = ref_curvature - P_gain * lateral_error - D_gain * yaw_error;
+                    const double curvature = ref_curvature 
+                        - trajectory_controller_lateral_P_gain * lateral_error 
+                        - trajectory_controller_lateral_D_gain * yaw_error;
 
                     // Linear longitudinal controller
                     const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
