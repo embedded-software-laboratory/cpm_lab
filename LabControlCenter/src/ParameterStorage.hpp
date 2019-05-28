@@ -58,6 +58,7 @@ public:
      * \brief Get the value of a parameter
      * \param name name of the parameter
      * \param value value of the parameter
+     * \param info info value of the parameter
      * \return true if the parameter exists
      */
     bool get_parameter_bool(std::string name, bool& value);

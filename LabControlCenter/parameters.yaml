@@ -1,22 +1,42 @@
 parameters:
   bool:
-    simulated_time: false
-    test1: true
+    simulated_time: 
+      value: false
+      info: "test value"
+    test1: 
+      value: true
+      info: "test value"
   int:
-    test3: 0
-    test4: 199
+    test3: 
+      value: 0
+      info: "test value"
+    test4: 
+      value: 199
+      info: "test value"
   double:
-    test5: 0.10000000000000001
-    test6: 1918829939.9847331
+    test5: 
+      value: 0.10000000000000001
+      info: "test value"
+    test6: 
+      value: 1918829939.9847331
+      info: "test value"
   string:
-    test7: "TEHST@#+-//\\\\??"
+    test7: 
+      value: "TEHST@#+-//\\\\??"
+      info: "test value"
   ints:
     test8:
-      - 0
-      - 200000
+      value:
+        - 0
+        - 200000  
+      info: "test value"
   doubles:
     test10:
-      - 29342424
+      value:
+        - 29342424
+      info: "test value"
     test9:
-      - 0.12313213123123123
-      - 12932193.540689999
+      value:
+        - 0.12313213123123123
+        - 12932193.540689999
+      info: "test value"

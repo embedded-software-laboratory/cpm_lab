@@ -38,28 +38,28 @@ void ParameterStorage::loadFile(std::string _filename) {
     }
 
     for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
-        set_parameter_bool(it->first.as<std::string>(), it->second.as<bool>());
+        set_parameter_bool(it->first.as<std::string>(), it->second["value"].as<bool>(), it->second["info"].as<std::string>());
     }
     for (YAML::const_iterator it=params_int.begin();it!=params_int.end();++it) {
-        set_parameter_int(it->first.as<std::string>(), it->second.as<int32_t>());
+        set_parameter_int(it->first.as<std::string>(), it->second["value"].as<int32_t>(), it->second["info"].as<std::string>());
     }
     for (YAML::const_iterator it=params_double.begin();it!=params_double.end();++it) {
-        set_parameter_double(it->first.as<std::string>(), it->second.as<double>());
+        set_parameter_double(it->first.as<std::string>(), it->second["value"].as<double>(), it->second["info"].as<std::string>());
     }
     for (YAML::const_iterator it=params_string.begin();it!=params_string.end();++it) {
-        set_parameter_string(it->first.as<std::string>(), it->second.as<std::string>());
+        set_parameter_string(it->first.as<std::string>(), it->second["value"].as<std::string>(), it->second["info"].as<std::string>());
     }
     for (YAML::const_iterator outer_it=params_ints.begin();outer_it!=params_ints.end();++outer_it) {
         std::vector<int32_t> ints;
 
-        if (!outer_it->second.IsSequence()) {
+        if (!outer_it->second["value"].IsSequence()) {
             throw std::domain_error("The input file is not conformant with the specification - ints must contain sequences");
         }
 
-        for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
+        for (YAML::const_iterator inner_it=outer_it->second["value"].begin();inner_it!=outer_it->second["value"].end();++inner_it) {
             ints.push_back(inner_it->as<int32_t>());
         }
-        set_parameter_ints(outer_it->first.as<std::string>(), ints);
+        set_parameter_ints(outer_it->first.as<std::string>(), ints, outer_it->second["info"].as<std::string>());
         // std::cout << "Loaded " << outer_it->first.as<std::string>() << " with values " << std::endl;
         // for (auto val : ints) {
         //     std::cout << "\t" << val << std::endl;
@@ -68,14 +68,14 @@ void ParameterStorage::loadFile(std::string _filename) {
     for (YAML::const_iterator outer_it=params_doubles.begin();outer_it!=params_doubles.end();++outer_it) {
         std::vector<double> doubles;
 
-        if (!outer_it->second.IsSequence()) {
+        if (!outer_it->second["value"].IsSequence()) {
             throw std::domain_error("The input file is not conformant with the specification - doubles must contain sequences");
         }
 
-        for (YAML::const_iterator inner_it=outer_it->second.begin();inner_it!=outer_it->second.end();++inner_it) {
+        for (YAML::const_iterator inner_it=outer_it->second["value"].begin();inner_it!=outer_it->second["value"].end();++inner_it) {
             doubles.push_back(inner_it->as<double>());
         }
-        set_parameter_doubles(outer_it->first.as<std::string>(), doubles);
+        set_parameter_doubles(outer_it->first.as<std::string>(), doubles, outer_it->second["info"].as<std::string>());
     }
 }
 
@@ -98,60 +98,106 @@ void ParameterStorage::storeFile(std::string _filename) {
     out << YAML::Key << "bool";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_bool()) {
-        bool value;
-        get_parameter_bool(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
-        out << YAML::Value << value;
+        out << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "value";
+        out << YAML::Value << param.parameter_data.value_bool();
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
 
     out << YAML::Key << "int";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_int()) {
-        int32_t value;
-        get_parameter_int(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
-        out << YAML::Value << value;
+        out << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "value";
+        out << YAML::Value << param.parameter_data.values_int32().at(0);
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
 
     out << YAML::Key << "double";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_double()) {
-        double value;
-        get_parameter_double(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
-        out << YAML::Value << YAML::DoublePrecision(PRECISION) << value;
+        out << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "value";
+        out << YAML::Value << YAML::DoublePrecision(PRECISION) << param.parameter_data.values_double().at(0);
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
 
     out << YAML::Key << "string";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_string()) {
-        std::string value;
-        get_parameter_string(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
-        out << YAML::Value << YAML::DoubleQuoted << value;
+        out << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "value";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_data.value_string();
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
 
     out << YAML::Key << "ints";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_ints()) {
-        std::vector<int32_t> value;
-        get_parameter_ints(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
+        out << YAML::Value << YAML::BeginMap;
+
+        std::vector<int32_t> value;
+        for (int32_t val : param.parameter_data.values_int32()) {
+            value.push_back(val);
+        }
+
+        out << YAML::Key << "value";
         out << YAML::Value << value;
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
     
     out << YAML::Key << "doubles";
     out << YAML::Value << YAML::BeginMap;
     for (auto const& key : list_doubles()) {
-        std::vector<double> value;
-        get_parameter_doubles(key, value);
+        ParameterWithDescription param;
+        get_parameter(key, param);
         out << YAML::Key << key;
+        out << YAML::Value << YAML::BeginMap;
+
+        std::vector<double> value;
+        for (double val : param.parameter_data.values_double()) {
+            value.push_back(val);
+        }
+
+        out << YAML::Key << "value";
         out << YAML::Value << YAML::DoublePrecision(PRECISION) << value;
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
     }
     out << YAML::EndMap;
 
