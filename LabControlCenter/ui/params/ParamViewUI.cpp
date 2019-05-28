@@ -5,7 +5,15 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     parameter_storage(_parameter_storage),
     float_precision(_float_precision)
 {
-    params_builder = Gtk::Builder::create_from_file("ui/params/params.glade");
+    try
+    {
+        params_builder = Gtk::Builder::create_from_file("ui/params/params.glade");
+    }
+    catch(const Gtk::BuilderError &e)
+    {
+        std::cerr << "Gtk::BuilderError: " << e.what() << std::endl;
+        exit(1);
+    }
 
     params_builder->get_widget("parameters_box", parent);
     // params_builder->get_widget("parameters_flow_top", parameters_flow_top);

@@ -20,6 +20,12 @@ parameters:
     test6:
       value: 1918829939.9847331
       info: "test value"
+    'trajectory_controller/lateral_P_gain': 
+      value: 7.0
+      info: ""
+    'trajectory_controller/lateral_D_gain': 
+      value: 4.0
+      info: ""
   string:
     test7:
       value: "TEHST@#+-//\\\\??"
