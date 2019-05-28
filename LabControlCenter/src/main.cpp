@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     auto storage = make_shared<ParameterStorage>(reader.config_file, 32);
     ParameterServer server(storage, reader.param_server_auto_start);
 
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
+    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create();
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
