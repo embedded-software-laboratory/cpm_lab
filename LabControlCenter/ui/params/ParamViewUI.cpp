@@ -64,8 +64,9 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
 
     //Delete button listener (also keyboard: del)
     parameters_button_delete->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::delete_selected_row));
-    parameters_list_scroll_window->signal_key_release_event().connect(sigc::mem_fun(this, &ParamViewUI::handle_button_released));
-    parameters_list_scroll_window->add_events(Gdk::KEY_RELEASE_MASK);
+    parameters_list_tree->signal_key_release_event().connect(sigc::mem_fun(this, &ParamViewUI::handle_button_released));
+    parameters_list_tree->signal_button_press_event().connect(sigc::mem_fun(this, &ParamViewUI::handle_mouse_event));
+    parameters_list_tree->add_events(Gdk::KEY_RELEASE_MASK);
 
     //Create and edit button listener
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
@@ -131,6 +132,20 @@ bool ParamViewUI::handle_button_released(GdkEventKey* event) {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Delete)
     {
         delete_selected_row();
+        return true;
+    }
+    else if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        open_param_edit_window();
+        return true;
+    }
+    return false;
+}
+
+bool ParamViewUI::handle_mouse_event(GdkEventButton* button_event) {
+    if (button_event->type == GDK_2BUTTON_PRESS)
+    {
+        open_param_edit_window();
         return true;
     }
     return false;

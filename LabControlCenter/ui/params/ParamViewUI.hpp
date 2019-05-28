@@ -71,6 +71,7 @@ private:
 
     //Key events - act depending on which button was released
     bool handle_button_released(GdkEventKey* event);
+    bool handle_mouse_event(GdkEventButton* button_event);
 
     //Event handler for toggle/switch for parameter server
     void on_param_server_active_changed();
