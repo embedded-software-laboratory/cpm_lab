@@ -27,11 +27,11 @@ private:
     Gtk::Widget* parent;
 
     //Top box: search bar and filter
-    Gtk::FlowBox* parameters_flow_top;
-    Gtk::SearchEntry* parameters_search;
-    Gtk::Box* parameters_box_filter;
-    Gtk::Label* parameters_filter_description;
-    Gtk::ComboBoxText* parameters_filter;
+    //Gtk::FlowBox* parameters_flow_top;
+    //Gtk::SearchEntry* parameters_search;
+    //Gtk::Box* parameters_box_filter;
+    //Gtk::Label* parameters_filter_description;
+    //Gtk::ComboBoxText* parameters_filter;
 
     //Middle box: Parameter list
     Gtk::ScrolledWindow* parameters_list_scroll_window;
@@ -45,8 +45,6 @@ private:
     Gtk::Button* parameters_button_edit;
     Gtk::FlowBoxChild* parameters_box_create;
     Gtk::Button* parameters_button_create;
-    Gtk::FlowBoxChild* parameters_box_show;
-    Gtk::Button* parameters_button_show;
 
     //Toggle button to start / stop the parameter server
     Gtk::ToggleButton* parameters_start_server_toggle;
