@@ -24,6 +24,11 @@ class MpcController
 
 
 public:
+
+	const uint64_t prediction_timestep_nanoseconds = 50000000ull;
+	const size_t prediction_steps = 8;
+	const size_t control_steps = 4;
+
     MpcController();
     
 };
