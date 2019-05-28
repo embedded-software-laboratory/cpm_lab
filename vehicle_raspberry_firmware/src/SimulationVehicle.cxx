@@ -85,7 +85,8 @@ spi_miso_data_t SimulationVehicle::update(
 
     spi_miso_data.tick                      = tick;
     spi_miso_data.odometer_steps            = distance/0.003122;
-    spi_miso_data.imu_yaw                   = yaw_measured/(-0.00109083078249645598);
+    spi_miso_data.imu_yaw                   = yaw_measured/(0.00109083078249645598/50*32);
+    spi_miso_data.imu_yaw_rate              = (curvature*speed)/(0.00109083078249645598);
     spi_miso_data.imu_acceleration_forward  = ((speed_ref-speed)/T_speed)*100;
     spi_miso_data.imu_acceleration_left     = curvature*speed*speed*100;
     spi_miso_data.speed                     = speed/0.003122/0.2384;
