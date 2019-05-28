@@ -5,8 +5,29 @@
 
 ## Apt
 
-sudo apt install git tree screen sublime-text cmake libgtkmm-3.0-dev
+sudo apt install build-essential git tmux cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk
 
+## NTP
+
+    sudo nano /etc/ntp.conf
+
+Add the lines
+
+    pool ntp1.rwth-aachen.de iburst
+    pool ntp2.rwth-aachen.de iburst
+
+Run
+
+    sudo service ntp restart
+    ntpq -p
+
+Under the column "st" there should be a 1 for the RWTH NTP servers.
+
+## Joystick / Gamepad
+
+Run `jstest-gtk`, perform calibration.
+
+Then run `sudo jscal-store /dev/input/js0`.
 
 ## RTI Connext
 
@@ -27,6 +48,8 @@ Raspberry PI RTI Libraries
 
 https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
 
+    sudo rtipkginstall rti_connext_dds-5.3.1-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
+
 ## Bash RC
 
     export PATH=$PATH:$HOME/rti_connext_dds-5.3.1/bin
@@ -34,3 +57,11 @@ https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
     export NDDSHOME=$HOME/rti_connext_dds-5.3.1
     export RASPBIAN_TOOLCHAIN=$HOME/raspbian-toolchain-gcc-4.7.2-linux64
     export RTI_LICENSE_FILE=$HOME/rti_workspace/rti_license.dat
+
+### Alternative for system-wide installation
+
+    export PATH=$PATH:/opt/rti_connext_dds-5.3.1/bin
+    export PATH=$PATH:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin
+    export NDDSHOME=/opt/rti_connext_dds-5.3.1
+    export RASPBIAN_TOOLCHAIN=/opt/raspbian-toolchain-gcc-4.7.2-linux64
+    export RTI_LICENSE_FILE=/opt/rti_connext_dds-5.3.1/rti_license.dat

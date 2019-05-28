@@ -70,11 +70,12 @@ int main(int argc, char *argv[])
     auto& participant = cpm::ParticipantSingleton::Instance();
 
     dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
-    auto QoS = dds::pub::qos::DataWriterQos();
-    auto reliability = dds::core::policy::Reliability::BestEffort();
-    reliability.max_blocking_time(dds::core::Duration(0,0));
-    QoS.policy(reliability);
-    dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicleState, QoS);
+
+    dds::pub::DataWriter<VehicleState> writer_vehicleState(
+        dds::pub::Publisher(participant), 
+        topic_vehicleState, 
+        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()
+    );
 
     dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), "vehicleObservation");
     cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
@@ -116,10 +117,10 @@ int main(int argc, char *argv[])
     uint64_t t_prev = update_loop->get_time();
     auto log_fn = [&](int line){
         uint64_t now = update_loop->get_time();
-        std::cerr << "PERF L " << line << " DT " << (now-t_prev) << std::endl;
+        std::cerr << "PERF L " << line << " DT " << (double(now-t_prev)*1e-6) << std::endl;
         t_prev = now;
-    };
-    */
+    };*/
+    
 
     // Control loop
     update_loop->start([&](uint64_t t_now) 
@@ -134,7 +135,6 @@ int main(int argc, char *argv[])
             spi_mosi_data_t spi_mosi_data;
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
-            
             double motor_throttle = 0;
             double steering_servo = 0;
 
@@ -152,7 +152,6 @@ int main(int argc, char *argv[])
                 spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
                 spi_mosi_data.motor_mode = motor_mode;
             }
-
 
             // LED identification signal
             {
@@ -174,8 +173,7 @@ int main(int argc, char *argv[])
 #else
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
-#endif            
-     
+#endif
 
             // Process sensor data
             if(check_CRC_miso(spi_miso_data)) 
@@ -199,7 +197,8 @@ int main(int argc, char *argv[])
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
-            
+                
+                //cpm::Logging::Instance().write("sending state with stamp %llu", vehicleState.header().create_stamp().nanoseconds());
             }
             else 
             {
