@@ -1,8 +1,5 @@
 parameters:
   bool:
-    simulated_time:
-      value: false
-      info: "test value"
     test1:
       value: true
       info: "test value"

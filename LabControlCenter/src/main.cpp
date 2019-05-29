@@ -15,7 +15,7 @@
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
-#include "CommandLineReader.hpp"
+#include "cpm/CommandLineReader.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -31,10 +31,11 @@ int main(int argc, char *argv[])
 
     //Read command line parameters (current params: auto_start and config_file)
     //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready
-    CommandLineReader reader(argc, argv, "parameters.yaml");
 
-    auto storage = make_shared<ParameterStorage>(reader.config_file, 32);
-    ParameterServer server(storage, reader.param_server_auto_start);
+    std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
+
+    auto storage = make_shared<ParameterStorage>(config_file, 32);
+    ParameterServer server(storage);
     storage->register_on_param_changed_callback(std::bind(&ParameterServer::resend_param_callback, &server, _1));
 
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create();
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
     );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto paramViewUi = make_shared<ParamViewUI>(storage, 5, std::bind(&ParameterServer::set_active_callback, &server, _1), reader.param_server_auto_start);
+    auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

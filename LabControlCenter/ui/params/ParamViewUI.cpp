@@ -1,7 +1,6 @@
 #include "ParamViewUI.hpp"
 
-ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, int _float_precision, std::function<void(bool)> _param_server_active_callback, bool param_server_active_init) :
-    param_server_active_callback(_param_server_active_callback),
+ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, int _float_precision) :
     parameter_storage(_parameter_storage),
     float_precision(_float_precision)
 {
@@ -30,7 +29,6 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     params_builder->get_widget("parameters_button_edit", parameters_button_edit);
     params_builder->get_widget("parameters_box_create", parameters_box_create);
     params_builder->get_widget("parameters_button_create", parameters_button_create);
-    params_builder->get_widget("parameters_start_server_toggle", parameters_start_server_toggle);
 
     assert(parent);
     // assert(parameters_flow_top);
@@ -47,7 +45,6 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     assert(parameters_button_edit);
     assert(parameters_box_create);
     assert(parameters_button_create);
-    assert(parameters_start_server_toggle);
 
     //Create data model_record for parameters
     parameter_list_storage = Gtk::ListStore::create(model_record);
@@ -80,11 +77,6 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     parameter_view_unchangeable.store(false); //Window for creation should only exist once
     parameters_button_create->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_create_window));
     parameters_button_edit->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::open_param_edit_window));
-
-    //State change of 'param server active' switch listener
-    parameters_start_server_toggle->signal_toggled().connect(sigc::mem_fun(this, &ParamViewUI::on_param_server_active_changed));
-    parameters_start_server_toggle->set_tooltip_text("Click to change");
-    parameters_start_server_toggle->set_active(param_server_active_init);
 
     //Save all button listener (save the currently visible configuration to the currently open yaml file)
     //parameters_button_show->signal_clicked().connect(sigc::mem_fun(this, &ParamViewUI::save_configuration));
@@ -158,29 +150,6 @@ bool ParamViewUI::handle_mouse_event(GdkEventButton* button_event) {
         return true;
     }
     return false;
-}
-
-void ParamViewUI::on_param_server_active_changed() {
-    bool new_value = parameters_start_server_toggle->get_active();
-    
-    if (param_server_active_callback) {
-        param_server_active_callback(new_value);
-
-        if (new_value) {
-            parameters_start_server_toggle->set_label("Toggle parameter server (active)");
-        }
-        else {
-            parameters_start_server_toggle->set_label("Toggle parameter server (inactive)");
-        }
-    }
-    else {
-        cpm::Logging::Instance().write("Error: Could not change param server state!");
-        parameters_start_server_toggle->set_active(false);
-    }
-
-    //UI change after the other changes have been performed
-    //parameters_start_server_toggle->set_active(new_value);
-    //return false;
 }
 
 void ParamViewUI::delete_selected_row() {
