@@ -38,6 +38,7 @@ public:
     ParameterServer(std::shared_ptr<ParameterStorage> _storage, bool init_active_value);
 
     void set_active_callback(bool active);
+    void resend_param_callback(std::string name);
     
     std::shared_ptr<ParameterStorage> storage;
 };

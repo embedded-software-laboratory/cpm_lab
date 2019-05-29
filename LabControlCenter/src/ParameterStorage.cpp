@@ -7,6 +7,10 @@ ParameterStorage::ParameterStorage(std::string _filename, int precision) :
     loadFile();
 }
 
+void ParameterStorage::register_on_param_changed_callback(std::function<void(std::string)> _on_param_changed_callback) {
+    on_param_changed_callback = _on_param_changed_callback;
+}
+
 void ParameterStorage::loadFile() {
     loadFile(filename);
 }
@@ -210,12 +214,18 @@ void ParameterStorage::storeFile(std::string _filename) {
 }
 
 void ParameterStorage::set_parameter(std::string name, ParameterWithDescription param) {
-    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    std::unique_lock<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         param_storage[name] = param;
     }
     else {
         param_storage.emplace(name, param);
+    }
+    u_lock.unlock();
+
+    //Call the user of the storage s.t. it can react to the change
+    if (on_param_changed_callback) {
+        on_param_changed_callback(name);
     }
 }
 

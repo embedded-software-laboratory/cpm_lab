@@ -29,6 +29,12 @@ public:
     ParameterStorage& operator=(ParameterStorage &&) = delete;
 
     /**
+     * \brief used to register a callback that is called whenever the value of a parameter changes
+     * \param _on_param_changed_callback the callback function
+     */
+    void register_on_param_changed_callback(std::function<void(std::string)> _on_param_changed_callback);
+
+    /**
      * \brief Load YAML file into memory, use mutex
      * \param _filename Change the current filename and use the given parameter for that, thus switch to the new file
      */
@@ -103,4 +109,7 @@ private:
 
     //Mutex for the map
     std::mutex param_storage_mutex;
+
+    //Callback that gets called whenever a parameter changes
+    std::function<void(std::string)> on_param_changed_callback;
 };

@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 
     auto storage = make_shared<ParameterStorage>(reader.config_file, 32);
     ParameterServer server(storage, reader.param_server_auto_start);
+    storage->register_on_param_changed_callback(std::bind(&ParameterServer::resend_param_callback, &server, _1));
 
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create();
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
