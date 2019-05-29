@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 /**
  * \brief Used to read a single command line argument from argv
@@ -62,6 +63,36 @@ namespace cpm {
             if (param.find(key) != std::string::npos) {
                 std::string value = param.substr(param.find("=") + 1);
                 return value;
+            }
+        }
+
+        return default_value;
+    }
+
+    /**
+     * \brief Read an integer command line argument from argv (form: --name=value), use a default value if it does not exist
+     */
+    std::vector<int> cmd_parameter_ints(std::string name, std::vector<int> default_value, int argc, char *argv[]) {
+        std::string key = "--" + name + "=";
+
+        for (int i = 1; i < argc; ++i) {
+            std::string param = std::string(argv[i]);
+            if (param.find(key) != std::string::npos) {
+                std::string value = param.substr(param.find("=") + 1);
+
+                std::vector<int> ints;
+                std::stringstream id_stream(value);
+                std::string single_id;
+                while (std::getline(id_stream, single_id, ',')) {
+                    try {
+                        ints.push_back(std::stoi(single_id));
+                    }
+                    catch (...) {
+                        return default_value;
+                    }
+                }
+
+                return ints;
             }
         }
 
