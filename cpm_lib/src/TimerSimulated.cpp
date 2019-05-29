@@ -49,6 +49,7 @@ namespace cpm {
                 if (sample.data().next_start().nanoseconds() == deadline) {
                     current_time = deadline;
 
+                    //Current deadline reached -> perform calculation, call callback, update deadline
                     if(m_update_callback) m_update_callback(deadline);
                     deadline += period_nanoseconds;
 
