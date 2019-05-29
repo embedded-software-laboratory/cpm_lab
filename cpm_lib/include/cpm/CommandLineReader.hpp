@@ -17,7 +17,7 @@ namespace cpm {
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
             if (param.find(key) != std::string::npos) {
-                std::string value = param.substr(param.find("="));
+                std::string value = param.substr(param.find("=") + 1);
                 return (value == "true" || value == "True" || value == "T" || value == "1");
             }
         }
@@ -34,8 +34,17 @@ namespace cpm {
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
             if (param.find(key) != std::string::npos) {
-                std::string value = param.substr(param.find("="));
-                return std::stoi(value);
+                std::string value = param.substr(param.find("=") + 1);
+
+                int int_value = 0;
+                try {
+                    int_value = std::stoi(value);
+                }
+                catch (...) {
+                    return default_value;
+                }
+
+                return int_value;
             }
         }
 
@@ -51,7 +60,7 @@ namespace cpm {
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
             if (param.find(key) != std::string::npos) {
-                std::string value = param.substr(param.find("="));
+                std::string value = param.substr(param.find("=") + 1);
                 return value;
             }
         }
