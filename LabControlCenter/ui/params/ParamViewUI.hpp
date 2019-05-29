@@ -89,8 +89,10 @@ public:
      * \brief constructor
      * \param parameter_storage The data storage that needs to be accessed from the UI to present data and store/modify it if the user does so
      * \param float_precision precision of floats shown by the UI
+     * \param param_server_active_callback callback function that is registered to react to the on/off switch of the param server toggle button
+     * /param param_server_active_init initial value of the toggle button
      */
-    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision, std::function<void(bool)> param_server_active_callback);
+    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision, std::function<void(bool)> param_server_active_callback, bool param_server_active_init);
     Gtk::Widget* get_parent();
 
     //Callbacks for button presses on menu items

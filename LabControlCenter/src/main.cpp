@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto paramViewUi = make_shared<ParamViewUI>(storage, 5, std::bind(&ParameterServer::set_active_callback, &server, _1));
+    auto paramViewUi = make_shared<ParamViewUI>(storage, 5, std::bind(&ParameterServer::set_active_callback, &server, _1), reader.param_server_auto_start);
     auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
