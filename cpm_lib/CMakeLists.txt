@@ -10,6 +10,7 @@ include_directories(include)
 file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
+    include/CommandLineReader.hpp
     include/cpm/get_topic.hpp
     include/cpm/Parameter.hpp
     include/cpm/ParameterReceiver.hpp
