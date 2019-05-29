@@ -33,7 +33,8 @@ namespace cpm
             uint64_t period_nanoseconds, 
             uint64_t offset_nanoseconds, 
             bool wait_for_start,
-            bool simulated_time_allowed
+            bool simulated_time_allowed,
+            bool simulated_time
         );
         /**
          * Start the periodic callback of the callback function in the 
