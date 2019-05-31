@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     uint64_t t_prev = update_loop->get_time();
     auto log_fn = [&](int line){
         uint64_t now = update_loop->get_time();
-        std::cerr << "PERF L " << line << " DT " << (double(now-t_prev)*1e-6) << std::endl;
+        cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
         t_prev = now;
     };*/
     
@@ -217,6 +217,7 @@ int main(int argc, char *argv[])
                 localization.reset();
             }
             loop_count++;
+
         }
         catch(const dds::core::Exception& e)
         {
