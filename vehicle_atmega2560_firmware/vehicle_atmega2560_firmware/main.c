@@ -20,12 +20,9 @@
 #include "twi.h"
 #include "imu.h"
 #include "crc.h"
-
-#define ENABLE_TEST_PROGRAM 1
-
-#if ENABLE_TEST_PROGRAM == 1
 #include "test_sequence.h"
-#endif
+
+#define TEST_MODE TEST_NONE
 
 
 int main(void)
@@ -127,9 +124,7 @@ int main(void)
 		spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 		
 		
-#if ENABLE_TEST_PROGRAM == 1
-		test_sequence(&spi_mosi_data, &spi_miso_data);
-#endif
+		test_sequence(&spi_mosi_data, &spi_miso_data, TEST_MODE);
 		
 		// Apply commands
 		motor_set_direction(spi_mosi_data.motor_mode);

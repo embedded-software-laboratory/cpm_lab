@@ -37,6 +37,10 @@ void set_servo_pwm(uint16_t pwm) {
 	OCR3C = pwm;
 	
 	// servo enable on pin PD7
+	// servo pwm range:
+	// 2000: negative limit
+	// 3000: middle
+	// 4000: positive limit
 	if (servo_counter > SERVO_THRESH) {
 		CLEAR_BIT(PORTD, 7);
 		
