@@ -105,4 +105,3 @@ void servo_timer_setup() {
 	SET_BIT(DDRD, 7);
 	SET_BIT(PORTD, 7);
 }
-
