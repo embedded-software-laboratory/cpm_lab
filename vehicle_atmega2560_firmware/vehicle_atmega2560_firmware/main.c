@@ -21,7 +21,7 @@
 #include "imu.h"
 #include "crc.h"
 
-//#define ENABLE_TEST_PROGRAM 1
+#define ENABLE_TEST_PROGRAM 1
 
 #if ENABLE_TEST_PROGRAM == 1
 #include "test_sequence.h"

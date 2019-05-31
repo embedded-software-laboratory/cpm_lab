@@ -5,6 +5,9 @@
  *  Author: maczijewski
  */ 
 
+// servo enable count threshold
+#define SERVO_THRESH 100
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -12,27 +15,64 @@
 #include "servo_timer.h"
 
 
+
 static volatile uint32_t tick_counter = 0;
 static volatile uint8_t tick_flag = 0;
 
+// static: in the C programming language, 
+//         static is used with global variables 
+//         and functions to set their scope to the containing file
+// servo enable count
+static uint8_t servo_counter = 0;
+
 
 void set_servo_pwm(uint16_t pwm) {	
-	if(pwm > 4000) pwm = 4000;
-	else if (pwm < 2000) pwm = 2000;
+	if(pwm > 4000) {
+		pwm = 4000;
+	}
+	else if (pwm < 2000) {
+		pwm = 2000;
+	}
+	
 	OCR3C = pwm;
+	
+	// servo enable on pin PD7
+	if (servo_counter > SERVO_THRESH) {
+		CLEAR_BIT(PORTD, 7);
+		
+		// clear counter if pwm not 3000
+		if (pwm != 3000) {
+			servo_counter = 0;
+		}
+	}
+	else {
+		SET_BIT(PORTD, 7);
+		
+		// need to consider overflow of 8-bit variable
+		// only increment if less than SERVO_THRESH
+		if (pwm == 3000) {
+			servo_counter++;
+		}
+		else {
+			servo_counter = 0;
+		}
+	}
 }
 
 uint32_t get_tick() { return tick_counter; }
+
 
 void tick_wait() {
 	tick_flag = 1;
 	while(tick_flag);
 }
 
+
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
 	tick_flag = 0;
 }
+
 
 void servo_timer_setup() {
 	// Using timer 3
@@ -60,4 +100,9 @@ void servo_timer_setup() {
 	// TOP interrupt for tick timer	
 	SET_BIT(TIMSK3, TOIE3);
 	SET_BIT(TIFR3, TOV3);
+	
+	// servo enable
+	SET_BIT(DDRD, 7);
+	SET_BIT(PORTD, 7);
 }
+
