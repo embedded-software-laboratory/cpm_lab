@@ -186,22 +186,22 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
     fprintf('\n')
     
     
-    
-    figure(1)
-    clf
-    hold on
-    plot(full(init_flat_first))
-    plot(full(nlp_result.x))
-    
-    
-    
-    
-    dx = ([sequences.x] - squeeze(X_soln(:,1,:)));
-    dy = ([sequences.y] - squeeze(X_soln(:,2,:)));    
-    dist = sqrt(dx.^2 + dy.^2);
-    figure(2)
-    clf
-    histogram(dist(:))
+%     
+%     figure(1)
+%     clf
+%     hold on
+%     plot(full(init_flat_first))
+%     plot(full(nlp_result.x))
+%     
+%     
+%     
+%     
+%     dx = ([sequences.x] - squeeze(X_soln(:,1,:)));
+%     dy = ([sequences.y] - squeeze(X_soln(:,2,:)));    
+%     dist = sqrt(dx.^2 + dy.^2);
+%     figure(2)
+%     clf
+%     histogram(dist(:))
     
 end
 
