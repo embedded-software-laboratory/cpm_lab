@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
             }
             else 
             {
-                cpm::Logging::Instance().write("%s", 
+                cpm::Logging::Instance().write(
                     "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
                     n_transmission_attempts);
             }
