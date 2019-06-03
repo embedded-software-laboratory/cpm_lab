@@ -1,4 +1,4 @@
-function optimize_parameters
+function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_command)
 
     %% See 'optimize_parameters.png/tex' for documentation.
 
@@ -26,9 +26,6 @@ function optimize_parameters
 
     
     %% Emulate delays by shifting data
-    n_delay_steps_IPS = 0;
-    n_delay_steps_local = 0;
-    n_delay_steps_command = 0;
     n_delay_max = 10;
     
     assert(n_delay_steps_IPS < n_delay_max);
@@ -154,7 +151,7 @@ function optimize_parameters
 
     
     %% Optimization
-    n_iter = 5;
+    n_iter = 2;
     for i = 1:n_iter
         if i < n_iter
             objective_trust_region = objective + (0.25^i) * sumsqr(init_flat-variables_flat);
