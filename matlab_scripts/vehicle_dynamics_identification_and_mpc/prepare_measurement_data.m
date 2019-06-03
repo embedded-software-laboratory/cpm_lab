@@ -1,6 +1,6 @@
 function prepare_measurement_data
 
-    % Run 'recording_to_csv.bash' before this script!
+    %% Run 'recording_to_csv.bash' before this script!
     
     % This script takes the recorded data and filters, combines and slices it in
     % preparation for the optimization.

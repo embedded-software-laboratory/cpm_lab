@@ -23,10 +23,40 @@ function optimize_parameters
     init_parameters = [ 1.007092, -0.192156, 0.196791, 3.578965, -1.824687, -64.212418, 9.083594, 1.369818, 12.023127, 0.033166, -0.013745 ]';
     init_parameters = [ 1.007419, -0.191607, 0.199668, 3.590788, -1.816570, -9.134298, 2.269441, 1.365857, 12.233076, 0.033411, -0.012818 ]';
     
-    
 
     
-    %% TODO: discrete signal delays
+    %% Emulate delays by shifting data
+    n_delay_steps_IPS = 0;
+    n_delay_steps_local = 0;
+    n_delay_steps_command = 0;
+    n_delay_max = 10;
+    
+    assert(n_delay_steps_IPS < n_delay_max);
+    assert(n_delay_steps_local < n_delay_max);
+    assert(n_delay_steps_command < n_delay_max);
+    assert(n_delay_max < length(sequences(1).x));
+    
+    for i = 1:length(sequences)
+        sequences(i).x                = circshift(sequences(i).x,                 n_delay_steps_IPS,     1);
+        sequences(i).y                = circshift(sequences(i).y,                 n_delay_steps_IPS,     1);
+        sequences(i).yaw              = circshift(sequences(i).yaw,               n_delay_steps_IPS,     1);
+        sequences(i).speed            = circshift(sequences(i).speed,             n_delay_steps_local,   1);
+        sequences(i).steering_command = circshift(sequences(i).steering_command,  n_delay_steps_command, 1);
+        sequences(i).motor_command    = circshift(sequences(i).motor_command,     n_delay_steps_command, 1);
+        sequences(i).battery_voltage  = circshift(sequences(i).battery_voltage,   n_delay_steps_local,   1);
+    end
+    
+    % Trim start data, that wrapped around in circshift()
+    f_names = fieldnames(sequences);
+    for i = 1:length(sequences)
+        for j = 1:length(f_names)
+            f_name = f_names{j};
+            data = sequences(i).(f_name);
+            sequences(i).(f_name) = data((n_delay_max+1):end);
+        end
+    end
+    
+    
     
     n_sequences = length(sequences);
     n_sequence_length = length(sequences(1).x);
@@ -149,7 +179,10 @@ function optimize_parameters
     X_soln = cellfun(@(e) full(e), X_soln,  'UniformOutput',false);
     X_soln = cat(3,X_soln{:});
     
-    save('dump','parameters_soln','X_soln','sequences');
+    objective_soln = full(nlp_result.f);
+    
+    save(sprintf('output/optimal_parameters_d_ips_%i_d_local_%i_d_cmd_%i', n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_command),...
+        'parameters_soln','X_soln','sequences', 'objective_soln', 'n_delay_steps_IPS', 'n_delay_steps_local', 'n_delay_steps_command');
     
     fprintf('New Parameters:\n')
     fprintf('%f, ', parameters_soln)
