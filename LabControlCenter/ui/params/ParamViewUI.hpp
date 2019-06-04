@@ -46,9 +46,6 @@ private:
     Gtk::FlowBoxChild* parameters_box_create;
     Gtk::Button* parameters_button_create;
 
-    //Toggle button to start / stop the parameter server
-    Gtk::ToggleButton* parameters_start_server_toggle;
-
     //TreeView Layout, Parameters storage
     ParamModelRecord model_record;
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
@@ -73,10 +70,6 @@ private:
     bool handle_button_released(GdkEventKey* event);
     bool handle_mouse_event(GdkEventButton* button_event);
 
-    //Event handler for toggle/switch for parameter server
-    void on_param_server_active_changed();
-    std::function<void(bool)> param_server_active_callback;
-
     //Callback: Allow to only create another create window when the former window was closed
     //Handles callback for close and for create operations
     void window_on_close_callback(ParameterWithDescription param, bool valid_parameter);
@@ -92,7 +85,7 @@ public:
      * \param param_server_active_callback callback function that is registered to react to the on/off switch of the param server toggle button
      * /param param_server_active_init initial value of the toggle button
      */
-    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision, std::function<void(bool)> param_server_active_callback, bool param_server_active_init);
+    ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
     Gtk::Widget* get_parent();
 
     //Callbacks for button presses on menu items

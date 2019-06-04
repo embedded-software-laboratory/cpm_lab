@@ -32,12 +32,9 @@ private:
     dds::pub::DataWriter<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
-    std::atomic<bool> is_active;
-
 public:
-    ParameterServer(std::shared_ptr<ParameterStorage> _storage, bool init_active_value);
+    ParameterServer(std::shared_ptr<ParameterStorage> _storage);
 
-    void set_active_callback(bool active);
     void resend_param_callback(std::string name);
     
     std::shared_ptr<ParameterStorage> storage;

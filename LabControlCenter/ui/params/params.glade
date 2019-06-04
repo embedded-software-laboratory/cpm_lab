@@ -84,33 +84,5 @@
         <property name="position">2</property>
       </packing>
     </child>
-    <child>
-      <object class="GtkFlowBox" id="parameters_flowbox_bottom_start">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkFlowBoxChild" id="parameters_flowbox_bottom_start_toggle">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <child>
-              <object class="GtkToggleButton" id="parameters_start_server_toggle">
-                <property name="label" translatable="yes">Toggle parameter server (inactive)</property>
-                <property name="name">parameters_start_server_toggle</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="valign">center</property>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">3</property>
-      </packing>
-    </child>
   </object>
 </interface>
