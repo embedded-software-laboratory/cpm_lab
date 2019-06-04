@@ -5,6 +5,8 @@
 #include "cpm/get_topic.hpp"
 
 
+const bool enable_visualization = false;
+
 IpsPipeline::IpsPipeline()
 :writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleObservation>("vehicleObservation"))
 {
@@ -23,7 +25,7 @@ IpsPipeline::IpsPipeline()
 
     poseCalculationFn = std::make_shared<PoseCalculation>( );
 
-    visualization_thread = std::thread([this](){ visualization_loop(); });
+    if(enable_visualization) visualization_thread = std::thread([this](){ visualization_loop(); });
 }
 
 

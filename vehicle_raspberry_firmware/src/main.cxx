@@ -36,17 +36,6 @@ using std::vector;
 
 #include "bcm2835.h"
 
-extern "C" {
-#include "spi.h"
-#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
-}
-
-bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
-    uint16_t mosi_CRC = spi_miso_data.CRC;
-    spi_miso_data.CRC = 0;
-    return mosi_CRC == crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -98,7 +87,6 @@ int main(int argc, char *argv[])
     const bool allow_simulated_time = true;
 #endif
 
-    crcInit();
 
 	const vector<uint8_t> identification_LED_period_ticks  { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 };
     const vector<uint8_t> identification_LED_enabled_ticks { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
@@ -117,7 +105,7 @@ int main(int argc, char *argv[])
     uint64_t t_prev = update_loop->get_time();
     auto log_fn = [&](int line){
         uint64_t now = update_loop->get_time();
-        std::cerr << "PERF L " << line << " DT " << (double(now-t_prev)*1e-6) << std::endl;
+        cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
         t_prev = now;
     };*/
     
@@ -165,18 +153,34 @@ int main(int argc, char *argv[])
                 spi_mosi_data.LED4_enabled_ticks = identification_LED_enabled_ticks.at(vehicle_id);
             }
 
-            spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
+            int n_transmission_attempts = 1;
+            int transmission_successful = 1;
 
 #ifdef VEHICLE_SIMULATION
             spi_miso_data_t spi_miso_data = simulationVehicle.update(
                 spi_mosi_data, t_now, period_nanoseconds/1e9, vehicle_id);
 #else
             // Exchange data with low level micro-controller
-            spi_miso_data_t spi_miso_data = spi_transfer(spi_mosi_data);
+            spi_miso_data_t spi_miso_data;
+
+            //auto t_transfer_start = update_loop->get_time();
+            spi_transfer(
+                spi_mosi_data,
+                &spi_miso_data,
+                &n_transmission_attempts,
+                &transmission_successful
+            );
+            //auto t_transfer_end = update_loop->get_time();
+            //cpm::Logging::Instance().write("spi transfer time %llu, n attempts %i", (t_transfer_end-t_transfer_start), n_transmission_attempts);
 #endif
 
+            /*if(n_transmission_attempts > 1)
+            {
+                cpm::Logging::Instance().write("n_transmission_attempts %i", n_transmission_attempts);
+            }*/
+
             // Process sensor data
-            if(check_CRC_miso(spi_miso_data)) 
+            if(transmission_successful) 
             {
                 // TODO rethink this. What should be skipped when there is a SPI error?
             
@@ -202,11 +206,9 @@ int main(int argc, char *argv[])
             }
             else 
             {
-                /*std::cerr 
-                << "[" << std::fixed << std::setprecision(9) << double(update_loop->get_time())/1e9 
-                <<  "] Data corruption on ATmega SPI bus. CRC mismatch." << std::endl;*/
-
-                cpm::Logging::Instance().write("%s", "Data corruption on ATmega SPI bus. CRC mismatch.");
+                cpm::Logging::Instance().write(
+                    "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
+                    n_transmission_attempts);
             }
 
 
@@ -215,6 +217,7 @@ int main(int argc, char *argv[])
                 localization.reset();
             }
             loop_count++;
+
         }
         catch(const dds::core::Exception& e)
         {
