@@ -1,5 +1,7 @@
 #include "TimerViewUI.hpp"
 
+#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
+
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(bool simulated_time) :
     use_simulated_time(simulated_time),
@@ -86,6 +88,43 @@ void TimerViewUI::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& sa
             lock.unlock();
         }
     }
+}
+
+void TimerViewUI::send_next_signal() {
+    if (use_simulated_time) {
+        //Find smallest next time step in the storage
+        uint64_t smallest_step = -1;
+        for (auto const& pair : ready_status_storage) {
+            if (smallest_step == -1 || smallest_step > pair.second) {
+                smallest_step = pair.second;
+            }
+        }
+
+        //TODO react according to current data
+        if (smallest_step == -1) {
+
+        }
+        else if (smallest_step < current_simulated_time) {
+
+        }
+        else if (smallest_step == current_simulated_time) {
+
+        }
+        else {
+
+        }
+    }
+    else {
+        SystemTrigger trigger;
+        trigger.next_start(0);
+        system_trigger_writer.write(trigger);
+    }
+}
+
+void TimerViewUI::send_stop_signal() {
+        SystemTrigger trigger;
+        trigger.next_start(TRIGGER_STOP_SYMBOL); //TODO: Symbol should be part of cpm lib
+        system_trigger_writer.write(trigger);
 }
 
 Gtk::Widget* TimerViewUI::get_parent() {

@@ -47,6 +47,10 @@ private:
     Glib::RefPtr<Gtk::ListStore> timer_list_storage;
     void insert_or_change_treeview(std::string id_string, std::string waiting_start_string, std::string waiting_response_string, std::string next_step_string);
 
+    //Timing functions
+    void send_next_signal();
+    void send_stop_signal();
+
 public:
     TimerViewUI(bool simulated_time);
     Gtk::Widget* get_parent();
