@@ -15,7 +15,6 @@ private:
     Gtk::Button* button_start;
     Gtk::Button* button_stop;
     Gtk::TreeView* active_timers_treeview;
-    Gtk::TreeView* received_messages_treeview;
     Gtk::Label* current_timestep_label;
 
 public:

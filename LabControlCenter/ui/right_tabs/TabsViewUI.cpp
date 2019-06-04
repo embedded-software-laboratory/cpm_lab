@@ -1,8 +1,9 @@
 #include "TabsViewUI.hpp"
 
-TabsViewUI::TabsViewUI(std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi, std::shared_ptr<ParamViewUI> paramViewUI) :
+TabsViewUI::TabsViewUI(std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi, std::shared_ptr<ParamViewUI> paramViewUI, std::shared_ptr<TimerViewUI> timerViewUi) :
     vehicle_manual_control_ui(vehicleManualControlUi),
-    param_view_ui(paramViewUI)
+    param_view_ui(paramViewUI),
+    timer_view_ui(timerViewUi)
  {
     tabs_builder = Gtk::Builder::create_from_file("ui/right_tabs/right_tabs.glade");
 
@@ -12,9 +13,11 @@ TabsViewUI::TabsViewUI(std::shared_ptr<VehicleManualControlUi> vehicleManualCont
 
     Glib::ustring manual_control_label("Manual Control");
     Glib::ustring parameters_label("Parameters");
+    Glib::ustring timer_label("Timer");
 
     right_notebook->insert_page(*(vehicleManualControlUi->get_parent()), manual_control_label, -1);
     right_notebook->insert_page(*(paramViewUI->get_parent()), parameters_label, -1);
+    right_notebook->insert_page(*(timerViewUi->get_parent()), timer_label, -1);
 }
 
 std::shared_ptr<ParamViewUI> TabsViewUI::get_param_view() {

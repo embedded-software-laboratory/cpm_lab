@@ -10,6 +10,7 @@
 #include "ui/map_view/MapViewUi.hpp"
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/params/ParamViewUI.hpp"
+#include "ui/timer/TimerViewUI.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "TrajectoryCommand.hpp"
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
-
+    auto timerViewUi = make_shared<TimerViewUI>();
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
+    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi, timerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 

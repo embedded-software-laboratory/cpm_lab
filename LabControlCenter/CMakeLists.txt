@@ -55,6 +55,8 @@ add_executable(LabControlCenter
     ui/params/ParamModelRecord.hpp
     ui/right_tabs/TabsViewUI.hpp
     ui/right_tabs/TabsViewUI.cpp
+    ui/timer/TimerViewUI.hpp
+    ui/timer/TimerViewUI.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp
