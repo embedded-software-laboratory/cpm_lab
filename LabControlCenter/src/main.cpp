@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
-    auto timerViewUi = make_shared<TimerViewUI>();
+    bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+    auto timerViewUi = make_shared<TimerViewUI>(use_simulated_time);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
