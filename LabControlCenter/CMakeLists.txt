@@ -57,6 +57,7 @@ add_executable(LabControlCenter
     ui/right_tabs/TabsViewUI.cpp
     ui/timer/TimerViewUI.hpp
     ui/timer/TimerViewUI.cpp
+    ui/timer/TimerModelRecord.hpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp
