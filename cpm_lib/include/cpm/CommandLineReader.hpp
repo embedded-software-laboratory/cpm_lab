@@ -17,7 +17,7 @@ namespace cpm {
 
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
-            if (param.find(key) != std::string::npos) {
+            if (param.find(key) == 0) {
                 std::string value = param.substr(param.find("=") + 1);
                 return (value == "true" || value == "True" || value == "T" || value == "1");
             }
@@ -34,7 +34,7 @@ namespace cpm {
 
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
-            if (param.find(key) != std::string::npos) {
+            if (param.find(key) == 0) {
                 std::string value = param.substr(param.find("=") + 1);
 
                 int int_value = 0;
@@ -60,7 +60,7 @@ namespace cpm {
 
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
-            if (param.find(key) != std::string::npos) {
+            if (param.find(key) == 0) {
                 std::string value = param.substr(param.find("=") + 1);
                 return value;
             }
@@ -77,7 +77,7 @@ namespace cpm {
 
         for (int i = 1; i < argc; ++i) {
             std::string param = std::string(argv[i]);
-            if (param.find(key) != std::string::npos) {
+            if (param.find(key) == 0) {
                 std::string value = param.substr(param.find("=") + 1);
 
                 std::vector<int> ints;
