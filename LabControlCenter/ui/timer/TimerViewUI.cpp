@@ -3,11 +3,8 @@
 #define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
 
 using namespace std::placeholders;
-TimerViewUI::TimerViewUI(bool simulated_time) :
-    use_simulated_time(simulated_time),
-    /*Set up communication*/
-    ready_status_reader(std::bind(&TimerViewUI::ready_status_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<ReadyStatus>("ready"), true),
-    system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("system_trigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
+TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
+    timer_trigger(timerTrigger)
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -42,172 +39,85 @@ TimerViewUI::TimerViewUI(bool simulated_time) :
     }
 
     //Register callbacks for button presses
-    button_start->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::send_start_signal));
-    button_stop->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::send_stop_signal));
+    button_start->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_start_callback));
+    button_stop->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_stop_callback));
+
+    run_thread.store(true);
+
+    ui_thread = std::thread(&TimerViewUI::update_ui, this);
 }
 
-void TimerViewUI::insert_or_change_treeview(std::string id_string, std::string last_message_string, std::string waiting_response_string, std::string next_step_string) {
-        Glib::ustring id_ustring(id_string);
-        Glib::ustring last_message_ustring(last_message_string);
-        Glib::ustring waiting_response_ustring(waiting_response_string);
-        Glib::ustring next_step_ustring(next_step_string);
+TimerViewUI::~TimerViewUI() {
+    run_thread.store(false);
 
-        Gtk::TreeModel::Row row;
-        bool entry_exists = false;
-
-        //Search if the entry already exists
-        for (Gtk::TreeModel::iterator iter = timer_list_storage->children().begin(); iter != timer_list_storage->children().end(); ++iter) {
-            row = *iter;
-            if (row[timer_record.column_id] == id_ustring) {
-                entry_exists = true;
-                break;
-            }
-        }
-
-        //Else create a new entry
-        if (!entry_exists) {
-            row = *(timer_list_storage->append());
-        }
-
-        row[timer_record.column_id] = id_ustring;
-        row[timer_record.column_last_message] = last_message_ustring;
-        row[timer_record.column_waiting_for_response] = waiting_response_ustring;
-        row[timer_record.column_next_step] = next_step_ustring;
+    if(ui_thread.joinable()) {
+        ui_thread.join();
+    }
 }
 
-void TimerViewUI::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            //Data from the sample to string
-            std::string id = sample.data().source_id();
+void TimerViewUI::update_ui() {
+    while (run_thread.load()) {
+        //Update treeview
+        for(const auto& entry : timer_trigger->get_participant_message_data()) {
             std::stringstream step_stream;
-            step_stream << sample.data().next_start_stamp().nanoseconds();
-            std::string next_step = step_stream.str();
-            //Find out the last message timestamp and print it to the UI - this can be useful for debugging purposes
-            std::string last_message = get_current_realtime();
+            step_stream << entry.second.next_timestep;
 
-            std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
+            Glib::ustring id_ustring(entry.first);
+            Glib::ustring last_message_ustring(entry.second.last_message);
+            Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
+            Glib::ustring next_step_ustring(step_stream.str());
 
-            //The LCC is only waiting for a response if:
-            //a) TODO The participant has been pre-registered and has not yet sent any message
-            //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
-            std::string waiting_response;
-            if (sample.data().next_start_stamp().nanoseconds() == current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id] == current_simulated_time){
-                    waiting_response = "YES";
+            Gtk::TreeModel::Row row;
+            bool entry_exists = false;
+
+            //Search if the entry already exists
+            for (Gtk::TreeModel::iterator iter = timer_list_storage->children().begin(); iter != timer_list_storage->children().end(); ++iter) {
+                row = *iter;
+                if (row[timer_record.column_id] == id_ustring) {
+                    entry_exists = true;
+                    break;
                 }
             }
-            else if (sample.data().next_start_stamp().nanoseconds() < current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id] < current_simulated_time){
-                    waiting_response = "OUT OF SYNC";
-                }
-            }
-            else {
-                waiting_response = "-";
+            //Else create a new entry
+            if (!entry_exists) {
+                row = *(timer_list_storage->append());
             }
 
-            //Only store new data if the current timestep is higher than the timestep that was stored for the vehicle
-            if (ready_status_storage.find(id) == ready_status_storage.end()) {
-                ready_status_storage[id] = sample.data().next_start_stamp().nanoseconds();
-            }
-            else if (ready_status_storage[id] < sample.data().next_start_stamp().nanoseconds()) {
-                ready_status_storage[id] = sample.data().next_start_stamp().nanoseconds();
-            }
-            else {
-                std::stringstream step_stream;
-                step_stream << ready_status_storage[id] << "()";
-                next_step = step_stream.str();
-
-                cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id);
-            }
-
-            lock.unlock();
-
-            //Also update the UI (in case last_message, waiting_response or next_step have changed or if a new participant needs to be added)
-            //TODO: Update the UI in discrete steps for performance reasons?
-            insert_or_change_treeview(id, last_message, waiting_response, next_step);
-        }
-    }
-
-    //Check if all vehicles that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep (simulated time only)
-    send_next_signal();
-
-    //TODO Check if uint64_t max number is close and stop the program automatically
-}
-
-void TimerViewUI::send_start_signal() {
-    timer_running = true;
-
-    if (use_simulated_time) {
-        bool signal_sent = send_next_signal();
-        //TODO Do something if no signal was sent
-    }
-    else {
-        SystemTrigger trigger;
-        trigger.next_start(TimeStamp(0));
-        system_trigger_writer.write(trigger);
-        //TODO What if the button is pressed before any participant sent a message?
-    }
-
-    button_start->set_sensitive(false);
-}
-
-bool TimerViewUI::send_next_signal() {
-    if (use_simulated_time && timer_running) {
-        //Find smallest next time step in the storage
-        uint64_t smallest_step = 0;
-        bool has_data = false;
-        for (auto const& pair : ready_status_storage) {
-            if (smallest_step == 0 || smallest_step > pair.second) {
-                smallest_step = pair.second;
-                has_data = true;
-            }
+            row[timer_record.column_id] = id_ustring;
+            row[timer_record.column_last_message] = last_message_ustring;
+            row[timer_record.column_waiting_for_response] = waiting_response_ustring;
+            row[timer_record.column_next_step] = next_step_ustring;
         }
 
-        //React according to current data
-        if (!has_data) {
-            cpm::Logging::Instance().write("LCC Timer: No data or only invalid data received!");
-        }
-        else if (smallest_step < current_simulated_time) {
-            cpm::Logging::Instance().write("LCC Timer: At least one participant is out of sync (or its answer was not received)!");
-        }
-        else if (smallest_step == current_simulated_time) {
-            cpm::Logging::Instance().write("LCC Timer: Some participants are still in the current timestep, waiting for an answer...");
-        }
-        else {
-            //The timer can progress to the next smallest timestep as all participants have performed their computations
-            current_simulated_time = smallest_step;
-            //Update current time in UI
+        //Update current time in UI
+        bool use_simulated_time;
+        uint64_t current_simulated_time;
+        timer_trigger->get_current_simulated_time(use_simulated_time, current_simulated_time);
+        if (use_simulated_time) {
             std::stringstream time_stream;
             time_stream << current_simulated_time;
             Glib::ustring step_ustring(time_stream.str());
             current_timestep_label->set_label(step_ustring);
-
-            //Send system trigger message to participants
-            SystemTrigger trigger;
-            trigger.next_start(TimeStamp(current_simulated_time));
-            system_trigger_writer.write(trigger);
-
-            return true;
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
-
-    return false;
 }
 
-void TimerViewUI::send_stop_signal() {
-        SystemTrigger trigger;
-        trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL)); //TODO: Symbol should be part of cpm lib
-        system_trigger_writer.write(trigger);
+void TimerViewUI::button_start_callback() {
+    timer_trigger->send_start_signal();
+
+    button_start->set_sensitive(false);
 }
 
-std::string TimerViewUI::get_current_realtime() {
-    std::stringstream time_stream;
-    std::time_t t = std::time(0);
-    std::tm* time = std::localtime(&t);
+void TimerViewUI::button_stop_callback() {
+    timer_trigger->send_stop_signal();
 
-    time_stream << time->tm_hour << ":" << time->tm_min << ":" << time->tm_sec;
-    return time_stream.str();
+    std::string label_msg = "stopped";
+    Glib::ustring label_msg_ustring(label_msg);
+    current_timestep_label->set_label(label_msg_ustring);
+
+    button_start->set_sensitive(false);
 }
 
 Gtk::Widget* TimerViewUI::get_parent() {

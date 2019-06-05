@@ -31,6 +31,8 @@ link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter
+    src/TimerTrigger.hpp
+    src/TimerTrigger.cpp
     src/TimeSeries.cpp
     src/TimeSeries.hpp
     src/TimeSeriesAggregator.cpp

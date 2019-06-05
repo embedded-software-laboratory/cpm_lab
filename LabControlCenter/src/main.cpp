@@ -17,6 +17,7 @@
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "TimerTrigger.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -45,7 +46,8 @@ int main(int argc, char *argv[])
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
     bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    auto timerViewUi = make_shared<TimerViewUI>(use_simulated_time);
+    auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
+    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
