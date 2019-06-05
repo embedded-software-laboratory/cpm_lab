@@ -21,5 +21,4 @@ void motor_set_duty(uint16_t duty); // values from 0 to 400
 void motor_setup();
 
 
-
 #endif /* MOTOR_H_ */

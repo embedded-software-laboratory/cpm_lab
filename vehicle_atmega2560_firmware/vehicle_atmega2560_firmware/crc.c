@@ -18,7 +18,6 @@
 #include "crc.h"
 
 
-
 #define FALSE	0
 #define TRUE	!FALSE
 
@@ -26,7 +25,6 @@
  * Select the CRC standard from the list that follows.
  */
 #define CRC16
-
 
 
 #define CRC_NAME			"CRC-16"
@@ -38,14 +36,12 @@
 #define CHECK_VALUE			0xBB3D
 
 
-
-
-
 /*
  * Derive parameters from the standard-specific parameters in crc.h.
  */
 #define WIDTH    (8 * sizeof(crc))
 #define TOPBIT   (1 << (WIDTH - 1))
+
 
 #if (REFLECT_DATA == TRUE)
 #undef  REFLECT_DATA
@@ -54,6 +50,7 @@
 #undef  REFLECT_DATA
 #define REFLECT_DATA(X)			(X)
 #endif
+
 
 #if (REFLECT_REMAINDER == TRUE)
 #undef  REFLECT_REMAINDER
@@ -101,7 +98,6 @@ reflect(uint32_t data, uint8_t nBits)
 	return (reflection);
 
 }	/* reflect() */
-
 
 
 crc  crcTable[256];

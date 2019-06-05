@@ -5,6 +5,7 @@
  * Author : maczijewski
  */
 
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -21,6 +22,7 @@
 #include "imu.h"
 #include "crc.h"
 #include "test_sequence.h"
+
 
 #define TEST_MODE TEST_NONE
 
@@ -122,7 +124,6 @@ int main(void)
 		
 		spi_miso_data.CRC = 0;
 		spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
-		
 		
 		test_sequence(&spi_mosi_data, &spi_miso_data, TEST_MODE);
 		

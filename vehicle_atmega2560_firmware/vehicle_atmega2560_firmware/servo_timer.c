@@ -3,10 +3,9 @@
  *
  * Created: 24.09.2018 16:26:48
  *  Author: maczijewski
+ * Modified: 05.31.2019 11:32:19
+ *  Author: cfrauzem
  */ 
-
-// servo enable count threshold
-#define SERVO_THRESH 100
 
 
 #include <avr/io.h>
@@ -15,55 +14,56 @@
 #include "servo_timer.h"
 
 
+#define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
 
 static volatile uint32_t tick_counter = 0;
 static volatile uint8_t tick_flag = 0;
 
-// static: in the C programming language, 
-//         static is used with global variables 
-//         and functions to set their scope to the containing file
-// servo enable count
-static uint8_t servo_counter = 0;
+static uint8_t consecutive_servo_center_command_count = 0;
 
-
+/* 
+ * servo enable on pin PD7
+ * servo pwm range:
+ * 2000: negative limit
+ * 3000: middle
+ * 4000: positive limit
+ */
 void set_servo_pwm(uint16_t pwm) {	
+	// cap command above servo command positive limit
 	if(pwm > 4000) {
 		pwm = 4000;
 	}
+	// cap command below servo command negative limit
 	else if (pwm < 2000) {
 		pwm = 2000;
 	}
 	
 	OCR3C = pwm;
 	
-	// servo enable on pin PD7
-	// servo pwm range:
-	// 2000: negative limit
-	// 3000: middle
-	// 4000: positive limit
-	if (servo_counter > SERVO_THRESH) {
+	if (consecutive_servo_center_command_count > SERVO_CENTER_COMMAND_COUNT_THRESHOLD) {
+		// disable servo
 		CLEAR_BIT(PORTD, 7);
-		
-		// clear counter if pwm not 3000
-		if (pwm != 3000) {
-			servo_counter = 0;
-		}
 	}
+	// need to consider overflow of 8-bit variable:
+	// only increment counter while less than threshold
 	else {
+			if (pwm == 3000) {
+				consecutive_servo_center_command_count++;
+			}
+	}
+	
+	// this is not the center/default command
+	// reset the counter, re-enable the servo
+	if (pwm != 3000) {
+		consecutive_servo_center_command_count = 0;
 		SET_BIT(PORTD, 7);
-		
-		// need to consider overflow of 8-bit variable
-		// only increment if less than SERVO_THRESH
-		if (pwm == 3000) {
-			servo_counter++;
-		}
-		else {
-			servo_counter = 0;
-		}
 	}
 }
 
-uint32_t get_tick() { return tick_counter; }
+
+uint32_t get_tick() { 
+	return tick_counter; 
+}
 
 
 void tick_wait() {
@@ -90,7 +90,6 @@ void servo_timer_setup() {
 	// Output on Pin 7 / OC3C / PE5
 	SET_BIT(DDRE, 5);
 	SET_BIT(TCCR3A, COM3C1);
-	
 	
 	// prescaler /8 => 2 MHz
 	SET_BIT(TCCR3B, CS31);

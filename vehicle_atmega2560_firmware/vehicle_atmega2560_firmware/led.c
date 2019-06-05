@@ -5,7 +5,9 @@
  *  Author: maczijewski
  */ 
 
+
 #include "led.h"
+
 
 void led_set_state(uint32_t tick, spi_mosi_data_t* spi_mosi_data) {
 	CLEAR_BIT(PORTC, 0);
@@ -44,6 +46,7 @@ void led_set_state(uint32_t tick, spi_mosi_data_t* spi_mosi_data) {
 		SET_BIT(PORTC, 7);
 	}
 }
+
 
 void led_setup() {
 	SET_BIT(DDRC, 0);

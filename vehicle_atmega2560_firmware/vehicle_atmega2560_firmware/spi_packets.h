@@ -18,6 +18,7 @@
 
 #define SPI_BUFFER_SIZE 28
 
+
 typedef struct
 {
 	int16_t motor_pwm;
@@ -63,7 +64,6 @@ typedef struct
 } __attribute__((packed)) spi_miso_data_t;
 
 
-
 #ifdef __cplusplus
 static_assert(sizeof(spi_mosi_data_t) == 15, "spi_mosi_data_t unexpected size, not packed?");
 static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
@@ -75,5 +75,6 @@ _Static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, 
 _Static_assert(sizeof(spi_mosi_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 _Static_assert(sizeof(spi_miso_data_t) + 1 <= SPI_BUFFER_SIZE, "SPI buffer too small");
 #endif
+
 
 #endif /* SPI_PACKETS_H_ */

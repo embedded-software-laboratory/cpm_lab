@@ -5,12 +5,10 @@
  *  Author: cfrauzem
  */ 
 
+
 #include <stdint.h>
 #include "spi.h"
 #include "test_sequence.h"
-
-
-
 
 
 static void led_test(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_miso_data) {
@@ -41,7 +39,7 @@ static void led_test(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_miso_d
 		spi_mosi_data->LED2_period_ticks = 50;
 		spi_mosi_data->LED2_enabled_ticks = 25;
 	}
-	// blink LED 2 2X
+	// blink LED 3 2X
 	else if(tick%500<300) {
 		spi_mosi_data->LED3_period_ticks = 50;
 		spi_mosi_data->LED3_enabled_ticks = 25;
@@ -80,7 +78,7 @@ static void servo_enable_test(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* s
 	// 2. servo disable till reactivated at t=3sec
 	// 3. reset at t=4sec
 	uint32_t tick;
-	uint8_t period	= 4;
+	uint8_t period	= 5;
 	uint8_t on		= 3;
 
 	// 50 ticks per second
@@ -89,10 +87,10 @@ static void servo_enable_test(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* s
 	// servo command translated into pwm
 	// pwm = servo_command + 3000
 	if(tick%(50*period)>50*on) {
-	spi_mosi_data->servo_command = 1;
+		spi_mosi_data->servo_command = 125;
 	}
 	else {
-	spi_mosi_data->servo_command = 0;
+		spi_mosi_data->servo_command = 0;
 	}
 }
 
@@ -136,7 +134,6 @@ static void system_test(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_mis
 	if(s > 200) s = 200;
 	spi_mosi_data->motor_pwm = s;
 }
-
 
 
 void test_sequence(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_miso_data, TestSequenceName testSequenceName)

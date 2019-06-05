@@ -16,6 +16,7 @@
 #ifndef _crc_h
 #define _crc_h
 
+
 #include <stdint.h>
 typedef uint16_t crc;
 
