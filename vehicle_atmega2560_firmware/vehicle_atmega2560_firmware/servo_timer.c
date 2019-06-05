@@ -60,4 +60,8 @@ void servo_timer_setup() {
 	// TOP interrupt for tick timer	
 	SET_BIT(TIMSK3, TOIE3);
 	SET_BIT(TIFR3, TOV3);
+	
+	
+	SET_BIT(DDRD, 7);
+	SET_BIT(PORTD, 7);
 }

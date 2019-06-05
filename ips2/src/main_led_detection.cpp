@@ -28,6 +28,7 @@ struct FrameInfo
     std::vector<double> points_y;
 };
 
+const bool enable_visualization = false;
 
 
 
@@ -96,7 +97,7 @@ void worker_led_detection()
         }
         LED_writer.write(myledPoints);
 
-        queue_visualization.push(frame);
+        if(enable_visualization) queue_visualization.push(frame);
     }
 }
 
@@ -268,7 +269,7 @@ void worker_grab_image()
 int main(int argc, char* argv[])
 {
     std::thread thread_led_detection([](){worker_led_detection();});
-    std::thread thread_visualization([](){worker_visualization();});
+    if(enable_visualization) std::thread thread_visualization([](){worker_visualization();});
     worker_grab_image();
     return 0;
 }

@@ -55,6 +55,8 @@ class Controller
 
     double speed_controller(const double speed_measured, const double speed_target);
 
+    void trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out);
+
     void receive_commands(uint64_t t_now);
 
     void reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
