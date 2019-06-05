@@ -5,14 +5,17 @@
  *  Author: maczijewski
  */ 
 
+
 #include "motor.h"
 #include "util.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+
 #define MOTOR_DIRECTION_BRAKE 0
 #define MOTOR_DIRECTION_FORWARD 1
 #define MOTOR_DIRECTION_REVERSE 2
+
 
 void motor_set_direction(uint8_t direction)
 {
@@ -31,6 +34,7 @@ void motor_set_direction(uint8_t direction)
 	}
 }
 
+
 void motor_set_duty(uint16_t duty) // values from 0 to 400
 {
 	if(duty > 400) {
@@ -38,6 +42,7 @@ void motor_set_duty(uint16_t duty) // values from 0 to 400
 	}
 	OCR4B = duty;
 }
+
 
 void motor_setup()
 {
