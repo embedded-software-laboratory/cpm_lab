@@ -1,0 +1,83 @@
+
+ATmega
+    spi_packets.h, spi_miso_data_t.status_flags
+        Define status bit "previous mosi packet correctly received".
+        Only documentation change, use existing status byte.
+
+
+    New interface between main.c and spi.c:
+
+        Remove spi_send(), spi_receive()
+
+        Remove double buffering, single buffer should be enough.
+
+        void spi_exchange(
+            spi_miso_data_t *packet_send,
+            spi_mosi_data_t *packet_received
+        )
+        
+        Behavior of spi_exchange():
+            Setup SPI send/receive buffers.
+
+            Infinite loop:
+                if (SPI_buffer_index >= SPI_BUFFER_SIZE)
+                    Calculate mosi CRC, determine miso error flag.
+                    Reset spi buffer index, to be ready for the transmission repeat.
+                    If CRC ok, copy spi_mosi_data_t to output.
+
+                if (slave select line has rising edge)
+                    return
+
+    servo_timer.c/h
+        
+        The ATmega no longer keeps its own 50Hz rhythm, the "tick" is obsolete.
+
+        Remove tick_counter
+        Remove uint32_t get_tick()
+        Remove ISR(TIMER3_OVF_vect)
+
+        Rename "servo_timer.c/h" to "servo.c/h"
+
+
+    main.c
+        Replace
+            tick = get_tick()
+            with
+            tick++
+            => tick simply counts the main loop iterations
+        Remove everything related to "safe_mode_flag". Replaced by watchdog.
+        Reorder main loop
+            1) measurements
+            2) spi_exchange()
+            3) apply commands
+            4) watchdog_reset()
+
+
+    watchdog.c/h
+        Timers 1,3,4 in use. Select another timer for the watchdog.
+
+        watchdog_reset()
+            Called in main, prevents the watchdog from acting
+
+        watchdog_setup()
+            Configure timer, timeout 500ms
+
+        ISR(...) // timer overrun triggers watchdog
+            disable motor
+            disable servo
+            enable LEDs
+            wait 20ms (waiting in ISR ok here?)
+            disable LEDs => disconnect flash
+
+
+Raspberry
+    Update Raspberry code! Changed in software/master.
+
+    spi.c, spi_transfer()
+        slave select / chip select
+            Toggle outside the loop
+            SS stays low between repeats, rising SS indicates end of communication phase
+        termination condition
+            CRC check (already exists)
+            AND slave CRC check flag in miso (new)
+        add delay after SPI_BUFFER_SIZE bytes, to give ATmega time to calculate CRC
