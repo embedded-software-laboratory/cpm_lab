@@ -39,9 +39,9 @@ set(SOURCE_CPM
 
 
 # Configuration for RTI Connext
-include_directories($ENV{NDDSHOME}/include)
-include_directories($ENV{NDDSHOME}/include/ndds)
-include_directories($ENV{NDDSHOME}/include/ndds/hpp)
+include_directories(SYSTEM $ENV{NDDSHOME}/include)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
+include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
 link_libraries(dl nsl m pthread rt)
 link_libraries(nddscpp2 nddsc nddscore)
 include_directories(dds)

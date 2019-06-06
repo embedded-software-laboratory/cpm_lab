@@ -13,8 +13,6 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 /**
  * Tests:
  * - Tests if the timer can be stopped by sending a stop signal
@@ -67,7 +65,7 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
         rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
         //Send stop signal
-        trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
+        trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
         writer_SystemTrigger.write(trigger);
     });
 

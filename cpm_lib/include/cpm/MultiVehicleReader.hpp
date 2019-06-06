@@ -33,9 +33,9 @@ namespace cpm
                 if(sample.info().valid()) 
                 {
                     uint8_t vehicle = sample.data().vehicle_id();
-                    auto pos = std::distance(vehicle_ids.begin(), std::find(vehicle_ids.begin(), vehicle_ids.end(), vehicle));
+                    long pos = std::distance(vehicle_ids.begin(), std::find(vehicle_ids.begin(), vehicle_ids.end(), vehicle));
 
-                    if (pos < vehicle_ids.size() && pos >= 0) {
+                    if (pos < static_cast<long>(vehicle_ids.size()) && pos >= 0) {
                         ring_buffers.at(pos).at(buffer_indices.at(pos)) = sample.data();
                         buffer_indices.at(pos) = (buffer_indices.at(pos) + 1) % CPM_READER_RING_BUFFER_SIZE;
                     }
@@ -57,7 +57,7 @@ namespace cpm
 
             //All buffer indices should be 0 when the program is started
             //Also: Create vehicle id list from 1 to num_of_vehicles
-            for (size_t pos = 0; pos < num_of_vehicles; ++pos) {
+            for (long pos = 0; pos < static_cast<long>(num_of_vehicles); ++pos) {
                 buffer_indices.at(pos) = 0;
                 vehicle_ids.push_back(pos + 1);
             }
@@ -78,7 +78,7 @@ namespace cpm
             vehicle_ids = _vehicle_ids;
 
             //All buffer indices should be 0 when the program is started
-            for (size_t pos = 0; pos < num_of_vehicles; ++pos) {
+            for (long pos = 0; pos < static_cast<long>(num_of_vehicles); ++pos) {
                 buffer_indices.at(pos) = 0;
             }
         }
@@ -106,7 +106,7 @@ namespace cpm
             sample_out.clear();
             sample_age_out.clear();
 
-            for (size_t i = 0; i < vehicle_ids.size(); ++i) {
+            for (long i = 0; i < static_cast<long>(vehicle_ids.size()); ++i) {
                 T sample = T();
                 sample.header().create_stamp().nanoseconds(0);
                 sample_out[vehicle_ids.at(i)] = sample;
@@ -114,8 +114,8 @@ namespace cpm
             }
 
             // select samples
-            for (size_t pos = 0; pos < vehicle_ids.size(); ++pos) {
-                for (size_t i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
+            for (long pos = 0; pos < static_cast<long>(vehicle_ids.size()); ++pos) {
+                for (long i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
                 {
                     auto& current_sample = 
                         ring_buffers

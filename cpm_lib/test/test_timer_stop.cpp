@@ -12,8 +12,6 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 /**
  * Tests:
  * - Sends a stop signal but not a start signal
@@ -58,7 +56,7 @@ TEST_CASE( "TimerFD_stop_signal" ) {
 
         //Send stop signal
         SystemTrigger trigger;
-        trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
+        trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
         writer_SystemTrigger.write(trigger);
     });
 

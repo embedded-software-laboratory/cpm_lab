@@ -109,7 +109,7 @@ TEST_CASE( "Logging" ) {
     std::string second_test_escaped = std::string(second_test);
     second_test_escaped += with_more;
     std::string escaped_quote = std::string("\"\"");
-    int pos = 0;
+    size_t pos = 0;
     while ((pos = second_test_escaped.find('"', pos)) != std::string::npos) {
         second_test_escaped.replace(pos, 1, escaped_quote);
         pos += escaped_quote.size();
