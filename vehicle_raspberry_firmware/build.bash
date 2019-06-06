@@ -1,20 +1,20 @@
 #!/bin/bash
 
 
-mkdir build
-mkdir build_sim
+mkdir build_arm
+mkdir build_x64_sim
 
 
-cd build_sim
-cmake .. -DBUILD_X64=ON
+pushd build_x64_sim
+cmake .. -DBUILD_X64=ON -DBUILD_SIMULATION=ON
 make -j20
-cd ..
+popd
 
 
-cd build
-cmake .. -DBUILD_X64=OFF -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
+pushd build_arm
+cmake .. -DBUILD_X64=OFF -DBUILD_SIMULATION=OFF -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
 make -j20
-cd ..
+popd
 
 exit
 
