@@ -11,6 +11,7 @@ file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
     include/cpm/CommandLineReader.hpp
+    src/CommandLineReader.cpp
     include/cpm/get_topic.hpp
     include/cpm/Parameter.hpp
     include/cpm/ParameterReceiver.hpp
