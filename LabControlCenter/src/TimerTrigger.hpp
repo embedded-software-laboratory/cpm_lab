@@ -12,6 +12,7 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "dds/pub/DataWriter.hpp"
 

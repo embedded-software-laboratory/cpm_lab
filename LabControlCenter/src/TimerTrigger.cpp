@@ -1,7 +1,5 @@
 #include "TimerTrigger.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
@@ -129,7 +127,7 @@ bool TimerTrigger::send_next_signal() {
 
 void TimerTrigger::send_stop_signal() {
         SystemTrigger trigger;
-        trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL)); //TODO: Symbol should be part of cpm lib (Timer.hpp)
+        trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
         system_trigger_writer.write(trigger);
 }
 

@@ -1,7 +1,5 @@
 #include "TimerViewUI.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     timer_trigger(timerTrigger)
