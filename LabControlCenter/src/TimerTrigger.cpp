@@ -12,8 +12,12 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
 }
 
 void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
+    bool all_invalid = true; 
+
     for (auto sample : samples) {
         if (sample.info().valid()) {
+            all_invalid = false;
+            
             //Data from the sample to string
             std::string id = sample.data().source_id();
             //Find out the last message timestamp and print it to the UI - this can be useful for debugging purposes
@@ -60,13 +64,12 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 
             lock.unlock();
         }
-        else {
-            std::cout << "invalid sample TODO only send_next if not all invalid" << std::endl; //TODO
-        }
     }
 
     //Check if all vehicles that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep (simulated time only)
-    send_next_signal();
+    if (!all_invalid) {
+        send_next_signal();
+    }
 
     //TODO Check if uint64_t max number is close and stop the program automatically
 }
