@@ -180,7 +180,7 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
     objective_soln = full(nlp_result.f);
     
     save(sprintf('output/optimal_parameters_d_ips_%i_d_local_%i_d_steer_%i_d_mot_%i', n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor),...
-        'parameters_soln','X_soln','sequences', 'objective_soln', 'n_delay_steps_IPS', 'n_delay_steps_local', 'n_delay_steps_command');
+        'parameters_soln','X_soln','sequences', 'objective_soln', 'n_delay_steps_IPS', 'n_delay_steps_local', 'n_delay_steps_steering', 'n_delay_steps_motor');
     
     fprintf('New Parameters:\n')
     fprintf('%f, ', parameters_soln)
