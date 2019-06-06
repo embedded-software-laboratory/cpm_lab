@@ -23,6 +23,7 @@ using std::vector;
 #include "cpm/Reader.hpp"
 #include "cpm/stamp_message.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/CommandLineReader.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -39,12 +40,14 @@ using std::vector;
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2) {
-        std::cerr << "Usage: vehicle_rpi_firmware <vehicle-id>" << std::endl;
+    if(argc < 2) {
+        std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT" << std::endl;
         return 1;
     }
 
-    const int vehicle_id = std::atoi(argv[1]);
+    const int vehicle_id = cpm::cmd_parameter_int("vehicle_id", 0, argc, argv);
+    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+
 
     if(vehicle_id <= 0 || vehicle_id > 25) {
         std::cerr << "Invalid vehicle ID." << std::endl;
@@ -95,7 +98,12 @@ int main(int argc, char *argv[])
     int loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
-    auto update_loop = cpm::Timer::create("vehicle_raspberry_" + std::to_string(vehicle_id), period_nanoseconds, 0, false, allow_simulated_time);
+    auto update_loop = cpm::Timer::create(
+        "vehicle_raspberry_" + std::to_string(vehicle_id), 
+        period_nanoseconds, 0, 
+        false, 
+        allow_simulated_time,
+        enable_simulated_time);
 
     Localization localization;
     Controller controller(vehicle_id, [&](){return update_loop->get_time();});

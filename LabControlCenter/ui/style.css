@@ -18,3 +18,40 @@
     color: white;
     background-color: #f00;
 }
+
+
+#parameters_start_server_toggle{
+    background-image: linear-gradient(#B71C1C);
+    background-color: #B71C1C;
+    color: white;
+}
+
+#parameters_start_server_toggle:checked{
+    background-image: linear-gradient(#33691E);
+    background-color: #33691E;
+    color: white;
+}
+
+#file_chooser_abort{
+    background-image: linear-gradient(#B71C1C);
+    background-color: #B71C1C;
+    color: white;
+}
+
+#file_chooser_load{
+    background-image: linear-gradient(#33691E);
+    background-color: #33691E;
+    color: white;
+}
+
+#file_saver_abort{
+    background-image: linear-gradient(#B71C1C);
+    background-color: #B71C1C;
+    color: white;
+}
+
+#file_saver_save{
+    background-image: linear-gradient(#33691E);
+    background-color: #33691E;
+    color: white;
+}

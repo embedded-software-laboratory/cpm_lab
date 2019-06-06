@@ -5,6 +5,7 @@
  *  Author: maczijewski
  */ 
 
+
 #define BNO055_ADDRESS (0x28)
 
 
@@ -37,6 +38,7 @@
 #include <stdbool.h>
 #include "twi.h"
 #include "util.h"
+
 
 bool imu_setup() {
 	
@@ -102,7 +104,6 @@ bool imu_setup() {
 	_delay_ms(10);
 	
 	
-	
 	// activate register page 0
 	buffer[0] = BNO055_REGISTER_PAGE_ADDR;
 	buffer[1] = 0;
@@ -113,11 +114,12 @@ bool imu_setup() {
 	_delay_ms(10);
 
 
-	
 	return true;	
 }
 
+
 static int32_t imu_yaw_accumulator = 0;
+
 
 bool imu_read(
 	uint16_t* imu_yaw,
@@ -126,8 +128,7 @@ bool imu_read(
 	int16_t* imu_acceleration_left,
 	int16_t* imu_acceleration_up
 )
-{
-	
+{	
 	bool success_flag = true;
 	uint8_t buffer[10];
 	

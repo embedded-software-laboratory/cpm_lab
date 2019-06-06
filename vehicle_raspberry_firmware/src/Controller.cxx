@@ -1,6 +1,7 @@
 #include "Controller.hpp"
 #include <iostream>
 #include "TrajectoryInterpolation.hpp"
+#include "cpm/Parameter.hpp"
 
 
 template<typename T>
@@ -113,6 +114,10 @@ double steering_curvature_calibration(double curvature)
 
 void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
 {
+    const double trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+    const double trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+
+
     // Find active segment
     auto iterator_segment_end = m_trajectory_points.lower_bound(t_now);
     if(iterator_segment_end != m_trajectory_points.end()
@@ -149,7 +154,9 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
             // Linear lateral controller
             const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
             //const double ref_curvature = trajectory_interpolation.curvature;
-            const double curvature = ref_curvature - 7.0 * lateral_error - 4.0 * yaw_error;
+            const double curvature = ref_curvature 
+                - trajectory_controller_lateral_P_gain * lateral_error 
+                - trajectory_controller_lateral_D_gain * yaw_error;
 
             // Linear longitudinal controller
             const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;

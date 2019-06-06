@@ -5,14 +5,14 @@
  *  Author: maczijewski
  */ 
 
+
 #include "adc.h"
 #include "util.h"
 #include <util/delay.h>
 #include <avr/io.h>
 
+
 void adc_measure(uint16_t* battery_voltage, uint16_t* current_sense) {
-	
-	
 	
 	
 	// battery measurement	
@@ -22,7 +22,7 @@ void adc_measure(uint16_t* battery_voltage, uint16_t* current_sense) {
 	while (ADCSRA & (1 << ADSC) );
 	*battery_voltage = ADC;	
 	
-	
+
 	_delay_us(125);
 	
 	
@@ -32,7 +32,6 @@ void adc_measure(uint16_t* battery_voltage, uint16_t* current_sense) {
 	ADCSRA |= (1 << ADSC);
 	while (ADCSRA & (1 << ADSC) );
 	*current_sense = ADC;
-	
 }
 
 

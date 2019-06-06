@@ -19,6 +19,7 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
 */
 
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -26,6 +27,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <compat/twi.h>
+
 
 #ifndef cbi
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
@@ -60,6 +62,7 @@ static volatile uint8_t twi_rxBufferIndex;
 
 static volatile uint8_t twi_error;
 
+
 /* 
  * Function twi_init
  * Desc     readys twi pins and sets twi bitrate
@@ -90,6 +93,7 @@ void twi_init(void)
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
 }
 
+
 /* 
  * Function twi_disable
  * Desc     disables twi pins
@@ -118,6 +122,7 @@ void twi_setAddress(uint8_t address)
   TWAR = address << 1;
 }
 
+
 /* 
  * Function twi_setClock
  * Desc     sets twi bit rate
@@ -133,6 +138,7 @@ void twi_setFrequency(uint32_t frequency)
   note: TWBR should be 10 or higher for master mode
   It is 72 for a 16mhz Wiring board with 100kHz TWI */
 }
+
 
 /* 
  * Function twi_readFrom
@@ -207,6 +213,7 @@ uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length, uint8_t sen
 	
   return length;
 }
+
 
 /* 
  * Function twi_writeTo
@@ -289,6 +296,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, uint8_t wait
     return 4;	// other twi error
 }
 
+
 /* 
  * Function twi_transmit
  * Desc     fills slave tx buffer with data
@@ -322,6 +330,7 @@ uint8_t twi_transmit(const uint8_t* data, uint8_t length)
   return 0;
 }
 
+
 /* 
  * Function twi_attachSlaveRxEvent
  * Desc     sets function called before a slave read operation
@@ -333,6 +342,7 @@ void twi_attachSlaveRxEvent( void (*function)(uint8_t*, int) )
   twi_onSlaveReceive = function;
 }
 
+
 /* 
  * Function twi_attachSlaveTxEvent
  * Desc     sets function called before a slave write operation
@@ -343,6 +353,7 @@ void twi_attachSlaveTxEvent( void (*function)(void) )
 {
   twi_onSlaveTransmit = function;
 }
+
 
 /* 
  * Function twi_reply
@@ -359,6 +370,7 @@ void twi_reply(uint8_t ack)
 	  TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
   }
 }
+
 
 /* 
  * Function twi_stop
@@ -381,6 +393,7 @@ void twi_stop(void)
   twi_state = TWI_READY;
 }
 
+
 /* 
  * Function twi_releaseBus
  * Desc     releases bus control
@@ -395,6 +408,7 @@ void twi_releaseBus(void)
   // update twi state
   twi_state = TWI_READY;
 }
+
 
 ISR(TWI_vect)
 {
@@ -558,4 +572,3 @@ ISR(TWI_vect)
       break;
   }
 }
-

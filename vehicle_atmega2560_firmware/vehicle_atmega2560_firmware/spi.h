@@ -18,5 +18,4 @@ uint32_t spi_receive(spi_mosi_data_t *packet);
 void spi_setup();
 
 
-
 #endif /* SPI_H_ */

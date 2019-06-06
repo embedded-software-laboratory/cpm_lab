@@ -23,6 +23,7 @@ rtidds/
 /.vscode
 /ParamServer/yaml-cpp
 Log_*.csv
+core
 *.txt
 ips2/debug*.png
 output/

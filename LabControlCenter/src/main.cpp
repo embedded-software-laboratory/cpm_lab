@@ -8,25 +8,37 @@
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ui/right_tabs/TabsViewUI.hpp"
+#include "ui/params/ParamViewUI.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/CommandLineReader.hpp"
 
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <functional>
+
+using namespace std::placeholders;
 
 int main(int argc, char *argv[])
 {
+    //Must be done first, s.t. no class using the logger produces an error
     cpm::Logging::Instance().set_id("LabControlCenter");
 
-    ParameterStorage storage("parameters.yaml");
+    //Read command line parameters (current params: auto_start and config_file)
+    //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready
+
+    std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
+
+    auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);
+    storage->register_on_param_changed_callback(std::bind(&ParameterServer::resend_param_callback, &server, _1));
 
-
-    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv);
+    Glib::RefPtr<Gtk::Application> app = Gtk::Application::create();
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
@@ -42,7 +54,9 @@ int main(int argc, char *argv[])
     );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
-    auto mainWindow = make_shared<MainWindow>(vehicleManualControlUi, monitoringUi, mapViewUi);
+    auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
+    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
+    auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});

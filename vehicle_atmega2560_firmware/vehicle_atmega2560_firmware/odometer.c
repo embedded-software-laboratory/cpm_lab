@@ -5,10 +5,12 @@
  *  Author: maczijewski
  */ 
 
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "util.h"
 #include "odometer.h"
+
 
 static const int8_t direction_lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -22,6 +24,7 @@ static volatile int32_t odometer_count = 0;
 static volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
 static volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
 static volatile uint8_t odometer_buffer_index = 0;
+
 
 // interrupt for hall sensor pin change
 ISR(PCINT2_vect) {
@@ -49,6 +52,7 @@ ISR(PCINT2_vect) {
 	hall_sensor_states_prev = hall_sensor_states_now;
 	timer1_prev = timer1_now;
 }
+
 
 int16_t get_speed() {
 	cli();
@@ -87,7 +91,9 @@ int16_t get_speed() {
 	return average_speed_i16;		
 }
 
+
 int32_t get_odometer_count() { return odometer_count; }
+
 
 void odometer_setup() {
 	// Setup Timer1
