@@ -1,4 +1,4 @@
-function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_command)
+function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor)
 
     %% See 'optimize_parameters.png/tex' for documentation.
 
@@ -30,7 +30,8 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
     
     assert(n_delay_steps_IPS < n_delay_max);
     assert(n_delay_steps_local < n_delay_max);
-    assert(n_delay_steps_command < n_delay_max);
+    assert(n_delay_steps_steering < n_delay_max);
+    assert(n_delay_steps_motor < n_delay_max);
     assert(n_delay_max < length(sequences(1).x));
     
     for i = 1:length(sequences)
@@ -38,8 +39,8 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
         sequences(i).y                = circshift(sequences(i).y,                 n_delay_steps_IPS,     1);
         sequences(i).yaw              = circshift(sequences(i).yaw,               n_delay_steps_IPS,     1);
         sequences(i).speed            = circshift(sequences(i).speed,             n_delay_steps_local,   1);
-        sequences(i).steering_command = circshift(sequences(i).steering_command,  n_delay_steps_command, 1);
-        sequences(i).motor_command    = circshift(sequences(i).motor_command,     n_delay_steps_command, 1);
+        sequences(i).steering_command = circshift(sequences(i).steering_command,  n_delay_steps_steering,1);
+        sequences(i).motor_command    = circshift(sequences(i).motor_command,     n_delay_steps_motor,   1);
         sequences(i).battery_voltage  = circshift(sequences(i).battery_voltage,   n_delay_steps_local,   1);
     end
     
@@ -178,7 +179,7 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
     
     objective_soln = full(nlp_result.f);
     
-    save(sprintf('output/optimal_parameters_d_ips_%i_d_local_%i_d_cmd_%i', n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_command),...
+    save(sprintf('output/optimal_parameters_d_ips_%i_d_local_%i_d_steer_%i_d_mot_%i', n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor),...
         'parameters_soln','X_soln','sequences', 'objective_soln', 'n_delay_steps_IPS', 'n_delay_steps_local', 'n_delay_steps_command');
     
     fprintf('New Parameters:\n')
