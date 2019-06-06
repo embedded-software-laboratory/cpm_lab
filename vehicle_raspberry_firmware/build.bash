@@ -1,29 +1,22 @@
 #!/bin/bash
 
 
-mkdir build_x64_sim
-mkdir build_arm_sim
-mkdir build_arm
+mkdir build
+mkdir build_sim
 
 
-pushd build_x64_sim
-cmake .. -DBUILD_SIMULATION=ON -DBUILD_ARM=OFF
+cd build_sim
+cmake .. -DBUILD_X64=ON
 make -j20
-popd
+cd ..
 
 
-pushd build_arm_sim
-cmake .. -DBUILD_SIMULATION=ON -DBUILD_ARM=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
+cd build
+cmake .. -DBUILD_X64=OFF -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
 make -j20
-popd
+cd ..
 
-
-pushd build_arm
-cmake .. -DBUILD_SIMULATION=OFF -DBUILD_ARM=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
-make -j20
-popd
-
-
+exit
 
 
 cp build/vehicle_rpi_firmware package
