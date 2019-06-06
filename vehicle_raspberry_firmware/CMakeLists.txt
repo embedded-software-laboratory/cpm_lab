@@ -64,8 +64,11 @@ if(BUILD_X64) # x64 options
     add_executable(vehicle_rpi_firmware ${SOURCE})
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
-    target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
+
+
+
     SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
+
 else() # ARM/Raspberry options
     link_directories(../../cpm_base/cpm_lib/build_arm/)
 
@@ -73,6 +76,11 @@ else() # ARM/Raspberry options
     add_executable(vehicle_rpi_firmware ${SOURCE})
 
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -march=armv6 -mfpu=vfp -mfloat-abi=hard -mlong-calls)
+endif()
+
+
+if(BUILD_SIMULATION)
+    target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
 endif()
 
 

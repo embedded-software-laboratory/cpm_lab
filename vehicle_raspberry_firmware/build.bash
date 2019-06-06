@@ -2,11 +2,18 @@
 
 
 mkdir build_arm
+mkdir build_arm_sim
 mkdir build_x64_sim
 
 
 pushd build_x64_sim
 cmake .. -DBUILD_X64=ON -DBUILD_SIMULATION=ON
+make -j20
+popd
+
+
+pushd build_arm_sim
+cmake .. -DBUILD_X64=OFF -DBUILD_SIMULATION=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
 make -j20
 popd
 
