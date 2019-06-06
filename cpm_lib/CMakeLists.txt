@@ -10,6 +10,8 @@ include_directories(include)
 file(GLOB SOURCE_DDS "dds/*")
 
 set(SOURCE_CPM
+    include/cpm/CommandLineReader.hpp
+    src/CommandLineReader.cpp
     include/cpm/get_topic.hpp
     include/cpm/Parameter.hpp
     include/cpm/ParameterReceiver.hpp
@@ -73,6 +75,7 @@ if(NOT BUILD_ARM)
         test/test_VehicleIDFilteredTopic.cpp
         test/test_Reader.cpp
         test/test_MultiVehicleReader.cpp
+        test/test_CommandLineReader.cpp
     )
 
     target_link_libraries(unittest cpm)

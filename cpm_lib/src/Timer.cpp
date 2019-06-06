@@ -11,15 +11,16 @@ std::shared_ptr<Timer> Timer::create(
     uint64_t period_nanoseconds, 
     uint64_t offset_nanoseconds,
     bool wait_for_start, 
-    bool simulated_time_allowed
+    bool simulated_time_allowed,
+    bool simulated_time
 ) 
 {
     // Switch between FD and simulated time
-    if (cpm::parameter_bool("simulated_time") && simulated_time_allowed) {
+    if (simulated_time && simulated_time_allowed) {
         //Use timer for simulated time
         return std::make_shared<TimerSimulated>(node_id, period_nanoseconds, offset_nanoseconds);
     }
-    else if (cpm::parameter_bool("simulated_time") && !simulated_time_allowed) {
+    else if (simulated_time && !simulated_time_allowed) {
         Logging::Instance().write("Timer Error: simulated time requested but not allowed.");
         fprintf(stderr, "Error: simulated time requested but not allowed.\n");
         fflush(stderr); 
