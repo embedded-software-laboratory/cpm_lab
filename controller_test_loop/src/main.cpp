@@ -13,12 +13,14 @@
 #include "test_loop_trajectory.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/CommandLineReader.hpp"
 
 
 
-int main()
+int main(int argc, char *argv[])
 {
     cpm::Logging::Instance().set_id("controller_test_loop");
+    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
     // Load trajectory data
     std::vector<TrajectoryPoint> trajectory_points;
@@ -95,7 +97,7 @@ int main()
 
 
     // Control loop, which sends trajectory commands to the vehicles
-    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, 0, false, true);
+    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, 0, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(_mutex);
 

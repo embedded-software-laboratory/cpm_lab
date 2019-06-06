@@ -7,7 +7,7 @@ TrajectoryCommand::TrajectoryCommand()
     topic_vehicleCommandTrajectory)
 )
 {
-    timer = cpm::Timer::create("LabControlCenter_TrajectoryCommand",40000000ull, 0, false,true);
+    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand",40000000ull, 0, false);
 
     timer->start_async([this](uint64_t t_now){
         send_trajectory(t_now);
@@ -18,6 +18,14 @@ TrajectoryCommand::TrajectoryCommand()
 TrajectoryCommand::~TrajectoryCommand()
 {
     timer->stop();
+}
+
+void TrajectoryCommand::init() {
+    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand",40000000ull, 0, false);
+
+    timer->start_async([this](uint64_t t_now){
+        send_trajectory(t_now);
+    });
 }
 
 int find_path_loop_start_index(std::vector<Point> path)
@@ -59,7 +67,7 @@ inline double vector_length(double x, double y)
 void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Point> path, int n_loop)
 {
     if(path.size() < 3) return;
-
+    if(timer == nullptr) return;
 
 
     /********** Generate trajectory from given path ********/

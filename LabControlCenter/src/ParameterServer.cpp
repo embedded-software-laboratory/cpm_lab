@@ -3,7 +3,7 @@
 
 using namespace std::placeholders;
 
-ParameterServer::ParameterServer(ParameterStorage& _storage):
+ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
     parameterTopic(cpm::get_topic<Parameter>("parameter")),
     parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
     writer(
@@ -20,6 +20,10 @@ ParameterServer::ParameterServer(ParameterStorage& _storage):
 {
 }
 
+void ParameterServer::resend_param_callback(std::string name) {
+    handleSingleParamRequest(name);
+}
+
 void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
@@ -29,13 +33,11 @@ void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterReques
 }
 
 void ParameterServer::handleSingleParamRequest(std::string name) {
-    std::cout << "Got request: " << name << std::endl;
-
     Parameter param = Parameter();
     param.name(name);
 
     bool boolParam;
-    if(storage.get_parameter_bool(name, boolParam)) {
+    if(storage->get_parameter_bool(name, boolParam)) {
         param.type(ParameterType::Bool);
         param.value_bool(boolParam);
 
@@ -44,7 +46,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 
     int32_t intParam;
-    if(storage.get_parameter_int(name, intParam)) {
+    if(storage->get_parameter_int(name, intParam)) {
         //Create data to send
         std::vector<int32_t> stdInts;
         stdInts.push_back(intParam);
@@ -59,7 +61,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 
     double doubleParam;
-    if(storage.get_parameter_double(name, doubleParam)) {
+    if(storage->get_parameter_double(name, doubleParam)) {
         //Create data to send
         std::vector<double> stdDoubles;
         stdDoubles.push_back(doubleParam);
@@ -74,7 +76,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 
     std::string stringParam;
-    if(storage.get_parameter_string(name, stringParam)) {
+    if(storage->get_parameter_string(name, stringParam)) {
         param.type(ParameterType::String);
         param.value_string(stringParam);
         
@@ -84,7 +86,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 
     std::vector<int32_t> intParams;
-    if(storage.get_parameter_ints(name, intParams)) {
+    if(storage->get_parameter_ints(name, intParams)) {
         //Create data to send
         rti::core::vector<int32_t> ints(intParams);
 
@@ -97,7 +99,7 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     }
 
     std::vector<double> doubleParams;
-    if(storage.get_parameter_doubles(name, doubleParams)) {
+    if(storage->get_parameter_doubles(name, doubleParams)) {
         //Create data to send
         rti::core::vector<double> doubles(doubleParams);
 
