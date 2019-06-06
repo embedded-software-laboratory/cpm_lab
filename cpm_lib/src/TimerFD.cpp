@@ -10,8 +10,6 @@
 #include <stdint.h>
 #include "cpm/get_topic.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 namespace cpm {
 
     TimerFD::TimerFD(

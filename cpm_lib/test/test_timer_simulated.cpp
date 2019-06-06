@@ -16,8 +16,6 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-#define TRIGGER_STOP_SYMBOL (0xffffffffffffffffull)
-
 /**
  * Tests:
  * - Does the source ID match the sender ID (data remains unchanged, no other data was received during the test)
@@ -109,7 +107,7 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
         waitset.wait();
 
         SystemTrigger stop_trigger;
-        stop_trigger.next_start(TimeStamp(TRIGGER_STOP_SYMBOL));
+        stop_trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
         writer_SystemTrigger.write(stop_trigger);
     });
 

@@ -14,6 +14,8 @@
 
 namespace cpm
 {
+    constexpr uint64_t TRIGGER_STOP_SYMBOL = (0xffffffffffffffffull);
+
     class Timer
     {
     protected:
