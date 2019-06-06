@@ -24,8 +24,6 @@ include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
 
 
 set(SOURCE_BASE
-    src/bcm2835.c
-    src/bcm2835.h
     src/main.cxx
     src/SensorCalibration.cxx
     src/SensorCalibration.hpp
@@ -35,8 +33,6 @@ set(SOURCE_BASE
     src/Controller.hpp
     src/TrajectoryInterpolation.cxx
     src/TrajectoryInterpolation.hpp
-    src/spi.c
-    src/spi.h
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c
 )
@@ -53,6 +49,10 @@ if(BUILD_SIMULATION)
 else() 
     set(SOURCE
         ${SOURCE_BASE}
+        src/bcm2835.c
+        src/bcm2835.h
+        src/spi.c
+        src/spi.h
     )
 endif()
 
