@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-option(BUILD_X64 OFF)
+option(BUILD_ARM OFF)
 option(BUILD_SIMULATION OFF)
 
 add_definitions(-Wall -Wextra)
@@ -57,25 +57,18 @@ else()
 endif()
 
 
-if(BUILD_X64) # x64 options
-    link_directories(../../cpm_base/cpm_lib/build/)
 
-    link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
-    add_executable(vehicle_rpi_firmware ${SOURCE})
-
-    target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
-
-
-
-    SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
-
-else() # ARM/Raspberry options
+if(BUILD_ARM)
     link_directories(../../cpm_base/cpm_lib/build_arm/)
-
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
     add_executable(vehicle_rpi_firmware ${SOURCE})
-
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -march=armv6 -mfpu=vfp -mfloat-abi=hard -mlong-calls)
+else()
+    link_directories(../../cpm_base/cpm_lib/build/)
+    link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
+    add_executable(vehicle_rpi_firmware ${SOURCE})
+    target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
+    SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 endif()
 
 
