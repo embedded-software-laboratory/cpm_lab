@@ -290,13 +290,13 @@ void ParamViewUI::params_load_file_handler(std::string filename) {
     read_storage_data();    
 }
 
-void ParamViewUI::params_load_multiple_files_handler() {
+// void ParamViewUI::params_load_multiple_files_handler() {
 
-}
+// }
 
-void ParamViewUI::params_load_params_handler() {
+// void ParamViewUI::params_load_params_handler() {
 
-}
+// }
 
 void ParamViewUI::make_sensitive() {
     parent->set_sensitive(true);
