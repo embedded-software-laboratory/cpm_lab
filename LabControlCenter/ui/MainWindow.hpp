@@ -27,16 +27,16 @@ private:
     Gtk::MenuItem* menu_bar_params_save = nullptr;
     Gtk::MenuItem* menu_bar_params_save_as = nullptr;
     Gtk::MenuItem* menu_bar_params_load_file = nullptr;
-    Gtk::MenuItem* menu_bar_params_load_multiple_files = nullptr;
-    Gtk::MenuItem* menu_bar_params_load_params = nullptr;
+    // Gtk::MenuItem* menu_bar_params_load_multiple_files = nullptr;
+    // Gtk::MenuItem* menu_bar_params_load_params = nullptr;
 
     //Signal handlers for menu bar items
     void on_menu_params_reload_pressed();
     void on_menu_params_save_pressed();
     void on_menu_params_save_as_pressed();
     void on_menu_params_load_file_pressed();
-    void on_menu_params_load_multiple_files_pressed();
-    void on_menu_params_load_params_pressed();
+    // void on_menu_params_load_multiple_files_pressed();
+    // void on_menu_params_load_params_pressed();
 
     //File chooser window
     std::shared_ptr<FileChooserUI> file_chooser_window;
