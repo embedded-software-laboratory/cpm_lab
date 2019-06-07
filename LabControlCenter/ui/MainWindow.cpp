@@ -50,18 +50,22 @@ MainWindow::MainWindow(
     int screen_height = window_LCC->get_screen()->get_height();
     window_LCC->set_default_size((3 * screen_width)/4, (3 * screen_height)/4);
     window_LCC->resize((3 * screen_width)/4, (3 * screen_height)/4);
-    window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
     
 
-    pane2->pack2(*(tabsViewUI->get_parent()),true,true);
-    pane1->pack2(*(monitoringUi->get_parent()),true,true);
+    pane2->pack2(*(tabsViewUI->get_parent()),false,false);
+    pane1->pack2(*(monitoringUi->get_parent()),false,false);
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
         exit(0);
         return false;
     });
+
+    Glib::signal_timeout().connect([&]()->bool{
+        window_LCC->maximize();
+        return false;
+    }, 100);
 
     Glib::signal_timeout().connect([&]()->bool{
         int width = 0;
