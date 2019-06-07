@@ -7,11 +7,13 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
     ready_status_reader(std::bind(&TimerTrigger::ready_status_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<ReadyStatus>("ready"), true),
     system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("system_trigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
 {    
+    current_simulated_time = 0;
+    timer_running.store(false);
 }
 
 void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
     bool all_invalid = true; 
-
+    
     for (auto sample : samples) {
         if (sample.info().valid()) {
             all_invalid = false;
@@ -22,6 +24,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             std::string last_message = get_current_realtime();
 
             std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
+            std::unique_lock<std::mutex> lock2(simulated_time_mutex);
 
             //The LCC is only waiting for a response if:
             //a) TODO The participant has been pre-registered and has not yet sent any message
@@ -61,6 +64,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             ready_status_storage[id] = data;
 
             lock.unlock();
+            lock2.unlock();
         }
     }
 
@@ -73,7 +77,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 }
 
 void TimerTrigger::send_start_signal() {
-    timer_running = true;
+    timer_running.store(true);
 
     if (use_simulated_time) {
         bool signal_sent = send_next_signal();
@@ -88,7 +92,7 @@ void TimerTrigger::send_start_signal() {
 }
 
 bool TimerTrigger::send_next_signal() {
-    if (use_simulated_time && timer_running) {
+    if (use_simulated_time && timer_running.load()) {
         //Find smallest next time step in the storage
         uint64_t smallest_step = 0;
         bool has_data = false;
@@ -99,6 +103,7 @@ bool TimerTrigger::send_next_signal() {
             }
         }
 
+        std::lock_guard<std::mutex> lock(simulated_time_mutex);
         //React according to current data
         if (!has_data) {
             cpm::Logging::Instance().write("LCC Timer: No data or only invalid data received!");
@@ -149,6 +154,8 @@ std::map<string, TimerData> TimerTrigger::get_participant_message_data() {
 void TimerTrigger::get_current_simulated_time(bool& _use_simulated_time, uint64_t& _current_time) {
     uint64_t simulated_copy = use_simulated_time;
     _use_simulated_time = simulated_copy;
+
+    std::lock_guard<std::mutex> lock(simulated_time_mutex);
     uint64_t time_copy = current_simulated_time;
     _current_time = time_copy;
 }

@@ -56,6 +56,8 @@ private:
     std::shared_ptr<TimerTrigger> timer_trigger;
 
     //UI thread
+    void dispatcher_callback();
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
     std::thread ui_thread;
     std::atomic_bool run_thread;
 

@@ -2,7 +2,8 @@
 
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
-    timer_trigger(timerTrigger)
+    timer_trigger(timerTrigger),
+    ui_dispatcher()
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -40,8 +41,9 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     button_start->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_start_callback));
     button_stop->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_stop_callback));
 
+    //Create thread and register dispatcher callback
+    ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
     run_thread.store(true);
-
     ui_thread = std::thread(&TimerViewUI::update_ui, this);
 }
 
@@ -53,50 +55,54 @@ TimerViewUI::~TimerViewUI() {
     }
 }
 
+void TimerViewUI::dispatcher_callback() {
+    //Update treeview
+    for(const auto& entry : timer_trigger->get_participant_message_data()) {
+        std::stringstream step_stream;
+        step_stream << entry.second.next_timestep;
+
+        Glib::ustring id_ustring(entry.first);
+        Glib::ustring last_message_ustring(entry.second.last_message);
+        Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
+        Glib::ustring next_step_ustring(step_stream.str());
+
+        Gtk::TreeModel::Row row;
+        bool entry_exists = false;
+
+        //Search if the entry already exists
+        for (Gtk::TreeModel::iterator iter = timer_list_storage->children().begin(); iter != timer_list_storage->children().end(); ++iter) {
+            row = *iter;
+            if (row[timer_record.column_id] == id_ustring) {
+                entry_exists = true;
+                break;
+            }
+        }
+        //Else create a new entry
+        if (!entry_exists) {
+            row = *(timer_list_storage->append());
+        }
+
+        row[timer_record.column_id] = id_ustring;
+        row[timer_record.column_last_message] = last_message_ustring;
+        row[timer_record.column_waiting_for_response] = waiting_response_ustring;
+        row[timer_record.column_next_step] = next_step_ustring;
+    }
+
+    //Update current time in UI
+    bool use_simulated_time;
+    uint64_t current_simulated_time;
+    timer_trigger->get_current_simulated_time(use_simulated_time, current_simulated_time);
+    if (use_simulated_time) {
+        std::stringstream time_stream;
+        time_stream << current_simulated_time;
+        Glib::ustring step_ustring(time_stream.str());
+        current_timestep_label->set_label(step_ustring);
+    }
+}
+
 void TimerViewUI::update_ui() {
     while (run_thread.load()) {
-        //Update treeview
-        for(const auto& entry : timer_trigger->get_participant_message_data()) {
-            std::stringstream step_stream;
-            step_stream << entry.second.next_timestep;
-
-            Glib::ustring id_ustring(entry.first);
-            Glib::ustring last_message_ustring(entry.second.last_message);
-            Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
-            Glib::ustring next_step_ustring(step_stream.str());
-
-            Gtk::TreeModel::Row row;
-            bool entry_exists = false;
-
-            //Search if the entry already exists
-            for (Gtk::TreeModel::iterator iter = timer_list_storage->children().begin(); iter != timer_list_storage->children().end(); ++iter) {
-                row = *iter;
-                if (row[timer_record.column_id] == id_ustring) {
-                    entry_exists = true;
-                    break;
-                }
-            }
-            //Else create a new entry
-            if (!entry_exists) {
-                row = *(timer_list_storage->append());
-            }
-
-            row[timer_record.column_id] = id_ustring;
-            row[timer_record.column_last_message] = last_message_ustring;
-            row[timer_record.column_waiting_for_response] = waiting_response_ustring;
-            row[timer_record.column_next_step] = next_step_ustring;
-        }
-
-        //Update current time in UI
-        bool use_simulated_time;
-        uint64_t current_simulated_time;
-        timer_trigger->get_current_simulated_time(use_simulated_time, current_simulated_time);
-        if (use_simulated_time) {
-            std::stringstream time_stream;
-            time_stream << current_simulated_time;
-            Glib::ustring step_ustring(time_stream.str());
-            current_timestep_label->set_label(step_ustring);
-        }
+        ui_dispatcher.emit();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }

@@ -28,7 +28,7 @@ struct TimerData {
 class TimerTrigger {
 private:
     bool use_simulated_time = false;
-    bool timer_running = false;
+    std::atomic_bool timer_running;
 
     //Communication objects and callbacks
     void ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples);
@@ -37,6 +37,7 @@ private:
     std::map<string, TimerData> ready_status_storage; //Always stores the highest timestamp that was sent by each participant
     std::mutex ready_status_storage_mutex;
     uint64_t current_simulated_time; //Only makes sense if simulated time is used
+    std::mutex simulated_time_mutex;
 
     /**
      * \brief Get the current time as string in hours:minutes:seconds
