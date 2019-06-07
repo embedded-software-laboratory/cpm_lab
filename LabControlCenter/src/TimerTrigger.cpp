@@ -76,6 +76,12 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
     //TODO Check if uint64_t max number is close and stop the program automatically
 }
 
+uint64_t TimerTrigger::get_current_time_ns() {
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
+}
+
 void TimerTrigger::send_start_signal() {
     timer_running.store(true);
 
@@ -85,7 +91,8 @@ void TimerTrigger::send_start_signal() {
     }
     else {
         SystemTrigger trigger;
-        trigger.next_start(TimeStamp(0));
+
+        trigger.next_start(TimeStamp(get_current_time_ns() + 1000000000ull));
         system_trigger_writer.write(trigger);
         //TODO What if the button is pressed before any participant sent a message?
     }

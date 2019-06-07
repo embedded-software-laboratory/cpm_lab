@@ -85,3 +85,9 @@ add_executable(TimerTestSimulated
 )
 
 target_link_libraries(TimerTestSimulated cpm)
+
+add_executable(TimerTestRealtime
+    test/TimerTestRealtime.cpp
+)
+
+target_link_libraries(TimerTestRealtime cpm)

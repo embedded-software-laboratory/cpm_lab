@@ -51,6 +51,9 @@ private:
      */
     bool send_next_signal();
 
+    //Get the current time in ns
+    uint64_t get_current_time_ns();
+
 public:
     TimerTrigger(bool simulated_time);
 
