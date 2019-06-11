@@ -65,6 +65,9 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 
             lock.unlock();
             lock2.unlock();
+
+            std::cout << "Got " << sample.data().next_start_stamp().nanoseconds() << " from " << id << std::endl;
+            std::cout << "Used " << next_step << std::endl;
         }
     }
 
@@ -74,6 +77,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
     }
 
     //TODO Check if uint64_t max number is close and stop the program automatically
+    //samples.return_loan(); Actually made a difference in one situation
 }
 
 uint64_t TimerTrigger::get_current_time_ns() {
@@ -118,10 +122,11 @@ bool TimerTrigger::send_next_signal() {
         else if (smallest_step < current_simulated_time) {
             cpm::Logging::Instance().write("LCC Timer: At least one participant is out of sync (or its answer was not received)!");
         }
-        else if (smallest_step == current_simulated_time) {
-            cpm::Logging::Instance().write("LCC Timer: Some participants are still in the current timestep, waiting for an answer...");
-        }
         else {
+            if (smallest_step == current_simulated_time) {
+                cpm::Logging::Instance().write("LCC Timer: Some participants are still in the current timestep, waiting for an answer, re-sending signal...");
+            }
+
             //The timer can progress to the next smallest timestep as all participants have performed their computations
             current_simulated_time = smallest_step;
 
