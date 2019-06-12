@@ -1,4 +1,4 @@
-function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor)
+function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor)
 
     %% See 'optimize_parameters.png/tex' for documentation.
 
@@ -152,14 +152,10 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
 
     
     %% Optimization
-    n_iter = 2;
-    for i = 1:n_iter
-        if i < n_iter
-            objective_trust_region = objective + (0.25^i) * sumsqr(init_flat-variables_flat);
-        else
-            objective_trust_region = objective;
-        end
-
+    regularization_weights = [1e-2 1e-9];
+    for i = 1:length(regularization_weights)
+        objective_trust_region = objective + regularization_weights(i) * sumsqr(init_flat-variables_flat);
+        
         nlp = struct('x', variables_flat, 'f', objective_trust_region, 'g', defects);
         nlpsolver = nlpsol('nlpsolver', 'ipopt', nlp);
         nlp_result = nlpsolver(...
@@ -167,6 +163,12 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
             'lbg', zeros(size(defects)), ...
             'ubg', zeros(size(defects)) ...
         );
+    
+        % Check objectives
+        tmp_fn = casadi.Function('tmp_fn', {variables_flat}, {objective, regularization_weights(i) * sumsqr(init_flat-variables_flat)});
+        [original_objective, regularization_objective] = tmp_fn(nlp_result.x)
+    
+    
         init_flat = nlp_result.x;
     end
     
@@ -179,7 +181,7 @@ function optimize_parameters(n_delay_steps_IPS, n_delay_steps_local, n_delay_ste
     
     objective_soln = full(nlp_result.f);
     
-    save(sprintf('output/optimal_parameters_d_ips_%i_d_local_%i_d_steer_%i_d_mot_%i', n_delay_steps_IPS, n_delay_steps_local, n_delay_steps_steering, n_delay_steps_motor),...
+    save(file_name,...
         'parameters_soln','X_soln','sequences', 'objective_soln', 'n_delay_steps_IPS', 'n_delay_steps_local', 'n_delay_steps_steering', 'n_delay_steps_motor');
     
     fprintf('New Parameters:\n')
