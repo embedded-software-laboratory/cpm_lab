@@ -114,7 +114,7 @@ function prepare_measurement_data
 %     grid on
     
     sequences = result_sequences(2:end);
-    save('sequences', 'sequences');
+    save('output/sequences', 'sequences');
     
 end
 

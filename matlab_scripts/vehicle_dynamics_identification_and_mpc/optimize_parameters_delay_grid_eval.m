@@ -55,7 +55,7 @@ function optimize_parameters_delay_grid_eval
     plot(objective_soln_IPS,'o-')
     
     
-    cutoff_objective = quantile(objective_soln(:),18/N);
+    cutoff_objective = quantile(objective_soln(:),6/N);
     filter = objective_soln(:) <= cutoff_objective;
     
     relative_delays_IPS = n_delay_steps_IPS(filter) - n_delay_steps_local(filter);

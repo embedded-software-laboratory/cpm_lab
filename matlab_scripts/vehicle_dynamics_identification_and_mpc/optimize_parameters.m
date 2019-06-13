@@ -4,7 +4,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
 
     addpath('~/casadi-linux-matlabR2014b-v3.4.5')
     import casadi.*
-    sequences = load('sequences.mat');
+    sequences = load('output/sequences.mat');
     sequences = sequences.sequences;
     
     % use random subset for testing
@@ -12,19 +12,8 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
     %sequences = sequences(1:20);
     
     
-    init_parameters = [  0.940000, 0.000000, 0.000000, 2.941200, -2.500000, 16.500000, 0.000000, 1.620000, 5.555600, 0.000000, 0.000000, ]';
-    init_parameters = [  1.002971, -0.136922, 0.235773, 3.857093, -1.167893, 10.345707, -0.796048, 1.114689, 11.214041, 0.053628, 0.018592 ]';
-    init_parameters = [  0.993031, -0.125480, 0.254318, 3.420219, -1.809237, 5.068506, 0.301489, 1.258333, 8.322000, 0.001451, 0.031261 ]';
-    init_parameters = [  0.975630, -0.025596, 0.254035, 3.221276, -1.644736, 7.105890, 0.118146, 1.442459, 9.033599, 0.018313, 0.022002 ]';
-    init_parameters = [  0.976820, -0.031865, 0.257054, 3.239819, -1.690282, 7.508750, 0.098089, 1.456106, 9.947812, 0.011501, 0.027306 ]';
-    init_parameters = [ 0.967812, 0.060636, 0.394950, 3.373651, -1.522835, 8.858272, -0.154539, 1.483766, 6.929098, 0.012479, 0.051342 ]';
-    init_parameters = [ 0.989017, -0.096090, 0.244079, 3.482601, -1.589433, 1.337974, 0.759202, 1.343048, 8.717094, 0.021072, 0.023359 ]';
-    init_parameters = [ 0.990848, -0.112469, 0.206194, 3.469654, -1.623418, 0.851647, 0.829819, 1.329458, 9.466841, 0.021178, 0.018267 ]';
-    init_parameters = [ 1.007092, -0.192156, 0.196791, 3.578965, -1.824687, -64.212418, 9.083594, 1.369818, 12.023127, 0.033166, -0.013745 ]';
-    init_parameters = [ 1.007419, -0.191607, 0.199668, 3.590788, -1.816570, -9.134298, 2.269441, 1.365857, 12.233076, 0.033411, -0.012818 ]';
-    
-    % result for optimized delays (1,0,5,5)
-    init_parameters = [ 1.015767, -0.108203, 0.260438, 3.561361, -2.306952, -9.107620, 2.487518, 1.304803, 100.313855, 0.034195, -0.005756 ]';
+    % optimal delays (0,0,4,4)
+    init_parameters = [ 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 ]';
     
 
     
@@ -71,7 +60,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
             SX.sym(['y_' num2str(i_sequence)], n_sequence_length, 1) ...
             SX.sym(['yaw_' num2str(i_sequence)], n_sequence_length, 1) ...
             SX.sym(['v_' num2str(i_sequence)], n_sequence_length, 1) ...
-            SX.sym(['del_' num2str(i_sequence)], n_sequence_length, 1) ...
+            %SX.sym(['del_' num2str(i_sequence)], n_sequence_length, 1) ...
         ];
     end
     
@@ -129,7 +118,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
             sequences(i_sequence).y(1) ...
             sequences(i_sequence).yaw(1) ...
             sequences(i_sequence).speed(1) ...
-            sequences(i_sequence).steering_command(1) ...
+            %sequences(i_sequence).steering_command(1) ...
         ];
     
         U_sim = [ ...
