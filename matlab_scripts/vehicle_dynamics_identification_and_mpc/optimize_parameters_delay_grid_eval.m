@@ -55,12 +55,19 @@ function optimize_parameters_delay_grid_eval
     plot(objective_soln_IPS,'o-')
     
     
-    cutoff_objective = quantile(objective_soln(:),12/N);
+    cutoff_objective = quantile(objective_soln(:),18/N);
     filter = objective_soln(:) <= cutoff_objective;
     
-    relative_delays_local = n_delay_steps_local(filter) - n_delay_steps_IPS(filter);
-    relative_delays_steering = n_delay_steps_steering(filter) - n_delay_steps_IPS(filter);
-    relative_delays_motor = n_delay_steps_motor(filter) - n_delay_steps_IPS(filter);
+    relative_delays_IPS = n_delay_steps_IPS(filter) - n_delay_steps_local(filter);
+    relative_delays_local = n_delay_steps_local(filter) - n_delay_steps_local(filter);
+    relative_delays_steering = n_delay_steps_steering(filter) - n_delay_steps_local(filter);
+    relative_delays_motor = n_delay_steps_motor(filter) - n_delay_steps_local(filter);
+    
+    %% Results
+    % IPS delay: 1 sample
+    % local delay: 0 samples
+    % steering delay: 5 samples
+    % motor delay: 5 samples
     
 end
 
