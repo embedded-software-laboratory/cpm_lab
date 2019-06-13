@@ -36,7 +36,7 @@ class IpsPipeline
     std::thread visualization_thread;
 
 public:
-    IpsPipeline();
+    IpsPipeline(const bool enable_visualization);
     void apply(LedPoints led_points);
     cv::Mat visualization(const IpsVisualizationInput &input);
     void visualization_loop();
