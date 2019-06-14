@@ -274,7 +274,11 @@ int main(int argc, char* argv[])
     enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
 
     std::thread thread_led_detection([](){worker_led_detection();});
-    if(enable_visualization) std::thread thread_visualization([](){worker_visualization();});
+    std::thread thread_visualization;
+    if(enable_visualization)
+    {
+        thread_visualization = std::thread([](){worker_visualization();});
+    }
     worker_grab_image();
     return 0;
 }
