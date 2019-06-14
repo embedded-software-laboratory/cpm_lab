@@ -27,7 +27,7 @@ classdef MpcController
             addpath('~/casadi-linux-matlabR2014b-v3.4.5')
             import casadi.*
             
-            var_x0 = SX.sym('x', 1, 5);
+            var_x0 = SX.sym('x', 1, 4);
             var_u = SX.sym('ui', Hu, 3);
             var_momentum = SX.sym('M', Hu, 3);
             var_params = SX.sym('p', length(parameters), 1);
@@ -88,11 +88,11 @@ classdef MpcController
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
             
             
-            learning_rate = 3;
-            momentum_rate = 0.7;
+            learning_rate = 1;
+            momentum_rate = 0.6;
                 
             tic
-            for j = 1:50
+            for j = 1:100
                 [trajectory_x, trajectory_y, objective, momentum_next, u_next] = ...
                     obj.mpc_fn_compiled(state, obj.u_soln, obj.momentum, obj.parameters, ...
                     reference_trajectory_x, reference_trajectory_y, learning_rate, momentum_rate);
