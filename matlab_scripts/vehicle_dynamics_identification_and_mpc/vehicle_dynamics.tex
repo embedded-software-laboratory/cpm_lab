@@ -2,7 +2,7 @@
 This is an end-to-end, grey-box model for the vehicle dynamics. The model parameters are not measured directly, but optimized to best fit the vehicle behavior.
 
 \begin{align*}
-\boldsymbol{x} &= [p_x, p_y, \psi, v, \delta] \\
+\boldsymbol{x} &= [p_x, p_y, \psi, v] \\
 \boldsymbol{u} &= [f, \delta_{ref}, V] \\ 
 \end{align*}
 
@@ -14,7 +14,6 @@ This is an end-to-end, grey-box model for the vehicle dynamics. The model parame
  $p_y$ & IPS y-position   \\ 
  $\psi$ & IPS yaw angle  \\ 
  $v$ & Odometer Speed  \\ 
- $\delta$ & Dimensionless steering state \\ 
  $f$ & Dimensionless motor command  \\ 
  $\delta_{ref}$ & Dimensionless steering command  \\ 
  $V$ & Battery voltage  \\ 
@@ -23,11 +22,10 @@ This is an end-to-end, grey-box model for the vehicle dynamics. The model parame
 
 
 \begin{align*}
-\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \cos(\psi + p_3 \cdot \delta + p_{11}) \\
-\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot \delta^2) \cdot \sin(\psi + p_3 \cdot \delta + p_{11}) \\
-\dot{\psi} &= p_4 \cdot v \cdot \delta \\
-\dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8} \\
-\dot{\delta} &= p_9 \cdot (-\delta + \delta_{ref} + p_{10})
+\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \cos(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
+\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \sin(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
+\dot{\psi} &= p_4 \cdot v \cdot (\delta_{ref} + p_{9}) \\
+\dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8}
 \end{align*}
 
 This is a kinematic bicycle model with some added terms to account for various errors.
@@ -36,11 +34,10 @@ This is a kinematic bicycle model with some added terms to account for various e
 \item $p_1$: Compensate calibration error between IPS speed and odometer speed. 
 \item $(1+p_2 \cdot \delta^2)$: Compensate for speed differences due to different reference points between the IPS and odometer. The formulation is simplified with a second-order Taylor approximation.
 \item $p_3$: Side slip angle (Schwimmwinkel) due to steering.
-\item $p_{11}$: IPS Yaw calibration error.
+\item $p_{10}$: IPS Yaw calibration error.
 \item $p_{4}$: Unit conversion for the steering state.
 \item $p_{5}$: Speed low pass (PT1).
 \item $p_{6}, p_{7}$: Motor strength depends on the battery voltage.
 \item $p_{8}$: Compensate non-linear steady-state speed.
-\item $p_{9}$: Steering low pass (PT1).
-\item $p_{10}$: Steering misalignment correction.
+\item $p_{9}$: Steering misalignment correction.
 \end{itemize}
