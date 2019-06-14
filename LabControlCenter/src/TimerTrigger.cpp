@@ -65,9 +65,6 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 
             lock.unlock();
             lock2.unlock();
-
-            std::cout << "Got " << sample.data().next_start_stamp().nanoseconds() << " from " << id << std::endl;
-            std::cout << "Used " << next_step << std::endl;
         }
     }
 
@@ -106,11 +103,13 @@ bool TimerTrigger::send_next_signal() {
     if (use_simulated_time && timer_running.load()) {
         //Find smallest next time step in the storage
         uint64_t smallest_step = 0;
+        bool first_data = true;
         bool has_data = false;
         for (auto const& pair : ready_status_storage) {
-            if (smallest_step == 0 || smallest_step > pair.second.next_timestep) {
+            if (first_data || smallest_step > pair.second.next_timestep) {
                 smallest_step = pair.second.next_timestep;
                 has_data = true;
+                first_data = false;
             }
         }
 
