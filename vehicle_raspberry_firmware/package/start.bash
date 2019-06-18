@@ -1,12 +1,14 @@
 #!/bin/bash
 
 
-export IP_SELF="$(hostname -i)"
+export IP_SELF="$(hostname -I)"
 
 echo IP_SELF
 echo $IP_SELF
 
-export VEHICLE_ID="$(cat vehicle_id_map/$IP_SELF)"
+export VEHICLE_ID="$(hostname -I | tail -c 4)"
+export VEHICLE_ID="$(echo $VEHICLE_ID)"
+
 
 echo VEHICLE_ID
 echo $VEHICLE_ID

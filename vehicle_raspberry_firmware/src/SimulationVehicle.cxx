@@ -79,9 +79,8 @@ spi_miso_data_t SimulationVehicle::update(
 
     yaw_measured += 1e-4 * frand(); // simulate random biased gyro drift
 
-    if(yaw_measured > 0)       yaw_measured -= 2*M_PI;
-    if(yaw_measured < -2*M_PI) yaw_measured += 2*M_PI;
-
+    if(yaw_measured > 2*M_PI) yaw_measured -= 2*M_PI;
+    if(yaw_measured < 0)      yaw_measured += 2*M_PI;
 
     spi_miso_data.tick                      = tick;
     spi_miso_data.odometer_steps            = distance/0.003122;

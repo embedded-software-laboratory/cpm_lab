@@ -10,6 +10,7 @@ using std::vector;
 
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
+#include <rti/config/Logger.hpp>
 #include <rti/util/util.hpp> // for sleep()
 
 #include "VehicleObservation.hpp"
@@ -40,6 +41,9 @@ using std::vector;
 
 int main(int argc, char *argv[])
 {
+    //rti::config::Logger::instance().verbosity(rti::config::Verbosity::STATUS_ALL);
+    rti::config::Logger::instance().verbosity(rti::config::Verbosity::WARNING);
+
     if(argc < 2) {
         std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT" << std::endl;
         return 1;

@@ -9,6 +9,7 @@
 #include <ThreadSafeQueue.hpp>
 #include "LedPoints.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/CommandLineReader.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -28,8 +29,7 @@ struct FrameInfo
     std::vector<double> points_y;
 };
 
-const bool enable_visualization = false;
-
+bool enable_visualization;
 
 
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
@@ -268,8 +268,17 @@ void worker_grab_image()
 
 int main(int argc, char* argv[])
 {
+    if(argc < 2) {
+        std::cout << "To enable visualization use parameter --visualization=1" << std::endl;
+    }
+    enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
+
     std::thread thread_led_detection([](){worker_led_detection();});
-    if(enable_visualization) std::thread thread_visualization([](){worker_visualization();});
+    std::thread thread_visualization;
+    if(enable_visualization)
+    {
+        thread_visualization = std::thread([](){worker_visualization();});
+    }
     worker_grab_image();
     return 0;
 }

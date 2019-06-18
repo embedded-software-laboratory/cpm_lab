@@ -112,12 +112,15 @@ double steering_curvature_calibration(double curvature)
     return steering_servo;
 }
 
+
+void Controller::update_remote_parameters()
+{
+    trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+    trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+}
+
 void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
 {
-    const double trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
-    const double trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
-
-
     // Find active segment
     auto iterator_segment_end = m_trajectory_points.lower_bound(t_now);
     if(iterator_segment_end != m_trajectory_points.end()
@@ -180,6 +183,8 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
 void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, double &steering_servo) 
 {
     receive_commands(t_now);
+
+    update_remote_parameters();
 
     if(latest_command_receive_time + command_timeout < t_now)
     {

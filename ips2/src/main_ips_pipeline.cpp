@@ -6,13 +6,18 @@
 #include "LedPoints.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/CommandLineReader.hpp"
 #include "IpsPipeline.hpp"
 
 
 
 int main(int argc, char* argv[])
 {
-    IpsPipeline ipsPipeline;
+    if(argc < 2) {
+        std::cout << "To enable visualization use parameter --visualization=1" << std::endl;
+    }
+    const bool enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
+    IpsPipeline ipsPipeline(enable_visualization);
 
 
     cpm::AsyncReader<LedPoints> ipsLedPoints_reader(

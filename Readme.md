@@ -50,15 +50,8 @@ https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
 
     sudo rtipkginstall rti_connext_dds-5.3.1-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
 
-## Bash RC
 
-    export PATH=$PATH:$HOME/rti_connext_dds-5.3.1/bin
-    export PATH=$PATH:$HOME/toolchains/raspbian-toolchain-gcc-4.7.2-linux64/bin
-    export NDDSHOME=$HOME/rti_connext_dds-5.3.1
-    export RASPBIAN_TOOLCHAIN=$HOME/raspbian-toolchain-gcc-4.7.2-linux64
-    export RTI_LICENSE_FILE=$HOME/rti_workspace/rti_license.dat
-
-### Alternative for system-wide installation
+### Environment variables for system-wide installation in `sudo nano /etc/profile`
 
     export PATH=$PATH:/opt/rti_connext_dds-5.3.1/bin
     export PATH=$PATH:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin
