@@ -99,6 +99,8 @@ MpcController::MpcController()
 
 
 
+
+    // temp test, delete later
     auto t_start = get_time_ns();
 
     for (int i = 0; i < 50; ++i)
@@ -117,4 +119,63 @@ MpcController::MpcController()
 
     std::cout << "dt " << (t_end - t_start) << std::endl;
 
+}
+
+
+
+void MpcController::update(
+    uint64_t t_now, 
+    const VehicleState &vehicleState,
+    const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+    double &motor_throttle, 
+    double &steering_servo
+)
+{
+    battery_voltage_lowpass_filtered += 0.1 * (vehicleState.battery_voltage() - battery_voltage_lowpass_filtered);
+
+
+    const VehicleState vehicleState_predicted_start = delay_compensation_prediction(vehicleState);
+
+    // TODO run MPC optimization
+
+
+    // TODO shift output history, save new output
+}
+
+
+
+VehicleState MpcController::delay_compensation_prediction(
+    const VehicleState &vehicleState
+)
+{
+    const double dt_control_loop = 0.02;
+
+    double px = vehicleState.pose().x();
+    double py = vehicleState.pose().y();
+    double yaw = vehicleState.pose().yaw();
+    double speed = vehicleState.speed();
+
+
+    for (int i = 0; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
+    {
+        const auto &p = dynamics_parameters;
+        const double delta = steering_output_history[i] + p[9];
+        const double f = motor_output_history[i];
+        const double d_px = p[1] * speed * (1 + p[2] * delta*delta) * cos(yaw + p[3] * delta + p[10]);
+        const double d_py = p[1] * speed * (1 + p[2] * delta*delta) * sin(yaw + p[3] * delta + p[10]);
+        const double d_yaw = p[4] * speed * delta;
+        const double d_speed = p[5] * speed + (p[6] + p[7] * battery_voltage_lowpass_filtered) * ((f>=0)?(1.0):(-1.0)) * pow(fabs(f), p[8]);
+
+        px += dt_control_loop * d_px;
+        py += dt_control_loop * d_py;
+        yaw += dt_control_loop * d_yaw;
+        speed += dt_control_loop * d_speed;
+    }
+
+    VehicleState vehicleState_predicted_start = vehicleState;
+    vehicleState_predicted_start.pose().x(px);
+    vehicleState_predicted_start.pose().y(py);
+    vehicleState_predicted_start.pose().yaw(yaw);
+    vehicleState_predicted_start.speed(speed);
+    return vehicleState_predicted_start;
 }

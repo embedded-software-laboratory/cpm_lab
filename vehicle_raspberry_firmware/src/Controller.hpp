@@ -43,7 +43,7 @@ class Controller
 
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
-    VehicleCommandTrajectory m_vehicleCommandTrajectory;
+    
 
     ControllerState state = ControllerState::Stop;
 
