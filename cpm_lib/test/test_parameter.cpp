@@ -22,7 +22,7 @@ class ParameterServer {
         dds::pub::DataWriter<Parameter> parameter_writer;
         cpm::AsyncReader<ParameterRequest> parameter_request_subscriber;
     public:
-        ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest> samples)> callback) :
+        ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
             parameter_writer(
                 dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
                 cpm::get_topic<Parameter>("parameter"),
@@ -55,7 +55,7 @@ TEST_CASE( "parameter_double" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest> samples){
+    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
         for (auto sample : samples) {
             if (sample.info().valid()) {
                 if (sample.data().name() == param_name) {
@@ -104,7 +104,7 @@ TEST_CASE( "parameter_strings" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest> samples){
+    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
         for (auto sample : samples) {
             if (sample.info().valid()) {
                 if (sample.data().name() == param_name_1) {
@@ -150,7 +150,7 @@ TEST_CASE( "parameter_bool" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest> samples){
+    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
         for (auto sample : samples) {
             if (sample.info().valid()) {
                 if (sample.data().name() == param_name_1) {

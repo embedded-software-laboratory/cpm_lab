@@ -70,7 +70,7 @@ namespace cpm
          * \brief Callback function that handles incoming parameter definitions. Parameters are stored in maps depending on their type and name for later access.
          * \param samples Samples to be processed by the callback function (received messages)
          */
-        void callback(dds::sub::LoanedSamples<Parameter> samples);
+        void callback(dds::sub::LoanedSamples<Parameter>& samples);
 
     public:
         dds::topic::Topic<Parameter> parameterTopic;

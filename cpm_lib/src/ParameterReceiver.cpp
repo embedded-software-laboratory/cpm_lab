@@ -150,7 +150,7 @@ namespace cpm
         writer.write(request);
     }
 
-    void ParameterReceiver::callback(dds::sub::LoanedSamples<Parameter> samples) {
+    void ParameterReceiver::callback(dds::sub::LoanedSamples<Parameter>& samples) {
         for (auto sample : samples) {
             if (sample.info().valid()) {
                 const auto& parameter = sample.data();
