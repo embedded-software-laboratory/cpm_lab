@@ -1,6 +1,7 @@
 #include "MpcController.hpp"
 #include <cassert>
 #include <iostream>
+#include "cpm/Logging.hpp"
 
 
 
@@ -66,6 +67,7 @@ MpcController::MpcController()
             name = casadi_mpc_fn_name_out(i_var - n_in);
         }
 
+        assert(casadi_vars.count(name) == 0);
         casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 0.0);
         casadi_real* p_buffer = casadi_vars[name].data();
 
@@ -136,6 +138,21 @@ void MpcController::update(
     const VehicleState vehicleState_predicted_start = delay_compensation_prediction(vehicleState);
 
 
+    std::vector<double> mpc_reference_trajectory_x;
+    std::vector<double> mpc_reference_trajectory_y;
+
+    if(!interpolate_reference_trajectory(
+        t_now, 
+        trajectory_points,
+        mpc_reference_trajectory_x,
+        mpc_reference_trajectory_y
+    ))
+    {
+        motor_throttle = 0;
+        steering_servo = 0;
+        return;
+    }
+
     // TODO reference trajectory interpolation
 
 
@@ -147,17 +164,56 @@ void MpcController::update(
 
 
 
+bool MpcController::interpolate_reference_trajectory(
+    uint64_t t_now, 
+    const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+    std::vector<double> &out_mpc_reference_trajectory_x,
+    std::vector<double> &out_mpc_reference_trajectory_y
+)
+{
+    if(trajectory_points.size() < 2)
+    {
+        return false;
+    }
+
+    // interval of the MPC prediction
+    const uint64_t t_start = t_now + MPC_DELAY_COMPENSATION_STEPS * dt_control_loop + dt_MPC;
+    const uint64_t t_end = t_start + (MPC_prediction_steps-1) * dt_MPC;
+
+    // interval of the trajectory command
+    const uint64_t t_trajectory_min = trajectory_points.begin()->first;
+    const uint64_t t_trajectory_max = trajectory_points.rbegin()->first;
+
+
+    if(t_trajectory_min >= t_start)
+    {
+        cpm::Logging::Instance().write("Warning: Trajectory Controller: The trajectory command starts in the future.");
+        return false;
+    }
+
+    if(t_trajectory_max <= t_end)
+    {
+        cpm::Logging::Instance().write(
+            "Warning: Trajectory Controller: "
+            "The trajectory command has insufficient lead time. "
+            "Increase lead time by %.2f ms.",
+            double(t_end - t_trajectory_max) * 1e-6);
+        return false;
+    }
+
+
+    
+}
+
+
 VehicleState MpcController::delay_compensation_prediction(
     const VehicleState &vehicleState
 )
 {
-    const double dt_control_loop = 0.02;
-
     double px = vehicleState.pose().x();
     double py = vehicleState.pose().y();
     double yaw = vehicleState.pose().yaw();
     double speed = vehicleState.speed();
-
 
     for (int i = 0; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
     {

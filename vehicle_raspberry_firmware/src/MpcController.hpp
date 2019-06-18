@@ -26,9 +26,10 @@ class MpcController
     std::vector<casadi_real*> casadi_results;
 
 
-    const uint64_t prediction_timestep_nanoseconds = 50000000ull;
-    const size_t prediction_steps = 8;
-    const size_t control_steps = 4;
+    const size_t MPC_prediction_steps = 8;
+    const size_t MPC_control_steps = 4;
+    const double dt_control_loop = 0.02; // the period in which update() is called
+    const double dt_MPC = 0.05; // the MPC prediction time step
 
 
     // TODO load parameters via DDS parameters
@@ -46,6 +47,16 @@ class MpcController
     // This is necessary to compensate the delay of the inputs.
     VehicleState delay_compensation_prediction(
         const VehicleState &vehicleState
+    );
+
+
+    // Interpolates the reference trajectory on the MPC time grid.
+    // Returns false iff the reference trajectory is not defined for the MPC prediction time interval.
+    bool interpolate_reference_trajectory(
+        uint64_t t_now, 
+        const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+        std::vector<double> &out_mpc_reference_trajectory_x,
+        std::vector<double> &out_mpc_reference_trajectory_y
     );
 
 
