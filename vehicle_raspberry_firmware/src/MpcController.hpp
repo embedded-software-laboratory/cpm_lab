@@ -31,6 +31,7 @@ class MpcController
     const size_t control_steps = 4;
 
 
+    // TODO load parameters via DDS parameters
     std::vector<double> dynamics_parameters = { 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 };
 
     double battery_voltage_lowpass_filtered = 8;
