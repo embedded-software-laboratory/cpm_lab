@@ -88,8 +88,10 @@ classdef MpcController
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
             
             
-            learning_rate = 1;
+            learning_rate = 0.5;
             momentum_rate = 0.6;
+            
+            objective_prev = 1e111;
                 
             tic
             for j = 1:100
@@ -103,6 +105,15 @@ classdef MpcController
                 obj.u_soln = full(u_next);
                 
                 obj.u_soln(:,1:2) = min(1,max(-1,obj.u_soln(:,1:2)));
+                
+                objective_change = objective_prev - objective;
+                
+%                 if( j > 10 && full(objective_change) < 1e-5 )
+%                     j
+%                     break;
+%                 end
+                
+                objective_prev = objective;
             end
             toc
             fprintf('%.7f\n',full(objective));
