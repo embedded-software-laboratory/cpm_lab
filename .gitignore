@@ -2,6 +2,9 @@
 *.a
 *.so
 build/
+build_arm/
+build_arm_sim/
+build_x64_sim/
 build_sim/
 install/
 __pycache__/
