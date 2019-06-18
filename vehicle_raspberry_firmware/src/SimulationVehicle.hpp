@@ -14,11 +14,11 @@ static inline double frand() { return (double(rand()))/RAND_MAX; }
 
 class SimulationVehicle
 {
-    double x = frand()*4;
-    double y = frand()*4;
+    double x = 0.28;//frand()*4;
+    double y = 2.05;//frand()*4;
     double distance = 0;
-    double yaw = frand()*20;
-    double yaw_measured = 0;
+    double yaw = 1.52;//frand()*20;
+    double yaw_measured = 1.52;
     double speed = 0;
     double curvature = 0;
 

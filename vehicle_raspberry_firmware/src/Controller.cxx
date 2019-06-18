@@ -112,6 +112,13 @@ double steering_curvature_calibration(double curvature)
     return steering_servo;
 }
 
+
+void Controller::update_remote_parameters()
+{
+    trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+    trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+}
+
 void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
 {
     // Find active segment
@@ -150,7 +157,9 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
             // Linear lateral controller
             const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
             //const double ref_curvature = trajectory_interpolation.curvature;
-            const double curvature = ref_curvature - 7.0 * lateral_error - 4.0 * yaw_error;
+            const double curvature = ref_curvature 
+                - trajectory_controller_lateral_P_gain * lateral_error 
+                - trajectory_controller_lateral_D_gain * yaw_error;
 
             // Linear longitudinal controller
             const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
@@ -174,6 +183,8 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
 void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, double &steering_servo) 
 {
     receive_commands(t_now);
+
+    update_remote_parameters();
 
     if(latest_command_receive_time + command_timeout < t_now)
     {

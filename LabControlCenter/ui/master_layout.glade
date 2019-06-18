@@ -67,20 +67,6 @@
                         <property name="label" translatable="yes">Load File</property>
                       </object>
                     </child>
-                    <child>
-                      <object class="GtkMenuItem" id="menu_bar_params_load_multiple_files">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Load Files</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="menu_bar_params_load_params">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Load Params</property>
-                      </object>
-                    </child>
                   </object>
                 </child>
               </object>
@@ -108,7 +94,7 @@
                 </child>
               </object>
               <packing>
-                <property name="resize">False</property>
+                <property name="resize">True</property>
                 <property name="shrink">True</property>
               </packing>
             </child>

@@ -5,6 +5,7 @@
  *  Author: maczijewski
  */ 
 
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "util.h"
@@ -30,6 +31,7 @@ static volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
 static volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
 static volatile uint32_t latest_receive_tick = 0;
 
+
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
 	uint8_t received_byte = SPDR;
@@ -37,6 +39,7 @@ ISR(SPI_STC_vect) {
 	mosi_buffer_bus[spi_buffer_index] = received_byte;
 	spi_buffer_index++;
 }
+
 
 // interrupt for slave select pin change
 ISR(PCINT0_vect) {
@@ -64,6 +67,7 @@ ISR(PCINT0_vect) {
 	
 }
 
+
 void spi_send(spi_miso_data_t *packet) {
 	cli(); // stop buffer swap
 	uint8_t* p = (uint8_t*) packet;
@@ -75,6 +79,7 @@ void spi_send(spi_miso_data_t *packet) {
 	sei();
 }
 
+
 uint32_t spi_receive(spi_mosi_data_t *packet) {
 	cli(); // stop buffer swap
 	uint8_t* p = (uint8_t*) packet;
@@ -85,6 +90,7 @@ uint32_t spi_receive(spi_mosi_data_t *packet) {
 	sei();
 	return latest_receive_tick;
 }
+
 
 void spi_setup() {
 	
@@ -100,5 +106,4 @@ void spi_setup() {
 	// interrupt on the slave select pin
 	SET_BIT(PCICR, PCIE0);
 	SET_BIT(PCMSK0, PCINT0);
-	
 }

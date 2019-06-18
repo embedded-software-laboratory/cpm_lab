@@ -27,8 +27,8 @@ MainWindow::MainWindow(
     builder_master_layout->get_widget("menu_bar_params_save", menu_bar_params_save);
     builder_master_layout->get_widget("menu_bar_params_save_as", menu_bar_params_save_as);
     builder_master_layout->get_widget("menu_bar_params_load_file", menu_bar_params_load_file);
-    builder_master_layout->get_widget("menu_bar_params_load_multiple_files", menu_bar_params_load_multiple_files);
-    builder_master_layout->get_widget("menu_bar_params_load_params", menu_bar_params_load_params);
+    // builder_master_layout->get_widget("menu_bar_params_load_multiple_files", menu_bar_params_load_multiple_files);
+    // builder_master_layout->get_widget("menu_bar_params_load_params", menu_bar_params_load_params);
 
 
     assert(window_LCC);
@@ -41,8 +41,8 @@ MainWindow::MainWindow(
     assert(menu_bar_params_save);
     assert(menu_bar_params_save_as);
     assert(menu_bar_params_load_file);
-    assert(menu_bar_params_load_multiple_files);
-    assert(menu_bar_params_load_params);
+    // assert(menu_bar_params_load_multiple_files);
+    // assert(menu_bar_params_load_params);
 
     //Show window, set size depending on monitor resolution
     window_LCC->show();
@@ -50,18 +50,22 @@ MainWindow::MainWindow(
     int screen_height = window_LCC->get_screen()->get_height();
     window_LCC->set_default_size((3 * screen_width)/4, (3 * screen_height)/4);
     window_LCC->resize((3 * screen_width)/4, (3 * screen_height)/4);
-    window_LCC->maximize();
     window_LCC->add_events(Gdk::SCROLL_MASK);
     
 
-    pane2->pack2(*(tabsViewUI->get_parent()),true,true);
-    pane1->pack2(*(monitoringUi->get_parent()),true,true);
+    pane2->pack2(*(tabsViewUI->get_parent()),false,false);
+    pane1->pack2(*(monitoringUi->get_parent()),false,false);
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
         exit(0);
         return false;
     });
+
+    Glib::signal_timeout().connect([&]()->bool{
+        window_LCC->maximize();
+        return false;
+    }, 100);
 
     Glib::signal_timeout().connect([&]()->bool{
         int width = 0;
@@ -78,8 +82,8 @@ MainWindow::MainWindow(
     menu_bar_params_save->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_save_pressed));
     menu_bar_params_save_as->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_save_as_pressed));
     menu_bar_params_load_file->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_load_file_pressed));
-    menu_bar_params_load_multiple_files->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_load_multiple_files_pressed));
-    menu_bar_params_load_params->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_load_params_pressed));
+    // menu_bar_params_load_multiple_files->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_load_multiple_files_pressed));
+    // menu_bar_params_load_params->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_load_params_pressed));
 
     std::cout << "MainWindow done" << std::endl;
 }
@@ -98,8 +102,8 @@ void MainWindow::on_menu_params_save_as_pressed() {
     menu_bar_params_save->set_sensitive(false);
     menu_bar_params_save_as->set_sensitive(false);
     menu_bar_params_load_file->set_sensitive(false);
-    menu_bar_params_load_multiple_files->set_sensitive(false);
-    menu_bar_params_load_params->set_sensitive(false);
+    // menu_bar_params_load_multiple_files->set_sensitive(false);
+    // menu_bar_params_load_params->set_sensitive(false);
     tabs_view_ui->get_param_view()->make_insensitive();
 
     file_saver_window = make_shared<FileSaverUI>(std::bind(&MainWindow::file_saver_callback, this, _1, _2));
@@ -111,20 +115,20 @@ void MainWindow::on_menu_params_load_file_pressed() {
     menu_bar_params_save->set_sensitive(false);
     menu_bar_params_save_as->set_sensitive(false);
     menu_bar_params_load_file->set_sensitive(false);
-    menu_bar_params_load_multiple_files->set_sensitive(false);
-    menu_bar_params_load_params->set_sensitive(false);
+    // menu_bar_params_load_multiple_files->set_sensitive(false);
+    // menu_bar_params_load_params->set_sensitive(false);
     tabs_view_ui->get_param_view()->make_insensitive();
 
     file_chooser_window = make_shared<FileChooserUI>(std::bind(&MainWindow::file_chooser_callback, this, _1, _2));
 }
 
-void MainWindow::on_menu_params_load_multiple_files_pressed() {
-    tabs_view_ui->get_param_view()->params_load_multiple_files_handler();
-}
+// void MainWindow::on_menu_params_load_multiple_files_pressed() {
+//     tabs_view_ui->get_param_view()->params_load_multiple_files_handler();
+// }
 
-void MainWindow::on_menu_params_load_params_pressed() {
-    tabs_view_ui->get_param_view()->params_load_params_handler();
-}
+// void MainWindow::on_menu_params_load_params_pressed() {
+//     tabs_view_ui->get_param_view()->params_load_params_handler();
+// }
 
 void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
     std::cout << "called" << std::endl;
@@ -134,8 +138,8 @@ void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
     menu_bar_params_save->set_sensitive(true);
     menu_bar_params_save_as->set_sensitive(true);
     menu_bar_params_load_file->set_sensitive(true);
-    menu_bar_params_load_multiple_files->set_sensitive(true);
-    menu_bar_params_load_params->set_sensitive(true);
+    // menu_bar_params_load_multiple_files->set_sensitive(true);
+    // menu_bar_params_load_params->set_sensitive(true);
     tabs_view_ui->get_param_view()->make_sensitive();
 
     //Call Param UI to process changes
@@ -150,8 +154,8 @@ void MainWindow::file_saver_callback(std::string file_string, bool has_file) {
     menu_bar_params_save->set_sensitive(true);
     menu_bar_params_save_as->set_sensitive(true);
     menu_bar_params_load_file->set_sensitive(true);
-    menu_bar_params_load_multiple_files->set_sensitive(true);
-    menu_bar_params_load_params->set_sensitive(true);
+    // menu_bar_params_load_multiple_files->set_sensitive(true);
+    // menu_bar_params_load_params->set_sensitive(true);
     tabs_view_ui->get_param_view()->make_sensitive();
 
     //Call Param UI to process changes

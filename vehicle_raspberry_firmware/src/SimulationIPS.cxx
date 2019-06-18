@@ -19,14 +19,14 @@ SimulationIPS::SimulationIPS(dds::topic::Topic<VehicleObservation>& _topic_vehic
 
 void SimulationIPS::update(VehicleObservation simulatedState)
 {
-    // Simulate 25% probability of detection
-    if( rand()%4 != 1 ) return;
+    // Simulate probability of detection
+    if( rand()%20 == 1 ) return;
 
 
     // simulate signal noise
-    simulatedState.pose().x(simulatedState.pose().x() + 0.005 * frand_sym());
-    simulatedState.pose().y(simulatedState.pose().y() + 0.005 * frand_sym());
-    simulatedState.pose().yaw(simulatedState.pose().yaw() + 0.03 * frand_sym());
+    simulatedState.pose().x(simulatedState.pose().x() + 0.002 * frand_sym());
+    simulatedState.pose().y(simulatedState.pose().y() + 0.002 * frand_sym());
+    simulatedState.pose().yaw(simulatedState.pose().yaw() + 0.01 * frand_sym());
 
     simulatedState.pose().yaw(remainder(simulatedState.pose().yaw(), 2*M_PI)); // yaw in range [-PI, PI]
 
@@ -35,7 +35,7 @@ void SimulationIPS::update(VehicleObservation simulatedState)
 
 
     // Send old sample
-    if(delay_buffer.size() > 10)
+    if(delay_buffer.size() > 3)
     {
         writer_vehicleObservation.write(delay_buffer.front());
         delay_buffer.pop_front();

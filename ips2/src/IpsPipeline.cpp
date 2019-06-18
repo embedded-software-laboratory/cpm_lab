@@ -5,9 +5,7 @@
 #include "cpm/get_topic.hpp"
 
 
-const bool enable_visualization = false;
-
-IpsPipeline::IpsPipeline()
+IpsPipeline::IpsPipeline(const bool enable_visualization)
 :writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleObservation>("vehicleObservation"))
 {
     undistortPointsFn = std::make_shared<UndistortPoints>(
