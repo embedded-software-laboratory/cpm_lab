@@ -34,6 +34,9 @@ set(SOURCE_CPM
     include/cpm/ParticipantSingleton.hpp
     src/Logging.cpp
     include/cpm/Logging.hpp
+    src/InternalConfiguration.hpp
+    src/InternalConfiguration.cpp
+    include/cpm/init.hpp
 )
 
 
@@ -76,6 +79,7 @@ if(NOT BUILD_ARM)
         test/test_Reader.cpp
         test/test_MultiVehicleReader.cpp
         test/test_CommandLineReader.cpp
+        test/test_InternalConfiguration.cpp
     )
 
     target_link_libraries(unittest cpm)
