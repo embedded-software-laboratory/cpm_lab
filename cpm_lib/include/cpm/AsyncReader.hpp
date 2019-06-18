@@ -33,7 +33,7 @@ namespace cpm
          * \brief Handler that takes unread samples, releases the waitset and calls the callback function provided by the user
          * \param func The callback function provided by the user
          */
-        void handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func);
+        void handler(std::function<void(dds::sub::LoanedSamples<MessageType>)> func);
     public:
         /**
          * \brief Constructor for the AsynReader. Participant and topic need to be provided by the user, as well as the callback function for the reader.
@@ -43,13 +43,13 @@ namespace cpm
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
          */
         AsyncReader(
-            std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+            std::function<void(dds::sub::LoanedSamples<MessageType>)> func, 
             dds::domain::DomainParticipant& _participant, 
             dds::topic::Topic<MessageType> topic, 
             bool is_reliable = false
         );
         AsyncReader(
-            std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+            std::function<void(dds::sub::LoanedSamples<MessageType>)> func, 
             dds::domain::DomainParticipant& _participant, 
             dds::topic::ContentFilteredTopic<MessageType> topic, 
             bool is_reliable = false
@@ -61,7 +61,7 @@ namespace cpm
 
     template<class MessageType> 
     AsyncReader<MessageType>::AsyncReader(
-        std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+        std::function<void(dds::sub::LoanedSamples<MessageType>)> func, 
         dds::domain::DomainParticipant & _participant, 
         dds::topic::Topic<MessageType> topic,
         bool is_reliable
@@ -86,7 +86,7 @@ namespace cpm
     
     template<class MessageType> 
     AsyncReader<MessageType>::AsyncReader(
-        std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
+        std::function<void(dds::sub::LoanedSamples<MessageType>)> func, 
         dds::domain::DomainParticipant & _participant, 
         dds::topic::ContentFilteredTopic<MessageType> topic,
         bool is_reliable
@@ -113,7 +113,7 @@ namespace cpm
 
     template<class MessageType> 
     void AsyncReader<MessageType>::handler(
-        std::function<void(dds::sub::LoanedSamples<MessageType>&)> func
+        std::function<void(dds::sub::LoanedSamples<MessageType>)> func
     )
     {
         // Take all samples This will reset the StatusCondition
@@ -124,6 +124,6 @@ namespace cpm
         waitset.unlock_condition(dds::core::cond::StatusCondition(reader));
 
         // Process sample 
-        func(samples);
+        func(std::move(samples));
     }
 }
