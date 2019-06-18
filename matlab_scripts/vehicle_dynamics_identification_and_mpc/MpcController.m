@@ -105,6 +105,7 @@ classdef MpcController
                 obj.u_soln = full(u_next);
                 
                 obj.u_soln(:,1:2) = min(1,max(-1,obj.u_soln(:,1:2)));
+                obj.u_soln(:,3) = 8;
                 
                 objective_change = objective_prev - objective;
                 

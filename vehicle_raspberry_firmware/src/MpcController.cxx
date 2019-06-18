@@ -5,12 +5,12 @@
 #include "TrajectoryInterpolation.hpp"
 
 
-static inline uint64_t get_time_ns()
+/*static inline uint64_t get_time_ns()
 {
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
+}*/
 
 
 MpcController::MpcController()
@@ -68,7 +68,8 @@ MpcController::MpcController()
         }
 
         assert(casadi_vars.count(name) == 0);
-        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 0.0);
+        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12);
+        casadi_vars_size[name] = std::array<casadi_int, 2>{n_rows, n_cols};
         casadi_real* p_buffer = casadi_vars[name].data();
 
         if (i_var < n_in) 
@@ -101,7 +102,49 @@ MpcController::MpcController()
 
 
 
+    // Check casadi sizes against expected values
+    assert(casadi_vars_size["var_x0"][0] == 1);
+    assert(casadi_vars_size["var_x0"][1] == 4);
 
+    assert(casadi_vars_size["var_u"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_u"][1] == 3);
+
+    assert(casadi_vars_size["var_momentum"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_momentum"][1] == 3);
+
+    assert(casadi_vars_size["var_params"][0] == 10);
+    assert(casadi_vars_size["var_params"][1] == 1);
+
+    assert(casadi_vars_size["var_reference_trajectory_x"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["var_reference_trajectory_x"][1] == 1);
+
+    assert(casadi_vars_size["var_reference_trajectory_y"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["var_reference_trajectory_y"][1] == 1);
+
+    assert(casadi_vars_size["var_learning_rate"][0] == 1);
+    assert(casadi_vars_size["var_learning_rate"][1] == 1);
+
+    assert(casadi_vars_size["var_momentum_rate"][0] == 1);
+    assert(casadi_vars_size["var_momentum_rate"][1] == 1);
+
+    assert(casadi_vars_size["trajectory_x"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["trajectory_x"][1] == 1);
+
+    assert(casadi_vars_size["trajectory_y"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["trajectory_y"][1] == 1);
+
+    assert(casadi_vars_size["objective"][0] == 1);
+    assert(casadi_vars_size["objective"][1] == 1);
+
+    assert(casadi_vars_size["var_momentum_next"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_momentum_next"][1] == 3);
+
+    assert(casadi_vars_size["var_u_next"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_u_next"][1] == 3);
+
+
+
+    /*
     // temp test, delete later
     auto t_start = get_time_ns();
 
@@ -120,7 +163,7 @@ MpcController::MpcController()
     auto t_end = get_time_ns();
 
     std::cout << "dt " << (t_end - t_start) << std::endl;
-
+    */
 }
 
 
@@ -157,7 +200,6 @@ void MpcController::update(
     assert(mpc_reference_trajectory_y.size() == MPC_prediction_steps);
 
 
-    // TODO run MPC optimization
     optimize_control_inputs(
         vehicleState_predicted_start,
         mpc_reference_trajectory_x,
@@ -179,7 +221,81 @@ void MpcController::optimize_control_inputs(
     double &out_steering_servo
 )
 {
+    for (int i = 0; i < 200; ++i)
+    {
+        /*
+        casadi_vars["var_x0"][j] = 0;
+        casadi_vars["var_u"][j] = 0;
+        casadi_vars["var_momentum"][j] = 0;
+        casadi_vars["var_params"][j] = 0;
+        casadi_vars["var_reference_trajectory_x"][j] = 0;
+        casadi_vars["var_reference_trajectory_y"][j] = 0;
+        casadi_vars["var_learning_rate"][j] = 0;
+        casadi_vars["var_momentum_rate"][j] = 0;
+        */
 
+        casadi_vars["var_x0"][0] = vehicleState_predicted_start.pose().x();
+        casadi_vars["var_x0"][1] = vehicleState_predicted_start.pose().y();
+        casadi_vars["var_x0"][2] = vehicleState_predicted_start.pose().yaw();
+        casadi_vars["var_x0"][3] = vehicleState_predicted_start.speed();
+
+        for (int j = 0; j < 2 * MPC_control_steps; ++j)
+        {
+            casadi_vars["var_u"][j] = casadi_vars["var_u_next"][j];
+            casadi_vars["var_momentum"][j] = casadi_vars["var_momentum_next"][j];
+        }
+
+        // overwrite voltage, it is a measured disturbance, not an actual input
+        for (int j = 0; j < MPC_control_steps; ++j)
+        {
+            casadi_vars["var_u"].at(2*MPC_control_steps + j) = battery_voltage_lowpass_filtered; 
+            casadi_vars["var_momentum"].at(2*MPC_control_steps + j) = 0;
+        }
+
+        for (size_t j = 0; j < dynamics_parameters.size(); ++j)
+        {
+            casadi_vars["var_params"].at(j) = dynamics_parameters.at(j);
+        }
+
+
+        for (int j = 0; j < MPC_prediction_steps; ++j)
+        {
+            casadi_vars["var_reference_trajectory_x"][j] = mpc_reference_trajectory_x[j];
+            casadi_vars["var_reference_trajectory_y"][j] = mpc_reference_trajectory_y[j];
+        }
+
+        casadi_vars["var_learning_rate"][0] = 0.5;
+        casadi_vars["var_momentum_rate"][0] = 0.5;
+        
+        // Run casadi
+        casadi_mpc_fn(
+            (const casadi_real**)(casadi_arguments.data()), 
+            casadi_results.data(), 
+            nullptr, nullptr, nullptr);
+
+        std::cout << "objective value " << casadi_vars["objective"][0] << std::endl;
+
+        /*std::cout << "u ";
+
+        for (int j = 0; j < 2 * MPC_control_steps; ++j)
+        {
+            std::cout << casadi_vars["var_u_next"][j] << ", ";
+        }
+        std::cout << std::endl;
+        std::cout << "trx ";
+
+        for (int j = 0; j < MPC_prediction_steps; ++j)
+        {
+            std::cout << casadi_vars["trajectory_x"][j] << ", ";
+        }
+        std::cout << std::endl;*/
+
+        // TODO actor limits
+
+
+        // TODO print objective for debug
+    }
+    exit(0);
 }
 
 
@@ -205,7 +321,7 @@ bool MpcController::interpolate_reference_trajectory(
     const uint64_t t_trajectory_max = trajectory_points.rbegin()->first;
 
 
-    if(t_trajectory_min > t_start)
+    if(t_trajectory_min >= t_start)
     {
         cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "

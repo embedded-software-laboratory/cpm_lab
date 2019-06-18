@@ -2,6 +2,7 @@
 #include "casadi_mpc_fn.h"
 #include <map>
 #include <string>
+#include <array>
 #include <vector>
 #include "VehicleState.hpp"
 #include "VehicleCommandTrajectory.hpp"
@@ -21,6 +22,8 @@ class MpcController
 {
 
     std::map< std::string, std::vector<casadi_real> > casadi_vars;
+    std::map< std::string, std::array<casadi_int, 2> > casadi_vars_size;
+
 
     std::vector<casadi_real*> casadi_arguments;
     std::vector<casadi_real*> casadi_results;
