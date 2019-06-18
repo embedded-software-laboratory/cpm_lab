@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include "cpm/Logging.hpp"
-
+#include "TrajectoryInterpolation.hpp"
 
 
 static inline uint64_t get_time_ns()
@@ -129,8 +129,8 @@ void MpcController::update(
     uint64_t t_now, 
     const VehicleState &vehicleState,
     const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
-    double &motor_throttle, 
-    double &steering_servo
+    double &out_motor_throttle, 
+    double &out_steering_servo
 )
 {
     battery_voltage_lowpass_filtered += 0.1 * (vehicleState.battery_voltage() - battery_voltage_lowpass_filtered);
@@ -148,18 +148,38 @@ void MpcController::update(
         mpc_reference_trajectory_y
     ))
     {
-        motor_throttle = 0;
-        steering_servo = 0;
+        out_motor_throttle = 0;
+        out_steering_servo = 0;
         return;
     }
 
-    // TODO reference trajectory interpolation
+    assert(mpc_reference_trajectory_x.size() == MPC_prediction_steps);
+    assert(mpc_reference_trajectory_y.size() == MPC_prediction_steps);
 
 
     // TODO run MPC optimization
+    optimize_control_inputs(
+        vehicleState_predicted_start,
+        mpc_reference_trajectory_x,
+        mpc_reference_trajectory_y,
+        out_motor_throttle, 
+        out_steering_servo
+    );
 
 
     // TODO shift output history, save new output
+}
+
+
+void MpcController::optimize_control_inputs(
+    const VehicleState &vehicleState_predicted_start,
+    const std::vector<double> &mpc_reference_trajectory_x,
+    const std::vector<double> &mpc_reference_trajectory_y,
+    double &out_motor_throttle, 
+    double &out_steering_servo
+)
+{
+
 }
 
 
@@ -185,13 +205,15 @@ bool MpcController::interpolate_reference_trajectory(
     const uint64_t t_trajectory_max = trajectory_points.rbegin()->first;
 
 
-    if(t_trajectory_min >= t_start)
+    if(t_trajectory_min > t_start)
     {
-        cpm::Logging::Instance().write("Warning: Trajectory Controller: The trajectory command starts in the future.");
+        cpm::Logging::Instance().write(
+            "Warning: Trajectory Controller: "
+            "The trajectory command starts in the future.");
         return false;
     }
 
-    if(t_trajectory_max <= t_end)
+    if(t_trajectory_max < t_end)
     {
         cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
@@ -201,8 +223,65 @@ bool MpcController::interpolate_reference_trajectory(
         return false;
     }
 
+    out_mpc_reference_trajectory_x.resize(MPC_prediction_steps, 0);
+    out_mpc_reference_trajectory_y.resize(MPC_prediction_steps, 0);
 
-    
+    for (int i = 0; i < MPC_prediction_steps; ++i)
+    {
+        const uint64_t t_interpolation = t_start + i * dt_MPC;
+
+
+        const auto iterator_segment_end = trajectory_points.lower_bound(t_interpolation);
+
+        assert(iterator_segment_end != trajectory_points.end());
+        assert(iterator_segment_end != trajectory_points.begin());
+
+        auto iterator_segment_start = iterator_segment_end;
+        iterator_segment_start--;
+
+        const TrajectoryPoint start_point = (*iterator_segment_start).second;
+        const TrajectoryPoint end_point = (*iterator_segment_end).second;
+
+        assert(t_interpolation >= start_point.t().nanoseconds());
+        assert(t_interpolation <= end_point.t().nanoseconds());
+
+        TrajectoryInterpolation trajectory_interpolation(t_interpolation, start_point, end_point);
+
+        if(fabs(trajectory_interpolation.acceleration_x) > 10.0)
+        {
+            cpm::Logging::Instance().write(
+                "Warning: Trajectory Controller: "
+                "Large acceleration in reference trajectory. "
+                "acceleration_x = %f",
+                trajectory_interpolation.acceleration_x);
+            return false;
+        }
+
+        if(fabs(trajectory_interpolation.acceleration_y) > 10.0)
+        {
+            cpm::Logging::Instance().write(
+                "Warning: Trajectory Controller: "
+                "Large acceleration in reference trajectory. "
+                "acceleration_y = %f",
+                trajectory_interpolation.acceleration_y);
+            return false;
+        }
+
+        if(fabs(trajectory_interpolation.curvature) > 4.0)
+        {
+            cpm::Logging::Instance().write(
+                "Warning: Trajectory Controller: "
+                "Large curvature in reference trajectory. "
+                "curvature = %f",
+                trajectory_interpolation.curvature);
+            return false;
+        }
+
+        out_mpc_reference_trajectory_x[i] = trajectory_interpolation.position_x;
+        out_mpc_reference_trajectory_y[i] = trajectory_interpolation.position_y;
+    }
+
+    return true;
 }
 
 

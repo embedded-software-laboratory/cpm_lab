@@ -51,7 +51,8 @@ class MpcController
 
 
     // Interpolates the reference trajectory on the MPC time grid.
-    // Returns false iff the reference trajectory is not defined for the MPC prediction time interval.
+    // Returns false if the reference trajectory is not defined for the 
+    // MPC prediction time interval, or is impossible to follow.
     bool interpolate_reference_trajectory(
         uint64_t t_now, 
         const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
@@ -60,19 +61,28 @@ class MpcController
     );
 
 
+
+    void optimize_control_inputs(
+        const VehicleState &vehicleState_predicted_start,
+        const std::vector<double> &mpc_reference_trajectory_x,
+        const std::vector<double> &mpc_reference_trajectory_y,
+        double &out_motor_throttle, 
+        double &out_steering_servo
+    );
+
+
+
+
 public:
 
-
     MpcController();
-
-
 
     void update(
         uint64_t t_now, 
         const VehicleState &vehicleState,                  
         const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
-        double &motor_throttle, 
-        double &steering_servo
+        double &out_motor_throttle, 
+        double &out_steering_servo
     );
     
 };
