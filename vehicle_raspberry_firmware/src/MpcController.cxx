@@ -209,7 +209,15 @@ void MpcController::update(
     );
 
 
-    // TODO shift output history, save new output
+    // shift output history, save new output
+    for (int i = 1; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
+    {
+        motor_output_history[i-1] = motor_output_history[i];
+        steering_output_history[i-1] = steering_output_history[i];
+    }
+    
+    motor_output_history[MPC_DELAY_COMPENSATION_STEPS-1] = out_motor_throttle;
+    steering_output_history[MPC_DELAY_COMPENSATION_STEPS-1] = out_steering_servo;
 }
 
 
@@ -221,32 +229,21 @@ void MpcController::optimize_control_inputs(
     double &out_steering_servo
 )
 {
-    for (int i = 0; i < 200; ++i)
+    for (int i = 0; i < 20; ++i)
     {
-        /*
-        casadi_vars["var_x0"][j] = 0;
-        casadi_vars["var_u"][j] = 0;
-        casadi_vars["var_momentum"][j] = 0;
-        casadi_vars["var_params"][j] = 0;
-        casadi_vars["var_reference_trajectory_x"][j] = 0;
-        casadi_vars["var_reference_trajectory_y"][j] = 0;
-        casadi_vars["var_learning_rate"][j] = 0;
-        casadi_vars["var_momentum_rate"][j] = 0;
-        */
-
         casadi_vars["var_x0"][0] = vehicleState_predicted_start.pose().x();
         casadi_vars["var_x0"][1] = vehicleState_predicted_start.pose().y();
         casadi_vars["var_x0"][2] = vehicleState_predicted_start.pose().yaw();
         casadi_vars["var_x0"][3] = vehicleState_predicted_start.speed();
 
-        for (int j = 0; j < 2 * MPC_control_steps; ++j)
+        for (size_t j = 0; j < 2 * MPC_control_steps; ++j)
         {
-            casadi_vars["var_u"][j] = casadi_vars["var_u_next"][j];
+            casadi_vars["var_u"][j] = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][j]));
             casadi_vars["var_momentum"][j] = casadi_vars["var_momentum_next"][j];
         }
 
         // overwrite voltage, it is a measured disturbance, not an actual input
-        for (int j = 0; j < MPC_control_steps; ++j)
+        for (size_t j = 0; j < MPC_control_steps; ++j)
         {
             casadi_vars["var_u"].at(2*MPC_control_steps + j) = battery_voltage_lowpass_filtered; 
             casadi_vars["var_momentum"].at(2*MPC_control_steps + j) = 0;
@@ -258,7 +255,7 @@ void MpcController::optimize_control_inputs(
         }
 
 
-        for (int j = 0; j < MPC_prediction_steps; ++j)
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
         {
             casadi_vars["var_reference_trajectory_x"][j] = mpc_reference_trajectory_x[j];
             casadi_vars["var_reference_trajectory_y"][j] = mpc_reference_trajectory_y[j];
@@ -295,7 +292,8 @@ void MpcController::optimize_control_inputs(
 
         // TODO print objective for debug
     }
-    exit(0);
+    out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
+    out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
 }
 
 
@@ -342,7 +340,7 @@ bool MpcController::interpolate_reference_trajectory(
     out_mpc_reference_trajectory_x.resize(MPC_prediction_steps, 0);
     out_mpc_reference_trajectory_y.resize(MPC_prediction_steps, 0);
 
-    for (int i = 0; i < MPC_prediction_steps; ++i)
+    for (size_t i = 0; i < MPC_prediction_steps; ++i)
     {
         const uint64_t t_interpolation = t_start + i * dt_MPC;
 
