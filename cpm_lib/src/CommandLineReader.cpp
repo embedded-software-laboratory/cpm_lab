@@ -43,6 +43,33 @@ namespace cpm {
     }
 
     /**
+     * \brief Read an integer command line argument from argv (form: --name=value), use a default value if it does not exist
+     */
+    uint64_t cmd_parameter_uint64_t(std::string name, uint64_t default_value, int argc, char *argv[]) {
+        std::string key = "--" + name + "=";
+
+        for (int i = 1; i < argc; ++i) {
+            std::string param = std::string(argv[i]);
+            if (param.find(key) == 0) {
+                std::string value = param.substr(param.find("=") + 1);
+
+                unsigned long long uint_value = 0;
+                try {
+                    //@Janis: Alternativ lässt sich mittels stringstream casten, falls die ungleichen Typen deiner Einschätzung nach eventuell Fehler hervorrufen könnten. Dann wäre die Fehlerbehandlung jedoch auch anders.
+                    uint_value = std::stoull(value);
+                }
+                catch (...) {
+                    return default_value;
+                }
+
+                return static_cast<uint64_t>(uint_value);
+            }
+        }
+
+        return default_value;
+    }
+
+    /**
      * \brief Read a std::string command line argument from argv (form: --name=value), use a default value if it does not exist
      */
     std::string cmd_parameter_string(std::string name, std::string default_value, int argc, char *argv[]) {

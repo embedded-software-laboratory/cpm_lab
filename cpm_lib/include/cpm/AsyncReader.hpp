@@ -67,7 +67,7 @@ namespace cpm
         bool is_reliable
     )
     :sub(_participant)
-    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort()))
+    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort() << dds::core::policy::History::KeepAll()))
     ,read_condition(reader)
     {
         //Call the callback function whenever any new data is available
@@ -92,7 +92,7 @@ namespace cpm
         bool is_reliable
     )
     :sub(_participant)
-    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort()))
+    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort() << dds::core::policy::History::KeepAll()))
     ,read_condition(reader)
     {
         //Call the callback function whenever any new data is available
