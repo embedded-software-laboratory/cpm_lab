@@ -68,12 +68,34 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     timeseries_vehicles[vehicle_id]["battery_voltage"] = make_shared<TimeSeries>(
         "Battery Voltage", "%5.2f", "V");
+    
+    timeseries_vehicles[vehicle_id]["battery_level"] = make_shared<TimeSeries>(
+        "Battery Level", "%3.0f", "%");
 
     timeseries_vehicles[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
         "Motor Current", "%5.2f", "A");
 
     timeseries_vehicles[vehicle_id]["clock_delta"] = make_shared<TimeSeries>(
         "Clock Delta", "%5.1f", "ms");
+}
+
+
+static inline double voltage_to_percent(const double& v)
+{
+    // approximate discharge curve with three linear segments,
+    // see matlab_scripts/linear_discharge.m
+    if (v >= 7.55)
+    {
+        return std::min({72.83 * (v-7.55) + 52.66, 100.0});
+    }
+    else if (v >= 7.22)
+    {
+        return (143.45 * (v-7.22) +  5.33);
+    }
+    else
+    {
+        return std::max({6.49 * (v-6.4 ), 0.0});
+    }
 }
 
 
@@ -99,10 +121,9 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             timeseries_vehicles[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
             timeseries_vehicles[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
             timeseries_vehicles[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
+            timeseries_vehicles[state.vehicle_id()]["battery_level"]            ->push_sample(now, voltage_to_percent(state.battery_voltage()));
             timeseries_vehicles[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
-
-            timeseries_vehicles[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(now - state.header().create_stamp().nanoseconds())/1e6 );
-
+            timeseries_vehicles[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(int64_t(now)- int64_t(state.header().create_stamp().nanoseconds()))/1e6 );
         }
     }
 }
