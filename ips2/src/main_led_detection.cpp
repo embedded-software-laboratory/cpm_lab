@@ -184,7 +184,7 @@ void worker_grab_image()
 
         // Set exposure
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
-        camera.ExposureTime.SetValue(120);
+        camera.ExposureTime.SetValue(50);
 
 
         camera.StartGrabbing();

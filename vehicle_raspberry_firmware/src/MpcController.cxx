@@ -106,6 +106,9 @@ MpcController::MpcController()
     assert(casadi_vars_size["var_x0"][0] == 1);
     assert(casadi_vars_size["var_x0"][1] == 4);
 
+    assert(casadi_vars_size["var_u0"][0] == 1);
+    assert(casadi_vars_size["var_u0"][1] == 2);
+
     assert(casadi_vars_size["var_u"][0] == MPC_control_steps);
     assert(casadi_vars_size["var_u"][1] == 3);
 
@@ -236,6 +239,10 @@ void MpcController::optimize_control_inputs(
         casadi_vars["var_x0"][2] = vehicleState_predicted_start.pose().yaw();
         casadi_vars["var_x0"][3] = vehicleState_predicted_start.speed();
 
+
+        casadi_vars["var_u0"][0] = motor_output_history[MPC_DELAY_COMPENSATION_STEPS-1];
+        casadi_vars["var_u0"][1] = steering_output_history[MPC_DELAY_COMPENSATION_STEPS-1];
+
         for (size_t j = 0; j < 2 * MPC_control_steps; ++j)
         {
             casadi_vars["var_u"][j] = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][j]));
@@ -261,8 +268,8 @@ void MpcController::optimize_control_inputs(
             casadi_vars["var_reference_trajectory_y"][j] = mpc_reference_trajectory_y[j];
         }
 
-        casadi_vars["var_learning_rate"][0] = 0.5;
-        casadi_vars["var_momentum_rate"][0] = 0.5;
+        casadi_vars["var_learning_rate"][0] = 0.4;
+        casadi_vars["var_momentum_rate"][0] = 0.6;
         
         // Run casadi
         casadi_mpc_fn(
