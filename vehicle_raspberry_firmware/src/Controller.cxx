@@ -219,7 +219,10 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
         case ControllerState::Trajectory:
         {
-            trajectory_controller_linear(t_now, motor_throttle, steering_servo);
+            mpcController.update(
+                t_now, m_vehicleState, m_trajectory_points,
+                motor_throttle, steering_servo);
+            //trajectory_controller_linear(t_now, motor_throttle, steering_servo);
         }
         break;
 

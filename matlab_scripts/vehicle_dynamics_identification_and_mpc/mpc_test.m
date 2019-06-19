@@ -27,13 +27,15 @@ function mpc_test
     dt = 1/50;
     dt_MPC = 1/20;
     
-    state = [2, 3.8, 0, 1, 0];
+    state = [1.5, 3.4, 0, 0];
     
-    parameters = [ 1.007419, -0.191607, 0.199668, 3.590788, -1.816570, -9.134298, 2.269441, 1.365857, 12.233076, 0.033411, -0.012818 ]';
+    parameters = [ 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 ]';
     
-    Hp = 20;
-    Hu = 10;
+    Hp = 8;
+    Hu = 4;
     mpcController = MpcController(parameters, Hp, Hu, dt_MPC);
+    
+    u_delayed = zeros(3,3);
     
     for t_now = (0:dt:27)+1e-6        
         
@@ -58,17 +60,20 @@ function mpc_test
         
         
         
-        [u, trajectory_pred_x, trajectory_pred_y] = ...
+        [u_command, trajectory_pred_x, trajectory_pred_y] = ...
             mpcController.update(state, reference_trajectory_x, reference_trajectory_y);
         
-        u(1) = max(-1,min(1,u(1))); % motor
-        u(2) = max(-1,min(1,u(2))); % steering
-        u(3) = 8; % battery voltage
+        u_command(1) = max(-1,min(1,u_command(1))); % motor
+        u_command(2) = max(-1,min(1,u_command(2))); % steering
+        u_command(3) = 8; % battery voltage
+        
         
         
         % Simulate
-        state = state + dt * vehicle_dynamics(state,u,parameters);
+        state = state + dt * vehicle_dynamics(state,u_delayed(1,:),parameters);
+        state = state + 1e-3 * randn(size(state));
         
+        u_delayed = [u_delayed(2:end,:);u_command];
         
         % Visualize
         vehicle_geometry_x = [-1 1 1 -1]*0.1;

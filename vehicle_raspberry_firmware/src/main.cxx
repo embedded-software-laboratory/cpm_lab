@@ -112,19 +112,20 @@ int main(int argc, char *argv[])
     Localization localization;
     Controller controller(vehicle_id, [&](){return update_loop->get_time();});
 
-    /*
+    
     // Timing / profiling helper
     uint64_t t_prev = update_loop->get_time();
     auto log_fn = [&](int line){
         uint64_t now = update_loop->get_time();
         cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
         t_prev = now;
-    };*/
+    };
     
 
     // Control loop
     update_loop->start([&](uint64_t t_now) 
     {
+        log_fn(__LINE__);
         try 
         {
             // get IPS observation
@@ -237,6 +238,8 @@ int main(int argc, char *argv[])
             std::string err_message = e.what();
             cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
         }
+        
+        log_fn(__LINE__);
     });
     
     return 0;

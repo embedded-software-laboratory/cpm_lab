@@ -33,9 +33,17 @@ set(SOURCE_BASE
     src/Controller.hpp
     src/TrajectoryInterpolation.cxx
     src/TrajectoryInterpolation.hpp
+    src/casadi_mpc_fn.c
+    src/casadi_mpc_fn.h
+    src/MpcController.hpp
+    src/MpcController.cxx
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c
 )
+
+
+
+set_source_files_properties(src/casadi_mpc_fn.c PROPERTIES COMPILE_FLAGS -O3)
 
 
 if(BUILD_SIMULATION)

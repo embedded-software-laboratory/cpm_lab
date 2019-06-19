@@ -14,6 +14,7 @@
 #include "cpm/Reader.hpp"
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
+#include "MpcController.hpp"
 
 extern "C" {
     #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -29,6 +30,8 @@ enum class ControllerState
 
 class Controller
 {
+    MpcController mpcController;
+
     std::function<uint64_t()> m_get_time;
 
     std::unique_ptr< cpm::Reader<VehicleCommandDirect> > reader_CommandDirect;
@@ -40,7 +43,7 @@ class Controller
 
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
-    VehicleCommandTrajectory m_vehicleCommandTrajectory;
+    
 
     ControllerState state = ControllerState::Stop;
 
