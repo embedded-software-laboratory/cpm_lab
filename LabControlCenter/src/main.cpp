@@ -28,8 +28,8 @@ using namespace std::placeholders;
 int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
-    cpm::Logging::Instance().set_id("LabControlCenter");
     cpm::init(argc, argv);
+    cpm::Logging::Instance().set_id("LabControlCenter");
 
     //Read command line parameters (current params: auto_start and config_file)
     //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready

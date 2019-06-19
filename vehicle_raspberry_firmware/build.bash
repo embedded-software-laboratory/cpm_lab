@@ -40,3 +40,4 @@ popd
 rm -f /var/www/html/raspberry/package.tar.gz
 #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
 cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case
+echo $DDS_DOMAIN >/var/www/html/raspberry/DDS_DOMAIN
