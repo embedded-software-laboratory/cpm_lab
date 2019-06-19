@@ -58,7 +58,7 @@ typedef struct
 	 * Bit 4: reserved
 	 * Bit 3: reserved
 	 * Bit 2: reserved
-	 * Bit 1: reserved
+	 * Bit 1: SPI status, 0 -> previous mosi packet correctly received, 1 -> fault
 	 * Bit 0: IMU status, 0 -> OK, 1 -> fault
 	*/
 } __attribute__((packed)) spi_miso_data_t;
