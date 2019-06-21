@@ -10,6 +10,8 @@
 #include "LedPoints.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/init.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -271,6 +273,10 @@ int main(int argc, char* argv[])
     if(argc < 2) {
         std::cout << "To enable visualization use parameter --visualization=1" << std::endl;
     }
+
+    cpm::init(argc, argv);
+    cpm::Logging::Instance().set_id("led_detection");
+
     enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
 
     std::thread thread_led_detection([](){worker_led_detection();});

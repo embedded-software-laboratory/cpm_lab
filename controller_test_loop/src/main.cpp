@@ -14,11 +14,13 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/init.hpp"
 
 
 
 int main(int argc, char *argv[])
 {
+    cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("controller_test_loop");
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
