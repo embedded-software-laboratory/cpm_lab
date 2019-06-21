@@ -57,14 +57,15 @@ class Controller
     std::mutex command_receive_mutex;
 
 
+    // TODO remove linear trajectory controller related stuff, once the MPC works well
     double trajectory_controller_lateral_P_gain;
     double trajectory_controller_lateral_D_gain;
+    void trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out);
 
     void update_remote_parameters();
 
     double speed_controller(const double speed_measured, const double speed_target);
 
-    void trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out);
 
     void receive_commands(uint64_t t_now);
 
