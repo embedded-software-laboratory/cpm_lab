@@ -20,7 +20,6 @@
 #include "TimerTrigger.hpp"
 #include "cpm/init.hpp"
 
-
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
