@@ -2,6 +2,7 @@
 #include <iostream>
 #include "TrajectoryInterpolation.hpp"
 #include "cpm/Parameter.hpp"
+#include "cpm/Logging.hpp"
 
 
 template<typename T>
@@ -188,12 +189,18 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
     if(latest_command_receive_time + command_timeout < t_now)
     {
+        cpm::Logging::Instance().write(
+            "Warning: Vehicle Controller: "
+            "No new commands received. Stopping.");
         state = ControllerState::Stop;
     }
 
     if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
         && state == ControllerState::Trajectory)
     {
+        cpm::Logging::Instance().write(
+            "Warning: Vehicle Controller: "
+            "Lost IPS position reference. Stopping.");
         state = ControllerState::Stop;
     }
 

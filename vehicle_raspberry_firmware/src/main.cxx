@@ -25,6 +25,7 @@ using std::vector;
 #include "cpm/stamp_message.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/init.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -42,12 +43,14 @@ using std::vector;
 int main(int argc, char *argv[])
 {
     //rti::config::Logger::instance().verbosity(rti::config::Verbosity::STATUS_ALL);
-    rti::config::Logger::instance().verbosity(rti::config::Verbosity::WARNING);
+    //rti::config::Logger::instance().verbosity(rti::config::Verbosity::WARNING);
 
     if(argc < 2) {
         std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT" << std::endl;
         return 1;
     }
+
+    cpm::init(argc, argv);
 
     const int vehicle_id = cpm::cmd_parameter_int("vehicle_id", 0, argc, argv);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
@@ -125,7 +128,7 @@ int main(int argc, char *argv[])
     // Control loop
     update_loop->start([&](uint64_t t_now) 
     {
-        log_fn(__LINE__);
+        //log_fn(__LINE__);
         try 
         {
             // get IPS observation
@@ -239,7 +242,7 @@ int main(int argc, char *argv[])
             cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
         }
         
-        log_fn(__LINE__);
+        //log_fn(__LINE__);
     });
     
     return 0;

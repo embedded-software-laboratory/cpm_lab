@@ -18,6 +18,7 @@
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "TimerTrigger.hpp"
+#include "cpm/init.hpp"
 
 
 #include <gtkmm/builder.h>
@@ -29,6 +30,7 @@ using namespace std::placeholders;
 int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
+    cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("LabControlCenter");
 
     //Read command line parameters (current params: auto_start and config_file)

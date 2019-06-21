@@ -7,6 +7,8 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/init.hpp"
 #include "IpsPipeline.hpp"
 
 
@@ -16,6 +18,10 @@ int main(int argc, char* argv[])
     if(argc < 2) {
         std::cout << "To enable visualization use parameter --visualization=1" << std::endl;
     }
+
+    cpm::init(argc, argv);
+    cpm::Logging::Instance().set_id("ips_pipeline");
+
     const bool enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
     IpsPipeline ipsPipeline(enable_visualization);
 
