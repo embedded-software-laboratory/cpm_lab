@@ -48,6 +48,11 @@ void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleComm
             latest_command_receive_time = m_get_time();
         }
     }
+
+    // Erase trajectory points which are older than 1 second
+    const uint64_t past_threshold_time = latest_command_receive_time - 1000000000ull;
+    auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
+    m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
 }
 
 
@@ -227,6 +232,7 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
         case ControllerState::Trajectory:
         {
+            // Run controller
             mpcController.update(
                 t_now, m_vehicleState, m_trajectory_points,
                 motor_throttle, steering_servo);
