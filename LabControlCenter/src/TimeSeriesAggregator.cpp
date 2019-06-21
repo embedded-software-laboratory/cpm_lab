@@ -158,29 +158,39 @@ void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
     dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples
 )
 {
-    std::lock_guard<std::mutex> lock(_mutex);
-    for(auto sample : samples)
     {
-        if(sample.info().valid())
+        std::lock_guard<std::mutex> lock(_mutex);
+        for(auto sample : samples)
         {
-            const uint8_t vehicle_id = sample.data().vehicle_id();
-            if(vehicle_reference_trajectories.count(vehicle_id) == 0)
+            if(sample.info().valid())
             {
-                vehicle_reference_trajectories[vehicle_id] = 
-                    make_shared<TimeSeries_TrajectoryPoint>("","","");
-            }
-
-
-            for(const TrajectoryPoint &point : sample.data().trajectory_points())
-            {
-                const uint64_t t = point.t().nanoseconds();
-                if(vehicle_reference_trajectories[vehicle_id]->get_latest_time() < t)
+                const uint8_t vehicle_id = sample.data().vehicle_id();
+                auto dds_trajectory_points = sample.data().trajectory_points();                                    
+                for(auto trajectory_point : dds_trajectory_points) 
                 {
-                    vehicle_reference_trajectories[vehicle_id]->push_sample(t, point);
+                    const uint64_t t = trajectory_point.t().nanoseconds();
+                    vehicle_reference_trajectories[vehicle_id][t] = trajectory_point;
                 }
-
             }
         }
+    }
+    erase_past_commandTrajectory_samples();    
+}
+
+void TimeSeriesAggregator::erase_past_commandTrajectory_samples()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    // Erase trajectory points which are older than 1 second
+    const uint64_t past_threshold_time = clock_gettime_nanoseconds() - 1000000000ull;
+    for (auto vehicle_trajectory_it = vehicle_reference_trajectories.begin();
+         vehicle_trajectory_it != vehicle_reference_trajectories.end();
+         ++vehicle_trajectory_it)
+    {
+        auto last_valid_it = vehicle_trajectory_it->second.upper_bound(past_threshold_time);
+        vehicle_trajectory_it->second.erase(
+            vehicle_trajectory_it->second.begin(),
+            last_valid_it
+        );
     }
 }
 
@@ -190,6 +200,7 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
 }
 
 VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
-    std::lock_guard<std::mutex> lock(_mutex); 
+    erase_past_commandTrajectory_samples(); 
+    std::lock_guard<std::mutex> lock(_mutex);
     return vehicle_reference_trajectories; 
 }

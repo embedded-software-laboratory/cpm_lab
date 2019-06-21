@@ -10,7 +10,7 @@
 
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
-using VehicleTrajectories = map<uint8_t, shared_ptr<TimeSeries_TrajectoryPoint>  >;
+using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
 
 class TimeSeriesAggregator
 {
@@ -21,6 +21,7 @@ class TimeSeriesAggregator
     void handle_new_vehicleState_samples(dds::sub::LoanedSamples<VehicleState>& samples);
     void handle_new_vehicleObservation_samples(dds::sub::LoanedSamples<VehicleObservation>& samples);
     void handle_new_commandTrajectory_samples(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
+    void erase_past_commandTrajectory_samples();
 
     shared_ptr<cpm::AsyncReader<VehicleState>> vehicle_state_reader;
     shared_ptr<cpm::AsyncReader<VehicleObservation>> vehicle_observation_reader;
