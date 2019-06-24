@@ -26,16 +26,18 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
             std::unique_lock<std::mutex> lock2(simulated_time_mutex);
 
+            const uint64_t next_start_stamp = sample.data().next_start_stamp().nanoseconds();
+
             //The LCC is only waiting for a response if:
             //a) TODO The participant has been pre-registered and has not yet sent any message
             //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
             WaitingResponse waiting_response;
-            if (sample.data().next_start_stamp().nanoseconds() == current_simulated_time && use_simulated_time) {
+            if (next_start_stamp == current_simulated_time && use_simulated_time) {
                 if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep == current_simulated_time){
                     waiting_response = YES;
                 }
             }
-            else if (sample.data().next_start_stamp().nanoseconds() < current_simulated_time && use_simulated_time) {
+            else if (next_start_stamp < current_simulated_time && use_simulated_time) {
                 if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep < current_simulated_time){
                     waiting_response = OUT_OF_SYNC;
                 }
@@ -47,10 +49,10 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             //Only store new data if the current timestep is higher than the timestep that was stored for the vehicle
             uint64_t next_step;
             if (ready_status_storage.find(id) == ready_status_storage.end()) {
-                next_step = sample.data().next_start_stamp().nanoseconds();
+                next_step = next_start_stamp;
             }
-            else if (ready_status_storage[id].next_timestep <= sample.data().next_start_stamp().nanoseconds()) {
-                next_step = sample.data().next_start_stamp().nanoseconds();
+            else if (ready_status_storage[id].next_timestep <= next_start_stamp) {
+                next_step = next_start_stamp;
             }
             else {
                 cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id.c_str());
@@ -70,9 +72,6 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             }
 
             ready_status_storage[id] = data;
-
-            lock.unlock();
-            lock2.unlock();
         }
     }
 
