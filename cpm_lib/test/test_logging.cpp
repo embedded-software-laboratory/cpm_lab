@@ -2,10 +2,12 @@
 #include "cpm/Logging.hpp"
 #include <unistd.h>
 
+#include <algorithm>
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <vector>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/sub/ddssub.hpp>
@@ -24,42 +26,17 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().set_id(id);
 
     //Create logging logs_reader
-    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
+    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
 
-    // Create a WaitSet that waits for any data
-    dds::core::cond::WaitSet waitset;
-    dds::sub::cond::ReadCondition read_cond(
-        logs_reader, dds::sub::status::DataState::any());
-    waitset += read_cond;
+    //Sleep 100ms to make sure that the logger reader is ready to receive messages
+    rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
     std::string first_test = "TEST";
     std::string second_test = "Second\" test!";
     std::string with_more = "With \"m\"ore!";
-
-    //Data from the threads for later checks - CHECK does not support concurrency
-    std::string thread_content_1;
-    std::string thread_id;
-    std::string thread_content_2;
-
-    //Thread for testing whether the logs are sent correctly via DDS
-    //The thread waits for the log signals and stores them in thread_content_1 and thread_content_2 for later checks
-    std::thread signal_thread = std::thread([&](){
-        waitset.wait();
-        for (auto sample : logs_reader.take()) {
-            if (sample.info().valid()) {
-                thread_content_1 = sample.data().content();
-                thread_id = sample.data().id();
-            }
-        }
-        waitset.wait();
-        for (auto sample : logs_reader.take()) {
-            if (sample.info().valid()) {
-                thread_content_2 = sample.data().content();
-            }
-        }
-    });
+    std::string third_test = "Die Zahl 5 nennt sich auch fünf";
 
     //Log first test data and write it to the stringstream for comparison
     actual_content << first_test;
@@ -81,7 +58,7 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
-    rti::util::sleep(dds::core::Duration::from_millisecs(250));
+    rti::util::sleep(dds::core::Duration::from_millisecs(50));
 
     //Write second message to Logger
     std::stringstream stream;
@@ -89,7 +66,7 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().write(stream.str().c_str());
     stream.clear();
 
-    rti::util::sleep(dds::core::Duration::from_millisecs(250));
+    rti::util::sleep(dds::core::Duration::from_millisecs(50));
 
     //Write C-style message
     cpm::Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
@@ -120,12 +97,21 @@ TEST_CASE( "Logging" ) {
 
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
     CHECK(file_content.str().find(second_test_escaped) != std::string::npos);
-    CHECK(file_content.str().find("Die Zahl 5 nennt sich auch fünf") != std::string::npos);
+    CHECK(file_content.str().find(third_test) != std::string::npos);
 
-    signal_thread.join();
+    //Get listener data to check if it logs were received via DDS
+    std::vector<std::string> listener_content;
+    std::string thread_id;
+    for (auto sample : logs_reader.take()) {
+        if (sample.info().valid()) {
+            listener_content.push_back(sample.data().content());
+            thread_id = sample.data().id();
+        }
+    }
 
-    //Compare thread content (received messages) with desired content
-    CHECK(thread_content_1 == actual_content.str());
+    //Compare thread content (received messages) with desired content (order irrelevant)
+    CHECK((std::find(listener_content.begin(), listener_content.end(), actual_content.str()) != listener_content.end() &&
+        std::find(listener_content.begin(), listener_content.end(), (second_test + with_more)) != listener_content.end() &&
+        std::find(listener_content.begin(), listener_content.end(), third_test) != listener_content.end()));
     CHECK(thread_id == id);
-    CHECK(thread_content_2 == second_test + with_more);
 }
