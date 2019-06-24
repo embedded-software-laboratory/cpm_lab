@@ -139,24 +139,6 @@ int main(int argc, char *argv[])
             spi_mosi_data_t spi_mosi_data;
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
-            double motor_throttle = 0;
-            double steering_servo = 0;
-
-            // Run controller
-            {
-                controller.get_control_signals(t_now, motor_throttle, steering_servo);
-
-                // Motor deadband, to prevent small stall currents when standing still
-                uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-                if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-                if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
-
-                // Convert to low level controller units
-                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
-                spi_mosi_data.motor_mode = motor_mode;
-            }
-
             // LED identification signal
             {
                 spi_mosi_data.LED1_period_ticks = 1;
@@ -169,13 +151,36 @@ int main(int argc, char *argv[])
                 spi_mosi_data.LED4_enabled_ticks = identification_LED_enabled_ticks.at(vehicle_id);
             }
 
+            double motor_throttle = 0;
+            double steering_servo = 0;
+
+            // Run controller
+            controller.get_control_signals(t_now, motor_throttle, steering_servo);
+            // Motor deadband, to prevent small stall currents when standing still
+            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
+
+            VehicleState vehicleState;
             int n_transmission_attempts = 1;
             int transmission_successful = 1;
 
+            
 #ifdef VEHICLE_SIMULATION
-            spi_miso_data_t spi_miso_data = simulationVehicle.update(
-                spi_mosi_data, t_now, period_nanoseconds/1e9, vehicle_id);
+            vehicleState = simulationVehicle.update(
+                motor_throttle,
+                steering_servo,
+                motor_mode,
+                t_now,
+                period_nanoseconds/1e9,
+                vehicle_id
+            );
 #else
+            // Convert to low level controller units
+            spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+            spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
+            spi_mosi_data.motor_mode = motor_mode;
+
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data;
 
@@ -199,8 +204,10 @@ int main(int argc, char *argv[])
             if(transmission_successful) 
             {
                 // TODO rethink this. What should be skipped when there is a SPI error?
-            
-                VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
+
+#ifndef VEHICLE_SIMULATION
+                vehicleState = SensorCalibration::convert(spi_miso_data);
+#endif                
                 Pose2D new_pose = localization.update(
                     t_now,
                     period_nanoseconds,

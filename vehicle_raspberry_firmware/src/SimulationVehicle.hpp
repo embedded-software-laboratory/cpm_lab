@@ -1,7 +1,10 @@
 #pragma once
 
+#include <list>
 #include <stdint.h>
+
 #include "VehicleObservation.hpp"
+#include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
 
@@ -11,6 +14,23 @@ extern "C" {
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
+struct ActuatorInput
+{
+    ActuatorInput();
+    ActuatorInput(
+        const double& motor_throttle,
+        const double& steering_servo,
+        const uint8_t& motor_mode)
+    :motor_throttle(motor_throttle)
+    ,steering_servo(steering_servo)
+    ,motor_mode(motor_mode)
+    {
+    }
+    
+    double motor_throttle = 0;
+    double steering_servo = 0;
+    uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+};
 
 class SimulationVehicle
 {
@@ -22,10 +42,10 @@ class SimulationVehicle
     double speed = 0;
     double curvature = 0;
 
-    
-    uint32_t tick = 0;
-    
-    spi_mosi_data_t input_next; // save one input sample to simulate delay time
+    int input_delay = 1;
+    // list to simulate time delay
+    // last element is the most recent
+    std::list<ActuatorInput> actuator_inputs; 
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
@@ -34,11 +54,15 @@ class SimulationVehicle
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS);
-    spi_miso_data_t update(
-        const spi_mosi_data_t spi_mosi_data, 
-        const uint64_t t_now, 
-        const double dt, 
-        const uint8_t vehicle_id
+
+    VehicleState update(
+        const double& motor_throttle,
+        const double& steering_servo,
+        const uint8_t& motor_mode,
+        const uint64_t& t_now, 
+        const double& dt, 
+        const uint8_t& vehicle_id
     );
+
     void get_state(double& _x, double& _y, double& _yaw, double& _speed);
 };
