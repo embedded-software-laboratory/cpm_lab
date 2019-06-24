@@ -12,11 +12,11 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
 }
 
 void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
-    bool all_invalid = true; 
+    bool any_message_received = false; 
     
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            all_invalid = false;
+            any_message_received = true;
             
             //Data from the sample to string
             std::string id = sample.data().source_id();
@@ -76,7 +76,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
     }
 
     //Check if all vehicles that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep (simulated time only)
-    if (!all_invalid) {
+    if (any_message_received) {
         send_next_signal();
     }
 
