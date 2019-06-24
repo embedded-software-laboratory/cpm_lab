@@ -21,7 +21,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             //Data from the sample to string
             std::string id = sample.data().source_id();
             //Find out the last message timestamp and print it to the UI - this can be useful for debugging purposes
-            std::string last_message = get_current_realtime();
+            uint64_t last_message = get_current_time_ns();
 
             std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
             std::unique_lock<std::mutex> lock2(simulated_time_mutex);
@@ -57,7 +57,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             }
 
             TimerData data;
-            data.last_message = last_message;
+            data.last_message_receive_stamp = last_message;
             data.waiting_for_response = waiting_response;
             data.next_timestep = next_step;
 
@@ -147,13 +147,36 @@ void TimerTrigger::send_stop_signal() {
         system_trigger_writer.write(trigger);
 }
 
-std::string TimerTrigger::get_current_realtime() {
-    std::stringstream time_stream;
-    std::time_t t = std::time(0);
-    std::tm* time = std::localtime(&t);
+std::string TimerTrigger::get_human_readable_time_diff(uint64_t other_time) {
+    uint64_t current_time = get_current_time_ns();
+    if (current_time >= other_time) {
+        uint64_t time_diff = get_current_time_ns() - other_time;
+        std::stringstream time_stream;
 
-    time_stream << time->tm_hour << ":" << time->tm_min << ":" << time->tm_sec;
-    return time_stream.str();
+        time_diff /= 1000000000ull;
+        if (time_diff <= 59) {
+            time_stream << time_diff << "s";
+        }
+        else {
+            uint64_t time_diff_min = time_diff/60;
+            uint64_t time_diff_sec = time_diff % 60;
+
+            if (time_diff_min <= 59) {
+                time_stream << time_diff_min << "min " << time_diff_sec << "s";
+            }
+            else {
+                uint64_t time_diff_h = time_diff_min/60;
+                time_diff_min = time_diff_min % 60;
+
+                time_stream << time_diff_h << "h " << time_diff_min << "min " << time_diff_sec << "s";
+            }
+        }
+
+        return time_stream.str();
+    }
+    else {
+        return "-1";
+    }
 }
 
 std::map<string, TimerData> TimerTrigger::get_participant_message_data() {

@@ -21,7 +21,7 @@
 
 struct TimerData {
     uint64_t next_timestep;
-    std::string last_message;
+    uint64_t last_message_receive_stamp;
     std::string waiting_for_response;
 };
 
@@ -38,11 +38,6 @@ private:
     std::mutex ready_status_storage_mutex;
     uint64_t current_simulated_time; //Only makes sense if simulated time is used
     std::mutex simulated_time_mutex;
-
-    /**
-     * \brief Get the current time as string in hours:minutes:seconds
-     */
-    std::string get_current_realtime();
 
     //Timing functions
     /**
@@ -70,4 +65,9 @@ public:
     std::map<string, TimerData> get_participant_message_data();
 
     void get_current_simulated_time(bool& use_simulated_time, uint64_t& current_time);
+
+    /**
+     * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
+     */
+    std::string get_human_readable_time_diff(uint64_t other_time);
 };

@@ -62,7 +62,7 @@ void TimerViewUI::dispatcher_callback() {
         step_stream << entry.second.next_timestep;
 
         Glib::ustring id_ustring(entry.first);
-        Glib::ustring last_message_ustring(entry.second.last_message);
+        Glib::ustring last_message_ustring(timer_trigger->get_human_readable_time_diff(entry.second.last_message_receive_stamp));
         Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
         Glib::ustring next_step_ustring(step_stream.str());
 
