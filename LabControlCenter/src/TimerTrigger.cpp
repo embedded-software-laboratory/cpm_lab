@@ -29,19 +29,19 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             //The LCC is only waiting for a response if:
             //a) TODO The participant has been pre-registered and has not yet sent any message
             //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
-            std::string waiting_response;
+            WaitingResponse waiting_response;
             if (sample.data().next_start_stamp().nanoseconds() == current_simulated_time && use_simulated_time) {
                 if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep == current_simulated_time){
-                    waiting_response = "YES";
+                    waiting_response = YES;
                 }
             }
             else if (sample.data().next_start_stamp().nanoseconds() < current_simulated_time && use_simulated_time) {
                 if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep < current_simulated_time){
-                    waiting_response = "OUT OF SYNC";
+                    waiting_response = OUT_OF_SYNC;
                 }
             }
             else {
-                waiting_response = "-";
+                waiting_response = NO;
             }
 
             //Only store new data if the current timestep is higher than the timestep that was stored for the vehicle
@@ -58,8 +58,16 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 
             TimerData data;
             data.last_message_receive_stamp = last_message;
-            data.waiting_for_response = waiting_response;
             data.next_timestep = next_step;
+            if (waiting_response == YES) {
+                data.waiting_for_response = "YES";
+            }
+            else if (waiting_response == OUT_OF_SYNC) {
+                data.waiting_for_response = "OUT OF SYNC";
+            }
+            else {
+                data.waiting_for_response = "-";
+            }
 
             ready_status_storage[id] = data;
 

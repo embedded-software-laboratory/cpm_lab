@@ -25,6 +25,10 @@ struct TimerData {
     std::string waiting_for_response;
 };
 
+enum WaitingResponse {
+    YES, OUT_OF_SYNC, NO
+};
+
 class TimerTrigger {
 private:
     bool use_simulated_time = false;
