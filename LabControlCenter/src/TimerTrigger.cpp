@@ -75,7 +75,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
         }
     }
 
-    //Check if all vehicles that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep (simulated time only)
+    //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
     if (any_message_received) {
         send_next_signal();
     }
