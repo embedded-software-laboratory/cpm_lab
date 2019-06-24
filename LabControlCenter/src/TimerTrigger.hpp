@@ -45,10 +45,10 @@ private:
 
     //Timing functions
     /**
-     * \brief Send time signals if simulated time is used
+     * \brief Send time signals if simulated time is used, check received messages
      * \returns true if a signal was sent, else false
      */
-    bool send_next_signal();
+    bool check_signals_and_send_next_signal();
 
     //Get the current time in ns
     uint64_t get_current_time_ns();

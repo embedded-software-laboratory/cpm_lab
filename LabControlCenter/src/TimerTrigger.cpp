@@ -77,7 +77,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
 
     //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
     if (any_message_received) {
-        send_next_signal();
+        check_signals_and_send_next_signal();
     }
 
     //TODO Check if uint64_t max number is close and stop the program automatically
@@ -94,7 +94,7 @@ void TimerTrigger::send_start_signal() {
     timer_running.store(true);
 
     if (use_simulated_time) {
-        bool signal_sent = send_next_signal();
+        bool signal_sent = check_signals_and_send_next_signal();
         //TODO Do something if no signal was sent
     }
     else {
@@ -106,7 +106,7 @@ void TimerTrigger::send_start_signal() {
     }
 }
 
-bool TimerTrigger::send_next_signal() {
+bool TimerTrigger::check_signals_and_send_next_signal() {
     if (use_simulated_time && timer_running.load()) {
         //Find smallest next time step in the storage
         uint64_t smallest_step = 0;
