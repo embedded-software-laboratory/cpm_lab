@@ -4,18 +4,8 @@
 #include "cpm/Logging.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-
-/*static inline uint64_t get_time_ns()
-{
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}*/
-
-
 MpcController::MpcController()
 {
-
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
 
@@ -55,7 +45,6 @@ MpcController::MpcController()
             }
         }
 
-
         // Generate buffers for casadi variables
         std::string name = "";
         if (i_var < n_in) 
@@ -82,7 +71,6 @@ MpcController::MpcController()
         }
     }
 
-
     assert((casadi_int)(casadi_arguments.size()) == n_in);
     assert((casadi_int)(casadi_results.size()) == n_out);
 
@@ -99,8 +87,6 @@ MpcController::MpcController()
     assert(sz_res == n_out);
     assert(sz_iw == 0);
     assert(sz_w == 0);
-
-
 
     // Check casadi sizes against expected values
     assert(casadi_vars_size["var_x0"][0] == 1);
@@ -144,32 +130,7 @@ MpcController::MpcController()
 
     assert(casadi_vars_size["var_u_next"][0] == MPC_control_steps);
     assert(casadi_vars_size["var_u_next"][1] == 3);
-
-
-
-    /*
-    // temp test, delete later
-    auto t_start = get_time_ns();
-
-    for (int i = 0; i < 50; ++i)
-    {
-
-        // tmp, test eval
-        casadi_mpc_fn(
-            (const casadi_real**)(casadi_arguments.data()), 
-            casadi_results.data(), 
-            nullptr, nullptr, nullptr);
-    }
-
-
-
-    auto t_end = get_time_ns();
-
-    std::cout << "dt " << (t_end - t_start) << std::endl;
-    */
 }
-
-
 
 void MpcController::update(
     uint64_t t_now, 
@@ -182,7 +143,6 @@ void MpcController::update(
     battery_voltage_lowpass_filtered += 0.1 * (vehicleState.battery_voltage() - battery_voltage_lowpass_filtered);
 
     const VehicleState vehicleState_predicted_start = delay_compensation_prediction(vehicleState);
-
 
     std::vector<double> mpc_reference_trajectory_x;
     std::vector<double> mpc_reference_trajectory_y;
@@ -202,7 +162,6 @@ void MpcController::update(
     assert(mpc_reference_trajectory_x.size() == MPC_prediction_steps);
     assert(mpc_reference_trajectory_y.size() == MPC_prediction_steps);
 
-
     optimize_control_inputs(
         vehicleState_predicted_start,
         mpc_reference_trajectory_x,
@@ -210,7 +169,6 @@ void MpcController::update(
         out_motor_throttle, 
         out_steering_servo
     );
-
 
     // shift output history, save new output
     for (int i = 1; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
@@ -239,7 +197,6 @@ void MpcController::optimize_control_inputs(
         casadi_vars["var_x0"][2] = vehicleState_predicted_start.pose().yaw();
         casadi_vars["var_x0"][3] = vehicleState_predicted_start.speed();
 
-
         casadi_vars["var_u0"][0] = motor_output_history[MPC_DELAY_COMPENSATION_STEPS-1];
         casadi_vars["var_u0"][1] = steering_output_history[MPC_DELAY_COMPENSATION_STEPS-1];
 
@@ -261,7 +218,6 @@ void MpcController::optimize_control_inputs(
             casadi_vars["var_params"].at(j) = dynamics_parameters.at(j);
         }
 
-
         for (size_t j = 0; j < MPC_prediction_steps; ++j)
         {
             casadi_vars["var_reference_trajectory_x"][j] = mpc_reference_trajectory_x[j];
@@ -277,30 +233,24 @@ void MpcController::optimize_control_inputs(
             casadi_results.data(), 
             nullptr, nullptr, nullptr);
 
-        std::cout << "objective value " << casadi_vars["objective"][0] << std::endl;
-
-        /*std::cout << "u ";
-
-        for (int j = 0; j < 2 * MPC_control_steps; ++j)
-        {
-            std::cout << casadi_vars["var_u_next"][j] << ", ";
-        }
-        std::cout << std::endl;
-        std::cout << "trx ";
-
-        for (int j = 0; j < MPC_prediction_steps; ++j)
-        {
-            std::cout << casadi_vars["trajectory_x"][j] << ", ";
-        }
-        std::cout << std::endl;*/
-
-        // TODO actor limits
-
-
-        // TODO print objective for debug
     }
-    out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
-    out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
+
+    //cpm::Logging::Instance().write("objective value %f ",casadi_vars["objective"][0]);
+
+    if(casadi_vars["objective"][0] < 0.7)
+    {
+        out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
+        out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
+    }
+    else
+    {
+        cpm::Logging::Instance().write(
+            "Warning: Trajectory Controller: "
+            "Large MPC objective. Provide a better reference trajectory. Stopping.");
+
+        out_motor_throttle = 0.0;
+        out_steering_servo = 0.0;
+    }
 }
 
 

@@ -48,6 +48,11 @@ void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleComm
             latest_command_receive_time = m_get_time();
         }
     }
+
+    // Erase trajectory points which are older than 1 second
+    const uint64_t past_threshold_time = latest_command_receive_time - 1000000000ull;
+    auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
+    m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
 }
 
 
@@ -116,8 +121,8 @@ double steering_curvature_calibration(double curvature)
 
 void Controller::update_remote_parameters()
 {
-    trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
-    trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
+    //trajectory_controller_lateral_P_gain = cpm::parameter_double("trajectory_controller/lateral_P_gain");
+    //trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
 }
 
 void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
@@ -187,7 +192,8 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
     update_remote_parameters();
 
-    if(latest_command_receive_time + command_timeout < t_now)
+    if(latest_command_receive_time + command_timeout < t_now
+        && state != ControllerState::Stop)
     {
         cpm::Logging::Instance().write(
             "Warning: Vehicle Controller: "
@@ -226,6 +232,7 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
         case ControllerState::Trajectory:
         {
+            // Run controller
             mpcController.update(
                 t_now, m_vehicleState, m_trajectory_points,
                 motor_throttle, steering_servo);

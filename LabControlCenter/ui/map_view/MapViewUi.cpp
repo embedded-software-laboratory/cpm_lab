@@ -1,7 +1,6 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
-using VehicleTrajectories = map<uint8_t, shared_ptr<TimeSeries_TrajectoryPoint>  >;
 
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
@@ -235,9 +234,13 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     for(const auto& entry : vehicleTrajectories) 
     {
         const auto vehicle_id = entry.first;
-        const auto& trajectory = entry.second;
+        const auto& trajectory_points = entry.second;
 
-        auto trajectory_segment = trajectory->get_last_n_values(6);
+        std::vector<TrajectoryPoint> trajectory_segment;
+        for (const auto& trajectory_point : trajectory_points)
+        {
+            trajectory_segment.push_back(trajectory_point.second);
+        }        
 
         if(trajectory_segment.size() > 1)
         {
