@@ -31,6 +31,7 @@ private:
     Gtk::Box* parent;
     Gtk::TreeView* logs_treeview;
     Gtk::Label* logs_label_header;
+    Gtk::ScrolledWindow* logs_scrolled_window;
 
     //TreeView Layout, status storage for the UI
     LoggerModelRecord log_record;

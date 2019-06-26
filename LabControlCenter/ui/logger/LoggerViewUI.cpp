@@ -10,13 +10,16 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("parent", parent);
     ui_builder->get_widget("logs_treeview", logs_treeview);
     ui_builder->get_widget("logs_label_header", logs_label_header);
+    ui_builder->get_widget("logs_scrolled_window", logs_scrolled_window);
 
     assert(parent);
     assert(logs_treeview);
     assert(logs_label_header);
+    assert(logs_scrolled_window);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
+    log_list_store->set_sort_column(static_cast<Gtk::TreeModelColumnBase>(log_record.log_stamp), Gtk::SORT_DESCENDING);
     logs_treeview->set_model(log_list_store);
 
     //Use model_record, add it to the view
@@ -64,6 +67,8 @@ void LoggerViewUI::dispatcher_callback() {
         row[log_record.log_content] = log_msg_ustring;
         row[log_record.log_stamp] = entry.stamp().nanoseconds();
     }
+
+    logs_scrolled_window->get_vadjustment()->set_value(0);
 }
 
 void LoggerViewUI::update_ui() {
