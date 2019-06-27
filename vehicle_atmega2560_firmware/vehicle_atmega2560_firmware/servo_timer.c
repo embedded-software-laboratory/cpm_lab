@@ -47,9 +47,9 @@ void set_servo_pwm(uint16_t pwm) {
 	// need to consider overflow of 8-bit variable:
 	// only increment counter while less than threshold
 	else {
-			if (pwm == 3000) {
-				consecutive_servo_center_command_count++;
-			}
+		if (pwm == 3000) {
+			consecutive_servo_center_command_count++;
+		}
 	}
 	
 	// this is not the center/default command

@@ -79,7 +79,8 @@ void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received
 	while(PINB & 0b00000001) {
 		// safe mode triggered
 		if (safe_mode_flag) {
-			break;
+			//break; // break exits loop, return exits function
+			return;
 		}
 	}
 	
@@ -114,12 +115,12 @@ void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received
 	
 		// safe mode triggered
 		if (safe_mode_flag) {
-			break;
+			return;
 		}
 		
 		// end of transmission
 		if (PINB & 0b00000001) {
-			break;
+			return;
 		}
 	}
 }

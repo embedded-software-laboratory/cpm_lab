@@ -80,9 +80,10 @@ void safe_mode(spi_mosi_data_t* spi_mosi_data) {
 		uint32_t tick = get_tick();
 			
 		// SS LOW -> master active again
-		if (~PINB & 0b00000001) { // reset safe mode
-			safe_mode_flag = 0;
+		if (~PINB & 0b00000001) { 
+			safe_mode_flag = 0; // reset safe mode
 			watchdog_reset(); // reset watchdog
+			return;
 		}
 		
 		// 50 ticks = 1sec 
