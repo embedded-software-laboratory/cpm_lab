@@ -62,7 +62,7 @@ void TimerViewUI::dispatcher_callback() {
         step_stream << entry.second.next_timestep;
 
         Glib::ustring id_ustring(entry.first);
-        Glib::ustring last_message_ustring(timer_trigger->get_human_readable_time_diff(entry.second.last_message_receive_stamp));
+        Glib::ustring last_message_ustring(get_human_readable_time_diff(entry.second.last_message_receive_stamp));
         Glib::ustring waiting_response_ustring(waiting_response_to_string(entry.second.waiting_for_response));
         Glib::ustring next_step_ustring(step_stream.str());
 
@@ -124,7 +124,7 @@ void TimerViewUI::button_stop_callback() {
     button_start->set_sensitive(false);
 }
 
-std::string waiting_response_to_string(WaitingResponse response) {
+std::string TimerViewUI::waiting_response_to_string(WaitingResponse response) {
     if (response == WaitingResponse::YES) {
         return "YES";
     }
@@ -132,7 +132,39 @@ std::string waiting_response_to_string(WaitingResponse response) {
         return "OUT OF SYNC";
     }
     else {
-        return = "-";
+        return "-";
+    }
+}
+
+std::string TimerViewUI::get_human_readable_time_diff(uint64_t other_time) {
+    uint64_t current_time = cpm::get_time_ns();
+    if (current_time >= other_time) {
+        uint64_t time_diff = current_time - other_time;
+        std::stringstream time_stream;
+
+        time_diff /= 1000000000ull;
+        if (time_diff <= 59) {
+            time_stream << time_diff << "s";
+        }
+        else {
+            uint64_t time_diff_min = time_diff/60;
+            uint64_t time_diff_sec = time_diff % 60;
+
+            if (time_diff_min <= 59) {
+                time_stream << time_diff_min << "min " << time_diff_sec << "s";
+            }
+            else {
+                uint64_t time_diff_h = time_diff_min/60;
+                time_diff_min = time_diff_min % 60;
+
+                time_stream << time_diff_h << "h " << time_diff_min << "min " << time_diff_sec << "s";
+            }
+        }
+
+        return time_stream.str();
+    }
+    else {
+        return "-1";
     }
 }
 

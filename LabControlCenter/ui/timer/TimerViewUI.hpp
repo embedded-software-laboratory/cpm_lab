@@ -63,6 +63,11 @@ private:
 
     //Helper functions
     std::string waiting_response_to_string(WaitingResponse response);
+    
+    /**
+     * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
+     */
+    std::string get_human_readable_time_diff(uint64_t other_time);
 
 public:
     TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger);

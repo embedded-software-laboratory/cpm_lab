@@ -14,19 +14,20 @@
 #include "cpm/Logging.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "dds/pub/DataWriter.hpp"
 
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+enum WaitingResponse {
+    YES, OUT_OF_SYNC, NO
+};
+
 struct TimerData {
     uint64_t next_timestep;
     uint64_t last_message_receive_stamp;
     WaitingResponse waiting_for_response;
-};
-
-enum WaitingResponse {
-    YES, OUT_OF_SYNC, NO
 };
 
 class TimerTrigger {
@@ -50,9 +51,6 @@ private:
      */
     bool check_signals_and_send_next_signal();
 
-    //Get the current time in ns
-    uint64_t get_current_time_ns();
-
 public:
     TimerTrigger(bool simulated_time);
 
@@ -69,9 +67,4 @@ public:
     std::map<string, TimerData> get_participant_message_data();
 
     void get_current_simulated_time(bool& use_simulated_time, uint64_t& current_time);
-
-    /**
-     * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
-     */
-    std::string get_human_readable_time_diff(uint64_t other_time);
 };
