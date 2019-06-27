@@ -117,7 +117,7 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Point> path, in
     }
 
     // Set the timing of the trajectory nodes
-    uint64_t t_start = timer->get_time() + 1000000000ull;
+    uint64_t t_start = timer->get_time() + 2000000000ull;
     trajectory.at(0).t().nanoseconds(t_start);
 
     for (size_t i = 1; i < trajectory.size(); ++i)
@@ -177,7 +177,7 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
         for (size_t i = 0; i < trajectory.size(); ++i)
         {
             // find active trajectory point
-            if(t_now + 500000000ull < trajectory.at(i).t().nanoseconds())
+            if(t_now + 1500000000ull < trajectory.at(i).t().nanoseconds())
             {
                 auto trajectoryPoint = trajectory.at(i);
                 VehicleCommandTrajectory command;

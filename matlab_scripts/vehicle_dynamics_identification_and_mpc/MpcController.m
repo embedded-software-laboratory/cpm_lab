@@ -11,6 +11,7 @@ classdef MpcController
         dt
         momentum
         mpc_fn_compiled
+        u_prev
     end
     
     methods
@@ -27,11 +28,15 @@ classdef MpcController
             addpath('~/casadi-linux-matlabR2014b-v3.4.5')
             import casadi.*
             
-            var_x0 = SX.sym('x', 1, 5);
+            var_x0 = SX.sym('x', 1, 4);
+            var_u0 = SX.sym('u0', 1, 2);
             var_u = SX.sym('ui', Hu, 3);
+            var_momentum = SX.sym('M', Hu, 3);
             var_params = SX.sym('p', length(parameters), 1);
             var_reference_trajectory_x = SX.sym('rx', Hp, 1);
             var_reference_trajectory_y = SX.sym('ry', Hp, 1);
+            var_learning_rate = SX.sym('LR', 1, 1);
+            var_momentum_rate = SX.sym('MR', 1, 1);
             
             X = var_x0 + dt * vehicle_dynamics(var_x0, var_u(u_idx(1),:), var_params);
             for k = 2:Hp
@@ -42,20 +47,29 @@ classdef MpcController
             
             trajectory_x = X(:,1);
             trajectory_y = X(:,2);
-            
-            objective = sumsqr(trajectory_x - var_reference_trajectory_x) + sumsqr(trajectory_y - var_reference_trajectory_y);
+                        
+            objective = sumsqr((trajectory_x - var_reference_trajectory_x)) ...
+                      + sumsqr((trajectory_y - var_reference_trajectory_y)) ...
+                      + 0.5 * sumsqr(var_u(:,1) - [var_u0(1);var_u(1:end-1,1)]) ...
+                      + 0.01 * sumsqr(var_u(:,2) - [var_u0(2);var_u(1:end-1,2)]);
             
             opt_vars = var_u(:,1:2);            
             opt_vars = reshape(opt_vars, Hu*2, 1);
             
             g = gradient(objective, opt_vars);
-            %H = hessian(objective, opt_vars);
             step_u = [reshape(-g,Hu,2) zeros(Hu,1)];
             
             
+            
+            var_momentum_next = var_momentum_rate * var_momentum + step_u;
+            var_u_next = var_u + var_learning_rate * var_momentum_next;
+            
+            
             obj.mpc_fn = casadi.Function('casadi_mpc_fn', ...
-                {var_x0, var_u, var_params, var_reference_trajectory_x, var_reference_trajectory_y},...
-                {trajectory_x, trajectory_y, objective, step_u});
+                {var_x0, var_u0, var_u, var_momentum, var_params, var_reference_trajectory_x, var_reference_trajectory_y, var_learning_rate, var_momentum_rate},...
+                {trajectory_x, trajectory_y, objective, var_momentum_next, var_u_next},...
+                {'var_x0', 'var_u0', 'var_u', 'var_momentum', 'var_params', 'var_reference_trajectory_x', 'var_reference_trajectory_y', 'var_learning_rate', 'var_momentum_rate'}, ...
+                {'trajectory_x', 'trajectory_y', 'objective', 'var_momentum_next', 'var_u_next'} );
             
             obj.mpc_fn.generate('casadi_mpc_fn.c',struct('with_header',true));
             
@@ -66,25 +80,43 @@ classdef MpcController
             obj.u_soln = [0.01,0.01,8] .* ones(Hu,3);
             
             obj.momentum = 0*obj.u_soln;
+            obj.u_prev = [0 0];
+            
+            
+            copyfile casadi_mpc_fn.c ../../vehicle_raspberry_firmware/src/
+            copyfile casadi_mpc_fn.h ../../vehicle_raspberry_firmware/src/
         end
         
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)
             
+            
+            learning_rate = 0.4;
+            momentum_rate = 0.6;
+            
+            objective_prev = 1e111;
+                
             tic
-            for j = 1:50
-                [trajectory_x, trajectory_y, objective, step_u] = ...
-                    obj.mpc_fn_compiled(state, obj.u_soln, obj.parameters, reference_trajectory_x, reference_trajectory_y);
+            for j = 1:20
+                [trajectory_x, trajectory_y, objective, momentum_next, u_next] = ...
+                    obj.mpc_fn_compiled(state, obj.u_prev, obj.u_soln, obj.momentum, obj.parameters, ...
+                    reference_trajectory_x, reference_trajectory_y, learning_rate, momentum_rate);
 
-                obj.momentum = 0.7 * obj.momentum + full(step_u);
                 
-                obj.u_soln = obj.u_soln + 0.07 * obj.momentum;
+                obj.momentum = full(momentum_next);
                 
-%                 d = full(H\g);                
-%                 step_u = [reshape(-d,obj.Hu,2) zeros(obj.Hu,1)];                
-%                 obj.u_soln = obj.u_soln + 0.9*full(step_u);
-                
+                obj.u_soln = full(u_next);
                 
                 obj.u_soln(:,1:2) = min(1,max(-1,obj.u_soln(:,1:2)));
+                obj.u_soln(:,3) = 8;
+                
+                objective_change = objective_prev - objective;
+                
+%                 if( j > 10 && full(objective_change) < 1e-5 )
+%                     j
+%                     break;
+%                 end
+                
+                objective_prev = objective;
             end
             toc
             fprintf('%.7f\n',full(objective));
@@ -93,6 +125,8 @@ classdef MpcController
             trajectory_pred_y = full(trajectory_y);
             
             u = obj.u_soln(1,:);
+            
+            obj.u_prev = u(1,1:2);
         
         end
     end

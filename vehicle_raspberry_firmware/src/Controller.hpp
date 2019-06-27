@@ -14,6 +14,7 @@
 #include "cpm/Reader.hpp"
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
+#include "MpcController.hpp"
 
 extern "C" {
     #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -29,6 +30,8 @@ enum class ControllerState
 
 class Controller
 {
+    MpcController mpcController;
+
     std::function<uint64_t()> m_get_time;
 
     std::unique_ptr< cpm::Reader<VehicleCommandDirect> > reader_CommandDirect;
@@ -40,7 +43,7 @@ class Controller
 
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
-    VehicleCommandTrajectory m_vehicleCommandTrajectory;
+    
 
     ControllerState state = ControllerState::Stop;
 
@@ -54,14 +57,15 @@ class Controller
     std::mutex command_receive_mutex;
 
 
+    // TODO remove linear trajectory controller related stuff, once the MPC works well
     double trajectory_controller_lateral_P_gain;
     double trajectory_controller_lateral_D_gain;
+    void trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out);
 
     void update_remote_parameters();
 
     double speed_controller(const double speed_measured, const double speed_target);
 
-    void trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out);
 
     void receive_commands(uint64_t t_now);
 

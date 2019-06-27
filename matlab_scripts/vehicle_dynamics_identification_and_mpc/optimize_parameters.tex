@@ -1,4 +1,3 @@
-
 Optimal parameter estimation problem for the vehicle dynamics. The optimization tries to find a set of model parameters, that best explain/reproduce the experiment data.
 
 \begin{align*}
@@ -21,4 +20,7 @@ Optimal parameter estimation problem for the vehicle dynamics. The optimization 
 \end{tabular}
 \end{center}
 
-\textbf{Error penalty $E$}: Weighted quadratic error with model specific extensions. The yaw error function has a period of $2\pi$, so that a full rotation does not count as an error. This is done using $\sin(\Delta\psi/2)$. The 5th state (steering) is not measured and thus not penalized.
+\textbf{Error penalty $E$}: Weighted quadratic error with model specific extensions. The yaw error function has a period of $2\pi$, so that a full rotation does not count as an error. This is done using $\sin(\Delta\psi/2)$.
+
+
+\textbf{Delays}: This kind of optimization problem is not well suited for identifying the delay times (Totzeiten). The delays are solved in an outer loop. The delay is guessed/assumed and the measurement data is modified by appropriately shifting it in the time index $k$. This optimization problem is solved many times for combinations of delay times. The delays that create the lowest objective value are taken as the solution.

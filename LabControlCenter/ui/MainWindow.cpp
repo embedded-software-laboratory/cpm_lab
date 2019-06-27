@@ -52,6 +52,7 @@ MainWindow::MainWindow(
     window_LCC->resize((3 * screen_width)/4, (3 * screen_height)/4);
     window_LCC->add_events(Gdk::SCROLL_MASK);
     
+    window_LCC->set_icon(Gdk::Pixbuf::create_from_file("icon.png"));
 
     pane2->pack2(*(tabsViewUI->get_parent()),false,false);
     pane1->pack2(*(monitoringUi->get_parent()),false,false);

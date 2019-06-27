@@ -2,6 +2,9 @@
 *.a
 *.so
 build/
+build_arm/
+build_arm_sim/
+build_x64_sim/
 build_sim/
 install/
 __pycache__/
@@ -30,3 +33,5 @@ output/
 *.mat
 package.tar.gz
 vehicle_raspberry_firmware/package/
+matlab_scripts/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
+core
