@@ -18,9 +18,6 @@
 
 volatile uint8_t safe_mode_flag = 0;
 
-// safe mode tick
-static volatile uint32_t tick = 0;
-
 
 void watchdog_disable() {
 	wdt_reset();
@@ -60,51 +57,19 @@ void watchdog_enable() {
 	// = not |= since want to also clear WDE -> need rewrite WDTCSR not change certain bits.
     WDTCSR = 1<<WDP2; // 250ms
 	//WDTCSR = (1<<WDP3) | (1<<WDP0); // 8sec
-	
-    // enable global interrupts
-    sei();
 
     // enable watchdog interrupt only mode
     WDTCSR |= 1<<WDIE;
+    
+    // enable global interrupts
+    sei();
 }
 
 
-void watchdog_reset(){
+void watchdog_reset() {
 	wdt_reset();
+	safe_mode_flag = 0;
 }
-
-
-void safe_mode(spi_mosi_data_t* spi_mosi_data) {
-	
-	while(1) {
-		uint32_t tick = get_tick();
-			
-		// SS LOW -> master active again
-		if (~PINB & 0b00000001) { 
-			safe_mode_flag = 0; // reset safe mode
-			watchdog_reset(); // reset watchdog
-			return;
-		}
-		
-		// 50 ticks = 1sec 
-		if (tick%30>15) {
-			spi_mosi_data->LED1_enabled = 1;
-			spi_mosi_data->LED2_enabled = 1;
-			spi_mosi_data->LED3_enabled = 1;
-			spi_mosi_data->LED4_enabled = 1;
-		
-			led_set_state(spi_mosi_data);
-		}
-		else {
-			spi_mosi_data->LED1_enabled = 0;
-			spi_mosi_data->LED2_enabled = 0;
-			spi_mosi_data->LED3_enabled = 0;
-			spi_mosi_data->LED4_enabled = 0;
-			led_set_state(spi_mosi_data);		
-		}
-	}
-}
-
 
 ISR(WDT_vect) {
 	safe_mode_flag = 1;

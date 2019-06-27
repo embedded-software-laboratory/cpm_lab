@@ -40,6 +40,15 @@ ISR(SPI_STC_vect) {
 }
 
 
+// interrupt for slave select pin change
+ISR(PCINT0_vect) {
+	if(PINB & 1) { // end of spi transmission
+		watchdog_reset(); // resume normal operation when the master raises the slave select
+	}	
+}
+
+
+
 void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received) {
 	// calculate CRC possibilities before so least time in between spi communication
 	// good CRC
@@ -135,8 +144,7 @@ void spi_setup() {
 	
 	SET_BIT(DDRB, 3); // set MISO as output
 	
-	// obsolete
 	// interrupt on the slave select pin
-	//SET_BIT(PCICR, PCIE0);
-	//SET_BIT(PCMSK0, PCINT0);
+	SET_BIT(PCICR, PCIE0);
+	SET_BIT(PCMSK0, PCINT0);
 }

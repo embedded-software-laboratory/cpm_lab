@@ -23,7 +23,4 @@ void watchdog_enable();
 
 void watchdog_reset();
 
-void safe_mode(spi_mosi_data_t* spi_mosi_data);
-
-
 #endif /* WATCHDOG_H_ */
