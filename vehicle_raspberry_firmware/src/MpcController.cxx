@@ -154,6 +154,7 @@ void MpcController::update(
         mpc_reference_trajectory_y
     ))
     {
+        reset_optimizer();
         out_motor_throttle = 0;
         out_steering_servo = 0;
         return;
@@ -248,8 +249,20 @@ void MpcController::optimize_control_inputs(
             "Warning: Trajectory Controller: "
             "Large MPC objective. Provide a better reference trajectory. Stopping.");
 
+        reset_optimizer();
         out_motor_throttle = 0.0;
         out_steering_servo = 0.0;
+    }
+}
+
+void MpcController::reset_optimizer()
+{
+    for(auto &casadi_var:casadi_vars)
+    {
+        for (size_t i = 0; i < casadi_var.second.size(); ++i)
+        {
+            casadi_vars[casadi_var.first][i] = 1e-12;
+        }
     }
 }
 
