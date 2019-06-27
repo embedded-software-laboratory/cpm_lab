@@ -142,6 +142,8 @@ int main(int argc, char *argv[])
             double motor_throttle = 0;
             double steering_servo = 0;
 
+            //log_fn(__LINE__);
+
             // Run controller
             {
                 controller.get_control_signals(t_now, motor_throttle, steering_servo);
@@ -157,6 +159,8 @@ int main(int argc, char *argv[])
                 spi_mosi_data.motor_mode = motor_mode;
             }
 
+            //log_fn(__LINE__);
+
             // LED identification signal
             {
                 spi_mosi_data.LED1_enabled = 1;
@@ -171,6 +175,7 @@ int main(int argc, char *argv[])
 
             int n_transmission_attempts = 1;
             int transmission_successful = 1;
+
 
 #ifdef VEHICLE_SIMULATION
             spi_miso_data_t spi_miso_data = simulationVehicle.update(
@@ -189,6 +194,8 @@ int main(int argc, char *argv[])
             //auto t_transfer_end = update_loop->get_time();
             //cpm::Logging::Instance().write("spi transfer time %llu, n attempts %i", (t_transfer_end-t_transfer_start), n_transmission_attempts);
 #endif
+
+            //log_fn(__LINE__);            
 
             /*if(n_transmission_attempts > 1)
             {
