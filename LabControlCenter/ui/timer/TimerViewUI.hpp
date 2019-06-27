@@ -61,6 +61,9 @@ private:
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
+    //Helper functions
+    std::string waiting_response_to_string(WaitingResponse response);
+
 public:
     TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger);
     ~TimerViewUI();

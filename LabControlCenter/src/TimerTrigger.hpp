@@ -22,7 +22,7 @@
 struct TimerData {
     uint64_t next_timestep;
     uint64_t last_message_receive_stamp;
-    std::string waiting_for_response;
+    WaitingResponse waiting_for_response;
 };
 
 enum WaitingResponse {
@@ -31,7 +31,7 @@ enum WaitingResponse {
 
 class TimerTrigger {
 private:
-    bool use_simulated_time = false;
+    const bool use_simulated_time;
     std::atomic_bool timer_running;
 
     //Communication objects and callbacks

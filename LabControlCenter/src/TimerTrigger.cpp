@@ -19,59 +19,45 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             any_message_received = true;
             
             //Data from the sample to string
-            std::string id = sample.data().source_id();
-            //Find out the last message timestamp and print it to the UI - this can be useful for debugging purposes
-            uint64_t last_message = get_current_time_ns();
+            const std::string id = sample.data().source_id();
 
             std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
             std::unique_lock<std::mutex> lock2(simulated_time_mutex);
 
-            const uint64_t next_start_stamp = sample.data().next_start_stamp().nanoseconds();
-
-            //The LCC is only waiting for a response if:
-            //a) TODO The participant has been pre-registered and has not yet sent any message
-            //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
-            WaitingResponse waiting_response;
-            if (next_start_stamp == current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep == current_simulated_time){
-                    waiting_response = YES;
-                }
-            }
-            else if (next_start_stamp < current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep < current_simulated_time){
-                    waiting_response = OUT_OF_SYNC;
-                }
-            }
-            else {
-                waiting_response = NO;
-            }
-
-            //Only store new data if the current timestep is higher than the timestep that was stored for the vehicle
-            uint64_t next_step;
+            //Save current start request and storage start request of the participant (the latter may be higher)
+            uint64_t next_start_request = sample.data().next_start_stamp().nanoseconds();
+            uint64_t storage_start_request = 0;
             if (ready_status_storage.find(id) == ready_status_storage.end()) {
-                next_step = next_start_stamp;
+                storage_start_request = ready_status_storage[id].next_timestep;
             }
-            else if (ready_status_storage[id].next_timestep <= next_start_stamp) {
-                next_step = next_start_stamp;
+
+            //Only store new data if the current timestep is higher than the timestep that was stored for the participant
+            if (next_start_request >= storage_start_request) {
+                //The LCC is only waiting for a response if:
+                //a) TODO The participant has been pre-registered and has not yet sent any message -> Kommentar entfernen?
+                //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
+                WaitingResponse waiting_for_participant;
+                //The LCC is waiting for a response if the participant registered a "callback" in the current timestep
+                if (next_start_request == current_simulated_time && use_simulated_time) {
+                    waiting_for_participant = YES;
+                } //If an old message is received and the entry in the storage is old as well, the participant is out of sync
+                else if (next_start_request < current_simulated_time && use_simulated_time) {
+                    waiting_for_participant = OUT_OF_SYNC;
+                }
+                else {
+                    waiting_for_participant = NO;
+                }
+
+                TimerData data;
+                data.last_message_receive_stamp = get_current_time_ns();
+                data.next_timestep = next_start_request;
+                data.waiting_for_response = waiting_for_participant;
+
+                ready_status_storage[id] = data;
             }
             else {
                 cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id.c_str());
             }
-
-            TimerData data;
-            data.last_message_receive_stamp = last_message;
-            data.next_timestep = next_step;
-            if (waiting_response == YES) {
-                data.waiting_for_response = "YES";
-            }
-            else if (waiting_response == OUT_OF_SYNC) {
-                data.waiting_for_response = "OUT OF SYNC";
-            }
-            else {
-                data.waiting_for_response = "-";
-            }
-
-            ready_status_storage[id] = data;
         }
     }
 
@@ -110,13 +96,11 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
     if (use_simulated_time && timer_running.load()) {
         //Find smallest next time step in the storage
         uint64_t smallest_step = 0;
-        bool first_data = true;
         bool has_data = false;
         for (auto const& pair : ready_status_storage) {
-            if (first_data || smallest_step > pair.second.next_timestep) {
+            if (!has_data || smallest_step > pair.second.next_timestep) {
                 smallest_step = pair.second.next_timestep;
                 has_data = true;
-                first_data = false;
             }
         }
 
@@ -157,7 +141,7 @@ void TimerTrigger::send_stop_signal() {
 std::string TimerTrigger::get_human_readable_time_diff(uint64_t other_time) {
     uint64_t current_time = get_current_time_ns();
     if (current_time >= other_time) {
-        uint64_t time_diff = get_current_time_ns() - other_time;
+        uint64_t time_diff = current_time - other_time;
         std::stringstream time_stream;
 
         time_diff /= 1000000000ull;
@@ -193,7 +177,7 @@ std::map<string, TimerData> TimerTrigger::get_participant_message_data() {
 }
 
 void TimerTrigger::get_current_simulated_time(bool& _use_simulated_time, uint64_t& _current_time) {
-    uint64_t simulated_copy = use_simulated_time;
+    bool simulated_copy = use_simulated_time;
     _use_simulated_time = simulated_copy;
 
     std::lock_guard<std::mutex> lock(simulated_time_mutex);

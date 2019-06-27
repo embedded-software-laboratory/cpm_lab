@@ -63,7 +63,7 @@ void TimerViewUI::dispatcher_callback() {
 
         Glib::ustring id_ustring(entry.first);
         Glib::ustring last_message_ustring(timer_trigger->get_human_readable_time_diff(entry.second.last_message_receive_stamp));
-        Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
+        Glib::ustring waiting_response_ustring(waiting_response_to_string(entry.second.waiting_for_response));
         Glib::ustring next_step_ustring(step_stream.str());
 
         Gtk::TreeModel::Row row;
@@ -122,6 +122,18 @@ void TimerViewUI::button_stop_callback() {
     current_timestep_label->set_label(label_msg_ustring);
 
     button_start->set_sensitive(false);
+}
+
+std::string waiting_response_to_string(WaitingResponse response) {
+    if (response == WaitingResponse::YES) {
+        return "YES";
+    }
+    else if (response == WaitingResponse::OUT_OF_SYNC) {
+        return "OUT OF SYNC";
+    }
+    else {
+        return = "-";
+    }
 }
 
 Gtk::Widget* TimerViewUI::get_parent() {
