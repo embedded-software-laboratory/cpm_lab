@@ -142,7 +142,8 @@ void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received
 }
 
 
-void spi_setup() {
+void spi_setup() 
+{
 	SET_BIT(SPCR, SPIE); // spi interrupt enable
 	SET_BIT(SPCR, SPE); // spi enable
 	// MSB first (default)
@@ -150,6 +151,10 @@ void spi_setup() {
 	// spi mode 0 (default)
 	
 	SET_BIT(DDRB, 3); // set MISO as output
+	
+	SET_BIT(PORTB, 1); // set SS as pull-up input
+	CLEAR_BIT(MCUCR, PUD);
+	
 	
 	// interrupt on the slave select pin
 	SET_BIT(PCICR, PCIE0);
