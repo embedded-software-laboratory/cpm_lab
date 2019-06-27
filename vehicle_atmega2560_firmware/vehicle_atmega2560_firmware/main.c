@@ -65,7 +65,7 @@ int main(void)
 				spi_mosi_data.LED4_enabled = 1;
 			}
 			
-			_delay_ms(19);
+			_delay_ms(1);
 		}
 		else
 		{	
