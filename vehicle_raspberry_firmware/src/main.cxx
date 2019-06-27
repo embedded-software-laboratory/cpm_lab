@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     const vector<uint8_t> identification_LED_enabled_ticks { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
     
     // Loop setup
-    int loop_count = 0;
+    int64_t loop_count = 0;
 
     const uint64_t period_nanoseconds = 20000000ull; // 50 Hz
     auto update_loop = cpm::Timer::create(
@@ -159,14 +159,14 @@ int main(int argc, char *argv[])
 
             // LED identification signal
             {
-                spi_mosi_data.LED1_period_ticks = 1;
-                spi_mosi_data.LED1_enabled_ticks = 1;
-                spi_mosi_data.LED2_period_ticks = 1;
-                spi_mosi_data.LED2_enabled_ticks = 1;
-                spi_mosi_data.LED3_period_ticks = 1;
-                spi_mosi_data.LED3_enabled_ticks = 1;
-                spi_mosi_data.LED4_period_ticks = identification_LED_period_ticks.at(vehicle_id);
-                spi_mosi_data.LED4_enabled_ticks = identification_LED_enabled_ticks.at(vehicle_id);
+                spi_mosi_data.LED1_enabled = 1;
+                spi_mosi_data.LED2_enabled = 1;
+                spi_mosi_data.LED3_enabled = 1;
+
+                if(loop_count % identification_LED_period_ticks.at(vehicle_id) < identification_LED_enabled_ticks.at(vehicle_id))
+                {
+                    spi_mosi_data.LED4_enabled = 1;
+                }
             }
 
             int n_transmission_attempts = 1;
