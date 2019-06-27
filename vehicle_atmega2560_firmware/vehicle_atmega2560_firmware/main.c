@@ -23,8 +23,6 @@
 #include "crc.h"
 #include "watchdog.h"
 
-#define TEST_MODE TEST_NONE
-
 
 int main(void)
 {

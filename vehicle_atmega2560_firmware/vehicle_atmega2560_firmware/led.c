@@ -12,8 +12,6 @@
 #include "led.h"
 
 
-// synchronous architecture
-// LED period now handled by master
 void led_set_state(spi_mosi_data_t* spi_mosi_data) {
 	CLEAR_BIT(PORTC, 0);
 	CLEAR_BIT(PORTC, 1);
