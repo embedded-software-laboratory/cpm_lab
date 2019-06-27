@@ -12,10 +12,7 @@
 
 #include "spi_packets.h"
 
-
-//inline uint8_t get_safe_mode_flag(); // read only
-extern volatile uint8_t safe_mode_flag; // read and write
-
+extern volatile uint8_t safe_mode_flag;
 
 void watchdog_disable();
 

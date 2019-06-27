@@ -19,24 +19,22 @@
 
 // spi protocol: exchange fixed size buffers (no register addressing).
 // this (atmega) is the spi slave.
-// synchronous master slave communication. Single buffer enough.
+// The communication is blocking / synchronous. 
+// spi_exchange() blocks until the transfer is complete.
+
+
 static volatile uint8_t spi_buffer_index = 0;
-
-static volatile uint8_t* miso_buffer;
-
+static volatile uint8_t* miso_buffer = 0;
 static volatile uint8_t miso_correct_CRC[SPI_BUFFER_SIZE];
-
 static volatile uint8_t miso_wrong_CRC[SPI_BUFFER_SIZE];
-
 static volatile uint8_t mosi_buffer[SPI_BUFFER_SIZE];
 
 
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
-	uint8_t received_byte = SPDR;
-	SPDR = miso_buffer[spi_buffer_index]; // send next byte
-	mosi_buffer[spi_buffer_index] = received_byte;
+	mosi_buffer[spi_buffer_index] = SPDR;
 	spi_buffer_index++;
+	SPDR = miso_buffer[spi_buffer_index];
 }
 
 
@@ -49,86 +47,95 @@ ISR(PCINT0_vect) {
 
 
 
-void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received) {
-	// calculate CRC possibilities before so least time in between spi communication
-	// good CRC
-	CLEAR_BIT(packet_send->status_flags, 1);
-	packet_send->CRC = 0;
-	packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
+void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received) 
+{
+	// calculate miso CRCs for two cases: mosi CRC ok, and mosi CRC wrong
 	
-	// copy stack data without CRC flag
-	uint8_t* p_send = (uint8_t*) packet_send;
-	for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) {
-		miso_correct_CRC[i] = p_send[i];
+	// good CRC
+	{
+		CLEAR_BIT(packet_send->status_flags, 1);
+		packet_send->CRC = 0;
+		packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
+		uint8_t* p_send = (uint8_t*) packet_send;
+		for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) 
+		{
+			miso_correct_CRC[i] = p_send[i];
+		}
 	}
 	
 	// bad CRC
-	SET_BIT(packet_send->status_flags, 1);
-	packet_send->CRC = 0;
-	packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
+	{
+		SET_BIT(packet_send->status_flags, 1);
+		packet_send->CRC = 0;
+		packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
 		
-	// copy stack data with CRC flag
-	p_send = (uint8_t*) packet_send;
-	for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) {
-		miso_wrong_CRC[i] = p_send[i];
+		// copy stack data with CRC flag
+		uint8_t* p_send = (uint8_t*) packet_send;
+		for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) 
+		{
+			miso_wrong_CRC[i] = p_send[i];
+		}
 	}
 	
-	// first send raspberry pi miso_wrong_CRC
+	// first send raspberry pi miso_wrong_CRC, since we have not received a correct packet yet
 	miso_buffer = miso_wrong_CRC;
 	
-	// prepare first byte
+	// prepare transmission
 	spi_buffer_index = 0;
-	SPDR = miso_buffer[spi_buffer_index]; // set start byte for next transmission
-	spi_buffer_index++;
+	// set start byte for next transmission
+	SPDR = miso_buffer[spi_buffer_index]; 
 	
 	// wait for transmission start
-	// SS pIN: PB1
-	// SS pin HIGH = transmission idle
-	// SS pin LOW = transmission start
-	while(PINB & 0b00000001) {
-		// safe mode triggered
-		if (safe_mode_flag) {
-			//break; // break exits loop, return exits function
+	// SS pin is PB1
+	// HIGH == transmission idle
+	// LOW == transmission start
+	while(PINB & 0b00000001) 
+	{
+		if (safe_mode_flag) 
+		{
 			return;
 		}
 	}
 	
 	// spi transmission active
-	while(1) {
-		// process data package
-		if (spi_buffer_index == SPI_BUFFER_SIZE+1) { // data package transmission complete
+	while(1) 
+	{
+		if (spi_buffer_index >= SPI_BUFFER_SIZE) // data package transmission complete
+		{
+			// validate spi received mosi crc
+			spi_mosi_data_t* mosi_buffer_as_mosi_packet = (spi_mosi_data_t*) mosi_buffer;
+			const uint16_t mosi_CRC_actual = mosi_buffer_as_mosi_packet->CRC;
+			mosi_buffer_as_mosi_packet->CRC = 0;
+			const uint16_t mosi_CRC_target = crcFast(mosi_buffer, sizeof(spi_mosi_data_t));
 			
-			// validate spi received crc
-			uint16_t mosi_CRC_actual = packet_received->CRC;
-			packet_received->CRC = 0;
-			uint16_t mosi_CRC_target = crcFast((uint8_t*)(packet_received), sizeof(spi_mosi_data_t));
-			
-			if (mosi_CRC_actual == mosi_CRC_target) {
-				// tell raspberry pi message was received correctly
+			if (mosi_CRC_actual == mosi_CRC_target) 
+			{
+				// tell master that mosi message was received correctly
 				miso_buffer = miso_correct_CRC;
 				
-				// write spi buffer data to stack
+				// copy mosi buffer data to output
 				uint8_t* p_received = (uint8_t*) packet_received;
-				for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++) {
+				for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++) 
+				{
 					p_received[i] = mosi_buffer[i];
 				}
-			}
-			else {
-				// tell raspberry pi message was corrupted
-				miso_buffer = miso_wrong_CRC;
 			}
 			
 			// reset buffer index counter
 			spi_buffer_index = 0;
+			
+			// set start byte for next transmission
+			SPDR = miso_buffer[spi_buffer_index]; 
 		}
 	
-		// safe mode triggered
-		if (safe_mode_flag) {
+		if (safe_mode_flag) 
+		{
 			return;
 		}
 		
 		// end of transmission
-		if (PINB & 0b00000001) {
+		if (PINB & 0b00000001) 
+		{
 			return;
 		}
 	}

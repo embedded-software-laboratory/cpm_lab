@@ -52,11 +52,11 @@ int main(void)
 
     while (1)
     {
+	    // All zeros is a safe command (motor stopped, steering centered)
+	    memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+		
 		if(safe_mode_flag) 
 		{
-			// All zeros is a safe command (motor stopped, steering centered)
-			memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
-			
 			// Flash LEDs to indicate safe mode
 			if (get_tick() % 25 == 0) {
 				spi_mosi_data.LED1_enabled = 1;
@@ -68,23 +68,22 @@ int main(void)
 			_delay_ms(19);
 		}
 		else
-		{
-			memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));			
+		{	
 			spi_exchange(&spi_miso_data, &spi_mosi_data);
 		}
 			
-		// 3. read sensors
+		/// read sensors
 			
 		// read odometer
 		const int16_t speed = get_speed();
 		const int32_t odometer_count = get_odometer_count();
 		
-		// read adc
+		// read ADC
 		uint16_t battery_voltage = 0;
 		uint16_t current_sense = 0;
 		adc_measure(&battery_voltage, &current_sense);
 		
-		// read imu
+		// read IMU
 		uint16_t imu_yaw = 0;
 		int16_t imu_yaw_rate = 0;
 		int16_t imu_acceleration_forward = 0;
@@ -117,7 +116,7 @@ int main(void)
 		}		
 		
 	
-		// 4. apply commands
+		/// apply commands
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
