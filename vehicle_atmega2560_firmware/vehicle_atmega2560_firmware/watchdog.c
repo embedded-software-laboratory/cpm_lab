@@ -12,8 +12,14 @@
 #include <util/delay.h>
 #include <string.h>
 #include <stdint.h>
+#include "servo_timer.h"
 #include "led.h"
 #include "watchdog.h"
+
+volatile uint8_t safe_mode_flag = 0;
+
+// safe mode tick
+static volatile uint32_t tick = 0;
 
 
 void watchdog_disable() {
@@ -50,10 +56,11 @@ void watchdog_enable() {
     // First step of timed sequence, we have 4 cycles after this to make changes to WDE and WD timeout
     WDTCSR |= (1<<WDCE) | (1<<WDE);
 
-    // timeout in 8K cycles (64ms), disable reset mode. Must be done in one operation
-	// = not |= since want to clear WDE. Want to rewrite WDTCSR not change certain bits.
-    WDTCSR = 1<<WDP2;
-
+    // timeout in 32K cycles (0.25s), disable reset mode. Must be done in one operation
+	// = not |= since want to also clear WDE -> need rewrite WDTCSR not change certain bits.
+    WDTCSR = 1<<WDP2; // 250ms
+	//WDTCSR = (1<<WDP3) | (1<<WDP0); // 8sec
+	
     // enable global interrupts
     sei();
 
@@ -68,15 +75,18 @@ void watchdog_reset(){
 
 
 void safe_mode(spi_mosi_data_t* spi_mosi_data) {
-	uint8_t tick = 0;
+	
 	while(1) {
+		uint32_t tick = get_tick();
+			
 		// SS LOW -> master active again
 		if (~PINB & 0b00000001) { // reset safe mode
-			safe_mode_flag = 1;
+			safe_mode_flag = 0;
+			watchdog_reset(); // reset watchdog
 		}
 		
-		// uint8: 0-255	
-		if (tick%127) {
+		// 50 ticks = 1sec 
+		if (tick%30>15) {
 			spi_mosi_data->LED1_enabled = 1;
 			spi_mosi_data->LED2_enabled = 1;
 			spi_mosi_data->LED3_enabled = 1;
@@ -91,8 +101,6 @@ void safe_mode(spi_mosi_data_t* spi_mosi_data) {
 			spi_mosi_data->LED4_enabled = 0;
 			led_set_state(spi_mosi_data);		
 		}
-	
-	tick++;	
 	}
 }
 

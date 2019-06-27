@@ -61,24 +61,24 @@ void set_servo_pwm(uint16_t pwm) {
 }
 
 
-//uint32_t get_tick() { 
-	//return tick_counter; 
-//}
+uint32_t get_tick() { 
+	return tick_counter; 
+}
 
 
-//void tick_wait() {
-	//tick_flag = 1;
-	//while(tick_flag);
-//}
+void tick_wait() {
+	tick_flag = 1;
+	while(tick_flag);
+}
 
 
 // timer 3 set to 20ms period
 // timer/counter3 overflow interrupt
-// used timer3 becuase convenient could have used different timer
-//ISR(TIMER3_OVF_vect) {
-	//tick_counter++;
-	//tick_flag = 0;
-//}
+// used timer3 because convenien: could have used different timer
+ISR(TIMER3_OVF_vect) {
+	tick_counter++;
+	tick_flag = 0;
+}
 
 
 void servo_timer_setup() {
@@ -102,6 +102,11 @@ void servo_timer_setup() {
 	
 	// servo center position (1.5 msec)
 	OCR3C = 3000;
+	
+	// TOP interrupt for tick timer
+	// 50Hz i.e. 20ms
+	SET_BIT(TIMSK3, TOIE3);
+	SET_BIT(TIFR3, TOV3);
 	
 	// servo enable
 	SET_BIT(DDRD, 7);

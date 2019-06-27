@@ -51,6 +51,8 @@ int main(void)
 	
 	watchdog_enable(); // interrupt mode
 	
+	watchdog_reset();
+
 
     while (1)
     {
