@@ -11,15 +11,17 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("logs_treeview", logs_treeview);
     ui_builder->get_widget("logs_label_header", logs_label_header);
     ui_builder->get_widget("logs_scrolled_window", logs_scrolled_window);
+    ui_builder->get_widget("autoscroll_check_button", autoscroll_check_button);
 
     assert(parent);
     assert(logs_treeview);
     assert(logs_label_header);
     assert(logs_scrolled_window);
+    assert(autoscroll_check_button);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
-    log_list_store->set_sort_column(static_cast<Gtk::TreeModelColumnBase>(log_record.log_stamp), Gtk::SORT_DESCENDING);
+    log_list_store->set_sort_column(static_cast<Gtk::TreeModelColumnBase>(log_record.log_stamp), Gtk::SORT_ASCENDING);
     logs_treeview->set_model(log_list_store);
 
     //Use model_record, add it to the view
@@ -68,7 +70,10 @@ void LoggerViewUI::dispatcher_callback() {
         row[log_record.log_stamp] = entry.stamp().nanoseconds();
     }
 
-    logs_scrolled_window->get_vadjustment()->set_value(0);
+    if (autoscroll_check_button->get_active()) {
+        auto adjustment = logs_scrolled_window->get_vadjustment();
+        adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
+    }
 }
 
 void LoggerViewUI::update_ui() {
