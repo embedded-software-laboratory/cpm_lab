@@ -48,6 +48,10 @@ private:
     //Object that holds (new) log data
     std::shared_ptr<LogStorage> log_storage;
 
+    //Filtering
+    Glib::RefPtr<Gtk::TreeModelFilter> filter;
+    bool filter_func(const Gtk::TreeModel::const_iterator& iter);
+
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
     ~LoggerViewUI();

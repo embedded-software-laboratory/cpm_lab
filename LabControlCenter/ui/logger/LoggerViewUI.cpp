@@ -22,7 +22,6 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
     log_list_store->set_sort_column(static_cast<Gtk::TreeModelColumnBase>(log_record.log_stamp), Gtk::SORT_ASCENDING);
-    logs_treeview->set_model(log_list_store);
 
     //Use model_record, add it to the view
     logs_treeview->append_column("ID", log_record.log_id);
@@ -46,6 +45,11 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_dispatcher.connect(sigc::mem_fun(*this, &LoggerViewUI::dispatcher_callback));
     run_thread.store(true);
     ui_thread = std::thread(&LoggerViewUI::update_ui, this);
+
+    //Filtering
+    filter = Gtk::TreeModelFilter::create(log_list_store);
+    filter->set_visible_func(sigc::mem_fun(*this, &LoggerViewUI::filter_func));
+    logs_treeview->set_model(filter);
 }
 
 LoggerViewUI::~LoggerViewUI() {
@@ -81,6 +85,21 @@ void LoggerViewUI::update_ui() {
         ui_dispatcher.emit();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+}
+
+bool LoggerViewUI::filter_func(const Gtk::TreeModel::const_iterator& iter) {
+    auto row = *iter;
+    std::stringstream stream;
+    stream << row[log_record.log_id];
+    std::string row_id = stream.str();
+    if (row_id.find("middleware") != string::npos) {
+        std::cout << "False" << std::endl;
+        return false;
+    }
+    else {
+        std::cout << "True" << std::endl;
+        return true;
     }
 }
 
