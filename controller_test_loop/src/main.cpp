@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
 
                     const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
 
-                    if(fabs(trajectory_point.px() - observation.pose().x()) < 0.8
-                    && fabs(trajectory_point.py() - observation.pose().y()) < 0.8
+                    if(fabs(trajectory_point.px() - observation.pose().x()) < 0.3
+                    && fabs(trajectory_point.py() - observation.pose().y()) < 0.3
                     && fabs(sin(0.5*(ref_yaw - observation.pose().yaw()))) < 0.3)
                     {
                         for (size_t k = 0; k < slot_vehicle_ids.size(); ++k)

@@ -73,6 +73,8 @@ class MpcController
         double &out_steering_servo
     );
 
+    void reset_optimizer();
+
 
 
 

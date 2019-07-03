@@ -55,34 +55,36 @@ void spi_transfer(
 
     spi_mosi_data.CRC = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
 
-    for (int i = 1; i < 20; ++i)
+    // CS low => transmission start
+    bcm2835_gpio_clr(RPI_GPIO_P1_24);
+
+    for (int i = 1; i < 7; ++i)
     {
         uint8_t SPI_recv_buffer[SPI_BUFFER_SIZE];
         uint8_t* mosi_data_ptr = (uint8_t*)(&spi_mosi_data);
 
-        // CS low => transmission start
-        bcm2835_gpio_clr(RPI_GPIO_P1_24);
 
-        busy_wait(50);
+        busy_wait(1000);
 
         for (int i = 0; i < SPI_BUFFER_SIZE; ++i)
         {
             SPI_recv_buffer[i] = bcm2835_spi_transfer(mosi_data_ptr[i]);
-            busy_wait(50);
+            busy_wait(1000);
         }
 
-        // CS high => transmission end
-        bcm2835_gpio_set(RPI_GPIO_P1_24);
-        busy_wait(50);
+        busy_wait(10000);
 
         *n_transmission_attempts_out = i;
 
-        memcpy(spi_miso_data_out, SPI_recv_buffer+1, sizeof(spi_miso_data_t));
+        memcpy(spi_miso_data_out, SPI_recv_buffer, sizeof(spi_miso_data_t));
 
-        if(check_CRC_miso(*spi_miso_data_out))
+        if(check_CRC_miso(*spi_miso_data_out) && !(spi_miso_data_out->status_flags & 2))
         {
             *transmission_successful_out = 1;
-            return;
+            break;
         }
     }
+
+    // CS high => transmission end
+    bcm2835_gpio_set(RPI_GPIO_P1_24);
 }

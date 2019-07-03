@@ -10,13 +10,10 @@
 #define LED_H_
 
 
-#include "util.h"
 #include "spi_packets.h"
-#include <avr/io.h>
-#include <util/delay.h>
 
 
-void led_set_state(uint32_t tick, spi_mosi_data_t* spi_mosi_data);
+void led_set_state(spi_mosi_data_t* spi_mosi_data);
 
 void led_setup();
 
