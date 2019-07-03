@@ -12,12 +12,14 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("logs_label_header", logs_label_header);
     ui_builder->get_widget("logs_scrolled_window", logs_scrolled_window);
     ui_builder->get_widget("autoscroll_check_button", autoscroll_check_button);
+    ui_builder->get_widget("logs_search_entry", logs_search_entry);
 
     assert(parent);
     assert(logs_treeview);
     assert(logs_label_header);
     assert(logs_scrolled_window);
     assert(autoscroll_check_button);
+    assert(logs_search_entry);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
@@ -27,6 +29,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_treeview->append_column("ID", log_record.log_id);
     logs_treeview->append_column("Content", log_record.log_content);
     logs_treeview->append_column("At time", log_record.log_stamp);
+    logs_treeview->set_model(log_list_store);
 
     //Set columns resize property
     for (int i = 0; i < 3; ++i) {
@@ -49,7 +52,11 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     //Filtering
     filter = Gtk::TreeModelFilter::create(log_list_store);
     filter->set_visible_func(sigc::mem_fun(*this, &LoggerViewUI::filter_func));
-    logs_treeview->set_model(filter);
+    //logs_treeview->set_model(filter);
+
+    //Search callback
+    logs_search_entry->signal_search_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::search_changed));
+    logs_search_entry->signal_stop_search().connect(sigc::mem_fun(*this, &LoggerViewUI::stop_search));
 }
 
 LoggerViewUI::~LoggerViewUI() {
@@ -93,14 +100,25 @@ bool LoggerViewUI::filter_func(const Gtk::TreeModel::const_iterator& iter) {
     std::stringstream stream;
     stream << row[log_record.log_id];
     std::string row_id = stream.str();
-    if (row_id.find("middleware") != string::npos) {
-        std::cout << "False" << std::endl;
-        return false;
-    }
-    else {
-        std::cout << "True" << std::endl;
+    std::string filter_value = std::string(logs_search_entry->get_text().c_str());
+    if (filter_value.size() == 0 || row_id.find(filter_value) != string::npos) {
         return true;
     }
+    else {
+        return false;
+    }
+}
+
+void LoggerViewUI::stop_search() {
+    //Return to the full log list
+    logs_treeview->set_model(log_list_store);
+}
+
+void LoggerViewUI::search_changed() {
+    //Set the view to the filter model
+    //Re-apply the filter
+    logs_treeview->set_model(filter);
+    filter->refilter();
 }
 
 Gtk::Widget* LoggerViewUI::get_parent() {

@@ -33,6 +33,7 @@ private:
     Gtk::Label* logs_label_header;
     Gtk::ScrolledWindow* logs_scrolled_window;
     Gtk::CheckButton* autoscroll_check_button;
+    Gtk::SearchEntry* logs_search_entry;
 
     //TreeView Layout, status storage for the UI
     LoggerModelRecord log_record;
@@ -51,6 +52,8 @@ private:
     //Filtering
     Glib::RefPtr<Gtk::TreeModelFilter> filter;
     bool filter_func(const Gtk::TreeModel::const_iterator& iter);
+    void stop_search();
+    void search_changed();
 
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
