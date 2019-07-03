@@ -37,6 +37,8 @@ set(SOURCE_CPM
     src/InternalConfiguration.hpp
     src/InternalConfiguration.cpp
     include/cpm/init.hpp
+    include/cpm/get_time_ns.hpp
+    src/get_time_ns.cpp
 )
 
 

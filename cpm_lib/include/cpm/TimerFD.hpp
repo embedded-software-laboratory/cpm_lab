@@ -14,6 +14,7 @@
 #include <dds/core/ddscore.hpp>
 
 #include "cpm/exceptions.hpp"
+#include "cpm/get_time_ns.hpp"
 
 /**
  * \class TimerFD.hpp
