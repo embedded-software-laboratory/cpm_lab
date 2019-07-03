@@ -16,6 +16,7 @@ SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
 ,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
 ,simulationIPS(_simulationIPS)
 {
+    // fill a list with empty actuation inputs to simulate delay
     ActuatorInput input;
     for (size_t i = 0; i < input_delay; ++i)
     {
@@ -33,7 +34,6 @@ VehicleState SimulationVehicle::update(
         const uint8_t& vehicle_id
 )
 {
-    // TODO: Lag
     actuator_inputs.push_back(
         ActuatorInput(motor_throttle, steering_servo, motor_mode));
 

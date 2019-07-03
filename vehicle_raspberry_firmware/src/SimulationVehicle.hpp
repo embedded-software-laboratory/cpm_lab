@@ -16,7 +16,7 @@ static inline double frand() { return (double(rand()))/RAND_MAX; }
 
 struct ActuatorInput
 {
-    ActuatorInput();
+    ActuatorInput(){};
     ActuatorInput(
         const double& motor_throttle,
         const double& steering_servo,
@@ -44,7 +44,8 @@ class SimulationVehicle
 
     int input_delay = 1;
     // list to simulate time delay
-    // last element is the most recent
+    //      last element is received most recently
+    //      first element is the next to process
     std::list<ActuatorInput> actuator_inputs; 
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;

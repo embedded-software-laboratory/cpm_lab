@@ -134,7 +134,11 @@ int main(int argc, char *argv[])
             // get IPS observation
             VehicleObservation sample_vehicleObservation;
             uint64_t sample_vehicleObservation_age;
-            reader_vehicleObservation.get_sample(t_now, sample_vehicleObservation, sample_vehicleObservation_age);
+            reader_vehicleObservation.get_sample(
+                t_now,
+                sample_vehicleObservation,
+                sample_vehicleObservation_age
+            );
 
             spi_mosi_data_t spi_mosi_data;
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
