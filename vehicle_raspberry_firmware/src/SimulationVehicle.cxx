@@ -74,13 +74,10 @@ VehicleState SimulationVehicle::update(
     }
 
     /*std::cout 
-    << "curvature_ref"         << "  " << curvature_ref         << std::endl
-    << "speed_ref"             << "  " << speed_ref             << std::endl
     << "dt"                    << "  " << dt                    << std::endl
     << "speed"                 << "  " << speed                 << std::endl
     << "curvature"             << "  " << curvature             << std::endl
     << "yaw"                   << "  " << yaw                   << std::endl
-    << "spi_miso_data.imu_yaw" << "  " << spi_miso_data.imu_yaw << std::endl
     << "x"                     << "  " << x                     << std::endl
     << "distance"              << "  " << distance              << std::endl
     << "===============================" << std::endl;*/
