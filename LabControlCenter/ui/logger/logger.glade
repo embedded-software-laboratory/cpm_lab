@@ -19,10 +19,11 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkComboBoxText" id="logs_search_type">
+                <property name="width_request">7</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Search:</property>
+                <property name="valign">center</property>
               </object>
             </child>
           </object>

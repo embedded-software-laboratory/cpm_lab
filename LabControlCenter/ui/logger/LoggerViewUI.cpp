@@ -13,6 +13,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("logs_scrolled_window", logs_scrolled_window);
     ui_builder->get_widget("autoscroll_check_button", autoscroll_check_button);
     ui_builder->get_widget("logs_search_entry", logs_search_entry);
+    ui_builder->get_widget("logs_search_type", logs_search_type);
 
     assert(parent);
     assert(logs_treeview);
@@ -20,6 +21,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     assert(logs_scrolled_window);
     assert(autoscroll_check_button);
     assert(logs_search_entry);
+    assert(logs_search_type);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
@@ -57,6 +59,14 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     //Search callback
     logs_search_entry->signal_search_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::search_changed));
     logs_search_entry->signal_stop_search().connect(sigc::mem_fun(*this, &LoggerViewUI::stop_search));
+
+    //Search types
+    logs_search_type->append(type_id_ustring);
+    logs_search_type->append(type_content_ustring);
+    logs_search_type->append(type_timestamp_ustring);
+    logs_search_type->append(type_all_ustring);
+    logs_search_type->set_active_text(type_id_ustring);
+    logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed) );
 }
 
 LoggerViewUI::~LoggerViewUI() {
@@ -98,10 +108,22 @@ void LoggerViewUI::update_ui() {
 bool LoggerViewUI::filter_func(const Gtk::TreeModel::const_iterator& iter) {
     auto row = *iter;
     std::stringstream stream;
-    stream << row[log_record.log_id];
+    if (logs_search_type->get_active_text() == type_id_ustring) {
+        stream << row[log_record.log_id];
+    }
+    else if (logs_search_type->get_active_text() == type_content_ustring) {
+        stream << row[log_record.log_content];
+    }
+    else if (logs_search_type->get_active_text() == type_timestamp_ustring) {
+        stream << row[log_record.log_stamp];
+    }
+    else {
+        stream << row[log_record.log_id] << row[log_record.log_content] << row[log_record.log_stamp];
+    } 
+
     std::string row_id = stream.str();
     std::string filter_value = std::string(logs_search_entry->get_text().c_str());
-    if (filter_value.size() == 0 || row_id.find(filter_value) != string::npos) {
+    if (row_id.find(filter_value) != string::npos) {
         return true;
     }
     else {
@@ -117,8 +139,20 @@ void LoggerViewUI::stop_search() {
 void LoggerViewUI::search_changed() {
     //Set the view to the filter model
     //Re-apply the filter
-    logs_treeview->set_model(filter);
-    filter->refilter();
+    if (logs_search_entry->get_text().size() > 0) {
+        logs_treeview->set_model(filter);
+        filter->refilter(); //(CHECK in späteren Tests: Wird das Modell aktualisiert?)
+    }
+    else {
+        logs_treeview->set_model(log_list_store);
+    }
+}
+
+void LoggerViewUI::on_filter_type_changed() {
+    if (logs_search_entry->get_text().size() > 0) {
+        logs_treeview->set_model(filter);
+        filter->refilter();
+    }
 }
 
 Gtk::Widget* LoggerViewUI::get_parent() {
