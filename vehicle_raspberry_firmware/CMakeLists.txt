@@ -37,6 +37,8 @@ set(SOURCE_BASE
     src/casadi_mpc_fn.h
     src/MpcController.hpp
     src/MpcController.cxx
+    src/VehicleModel.hpp
+    src/VehicleModel.cxx
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h
     ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c
 )

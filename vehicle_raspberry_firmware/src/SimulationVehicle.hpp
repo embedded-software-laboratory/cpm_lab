@@ -3,6 +3,7 @@
 #include <list>
 #include <stdint.h>
 
+#include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
@@ -12,41 +13,28 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-static inline double frand() { return (double(rand()))/RAND_MAX; }
+#define INPUT_DELAY (1) // Input delay >= 0
 
-struct ActuatorInput
-{
-    ActuatorInput(){};
-    ActuatorInput(
-        const double& motor_throttle,
-        const double& steering_servo,
-        const uint8_t& motor_mode)
-    :motor_throttle(motor_throttle)
-    ,steering_servo(steering_servo)
-    ,motor_mode(motor_mode)
-    {
-    }
-    
-    double motor_throttle = 0;
-    double steering_servo = 0;
-    uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-};
+static inline double frand() { return (double(rand()))/RAND_MAX; }
 
 class SimulationVehicle
 {
-    double x = 0.28;//frand()*4;
-    double y = 2.05;//frand()*4;
+    // TODO load parameters via DDS parameters
+    std::vector<double> dynamics_parameters = { 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 };
+
+    double px = 0.28;//frand()*4;
+    double py = 2.05;//frand()*4;
     double distance = 0;
     double yaw = 1.52;//frand()*20;
     double yaw_measured = 1.52;
     double speed = 0;
     double curvature = 0;
 
-    int input_delay = 1;
-    // list to simulate time delay
-    //      last element is received most recently
+    // array to simulate time delay on inputs
     //      first element is the next to process
-    std::list<ActuatorInput> actuator_inputs; 
+    //      last element is received most recently
+    double motor_throttle_history[INPUT_DELAY];
+    double steering_servo_history[INPUT_DELAY]; 
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
@@ -59,7 +47,6 @@ public:
     VehicleState update(
         const double& motor_throttle,
         const double& steering_servo,
-        const uint8_t& motor_mode,
         const uint64_t& t_now, 
         const double& dt, 
         const uint8_t& vehicle_id

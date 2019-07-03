@@ -160,10 +160,6 @@ int main(int argc, char *argv[])
 
             // Run controller
             controller.get_control_signals(t_now, motor_throttle, steering_servo);
-            // Motor deadband, to prevent small stall currents when standing still
-            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
 
             VehicleState vehicleState;
             int n_transmission_attempts = 1;
@@ -174,12 +170,15 @@ int main(int argc, char *argv[])
             vehicleState = simulationVehicle.update(
                 motor_throttle,
                 steering_servo,
-                motor_mode,
                 t_now,
                 period_nanoseconds/1e9,
                 vehicle_id
             );
 #else
+            // Motor deadband, to prevent small stall currents when standing still
+            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
             // Convert to low level controller units
             spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
             spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
