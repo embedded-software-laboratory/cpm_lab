@@ -15,6 +15,7 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "MpcController.hpp"
+#include "TrajectoryInterpolation.hpp"
 
 extern "C" {
     #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -70,6 +71,7 @@ class Controller
     void receive_commands(uint64_t t_now);
 
     void reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
+    std::shared_ptr<TrajectoryInterpolation> interpolate_trajectory_command(uint64_t t_now);
 
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);

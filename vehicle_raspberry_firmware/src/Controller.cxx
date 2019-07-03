@@ -1,6 +1,5 @@
 #include "Controller.hpp"
 #include <iostream>
-#include "TrajectoryInterpolation.hpp"
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
 
@@ -125,7 +124,8 @@ void Controller::update_remote_parameters()
     //trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
 }
 
-void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
+
+std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_command(uint64_t t_now)
 {
     // Find active segment
     auto iterator_segment_end = m_trajectory_points.lower_bound(t_now);
@@ -141,12 +141,22 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
 
         // We have a valid trajectory segment.
         // Interpolate for the current time.
-        TrajectoryInterpolation trajectory_interpolation(t_now, start_point, end_point);
+        return std::make_shared<TrajectoryInterpolation>(t_now, start_point, end_point);
+    }
+    return nullptr;
+}
 
 
-        const double x_ref = trajectory_interpolation.position_x;
-        const double y_ref = trajectory_interpolation.position_y;
-        const double yaw_ref = trajectory_interpolation.yaw;
+void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
+{
+    std::shared_ptr<TrajectoryInterpolation> trajectory_interpolation = 
+        interpolate_trajectory_command(t_now);
+
+    if(trajectory_interpolation) 
+    {
+        const double x_ref = trajectory_interpolation->position_x;
+        const double y_ref = trajectory_interpolation->position_y;
+        const double yaw_ref = trajectory_interpolation->yaw;
 
         const double x = m_vehicleState.pose().x();
         const double y = m_vehicleState.pose().y();
@@ -161,14 +171,14 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
         if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
         {
             // Linear lateral controller
-            const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
-            //const double ref_curvature = trajectory_interpolation.curvature;
+            const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation->curvature));
+            //const double ref_curvature = trajectory_interpolation->curvature;
             const double curvature = ref_curvature 
                 - trajectory_controller_lateral_P_gain * lateral_error 
                 - trajectory_controller_lateral_D_gain * yaw_error;
 
             // Linear longitudinal controller
-            const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
+            const double speed_target = trajectory_interpolation->speed - 0.5 * longitudinal_error;
 
             const double speed_measured = m_vehicleState.speed();
             steering_servo_out = steering_curvature_calibration(curvature);
@@ -179,7 +189,7 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
             "lateral_error " << lateral_error << "  " << 
             "longitudinal_error " << longitudinal_error << "  " << 
             "yaw_error " << yaw_error << "  " << 
-            "ref_curvature " << trajectory_interpolation.curvature << "  " << 
+            "ref_curvature " << trajectory_interpolation->curvature << "  " << 
             "curvature_cmd " << curvature << "  " << 
             std::endl;*/
         }
