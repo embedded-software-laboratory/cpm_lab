@@ -40,10 +40,12 @@ popd
 rm -f /var/www/html/raspberry/package.tar.gz
 #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
 cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case
+rm -f /var/www/html/raspberry/DDS_DOMAIN
 echo $DDS_DOMAIN >/var/www/html/raspberry/DDS_DOMAIN
 
 
 export IP_SELF="$(hostname -I)"
 export IP_SELF="$(echo $IP_SELF)"
 export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
+rm -f /var/www/html/raspberry/DDS_INITIAL_PEER
 echo $DDS_INITIAL_PEER >/var/www/html/raspberry/DDS_INITIAL_PEER
