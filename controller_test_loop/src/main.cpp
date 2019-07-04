@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(_mutex);
 
-        const uint64_t t_eval = ((t_now + 500000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
+        const uint64_t t_eval = ((t_now + 1000000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
 
 
         for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
