@@ -62,7 +62,7 @@ private:
     std::atomic_bool run_thread;
 
     //Helper functions
-    std::string waiting_response_to_string(WaitingResponse response);
+    std::string participant_status_ustring(ParticipantStatus response);
     
     /**
      * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)

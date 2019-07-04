@@ -26,7 +26,7 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     //Use model_record, add it to the view
     active_timers_treeview->append_column("ID", timer_record.column_id);
     active_timers_treeview->append_column("Last message", timer_record.column_last_message);
-    active_timers_treeview->append_column("Waiting for response", timer_record.column_waiting_for_response);
+    active_timers_treeview->append_column("Participant status", timer_record.column_participant_status);
     active_timers_treeview->append_column("Next timestep", timer_record.column_next_step);
 
     //Set equal width for all columns
@@ -63,7 +63,7 @@ void TimerViewUI::dispatcher_callback() {
 
         Glib::ustring id_ustring(entry.first);
         Glib::ustring last_message_ustring(get_human_readable_time_diff(entry.second.last_message_receive_stamp));
-        Glib::ustring waiting_response_ustring(waiting_response_to_string(entry.second.waiting_for_response));
+        Glib::ustring participant_status_ustring(participant_status_ustring(entry.second.waiting_for_response));
         Glib::ustring next_step_ustring(step_stream.str());
 
         Gtk::TreeModel::Row row;
@@ -84,7 +84,7 @@ void TimerViewUI::dispatcher_callback() {
 
         row[timer_record.column_id] = id_ustring;
         row[timer_record.column_last_message] = last_message_ustring;
-        row[timer_record.column_waiting_for_response] = waiting_response_ustring;
+        row[timer_record.column_participant_status] = participant_status_ustring;
         row[timer_record.column_next_step] = next_step_ustring;
     }
 
@@ -124,15 +124,18 @@ void TimerViewUI::button_stop_callback() {
     button_start->set_sensitive(false);
 }
 
-std::string TimerViewUI::waiting_response_to_string(WaitingResponse response) {
-    if (response == WaitingResponse::YES) {
-        return "YES";
+std::string TimerViewUI::participant_status_ustring(ParticipantStatus response) {
+    if (response == ParticipantStatus::REALTIME) {
+        return "(realtime)";
     }
-    else if (response == WaitingResponse::OUT_OF_SYNC) {
-        return "OUT OF SYNC";
+    else if (response == ParticipantStatus::WAITING) {
+        return "WAITING";
+    }
+    else if (response == ParticipantStatus::WORKING) {
+        return "WORKING";
     }
     else {
-        return "-";
+        return "OUT OF SYNC";
     }
 }
 

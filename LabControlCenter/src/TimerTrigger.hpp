@@ -20,14 +20,14 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
-enum WaitingResponse {
-    YES, OUT_OF_SYNC, NO
+enum ParticipantStatus {
+    WAITING, OUT_OF_SYNC, WORKING, REALTIME
 };
 
 struct TimerData {
     uint64_t next_timestep;
     uint64_t last_message_receive_stamp;
-    WaitingResponse waiting_for_response;
+    ParticipantStatus participant_status;
 };
 
 class TimerTrigger {
