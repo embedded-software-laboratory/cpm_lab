@@ -45,6 +45,9 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
     run_thread.store(true);
     ui_thread = std::thread(&TimerViewUI::update_ui, this);
+
+    //Boolean variable to find out if the system has been started
+    system_is_running.store(false);
 }
 
 TimerViewUI::~TimerViewUI() {
@@ -112,6 +115,7 @@ void TimerViewUI::button_start_callback() {
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
+    system_is_running.store(true);
 }
 
 void TimerViewUI::button_stop_callback() {
@@ -125,17 +129,22 @@ void TimerViewUI::button_stop_callback() {
 }
 
 std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus response) {
-    if (response == ParticipantStatus::REALTIME) {
-        return "(realtime)";
-    }
-    else if (response == ParticipantStatus::WAITING) {
-        return "WAITING";
-    }
-    else if (response == ParticipantStatus::WORKING) {
-        return "WORKING";
+    if (system_is_running.load() == false) {
+        return "READY";
     }
     else {
-        return "OUT OF SYNC";
+        if (response == ParticipantStatus::REALTIME) {
+            return "(realtime)";
+        }
+        else if (response == ParticipantStatus::WAITING) {
+            return "WAITING";
+        }
+        else if (response == ParticipantStatus::WORKING) {
+            return "WORKING";
+        }
+        else {
+            return "OUT OF SYNC";
+        }
     }
 }
 
