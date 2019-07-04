@@ -21,7 +21,7 @@ typedef enum
 	TEST_NONE
 } TestSequenceName;
 
-void test_sequence(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_miso_data, TestSequenceName testSequenceName);
+//void test_sequence(spi_mosi_data_t* spi_mosi_data, spi_miso_data_t* spi_miso_data, TestSequenceName testSequenceName);
 
 
 #endif /* TEST_SEQUENCE_H_ */

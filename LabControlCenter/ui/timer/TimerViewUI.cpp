@@ -26,7 +26,7 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     //Use model_record, add it to the view
     active_timers_treeview->append_column("ID", timer_record.column_id);
     active_timers_treeview->append_column("Last message", timer_record.column_last_message);
-    active_timers_treeview->append_column("Waiting for response", timer_record.column_waiting_for_response);
+    active_timers_treeview->append_column("Participant status", timer_record.column_participant_status);
     active_timers_treeview->append_column("Next timestep", timer_record.column_next_step);
 
     //Set equal width for all columns
@@ -62,8 +62,8 @@ void TimerViewUI::dispatcher_callback() {
         step_stream << entry.second.next_timestep;
 
         Glib::ustring id_ustring(entry.first);
-        Glib::ustring last_message_ustring(timer_trigger->get_human_readable_time_diff(entry.second.last_message_receive_stamp));
-        Glib::ustring waiting_response_ustring(entry.second.waiting_for_response);
+        Glib::ustring last_message_ustring(get_human_readable_time_diff(entry.second.last_message_receive_stamp));
+        Glib::ustring participant_status_ustring(participant_status_to_ustring(entry.second.participant_status));
         Glib::ustring next_step_ustring(step_stream.str());
 
         Gtk::TreeModel::Row row;
@@ -84,7 +84,7 @@ void TimerViewUI::dispatcher_callback() {
 
         row[timer_record.column_id] = id_ustring;
         row[timer_record.column_last_message] = last_message_ustring;
-        row[timer_record.column_waiting_for_response] = waiting_response_ustring;
+        row[timer_record.column_participant_status] = participant_status_ustring;
         row[timer_record.column_next_step] = next_step_ustring;
     }
 
@@ -122,6 +122,53 @@ void TimerViewUI::button_stop_callback() {
     current_timestep_label->set_label(label_msg_ustring);
 
     button_start->set_sensitive(false);
+}
+
+std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus response) {
+    if (response == ParticipantStatus::REALTIME) {
+        return "(realtime)";
+    }
+    else if (response == ParticipantStatus::WAITING) {
+        return "WAITING";
+    }
+    else if (response == ParticipantStatus::WORKING) {
+        return "WORKING";
+    }
+    else {
+        return "OUT OF SYNC";
+    }
+}
+
+std::string TimerViewUI::get_human_readable_time_diff(uint64_t other_time) {
+    uint64_t current_time = cpm::get_time_ns();
+    if (current_time >= other_time) {
+        uint64_t time_diff = current_time - other_time;
+        std::stringstream time_stream;
+
+        time_diff /= 1000000000ull;
+        if (time_diff <= 59) {
+            time_stream << time_diff << "s";
+        }
+        else {
+            uint64_t time_diff_min = time_diff/60;
+            uint64_t time_diff_sec = time_diff % 60;
+
+            if (time_diff_min <= 59) {
+                time_stream << time_diff_min << "min " << time_diff_sec << "s";
+            }
+            else {
+                uint64_t time_diff_h = time_diff_min/60;
+                time_diff_min = time_diff_min % 60;
+
+                time_stream << time_diff_h << "h " << time_diff_min << "min " << time_diff_sec << "s";
+            }
+        }
+
+        return time_stream.str();
+    }
+    else {
+        return "-1";
+    }
 }
 
 Gtk::Widget* TimerViewUI::get_parent() {

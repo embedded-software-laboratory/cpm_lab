@@ -19,59 +19,48 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
             any_message_received = true;
             
             //Data from the sample to string
-            std::string id = sample.data().source_id();
-            //Find out the last message timestamp and print it to the UI - this can be useful for debugging purposes
-            uint64_t last_message = get_current_time_ns();
+            const std::string id = sample.data().source_id();
 
             std::unique_lock<std::mutex> lock(ready_status_storage_mutex);
             std::unique_lock<std::mutex> lock2(simulated_time_mutex);
 
-            const uint64_t next_start_stamp = sample.data().next_start_stamp().nanoseconds();
-
-            //The LCC is only waiting for a response if:
-            //a) TODO The participant has been pre-registered and has not yet sent any message
-            //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
-            WaitingResponse waiting_response;
-            if (next_start_stamp == current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep == current_simulated_time){
-                    waiting_response = YES;
-                }
-            }
-            else if (next_start_stamp < current_simulated_time && use_simulated_time) {
-                if (ready_status_storage.find(id) == ready_status_storage.end() || ready_status_storage[id].next_timestep < current_simulated_time){
-                    waiting_response = OUT_OF_SYNC;
-                }
-            }
-            else {
-                waiting_response = NO;
+            //Save current start request and storage start request of the participant (the latter may be higher)
+            uint64_t next_start_request = sample.data().next_start_stamp().nanoseconds();
+            uint64_t storage_start_request = 0;
+            if (ready_status_storage.find(id) != ready_status_storage.end()) {
+                storage_start_request = ready_status_storage[id].next_timestep;
             }
 
-            //Only store new data if the current timestep is higher than the timestep that was stored for the vehicle
-            uint64_t next_step;
-            if (ready_status_storage.find(id) == ready_status_storage.end()) {
-                next_step = next_start_stamp;
-            }
-            else if (ready_status_storage[id].next_timestep <= next_start_stamp) {
-                next_step = next_start_stamp;
+            //Only store new data if the current timestep is higher than the timestep that was stored for the participant
+            if (next_start_request >= storage_start_request) {
+                //The LCC is only waiting for a response if:
+                //a) TODO The participant has been pre-registered and has not yet sent any message -> Kommentar entfernen?
+                //b) Simulated time is used - then the timer needs to wait for all participants that have registered for the timestep
+                ParticipantStatus current_participant_status;
+                //The LCC is waiting for a response if the participant registered a "callback" in the current timestep
+                if (next_start_request == current_simulated_time && use_simulated_time) {
+                    current_participant_status = WORKING;
+                } //If an old message is received and the entry in the storage is old as well, the participant is out of sync
+                else if (next_start_request < current_simulated_time && use_simulated_time) {
+                    current_participant_status = OUT_OF_SYNC;
+                }
+                else if (next_start_request > current_simulated_time && use_simulated_time) {
+                    current_participant_status = WAITING;
+                }
+                else {
+                    current_participant_status = REALTIME;
+                }
+
+                TimerData data;
+                data.last_message_receive_stamp = cpm::get_time_ns();
+                data.next_timestep = next_start_request;
+                data.participant_status = current_participant_status;
+
+                ready_status_storage[id] = data;
             }
             else {
                 cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id.c_str());
             }
-
-            TimerData data;
-            data.last_message_receive_stamp = last_message;
-            data.next_timestep = next_step;
-            if (waiting_response == YES) {
-                data.waiting_for_response = "YES";
-            }
-            else if (waiting_response == OUT_OF_SYNC) {
-                data.waiting_for_response = "OUT OF SYNC";
-            }
-            else {
-                data.waiting_for_response = "-";
-            }
-
-            ready_status_storage[id] = data;
         }
     }
 
@@ -84,12 +73,6 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
     //samples.return_loan(); Actually made a difference in one situation
 }
 
-uint64_t TimerTrigger::get_current_time_ns() {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
-
 void TimerTrigger::send_start_signal() {
     timer_running.store(true);
 
@@ -100,7 +83,7 @@ void TimerTrigger::send_start_signal() {
     else {
         SystemTrigger trigger;
 
-        trigger.next_start(TimeStamp(get_current_time_ns() + 1000000000ull));
+        trigger.next_start(TimeStamp(cpm::get_time_ns() + 1000000000ull));
         system_trigger_writer.write(trigger);
         //TODO What if the button is pressed before any participant sent a message?
     }
@@ -109,14 +92,12 @@ void TimerTrigger::send_start_signal() {
 bool TimerTrigger::check_signals_and_send_next_signal() {
     if (use_simulated_time && timer_running.load()) {
         //Find smallest next time step in the storage
-        uint64_t smallest_step = 0;
-        bool first_data = true;
+        uint64_t next_simulated_time = 0;
         bool has_data = false;
         for (auto const& pair : ready_status_storage) {
-            if (first_data || smallest_step > pair.second.next_timestep) {
-                smallest_step = pair.second.next_timestep;
+            if (!has_data || next_simulated_time > pair.second.next_timestep) {
+                next_simulated_time = pair.second.next_timestep;
                 has_data = true;
-                first_data = false;
             }
         }
 
@@ -125,16 +106,13 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
         if (!has_data) {
             cpm::Logging::Instance().write("LCC Timer: No data or only invalid data received!");
         }
-        else if (smallest_step < current_simulated_time) {
+        else if (next_simulated_time < current_simulated_time) {
             cpm::Logging::Instance().write("LCC Timer: At least one participant is out of sync (or its answer was not received)!");
         }
         else {
-            if (smallest_step == current_simulated_time) {
-                cpm::Logging::Instance().write("LCC Timer: Some participants are still in the current timestep, waiting for an answer, re-sending signal...");
-            }
-
             //The timer can progress to the next smallest timestep as all participants have performed their computations
-            current_simulated_time = smallest_step;
+            //Or: The current timestep is kept as they are equal and feedback from some participants is still required
+            current_simulated_time = next_simulated_time;
 
             //Send system trigger message to participants
             SystemTrigger trigger;
@@ -149,41 +127,9 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
 }
 
 void TimerTrigger::send_stop_signal() {
-        SystemTrigger trigger;
-        trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
-        system_trigger_writer.write(trigger);
-}
-
-std::string TimerTrigger::get_human_readable_time_diff(uint64_t other_time) {
-    uint64_t current_time = get_current_time_ns();
-    if (current_time >= other_time) {
-        uint64_t time_diff = get_current_time_ns() - other_time;
-        std::stringstream time_stream;
-
-        time_diff /= 1000000000ull;
-        if (time_diff <= 59) {
-            time_stream << time_diff << "s";
-        }
-        else {
-            uint64_t time_diff_min = time_diff/60;
-            uint64_t time_diff_sec = time_diff % 60;
-
-            if (time_diff_min <= 59) {
-                time_stream << time_diff_min << "min " << time_diff_sec << "s";
-            }
-            else {
-                uint64_t time_diff_h = time_diff_min/60;
-                time_diff_min = time_diff_min % 60;
-
-                time_stream << time_diff_h << "h " << time_diff_min << "min " << time_diff_sec << "s";
-            }
-        }
-
-        return time_stream.str();
-    }
-    else {
-        return "-1";
-    }
+    SystemTrigger trigger;
+    trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
+    system_trigger_writer.write(trigger);
 }
 
 std::map<string, TimerData> TimerTrigger::get_participant_message_data() {
@@ -193,7 +139,7 @@ std::map<string, TimerData> TimerTrigger::get_participant_message_data() {
 }
 
 void TimerTrigger::get_current_simulated_time(bool& _use_simulated_time, uint64_t& _current_time) {
-    uint64_t simulated_copy = use_simulated_time;
+    bool simulated_copy = use_simulated_time;
     _use_simulated_time = simulated_copy;
 
     std::lock_guard<std::mutex> lock(simulated_time_mutex);

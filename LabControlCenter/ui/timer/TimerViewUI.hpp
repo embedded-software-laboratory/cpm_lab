@@ -61,6 +61,14 @@ private:
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
+    //Helper functions
+    std::string participant_status_to_ustring(ParticipantStatus response);
+    
+    /**
+     * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
+     */
+    std::string get_human_readable_time_diff(uint64_t other_time);
+
 public:
     TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger);
     ~TimerViewUI();
