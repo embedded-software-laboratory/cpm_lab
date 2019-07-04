@@ -63,7 +63,7 @@ void TimerViewUI::dispatcher_callback() {
 
         Glib::ustring id_ustring(entry.first);
         Glib::ustring last_message_ustring(get_human_readable_time_diff(entry.second.last_message_receive_stamp));
-        Glib::ustring participant_status_ustring(participant_status_ustring(entry.second.waiting_for_response));
+        Glib::ustring participant_status_ustring(participant_status_to_ustring(entry.second.participant_status));
         Glib::ustring next_step_ustring(step_stream.str());
 
         Gtk::TreeModel::Row row;
@@ -124,7 +124,7 @@ void TimerViewUI::button_stop_callback() {
     button_start->set_sensitive(false);
 }
 
-std::string TimerViewUI::participant_status_ustring(ParticipantStatus response) {
+std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus response) {
     if (response == ParticipantStatus::REALTIME) {
         return "(realtime)";
     }
