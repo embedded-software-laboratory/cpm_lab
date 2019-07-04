@@ -63,6 +63,7 @@ private:
 
     //Helper functions
     std::string participant_status_to_ustring(ParticipantStatus response);
+    std::atomic_bool system_is_running;
     
     /**
      * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
