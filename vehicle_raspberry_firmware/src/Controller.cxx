@@ -228,11 +228,16 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
 
             double longitudinal_error_sum = 0;
             double lateral_error_sum = 0;
+            double longitudinal_error_max = 0;
+            double lateral_error_max = 0;
 
             for (int i = 0; i < TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE; ++i)
             {
                 longitudinal_error_sum += trajectory_tracking_statistics_longitudinal_errors[i];
                 lateral_error_sum += trajectory_tracking_statistics_lateral_errors[i];
+
+                longitudinal_error_max = fmax(longitudinal_error_max, fabs(trajectory_tracking_statistics_longitudinal_errors[i]));
+                lateral_error_max = fmax(lateral_error_max, fabs(trajectory_tracking_statistics_lateral_errors[i]));
             }
 
             const double longitudinal_error_mean = longitudinal_error_sum / TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE;
@@ -259,12 +264,16 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
                 "Vehicle Controller Tracking Errors:"
                 "long,mean: %f  "
                 "long,std: %f  "
+                "long,max: %f  "
                 "lat,mean: %f  "
-                "lat,std: %f  ",
+                "lat,std: %f  "
+                "lat,max: %f  ",
                 longitudinal_error_mean, 
                 longitudinal_error_std,
+                longitudinal_error_max,
                 lateral_error_mean,
-                lateral_error_std
+                lateral_error_std,
+                lateral_error_max
             );
         }
     }
