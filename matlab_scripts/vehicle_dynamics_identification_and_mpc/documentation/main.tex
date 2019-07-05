@@ -1,8 +1,10 @@
 \documentclass[12pt]{article}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage[latin1]{inputenc}
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
 
 \title{CPM Vehicle Parameter Identification and Model Predictive Control}
 \author{Janis Maczijewski}
@@ -18,7 +20,7 @@ This is an end-to-end, grey-box model for the vehicle dynamics. The model parame
 
 \begin{align*}
 \boldsymbol{x} &= [p_x, p_y, \psi, v] \\
-\boldsymbol{u} &= [f, \delta_{ref}, V] \\ 
+\boldsymbol{u} &= [f, \delta, V] \\ 
 \end{align*}
 
 
@@ -30,24 +32,24 @@ This is an end-to-end, grey-box model for the vehicle dynamics. The model parame
  $\psi$ & IPS yaw angle  \\ 
  $v$ & Odometer Speed  \\ 
  $f$ & Dimensionless motor command  \\ 
- $\delta_{ref}$ & Dimensionless steering command  \\ 
+ $\delta$ & Dimensionless steering command  \\ 
  $V$ & Battery voltage  \\ 
 \end{tabular}
 \end{center}
 
 
-\begin{align*}
-\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \cos(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
-\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \sin(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
-\dot{\psi} &= p_4 \cdot v \cdot (\delta_{ref} + p_{9}) \\
+\begin{align}
+\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta + p_{9})^2) \cdot \cos(\psi + p_3 \cdot (\delta + p_{9}) + p_{10}) \\
+\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta + p_{9})^2) \cdot \sin(\psi + p_3 \cdot (\delta + p_{9}) + p_{10}) \\
+\dot{\psi} &= p_4 \cdot v \cdot (\delta + p_{9}) \\
 \dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8}
-\end{align*}
+\end{align}
 
 This is a kinematic bicycle model with some added terms to account for various errors.
 
 \begin{itemize}
 \item $p_1$: Compensate calibration error between IPS speed and odometer speed. 
-\item $(1+p_2 \cdot \delta^2)$: Compensate for speed differences due to different reference points between the IPS and odometer. The formulation is simplified with a second-order Taylor approximation.
+\item $(1+p_2 \cdot (\delta + p_{9})^2)$: Compensate for speed differences due to different reference points between the IPS and odometer. The formulation is simplified with a second-order Taylor approximation.
 \item $p_3$: Side slip angle (Schwimmwinkel) due to steering.
 \item $p_{10}$: IPS Yaw calibration error.
 \item $p_{4}$: Unit conversion for the steering state.
@@ -58,16 +60,28 @@ This is a kinematic bicycle model with some added terms to account for various e
 \end{itemize}
 
 
+\section{Model Discretization}
+
+The model is discretized with the explicit Euler method, as follows:
+
+\begin{align}
+\boldsymbol{x}_{k+1} = \boldsymbol{x}_k + \Delta t \cdot f(\boldsymbol{x}_k,  \boldsymbol{u}_k, \boldsymbol{p}) 
+\end{align}
+
+This discretization is chosen for its simplicity and computational efficiency.
+
+TODO justification inaccuracy: small timestep, and discretization is included in identification.
+
 \section{Parameter Identification}
 
 Optimal parameter estimation problem for the vehicle dynamics. The optimization tries to find a set of model parameters, that best explain/reproduce the experiment data.
 
-\begin{align*}
+\begin{align}
 \underset{\boldsymbol{x}_k^j, \boldsymbol{p}}{\text{minimize}} && \sum_{j=1}^{n_{experiments}} \sum_{k=1}^{n_{timesteps}} E(\boldsymbol{x}_k^j - \hat{\boldsymbol{x}}_k^j) \\
 \text{subject to} &&  \boldsymbol{x}_{k+1}^j = \boldsymbol{x}_k^j + \Delta t \cdot f(\boldsymbol{x}_k^j,  \hat{\boldsymbol{u}}_k^j, \boldsymbol{p}) \\
 && \quad k=1..(n_{timesteps}-1) \\
 && \quad j=1..n_{experiments} \\
-\end{align*} 
+\end{align} 
 
 
 
@@ -82,9 +96,129 @@ Optimal parameter estimation problem for the vehicle dynamics. The optimization 
 \end{tabular}
 \end{center}
 
-\textbf{Error penalty $E$}: Weighted quadratic error with model specific extensions. The yaw error function has a period of $2\pi$, so that a full rotation does not count as an error. This is done using $\sin(\Delta\psi/2)$.
+\textbf{Error penalty $E$}: Weighted quadratic error with model specific extensions. The yaw error function has a period of $2\pi$, so that a full rotation does not count as an error. This is done using $\sin(\Delta\psi/2)^2$.
 
 
 \textbf{Delays}: This kind of optimization problem is not well suited for identifying the delay times (Totzeiten). The delays are solved in an outer loop. The delay is guessed/assumed and the measurement data is modified by appropriately shifting it in the time index $k$. This optimization problem is solved many times for combinations of delay times. The delays that create the lowest objective value are taken as the solution.
 
+
+\section{Model Predictive Control}
+
+The MPC uses the identified model to calculate control inputs in real time. The MPC must run in an environment with narrow computational constraints. It must run on a Raspberry Pi Zero W and in less than 10ms per time step. This results in a computational budget of roughly 100000 to 500000 double precision floating point operations per time step.
+
+
+\subsection{Optimization Problem and Optimizer}
+
+The MPC is formulated as a (mostly) unconstrained minimization problem, with a box constraint:
+
+\begin{align}
+\underset{z \in \mathbb{R}^n}{\text{minimize}} \quad & J(z) \\
+\text{subject to} \quad & -1 \leq z_i  \leq 1 
+\end{align}
+
+
+The optimization problem is solved using a simple and lightweight method, the gradient descent method with momentum.
+The method works by iterating the following two equations:
+
+\begin{align*}
+m^{(j)} &:= \beta  m^{(j-1)} - \nabla J(z^{(j-1)}) \\
+z^{(j)} &:= \text{clip}(z^{(j-1)} + \alpha  m^{(j)})
+\end{align*}
+
+where
+$z^{(j)}$ is the approximate solution, which is improved in each iteration,
+$m^{(j)}$ is the momentum term,
+$\alpha = 0.4$ and $\beta = 0.6$ are constants,
+$\text{clip}(\cdot)$ applies the following function element-wise $\min(1, \max(-1, x_i))$ and
+$\nabla J(z^{(j-1)})$ is the gradient of the objective.
+
+A constant number of iterations $j = 1 ... N$ are executed. 
+This guarantees a constant computation time, but not the convergence to the solution.
+The approximate solution $z^{(N)}$ is however sufficient in practice.
+
+\subsection{Trajectory Tracking Problem}
+
+The goal of the MPC is to make the vehicle follow a given reference trajectory.
+The reference trajectory is given as a Cubic Hermite spline function $r(t) = [p_{x,ref}, p_{y,ref}]$.
+This function is evaluated on an appropriate time grid $t_k$ to give the discrete reference trajectory $[p_{x,ref,k}, p_{y,ref,k}]$ where $k = 1 ... H_p$.
+The MPC objective is defined as follows:
+
+\begin{align*}
+J &= \sum_{k=1}^{H_p} \left[ (p_{x,k} - p_{x,ref,k})^2 + (p_{y,k} - p_{y,ref,k})^2 \right] \\
+  &+ 0.5 \sum_{k=1}^{H_u}  (f_k - f_{k-1})^2 \\
+  &+ 0.01 \sum_{m=1}^{H_u}  (\delta_{m} - \delta_{m-1})^2
+\end{align*}
+
+The predicted states are calculated explicitly and recursively. This is known as a single shooting method.
+
+\begin{align*}
+\begin{bmatrix}
+p_{x,k+1}  \\
+p_{y,k+1}  \\
+\psi_{k+1}  \\
+v_{k+1}  
+\end{bmatrix}
+= 
+\begin{bmatrix}
+p_{x,k}  \\
+p_{y,k}  \\
+\psi_{k}  \\
+v_{k}  
+\end{bmatrix}
++
+\Delta t_{MPC} \cdot f\left(
+\begin{bmatrix}
+p_{x,k}  \\
+p_{y,k}  \\
+\psi_{k}  \\
+v_{k}  
+\end{bmatrix}
+,  
+\begin{bmatrix}
+f_{\boldsymbol{m}_k}  \\
+\delta_{\boldsymbol{m}_k}  \\
+V_{\boldsymbol{m}_k} 
+\end{bmatrix}
+, \boldsymbol{p}\right), \quad k = 0 ... (H_p-1)
+\end{align*}
+
+where $f$ is the identified model from section (ref).
+
+$\boldsymbol{m}$ is an index vector that allows reuse of input vectors. Current implementation $\boldsymbol{m} = [1, 1, 2, 2, 3, 3]$.
+
+$H_p = 6$, $H_u = 3$
+
+The MPC uses a longer discretization time step $\Delta t_{MPC} = 0.05s$. 
+
+TODO experiment with the values for $\Delta t_{MPC}$, $H_p$, $H_u$.
+
+The inputs for the trajectory tracking problem are:
+
+\begin{itemize}
+\item $[p_{x,0}, p_{y,0}, \psi_{0}, v_{0}]$: The measured state
+\item $[f_{0}, \delta_{0}]$: The previous command
+\item $[p_{x,ref,k}, p_{y,ref,k}]$: The discrete reference trajectory
+\item $V_m$: The measured battery voltage
+\item $\boldsymbol{p}$: The model parameters
+\end{itemize}
+
+
+The variables for the trajectory tracking problem are: $z = [f_1, ..., f_{H_u}, \delta_1, ..., \delta_{H_u}]$.
+
+
+\subsection{Delay Compensation}
+
+
+\subsection{CasADi and Code Generation}
+
+
 \end{document}
+
+
+
+
+
+
+
+
+
