@@ -1,0 +1,90 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[latin1]{inputenc}
+
+\title{CPM Vehicle Parameter Identification and Model Predictive Control}
+\author{Janis Maczijewski}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Vehicle Dynamics Model}
+
+
+This is an end-to-end, grey-box model for the vehicle dynamics. The model parameters are not measured directly, but optimized to best fit the vehicle behavior.
+
+\begin{align*}
+\boldsymbol{x} &= [p_x, p_y, \psi, v] \\
+\boldsymbol{u} &= [f, \delta_{ref}, V] \\ 
+\end{align*}
+
+
+
+\begin{center}
+\begin{tabular}{ r | l }
+ $p_x$ & IPS x-position  \\ 
+ $p_y$ & IPS y-position   \\ 
+ $\psi$ & IPS yaw angle  \\ 
+ $v$ & Odometer Speed  \\ 
+ $f$ & Dimensionless motor command  \\ 
+ $\delta_{ref}$ & Dimensionless steering command  \\ 
+ $V$ & Battery voltage  \\ 
+\end{tabular}
+\end{center}
+
+
+\begin{align*}
+\dot{p}_x &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \cos(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
+\dot{p}_y &= p_1 \cdot v \cdot (1+p_2 \cdot (\delta_{ref} + p_{9})^2) \cdot \sin(\psi + p_3 \cdot (\delta_{ref} + p_{9}) + p_{10}) \\
+\dot{\psi} &= p_4 \cdot v \cdot (\delta_{ref} + p_{9}) \\
+\dot{v} &= p_5 \cdot v + (p_6 + p_7 \cdot V) \cdot \text{sign}(f) \cdot |f|^{p_8}
+\end{align*}
+
+This is a kinematic bicycle model with some added terms to account for various errors.
+
+\begin{itemize}
+\item $p_1$: Compensate calibration error between IPS speed and odometer speed. 
+\item $(1+p_2 \cdot \delta^2)$: Compensate for speed differences due to different reference points between the IPS and odometer. The formulation is simplified with a second-order Taylor approximation.
+\item $p_3$: Side slip angle (Schwimmwinkel) due to steering.
+\item $p_{10}$: IPS Yaw calibration error.
+\item $p_{4}$: Unit conversion for the steering state.
+\item $p_{5}$: Speed low pass (PT1).
+\item $p_{6}, p_{7}$: Motor strength depends on the battery voltage.
+\item $p_{8}$: Compensate non-linear steady-state speed.
+\item $p_{9}$: Steering misalignment correction.
+\end{itemize}
+
+
+\section{Parameter Identification}
+
+Optimal parameter estimation problem for the vehicle dynamics. The optimization tries to find a set of model parameters, that best explain/reproduce the experiment data.
+
+\begin{align*}
+\underset{\boldsymbol{x}_k^j, \boldsymbol{p}}{\text{minimize}} && \sum_{j=1}^{n_{experiments}} \sum_{k=1}^{n_{timesteps}} E(\boldsymbol{x}_k^j - \hat{\boldsymbol{x}}_k^j) \\
+\text{subject to} &&  \boldsymbol{x}_{k+1}^j = \boldsymbol{x}_k^j + \Delta t \cdot f(\boldsymbol{x}_k^j,  \hat{\boldsymbol{u}}_k^j, \boldsymbol{p}) \\
+&& \quad k=1..(n_{timesteps}-1) \\
+&& \quad j=1..n_{experiments} \\
+\end{align*} 
+
+
+
+\begin{center}
+\begin{tabular}{ r | l }
+ $\hat{\boldsymbol{x}}_k^j$ & Measured States  \\ 
+ $\hat{\boldsymbol{u}}_k^j$ & Measured Inputs   \\ 
+ $f$ & Vehicle dynamics model  \\ 
+ $\boldsymbol{p}$ & Model parameters  \\ 
+ $\Delta t$ & Constant timestep $0.02s$ \\ 
+ $E$ & Error penalty function \\ 
+\end{tabular}
+\end{center}
+
+\textbf{Error penalty $E$}: Weighted quadratic error with model specific extensions. The yaw error function has a period of $2\pi$, so that a full rotation does not count as an error. This is done using $\sin(\Delta\psi/2)$.
+
+
+\textbf{Delays}: This kind of optimization problem is not well suited for identifying the delay times (Totzeiten). The delays are solved in an outer loop. The delay is guessed/assumed and the measurement data is modified by appropriately shifting it in the time index $k$. This optimization problem is solved many times for combinations of delay times. The delays that create the lowest objective value are taken as the solution.
+
+\end{document}
