@@ -190,12 +190,10 @@ $H_p = 6$, $H_u = 3$
 
 The MPC uses a longer discretization time step $\Delta t_{MPC} = 0.05s$. 
 
-TODO experiment with the values for $\Delta t_{MPC}$, $H_p$, $H_u$.
-
 The inputs for the trajectory tracking problem are:
 
 \begin{itemize}
-\item $[p_{x,0}, p_{y,0}, \psi_{0}, v_{0}]$: The measured state
+\item $[p_{x,0}, p_{y,0}, \psi_{0}, v_{0}]$: The measured state with delay compensation
 \item $[f_{0}, \delta_{0}]$: The previous command
 \item $[p_{x,ref,k}, p_{y,ref,k}]$: The discrete reference trajectory
 \item $V_m$: The measured battery voltage
@@ -208,8 +206,21 @@ The variables for the trajectory tracking problem are: $z = [f_1, ..., f_{H_u}, 
 
 \subsection{Delay Compensation}
 
+The processes of measuring the state, running the MPC controller and applying the new command introduces a delay in the control loop. This delay is compensated by performing a short simulation after measuring the state and before running the MPC. Thus, the MPC will optimize the inputs for a future state, which matches the time by which the new commands take effect.
+This simulation requires some command inputs. These are the MPC commands from the previous timesteps.
+The simulation runs for 3 samples, or 60ms.
+
 
 \subsection{CasADi and Code Generation}
+
+The trajectory tracking problem and the optimizer are implemented symbolically with Matlab and CasADi.
+CasADi's code generator for C is used to obtain an efficient implementation for the Raspberry Pi.
+
+\subsection{Finetuning}
+
+The controller implementation collects statistical data about the trajectory tracking errors in real time.
+
+TODO play with all the MPC hyperparameters to minimize the tracking error.
 
 
 \end{document}
