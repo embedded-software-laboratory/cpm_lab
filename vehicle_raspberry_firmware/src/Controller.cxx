@@ -325,6 +325,7 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
         case ControllerState::Trajectory:
         {
+            std::lock_guard<std::mutex> lock(command_receive_mutex);
             trajectory_tracking_statistics_update(t_now);
 
             // Run controller

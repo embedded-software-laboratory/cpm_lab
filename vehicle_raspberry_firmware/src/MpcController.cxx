@@ -58,7 +58,7 @@ MpcController::MpcController()
         }
 
         assert(casadi_vars.count(name) == 0);
-        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12);
+        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12); // Can not be zero exactly, because the CadADi gradient is wrong at zero
         casadi_vars_size[name] = std::array<casadi_int, 2>{n_rows, n_cols};
         casadi_real* p_buffer = casadi_vars[name].data();
 
@@ -304,7 +304,7 @@ void MpcController::reset_optimizer()
     {
         for (size_t i = 0; i < casadi_var.second.size(); ++i)
         {
-            casadi_vars[casadi_var.first][i] = 1e-12;
+            casadi_vars[casadi_var.first][i] = 1e-12; // Can not be zero exactly, because the CadADi gradient is wrong at zero
         }
     }
 }

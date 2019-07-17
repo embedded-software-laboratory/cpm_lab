@@ -4,17 +4,53 @@ using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
     /*Set up communication*/
-    ready_status_reader(std::bind(&TimerTrigger::ready_status_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<ReadyStatus>("ready"), true),
+    ready_status_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<ReadyStatus>("ready"), dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()),
     system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("system_trigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
 {    
     current_simulated_time = 0;
+    simulation_started.store(false);
     timer_running.store(false);
+
+    if (use_simulated_time) {
+        timer_running.store(true);
+
+        //Create timer thread that handles receiving + sending timing messages in a more ordered fashion
+        next_signal_thread = std::thread([&] () {
+            //Get initial messages so that the UI displays all participants that have sent an initial ready message
+            while(!simulation_started.load() && timer_running.load()) {
+                obtain_new_ready_signals();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            while(timer_running.load()) {
+                //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - if new messages were received, wait for more messages that might arrive within x milliseconds for a more ordered event handling
+                while(obtain_new_ready_signals()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                }
+
+                //Progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
+                check_signals_and_send_next_signal();   
+
+                //Now only continue if new messages are received
+                while(!obtain_new_ready_signals()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }   
+            }  
+        });
+    }
 }
 
-void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
+TimerTrigger::~TimerTrigger() {
+    timer_running.store(false);
+    if(next_signal_thread.joinable()) {
+        next_signal_thread.join();
+    }
+}
+
+bool TimerTrigger::obtain_new_ready_signals() {
     bool any_message_received = false; 
     
-    for (auto sample : samples) {
+    for (auto sample : ready_status_reader.take()) {
         if (sample.info().valid()) {
             any_message_received = true;
             
@@ -64,21 +100,15 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
         }
     }
 
-    //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
-    if (any_message_received) {
-        check_signals_and_send_next_signal();
-    }
+    return any_message_received;
 
     //TODO Check if uint64_t max number is close and stop the program automatically
     //samples.return_loan(); Actually made a difference in one situation
 }
 
 void TimerTrigger::send_start_signal() {
-    timer_running.store(true);
-
     if (use_simulated_time) {
-        bool signal_sent = check_signals_and_send_next_signal();
-        //TODO Do something if no signal was sent
+        simulation_started.store(true);
     }
     else {
         SystemTrigger trigger;
@@ -94,12 +124,14 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
         //Find smallest next time step in the storage
         uint64_t next_simulated_time = 0;
         bool has_data = false;
+        std::unique_lock<std::mutex> storage_lock(ready_status_storage_mutex);
         for (auto const& pair : ready_status_storage) {
             if (!has_data || next_simulated_time > pair.second.next_timestep) {
                 next_simulated_time = pair.second.next_timestep;
                 has_data = true;
             }
         }
+        storage_lock.unlock();
 
         std::lock_guard<std::mutex> lock(simulated_time_mutex);
         //React according to current data
