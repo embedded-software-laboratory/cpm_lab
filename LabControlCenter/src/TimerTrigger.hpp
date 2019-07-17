@@ -52,7 +52,7 @@ private:
      * \returns true if a signal was sent, else false
      */
     std::thread next_signal_thread;
-    std::atomic_bool next_signal_thread_running;
+    std::atomic_bool simulation_started;
     bool check_signals_and_send_next_signal();
 
 public:
