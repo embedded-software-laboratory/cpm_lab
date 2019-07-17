@@ -38,7 +38,7 @@ private:
     std::atomic_bool timer_running;
 
     //Communication objects and callbacks
-    void ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples);
+    bool obtain_new_ready_signals();
     dds::sub::DataReader<ReadyStatus> ready_status_reader;
     dds::pub::DataWriter<SystemTrigger> system_trigger_writer;
     std::map<string, TimerData> ready_status_storage; //Always stores the highest timestamp that was sent by each participant

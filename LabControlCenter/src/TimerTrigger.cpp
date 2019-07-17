@@ -18,10 +18,10 @@ TimerTrigger::~TimerTrigger() {
     }
 }
 
-void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& samples) {
+bool TimerTrigger::obtain_new_ready_signals() {
     bool any_message_received = false; 
     
-    for (auto sample : samples) {
+    for (auto sample : ready_status_reader.take()) {
         if (sample.info().valid()) {
             any_message_received = true;
             
@@ -71,12 +71,7 @@ void TimerTrigger::ready_status_callback(dds::sub::LoanedSamples<ReadyStatus>& s
         }
     }
 
-    //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - in that case, progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
-    if (any_message_received) {
-        ready_status_callback(); //TODO Change this, as now there is no callback structure anymore
-        //TODO: If new messages arrived during the last x milliseconds, wait again for x milliseconds, else send next signal
-        check_signals_and_send_next_signal();
-    }
+    return any_message_received;
 
     //TODO Check if uint64_t max number is close and stop the program automatically
     //samples.return_loan(); Actually made a difference in one situation
@@ -90,7 +85,20 @@ void TimerTrigger::send_start_signal() {
         bool signal_sent = check_signals_and_send_next_signal();
         //Create timer thread that handles receiving + sending timing messages in a more ordered fashion
         next_signal_thread = std::thread([&] () {
-            check_signals_and_send_next_signal();
+            while(next_signal_thread_running.load()) {
+                //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - if new messages were received, wait for more messages that might arrive within x milliseconds for a more ordered event handling
+                while(obtain_new_ready_signals()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+
+                //Progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
+                check_signals_and_send_next_signal();   
+
+                //Now only continue if new messages are received
+                while(!obtain_new_ready_signals()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                }   
+            }  
         });
     }
     else {
