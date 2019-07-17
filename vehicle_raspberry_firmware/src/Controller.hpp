@@ -15,10 +15,13 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "MpcController.hpp"
+#include "TrajectoryInterpolation.hpp"
 
 extern "C" {
     #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
+
+#define TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE 1500
 
 enum class ControllerState
 {
@@ -70,6 +73,14 @@ class Controller
     void receive_commands(uint64_t t_now);
 
     void reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
+    std::shared_ptr<TrajectoryInterpolation> interpolate_trajectory_command(uint64_t t_now);
+
+
+    // Trajectory tacking statistics
+    void trajectory_tracking_statistics_update(uint64_t t_now);
+    double trajectory_tracking_statistics_longitudinal_errors  [TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE];
+    double trajectory_tracking_statistics_lateral_errors       [TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE];
+    size_t trajectory_tracking_statistics_index = 0;
 
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);

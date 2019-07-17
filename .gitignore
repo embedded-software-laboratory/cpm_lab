@@ -35,3 +35,4 @@ package.tar.gz
 vehicle_raspberry_firmware/package/
 matlab_scripts/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
 core
+matlab_scripts/vehicle_dynamics_identification_and_mpc/documentation
