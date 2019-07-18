@@ -9,35 +9,33 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
 {    
     current_simulated_time = 0;
     simulation_started.store(false);
-    timer_running.store(false);
 
-    if (use_simulated_time) {
-        timer_running.store(true);
+    timer_running.store(true);
 
-        //Create timer thread that handles receiving + sending timing messages in a more ordered fashion
-        next_signal_thread = std::thread([&] () {
-            //Get initial messages so that the UI displays all participants that have sent an initial ready message
-            while(!simulation_started.load() && timer_running.load()) {
-                obtain_new_ready_signals();
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //Create timer thread that handles receiving + sending timing messages in a more ordered fashion
+    next_signal_thread = std::thread([&] () {
+        //Get initial messages so that the UI displays all participants that have sent an initial ready message
+        //This is also used in a real time scenario
+        while(!simulation_started.load() && timer_running.load()) {
+            obtain_new_ready_signals();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        while(timer_running.load()) {
+            //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - if new messages were received, wait for more messages that might arrive within x milliseconds for a more ordered event handling
+            while(obtain_new_ready_signals()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
 
-            while(timer_running.load()) {
-                //Check if any of the participants that were waiting for a signal of the current timestep have sent an answer - if new messages were received, wait for more messages that might arrive within x milliseconds for a more ordered event handling
-                while(obtain_new_ready_signals()) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                }
+            //Progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
+            check_signals_and_send_next_signal();   
 
-                //Progress to the next timestep or send the current timestep again if some participants have not sent anything yet (simulated time only)
-                check_signals_and_send_next_signal();   
-
-                //Now only continue if new messages are received
-                while(!obtain_new_ready_signals()) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }   
-            }  
-        });
-    }
+            //Now only continue if new messages are received
+            while(!obtain_new_ready_signals()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }   
+        }  
+    });
 }
 
 TimerTrigger::~TimerTrigger() {
@@ -115,6 +113,9 @@ void TimerTrigger::send_start_signal() {
 
         trigger.next_start(TimeStamp(cpm::get_time_ns() + 1000000000ull));
         system_trigger_writer.write(trigger);
+
+        //New messages are now meaningless, thus shut down the message receiver
+        timer_running.store(false);
         //TODO What if the button is pressed before any participant sent a message?
     }
 }
