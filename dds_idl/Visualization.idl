@@ -23,7 +23,7 @@ struct Visualization
     VisualizationAction action;
 
     sequence<VisualizationPose> points;
-    short scale; //Line width in pixels or text size in pt
+    double size; //Line width in pixels or text size in pt
     string string_message;
 
     Color color;
