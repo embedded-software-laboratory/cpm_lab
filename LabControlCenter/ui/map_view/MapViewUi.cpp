@@ -9,11 +9,13 @@
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
     std::function<VehicleData()> get_vehicle_data_callback,
-    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
+    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
+,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
@@ -211,6 +213,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_path_painting(ctx);
 
+        draw_received_visualization_commands(ctx);
 
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
@@ -321,6 +324,33 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
             ctx->set_source_rgb(0.6,0,0);
             ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.02, 0.0, 2 * M_PI);
             ctx->fill();
+        }
+    }
+}
+
+//Draw all received viz commands on the screen
+void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
+    //Get commands
+    std::vector<Visualization> visualization_commands = get_visualization_msgs_callback();
+
+    for(const auto& entry : visualization_commands) 
+    {
+        if (entry.type() == VisualizationType::LineStrips && entry.points().size() > 1) {
+            const auto& message_points = entry.points();
+
+            //Set beginning point
+            ctx->set_source_rgba(entry.color().r(), entry.color().g(), entry.color().b(), entry.color().a());
+            ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
+
+            for (size_t i = 1; i < message_points.size(); ++i)
+            {
+                const auto& current_point = message_points.at(i);
+
+                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+            }  
+
+            ctx->set_line_width(entry.size());
+            ctx->stroke();      
         }
     }
 }
