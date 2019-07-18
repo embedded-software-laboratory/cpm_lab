@@ -1,0 +1,4 @@
+struct VisualizationPose {
+    long x;    // pixel
+    long y;    // pixel
+};

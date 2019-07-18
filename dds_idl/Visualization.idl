@@ -1,0 +1,30 @@
+#include "Color.idl"
+#include "VisualizationPose.idl"
+
+enum VisualizationType 
+{
+    LineStrips=0,
+    Polygon,
+    StringMessage
+};
+
+enum VisualizationAction
+{
+    ADD=0,
+    DELETE
+};
+
+struct Visualization 
+{
+    //Id to be able to delete the viz later on
+    long id; //@key
+
+    VisualizationType type;
+    VisualizationAction action;
+
+    sequence<VisualizationPose> points;
+    short scale; //Line width in pixels or text size in pt
+    string string_message;
+
+    Color color;
+};
