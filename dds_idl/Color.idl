@@ -1,6 +1,5 @@
 struct Color 
 {
-    double a;
     double r;
     double g;
     double b;

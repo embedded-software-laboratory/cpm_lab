@@ -1,4 +1,4 @@
 struct VisualizationPose {
-    long x;    // pixel
-    long y;    // pixel
+    double x;    // pixel
+    double y;    // pixel
 };
