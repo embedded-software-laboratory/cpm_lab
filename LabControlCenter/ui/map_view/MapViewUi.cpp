@@ -335,8 +335,9 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
     for(const auto& entry : visualization_commands) 
     {
-        if (entry.type() == VisualizationType::LineStrips && entry.points().size() > 1) {
-
+        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
+            && entry.points().size() > 1) 
+        {
             const auto& message_points = entry.points();
 
             //Set beginning point
@@ -349,6 +350,11 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
                 ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
             }  
+
+            //Line from end to beginning point to close the polygon
+            if (entry.type() == VisualizationType::Polygon) {
+                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+            }
 
             ctx->set_line_width(entry.size());
             ctx->stroke();      

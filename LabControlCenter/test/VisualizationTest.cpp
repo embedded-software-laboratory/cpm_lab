@@ -37,9 +37,30 @@ int main(int argc, char *argv[]) {
 
     usleep(100000);
 
-    std::cout << "Sending visualization..." << std::endl;
+    std::cout << "Sending visualization line..." << std::endl;
 
     viz_writer.write(viz);
+
+    Visualization viz2;
+    viz2.id(2);
+    viz2.type(VisualizationType::Polygon);
+    viz2.action(VisualizationAction::ADD);
+    viz2.size(0.05);
+
+    VisualizationPose point1_2(0.0, 0.0);
+    VisualizationPose point2_2(0.5, 0.5);
+    VisualizationPose point3_2(1.0, 0.0);
+    std::vector<VisualizationPose> viz2_points {point1_2, point2_2, point3_2};
+    viz2.points(rti::core::vector<VisualizationPose>(viz2_points));
+
+    Color viz2_color(1.0, 0.0, 1.0);
+    viz2.color(viz2_color);
+
+    usleep(100000);
+
+    std::cout << "Sending visualization polygon..." << std::endl;
+
+    viz_writer.write(viz2);
 
     std::cout << "Shutting down..." << std::endl;
 
