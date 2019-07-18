@@ -336,10 +336,11 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     for(const auto& entry : visualization_commands) 
     {
         if (entry.type() == VisualizationType::LineStrips && entry.points().size() > 1) {
+
             const auto& message_points = entry.points();
 
             //Set beginning point
-            ctx->set_source_rgba(entry.color().r(), entry.color().g(), entry.color().b(), entry.color().a());
+            ctx->set_source_rgb(entry.color().r(), entry.color().g(), entry.color().b());
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
             for (size_t i = 1; i < message_points.size(); ++i)

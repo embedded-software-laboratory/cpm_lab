@@ -7,7 +7,8 @@ VisualizationCommandsAggregator::VisualizationCommandsAggregator()
             handle_new_viz_msgs(samples);
         },
         cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<Visualization>("visualization")
+        cpm::get_topic<Visualization>("visualization"),
+        true
     );
 }
 

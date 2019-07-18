@@ -93,3 +93,9 @@ add_executable(TimerTestRealtime
 )
 
 target_link_libraries(TimerTestRealtime cpm)
+
+add_executable(VisualizationTest
+    test/VisualizationTest.cpp
+)
+
+target_link_libraries(VisualizationTest cpm)
