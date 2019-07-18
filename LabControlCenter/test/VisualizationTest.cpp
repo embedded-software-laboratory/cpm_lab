@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     std::vector<VisualizationPose> viz_points {point1, point2, point3, point4, point5};
     viz.points(rti::core::vector<VisualizationPose>(viz_points));
 
-    Color viz_color(0.5, 1.0, 1.0, 0.0);
+    Color viz_color(0.0, 1.0, 1.0);
     viz.color(viz_color);
 
     usleep(100000);
