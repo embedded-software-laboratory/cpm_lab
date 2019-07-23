@@ -102,6 +102,35 @@ void LoggerViewUI::update_ui() {
         ui_dispatcher.emit();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        //Delete old logs when limit is reached
+        ++update_count;
+        if (update_count > 10) {
+            delete_old_logs(5);
+            update_count = 0;
+        }
+    }
+}
+
+void LoggerViewUI::delete_old_logs(const long max_amount) {
+    //Get current number of elements
+    long count = 0;
+    for (auto iter = log_list_store->children().begin(); iter != log_list_store->children().end(); ++iter) {
+        ++count;
+    }
+
+    std::cout << "Count " << count << std::endl;
+
+    //Only delete if more elements are in the list_store (currently hope that iteration starts at oldest element)
+    if (count > max_amount) {
+        long amount_left = count - max_amount;
+        std::cout << "Deleting " << amount_left << std::endl;
+
+        for (long i = 0; i < amount_left; ++i) { 
+            auto iter = log_list_store->children().begin();
+            std::cout << "Removing row" << std::endl;
+            log_list_store->erase(iter);
+        }
     }
 }
 

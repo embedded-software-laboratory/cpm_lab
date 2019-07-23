@@ -63,6 +63,10 @@ private:
     Glib::ustring type_all_ustring = "All";
     void on_filter_type_changed();
 
+    //Delete old logs
+    void delete_old_logs(const long max_amount);
+    unsigned int update_count = 0;
+
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
     ~LoggerViewUI();
