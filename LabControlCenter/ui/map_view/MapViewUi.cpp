@@ -360,14 +360,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             ctx->stroke();      
         }
         else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
-            std::cout << "Received string: " << entry.string_message() << std::endl;
-
             //Set font properties
             ctx->set_source_rgb(entry.color().r(), entry.color().g(), entry.color().b());
             ctx->set_font_size(entry.size());
 
-            //Draw text
             ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+
+            //Flip font
+            Cairo::Matrix font_matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+            ctx->set_font_matrix(font_matrix);
+
+            //Draw text
             ctx->show_text(entry.string_message().c_str());
         }
     }
