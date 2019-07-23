@@ -62,6 +62,27 @@ int main(int argc, char *argv[]) {
 
     viz_writer.write(viz2);
 
+    Visualization viz3;
+    viz3.id(3);
+    viz3.type(VisualizationType::StringMessage);
+    viz3.action(VisualizationAction::ADD);
+    viz3.size(1.0);
+
+    VisualizationPose point1_3(0.2, 0.2);
+    std::vector<VisualizationPose> viz3_points {point1_3};
+    viz3.points(rti::core::vector<VisualizationPose>(viz3_points));
+
+    Color viz3_color(1.0, 1.0, 0.0);
+    viz3.color(viz3_color);
+
+    viz3.string_message("Hello LCC!");
+
+    usleep(100000);
+
+    std::cout << "Sending visualization string..." << std::endl;
+
+    viz_writer.write(viz3);
+
     std::cout << "Shutting down..." << std::endl;
 
     return 0;
