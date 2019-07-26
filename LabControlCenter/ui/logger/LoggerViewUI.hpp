@@ -65,7 +65,6 @@ private:
 
     //Delete old logs
     void delete_old_logs(const long max_amount);
-    unsigned int update_count = 0;
 
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
