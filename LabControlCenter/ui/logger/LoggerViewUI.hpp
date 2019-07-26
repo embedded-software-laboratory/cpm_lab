@@ -5,6 +5,7 @@
 #include <cassert>
 #include <chrono>
 #include <ctime>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -50,18 +51,23 @@ private:
     //Object that holds (new) log data
     std::shared_ptr<LogStorage> log_storage;
 
-    //Filtering
-    Glib::RefPtr<Gtk::TreeModelFilter> filter;
-    bool filter_func(const Gtk::TreeModel::const_iterator& iter);
-    void stop_search();
-    void search_changed();
-
-    //Filter types
+    //Filtering and filter types
     Glib::ustring type_id_ustring = "ID";
     Glib::ustring type_content_ustring = "Content";
     Glib::ustring type_timestamp_ustring = "Timestamp";
     Glib::ustring type_all_ustring = "All";
     void on_filter_type_changed();
+    void stop_search();
+    void search_changed();
+    std::atomic_bool filter_active;
+    std::atomic_bool search_result_used;
+    //Promise and future for search thread
+    std::promise<std::vector<Log>> search_promise;
+    std::future<std::vector<Log>> search_future;
+    std::atomic_bool search_thread_running;
+    std::thread search_thread;
+    void start_new_search_thread();
+    void kill_search_thread();
 
     //Delete old logs
     void delete_old_logs(const long max_amount);
