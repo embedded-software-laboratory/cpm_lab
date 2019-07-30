@@ -14,7 +14,7 @@ struct Visualization
     string id; //@key
 
     VisualizationType type;
-    float time_to_live;
+    unsigned long long time_to_live;
 
     sequence<Point2D> points;
     double size; //Line width in pixels or text size in pt
