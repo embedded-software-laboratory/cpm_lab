@@ -1,4 +1,0 @@
-struct VisualizationPose {
-    double x;    // pixel
-    double y;    // pixel
-};

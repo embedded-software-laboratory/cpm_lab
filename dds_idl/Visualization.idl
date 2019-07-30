@@ -1,5 +1,5 @@
 #include "Color.idl"
-#include "VisualizationPose.idl"
+#include "Point2D.idl"
 
 enum VisualizationType 
 {
@@ -22,7 +22,7 @@ struct Visualization
     VisualizationType type;
     VisualizationAction action;
 
-    sequence<VisualizationPose> points;
+    sequence<Point2D> points;
     double size; //Line width in pixels or text size in pt
     string string_message;
 
