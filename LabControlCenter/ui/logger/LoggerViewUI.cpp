@@ -49,7 +49,6 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     //Search objects
     filter_active.store(false); //UI dispatcher works differently when filters are applied
     search_future = search_promise.get_future();
-    search_result_used.store(false); //Used to see if the future has already been used
     search_thread_running.store(false); //Can be used to stop a search thread and to check if one is currently running
 
     //Search callback
@@ -101,44 +100,47 @@ void LoggerViewUI::dispatcher_callback() {
             row[log_record.log_content] = log_msg_ustring;
             row[log_record.log_stamp] = entry.stamp().nanoseconds();
         }
-
-        if (autoscroll_check_button->get_active()) {
-            auto adjustment = logs_scrolled_window->get_vadjustment();
-            adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
-        }
     }
     else {
         //Obtain entries that match the filter - use an async thread w. future to do so
         //This way a search can be aborted if the user changes the search in between - and it does not block the UI thread
-        if(search_future.valid() && !search_result_used.load()) {
-            for(const auto& entry : search_future.get()) {
-                Glib::ustring log_id_ustring(entry.id());
-                Glib::ustring log_msg_ustring(entry.content());
+        //Lock mutex so that, when the future is valid, the promise can not be reset until it has been obtained
+        std::unique_lock<std::mutex> lock(promise_reset_mutex);
+        if(search_future.valid()) {
+            //log_list_store.clear(); -> Sorgt nach Aufruf für Absturz bei append()!
+            reset_list_store();
+            Gtk::TreeModel::Row search_row;
+            search_row = *(log_list_store->append());   
+            search_row[log_record.log_id] = "";
+            search_row[log_record.log_content] = "Searching...";
+            search_row[log_record.log_stamp] = 0;
 
-                Gtk::TreeModel::Row row;
-                row = *(log_list_store->append());
-                
-                row[log_record.log_id] = log_id_ustring;
-                row[log_record.log_content] = log_msg_ustring;
-                row[log_record.log_stamp] = entry.stamp().nanoseconds();
+            if (search_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                std::vector<Log> search_results = search_future.get();
+
+                //Update the UI accordingly   
+                reset_list_store();            
+                for(const auto& entry : search_results) {
+                    Glib::ustring log_id_ustring(entry.id());
+                    Glib::ustring log_msg_ustring(entry.content());
+
+                    Gtk::TreeModel::Row row;
+                    row = *(log_list_store->append());
+                    
+                    row[log_record.log_id] = log_id_ustring;
+                    row[log_record.log_content] = log_msg_ustring;
+                    row[log_record.log_stamp] = entry.stamp().nanoseconds();
+                }
             }
-
-            if (autoscroll_check_button->get_active()) {
-                auto adjustment = logs_scrolled_window->get_vadjustment();
-                adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
-            }
-
-            //Update the UI accordingly
-            log_list_store.clear();
-
-            search_result_used.store(true);
         }
     }
 
+    if (autoscroll_check_button->get_active()) {
+        auto adjustment = logs_scrolled_window->get_vadjustment();
+        adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
+    }
     //TODO: 
-    // - Abstract basically same function in if and else part
-    // - Let UI thread know whether search_future contains actually valid search results before they are printed
-    // - Clear log_list_store once and maybe show "searching" - row to let the user know that a search is currently performed
+    // - More elegant solution for "searching...?"
 }
 
 void LoggerViewUI::update_ui() {
@@ -167,31 +169,19 @@ void LoggerViewUI::delete_old_logs(const long max_amount) {
     }
 }
 
-// bool LoggerViewUI::filter_func(const Gtk::TreeModel::const_iterator& iter) {
-//     auto row = *iter;
-//     std::stringstream stream;
-//     if (logs_search_type->get_active_text() == type_id_ustring) {
-//         stream << row[log_record.log_id];
-//     }
-//     else if (logs_search_type->get_active_text() == type_content_ustring) {
-//         stream << row[log_record.log_content];
-//     }
-//     else if (logs_search_type->get_active_text() == type_timestamp_ustring) {
-//         stream << row[log_record.log_stamp];
-//     }
-//     else {
-//         stream << row[log_record.log_id] << row[log_record.log_content] << row[log_record.log_stamp];
-//     } 
+void LoggerViewUI::reset_list_store() {
+    //Get current number of elements
+    size_t count = 0;
+    for (auto iter = log_list_store->children().begin(); iter != log_list_store->children().end(); ++iter) {
+        ++count;
+    }
 
-//     std::string row_id = stream.str();
-//     std::string filter_value = std::string(logs_search_entry->get_text().c_str());
-//     if (row_id.find(filter_value) != string::npos) {
-//         return true;
-//     }
-//     else {
-//         return false;
-//     }
-// }
+    //Delete them all
+    for (size_t i = 0; i < count; ++i) { 
+        auto iter = log_list_store->children().begin();
+        log_list_store->erase(iter);
+    }
+}
 
 void LoggerViewUI::stop_search() {
     //Return to the full log list
@@ -242,9 +232,15 @@ void LoggerViewUI::start_new_search_thread() {
         filter_type = LogStorage::FilterType::All;
     } 
 
-    search_result_used.store(false);
     search_thread_running.store(true);
-    search_thread = std::thread([&]() {
+    
+    //Reset promise, lock mutex because UI might access it exactly when it is invalidated
+    std::unique_lock<std::mutex> lock(promise_reset_mutex);
+    search_promise = std::promise<std::vector<Log>>();
+    search_future = search_promise.get_future();
+    lock.unlock();
+
+    search_thread = std::thread([filter_value, filter_type, this]() {
         search_promise.set_value(log_storage->perform_abortable_search(filter_value, filter_type, search_thread_running));
     });
 }

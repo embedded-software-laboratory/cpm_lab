@@ -60,10 +60,11 @@ private:
     void stop_search();
     void search_changed();
     std::atomic_bool filter_active;
-    std::atomic_bool search_result_used;
     //Promise and future for search thread
     std::promise<std::vector<Log>> search_promise;
     std::future<std::vector<Log>> search_future;
+    //Extra mutex because promise can be reset right after the UI thread checked if a future exists
+    std::mutex promise_reset_mutex;
     std::atomic_bool search_thread_running;
     std::thread search_thread;
     void start_new_search_thread();
@@ -71,6 +72,7 @@ private:
 
     //Delete old logs
     void delete_old_logs(const long max_amount);
+    void reset_list_store();
 
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);

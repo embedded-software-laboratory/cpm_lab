@@ -7,7 +7,7 @@ LogStorage::LogStorage() :
 {    
 }
 
-void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {    
+void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {  
     for (auto sample : samples) {
         if (sample.info().valid()) {
             std::lock_guard<std::mutex> lock_1(log_storage_mutex);
@@ -17,7 +17,9 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
         }
     }
 
-    //TODO: Clear storage and buffer when some max size was reached
+    //Clear storage and buffer when some max size was reached - keep last elements
+    keep_last_elements(log_storage, 10000);
+    keep_last_elements(log_buffer, 100);
 }
 
 std::vector<Log> LogStorage::get_new_logs() {
@@ -28,13 +30,18 @@ std::vector<Log> LogStorage::get_new_logs() {
 }
 
 std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search) {
-    //TODO: Does this lock too long? Are logs lost because they cannot be added to the storage?
-    //First idea to change this: Copy log_storage and perform search on copy only
-    std::lock_guard<std::mutex> lock(log_storage_mutex);
+    //Copy log_storage and perform search on copy only
+    std::unique_lock<std::mutex> lock(log_storage_mutex);
+    std::vector<Log> log_storage_copy = std::vector<Log>(log_storage);
+    lock.unlock();
+
+    //Result vector
     std::vector<Log> search_result;
 
-    for (auto iterator = log_storage.begin(); iterator != log_storage.end(); ++iterator) {
+    for (auto iterator = log_storage_copy.begin(); iterator != log_storage_copy.end(); ++iterator) {
         if (!continue_search.load()) {
+            //Return empty result list if the search was aborted
+            search_result.clear();
             break;
         }
 
@@ -62,5 +69,13 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
         }
     }
 
+    keep_last_elements(search_result, 100);
+
     return search_result;
+}
+
+void LogStorage::keep_last_elements(std::vector<Log>& vector, size_t count) {
+    if (vector.size() > count) {
+        vector.erase(vector.begin(), vector.end() - count);
+    }
 }

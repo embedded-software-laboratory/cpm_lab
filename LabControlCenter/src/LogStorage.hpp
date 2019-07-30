@@ -34,6 +34,9 @@ private:
     std::mutex log_buffer_mutex;
     std::mutex log_storage_mutex;
 
+    //Clear elements so that count last elements are kept
+    void keep_last_elements(std::vector<Log>& vector, size_t count);
+
 public:
     LogStorage();
 
