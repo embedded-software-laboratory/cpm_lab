@@ -7,11 +7,12 @@ LogStorage::LogStorage() :
 {    
 }
 
-void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {  
+void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) { 
+    std::lock_guard<std::mutex> lock_1(log_storage_mutex);
+    std::lock_guard<std::mutex> lock_2(log_buffer_mutex); 
+    
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            std::lock_guard<std::mutex> lock_1(log_storage_mutex);
-            std::lock_guard<std::mutex> lock_2(log_buffer_mutex);
             log_storage.push_back(sample.data());
             log_buffer.push_back(sample.data());
         }
