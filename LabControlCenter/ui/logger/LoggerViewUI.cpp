@@ -141,6 +141,7 @@ void LoggerViewUI::dispatcher_callback() {
     }
     //TODO: 
     // - More elegant solution for "searching...?"
+    // - Search is never refreshed automatically - refresh button?
 }
 
 void LoggerViewUI::update_ui() {
