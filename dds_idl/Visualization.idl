@@ -17,7 +17,7 @@ enum VisualizationAction
 struct Visualization 
 {
     //Id to be able to delete the viz later on
-    long id; //@key
+    string id; //@key
 
     VisualizationType type;
     VisualizationAction action;
