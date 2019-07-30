@@ -34,7 +34,7 @@ std::vector<Visualization> VisualizationCommandsAggregator::get_all_visualizatio
     std::vector<Visualization> viz_vector;
     
     std::lock_guard<std::mutex> lock(received_viz_map_mutex);
-    for (std::map<long, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
+    for (std::map<std::string, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
         viz_vector.push_back(it->second);
     }
 

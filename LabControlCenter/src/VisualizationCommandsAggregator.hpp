@@ -3,6 +3,7 @@
 #include "defaults.hpp"
 #include <map>
 #include <mutex>
+#include <string>
 #include <vector>
 
 #include "cpm/AsyncReader.hpp"
@@ -23,7 +24,7 @@ private:
 
     //Reader to receive samples, map / mutex to thread-safely store and access them
     std::shared_ptr<cpm::AsyncReader<Visualization>> viz_reader;
-    std::map<long, Visualization> received_viz_map;
+    std::map<std::string, Visualization> received_viz_map;
     std::mutex received_viz_map_mutex;
 public:
     VisualizationCommandsAggregator();
