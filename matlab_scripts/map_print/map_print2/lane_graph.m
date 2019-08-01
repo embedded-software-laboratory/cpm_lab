@@ -99,7 +99,8 @@ function lane_graph
         segments = [segments, {s}];
     end
     
-    
+    lane_graph = build_routing_graph(segments);
+    save lane_graph lane_graph
     
     for i = 1:length(segments)
         plot(segments{i}(:,1), segments{i}(:,2),'-', 'LineWidth',2)
@@ -112,6 +113,64 @@ function lane_graph
     
     axis equal
     grid on
+end
+
+function routing_graph = build_routing_graph(segments)
+
+    nodes = nan(0,4);
+
+    for i = 1:length(segments)
+        nodes(end+1, :) = segments{i}(1,:);
+        nodes(end+1, :) = segments{i}(end,:);
+    end
+    
+    node_diff = permute(nodes, [1 3 2]) - permute(nodes, [3 1 2]);
+    node_dist = vecnorm(node_diff, 2, 3) + 10 * eye(size(nodes,1));
+    
+    threshold = 0.05;
+    [I,J] = find(node_dist < threshold);
+    assert(~any(I==J));
+    
+    node_clusters = {};
+    for k = 1:length(I)
+        joined = false;
+        for p = 1:length(node_clusters)
+            if any(any(node_clusters{p} == [I(k); J(k)]))
+                node_clusters{p} = [node_clusters{p} I(k) J(k)];
+                joined = true;
+            end
+        end
+        
+        if ~joined
+            node_clusters{end+1} = [I(k) J(k)];
+        end
+    end
+
+    true_nodes = nan(0,4);
+    for p = 1:length(node_clusters)
+        true_nodes(end+1,:) = mean(nodes(unique(sort(node_clusters{p})), :));
+    end
+    
+    routing_graph = struct;
+    routing_graph.nodes = true_nodes;
+    routing_graph.edges = struct('start_node_index', {}, 'end_node_index', {}, 'path', {});
+    
+    
+    for i = 1:length(segments)
+        
+        [M,I] = min(vecnorm(routing_graph.nodes - segments{i}(1,:),2,2));
+        assert(M < threshold);
+        routing_graph.edges(i).start_node_index = I;
+        
+        
+        [M,I] = min(vecnorm(routing_graph.nodes - segments{i}(end,:),2,2));
+        assert(M < threshold);
+        routing_graph.edges(i).end_node_index = I;
+        
+        
+        routing_graph.edges(i).path = segments{i};
+    end
+    
 end
 
 function segment = expand_intersection_segment(segment, lane_width, steps, reverse)
