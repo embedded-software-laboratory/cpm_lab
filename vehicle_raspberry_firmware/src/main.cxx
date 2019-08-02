@@ -161,12 +161,12 @@ int main(int argc, char *argv[])
             // Run controller
             controller.get_control_signals(t_now, motor_throttle, steering_servo);
 
-            VehicleState vehicleState;
             int n_transmission_attempts = 1;
             int transmission_successful = 1;
 
+
 #ifdef VEHICLE_SIMULATION
-            vehicleState = simulationVehicle.update(
+            VehicleState vehicleState = simulationVehicle.update(
                 motor_throttle,
                 steering_servo,
                 t_now,
@@ -193,25 +193,13 @@ int main(int argc, char *argv[])
                 &n_transmission_attempts,
                 &transmission_successful
             );
-            //auto t_transfer_end = update_loop->get_time();
-            //cpm::Logging::Instance().write("spi transfer time %llu, n attempts %i", (t_transfer_end-t_transfer_start), n_transmission_attempts);
+
+            VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
 #endif
-
-            //log_fn(__LINE__);            
-
-            /*if(n_transmission_attempts > 1)
-            {
-                cpm::Logging::Instance().write("n_transmission_attempts %i", n_transmission_attempts);
-            }*/
 
             // Process sensor data
             if(transmission_successful) 
             {
-                // TODO rethink this. What should be skipped when there is a SPI error?
-
-#ifndef VEHICLE_SIMULATION
-                vehicleState = SensorCalibration::convert(spi_miso_data);
-#endif                
                 Pose2D new_pose = localization.update(
                     t_now,
                     period_nanoseconds,
@@ -228,8 +216,6 @@ int main(int argc, char *argv[])
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
-                
-                //cpm::Logging::Instance().write("sending state with stamp %llu", vehicleState.header().create_stamp().nanoseconds());
             }
             else 
             {
@@ -237,7 +223,6 @@ int main(int argc, char *argv[])
                     "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
                     n_transmission_attempts);
             }
-
 
             if(loop_count == 25)
             {
