@@ -1,0 +1,24 @@
+#include "Color.idl"
+#include "Point2D.idl"
+
+enum VisualizationType 
+{
+    LineStrips=0,
+    Polygon,
+    StringMessage
+};
+
+struct Visualization 
+{
+    //Id to be able to delete the viz later on
+    string id; //@key
+
+    VisualizationType type;
+    unsigned long long time_to_live;
+
+    sequence<Point2D> points;
+    double size; //Line width in pixels or text size in pt
+    string string_message;
+
+    Color color;
+};
