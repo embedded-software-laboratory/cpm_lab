@@ -1,7 +1,11 @@
 #pragma once
 
+#include <list>
 #include <stdint.h>
+
+#include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
+#include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
 
@@ -9,23 +13,28 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-static inline double frand() { return (double(rand()))/RAND_MAX; }
+#define INPUT_DELAY (4) // Input delay >= 0
 
+static inline double frand() { return (double(rand()))/RAND_MAX; }
 
 class SimulationVehicle
 {
-    double x = 0.28;//frand()*4;
-    double y = 2.05;//frand()*4;
+    // TODO load parameters via DDS parameters
+    std::vector<double> dynamics_parameters = { 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 };
+
+    double px = 0.28;//frand()*4;
+    double py = 2.05;//frand()*4;
     double distance = 0;
     double yaw = 1.52;//frand()*20;
     double yaw_measured = 1.52;
     double speed = 0;
     double curvature = 0;
 
-    
-    uint32_t tick = 0;
-    
-    spi_mosi_data_t input_next; // save one input sample to simulate delay time
+    // array to simulate time delay on inputs
+    //      first element is the next to process
+    //      last element is received most recently
+    double motor_throttle_history[INPUT_DELAY];
+    double steering_servo_history[INPUT_DELAY]; 
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
@@ -34,11 +43,14 @@ class SimulationVehicle
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS);
-    spi_miso_data_t update(
-        const spi_mosi_data_t spi_mosi_data, 
-        const uint64_t t_now, 
-        const double dt, 
-        const uint8_t vehicle_id
+
+    VehicleState update(
+        const double& motor_throttle,
+        const double& steering_servo,
+        const uint64_t& t_now, 
+        const double& dt, 
+        const uint8_t& vehicle_id
     );
+
     void get_state(double& _x, double& _y, double& _yaw, double& _speed);
 };

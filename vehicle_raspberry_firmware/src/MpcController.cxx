@@ -423,18 +423,14 @@ VehicleState MpcController::delay_compensation_prediction(
 
     for (int i = 0; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
     {
-        const auto &p = dynamics_parameters;
-        const double delta = steering_output_history[i] + p[9-1];
-        const double f = motor_output_history[i];
-        const double d_px = p[1-1] * speed * (1 + p[2-1] * delta*delta) * cos(yaw + p[3-1] * delta + p[10-1]);
-        const double d_py = p[1-1] * speed * (1 + p[2-1] * delta*delta) * sin(yaw + p[3-1] * delta + p[10-1]);
-        const double d_yaw = p[4-1] * speed * delta;
-        const double d_speed = p[5-1] * speed + (p[6-1] + p[7-1] * battery_voltage_lowpass_filtered) * ((f>=0)?(1.0):(-1.0)) * pow(fabs(f), p[8-1]);
-
-        px += dt_control_loop * d_px;
-        py += dt_control_loop * d_py;
-        yaw += dt_control_loop * d_yaw;
-        speed += dt_control_loop * d_speed;
+        VehicleModel::step(
+            dynamics_parameters,
+            dt_control_loop,
+            motor_output_history[i],
+            steering_output_history[i],
+            battery_voltage_lowpass_filtered,
+            px, py, yaw, speed
+        );
     }
 
     VehicleState vehicleState_predicted_start = vehicleState;
