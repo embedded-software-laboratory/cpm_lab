@@ -3,6 +3,7 @@
 #include <list>
 #include <stdint.h>
 
+#include "cpm/AsyncReader.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
@@ -40,6 +41,15 @@ class SimulationVehicle
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
 
     SimulationIPS& simulationIPS;
+
+    // For collision checks:
+    std::map<uint8_t, Pose2D> vehiclesPoses;
+    void check_for_collisions();
+    void receive_vehicle_observation_callback(
+        dds::sub::LoanedSamples<VehicleObservation>& samples
+    );
+    cpm::AsyncReader<VehicleObservation> reader_vehicle_observation;
+
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS);
