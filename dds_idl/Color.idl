@@ -2,9 +2,9 @@
 #define COLOR_IDL
 struct Color 
 {
-    short a;
-    short r;
-    short g;
-    short b;
+    octet a;
+    octet r;
+    octet g;
+    octet b;
 };
 #endif

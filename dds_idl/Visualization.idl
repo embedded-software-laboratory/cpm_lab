@@ -1,5 +1,5 @@
 #include "Color.idl"
-#include "VisualizationPose.idl"
+#include "Point2D.idl"
 
 #ifndef VISUALIZATION_IDL
 #define VISUALIZATION_IDL
@@ -11,22 +11,16 @@ enum VisualizationType
     StringMessage
 };
 
-enum VisualizationAction
-{
-    ADD=0,
-    DELETE
-};
-
 struct Visualization 
 {
     //Id to be able to delete the viz later on
-    long id; //@key
+    string id; //@key
 
     VisualizationType type;
-    VisualizationAction action;
+    unsigned long long time_to_live;
 
-    sequence<VisualizationPose> points;
-    short scale; //Line width in pixels or text size in pt
+    sequence<Point2D> points;
+    double size; //Line width in pixels or text size in pt
     string string_message;
 
     Color color;
