@@ -20,6 +20,7 @@ private:
     Gtk::Box* box = nullptr;
     Gtk::Paned* pane1 = nullptr;
     Gtk::Paned* pane2 = nullptr;
+    Gtk::ScrolledWindow* monitoring_scroll_window = nullptr;
 
     //Menu Bar Items, signal handlers call ParamViewUI functions (using tabsViewUI)
     Gtk::MenuBar* menu_bar = nullptr;

@@ -12,8 +12,8 @@
 
 #include "spi_packets.h"
 
-void spi_send(spi_miso_data_t *packet);
-uint32_t spi_receive(spi_mosi_data_t *packet);
+
+void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received);
 
 void spi_setup();
 

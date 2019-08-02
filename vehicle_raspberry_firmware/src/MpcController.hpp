@@ -16,7 +16,7 @@
  * See matlab_scripts/vehicle_dynamics_identification_and_mpc/MpcController.m
  */
 
-#define MPC_DELAY_COMPENSATION_STEPS (4)
+#define MPC_DELAY_COMPENSATION_STEPS (3)
 
 
 class MpcController
@@ -30,8 +30,8 @@ class MpcController
     std::vector<casadi_real*> casadi_results;
 
 
-    const size_t MPC_prediction_steps = 8;
-    const size_t MPC_control_steps = 4;
+    const size_t MPC_prediction_steps = 6;
+    const size_t MPC_control_steps = 3;
     const double dt_control_loop = 0.02; // the period in which update() is called
     const double dt_MPC = 0.05; // the MPC prediction time step
 
@@ -73,6 +73,8 @@ class MpcController
         double &out_motor_throttle, 
         double &out_steering_servo
     );
+
+    void reset_optimizer();
 
 
 

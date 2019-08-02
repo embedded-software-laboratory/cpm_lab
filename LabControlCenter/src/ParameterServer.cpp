@@ -18,6 +18,26 @@ ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
     ),
     storage(_storage)
 {
+    delayed_init_param_thread = std::thread([&]() {
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        resend_all_params();
+    });
+}
+
+ParameterServer::~ParameterServer() {
+    if(delayed_init_param_thread.joinable()) {
+        delayed_init_param_thread.join();
+    }
+}
+
+void ParameterServer::resend_all_params() {
+    std::vector<ParameterWithDescription> all_params = storage->get_all_parameters();
+
+    for (auto param : all_params) {
+        handleSingleParamRequest(param.parameter_data.name());
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
 
 void ParameterServer::resend_param_callback(std::string name) {

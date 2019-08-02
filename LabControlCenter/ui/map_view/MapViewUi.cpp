@@ -244,7 +244,6 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
         if(trajectory_segment.size() > 1)
         {
-            std::cout << "Trajectory segment lenght: " << trajectory_segment.size() << std::endl;
             // Draw trajectory interpolation
             for (int i = 2; i < int(trajectory_segment.size()); ++i)
             {

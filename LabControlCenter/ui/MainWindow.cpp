@@ -21,6 +21,7 @@ MainWindow::MainWindow(
     builder_master_layout->get_widget("box", box);
     builder_master_layout->get_widget("paned1", pane1);
     builder_master_layout->get_widget("paned2", pane2);
+    builder_master_layout->get_widget("monitoring_scroll_window", monitoring_scroll_window);
 
     builder_master_layout->get_widget("menu_bar", menu_bar);
     builder_master_layout->get_widget("menu_bar_params_reload", menu_bar_params_reload);
@@ -35,6 +36,7 @@ MainWindow::MainWindow(
     assert(box);
     assert(pane1);
     assert(pane2);
+    assert(monitoring_scroll_window);
 
     assert(menu_bar);
     assert(menu_bar_params_reload);
@@ -55,7 +57,8 @@ MainWindow::MainWindow(
     window_LCC->set_icon(Gdk::Pixbuf::create_from_file("icon.png"));
 
     pane2->pack2(*(tabsViewUI->get_parent()),false,false);
-    pane1->pack2(*(monitoringUi->get_parent()),false,false);
+    //pane1->pack2(*(monitoringUi->get_parent()),false,false);
+    monitoring_scroll_window->add(*(monitoringUi->get_parent()));
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
@@ -66,17 +69,17 @@ MainWindow::MainWindow(
     Glib::signal_timeout().connect([&]()->bool{
         window_LCC->maximize();
         return false;
-    }, 100);
+    }, 200);
 
     Glib::signal_timeout().connect([&]()->bool{
         int width = 0;
         int height = 0;
         window_LCC->get_size(width, height);
 
-        pane1->set_position(height-380);
+        pane1->set_position(height-420);
         pane2->set_position(width-600);
         return false;
-    }, 200);
+    }, 400);
 
     //Parameter Menu Bar signal handlers
     menu_bar_params_reload->signal_activate().connect(sigc::mem_fun(this, &MainWindow::on_menu_params_reload_pressed));

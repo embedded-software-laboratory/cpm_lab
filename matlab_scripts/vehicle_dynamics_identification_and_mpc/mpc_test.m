@@ -31,8 +31,8 @@ function mpc_test
     
     parameters = [ 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 ]';
     
-    Hp = 8;
-    Hu = 4;
+    Hp = 6;
+    Hu = 3;
     mpcController = MpcController(parameters, Hp, Hu, dt_MPC);
     
     u_delayed = zeros(3,3);

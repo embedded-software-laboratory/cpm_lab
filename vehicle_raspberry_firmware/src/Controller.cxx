@@ -1,6 +1,5 @@
 #include "Controller.hpp"
 #include <iostream>
-#include "TrajectoryInterpolation.hpp"
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
 
@@ -125,7 +124,8 @@ void Controller::update_remote_parameters()
     //trajectory_controller_lateral_D_gain = cpm::parameter_double("trajectory_controller/lateral_D_gain");
 }
 
-void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
+
+std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_command(uint64_t t_now)
 {
     // Find active segment
     auto iterator_segment_end = m_trajectory_points.lower_bound(t_now);
@@ -141,12 +141,22 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
 
         // We have a valid trajectory segment.
         // Interpolate for the current time.
-        TrajectoryInterpolation trajectory_interpolation(t_now, start_point, end_point);
+        return std::make_shared<TrajectoryInterpolation>(t_now, start_point, end_point);
+    }
+    return nullptr;
+}
 
 
-        const double x_ref = trajectory_interpolation.position_x;
-        const double y_ref = trajectory_interpolation.position_y;
-        const double yaw_ref = trajectory_interpolation.yaw;
+void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_throttle_out, double &steering_servo_out)
+{
+    std::shared_ptr<TrajectoryInterpolation> trajectory_interpolation = 
+        interpolate_trajectory_command(t_now);
+
+    if(trajectory_interpolation) 
+    {
+        const double x_ref = trajectory_interpolation->position_x;
+        const double y_ref = trajectory_interpolation->position_y;
+        const double yaw_ref = trajectory_interpolation->yaw;
 
         const double x = m_vehicleState.pose().x();
         const double y = m_vehicleState.pose().y();
@@ -161,14 +171,14 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
         if(fabs(lateral_error) < 0.8 && fabs(longitudinal_error) < 0.8 && fabs(yaw_error) < 0.7)
         {
             // Linear lateral controller
-            const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation.curvature));
-            //const double ref_curvature = trajectory_interpolation.curvature;
+            const double ref_curvature = fmin(0.5,fmax(-0.5,trajectory_interpolation->curvature));
+            //const double ref_curvature = trajectory_interpolation->curvature;
             const double curvature = ref_curvature 
                 - trajectory_controller_lateral_P_gain * lateral_error 
                 - trajectory_controller_lateral_D_gain * yaw_error;
 
             // Linear longitudinal controller
-            const double speed_target = trajectory_interpolation.speed - 0.5 * longitudinal_error;
+            const double speed_target = trajectory_interpolation->speed - 0.5 * longitudinal_error;
 
             const double speed_measured = m_vehicleState.speed();
             steering_servo_out = steering_curvature_calibration(curvature);
@@ -179,9 +189,92 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
             "lateral_error " << lateral_error << "  " << 
             "longitudinal_error " << longitudinal_error << "  " << 
             "yaw_error " << yaw_error << "  " << 
-            "ref_curvature " << trajectory_interpolation.curvature << "  " << 
+            "ref_curvature " << trajectory_interpolation->curvature << "  " << 
             "curvature_cmd " << curvature << "  " << 
             std::endl;*/
+        }
+    }
+}
+
+static inline double square(double x) {return x*x;}
+
+void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
+{
+    std::shared_ptr<TrajectoryInterpolation> trajectory_interpolation = 
+        interpolate_trajectory_command(t_now);
+
+    if(trajectory_interpolation) 
+    {
+        const double x_ref = trajectory_interpolation->position_x;
+        const double y_ref = trajectory_interpolation->position_y;
+        const double yaw_ref = trajectory_interpolation->yaw;
+
+        const double x = m_vehicleState.pose().x();
+        const double y = m_vehicleState.pose().y();
+        const double yaw = m_vehicleState.pose().yaw();
+
+        double longitudinal_error =  cos(yaw_ref) * (x-x_ref)  + sin(yaw_ref) * (y-y_ref);
+        double lateral_error      = -sin(yaw_ref) * (x-x_ref)  + cos(yaw_ref) * (y-y_ref);
+
+        trajectory_tracking_statistics_longitudinal_errors[trajectory_tracking_statistics_index] = longitudinal_error;
+        trajectory_tracking_statistics_lateral_errors     [trajectory_tracking_statistics_index] = lateral_error;
+
+        trajectory_tracking_statistics_index = (trajectory_tracking_statistics_index+1) 
+                                                % TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE;
+
+        if(trajectory_tracking_statistics_index == 0)
+        {
+            // output summary
+
+            double longitudinal_error_sum = 0;
+            double lateral_error_sum = 0;
+            double longitudinal_error_max = 0;
+            double lateral_error_max = 0;
+
+            for (int i = 0; i < TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE; ++i)
+            {
+                longitudinal_error_sum += trajectory_tracking_statistics_longitudinal_errors[i];
+                lateral_error_sum += trajectory_tracking_statistics_lateral_errors[i];
+
+                longitudinal_error_max = fmax(longitudinal_error_max, fabs(trajectory_tracking_statistics_longitudinal_errors[i]));
+                lateral_error_max = fmax(lateral_error_max, fabs(trajectory_tracking_statistics_lateral_errors[i]));
+            }
+
+            const double longitudinal_error_mean = longitudinal_error_sum / TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE;
+            const double lateral_error_mean = lateral_error_sum / TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE;
+
+
+            double longitudinal_error_variance_sum = 0;
+            double lateral_error_variance_sum = 0;
+
+            for (int i = 0; i < TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE; ++i)
+            {
+                longitudinal_error_variance_sum += square(trajectory_tracking_statistics_longitudinal_errors[i] - longitudinal_error_mean);
+                lateral_error_variance_sum += square(trajectory_tracking_statistics_lateral_errors[i] - lateral_error_mean);
+            }
+
+
+            const double longitudinal_error_variance = longitudinal_error_variance_sum / (TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE - 1);
+            const double lateral_error_variance = lateral_error_variance_sum / (TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE - 1);
+
+            const double longitudinal_error_std = sqrt(longitudinal_error_variance);
+            const double lateral_error_std = sqrt(lateral_error_variance);
+
+            cpm::Logging::Instance().write(
+                "Vehicle Controller Tracking Errors:"
+                "long,mean: %f  "
+                "long,std: %f  "
+                "long,max: %f  "
+                "lat,mean: %f  "
+                "lat,std: %f  "
+                "lat,max: %f  ",
+                longitudinal_error_mean, 
+                longitudinal_error_std,
+                longitudinal_error_max,
+                lateral_error_mean,
+                lateral_error_std,
+                lateral_error_max
+            );
         }
     }
 }
@@ -232,6 +325,9 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
         case ControllerState::Trajectory:
         {
+            std::lock_guard<std::mutex> lock(command_receive_mutex);
+            trajectory_tracking_statistics_update(t_now);
+
             // Run controller
             mpcController.update(
                 t_now, m_vehicleState, m_trajectory_points,
