@@ -13,7 +13,7 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-#define INPUT_DELAY (1) // Input delay >= 0
+#define INPUT_DELAY (4) // Input delay >= 0
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
