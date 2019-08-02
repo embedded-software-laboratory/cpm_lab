@@ -1,3 +1,5 @@
+#ifndef PARAMETER_IDL
+#define PARAMETER_IDL
 enum ParameterType 
 {
     Invalid = 0,
@@ -20,3 +22,4 @@ struct Parameter
     sequence<double> values_double;
     string value_string;
 };
+#endif

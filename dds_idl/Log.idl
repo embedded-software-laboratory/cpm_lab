@@ -1,7 +1,10 @@
 #include "TimeStamp.idl"
 
+#ifndef LOG_IDL
+#define LOG_IDL
 struct Log {
     string id; //@key
     string content;
     TimeStamp stamp;
 };
+#endif

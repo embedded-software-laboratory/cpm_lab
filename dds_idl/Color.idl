@@ -1,3 +1,5 @@
+#ifndef COLOR_IDL
+#define COLOR_IDL
 struct Color 
 {
     short a;
@@ -5,3 +7,4 @@ struct Color
     short g;
     short b;
 };
+#endif

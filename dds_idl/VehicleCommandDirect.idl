@@ -10,6 +10,9 @@
  * (steering_servo == -1) => Max right
  */
 
+#ifndef VEHICLECOMMANDDIRECT_IDL
+#define VEHICLECOMMANDDIRECT_IDL
+
 struct VehicleCommandDirect 
 {
     octet vehicle_id; //@key
@@ -17,3 +20,4 @@ struct VehicleCommandDirect
     double motor_throttle;  // dimensionless, in [-1, 1]
     double steering_servo;  // dimensionless, in [-1, 1]
 };
+#endif

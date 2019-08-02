@@ -1,4 +1,7 @@
+#ifndef VISUALIZATIONPOSE_IDL
+#define VISUALIZATIONPOSE_IDL
 struct VisualizationPose {
     long x;    // pixel
     long y;    // pixel
 };
+#endif

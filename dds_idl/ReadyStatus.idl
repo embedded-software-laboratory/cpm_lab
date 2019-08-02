@@ -9,9 +9,13 @@
  * 2) After a start signal has been received, ReadyStatus is only used in combination with simulated time: After a participant completes a computation step, it indicates in the field "next_start_stamp" its next expected trigger start time. The participant waits for a SystemTrigger that matches its next_start_stamp before any further computation is performed.
  */
 
+#ifndef READYSTATUS_IDL
+#define READYSTATUS_IDL
+
 struct ReadyStatus {
     /*Sender ID: To uniquely identify the sender of a ReadyStatus message - used to count all participants and to check if a participant sent an answer after it received a SystemTrigger for a TimeStamp that it registered.*/
     string source_id;
     /*The point in time when the sender should be triggered again (if simulated time is used). Else: An arbitrary value to show that the participant is ready to start with the computation.*/
     TimeStamp next_start_stamp;
 };
+#endif

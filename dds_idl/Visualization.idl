@@ -1,6 +1,9 @@
 #include "Color.idl"
 #include "VisualizationPose.idl"
 
+#ifndef VISUALIZATION_IDL
+#define VISUALIZATION_IDL
+
 enum VisualizationType 
 {
     LineStrips=0,
@@ -28,3 +31,4 @@ struct Visualization
 
     Color color;
 };
+#endif
