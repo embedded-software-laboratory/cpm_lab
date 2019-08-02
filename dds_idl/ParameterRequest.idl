@@ -1,3 +1,6 @@
+#ifndef PARAMETERREQUEST_IDL
+#define PARAMETERREQUEST_IDL
 struct ParameterRequest {
     string name; //@key
 };
+#endif

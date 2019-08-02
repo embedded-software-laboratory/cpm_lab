@@ -7,6 +7,9 @@
  *     This only works with "normal" driving, results may vary when spinning or sliding.
  */
 
+#ifndef VEHICLECOMMANDSPEEDCURVATURE_IDL
+#define VEHICLECOMMANDSPEEDCURVATURE_IDL
+
 struct VehicleCommandSpeedCurvature 
 {
     octet vehicle_id; //@key
@@ -14,3 +17,4 @@ struct VehicleCommandSpeedCurvature
     double speed;       //    m/s
     double curvature;   //    1/meter
 };
+#endif

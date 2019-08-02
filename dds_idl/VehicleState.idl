@@ -5,6 +5,9 @@
  * Provides calibrated vehicle sensor data.
  */
 
+#ifndef VEHICLESTATE_IDL
+#define VEHICLESTATE_IDL
+
 struct VehicleState {
     octet vehicle_id; //@key
     Header header;
@@ -40,3 +43,4 @@ struct VehicleState {
     double motor_throttle;                            // dimensionless, in [-1, 1]
     double steering_servo;                            // dimensionless, in [-1, 1]
 };
+#endif

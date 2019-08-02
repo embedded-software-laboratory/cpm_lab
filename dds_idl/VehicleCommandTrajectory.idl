@@ -25,6 +25,9 @@
  *     rti_raspberry/src/TrajectoryInterpolation.cxx
  */
 
+#ifndef VEHICLECOMMANDTRAJECTORY_IDL
+#define VEHICLECOMMANDTRAJECTORY_IDL
+
 struct TrajectoryPoint 
 {
     TimeStamp t;
@@ -39,3 +42,4 @@ struct VehicleCommandTrajectory
     octet vehicle_id; //@key
     sequence<TrajectoryPoint> trajectory_points;
 };
+#endif

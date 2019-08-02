@@ -11,7 +11,11 @@
  *   2) The final TimeStamp / stop signal is again the maximum value of uint64_t.
  */
 
+#ifndef SYSTEMTRIGGER_IDL
+#define SYSTEMTRIGGER_IDL
+
 struct SystemTrigger {
     /*TimeStamp: Used to define the starting time, further time steps during the computation and to send a stop signal to stop computation on all devices*/
     TimeStamp next_start;
 };
+#endif
