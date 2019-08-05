@@ -9,7 +9,7 @@ mkdir build_x64_sim
 # Build for simulation on desktop
 pushd build_x64_sim
 cmake .. -DBUILD_ARM=OFF -DBUILD_SIMULATION=ON
-make -j20
+make -j20 && ./unittest
 popd
 
 

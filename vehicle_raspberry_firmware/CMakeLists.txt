@@ -79,18 +79,37 @@ endif()
 
 add_executable(vehicle_rpi_firmware ${SOURCE})
 
-
-
 if(BUILD_ARM)
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -march=armv6 -mfpu=vfp -mfloat-abi=hard -mlong-calls)
 else()
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
-    SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
+    set_target_properties(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 endif()
 
 
 if(BUILD_SIMULATION)
     target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
+
+    # unittest
+    if(NOT BUILD_ARM)
+        add_executable(unittest
+            test/catch.cpp
+            test/catch.hpp
+            test/test_SimulationVehicle.cpp
+            src/SimulationVehicle.cxx
+            src/SimulationVehicle.hpp
+            src/SimulationIPS.cxx
+            src/SimulationIPS.hpp
+            src/VehicleModel.hpp
+            src/VehicleModel.cxx
+        )
+        target_compile_options(unittest PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
+        set_target_properties(unittest PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
+
+        target_link_libraries(unittest dl nsl m pthread rt)
+        target_link_libraries(unittest nddscpp2 nddsc nddscore)
+        target_link_libraries(unittest cpm)
+    endif()
 endif()
 
 

@@ -3,12 +3,12 @@
 #include <list>
 #include <stdint.h>
 
-#include "cpm/AsyncReader.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
+#include <dds/sub/ddssub.hpp>
 
 extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -18,11 +18,7 @@ extern "C" {
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
-// vehicle geometry from reference point
-// l_front: 0.12
-// l_back:  0.101
-// w_left:  0.55
-// w_right: 0.55
+Pose2D transform_to_COS(const Pose2D origin_COS, const Pose2D pose_in);
 
 class SimulationVehicle
 {
@@ -49,22 +45,22 @@ class SimulationVehicle
     SimulationIPS& simulationIPS;
 
     // For collision checks:
-    std::map<uint64_t, Pose2D> egoPoseHistory;
+    std::map<uint64_t, Pose2D> ego_pose_history;
     bool is_collision(const uint64_t timestamp, const Pose2D pose2D);
     void check_for_collision(const uint8_t vehicle_id);
     
-    dds::sub::DataReader<VehicleObservation> reader_vehicle_observation;
+    dds::sub::DataReader<VehicleObservation> reader_vehiclePoseSimulated;
 
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS);
 
     VehicleState update(
-        const double& motor_throttle,
-        const double& steering_servo,
-        const uint64_t& t_now, 
-        const double& dt, 
-        const uint8_t& vehicle_id
+        const double motor_throttle,
+        const double steering_servo,
+        const uint64_t t_now, 
+        const double dt, 
+        const uint8_t vehicle_id
     );
 
     void get_state(double& _x, double& _y, double& _yaw, double& _speed);
