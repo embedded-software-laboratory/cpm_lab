@@ -18,6 +18,12 @@ extern "C" {
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
+// vehicle geometry from reference point
+// l_front: 0.12
+// l_back:  0.101
+// w_left:  0.55
+// w_right: 0.55
+
 class SimulationVehicle
 {
     // TODO load parameters via DDS parameters
@@ -43,12 +49,11 @@ class SimulationVehicle
     SimulationIPS& simulationIPS;
 
     // For collision checks:
-    std::map<uint8_t, Pose2D> vehiclesPoses;
-    void check_for_collisions();
-    void receive_vehicle_observation_callback(
-        dds::sub::LoanedSamples<VehicleObservation>& samples
-    );
-    cpm::AsyncReader<VehicleObservation> reader_vehicle_observation;
+    std::map<uint64_t, Pose2D> egoPoseHistory;
+    bool is_collision(const uint64_t timestamp, const Pose2D pose2D);
+    void check_for_collision(const uint8_t vehicle_id);
+    
+    dds::sub::DataReader<VehicleObservation> reader_vehicle_observation;
 
 
 public:

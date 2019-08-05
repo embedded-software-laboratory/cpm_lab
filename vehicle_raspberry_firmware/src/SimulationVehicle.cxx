@@ -12,10 +12,47 @@ extern "C" {
 
 
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
-:topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
-,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
+:topic_vehiclePoseSimulated(cpm::get_topic<VehicleObservation>("vehiclePoseSimulated"))
+,writer_vehiclePoseSimulated(
+    dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+    topic_vehiclePoseSimulated)
 ,simulationIPS(_simulationIPS)
+{      
+    dds::sub::Subscriber subscriber = dds::sub::Subscriber(cpm::ParticipantSingleton::Instance());
+    dds::sub::qos::DataReaderQos qos = 
+        (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll());
+    reader_vehicle_observation = 
+        dds::sub::DataReader<VehicleObservation>(subscriber, topic_vehiclePoseSimulated, qos);
+}
+
+
+void SimulationVehicle::check_for_collision(const uint8_t vehicle_id)
 {
+    for(auto sample : reader_vehicle_observation.take())
+    {
+        if(sample.info().valid())
+        {
+            auto data = sample.data();
+            // if id == own id continue
+        }
+    }
+}
+
+bool SimulationVehicle::is_collision(
+    const uint64_t timestamp,
+    const Pose2D pose2D)
+{
+
+}
+
+bool are_rectangle_intersecting(const Pose2D pose2D_1, const Pose2D pose2D_2)
+{
+    // vehicle geometry from reference point
+    double l_front = 0.12;
+// l_back:  0.101
+// w_left:  0.55
+// w_right: 0.55
+
 }
 
 VehicleState SimulationVehicle::update(
@@ -72,7 +109,8 @@ VehicleState SimulationVehicle::update(
 
         simulationIPS.update(simulatedState);
     }
-
+    // Check for collision
+    check_for_collision(vehicle_id);
     /*std::cout 
     << "dt"                    << "  " << dt                    << std::endl
     << "speed"                 << "  " << speed                 << std::endl
