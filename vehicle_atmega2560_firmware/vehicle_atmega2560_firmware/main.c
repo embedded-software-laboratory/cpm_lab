@@ -22,6 +22,7 @@
 #include "imu.h"
 #include "crc.h"
 #include "watchdog.h"
+#include "tests.h"
 
 
 int main(void)
@@ -39,6 +40,7 @@ int main(void)
 	adc_setup();
 	const bool imu_init_status = imu_setup(); // must be after twi_init()
 	crcInit();
+	tests_setup();
 	
 	
 	spi_miso_data_t spi_miso_data;
@@ -65,12 +67,15 @@ int main(void)
 				spi_mosi_data.LED4_enabled = 1;
 			}
 			
+			tests_apply(get_tick(), &spi_miso_data, &spi_mosi_data);
+			
 			_delay_ms(1);
 		}
 		else
 		{	
 			spi_exchange(&spi_miso_data, &spi_mosi_data);
 		}
+		
 			
 		/// read sensors
 			
