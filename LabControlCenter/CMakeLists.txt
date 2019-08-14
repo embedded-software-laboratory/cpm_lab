@@ -31,6 +31,8 @@ link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter
+    src/TimerTrigger.hpp
+    src/TimerTrigger.cpp
     src/TimeSeries.cpp
     src/TimeSeries.hpp
     src/TimeSeriesAggregator.cpp
@@ -55,6 +57,9 @@ add_executable(LabControlCenter
     ui/params/ParamModelRecord.hpp
     ui/right_tabs/TabsViewUI.hpp
     ui/right_tabs/TabsViewUI.cpp
+    ui/timer/TimerViewUI.hpp
+    ui/timer/TimerViewUI.cpp
+    ui/timer/TimerModelRecord.hpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp
@@ -74,3 +79,15 @@ add_executable(LabControlCenter
 target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
+
+add_executable(TimerTestSimulated
+    test/TimerTestSimulated.cpp
+)
+
+target_link_libraries(TimerTestSimulated cpm)
+
+add_executable(TimerTestRealtime
+    test/TimerTestRealtime.cpp
+)
+
+target_link_libraries(TimerTestRealtime cpm)
