@@ -134,32 +134,14 @@ int main(int argc, char *argv[])
             // get IPS observation
             VehicleObservation sample_vehicleObservation;
             uint64_t sample_vehicleObservation_age;
-            reader_vehicleObservation.get_sample(t_now, sample_vehicleObservation, sample_vehicleObservation_age);
+            reader_vehicleObservation.get_sample(
+                t_now,
+                sample_vehicleObservation,
+                sample_vehicleObservation_age
+            );
 
             spi_mosi_data_t spi_mosi_data;
             memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
-
-            double motor_throttle = 0;
-            double steering_servo = 0;
-
-            //log_fn(__LINE__);
-
-            // Run controller
-            {
-                controller.get_control_signals(t_now, motor_throttle, steering_servo);
-
-                // Motor deadband, to prevent small stall currents when standing still
-                uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
-                if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
-                if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
-
-                // Convert to low level controller units
-                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
-                spi_mosi_data.motor_mode = motor_mode;
-            }
-
-            //log_fn(__LINE__);
 
             // LED identification signal
             {
@@ -173,14 +155,34 @@ int main(int argc, char *argv[])
                 }
             }
 
+            double motor_throttle = 0;
+            double steering_servo = 0;
+
+            // Run controller
+            controller.get_control_signals(t_now, motor_throttle, steering_servo);
+
             int n_transmission_attempts = 1;
             int transmission_successful = 1;
 
 
 #ifdef VEHICLE_SIMULATION
-            spi_miso_data_t spi_miso_data = simulationVehicle.update(
-                spi_mosi_data, t_now, period_nanoseconds/1e9, vehicle_id);
+            VehicleState vehicleState = simulationVehicle.update(
+                motor_throttle,
+                steering_servo,
+                t_now,
+                period_nanoseconds/1e9,
+                vehicle_id
+            );
 #else
+            // Motor deadband, to prevent small stall currents when standing still
+            uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
+            if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
+            if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
+            // Convert to low level controller units
+            spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+            spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
+            spi_mosi_data.motor_mode = motor_mode;
+
             // Exchange data with low level micro-controller
             spi_miso_data_t spi_miso_data;
 
@@ -191,23 +193,13 @@ int main(int argc, char *argv[])
                 &n_transmission_attempts,
                 &transmission_successful
             );
-            //auto t_transfer_end = update_loop->get_time();
-            //cpm::Logging::Instance().write("spi transfer time %llu, n attempts %i", (t_transfer_end-t_transfer_start), n_transmission_attempts);
+
+            VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
 #endif
-
-            //log_fn(__LINE__);            
-
-            /*if(n_transmission_attempts > 1)
-            {
-                cpm::Logging::Instance().write("n_transmission_attempts %i", n_transmission_attempts);
-            }*/
 
             // Process sensor data
             if(transmission_successful) 
             {
-                // TODO rethink this. What should be skipped when there is a SPI error?
-            
-                VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 Pose2D new_pose = localization.update(
                     t_now,
                     period_nanoseconds,
@@ -224,8 +216,6 @@ int main(int argc, char *argv[])
 
                 controller.update_vehicle_state(vehicleState);
                 writer_vehicleState.write(vehicleState);
-                
-                //cpm::Logging::Instance().write("sending state with stamp %llu", vehicleState.header().create_stamp().nanoseconds());
             }
             else 
             {
@@ -233,7 +223,6 @@ int main(int argc, char *argv[])
                     "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
                     n_transmission_attempts);
             }
-
 
             if(loop_count == 25)
             {

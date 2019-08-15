@@ -41,7 +41,7 @@ void set_servo_pwm(uint16_t pwm) {
 	
 	if (consecutive_servo_center_command_count > SERVO_CENTER_COMMAND_COUNT_THRESHOLD) {
 		// disable servo
-		CLEAR_BIT(PORTD, 7);
+		CLEAR_BIT(TCCR3A, COM3C1); // disable pwm signal -> servo goes into fail safe limp mode
 	}
 	// need to consider overflow of 8-bit variable:
 	// only increment counter while less than threshold
@@ -55,7 +55,7 @@ void set_servo_pwm(uint16_t pwm) {
 	// reset the counter, re-enable the servo
 	if (pwm != 3000) {
 		consecutive_servo_center_command_count = 0;
-		SET_BIT(PORTD, 7);
+		SET_BIT(TCCR3A, COM3C1); // enable pwm signal
 	}
 }
 

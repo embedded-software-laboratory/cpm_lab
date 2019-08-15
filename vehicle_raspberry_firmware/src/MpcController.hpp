@@ -4,8 +4,9 @@
 #include <string>
 #include <array>
 #include <vector>
-#include "VehicleState.hpp"
+#include "VehicleModel.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleState.hpp"
 
 
 

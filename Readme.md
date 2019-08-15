@@ -48,6 +48,8 @@ Raspberry PI RTI Libraries
 
 https://community.rti.com/downloads/rti-connext-dds-raspberry-pi
 
+https://community.rti.com/static/downloads/connext-dds/5.3.1/rti_connext_dds-5.3.1-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
+
     sudo rtipkginstall rti_connext_dds-5.3.1-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
 
 
