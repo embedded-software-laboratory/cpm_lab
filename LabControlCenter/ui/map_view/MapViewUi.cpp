@@ -341,7 +341,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             const auto& message_points = entry.points();
 
             //Set beginning point
-            ctx->set_source_rgb(entry.color().r(), entry.color().g(), entry.color().b());
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
             for (size_t i = 1; i < message_points.size(); ++i)
@@ -361,7 +361,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
         }
         else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
-            ctx->set_source_rgb(entry.color().r(), entry.color().g(), entry.color().b());
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
 
             ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
