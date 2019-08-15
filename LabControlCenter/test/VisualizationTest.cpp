@@ -8,6 +8,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/get_time_ns.hpp"
+#include "Color.hpp"
 #include "Visualization.hpp"
 
 //In this test scenario, the timers are not stopped by the program but by the LCC stop signal
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
     std::vector<Point2D> viz_points {point1, point2, point3, point4, point5};
     viz.points(rti::core::vector<Point2D>(viz_points));
 
-    Color viz_color(0.0, 1.0, 1.0);
+    Color viz_color(255, 0, 255, 255);
     viz.color(viz_color);
 
     usleep(100000);
@@ -54,7 +55,7 @@ int main(int argc, char *argv[]) {
     std::vector<Point2D> viz2_points {point1_2, point2_2, point3_2};
     viz2.points(rti::core::vector<Point2D>(viz2_points));
 
-    Color viz2_color(1.0, 0.0, 1.0);
+    Color viz2_color(255, 255, 0, 255);
     viz2.color(viz2_color);
 
     usleep(100000);
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]) {
     std::vector<Point2D> viz3_points {point1_3};
     viz3.points(rti::core::vector<Point2D>(viz3_points));
 
-    Color viz3_color(1.0, 1.0, 0.0);
+    Color viz3_color(255, 255, 255, 0);
     viz3.color(viz3_color);
 
     viz3.string_message("Hello LCC!");
