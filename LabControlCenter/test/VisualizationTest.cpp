@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     Visualization viz;
     viz.id("1");
     viz.type(VisualizationType::LineStrips);
-    viz.time_to_live(cpm::get_time_ns() + 3000000000);
+    viz.time_to_live(3000000000);
     viz.size(1.0);
 
     Point2D point1(0.0, 0.0);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     Visualization viz2;
     viz2.id("2");
     viz2.type(VisualizationType::Polygon);
-    viz2.time_to_live(cpm::get_time_ns() + 5000000000);
+    viz2.time_to_live(5000000000);
     viz2.size(0.05);
 
     Point2D point1_2(0.0, 0.0);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     Visualization viz3;
     viz3.id("3");
     viz3.type(VisualizationType::StringMessage);
-    viz3.time_to_live(cpm::get_time_ns() + 10000000000);
+    viz3.time_to_live(10000000000);
     viz3.size(1.0);
 
     Point2D point1_3(0.2, 0.2);
