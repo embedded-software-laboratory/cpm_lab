@@ -99,7 +99,11 @@ int main(int argc, char *argv[])
 
 
     // Control loop, which sends trajectory commands to the vehicles
-    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, 0, false, true, enable_simulated_time);
+    uint64_t period = 0;
+    if (enable_simulated_time) {
+        period = 1000000000ull;
+    }
+    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, period, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(_mutex);
 
