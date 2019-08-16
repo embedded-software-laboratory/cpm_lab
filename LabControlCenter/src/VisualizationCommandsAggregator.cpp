@@ -13,10 +13,10 @@ VisualizationCommandsAggregator::VisualizationCommandsAggregator()
 }
 
 void VisualizationCommandsAggregator::handle_new_viz_msgs(dds::sub::LoanedSamples<Visualization>& samples) {
+    std::lock_guard<std::mutex> lock(received_viz_map_mutex);
     for (auto sample : samples) {
         if (sample.info().valid()) {
             //Add new message or replace old one using the id
-            std::lock_guard<std::mutex> lock(received_viz_map_mutex);
             received_viz_map[sample.data().id()] = sample.data();
 
             //Change time stamp from time to live to point in time when msg is invalid

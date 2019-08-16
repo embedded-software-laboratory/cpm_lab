@@ -211,10 +211,6 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_received_trajectory_commands(ctx);
 
-        draw_path_painting(ctx);
-
-        draw_received_visualization_commands(ctx);
-
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
@@ -222,6 +218,19 @@ void MapViewUi::draw(const DrawingContext& ctx)
             if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
             {
                 draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
+            }
+        }
+
+        draw_received_visualization_commands(ctx);
+
+        draw_path_painting(ctx);
+
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+            const auto& vehicle_timeseries = entry.second;
+
+            if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
+            {
                 draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
             }
         }

@@ -260,7 +260,7 @@ void MpcController::optimize_control_inputs(
         vis.id("mpc_prediction_" + std::to_string(vehicle_id));
         vis.type(VisualizationType::LineStrips);
         vis.time_to_live(2000000000ull);
-        vis.size(0.12);
+        vis.size(0.03);
         vis.color().r(255);
         vis.color().g(0);
         vis.color().b(240);
