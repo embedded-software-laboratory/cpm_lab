@@ -24,13 +24,7 @@ namespace cpm {
     ,node_id(_node_id)
     ,current_time(0)
     {
-        //Offset must be smaller than period
-        if (offset_nanoseconds >= period_nanoseconds) {
-            Logging::Instance().write("TimerSimulated: Offset set higher than period.");
-            fprintf(stderr, "Offset set higher than period.\n");
-            fflush(stderr); 
-            exit(EXIT_FAILURE);
-        }
+        //Offset is allowed to be greater than period!
 
         dds::sub::cond::ReadCondition read_cond(reader_system_trigger, dds::sub::status::DataState::any());
         waitset += read_cond;
