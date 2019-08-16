@@ -7,6 +7,9 @@
 #include "VehicleModel.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleState.hpp"
+#include "Visualization.hpp"
+#include "cpm/get_topic.hpp"
+#include <dds/pub/ddspub.hpp>
 
 
 
@@ -21,6 +24,9 @@
 
 class MpcController
 {
+    dds::topic::Topic<Visualization> topic_Visualization;
+    dds::pub::DataWriter<Visualization> writer_Visualization;
+    uint8_t vehicle_id;
 
     std::map< std::string, std::vector<casadi_real> > casadi_vars;
     std::map< std::string, std::array<casadi_int, 2> > casadi_vars_size;
@@ -81,7 +87,7 @@ class MpcController
 
 public:
 
-    MpcController();
+    MpcController(uint8_t _vehicle_id);
 
     void update(
         uint64_t t_now, 

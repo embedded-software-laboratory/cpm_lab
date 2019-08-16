@@ -5,8 +5,10 @@
 #include "TimeSeries.hpp"
 #include "Point.hpp"
 #include <thread>
+#include <vector>
 #include "TrajectoryCommand.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "Visualization.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
@@ -19,6 +21,7 @@ class MapViewUi
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
+    std::function<std::vector<Visualization>()> get_visualization_msgs_callback;
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
@@ -63,6 +66,11 @@ class MapViewUi
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
 
+    /**
+     * /brief draw function that uses the viz callback to get all received viz commands and draws them on the screen
+     */
+    void draw_received_visualization_commands(const DrawingContext& ctx);
+
     bool is_valid_point_for_path(double x, double y);
     int find_vehicle_id_in_focus();
 
@@ -70,7 +78,8 @@ public:
     MapViewUi(
         shared_ptr<TrajectoryCommand> _trajectoryCommand,
         std::function<VehicleData()> get_vehicle_data_callback,
-        std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
+        std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+        std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
     Gtk::DrawingArea* get_parent();
 };

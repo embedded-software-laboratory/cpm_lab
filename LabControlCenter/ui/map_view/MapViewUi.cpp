@@ -9,11 +9,13 @@
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
     std::function<VehicleData()> get_vehicle_data_callback,
-    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
+    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
+,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
@@ -209,9 +211,6 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_received_trajectory_commands(ctx);
 
-        draw_path_painting(ctx);
-
-
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
@@ -219,6 +218,19 @@ void MapViewUi::draw(const DrawingContext& ctx)
             if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
             {
                 draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
+            }
+        }
+
+        draw_received_visualization_commands(ctx);
+
+        draw_path_painting(ctx);
+
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+            const auto& vehicle_timeseries = entry.second;
+
+            if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
+            {
                 draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
             }
         }
@@ -321,6 +333,54 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
             ctx->set_source_rgb(0.6,0,0);
             ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.02, 0.0, 2 * M_PI);
             ctx->fill();
+        }
+    }
+}
+
+//Draw all received viz commands on the screen
+void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
+    //Get commands
+    std::vector<Visualization> visualization_commands = get_visualization_msgs_callback();
+
+    for(const auto& entry : visualization_commands) 
+    {
+        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
+            && entry.points().size() > 1) 
+        {
+            const auto& message_points = entry.points();
+
+            //Set beginning point
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
+
+            for (size_t i = 1; i < message_points.size(); ++i)
+            {
+                const auto& current_point = message_points.at(i);
+
+                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+            }  
+
+            //Line from end to beginning point to close the polygon
+            if (entry.type() == VisualizationType::Polygon) {
+                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+            }
+
+            ctx->set_line_width(entry.size());
+            ctx->stroke();      
+        }
+        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            //Set font properties
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->set_font_size(entry.size());
+
+            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+
+            //Flip font
+            Cairo::Matrix font_matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+            ctx->set_font_matrix(font_matrix);
+
+            //Draw text
+            ctx->show_text(entry.string_message().c_str());
         }
     }
 }

@@ -5,7 +5,17 @@
 #include "cpm/Logging.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-MpcController::MpcController()
+MpcController::MpcController(uint8_t _vehicle_id)
+:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
+,writer_Visualization
+(
+    dds::pub::DataWriter<Visualization>
+    (
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        topic_Visualization
+    )
+)
+,vehicle_id(_vehicle_id)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -245,6 +255,24 @@ void MpcController::optimize_control_inputs(
         out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
 
 
+        // publish visualization of predicted trajectory
+        Visualization vis;
+        vis.id("mpc_prediction_" + std::to_string(vehicle_id));
+        vis.type(VisualizationType::LineStrips);
+        vis.time_to_live(2000000000ull);
+        vis.size(0.03);
+        vis.color().r(255);
+        vis.color().g(0);
+        vis.color().b(240);
+        vis.points().resize(MPC_prediction_steps);
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            vis.points().at(j).x(casadi_vars["trajectory_x"][j]);
+            vis.points().at(j).y(casadi_vars["trajectory_y"][j]);
+        }
+        writer_Visualization.write(vis);
+
+
         /*
         std::ostringstream oss;
 
@@ -290,7 +318,7 @@ void MpcController::optimize_control_inputs(
     {
         cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
-            "Large MPC objective. Provide a better reference trajectory. Stopping.");
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
         reset_optimizer();
         out_motor_throttle = 0.0;
