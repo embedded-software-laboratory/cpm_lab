@@ -100,6 +100,7 @@ function lane_graph
     end
     
     lane_graph = build_routing_graph(segments);
+    lane_graph_to_cpp(lane_graph);
     save lane_graph lane_graph
     
     for i = 1:length(segments)
