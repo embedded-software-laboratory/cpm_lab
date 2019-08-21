@@ -12,7 +12,8 @@ std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id
 }
 
 Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
-:m_get_time(_get_time)
+:mpcController(vehicle_id)
+,m_get_time(_get_time)
 {
     reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
     reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);

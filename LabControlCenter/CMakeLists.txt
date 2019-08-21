@@ -39,6 +39,8 @@ add_executable(LabControlCenter
     src/TimeSeries.hpp
     src/TimeSeriesAggregator.cpp
     src/TimeSeriesAggregator.hpp
+    src/VisualizationCommandsAggregator.cpp
+    src/VisualizationCommandsAggregator.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
     ui/manual_control/VehicleManualControlUi.cpp
@@ -96,3 +98,9 @@ add_executable(TimerTestRealtime
 )
 
 target_link_libraries(TimerTestRealtime cpm)
+
+add_executable(VisualizationTest
+    test/VisualizationTest.cpp
+)
+
+target_link_libraries(VisualizationTest cpm)

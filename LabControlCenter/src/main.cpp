@@ -4,6 +4,7 @@
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 #include "TimeSeriesAggregator.hpp"
+#include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
@@ -56,10 +57,12 @@ int main(int argc, char *argv[])
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
-        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();}
+        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);

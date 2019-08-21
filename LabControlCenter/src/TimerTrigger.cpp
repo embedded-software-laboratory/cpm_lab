@@ -147,6 +147,14 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
             //Or: The current timestep is kept as they are equal and feedback from some participants is still required
             current_simulated_time = next_simulated_time;
 
+            //Set all participants to "working" that waited for this message
+            std::lock_guard<std::mutex> participant_lock(ready_status_storage_mutex);
+            for (auto& pair : ready_status_storage) {
+                if (pair.second.next_timestep == current_simulated_time) {
+                    pair.second.participant_status = ParticipantStatus::WORKING;
+                }
+            }
+
             //Send system trigger message to participants
             SystemTrigger trigger;
             trigger.next_start(TimeStamp(current_simulated_time));

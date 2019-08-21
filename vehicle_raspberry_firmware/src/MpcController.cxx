@@ -5,7 +5,17 @@
 #include "cpm/Logging.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-MpcController::MpcController()
+MpcController::MpcController(uint8_t _vehicle_id)
+:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
+,writer_Visualization
+(
+    dds::pub::DataWriter<Visualization>
+    (
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        topic_Visualization
+    )
+)
+,vehicle_id(_vehicle_id)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -245,6 +255,24 @@ void MpcController::optimize_control_inputs(
         out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
 
 
+        // publish visualization of predicted trajectory
+        Visualization vis;
+        vis.id("mpc_prediction_" + std::to_string(vehicle_id));
+        vis.type(VisualizationType::LineStrips);
+        vis.time_to_live(2000000000ull);
+        vis.size(0.03);
+        vis.color().r(255);
+        vis.color().g(0);
+        vis.color().b(240);
+        vis.points().resize(MPC_prediction_steps);
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            vis.points().at(j).x(casadi_vars["trajectory_x"][j]);
+            vis.points().at(j).y(casadi_vars["trajectory_y"][j]);
+        }
+        writer_Visualization.write(vis);
+
+
         /*
         std::ostringstream oss;
 
@@ -290,7 +318,7 @@ void MpcController::optimize_control_inputs(
     {
         cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
-            "Large MPC objective. Provide a better reference trajectory. Stopping.");
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
         reset_optimizer();
         out_motor_throttle = 0.0;
@@ -423,18 +451,14 @@ VehicleState MpcController::delay_compensation_prediction(
 
     for (int i = 0; i < MPC_DELAY_COMPENSATION_STEPS; ++i)
     {
-        const auto &p = dynamics_parameters;
-        const double delta = steering_output_history[i] + p[9-1];
-        const double f = motor_output_history[i];
-        const double d_px = p[1-1] * speed * (1 + p[2-1] * delta*delta) * cos(yaw + p[3-1] * delta + p[10-1]);
-        const double d_py = p[1-1] * speed * (1 + p[2-1] * delta*delta) * sin(yaw + p[3-1] * delta + p[10-1]);
-        const double d_yaw = p[4-1] * speed * delta;
-        const double d_speed = p[5-1] * speed + (p[6-1] + p[7-1] * battery_voltage_lowpass_filtered) * ((f>=0)?(1.0):(-1.0)) * pow(fabs(f), p[8-1]);
-
-        px += dt_control_loop * d_px;
-        py += dt_control_loop * d_py;
-        yaw += dt_control_loop * d_yaw;
-        speed += dt_control_loop * d_speed;
+        VehicleModel::step(
+            dynamics_parameters,
+            dt_control_loop,
+            motor_output_history[i],
+            steering_output_history[i],
+            battery_voltage_lowpass_filtered,
+            px, py, yaw, speed
+        );
     }
 
     VehicleState vehicleState_predicted_start = vehicleState;

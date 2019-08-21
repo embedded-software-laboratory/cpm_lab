@@ -1,5 +1,4 @@
 #include "VehicleManualControl.hpp"
-#include "example_trajectory.hpp"
 #include "cpm/stamp_message.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -8,13 +7,11 @@
 #define AXIS_STEERING (3)
 #define BUTTON_SPEED_1MS (4)
 #define BUTTON_SPEED_CONST (5)
-#define BUTTON_TRAJECTORY (3)
 
 VehicleManualControl::VehicleManualControl()
 :participant(cpm::ParticipantSingleton::Instance())
 ,topic_vehicleCommandDirect(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"))
 ,topic_vehicleCommandSpeedCurvature(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"))
-,topic_vehicleCommandTrajectory(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
 {
     auto QoS = dds::pub::qos::DataWriterQos();
     auto reliability = dds::core::policy::Reliability::BestEffort();
@@ -26,7 +23,6 @@ VehicleManualControl::VehicleManualControl()
 
     writer_vehicleCommandDirect = make_shared<dds::pub::DataWriter<VehicleCommandDirect>>(publisher, topic_vehicleCommandDirect);
     writer_vehicleCommandSpeedCurvature = make_shared<dds::pub::DataWriter<VehicleCommandSpeedCurvature>>(publisher, topic_vehicleCommandSpeedCurvature);
-    writer_vehicleCommandTrajectory = make_shared<dds::pub::DataWriter<VehicleCommandTrajectory>>(publisher, topic_vehicleCommandTrajectory);
 }
 
 void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file) 
@@ -66,40 +62,6 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             writer_vehicleCommandSpeedCurvature->write(sample);
 
         }
-        else if(joystick->getButton(BUTTON_TRAJECTORY)) { // trajectory mode
-
-            VehicleCommandTrajectory sample;
-            sample.vehicle_id(vehicle_id);
-
-            if(ref_trajectory_start_time == 0) {
-                ref_trajectory_start_time = clock_gettime_nanoseconds() + 1000000000ull; 
-            }
-
-            while(ref_trajectory_index < example_trajectory_size
-                && ref_trajectory_start_time + uint64_t(1e9*example_trajectory_timestamp_offset[ref_trajectory_index])
-                    < clock_gettime_nanoseconds() + 500000000ull) {
-
-                ref_trajectory_index++;
-            }
-
-            if(ref_trajectory_index >= example_trajectory_size)
-            {
-                ref_trajectory_index = 0;
-                ref_trajectory_start_time += uint64_t(1e9*example_trajectory_period);
-            }
-
-
-            TrajectoryPoint trajectoryPoint;
-
-            trajectoryPoint.t().nanoseconds(ref_trajectory_start_time + uint64_t(1e9*example_trajectory_timestamp_offset[ref_trajectory_index]));
-            trajectoryPoint.px(example_trajectory_px[ref_trajectory_index]);
-            trajectoryPoint.py(example_trajectory_py[ref_trajectory_index]);
-            trajectoryPoint.vx(example_trajectory_vx[ref_trajectory_index]);
-            trajectoryPoint.vy(example_trajectory_vy[ref_trajectory_index]);
-
-            sample.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
-            writer_vehicleCommandTrajectory->write(sample);
-        }
         else { // direct control
 
             VehicleCommandDirect sample;
@@ -111,10 +73,8 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandDirect->write(sample);
 
-            // mode resets
+            // mode reset
             ref_speed = 0;
-            ref_trajectory_start_time = 0;
-            ref_trajectory_index = 0;
 
         }
 
