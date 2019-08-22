@@ -99,6 +99,12 @@ function lane_graph
         segments = [segments, {s}];
     end
     
+    % fix coordinate system, offset everything
+    for i = 1:length(segments)
+        s = segments{i};
+        segments{i} = s + [4.5/2 2 0 0];
+    end
+    
     lane_graph = build_routing_graph(segments);
     lane_graph_to_cpp(lane_graph);
     save lane_graph lane_graph
@@ -114,6 +120,8 @@ function lane_graph
     
     axis equal
     grid on
+    xlim([0 4.5])
+    ylim([0 4])
 end
 
 function routing_graph = build_routing_graph(segments)
