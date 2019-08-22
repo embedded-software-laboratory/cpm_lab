@@ -29,6 +29,10 @@ pushd controller_test_loop
 bash build.bash
 popd
 
+pushd central_routing_example
+bash build.bash
+popd
+
 
 
 pushd ips2
