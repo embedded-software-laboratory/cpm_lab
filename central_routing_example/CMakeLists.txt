@@ -24,5 +24,8 @@ link_libraries(dl nsl m pthread rt)
 
 add_executable(central_routing_example
     src/main.cpp
+    src/lane_graph.hpp
+    src/lane_graph_tools.hpp
+    src/lane_graph_tools.cpp
 )
 target_link_libraries(central_routing_example cpm)
