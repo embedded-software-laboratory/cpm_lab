@@ -113,21 +113,26 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
     // for now: if this gets stuck the vehicles will stop, because they wont get a new command
     while(1)
     {
+        vector<PathNode> self_path = get_planned_path();
+
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         int earliest_collision__speed_profile_index = 1<<30;
 
         // Find the earliest collision
         for(std::shared_ptr<VehicleTrajectoryPlanningState> other_vehicle:other_vehicles)
         {
-            double delta_s = 0;
+            vector<PathNode> other_path = other_vehicle->get_planned_path();
+
+            assert(self_path.size() == N_STEPS_SPEED_PROFILE);
+            assert(other_path.size() == N_STEPS_SPEED_PROFILE);
+
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
-                
+                const double distance = min_distance_vehicle_to_vehicle(self_path[i], other_path[i]);
 
-                // ....
-
-                if(0/* collision detected*/)
+                if(distance < 0.1)
                 {
+                    // collision detected
                     if(i < earliest_collision__speed_profile_index)
                     {
                         earliest_collision__speed_profile_index = i;
@@ -138,16 +143,42 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             }
         }
 
-
-
         // stop if there is no collision
         if(earliest_collision__speed_profile_index > N_STEPS_SPEED_PROFILE) return;
 
         // TODO fix speed profile to avoid collision
+        std::cout << "Collision detected" << std::endl;
+        return;
     }
 }
 
 vector<PathNode> VehicleTrajectoryPlanningState::get_planned_path()
 {
-    return {};
+    vector<PathNode> result;
+    
+    double delta_s = 0;
+    for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
+    {
+        delta_s += speed_profile[i] * dt_speed_profile;
+
+        size_t future_edge_index = current_edge_index;
+        size_t future_edge_path_index = current_edge_path_index;
+
+        laneGraphTools.move_along_route
+        (
+            current_route_edge_indices, 
+            future_edge_index, 
+            future_edge_path_index, 
+            delta_s
+        );
+
+        result.emplace_back(
+            laneGraphTools.edges_x.at(future_edge_index).at(future_edge_path_index),
+            laneGraphTools.edges_y.at(future_edge_index).at(future_edge_path_index),
+            laneGraphTools.edges_cos.at(future_edge_index).at(future_edge_path_index),
+            laneGraphTools.edges_sin.at(future_edge_index).at(future_edge_path_index)
+        );
+    }
+
+    return result;
 }

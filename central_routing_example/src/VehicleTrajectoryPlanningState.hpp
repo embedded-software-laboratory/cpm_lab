@@ -4,21 +4,13 @@
 #include <array>
 #include <cstdint>
 #include "VehicleCommandTrajectory.hpp"
+#include "geometry.hpp"
 using std::vector;
 using std::array;
 
 #define N_STEPS_SPEED_PROFILE (100)
 
-struct PathNode
-{
-    double x;
-    double y;
-    double cos_yaw;
-    double sin_yaw;
-    PathNode(){}
-    PathNode(double x, double y, double cos_yaw, double sin_yaw)
-    :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
-};
+
 
 class VehicleTrajectoryPlanningState
 {
