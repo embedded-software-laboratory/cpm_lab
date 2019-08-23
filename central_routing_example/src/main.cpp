@@ -24,7 +24,58 @@ struct VehicleTrajectoryPlanningState
 
 
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
+    void extend_random_route(size_t n);
+    void apply_timestep(uint64_t dt_nanos);
+    void invariant();
 };
+
+void VehicleTrajectoryPlanningState::invariant()
+{
+    assert(current_route_edge_indices.size() >= 1);
+    assert(current_route_edge_indices[0] == current_edge_index);
+    assert(current_edge_index < laneGraphTools.n_edges);
+    assert(current_edge_path_index < laneGraphTools.n_edge_path_nodes);
+}
+
+void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
+{
+    double acceleration = 0.6;
+    if(current_speed >= 1.2)
+    {
+        acceleration = 0;
+    }
+    const double dt = (dt_nanos*1e-9);
+    current_speed += dt * acceleration;
+    const double delta_s = dt * current_speed;
+
+    laneGraphTools.move_along_route
+    (
+        current_route_edge_indices, 
+        current_edge_index, 
+        current_edge_path_index, 
+        delta_s
+    );
+
+    while( !current_route_edge_indices.empty()
+        && current_route_edge_indices.at(0) != current_edge_index)
+    {
+        current_route_edge_indices.erase(current_route_edge_indices.begin());
+    }
+
+    invariant();
+}
+
+void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
+{
+    invariant();
+
+    while(current_route_edge_indices.size() < n)
+    {
+        auto next_edges = laneGraphTools.find_subsequent_edges(current_route_edge_indices.back());
+        assert(next_edges.size() > 0);
+        current_route_edge_indices.push_back(next_edges.at(rand() % next_edges.size()));
+    }
+}
 
 VehicleCommandTrajectory VehicleTrajectoryPlanningState::get_trajectory_command(uint64_t t_now)
 {
@@ -102,41 +153,9 @@ int main(int argc, char *argv[])
             return;
         }
 
-        assert(trajectoryPlan.current_route_edge_indices.size() >= 1);
-        assert(trajectoryPlan.current_route_edge_indices[0] == trajectoryPlan.current_edge_index);
 
-        // extend route randomly
-        while(trajectoryPlan.current_route_edge_indices.size() < 15)
-        {
-            auto next_edges = laneGraphTools.find_subsequent_edges(trajectoryPlan.current_route_edge_indices.back());
-            assert(next_edges.size() > 0);
-            trajectoryPlan.current_route_edge_indices.push_back(next_edges.at(rand() % next_edges.size()));
-        }
-
-        // longitudinal dynamics
-        double acceleration = 0.6;
-        if(trajectoryPlan.current_speed >= 1.2)
-        {
-            acceleration = 0;
-        }
-        const double dt = (dt_nanos*1e-9);
-        trajectoryPlan.current_speed += dt * acceleration;
-        const double delta_s = dt * trajectoryPlan.current_speed;
-
-
-
-        laneGraphTools.move_along_route
-        (
-            trajectoryPlan.current_route_edge_indices, 
-            trajectoryPlan.current_edge_index, 
-            trajectoryPlan.current_edge_path_index, 
-            delta_s
-        );
-
-        while(trajectoryPlan.current_route_edge_indices.at(0) != trajectoryPlan.current_edge_index)
-        {
-            trajectoryPlan.current_route_edge_indices.erase(trajectoryPlan.current_route_edge_indices.begin());
-        }
+        trajectoryPlan.extend_random_route(15);
+        trajectoryPlan.apply_timestep(dt_nanos);
 
 
 
