@@ -14,7 +14,7 @@
 
 using std::vector;
 
-struct VehicleTrajectoryPlanningState
+class VehicleTrajectoryPlanningState
 {
     uint8_t vehicle_id = 0;
     size_t current_edge_index = 0;
@@ -22,12 +22,31 @@ struct VehicleTrajectoryPlanningState
     double current_speed = 0;
     vector<size_t> current_route_edge_indices;
 
+    void invariant();
+public:
+
+    VehicleTrajectoryPlanningState(){}
+    VehicleTrajectoryPlanningState(
+        uint8_t _vehicle_id,
+        size_t _edge_index,
+        size_t _edge_path_index);
 
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void extend_random_route(size_t n);
     void apply_timestep(uint64_t dt_nanos);
-    void invariant();
 };
+
+VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
+    uint8_t _vehicle_id,
+    size_t _edge_index,
+    size_t _edge_path_index)
+:vehicle_id(_vehicle_id)
+,current_edge_index(_edge_index)
+,current_edge_path_index(_edge_path_index)
+,current_route_edge_indices({_edge_index})
+{
+
+}
 
 void VehicleTrajectoryPlanningState::invariant()
 {
@@ -169,11 +188,7 @@ int main(int argc, char *argv[])
 
                 if(matched)
                 {
-                    trajectoryPlans[new_id] = VehicleTrajectoryPlanningState();
-                    trajectoryPlans[new_id].vehicle_id = new_id;
-                    trajectoryPlans[new_id].current_edge_index = out_edge_index;
-                    trajectoryPlans[new_id].current_edge_path_index = out_edge_path_index;
-                    trajectoryPlans[new_id].current_route_edge_indices.push_back(trajectoryPlans[new_id].current_edge_index);
+                    trajectoryPlans[new_id] = VehicleTrajectoryPlanningState(new_id, out_edge_index, out_edge_path_index);
                     std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
                 }
                 else
