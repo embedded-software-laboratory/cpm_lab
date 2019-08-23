@@ -9,6 +9,17 @@ using std::array;
 
 #define N_STEPS_SPEED_PROFILE (100)
 
+struct PathNode
+{
+    double x;
+    double y;
+    double cos_yaw;
+    double sin_yaw;
+    PathNode(){}
+    PathNode(double x, double y, double cos_yaw, double sin_yaw)
+    :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
+};
+
 class VehicleTrajectoryPlanningState
 {
     uint8_t vehicle_id = 0;
@@ -27,6 +38,7 @@ class VehicleTrajectoryPlanningState
 
     void invariant();
     void extend_random_route(size_t n);
+    vector<PathNode> get_planned_path();
 public:
 
     VehicleTrajectoryPlanningState(){}
@@ -37,5 +49,7 @@ public:
 
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void apply_timestep(uint64_t dt_nanos);
-    void avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles);
+
+    // Change the own speed profile so as not to collide with the other_vehicles.
+    void avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
 };

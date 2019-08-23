@@ -105,7 +105,49 @@ VehicleCommandTrajectory VehicleTrajectoryPlanningState::get_trajectory_command(
 
 
 
-void VehicleTrajectoryPlanningState::avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles)
+// Change the own speed profile so as not to collide with the other_vehicles.
+void VehicleTrajectoryPlanningState::avoid_collisions(
+    vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles)
 {
-    
+    // TODO termination condition
+    // for now: if this gets stuck the vehicles will stop, because they wont get a new command
+    while(1)
+    {
+        // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
+        int earliest_collision__speed_profile_index = 1<<30;
+
+        // Find the earliest collision
+        for(std::shared_ptr<VehicleTrajectoryPlanningState> other_vehicle:other_vehicles)
+        {
+            double delta_s = 0;
+            for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
+            {
+                
+
+                // ....
+
+                if(0/* collision detected*/)
+                {
+                    if(i < earliest_collision__speed_profile_index)
+                    {
+                        earliest_collision__speed_profile_index = i;
+                    }
+                    // earliest collision for this vehicle found, stop
+                    break;
+                }
+            }
+        }
+
+
+
+        // stop if there is no collision
+        if(earliest_collision__speed_profile_index > N_STEPS_SPEED_PROFILE) return;
+
+        // TODO fix speed profile to avoid collision
+    }
+}
+
+vector<PathNode> VehicleTrajectoryPlanningState::get_planned_path()
+{
+    return {};
 }
