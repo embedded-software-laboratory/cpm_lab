@@ -1,5 +1,7 @@
 #include "lane_graph_tools.hpp"
 
+const LaneGraphTools laneGraphTools;
+
 LaneGraphTools::LaneGraphTools()
 {
     // Compute path arc lengths
@@ -20,7 +22,7 @@ LaneGraphTools::LaneGraphTools()
     }
 }
 
-bool LaneGraphTools::map_match_pose(Pose2D pose, int &out_edge_index, int &out_edge_path_index)
+bool LaneGraphTools::map_match_pose(Pose2D pose, int &out_edge_index, int &out_edge_path_index) const
 {
     bool match_found = false;
     double min_squared_distance = 1e300;
@@ -53,7 +55,7 @@ bool LaneGraphTools::map_match_pose(Pose2D pose, int &out_edge_index, int &out_e
     return match_found;
 }
 
-vector<size_t> LaneGraphTools::find_subsequent_edges(int edge_index)
+vector<size_t> LaneGraphTools::find_subsequent_edges(int edge_index) const
 {
     vector<size_t> result;
 
@@ -73,7 +75,7 @@ void LaneGraphTools::move_along_route(
     vector<size_t> route_edge_indices, 
     size_t &edge_index, 
     size_t &edge_path_index, 
-    double delta_s)
+    double delta_s) const
 {
     assert(route_edge_indices.size() > 2);
     assert(route_edge_indices[0] == edge_index);
