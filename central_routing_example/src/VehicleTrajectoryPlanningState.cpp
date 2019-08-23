@@ -12,7 +12,11 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {
-
+    speed_profile[0] = 0;
+    for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
+    {
+        speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
+    }
 }
 
 void VehicleTrajectoryPlanningState::invariant()
@@ -25,14 +29,17 @@ void VehicleTrajectoryPlanningState::invariant()
 
 void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
 {
-    double acceleration = 0.6;
-    if(current_speed >= 1.2)
+    uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
+    assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
+
+    double acceleration = ref_acceleration;
+    if(speed_profile[0] >= max_speed) // TODO redo this
     {
         acceleration = 0;
     }
     const double dt = (dt_nanos*1e-9);
-    current_speed += dt * acceleration;
-    const double delta_s = dt * current_speed;
+    speed_profile[0] += dt * acceleration;
+    const double delta_s = dt * speed_profile[0]; // TODO delta s calculation based on speed profile
 
     laneGraphTools.move_along_route
     (
@@ -69,8 +76,8 @@ VehicleCommandTrajectory VehicleTrajectoryPlanningState::get_trajectory_command(
     trajectory_point.t().nanoseconds(t_now + 1200000000ull);
     trajectory_point.px(laneGraphTools.edges_x.at(current_edge_index).at(current_edge_path_index));
     trajectory_point.py(laneGraphTools.edges_y.at(current_edge_index).at(current_edge_path_index));
-    trajectory_point.vx(laneGraphTools.edges_cos.at(current_edge_index).at(current_edge_path_index) * current_speed);
-    trajectory_point.vy(laneGraphTools.edges_sin.at(current_edge_index).at(current_edge_path_index) * current_speed);
+    trajectory_point.vx(laneGraphTools.edges_cos.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
+    trajectory_point.vy(laneGraphTools.edges_sin.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
     VehicleCommandTrajectory vehicleCommandTrajectory;
     vehicleCommandTrajectory.vehicle_id(vehicle_id);
     vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
