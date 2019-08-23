@@ -54,16 +54,19 @@ int main(int argc, char *argv[])
     {
         if(started)
         {
+            // Priority based collision avoidance: Every vehicle avoids 
+            // the 'previous' vehicles, i.e. those with a smaller ID.
+            vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
             for(auto &e:trajectoryPlans)
             {
-                //e.second->avoid_collisions();
+                e.second->avoid_collisions(previous_vehicles);
+                previous_vehicles.push_back(e.second);
             }
 
             for(auto &e:trajectoryPlans)
             {
                 writer_vehicleCommandTrajectory.write(e.second->get_trajectory_command(t_now));
                 e.second->apply_timestep(dt_nanos);
-                e.second->extend_random_route(15);
             }
         }
         else

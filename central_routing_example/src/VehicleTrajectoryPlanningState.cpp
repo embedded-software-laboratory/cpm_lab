@@ -59,6 +59,8 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
         current_route_edge_indices.erase(current_route_edge_indices.begin());
     }
 
+    extend_random_route(15);
+
     // shift and extend speed profile
     for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
     {
@@ -99,4 +101,11 @@ VehicleCommandTrajectory VehicleTrajectoryPlanningState::get_trajectory_command(
     vehicleCommandTrajectory.vehicle_id(vehicle_id);
     vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
     return vehicleCommandTrajectory;
+}
+
+
+
+void VehicleTrajectoryPlanningState::avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles)
+{
+    
 }

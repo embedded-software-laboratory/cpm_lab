@@ -26,6 +26,7 @@ class VehicleTrajectoryPlanningState
     array<double, N_STEPS_SPEED_PROFILE> speed_profile;
 
     void invariant();
+    void extend_random_route(size_t n);
 public:
 
     VehicleTrajectoryPlanningState(){}
@@ -35,6 +36,6 @@ public:
         size_t _edge_path_index);
 
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
-    void extend_random_route(size_t n);
     void apply_timestep(uint64_t dt_nanos);
+    void avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles);
 };
