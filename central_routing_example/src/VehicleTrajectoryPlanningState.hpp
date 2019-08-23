@@ -31,6 +31,8 @@ class VehicleTrajectoryPlanningState
     void invariant();
     void extend_random_route(size_t n);
     vector<PathNode> get_planned_path();
+    void set_speed(int idx_speed_reduction, double speed_value);
+    
 public:
 
     VehicleTrajectoryPlanningState(){}

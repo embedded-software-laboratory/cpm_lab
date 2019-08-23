@@ -144,11 +144,56 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         }
 
         // stop if there is no collision
-        if(earliest_collision__speed_profile_index > N_STEPS_SPEED_PROFILE) return;
+        if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return;
+
+
 
         // TODO fix speed profile to avoid collision
+        int idx_speed_reduction = earliest_collision__speed_profile_index - 25;
+
+        if(idx_speed_reduction < 25)
+        {
+            std::cout << "Collision unavoidable" << std::endl;
+            exit(1);
+            return;
+        }
+
         std::cout << "Collision detected" << std::endl;
-        return;
+
+        if(speed_profile[idx_speed_reduction] < min_speed)
+        {
+            std::cout << "Oops not implemented" << std::endl;
+            exit(1);
+            return;
+        }
+
+        set_speed(idx_speed_reduction, speed_profile[idx_speed_reduction] - 0.1);
+
+    }
+}
+
+
+void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double speed_value)
+{
+    assert(idx_speed_reduction >= 0);
+    assert(idx_speed_reduction < N_STEPS_SPEED_PROFILE);
+
+    speed_profile[idx_speed_reduction] = speed_value;
+
+    for (int i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
+    {
+        int i_forward = idx_speed_reduction + i;
+        int i_reverse = idx_speed_reduction - i;
+
+        if(i_forward < N_STEPS_SPEED_PROFILE)
+        {
+            speed_profile[i_forward] = fmin(speed_value + i * delta_v_step, speed_profile[i_forward]);
+        }
+
+        if(i_reverse >= 0)
+        {
+            speed_profile[i_reverse] = fmin(speed_value + i * delta_v_step, speed_profile[i_reverse]);
+        }
     }
 }
 
