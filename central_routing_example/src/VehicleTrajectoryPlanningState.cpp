@@ -31,16 +31,17 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
 {
     uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
+    assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
+    assert(n_steps >= 1);
 
-    double acceleration = ref_acceleration;
-    if(speed_profile[0] >= max_speed) // TODO redo this
+    // calculate driving distance of this time step
+    double delta_s = 0;
+    for (size_t i = 0; i < n_steps; ++i)
     {
-        acceleration = 0;
+        delta_s += speed_profile[i] * dt_speed_profile;
     }
-    const double dt = (dt_nanos*1e-9);
-    speed_profile[0] += dt * acceleration;
-    const double delta_s = dt * speed_profile[0]; // TODO delta s calculation based on speed profile
 
+    // move our position in the lane graph by delta s
     laneGraphTools.move_along_route
     (
         current_route_edge_indices, 
@@ -49,10 +50,24 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
         delta_s
     );
 
+    // delete old route edge(s)
     while( !current_route_edge_indices.empty()
         && current_route_edge_indices.at(0) != current_edge_index)
     {
         current_route_edge_indices.erase(current_route_edge_indices.begin());
+    }
+
+    // shift and extend speed profile
+    for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
+    {
+        if(i + n_steps < N_STEPS_SPEED_PROFILE)
+        {
+            speed_profile[i] = speed_profile[i + n_steps];
+        }
+        else
+        {
+            speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
+        }
     }
 
     invariant();
