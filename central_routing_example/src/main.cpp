@@ -3,7 +3,7 @@
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
-#include "cpm/AsyncReader.hpp"
+#include "cpm/MultiVehicleReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "VehicleObservation.hpp"
@@ -96,7 +96,17 @@ int main(int argc, char *argv[])
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing_example");
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
+    std::vector<uint8_t> vehicle_ids;
+    for(auto i:vehicle_ids_int)
+    {
+        assert(i>0);
+        assert(i<255);
+        vehicle_ids.push_back(i);
+    }
 
+
+    std::map<uint8_t, VehicleTrajectoryPlanningState> trajectoryPlans;
 
     // Writer for sending trajectory commands
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
@@ -105,99 +115,78 @@ int main(int argc, char *argv[])
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
 
-
-    VehicleTrajectoryPlanningState trajectoryPlan;
-
-
-    // receive vehicle pose from IPS
-    cpm::AsyncReader<VehicleObservation> vehicleObservations_reader(
-        [&](dds::sub::LoanedSamples<VehicleObservation>& samples) {
-
-            if (trajectoryPlan.vehicle_id > 0) return;
-
-            for(auto sample : samples) 
-            {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    auto new_id = data.vehicle_id();
-                    auto new_pose = data.pose();
-                    int out_edge_index = -1;
-                    int out_edge_path_index = -1;
-                    bool matched = laneGraphTools.map_match_pose(new_pose, out_edge_index, out_edge_path_index);
-
-                    if(matched)
-                    {
-                        trajectoryPlan.vehicle_id = new_id;
-                        trajectoryPlan.current_edge_index = out_edge_index;
-                        trajectoryPlan.current_edge_path_index = out_edge_path_index;
-                        trajectoryPlan.current_route_edge_indices.push_back(trajectoryPlan.current_edge_index);
-                        std::cout << "Vehicle matched" << std::endl;
-                        return;
-                    }
-                }
-            }
-        }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<VehicleObservation>("vehicleObservation")
+    cpm::MultiVehicleReader<VehicleObservation> ips_reader(
+        cpm::get_topic<VehicleObservation>("vehicleObservation"),
+        vehicle_ids
     );
 
+    bool started = false;
 
     const uint64_t dt_nanos = 400000000ull;
     auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) 
     {
-        if(trajectoryPlan.vehicle_id == 0)
+        if(started)
         {
-            std::cout << "Waiting for vehicle ..." << std::endl;
-            return;
+            for(auto &e:trajectoryPlans)
+            {
+                auto &trajectoryPlan = e.second;
+                trajectoryPlan.extend_random_route(15);
+                trajectoryPlan.apply_timestep(dt_nanos);
+
+                // Send trajectory point on DDS
+                writer_vehicleCommandTrajectory.write(trajectoryPlan.get_trajectory_command(t_now));
+            }
         }
+        else
+        {
+            std::map<uint8_t, VehicleObservation> ips_sample;
+            std::map<uint8_t, uint64_t> ips_sample_age;
+            ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
 
+            bool all_vehicles_online = true;
+            for(auto e:ips_sample_age)
+            {
+                if(e.second > 1000000000ull) all_vehicles_online = false;
+            }
 
-        trajectoryPlan.extend_random_route(15);
-        trajectoryPlan.apply_timestep(dt_nanos);
+            if(!all_vehicles_online)
+            {
+                std::cout << "Waiting for vehicles ..." << std::endl;
+                return;
+            }
 
+            bool all_vehicles_matched = true;
 
+            for(auto e:ips_sample)
+            {
+                auto data = e.second;
+                auto new_id = data.vehicle_id();
+                auto new_pose = data.pose();
+                int out_edge_index = -1;
+                int out_edge_path_index = -1;
+                bool matched = laneGraphTools.map_match_pose(new_pose, out_edge_index, out_edge_path_index);
 
+                if(matched)
+                {
+                    trajectoryPlans[new_id] = VehicleTrajectoryPlanningState();
+                    trajectoryPlans[new_id].vehicle_id = new_id;
+                    trajectoryPlans[new_id].current_edge_index = out_edge_index;
+                    trajectoryPlans[new_id].current_edge_path_index = out_edge_path_index;
+                    trajectoryPlans[new_id].current_route_edge_indices.push_back(trajectoryPlans[new_id].current_edge_index);
+                    std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
+                }
+                else
+                {
+                    all_vehicles_matched = false;
+                    std::cout << "Vehicle " << int(new_id) << " not matched" << std::endl;
+                }
+            }
 
-        // Send trajectory point on DDS
-        writer_vehicleCommandTrajectory.write(trajectoryPlan.get_trajectory_command(t_now));
-
+            if(all_vehicles_matched)
+            {
+                started = true;
+            }
+        }
     });
-
-
-
-    /*
-    std::cout << laneGraph.n_nodes << std::endl;
-
-    Pose2D pose;
-    pose.x(0.28);
-    pose.y(2.05);
-    pose.yaw(1.52);
-    int out_edge_index = -1;
-    int out_edge_path_index = -1;
-    std::cout << laneGraph.map_match_pose(pose, out_edge_index, out_edge_path_index) << std::endl;
-
-    std::cout << out_edge_index << std::endl;
-    std::cout << out_edge_path_index << std::endl;
-
-    {
-        auto next_edges = laneGraph.find_subsequent_edges(out_edge_index);
-
-        std::cout << "next_edges" << std::endl;
-        for(auto i:next_edges)
-        {
-            std::cout << i << std::endl;
-        }
-    }
-
-
-    std::cout << "random route" << std::endl;
-    for (int kk = 0; kk < 10000; ++kk)
-    {
-        auto next_edges = laneGraph.find_subsequent_edges(out_edge_index);
-        out_edge_index = next_edges.at(rand() % next_edges.size());
-        std::cout << out_edge_index << std::endl;
-    }
-    */
 }
