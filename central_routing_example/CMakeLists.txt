@@ -27,5 +27,7 @@ add_executable(central_routing_example
     src/lane_graph.hpp
     src/lane_graph_tools.hpp
     src/lane_graph_tools.cpp
+    src/VehicleTrajectoryPlanningState.hpp
+    src/VehicleTrajectoryPlanningState.cpp
 )
 target_link_libraries(central_routing_example cpm)
