@@ -15,6 +15,7 @@ LaneGraphTools::LaneGraphTools()
             const double dx = edges_x[i_edge][i_path] - edges_x[i_edge][i_path-1];
             const double dy = edges_y[i_edge][i_path] - edges_y[i_edge][i_path-1];
             const double len = sqrt(dx*dx+dy*dy);
+            //std::cout << len << ", ";
             edge_s.push_back(edge_s.back() + len);
         }
         assert(edge_s.size() == edges_x[i_edge].size());

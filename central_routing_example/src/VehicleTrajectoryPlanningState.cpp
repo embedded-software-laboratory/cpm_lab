@@ -155,7 +155,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         while(idx_speed_reduction > 0
             && speed_profile[idx_speed_reduction] < min_speed + 0.05)
         {
-            idx_speed_reduction -= 100;
+            idx_speed_reduction -= 10;
         }
 
         std::cout << 
@@ -163,7 +163,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         "  self id: " << int(vehicle_id) << 
         "  other id: " << colliding_vehicle_id << 
         "  Speed reduction,  t: " << idx_speed_reduction  << 
-        "  spd: " << fmax(speed_profile[idx_speed_reduction] - 0.5, min_speed) << std::endl;
+        "  spd: " << fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed) << std::endl;
 
         if(idx_speed_reduction < 15)
         {
@@ -179,7 +179,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             return;
         }
 
-        set_speed(idx_speed_reduction, fmax(speed_profile[idx_speed_reduction] - 0.5, min_speed));
+        set_speed(idx_speed_reduction, fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed));
     }
 }
 

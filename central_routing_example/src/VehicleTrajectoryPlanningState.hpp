@@ -8,7 +8,7 @@
 using std::vector;
 using std::array;
 
-#define N_STEPS_SPEED_PROFILE (2000)
+#define N_STEPS_SPEED_PROFILE (800)
 
 
 
@@ -22,7 +22,7 @@ class VehicleTrajectoryPlanningState
     static constexpr double ref_acceleration = 0.8;
     static constexpr double max_speed = 1.4;
     static constexpr double min_speed = 0.5;
-    static constexpr uint64_t dt_speed_profile_nanos = 5000000ull;
+    static constexpr uint64_t dt_speed_profile_nanos = 16000000ull;
     static constexpr double dt_speed_profile = (dt_speed_profile_nanos * 1e-9);
     static constexpr double delta_v_step = ref_acceleration * dt_speed_profile;
 
