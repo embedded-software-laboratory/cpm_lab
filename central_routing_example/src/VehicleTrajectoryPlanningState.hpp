@@ -8,7 +8,7 @@
 using std::vector;
 using std::array;
 
-#define N_STEPS_SPEED_PROFILE (100)
+#define N_STEPS_SPEED_PROFILE (2000)
 
 
 
@@ -22,7 +22,7 @@ class VehicleTrajectoryPlanningState
     static constexpr double ref_acceleration = 0.8;
     static constexpr double max_speed = 1.4;
     static constexpr double min_speed = 0.5;
-    static constexpr uint64_t dt_speed_profile_nanos = 40000000ull;
+    static constexpr uint64_t dt_speed_profile_nanos = 5000000ull;
     static constexpr double dt_speed_profile = (dt_speed_profile_nanos * 1e-9);
     static constexpr double delta_v_step = ref_acceleration * dt_speed_profile;
 
@@ -32,7 +32,7 @@ class VehicleTrajectoryPlanningState
     void extend_random_route(size_t n);
     vector<PathNode> get_planned_path();
     void set_speed(int idx_speed_reduction, double speed_value);
-    
+
 public:
 
     VehicleTrajectoryPlanningState(){}

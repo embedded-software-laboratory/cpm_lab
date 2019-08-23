@@ -12,7 +12,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {
-    extend_random_route(15);
+    extend_random_route(50);
 
     speed_profile[0] = 0;
     for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
@@ -59,7 +59,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
         current_route_edge_indices.erase(current_route_edge_indices.begin());
     }
 
-    extend_random_route(15);
+    extend_random_route(50);
 
     // shift and extend speed profile
     for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
@@ -117,6 +117,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
 
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         int earliest_collision__speed_profile_index = 1<<30;
+        int colliding_vehicle_id = 0;
 
         // Find the earliest collision
         for(std::shared_ptr<VehicleTrajectoryPlanningState> other_vehicle:other_vehicles)
@@ -130,12 +131,13 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             {
                 const double distance = min_distance_vehicle_to_vehicle(self_path[i], other_path[i]);
 
-                if(distance < 0.1)
+                if(distance < 0.06)
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
                     {
                         earliest_collision__speed_profile_index = i;
+                        colliding_vehicle_id = other_vehicle->vehicle_id;
                     }
                     // earliest collision for this vehicle found, stop
                     break;
@@ -147,34 +149,44 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return;
 
 
+        // fix speed profile to avoid collision
+        int idx_speed_reduction = earliest_collision__speed_profile_index - 10;
 
-        // TODO fix speed profile to avoid collision
-        int idx_speed_reduction = earliest_collision__speed_profile_index - 25;
-
-        if(idx_speed_reduction < 25)
+        while(idx_speed_reduction > 0
+            && speed_profile[idx_speed_reduction] < min_speed + 0.05)
         {
-            std::cout << "Collision unavoidable" << std::endl;
+            idx_speed_reduction -= 100;
+        }
+
+        std::cout << 
+        "Collision detected t:" << earliest_collision__speed_profile_index << 
+        "  self id: " << int(vehicle_id) << 
+        "  other id: " << colliding_vehicle_id << 
+        "  Speed reduction,  t: " << idx_speed_reduction  << 
+        "  spd: " << fmax(speed_profile[idx_speed_reduction] - 0.5, min_speed) << std::endl;
+
+        if(idx_speed_reduction < 15)
+        {
+            std::cout << "Collision unavoidable between " << int(vehicle_id) << " and " << colliding_vehicle_id << std::endl;
+
+            for(double spd:speed_profile)
+            {
+                std::cout << spd << ", ";
+            }
+            std::cout << std::endl;
+
             exit(1);
             return;
         }
 
-        std::cout << "Collision detected" << std::endl;
-
-        if(speed_profile[idx_speed_reduction] < min_speed)
-        {
-            std::cout << "Oops not implemented" << std::endl;
-            exit(1);
-            return;
-        }
-
-        set_speed(idx_speed_reduction, speed_profile[idx_speed_reduction] - 0.1);
-
+        set_speed(idx_speed_reduction, fmax(speed_profile[idx_speed_reduction] - 0.5, min_speed));
     }
 }
 
 
 void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double speed_value)
 {
+
     assert(idx_speed_reduction >= 0);
     assert(idx_speed_reduction < N_STEPS_SPEED_PROFILE);
 
