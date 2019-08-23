@@ -12,6 +12,7 @@
 #include "lane_graph_tools.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
+#include <memory>
 
 using std::vector;
 
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
     }
 
 
-    std::map<uint8_t, VehicleTrajectoryPlanningState> trajectoryPlans;
+    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
 
     // Writer for sending trajectory commands
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
@@ -55,12 +56,14 @@ int main(int argc, char *argv[])
         {
             for(auto &e:trajectoryPlans)
             {
-                auto &trajectoryPlan = e.second;
-                trajectoryPlan.extend_random_route(15);
-                trajectoryPlan.apply_timestep(dt_nanos);
+                //e.second->avoid_collisions();
+            }
 
-                // Send trajectory point on DDS
-                writer_vehicleCommandTrajectory.write(trajectoryPlan.get_trajectory_command(t_now));
+            for(auto &e:trajectoryPlans)
+            {
+                writer_vehicleCommandTrajectory.write(e.second->get_trajectory_command(t_now));
+                e.second->apply_timestep(dt_nanos);
+                e.second->extend_random_route(15);
             }
         }
         else
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
 
                 if(matched)
                 {
-                    trajectoryPlans[new_id] = VehicleTrajectoryPlanningState(new_id, out_edge_index, out_edge_path_index);
+                    trajectoryPlans[new_id] = std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index);
                     std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
                 }
                 else

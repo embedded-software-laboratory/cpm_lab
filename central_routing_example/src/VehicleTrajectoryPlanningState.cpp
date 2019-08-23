@@ -12,6 +12,8 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {
+    extend_random_route(15);
+
     speed_profile[0] = 0;
     for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
     {

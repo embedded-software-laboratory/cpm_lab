@@ -11,8 +11,12 @@ extern "C" {
 
 
 
-SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS)
-:topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
+SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id)
+:px(1.9*sin(vehicle_id * 0.5) + 2.25)
+,py(1.9*cos(vehicle_id * 0.5) + 2.0)
+,yaw(vehicle_id * -0.5)
+,yaw_measured(vehicle_id * -0.5)
+,topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
 ,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
 ,simulationIPS(_simulationIPS)
 {
