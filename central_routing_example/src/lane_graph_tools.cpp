@@ -1,4 +1,6 @@
 #include "lane_graph_tools.hpp"
+#include "geometry.hpp"
+#include <future>
 
 const LaneGraphTools laneGraphTools;
 
@@ -20,6 +22,66 @@ LaneGraphTools::LaneGraphTools()
         }
         assert(edge_s.size() == edges_x[i_edge].size());
         edges_s.push_back(edge_s);
+    }
+
+
+    // Precompute collision between all reference poses
+    edge_path_collisions = std::vector< std::vector< std::vector< std::vector<bool> > > >
+    (
+        n_edges,
+        std::vector< std::vector< std::vector<bool> > >
+        (
+            n_edge_path_nodes,
+            std::vector< std::vector<bool> >
+            (
+                n_edges,
+                std::vector<bool> 
+                (
+                    n_edge_path_nodes,
+                    false
+                )
+            )
+        )
+    );
+
+    std::vector<std::future<bool>> jobs;
+    for (size_t i_edge_A = 0; i_edge_A < n_edges; ++i_edge_A)
+    {
+        jobs.push_back(std::async(std::launch::async, 
+            [this, i_edge_A](){
+                for (size_t i_path_A = 0; i_path_A < n_edge_path_nodes; ++i_path_A)
+                {
+                    PathNode nodeA (
+                        edges_x.at(i_edge_A).at(i_path_A),
+                        edges_y.at(i_edge_A).at(i_path_A),
+                        edges_cos.at(i_edge_A).at(i_path_A),
+                        edges_sin.at(i_edge_A).at(i_path_A)
+                    );
+
+                    for (size_t i_edge_B = 0; i_edge_B < n_edges; ++i_edge_B)
+                    {
+                        for (size_t i_path_B = 0; i_path_B < n_edge_path_nodes; ++i_path_B)
+                        {
+                            PathNode nodeB (
+                                edges_x.at(i_edge_B).at(i_path_B),
+                                edges_y.at(i_edge_B).at(i_path_B),
+                                edges_cos.at(i_edge_B).at(i_path_B),
+                                edges_sin.at(i_edge_B).at(i_path_B)
+                            );
+
+                            const double distance = min_distance_vehicle_to_vehicle(nodeA, nodeB);
+                            edge_path_collisions.at(i_edge_A).at(i_path_A).at(i_edge_B).at(i_path_B) = (distance < 0.06);
+                        }
+                    }
+                }
+                return true;
+            }
+        ));
+    }
+
+    for(auto& job:jobs)
+    {
+        job.get();
     }
 }
 

@@ -12,7 +12,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {
-    extend_random_route(50);
+    extend_random_route(500);
 
     speed_profile[0] = 0;
     for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
@@ -59,7 +59,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
         current_route_edge_indices.erase(current_route_edge_indices.begin());
     }
 
-    extend_random_route(50);
+    extend_random_route(500);
 
     // shift and extend speed profile
     for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
@@ -113,7 +113,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
     // for now: if this gets stuck the vehicles will stop, because they wont get a new command
     while(1)
     {
-        vector<PathNode> self_path = get_planned_path();
+        vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         int earliest_collision__speed_profile_index = 1<<30;
@@ -122,16 +122,18 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         // Find the earliest collision
         for(std::shared_ptr<VehicleTrajectoryPlanningState> other_vehicle:other_vehicles)
         {
-            vector<PathNode> other_path = other_vehicle->get_planned_path();
+            vector<std::pair<size_t, size_t>> other_path = other_vehicle->get_planned_path();
 
             assert(self_path.size() == N_STEPS_SPEED_PROFILE);
             assert(other_path.size() == N_STEPS_SPEED_PROFILE);
 
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
-                const double distance = min_distance_vehicle_to_vehicle(self_path[i], other_path[i]);
-
-                if(distance < 0.06)
+                if(laneGraphTools.edge_path_collisions
+                    .at(self_path[i].first)
+                    .at(self_path[i].second)
+                    .at(other_path[i].first)
+                    .at(other_path[i].second))
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
@@ -158,12 +160,14 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             idx_speed_reduction -= 10;
         }
 
+        const double reduced_speed = fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed);
+
         std::cout << 
         "Collision detected t:" << earliest_collision__speed_profile_index << 
         "  self id: " << int(vehicle_id) << 
         "  other id: " << colliding_vehicle_id << 
         "  Speed reduction,  t: " << idx_speed_reduction  << 
-        "  spd: " << fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed) << std::endl;
+        "  spd: " << reduced_speed << std::endl;
 
         if(idx_speed_reduction < 15)
         {
@@ -179,7 +183,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             return;
         }
 
-        set_speed(idx_speed_reduction, fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed));
+        set_speed(idx_speed_reduction, reduced_speed);
     }
 }
 
@@ -209,9 +213,9 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
     }
 }
 
-vector<PathNode> VehicleTrajectoryPlanningState::get_planned_path()
+vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_path()
 {
-    vector<PathNode> result;
+    vector<std::pair<size_t, size_t>> result;
     
     double delta_s = 0;
     for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
@@ -229,12 +233,7 @@ vector<PathNode> VehicleTrajectoryPlanningState::get_planned_path()
             delta_s
         );
 
-        result.emplace_back(
-            laneGraphTools.edges_x.at(future_edge_index).at(future_edge_path_index),
-            laneGraphTools.edges_y.at(future_edge_index).at(future_edge_path_index),
-            laneGraphTools.edges_cos.at(future_edge_index).at(future_edge_path_index),
-            laneGraphTools.edges_sin.at(future_edge_index).at(future_edge_path_index)
-        );
+        result.push_back(std::make_pair(future_edge_index, future_edge_path_index));
     }
 
     return result;

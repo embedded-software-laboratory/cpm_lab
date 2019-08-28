@@ -2,13 +2,13 @@
 
 #include <vector>
 #include <array>
+#include <utility>
 #include <cstdint>
 #include "VehicleCommandTrajectory.hpp"
-#include "geometry.hpp"
 using std::vector;
 using std::array;
 
-#define N_STEPS_SPEED_PROFILE (800)
+#define N_STEPS_SPEED_PROFILE (3000)
 
 
 
@@ -30,7 +30,7 @@ class VehicleTrajectoryPlanningState
 
     void invariant();
     void extend_random_route(size_t n);
-    vector<PathNode> get_planned_path();
+    vector<std::pair<size_t, size_t>> get_planned_path();
     void set_speed(int idx_speed_reduction, double speed_value);
 
 public:
