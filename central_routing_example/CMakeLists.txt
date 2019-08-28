@@ -31,3 +31,12 @@ add_executable(central_routing_example
     src/VehicleTrajectoryPlanningState.cpp
 )
 target_link_libraries(central_routing_example cpm)
+
+
+add_executable(tests
+    src/tests.cpp
+    src/lane_graph.hpp
+    src/lane_graph_tools.hpp
+    src/lane_graph_tools.cpp
+)
+target_link_libraries(tests cpm)

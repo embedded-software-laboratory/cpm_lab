@@ -27,6 +27,7 @@ void VehicleTrajectoryPlanningState::invariant()
     assert(current_route_edge_indices[0] == current_edge_index);
     assert(current_edge_index < laneGraphTools.n_edges);
     assert(current_edge_path_index < laneGraphTools.n_edge_path_nodes);
+    assert(delta_s_path_node_offset >= 0);
 }
 
 void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
@@ -37,10 +38,9 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     assert(n_steps >= 1);
 
     // calculate driving distance of this time step
-    double delta_s = 0;
     for (size_t i = 0; i < n_steps; ++i)
     {
-        delta_s += speed_profile[i] * dt_speed_profile;
+        delta_s_path_node_offset += speed_profile[i] * dt_speed_profile;
     }
 
     // move our position in the lane graph by delta s
@@ -49,7 +49,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
         current_route_edge_indices, 
         current_edge_index, 
         current_edge_path_index, 
-        delta_s
+        delta_s_path_node_offset
     );
 
     // delete old route edge(s)
@@ -217,10 +217,11 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
 {
     vector<std::pair<size_t, size_t>> result;
     
-    double delta_s = 0;
+    double delta_s = delta_s_path_node_offset;
     for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
     {
         delta_s += speed_profile[i] * dt_speed_profile;
+        double delta_s_copy = delta_s;
 
         size_t future_edge_index = current_edge_index;
         size_t future_edge_path_index = current_edge_path_index;
@@ -230,7 +231,7 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
             current_route_edge_indices, 
             future_edge_index, 
             future_edge_path_index, 
-            delta_s
+            delta_s_copy
         );
 
         result.push_back(std::make_pair(future_edge_index, future_edge_path_index));

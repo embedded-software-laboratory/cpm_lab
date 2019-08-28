@@ -17,6 +17,7 @@ class VehicleTrajectoryPlanningState
     uint8_t vehicle_id = 0;
     size_t current_edge_index = 0;
     size_t current_edge_path_index = 0;
+    double delta_s_path_node_offset = 0;
     vector<size_t> current_route_edge_indices;
 
     static constexpr double ref_acceleration = 0.8;

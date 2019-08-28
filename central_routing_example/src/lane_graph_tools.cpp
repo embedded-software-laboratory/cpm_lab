@@ -138,7 +138,7 @@ void LaneGraphTools::move_along_route(
     vector<size_t> route_edge_indices, 
     size_t &edge_index, 
     size_t &edge_path_index, 
-    double delta_s) const
+    double &delta_s) const
 {
     assert(route_edge_indices.size() > 2);
     assert(route_edge_indices[0] == edge_index);
