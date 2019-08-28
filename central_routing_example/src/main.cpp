@@ -16,6 +16,13 @@
 
 using std::vector;
 
+struct MultiVehicleTrajectoryPlanner
+{
+    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
+    bool started = false;
+
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -31,8 +38,8 @@ int main(int argc, char *argv[])
         vehicle_ids.push_back(i);
     }
 
+    MultiVehicleTrajectoryPlanner planner;
 
-    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
 
     // Writer for sending trajectory commands
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
@@ -46,24 +53,23 @@ int main(int argc, char *argv[])
         vehicle_ids
     );
 
-    bool started = false;
 
     const uint64_t dt_nanos = 400000000ull;
     auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) 
     {
-        if(started)
+        if(planner.started)
         {
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, i.e. those with a smaller ID.
             vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
-            for(auto &e:trajectoryPlans)
+            for(auto &e:planner.trajectoryPlans)
             {
                 e.second->avoid_collisions(previous_vehicles);
                 previous_vehicles.push_back(e.second);
             }
 
-            for(auto &e:trajectoryPlans)
+            for(auto &e:planner.trajectoryPlans)
             {
                 writer_vehicleCommandTrajectory.write(e.second->get_trajectory_command(t_now));
                 e.second->apply_timestep(dt_nanos);
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
 
                 if(matched)
                 {
-                    trajectoryPlans[new_id] = std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index);
+                    planner.trajectoryPlans[new_id] = std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index);
                     std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
                 }
                 else
@@ -112,7 +118,7 @@ int main(int argc, char *argv[])
 
             if(all_vehicles_matched)
             {
-                started = true;
+                planner.started = true;
             }
         }
     });
