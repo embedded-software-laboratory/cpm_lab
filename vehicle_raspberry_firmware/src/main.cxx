@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     const bool allow_simulated_time = false;
 #else
     SimulationIPS simulationIPS(topic_vehicleObservation);
-    SimulationVehicle simulationVehicle(simulationIPS);
+    SimulationVehicle simulationVehicle(simulationIPS, vehicle_id);
     const bool allow_simulated_time = true;
 #endif
 
