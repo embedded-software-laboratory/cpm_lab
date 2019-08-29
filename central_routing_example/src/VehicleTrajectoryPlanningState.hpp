@@ -20,6 +20,8 @@ class VehicleTrajectoryPlanningState
     double delta_s_path_node_offset = 0;
     vector<size_t> current_route_edge_indices;
 
+    uint64_t t_elapsed = 0;
+
     static constexpr double ref_acceleration = 0.8;
     static constexpr double max_speed = 1.4;
     static constexpr double min_speed = 0.5;
@@ -42,9 +44,10 @@ public:
         size_t _edge_index,
         size_t _edge_path_index);
 
-    VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
+    TrajectoryPoint get_trajectory_point();
     void apply_timestep(uint64_t dt_nanos);
 
     // Change the own speed profile so as not to collide with the other_vehicles.
     void avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
+    uint8_t get_vehicle_id(){return vehicle_id;}
 };

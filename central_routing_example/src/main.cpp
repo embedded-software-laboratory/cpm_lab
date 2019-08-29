@@ -13,8 +13,22 @@
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 using std::vector;
+
+struct MultiVehicleTrajectoryPlanner
+{
+    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
+    bool started = false;
+    uint64_t t_start = 0;
+    uint64_t t_real_time = 0;
+    std::mutex mutex;
+
+    std::map<uint8_t, std::vector<TrajectoryPoint> > trajectory_point_buffer;
+
+};
 
 
 int main(int argc, char *argv[])
@@ -31,8 +45,8 @@ int main(int argc, char *argv[])
         vehicle_ids.push_back(i);
     }
 
+    MultiVehicleTrajectoryPlanner planner;
 
-    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
 
     // Writer for sending trajectory commands
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
@@ -46,27 +60,79 @@ int main(int argc, char *argv[])
         vehicle_ids
     );
 
-    bool started = false;
+
 
     const uint64_t dt_nanos = 400000000ull;
-    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
-    timer->start([&](uint64_t t_now) 
-    {
-        if(started)
+
+
+    std::thread planning_thread([&](){
+        while(!planner.started) usleep(110000);
+
+
+        uint64_t t_planning = 0;
+
+        {
+            std::lock_guard<std::mutex> lock(planner.mutex); 
+            t_planning = planner.t_real_time;
+        }
+
+        while(1)
         {
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, i.e. those with a smaller ID.
             vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
-            for(auto &e:trajectoryPlans)
+            for(auto &e:planner.trajectoryPlans)
             {
                 e.second->avoid_collisions(previous_vehicles);
                 previous_vehicles.push_back(e.second);
             }
 
-            for(auto &e:trajectoryPlans)
             {
-                writer_vehicleCommandTrajectory.write(e.second->get_trajectory_command(t_now));
+                std::lock_guard<std::mutex> lock(planner.mutex); 
+
+                if(planner.t_start == 0)
+                {
+                    planner.t_start = planner.t_real_time + 2000000000ull;
+                }
+
+                for(auto &e:planner.trajectoryPlans)
+                {
+                    while(planner.trajectory_point_buffer[e.first].size() > 9)
+                    {
+                        planner.trajectory_point_buffer[e.first].erase(planner.trajectory_point_buffer[e.first].begin());
+                    }
+                    auto trajectory_point = e.second->get_trajectory_point();
+                    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + planner.t_start);
+                    planner.trajectory_point_buffer[e.first].push_back(trajectory_point);
+                }
+            }
+
+            for(auto &e:planner.trajectoryPlans)
+            {
                 e.second->apply_timestep(dt_nanos);
+            }
+
+            t_planning += dt_nanos;
+
+            while(planner.t_real_time + 6000000000ull < t_planning) usleep(110000);
+        }
+    });
+
+
+    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
+    timer->start([&](uint64_t t_now)
+    {
+        std::lock_guard<std::mutex> lock(planner.mutex); 
+        planner.t_real_time = t_now;
+
+        if(planner.started)
+        {
+            for(auto &e:planner.trajectory_point_buffer)
+            {
+                VehicleCommandTrajectory vehicleCommandTrajectory;
+                vehicleCommandTrajectory.vehicle_id(e.first);
+                vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(e.second));
+                writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
             }
         }
         else
@@ -100,7 +166,7 @@ int main(int argc, char *argv[])
 
                 if(matched)
                 {
-                    trajectoryPlans[new_id] = std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index);
+                    planner.trajectoryPlans[new_id] = std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index);
                     std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
                 }
                 else
@@ -112,7 +178,7 @@ int main(int argc, char *argv[])
 
             if(all_vehicles_matched)
             {
-                started = true;
+                planner.started = true;
             }
         }
     });

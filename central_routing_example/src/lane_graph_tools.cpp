@@ -70,7 +70,7 @@ LaneGraphTools::LaneGraphTools()
                             );
 
                             const double distance = min_distance_vehicle_to_vehicle(nodeA, nodeB);
-                            edge_path_collisions.at(i_edge_A).at(i_path_A).at(i_edge_B).at(i_path_B) = (distance < 0.06);
+                            edge_path_collisions.at(i_edge_A).at(i_path_A).at(i_edge_B).at(i_path_B) = (distance < 0.01);
                         }
                     }
                 }
