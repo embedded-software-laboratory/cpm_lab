@@ -75,6 +75,8 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     }
 
     invariant();
+
+    t_elapsed += dt_nanos;
 }
 
 void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
@@ -89,18 +91,15 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     }
 }
 
-VehicleCommandTrajectory VehicleTrajectoryPlanningState::get_trajectory_command(uint64_t t_now)
+TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 {
     TrajectoryPoint trajectory_point;
-    trajectory_point.t().nanoseconds(t_now + 1200000000ull);
+    trajectory_point.t().nanoseconds(t_elapsed);
     trajectory_point.px(laneGraphTools.edges_x.at(current_edge_index).at(current_edge_path_index));
     trajectory_point.py(laneGraphTools.edges_y.at(current_edge_index).at(current_edge_path_index));
     trajectory_point.vx(laneGraphTools.edges_cos.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
     trajectory_point.vy(laneGraphTools.edges_sin.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
-    VehicleCommandTrajectory vehicleCommandTrajectory;
-    vehicleCommandTrajectory.vehicle_id(vehicle_id);
-    vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
-    return vehicleCommandTrajectory;
+    return trajectory_point;
 }
 
 

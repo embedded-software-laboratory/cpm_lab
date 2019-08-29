@@ -20,6 +20,9 @@ struct MultiVehicleTrajectoryPlanner
 {
     std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
     bool started = false;
+    uint64_t t_start = 0;
+
+    std::map<uint8_t, std::vector<TrajectoryPoint> > trajectory_point_buffer;
 
 };
 
@@ -71,8 +74,22 @@ int main(int argc, char *argv[])
 
             for(auto &e:planner.trajectoryPlans)
             {
-                writer_vehicleCommandTrajectory.write(e.second->get_trajectory_command(t_now));
+                while(planner.trajectory_point_buffer[e.first].size() > 9)
+                {
+                    planner.trajectory_point_buffer[e.first].erase(planner.trajectory_point_buffer[e.first].begin());
+                }
+                auto trajectory_point = e.second->get_trajectory_point();
+                trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + planner.t_start);
+                planner.trajectory_point_buffer[e.first].push_back(trajectory_point);
                 e.second->apply_timestep(dt_nanos);
+            }
+
+            for(auto &e:planner.trajectory_point_buffer)
+            {
+                VehicleCommandTrajectory vehicleCommandTrajectory;
+                vehicleCommandTrajectory.vehicle_id(e.first);
+                vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(e.second));
+                writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
             }
         }
         else
@@ -119,6 +136,7 @@ int main(int argc, char *argv[])
             if(all_vehicles_matched)
             {
                 planner.started = true;
+                planner.t_start = t_now + 2000000000ull;
             }
         }
     });
