@@ -13,6 +13,8 @@
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 using std::vector;
 
@@ -21,6 +23,8 @@ struct MultiVehicleTrajectoryPlanner
     std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
     bool started = false;
     uint64_t t_start = 0;
+    uint64_t t_real_time = 0;
+    std::mutex mutex;
 
     std::map<uint8_t, std::vector<TrajectoryPoint> > trajectory_point_buffer;
 
@@ -57,11 +61,22 @@ int main(int argc, char *argv[])
     );
 
 
+
     const uint64_t dt_nanos = 400000000ull;
-    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
-    timer->start([&](uint64_t t_now) 
-    {
-        if(planner.started)
+
+
+    std::thread planning_thread([&](){
+        while(!planner.started) usleep(110000);
+
+
+        uint64_t t_planning = 0;
+
+        {
+            std::lock_guard<std::mutex> lock(planner.mutex); 
+            t_planning = planner.t_real_time;
+        }
+
+        while(1)
         {
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, i.e. those with a smaller ID.
@@ -72,18 +87,40 @@ int main(int argc, char *argv[])
                 previous_vehicles.push_back(e.second);
             }
 
+            {
+                std::lock_guard<std::mutex> lock(planner.mutex); 
+                for(auto &e:planner.trajectoryPlans)
+                {
+                    while(planner.trajectory_point_buffer[e.first].size() > 9)
+                    {
+                        planner.trajectory_point_buffer[e.first].erase(planner.trajectory_point_buffer[e.first].begin());
+                    }
+                    auto trajectory_point = e.second->get_trajectory_point();
+                    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + planner.t_start);
+                    planner.trajectory_point_buffer[e.first].push_back(trajectory_point);
+                }
+            }
+
             for(auto &e:planner.trajectoryPlans)
             {
-                while(planner.trajectory_point_buffer[e.first].size() > 9)
-                {
-                    planner.trajectory_point_buffer[e.first].erase(planner.trajectory_point_buffer[e.first].begin());
-                }
-                auto trajectory_point = e.second->get_trajectory_point();
-                trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + planner.t_start);
-                planner.trajectory_point_buffer[e.first].push_back(trajectory_point);
                 e.second->apply_timestep(dt_nanos);
             }
 
+            t_planning += dt_nanos;
+
+            while(planner.t_real_time + 6000000000ull < t_planning) usleep(110000);
+        }
+    });
+
+
+    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
+    timer->start([&](uint64_t t_now)
+    {
+        std::lock_guard<std::mutex> lock(planner.mutex); 
+        planner.t_real_time = t_now;
+
+        if(planner.started)
+        {
             for(auto &e:planner.trajectory_point_buffer)
             {
                 VehicleCommandTrajectory vehicleCommandTrajectory;
