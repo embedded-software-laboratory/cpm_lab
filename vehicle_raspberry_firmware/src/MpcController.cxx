@@ -402,7 +402,7 @@ bool MpcController::interpolate_reference_trajectory(
 
         TrajectoryInterpolation trajectory_interpolation(t_interpolation, start_point, end_point);
 
-        if(fabs(trajectory_interpolation.acceleration_x) > 10.0)
+        if(fabs(trajectory_interpolation.acceleration_x) > 20.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
@@ -412,7 +412,7 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.acceleration_y) > 10.0)
+        if(fabs(trajectory_interpolation.acceleration_y) > 20.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
@@ -422,7 +422,7 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.curvature) > 4.0)
+        if(fabs(trajectory_interpolation.curvature) > 50.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
