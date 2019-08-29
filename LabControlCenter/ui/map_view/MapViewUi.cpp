@@ -173,7 +173,7 @@ bool MapViewUi::is_valid_point_for_path(double x, double y)
     double dy = y - path_painting_in_progress.back().y;
     double dist_sq = dx*dx + dy*dy;
     if(dist_sq < (path_segment_length*path_segment_length)) return false;
-    if(dist_sq > ((path_segment_length+0.1)*(path_segment_length+0.1))) return false;
+    if(dist_sq > ((path_segment_length+0.3)*(path_segment_length+0.3))) return false;
 
     double c1 = cos(path_painting_in_progress_yaw + path_segment_max_angle);
     double s1 = sin(path_painting_in_progress_yaw + path_segment_max_angle);
