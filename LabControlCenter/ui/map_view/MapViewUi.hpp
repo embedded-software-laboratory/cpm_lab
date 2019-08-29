@@ -9,6 +9,7 @@
 #include "TrajectoryCommand.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Visualization.hpp"
+#include "Pose2D.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
@@ -29,11 +30,10 @@ class MapViewUi
 
 
     // hold the path and related values temporarily, while the user draws with the mouse
-    std::vector<Point> path_painting_in_progress;
+    std::vector<Pose2D> path_painting_in_progress;
     int path_painting_in_progress_vehicle_id = -1;
-    double path_painting_in_progress_yaw = 0; // radian
-    const double path_segment_length = 0.3; // meter
-    const double path_segment_max_angle = 0.6; // radian
+    static constexpr double path_segment_delta_s = 0.01; // meter
+    static constexpr double path_segment_max_delta_yaw = path_segment_delta_s * 2.6; // radian
 
 
     int vehicle_id_in_focus = -1;
