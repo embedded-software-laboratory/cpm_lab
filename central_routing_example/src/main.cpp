@@ -89,6 +89,12 @@ int main(int argc, char *argv[])
 
             {
                 std::lock_guard<std::mutex> lock(planner.mutex); 
+
+                if(planner.t_start == 0)
+                {
+                    planner.t_start = planner.t_real_time + 2000000000ull;
+                }
+
                 for(auto &e:planner.trajectoryPlans)
                 {
                     while(planner.trajectory_point_buffer[e.first].size() > 9)
@@ -173,7 +179,6 @@ int main(int argc, char *argv[])
             if(all_vehicles_matched)
             {
                 planner.started = true;
-                planner.t_start = t_now + 2000000000ull;
             }
         }
     });
