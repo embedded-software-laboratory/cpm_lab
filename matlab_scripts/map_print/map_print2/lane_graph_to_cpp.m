@@ -33,11 +33,11 @@ function lane_graph_to_cpp(lane_graph)
     fprintf(f, '    const size_t n_edge_path_nodes = %i;\n', n_path_nodes);
     
     fprintf(f, '    const std::vector<size_t> edges_start_index = ');
-    write_index_vector(f,[lane_graph.edges.start_node_index]);
+    write_index_vector(f,[lane_graph.edges.start_node_index]-1);
     fprintf(f, ';\n');
     
     fprintf(f, '    const std::vector<size_t> edges_end_index = ');
-    write_index_vector(f,[lane_graph.edges.end_node_index]);
+    write_index_vector(f,[lane_graph.edges.end_node_index]-1);
     fprintf(f, ';\n');
     fprintf(f, '\n');
     %    std::vector<std::vector<double>>
