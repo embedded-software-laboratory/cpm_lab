@@ -37,6 +37,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     for (int i = 0; i < 3; ++i) {
         logs_treeview->get_column(i)->set_resizable(true);
         logs_treeview->get_column(i)->set_expand(true);
+        //logs_treeview->get_column(i)->set_sizing(Gtk::TreeViewColumnSizing::TREE_VIEW_COLUMN_AUTOSIZE);
     }
     //Set column widths
     logs_treeview->get_column(0)->set_min_width(10);
@@ -62,6 +63,10 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->append(type_all_ustring);
     logs_search_type->set_active_text(type_id_ustring);
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
+
+    //Tooltip callbacks (if content is too long, text on hover)
+    logs_treeview->set_has_tooltip(true);
+    logs_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &LoggerViewUI::tooltip_callback));
 
     //Create UI thread and register dispatcher callback
     ui_dispatcher.connect(sigc::mem_fun(*this, &LoggerViewUI::dispatcher_callback));
@@ -250,6 +255,22 @@ void LoggerViewUI::kill_search_thread() {
     search_thread_running.store(false);
     if (search_thread.joinable()) {
         search_thread.join();
+    }
+}
+
+bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+    Gtk::TreeModel::iterator iter;
+    bool row_at_point = logs_treeview->get_tooltip_context_iter(x, y, keyboard_tooltip, iter);
+
+    if (row_at_point) {
+        //Get text at iter
+        Gtk::TreeModel::Row row = *iter;
+        Glib::ustring content_ustring(row[log_record.log_content]);
+        tooltip->set_text(content_ustring);
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
