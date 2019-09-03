@@ -259,13 +259,44 @@ void LoggerViewUI::kill_search_thread() {
 }
 
 bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
-    Gtk::TreeModel::iterator iter;
-    bool row_at_point = logs_treeview->get_tooltip_context_iter(x, y, keyboard_tooltip, iter);
+    // Gtk::TreeModel::iterator iter;
+    // bool row_at_point = logs_treeview->get_tooltip_context_iter(x, y, keyboard_tooltip, iter);
 
-    if (row_at_point) {
-        //Get text at iter
+    int cell_x, cell_y = 0;
+    Gtk::TreeModel::Path path;
+    Gtk::TreeViewColumn* column;
+    bool path_exists;
+
+    //Get the current path and column at the selected point
+    if (keyboard_tooltip) {
+        logs_treeview->get_cursor(path, column);
+        path_exists = column != nullptr;
+    }
+    else {
+        path_exists = logs_treeview->get_path_at_pos(x, y, path, column, cell_x, cell_y);
+    }
+
+    if (path_exists) {
+        //Get selected row
+        Gtk::TreeModel::iterator iter = log_list_store->get_iter(path);
         Gtk::TreeModel::Row row = *iter;
-        Glib::ustring content_ustring(row[log_record.log_content]);
+
+        //Get tooltip text depending on current column
+        Glib::ustring content_ustring;
+        if (column->get_title() == "Content") {
+            content_ustring = Glib::ustring(row[log_record.log_content]);
+        } 
+        else if (column->get_title() == "ID") {
+            content_ustring = Glib::ustring(row[log_record.log_id]);
+        }
+        else {
+            uint64_t id(row[log_record.log_stamp]);
+            std::stringstream stream;
+            stream << id;
+            content_ustring = Glib::ustring(stream.str().c_str());
+        }
+
+        //Get text at iter
         tooltip->set_text(content_ustring);
         return true;
     }
