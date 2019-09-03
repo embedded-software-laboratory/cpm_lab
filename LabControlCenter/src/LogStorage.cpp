@@ -68,7 +68,7 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
                     break;
             }
 
-            if (std::regex_match(filter_by_text, search_regex)) {
+            if (std::regex_search(filter_by_text, search_regex)) {
                 search_result.emplace_back(*iterator);
             }
 
