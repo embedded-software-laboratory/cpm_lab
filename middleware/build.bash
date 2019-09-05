@@ -12,9 +12,10 @@ mkdir build
 cd build
 
 # Copy local communication QoS, use correct IP
-#/bin/cp -rf ../QOS_LOCAL_COMMUNICATION.xml ./
-#my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-#sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
+my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+sed -e "s/TEMPLATE_IP/${my_ip}/g" \
+<../QOS_LOCAL_COMMUNICATION.xml.template \
+>./QOS_LOCAL_COMMUNICATION.xml
 
 cmake .. 
 make -j8 && ./unittest
