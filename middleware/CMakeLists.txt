@@ -39,7 +39,7 @@ add_executable( middleware
     ${SOURCES}
 )
 
-target_link_libraries(middleware cpm additional_idl stdc++fs)
+target_link_libraries(middleware cpm additional_idl)
 
 add_executable(unittest 
     test/catch.cpp
@@ -50,4 +50,4 @@ add_executable(unittest
     ${SOURCES}
 )
 
-target_link_libraries(unittest cpm additional_idl stdc++fs)
+target_link_libraries(unittest cpm additional_idl)

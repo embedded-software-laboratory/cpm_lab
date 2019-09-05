@@ -69,7 +69,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         //Send test data from a virtual vehicle - only the round number matters here, which is transmitted using the timestamp value
         dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateTopicName);
         dds::pub::Publisher publisher = dds::pub::Publisher(cpm::ParticipantSingleton::Instance());
-        dds::pub::DataWriter vehicleWriter(publisher, topic);
+        dds::pub::DataWriter<VehicleState> vehicleWriter(publisher, topic);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
             //Send data (first older data, then newer data - only the newer data should be returned by getLatestVehicleMessage) and wait
             VehicleState state_old;

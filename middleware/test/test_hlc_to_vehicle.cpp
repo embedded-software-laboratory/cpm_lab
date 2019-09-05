@@ -63,7 +63,7 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         Communication communication(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, vehicle_ids);
 
         //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. In this function, round numbers are stored - the number of each round should be received.
-        dds::sub::DataReader vehicleReader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(), vehicleSpeedCurvatureTopicName));
+        dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(), vehicleSpeedCurvatureTopicName));
         dds::core::cond::StatusCondition readCondition(vehicleReader);
         rti::core::cond::AsyncWaitSet waitset;
         readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
@@ -88,7 +88,7 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);    
         dds::topic::Topic<VehicleCommandSpeedCurvature> topic = dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, hlcSpeedCurvatureTopicName);
         dds::pub::Publisher publisher = dds::pub::Publisher(participant);
-        dds::pub::DataWriter hlcWriter(publisher, topic);
+        dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(publisher, topic);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
             //Send data and wait
             rti::util::sleep(dds::core::Duration::from_millisecs(50));

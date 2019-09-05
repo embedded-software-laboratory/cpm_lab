@@ -60,7 +60,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
 
     //HLC Writer
     dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);
-    dds::pub::DataWriter hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, hlcSpeedCurvatureTopicName));
+    dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, hlcSpeedCurvatureTopicName));
 
     //Data for checks
     std::vector<uint64_t> hlc_current_round_received;
@@ -71,7 +71,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     size_t hlc_reader_round_pos = 0;
 
     //Test which data was received by the HLC
-	dds::sub::DataReader hlcReader(dds::sub::Subscriber(participant), dds::topic::find<dds::topic::Topic<VehicleStateList>>(participant, hlcStateTopicName));
+	dds::sub::DataReader<VehicleStateList> hlcReader(dds::sub::Subscriber(participant), dds::topic::find<dds::topic::Topic<VehicleStateList>>(participant, hlcStateTopicName));
     dds::core::cond::StatusCondition readCondition = dds::core::cond::StatusCondition(hlcReader);
     rti::core::cond::AsyncWaitSet waitset;
     readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
