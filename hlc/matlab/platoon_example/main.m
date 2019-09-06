@@ -5,13 +5,28 @@ function main(matlabDomainID, vehicleIDs)
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)
+    
     setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/QOS_READY_TRIGGER.xml;file://' script_directoy '/QOS_LOCAL_COMMUNICATION.xml']);
     
+    git_directory = fileparts(fileparts(fileparts(script_directoy)));
+    base_directory = fileparts(git_directory);
+    cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
+    hlc_idl_directory = [git_directory '/middleware/idl'];
     
-    %% Include IDL path
-    addpath('./IDL');
-    mkdir('./IDL_gen');
-    cd('./IDL_gen');
+    if ~exist(cpm_idl_directory, 'dir')
+        error(['Missing directory "' cpm_idl_directory '"']);
+    end
+    if ~exist(hlc_idl_directory, 'dir')
+        error(['Missing directory "' hlc_idl_directory '"']);
+    end
+    
+    addpath(cpm_idl_directory);
+    addpath(hlc_idl_directory);
+    
+    
+    mkdir('../IDL_gen');
+    addpath('../IDL_gen');
+    cd('../IDL_gen');
 
     DDS.import('VehicleStateList.idl','matlab', 'f')
     DDS.import('VehicleState.idl','matlab', 'f')
@@ -19,8 +34,7 @@ function main(matlabDomainID, vehicleIDs)
     DDS.import('SystemTrigger.idl','matlab','f')
     DDS.import('ReadyStatus.idl','matlab','f')
     
-    cd ..
-    addpath('./IDL_gen');
+    cd(script_directoy)
     
     %% variables for the communication
     vehicle_ids = str2num(vehicleIDs);
@@ -133,9 +147,6 @@ function main(matlabDomainID, vehicleIDs)
             end
         end
     end
-
-    %% w = waitforbuttonpress
-    %% end
 
     disp('Finished');
 
