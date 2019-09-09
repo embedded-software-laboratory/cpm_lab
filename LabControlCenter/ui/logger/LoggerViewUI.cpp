@@ -62,7 +62,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->append(type_content_ustring);
     logs_search_type->append(type_timestamp_ustring);
     logs_search_type->append(type_all_ustring);
-    logs_search_type->set_active_text(type_id_ustring);
+    logs_search_type->set_active_text(type_all_ustring);
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
 
     //Tooltip callbacks (if content is too long, text on hover)
