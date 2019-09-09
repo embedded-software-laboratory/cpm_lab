@@ -66,9 +66,13 @@ private:
     //Extra mutex because promise can be reset right after the UI thread checked if a future exists
     std::mutex promise_reset_mutex;
     std::atomic_bool search_thread_running;
+    std::atomic_bool search_reset; //Set after search was finished, to retrieve all old log messages in the UI thread again
     std::thread search_thread;
     void start_new_search_thread();
     void kill_search_thread();
+
+    //Add log entry to UI (only call from UI thread!)
+    void add_log_entry(const Log& entry);
 
     //Delete old logs
     void delete_old_logs(const long max_amount);

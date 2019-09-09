@@ -30,6 +30,12 @@ std::vector<Log> LogStorage::get_new_logs() {
     return log_copy;
 }
 
+std::vector<Log> LogStorage::get_all_logs() {
+    std::lock_guard<std::mutex> lock(log_storage_mutex);
+    std::vector<Log> log_copy = log_storage;
+    return log_copy;
+}
+
 std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search) {
     //Copy log_storage and perform search on copy only
     std::unique_lock<std::mutex> lock(log_storage_mutex);

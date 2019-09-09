@@ -49,6 +49,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
 
     //Search objects
     filter_active.store(false); //UI dispatcher works differently when filters are applied
+    search_reset.store(false);
     search_future = search_promise.get_future();
     search_thread_running.store(false); //Can be used to stop a search thread and to check if one is currently running
 
@@ -97,16 +98,19 @@ void LoggerViewUI::dispatcher_callback() {
         //Delete old logs when limit is reached
         delete_old_logs(100);
 
-        for(const auto& entry : log_storage->get_new_logs()) {
-            Glib::ustring log_id_ustring(entry.id());
-            Glib::ustring log_msg_ustring(entry.content());
+        //Add only new entries if the whole log list is shown, or add all again after a search was performed
+        if (search_reset.load()) {
+            search_reset.store(false);
+            reset_list_store();
 
-            Gtk::TreeModel::Row row;
-            row = *(log_list_store->append());
-            
-            row[log_record.log_id] = log_id_ustring;
-            row[log_record.log_content] = log_msg_ustring;
-            row[log_record.log_stamp] = entry.stamp().nanoseconds();
+            for(const auto& entry : log_storage->get_all_logs()) {
+                add_log_entry(entry);
+            }
+        }
+        else {
+            for(const auto& entry : log_storage->get_new_logs()) {
+                add_log_entry(entry);
+            }
         }
     }
     else {
@@ -129,15 +133,7 @@ void LoggerViewUI::dispatcher_callback() {
                 //Update the UI accordingly   
                 reset_list_store();            
                 for(const auto& entry : search_results) {
-                    Glib::ustring log_id_ustring(entry.id());
-                    Glib::ustring log_msg_ustring(entry.content());
-
-                    Gtk::TreeModel::Row row;
-                    row = *(log_list_store->append());
-                    
-                    row[log_record.log_id] = log_id_ustring;
-                    row[log_record.log_content] = log_msg_ustring;
-                    row[log_record.log_stamp] = entry.stamp().nanoseconds();
+                    add_log_entry(entry);
                 }
             }
         }
@@ -150,6 +146,18 @@ void LoggerViewUI::dispatcher_callback() {
     //TODO: 
     // - More elegant solution for "searching...?"
     // - Search is never refreshed automatically - refresh button?
+}
+
+void LoggerViewUI::add_log_entry(const Log& entry) {
+    Glib::ustring log_id_ustring(entry.id());
+    Glib::ustring log_msg_ustring(entry.content());
+
+    Gtk::TreeModel::Row row;
+    row = *(log_list_store->append());
+    
+    row[log_record.log_id] = log_id_ustring;
+    row[log_record.log_content] = log_msg_ustring;
+    row[log_record.log_stamp] = entry.stamp().nanoseconds();
 }
 
 void LoggerViewUI::update_ui() {
@@ -195,6 +203,7 @@ void LoggerViewUI::reset_list_store() {
 void LoggerViewUI::stop_search() {
     //Return to the full log list
     filter_active.store(false);
+    search_reset.store(true);
     kill_search_thread();
 }
 
@@ -206,8 +215,7 @@ void LoggerViewUI::search_changed() {
         start_new_search_thread();
     }
     else {
-        filter_active.store(false);
-        kill_search_thread();
+        stop_search();
     }
 }
 
@@ -313,7 +321,6 @@ bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const G
 bool LoggerViewUI::scroll_callback(GdkEventScroll* scroll_event) {
     //React to a mouse scroll event (but propagate it further)
     autoscroll_check_button->set_active(false);
-    std::cout << "I saw dis" << std::endl;
     return false;
 }
 

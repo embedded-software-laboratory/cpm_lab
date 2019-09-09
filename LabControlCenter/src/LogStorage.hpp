@@ -42,6 +42,8 @@ public:
     LogStorage();
 
     std::vector<Log> get_new_logs();
+    
+    std::vector<Log> get_all_logs();
 
     /**
      * \brief Performs a search that is supposed to be run asynchronously in a new thread - using a future is recommended to obtain the result. The search can be aborted by setting continue_search to false (should thus be false at start) - this is useful in case the user starts a new search before the old one is completed
