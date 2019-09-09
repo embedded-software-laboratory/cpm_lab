@@ -276,7 +276,9 @@ bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const G
         path_exists = column != nullptr;
     }
     else {
-        path_exists = logs_treeview->get_path_at_pos(x, y, path, column, cell_x, cell_y);
+        int window_x, window_y;
+        logs_treeview->convert_widget_to_bin_window_coords(x, y, window_x, window_y);
+        path_exists = logs_treeview->get_path_at_pos(window_x, window_y, path, column, cell_x, cell_y);
     }
 
     if (path_exists) {
