@@ -77,6 +77,9 @@ private:
     //Callback for tooltip
     bool tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
+    //Check for scroll event to turn off automatic scrolling
+    bool scroll_callback(GdkEventScroll* scroll_event);
+
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
     ~LoggerViewUI();

@@ -72,6 +72,9 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_dispatcher.connect(sigc::mem_fun(*this, &LoggerViewUI::dispatcher_callback));
     run_thread.store(true);
     ui_thread = std::thread(&LoggerViewUI::update_ui, this);
+
+    //Scroll event callback
+    logs_treeview->signal_scroll_event().connect(sigc::mem_fun(*this, &LoggerViewUI::scroll_callback));
 }
 
 LoggerViewUI::~LoggerViewUI() {
@@ -303,6 +306,13 @@ bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const G
     else {
         return false;
     }
+}
+
+bool LoggerViewUI::scroll_callback(GdkEventScroll* scroll_event) {
+    //React to a mouse scroll event (but propagate it further)
+    autoscroll_check_button->set_active(false);
+    std::cout << "I saw dis" << std::endl;
+    return false;
 }
 
 Gtk::Widget* LoggerViewUI::get_parent() {
