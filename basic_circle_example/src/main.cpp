@@ -39,6 +39,26 @@ int main(int argc, char *argv[])
     uint64_t t_start = 0;
     auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
 
+
+    
+    vector<double> circle_px = vector<double>{ 1, 0,-1, 0};
+    vector<double> circle_py = vector<double>{ 0, 1, 0,-1};
+    vector<double> circle_vx = vector<double>{ 0,-1, 0, 1};
+    vector<double> circle_vy = vector<double>{ 1, 0,-1, 0};
+
+    for (double &px : circle_px)
+    {
+        px += map_center_x;
+    }
+    for (double &py : circle_py)
+    {
+        py += map_center_y;
+    }
+
+    // duration ~= PI*d/4
+    vector<double> t_section = vector<double>{ 0, 1.55, 3.1, 4.65};
+    double t_cycle = t_section.back();
+
     timer->start([&](uint64_t t_now)
     {
         // time used for trajectory generation
@@ -49,15 +69,30 @@ int main(int argc, char *argv[])
         VehicleCommandTrajectory vehicle_command_trajectory;
         vehicle_command_trajectory.vehicle_id(vehicle_id);
         vector<TrajectoryPoint> trajectory_points;
+
         for (int i = 0; i < num_trajectory_points; ++i)
         {
             TrajectoryPoint trajectory_point;
             uint64_t time_point = t_now - t_start + dt_nanos*i;
-            trajectory_point.px( std::cos(time_point * 1e-9) + map_center_x);
-            trajectory_point.py( std::sin(time_point * 1e-9) + map_center_y);
-            trajectory_point.vx(-std::sin(time_point * 1e-9));
-            trajectory_point.vy( std::cos(time_point * 1e-9));
-            trajectory_point.t().nanoseconds(t_now + dt_nanos*i);
+
+            // was muss ich addieren
+            // 
+
+            // find 'section' in which vehicle currently moves
+            double t_rel = fmod(time_point*1e-9, t_cycle);
+            auto it_sec = std::upper_bound(t_section.begin(), t_section.end(), t_rel);
+            uint section_idx = it_sec - t_section.begin();
+
+
+            double t_at_next_point = t_now + t_sec - t_rel + i*dt_nanos;
+            if (section_idx == 5)
+            {
+                section_idx = 0;
+            }
+            trajectory_point.px(circle_px[section_idx]);
+            trajectory_point.py(circle_py[section_idx]);
+            trajectory_point.vx(circle_vx[section_idx]);
+            trajectory_point.vy(circle_vy[section_idx]);
             trajectory_points.push_back(trajectory_point);
         }
         vehicle_command_trajectory.trajectory_points(trajectory_points);
