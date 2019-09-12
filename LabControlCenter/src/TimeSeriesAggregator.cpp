@@ -180,8 +180,8 @@ void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
 void TimeSeriesAggregator::erase_past_commandTrajectory_samples()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    // Erase trajectory points which are older than 1 second
-    const uint64_t past_threshold_time = clock_gettime_nanoseconds() - 1000000000ull;
+    // Erase trajectory points which are older than 3 second
+    const uint64_t past_threshold_time = clock_gettime_nanoseconds() - 3000000000ull;
     for (auto vehicle_trajectory_it = vehicle_reference_trajectories.begin();
          vehicle_trajectory_it != vehicle_reference_trajectories.end();
          ++vehicle_trajectory_it)
