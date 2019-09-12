@@ -120,9 +120,8 @@ MapViewUi::MapViewUi(
 
 
         // if in path drawing mode
-        if(mouse_left_button)
+        if(mouse_left_button && !path_painting_in_progress.empty())
         {
-
             while(1)
             {
                 assert(!path_painting_in_progress.empty());
