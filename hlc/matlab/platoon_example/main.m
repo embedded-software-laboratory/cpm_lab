@@ -1,17 +1,21 @@
 function main(matlabDomainID, vehicleIDs)
-    %Important: Call with period of 250ms
-    %setenv("NDDS_QOS_PROFILES", "file:///home/controller/Documents/GIT/software/Middleware/build/QOS_LOCAL_COMMUNICATION.xml");
-    
+
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)
     
-    setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/QOS_READY_TRIGGER.xml;file://' script_directoy '/QOS_LOCAL_COMMUNICATION.xml']);
     
     git_directory = fileparts(fileparts(fileparts(script_directoy)));
     base_directory = fileparts(git_directory);
     cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
     hlc_idl_directory = [git_directory '/middleware/idl'];
+    middleware_local_qos_xml = [git_directory '/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    
+    if ~exist(middleware_local_qos_xml,'file')
+        error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
+    end
+    
+    setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
     
     if ~exist(cpm_idl_directory, 'dir')
         error(['Missing directory "' cpm_idl_directory '"']);

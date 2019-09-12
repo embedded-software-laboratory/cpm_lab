@@ -1,6 +1,4 @@
 
-
-
 # Get cpm lib
 pushd ..
 if [ ! -d "cpm_base" ]; then
@@ -13,11 +11,14 @@ bash build.bash
 popd
 
 
-
 pushd LabControlCenter
 bash build.bash
 popd
 
+
+pushd middleware
+bash build.bash
+popd
 
 
 pushd vehicle_raspberry_firmware
@@ -29,10 +30,10 @@ pushd controller_test_loop
 bash build.bash
 popd
 
+
 pushd central_routing_example
 bash build.bash
 popd
-
 
 
 pushd ips2
