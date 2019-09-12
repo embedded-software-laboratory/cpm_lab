@@ -22,6 +22,7 @@ MapViewUi::MapViewUi(
     drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
+    image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
         vehicle_data = this->get_vehicle_data();
@@ -377,6 +378,15 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
+            // Draw car image
+        ctx->save();
+        {
+            const double scale = 1./500;
+            ctx->scale(scale, scale);
+            ctx->set_source(image_map,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
     ctx->save();
     {
         ctx->scale(.1, .1);
