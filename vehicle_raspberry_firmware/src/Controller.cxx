@@ -50,7 +50,7 @@ void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleComm
     }
 
     // Erase trajectory points which are older than 1 second
-    const uint64_t past_threshold_time = latest_command_receive_time - 1000000000ull;
+    const uint64_t past_threshold_time = latest_command_receive_time - 10000000000ull;
     auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
     m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
 }

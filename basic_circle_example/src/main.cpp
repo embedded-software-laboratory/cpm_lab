@@ -55,19 +55,8 @@ int main(int argc, char *argv[])
         py += map_center_y;
     }
 
-    // duration ~= PI*d/4
-    // vector<double> t_section = vector<double>{1.55, 1.55, 1.55, 1.55};
-    // vector<double> t_section_added = t_section;
-    // double t_cycle = 0;
-
-    // for (uint i = 1; i < t_section_added.size(); ++i)
-    // {
-    //     t_section_added[i] += t_section_added[i-1];
-    // }
-    // for (double &t : t_section)
-    // {
-    //     t_cycle += t;
-    // }
+    // duration to follow a trajectory segment:
+    // ~= PI*d/4 / v    with (v=1m/s), (d=2m)
     vector<uint64_t> t_section = vector<uint64_t>{1550000000ull, 1550000000ull, 1550000000ull, 1550000000ull};
     vector<uint64_t> t_section_added = t_section;
 
@@ -109,10 +98,8 @@ int main(int argc, char *argv[])
             trajectory_point.vx(circle_vx[section_idx]);
             trajectory_point.vy(circle_vy[section_idx]);
             trajectory_points.push_back(trajectory_point);
-            std::cout << trajectory_point << std::endl;
         }
         vehicle_command_trajectory.trajectory_points(trajectory_points);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-        std::cout << std::endl;
     });
 }
