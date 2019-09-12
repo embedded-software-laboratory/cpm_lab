@@ -32,23 +32,26 @@ int main(int argc, char *argv[])
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
 
-    
-    vector<double> circle_px = vector<double>{ 1, 0,-1, 0};
-    vector<double> circle_py = vector<double>{ 0, 1, 0,-1};
-    vector<double> circle_vx = vector<double>{ 0,-1, 0, 1};
-    vector<double> circle_vy = vector<double>{ 1, 0,-1, 0};
-    // duration to follow a trajectory segment:
-    // ~= 2PIr/4 / v    with (v=1m/s), (r=1m)
-    vector<uint64_t> t_section = vector<uint64_t>{1550000000ull, 1550000000ull, 1550000000ull, 1550000000ull};
-    vector<uint64_t> t_section_added = t_section;
+    // Circle
+    // vector<double> trajectory_px = vector<double>{ 1, 0,-1, 0};
+    // vector<double> trajectory_py = vector<double>{ 0, 1, 0,-1};
+    // vector<double> trajectory_vx = vector<double>{ 0,-1, 0, 1};
+    // vector<double> trajectory_vy = vector<double>{ 1, 0,-1, 0};
+    // vector<uint64_t> t_section = vector<uint64_t>{1550000000ull, 1550000000ull, 1550000000ull, 1550000000ull};
+    // Eight
+    vector<double> trajectory_px = vector<double>{-1, 0  , 1, 0};
+    vector<double> trajectory_py = vector<double>{ 0, 0  , 0, 0};
+    vector<double> trajectory_vx = vector<double>{ 0, 0.14, 0,-0.14};
+    vector<double> trajectory_vy = vector<double>{ 1.3,-1.27, 1.3,-1.27};
+    vector<uint64_t> t_section = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
 
     double map_center_x = 2.25;
     double map_center_y = 2.0;
-    for (double &px : circle_px)
+    for (double &px : trajectory_px)
     {
         px += map_center_x;
     }
-    for (double &py : circle_py)
+    for (double &py : trajectory_py)
     {
         py += map_center_y;
     }
@@ -71,10 +74,10 @@ int main(int argc, char *argv[])
 
         TrajectoryPoint trajectory_point;
         trajectory_point.t().nanoseconds(reference_trajectory_time);
-        trajectory_point.px(circle_px[reference_trajectory_index]);
-        trajectory_point.py(circle_py[reference_trajectory_index]);
-        trajectory_point.vx(circle_vx[reference_trajectory_index]);
-        trajectory_point.vy(circle_vy[reference_trajectory_index]);
+        trajectory_point.px(trajectory_px[reference_trajectory_index]);
+        trajectory_point.py(trajectory_py[reference_trajectory_index]);
+        trajectory_point.vx(trajectory_vx[reference_trajectory_index]);
+        trajectory_point.vy(trajectory_vy[reference_trajectory_index]);
         trajectory_points.push_back(trajectory_point);
 
 
