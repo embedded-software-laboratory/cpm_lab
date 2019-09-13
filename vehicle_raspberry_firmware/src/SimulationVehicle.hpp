@@ -3,6 +3,7 @@
 #include <list>
 #include <stdint.h>
 
+#include "geometry.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
@@ -14,7 +15,8 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-#define INPUT_DELAY (4) // Input delay >= 0
+#define INPUT_DELAY 4 // Input delay >= 0
+#define MAX_NUM_VEHICLES 30
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
@@ -46,11 +48,9 @@ class SimulationVehicle
 
     // For collision checks:
     std::map<uint64_t, Pose2D> ego_pose_history;
-    bool is_collision(const uint64_t timestamp, const Pose2D pose2D);
-    void check_for_collision(const uint8_t vehicle_id);
+    void check_for_collision(const uint64_t t_now, const uint8_t vehicle_id);
     
-    dds::sub::DataReader<VehicleObservation> reader_vehiclePoseSimulated;
-
+    cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id);
