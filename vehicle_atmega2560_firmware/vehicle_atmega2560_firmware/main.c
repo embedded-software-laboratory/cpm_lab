@@ -21,15 +21,15 @@
 #include "twi.h"
 #include "imu.h"
 #include "crc.h"
-#include "test_sequence.h"
-
-
-#define TEST_MODE TEST_NONE
+#include "watchdog.h"
+#include "tests.h"
 
 
 int main(void)
 {
 	sei();
+	
+	watchdog_disable(); // allow for longer setup procedures
 	
 	led_setup();
 	twi_init();
@@ -40,22 +40,55 @@ int main(void)
 	adc_setup();
 	const bool imu_init_status = imu_setup(); // must be after twi_init()
 	crcInit();
+	tests_setup();
 	
 	
-    while (1) 
+	spi_miso_data_t spi_miso_data;
+	memset(&spi_miso_data, 0, sizeof(spi_miso_data_t));
+
+	spi_mosi_data_t spi_mosi_data;
+	memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+	
+	watchdog_enable();	
+	watchdog_reset();
+
+    while (1)
     {
-	    const uint32_t tick = get_tick();
+	    // All zeros is a safe command (motor stopped, steering centered)
+	    memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 		
-		// Read Odometer
-	    const int16_t speed = get_speed();
-	    const int32_t odometer_count = get_odometer_count();
+		if(safe_mode_flag) 
+		{
+			// Flash LEDs to indicate safe mode
+			if (get_tick() % 25 == 0) {
+				spi_mosi_data.LED1_enabled = 1;
+				spi_mosi_data.LED2_enabled = 1;
+				spi_mosi_data.LED3_enabled = 1;
+				spi_mosi_data.LED4_enabled = 1;
+			}
+			
+			tests_apply(get_tick(), &spi_miso_data, &spi_mosi_data);
+			
+			_delay_ms(1);
+		}
+		else
+		{	
+			spi_exchange(&spi_miso_data, &spi_mosi_data);
+		}
 		
-		// Read ADC
+			
+		/// read sensors
+			
+		// read odometer
+		const int16_t speed = get_speed();
+		const int32_t odometer_count = get_odometer_count();
+		
+		// read ADC
 		uint16_t battery_voltage = 0;
 		uint16_t current_sense = 0;
 		adc_measure(&battery_voltage, &current_sense);
 		
-		// Read IMU
+		// read IMU
 		uint16_t imu_yaw = 0;
 		int16_t imu_yaw_rate = 0;
 		int16_t imu_acceleration_forward = 0;
@@ -68,44 +101,9 @@ int main(void)
 			&imu_acceleration_forward,
 			&imu_acceleration_left,
 			&imu_acceleration_up
-		);			
+		);
 		
-		// Read SPI
-		uint8_t safe_mode_flag = 0;
-		spi_mosi_data_t spi_mosi_data;		
-		uint32_t latest_receive_tick = spi_receive(&spi_mosi_data);
-		
-		if(latest_receive_tick + 5 < tick) { // if we do not receive new data, go into safe mode
-			safe_mode_flag = 1;
-		}
-		
-		// Validate SPI CRC
-		uint16_t mosi_CRC_actual = spi_mosi_data.CRC;
-		spi_mosi_data.CRC = 0;
-		uint16_t mosi_CRC_target = crcFast((uint8_t*)(&spi_mosi_data), sizeof(spi_mosi_data_t));
-		
-		if(mosi_CRC_actual != mosi_CRC_target) {
-			safe_mode_flag = 1;
-		}
-		
-		if(safe_mode_flag) {
-			memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t)); // Safe default value: all zeros
-			
-			// Flash all LEDs to indicate connection loss
-			spi_mosi_data.LED1_period_ticks = 25;
-			spi_mosi_data.LED1_enabled_ticks = 1;
-			spi_mosi_data.LED2_period_ticks = 25;
-			spi_mosi_data.LED2_enabled_ticks = 1;
-			spi_mosi_data.LED3_period_ticks = 25;
-			spi_mosi_data.LED3_enabled_ticks = 1;
-			spi_mosi_data.LED4_period_ticks = 25;
-			spi_mosi_data.LED4_enabled_ticks = 1;
-		}
-		
-		// Collect sensor data
-		spi_miso_data_t spi_miso_data;
-		memset(&spi_miso_data, 0, sizeof(spi_miso_data_t));
-		spi_miso_data.tick = tick;
+		// collect sensor data
 		spi_miso_data.odometer_steps = odometer_count;
 		spi_miso_data.speed = speed;
 		spi_miso_data.battery_voltage = battery_voltage;
@@ -122,20 +120,12 @@ int main(void)
 			SET_BIT(spi_miso_data.status_flags, 0);
 		}		
 		
-		spi_miso_data.CRC = 0;
-		spi_miso_data.CRC = crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
-		
-		test_sequence(&spi_mosi_data, &spi_miso_data, TEST_MODE);
-		
-		// Apply commands
+	
+		/// apply commands
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
-		led_set_state(tick, &spi_mosi_data);
-		
-		// Send sensor data to master
-		spi_send(&spi_miso_data);
-		
-		tick_wait(); // synchronize 50 Hz loop
-    }
+		led_set_state(&spi_mosi_data);
+	}
+	
 }

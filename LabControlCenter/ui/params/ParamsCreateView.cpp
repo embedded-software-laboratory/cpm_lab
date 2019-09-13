@@ -3,8 +3,8 @@
 ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
-    float_precision(_float_precision),
-    is_edit_window(false)
+    is_edit_window(false),
+    float_precision(_float_precision)
 {
     init_members();
 
@@ -15,9 +15,9 @@ ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, 
 ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, ParameterWithDescription _param, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
-    float_precision(_float_precision),
     param(_param),
-    is_edit_window(true)
+    is_edit_window(true),
+    float_precision(_float_precision)
 {
     init_members();
 
@@ -148,7 +148,7 @@ bool ParamsCreateView::on_delete(GdkEventAny* any_event) {
 }
 
 bool ParamsCreateView::handle_button_released(GdkEventKey* event) {
-    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Delete)
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Escape)
     {
         on_abort();
         return true;

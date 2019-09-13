@@ -17,7 +17,6 @@
 #define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
 
 static volatile uint32_t tick_counter = 0;
-static volatile uint8_t tick_flag = 0;
 
 static uint8_t consecutive_servo_center_command_count = 0;
 
@@ -42,21 +41,21 @@ void set_servo_pwm(uint16_t pwm) {
 	
 	if (consecutive_servo_center_command_count > SERVO_CENTER_COMMAND_COUNT_THRESHOLD) {
 		// disable servo
-		CLEAR_BIT(PORTD, 7);
+		CLEAR_BIT(TCCR3A, COM3C1); // disable pwm signal -> servo goes into fail safe limp mode
 	}
 	// need to consider overflow of 8-bit variable:
 	// only increment counter while less than threshold
 	else {
-			if (pwm == 3000) {
-				consecutive_servo_center_command_count++;
-			}
+		if (pwm == 3000) {
+			consecutive_servo_center_command_count++;
+		}
 	}
 	
 	// this is not the center/default command
 	// reset the counter, re-enable the servo
 	if (pwm != 3000) {
 		consecutive_servo_center_command_count = 0;
-		SET_BIT(PORTD, 7);
+		SET_BIT(TCCR3A, COM3C1); // enable pwm signal
 	}
 }
 
@@ -66,15 +65,11 @@ uint32_t get_tick() {
 }
 
 
-void tick_wait() {
-	tick_flag = 1;
-	while(tick_flag);
-}
-
-
+// timer 3 set to 20ms period
+// timer/counter3 overflow interrupt
+// used timer3 because convenient: could have used different timer
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
-	tick_flag = 0;
 }
 
 
@@ -100,7 +95,8 @@ void servo_timer_setup() {
 	// servo center position (1.5 msec)
 	OCR3C = 3000;
 	
-	// TOP interrupt for tick timer	
+	// TOP interrupt for tick timer
+	// 50Hz i.e. 20ms
 	SET_BIT(TIMSK3, TOIE3);
 	SET_BIT(TIFR3, TOV3);
 	

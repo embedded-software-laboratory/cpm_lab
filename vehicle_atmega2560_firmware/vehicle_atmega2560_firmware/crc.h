@@ -18,6 +18,8 @@
 
 
 #include <stdint.h>
+
+
 typedef uint16_t crc;
 
 void  crcInit(void);

@@ -1,10 +1,21 @@
 #include "MpcController.hpp"
 #include <cassert>
 #include <iostream>
+#include <sstream>
 #include "cpm/Logging.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-MpcController::MpcController()
+MpcController::MpcController(uint8_t _vehicle_id)
+:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
+,writer_Visualization
+(
+    dds::pub::DataWriter<Visualization>
+    (
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        topic_Visualization
+    )
+)
+,vehicle_id(_vehicle_id)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -57,7 +68,7 @@ MpcController::MpcController()
         }
 
         assert(casadi_vars.count(name) == 0);
-        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12);
+        casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12); // Can not be zero exactly, because the CadADi gradient is wrong at zero
         casadi_vars_size[name] = std::array<casadi_int, 2>{n_rows, n_cols};
         casadi_real* p_buffer = casadi_vars[name].data();
 
@@ -154,6 +165,7 @@ void MpcController::update(
         mpc_reference_trajectory_y
     ))
     {
+        reset_optimizer();
         out_motor_throttle = 0;
         out_steering_servo = 0;
         return;
@@ -241,15 +253,87 @@ void MpcController::optimize_control_inputs(
     {
         out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
         out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
+
+
+        // publish visualization of predicted trajectory
+        Visualization vis;
+        vis.id("mpc_prediction_" + std::to_string(vehicle_id));
+        vis.type(VisualizationType::LineStrips);
+        vis.time_to_live(2000000000ull);
+        vis.size(0.03);
+        vis.color().r(255);
+        vis.color().g(0);
+        vis.color().b(240);
+        vis.points().resize(MPC_prediction_steps);
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            vis.points().at(j).x(casadi_vars["trajectory_x"][j]);
+            vis.points().at(j).y(casadi_vars["trajectory_y"][j]);
+        }
+        writer_Visualization.write(vis);
+
+
+        /*
+        std::ostringstream oss;
+
+        oss << "ref_x = [";
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            if(j>0) oss << ",";
+            oss << mpc_reference_trajectory_x[j];
+        }
+        oss << "];";
+
+        oss << "ref_y = [";
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            if(j>0) oss << ",";
+            oss << mpc_reference_trajectory_y[j];
+        }
+        oss << "];";
+
+        oss << "pred_x = [";
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            if(j>0) oss << ",";
+            oss << casadi_vars["trajectory_x"][j];
+        }
+        oss << "];";
+
+        oss << "pred_y = [";
+        for (size_t j = 0; j < MPC_prediction_steps; ++j)
+        {
+            if(j>0) oss << ",";
+            oss << casadi_vars["trajectory_y"][j];
+        }
+        oss << "];";
+
+
+        std::string mpc_dbg = oss.str();
+        std::cerr << mpc_dbg << std::endl;
+        */
+
     }
     else
     {
         cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
-            "Large MPC objective. Provide a better reference trajectory. Stopping.");
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
+        reset_optimizer();
         out_motor_throttle = 0.0;
         out_steering_servo = 0.0;
+    }
+}
+
+void MpcController::reset_optimizer()
+{
+    for(auto &casadi_var:casadi_vars)
+    {
+        for (size_t i = 0; i < casadi_var.second.size(); ++i)
+        {
+            casadi_vars[casadi_var.first][i] = 1e-12; // Can not be zero exactly, because the CadADi gradient is wrong at zero
+        }
     }
 }
 
@@ -268,8 +352,8 @@ bool MpcController::interpolate_reference_trajectory(
     }
 
     // interval of the MPC prediction
-    const uint64_t t_start = t_now + MPC_DELAY_COMPENSATION_STEPS * dt_control_loop + dt_MPC;
-    const uint64_t t_end = t_start + (MPC_prediction_steps-1) * dt_MPC;
+    const uint64_t t_start = t_now + MPC_DELAY_COMPENSATION_STEPS * (dt_control_loop * 1e9) + (dt_MPC * 1e9);
+    const uint64_t t_end = t_start + (MPC_prediction_steps-1) * (dt_MPC * 1e9);
 
     // interval of the trajectory command
     const uint64_t t_trajectory_min = trajectory_points.begin()->first;
@@ -299,7 +383,7 @@ bool MpcController::interpolate_reference_trajectory(
 
     for (size_t i = 0; i < MPC_prediction_steps; ++i)
     {
-        const uint64_t t_interpolation = t_start + i * dt_MPC;
+        const uint64_t t_interpolation = t_start + i * (dt_MPC * 1e9);
 
 
         const auto iterator_segment_end = trajectory_points.lower_bound(t_interpolation);
@@ -318,7 +402,7 @@ bool MpcController::interpolate_reference_trajectory(
 
         TrajectoryInterpolation trajectory_interpolation(t_interpolation, start_point, end_point);
 
-        if(fabs(trajectory_interpolation.acceleration_x) > 10.0)
+        if(fabs(trajectory_interpolation.acceleration_x) > 20.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
@@ -328,7 +412,7 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.acceleration_y) > 10.0)
+        if(fabs(trajectory_interpolation.acceleration_y) > 20.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
@@ -338,7 +422,7 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.curvature) > 4.0)
+        if(fabs(trajectory_interpolation.curvature) > 50.0)
         {
             cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "

@@ -99,11 +99,15 @@ int main(int argc, char *argv[])
 
 
     // Control loop, which sends trajectory commands to the vehicles
-    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, 0, false, true, enable_simulated_time);
+    uint64_t offset = 0;
+    if (enable_simulated_time) {
+        offset = 1000000000ull;
+    }
+    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, offset, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) {
         std::unique_lock<std::mutex> lock(_mutex);
 
-        const uint64_t t_eval = ((t_now + 500000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
+        const uint64_t t_eval = ((t_now + 1000000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
 
 
         for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
@@ -141,8 +145,8 @@ int main(int argc, char *argv[])
 
                     const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
 
-                    if(fabs(trajectory_point.px() - observation.pose().x()) < 0.8
-                    && fabs(trajectory_point.py() - observation.pose().y()) < 0.8
+                    if(fabs(trajectory_point.px() - observation.pose().x()) < 0.3
+                    && fabs(trajectory_point.py() - observation.pose().y()) < 0.3
                     && fabs(sin(0.5*(ref_yaw - observation.pose().yaw()))) < 0.3)
                     {
                         for (size_t k = 0; k < slot_vehicle_ids.size(); ++k)

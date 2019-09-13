@@ -9,11 +9,13 @@
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
     std::function<VehicleData()> get_vehicle_data_callback,
-    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback
+    std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
+,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
@@ -75,14 +77,13 @@ MapViewUi::MapViewUi(
             if(path_painting_in_progress_vehicle_id >= 0)
             {
                 path_painting_in_progress.clear();
-                auto vehicle_timeseries = vehicle_data.at(path_painting_in_progress_vehicle_id);
+                auto& vehicle_timeseries = vehicle_data.at(path_painting_in_progress_vehicle_id);
 
-                path_painting_in_progress_yaw = vehicle_timeseries.at("pose_yaw")->get_latest_value();
-                Point start_point(
-                    vehicle_timeseries.at("pose_x")->get_latest_value(),
-                    vehicle_timeseries.at("pose_y")->get_latest_value()
-                );
-                path_painting_in_progress.push_back(start_point);
+                Pose2D pose;
+                pose.x(vehicle_timeseries.at("pose_x")->get_latest_value());
+                pose.y(vehicle_timeseries.at("pose_y")->get_latest_value());
+                pose.yaw(vehicle_timeseries.at("pose_yaw")->get_latest_value());
+                path_painting_in_progress.push_back(pose);
             }
         }
 
@@ -92,11 +93,18 @@ MapViewUi::MapViewUi(
     drawingArea->signal_button_release_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = false;
 
-
         // end path drawing mode
         if(!mouse_left_button)
         {
-            trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress, 0);
+            if(path_painting_in_progress.size() > 25)
+            {
+                std::vector<Point> path;
+                for (size_t i = 0; i < path_painting_in_progress.size(); i+=20)
+                {
+                    path.emplace_back(path_painting_in_progress.at(i).x(), path_painting_in_progress.at(i).y());
+                }
+                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path, 0);
+            }
 
             path_painting_in_progress.clear();
             path_painting_in_progress_vehicle_id = -1;
@@ -112,17 +120,49 @@ MapViewUi::MapViewUi(
 
 
         // if in path drawing mode
-        if(mouse_left_button)
+        if(mouse_left_button && !path_painting_in_progress.empty())
         {
-            if(is_valid_point_for_path(mouse_x, mouse_y))
+            while(1)
             {
-                // add new point to path
-                path_painting_in_progress.emplace_back(mouse_x, mouse_y);
-                assert(path_painting_in_progress.size() >= 2);
+                assert(!path_painting_in_progress.empty());
 
-                auto p2 = path_painting_in_progress.at(path_painting_in_progress.size()-1);
-                auto p1 = path_painting_in_progress.at(path_painting_in_progress.size()-2);
-                path_painting_in_progress_yaw = atan2(p2.y-p1.y, p2.x-p1.x);
+                Pose2D current_pose = path_painting_in_progress.back();
+
+                const double mouse_direction = atan2(
+                    mouse_y - current_pose.y(),
+                    mouse_x - current_pose.x()
+                );
+
+                double delta_yaw = mouse_direction - path_painting_in_progress.back().yaw();
+                delta_yaw = remainder(delta_yaw, 2*M_PI);
+                delta_yaw *= 0.1;
+                delta_yaw = fmax(delta_yaw, -path_segment_max_delta_yaw);
+                delta_yaw = fmin(delta_yaw,  path_segment_max_delta_yaw);
+
+                Pose2D next_pose;
+                next_pose.yaw(remainder(current_pose.yaw()+delta_yaw, 2*M_PI));
+                next_pose.x(current_pose.x() + path_segment_delta_s * cos(next_pose.yaw()));
+                next_pose.y(current_pose.y() + path_segment_delta_s * sin(next_pose.yaw()));
+
+
+                const double dx1 = mouse_x - current_pose.x();
+                const double dy1 = mouse_y - current_pose.y();
+
+                const double dx2 = mouse_x - next_pose.x();
+                const double dy2 = mouse_y - next_pose.y();
+
+                const double dist1sq = dx1*dx1 + dy1*dy1;
+                const double dist2sq = dx2*dx2 + dy2*dy2;
+
+
+                if(dist1sq > dist2sq && dist2sq > 0.01)
+                {
+                    path_painting_in_progress.push_back(next_pose);
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
@@ -160,32 +200,6 @@ int MapViewUi::find_vehicle_id_in_focus()
     return id;
 }
 
-bool MapViewUi::is_valid_point_for_path(double x, double y)
-{
-    // Test if the point is inside a forward pointing cone, and at a particular distance.
-    // This limits the maximum curvature of the path, and makes it driveable.
-
-    if(path_painting_in_progress.empty()) return false;
-
-    double dx = x - path_painting_in_progress.back().x;
-    double dy = y - path_painting_in_progress.back().y;
-    double dist_sq = dx*dx + dy*dy;
-    if(dist_sq < (path_segment_length*path_segment_length)) return false;
-    if(dist_sq > ((path_segment_length+0.1)*(path_segment_length+0.1))) return false;
-
-    double c1 = cos(path_painting_in_progress_yaw + path_segment_max_angle);
-    double s1 = sin(path_painting_in_progress_yaw + path_segment_max_angle);
-
-    double c2 = cos(path_painting_in_progress_yaw - path_segment_max_angle);
-    double s2 = sin(path_painting_in_progress_yaw - path_segment_max_angle);
-
-    if(dx * s1 - dy * c1 < 0) return false;
-    if(dx * s2 - dy * c2 > 0) return false;
-    return true;
-}
-
-
-
 void MapViewUi::draw(const DrawingContext& ctx)
 {
     ctx->save();
@@ -209,9 +223,6 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_received_trajectory_commands(ctx);
 
-        draw_path_painting(ctx);
-
-
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
@@ -219,6 +230,19 @@ void MapViewUi::draw(const DrawingContext& ctx)
             if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
             {
                 draw_vehicle_past_trajectory(ctx, vehicle_timeseries);
+            }
+        }
+
+        draw_received_visualization_commands(ctx);
+
+        draw_path_painting(ctx);
+
+        for(const auto& entry : vehicle_data) {
+            const auto vehicle_id = entry.first;
+            const auto& vehicle_timeseries = entry.second;
+
+            if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
+            {
                 draw_vehicle_body(ctx, vehicle_timeseries, vehicle_id);
             }
         }
@@ -244,7 +268,6 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
         if(trajectory_segment.size() > 1)
         {
-            std::cout << "Trajectory segment lenght: " << trajectory_segment.size() << std::endl;
             // Draw trajectory interpolation
             for (int i = 2; i < int(trajectory_segment.size()); ++i)
             {
@@ -289,39 +312,64 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
 {
-    if(!path_painting_in_progress.empty() && path_painting_in_progress_vehicle_id >= 0)
+    if(path_painting_in_progress.size() > 1 && path_painting_in_progress_vehicle_id >= 0)
     {
-        // Draw cone of valid directions
-        ctx->set_source_rgba(0,0,1,0.5);
-        ctx->arc(
-            path_painting_in_progress.back().x,
-            path_painting_in_progress.back().y,
-            path_segment_length, 
-            path_painting_in_progress_yaw - path_segment_max_angle, 
-            path_painting_in_progress_yaw + path_segment_max_angle
-        );
-        ctx->line_to(
-            path_painting_in_progress.back().x,
-            path_painting_in_progress.back().y
-        );
-        ctx->fill();
-
         // Draw path lines
-        for (size_t i = 0; i < path_painting_in_progress.size()-1; ++i)
+        ctx->set_source_rgb(0.6,0,0);
+        ctx->move_to(path_painting_in_progress[0].x(), path_painting_in_progress[0].y());
+        for (size_t i = 1; i < path_painting_in_progress.size(); ++i)
         {
-            ctx->set_source_rgb(0.6,0,0);
-            ctx->move_to(path_painting_in_progress[i].x, path_painting_in_progress[i].y);
-            ctx->line_to(path_painting_in_progress[i+1].x, path_painting_in_progress[i+1].y);
-            ctx->set_line_width(0.01);
-            ctx->stroke();
+            ctx->line_to(path_painting_in_progress[i].x(), path_painting_in_progress[i].y());
         }
+        ctx->set_line_width(0.01);
+        ctx->stroke();
+    }
+}
 
-        // Draw path nodes
-        for (size_t i = 0; i < path_painting_in_progress.size(); ++i)
+//Draw all received viz commands on the screen
+void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
+    //Get commands
+    std::vector<Visualization> visualization_commands = get_visualization_msgs_callback();
+
+    for(const auto& entry : visualization_commands) 
+    {
+        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
+            && entry.points().size() > 1) 
         {
-            ctx->set_source_rgb(0.6,0,0);
-            ctx->arc(path_painting_in_progress[i].x, path_painting_in_progress[i].y, 0.02, 0.0, 2 * M_PI);
-            ctx->fill();
+            const auto& message_points = entry.points();
+
+            //Set beginning point
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
+
+            for (size_t i = 1; i < message_points.size(); ++i)
+            {
+                const auto& current_point = message_points.at(i);
+
+                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+            }  
+
+            //Line from end to beginning point to close the polygon
+            if (entry.type() == VisualizationType::Polygon) {
+                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+            }
+
+            ctx->set_line_width(entry.size());
+            ctx->stroke();      
+        }
+        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            //Set font properties
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->set_font_size(entry.size());
+
+            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+
+            //Flip font
+            Cairo::Matrix font_matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+            ctx->set_font_matrix(font_matrix);
+
+            //Draw text
+            ctx->show_text(entry.string_message().c_str());
         }
     }
 }

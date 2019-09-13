@@ -7,6 +7,9 @@
 #include "VehicleModel.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleState.hpp"
+#include "Visualization.hpp"
+#include "cpm/get_topic.hpp"
+#include <dds/pub/ddspub.hpp>
 
 
 
@@ -16,11 +19,14 @@
  * See matlab_scripts/vehicle_dynamics_identification_and_mpc/MpcController.m
  */
 
-#define MPC_DELAY_COMPENSATION_STEPS (4)
+#define MPC_DELAY_COMPENSATION_STEPS (3)
 
 
 class MpcController
 {
+    dds::topic::Topic<Visualization> topic_Visualization;
+    dds::pub::DataWriter<Visualization> writer_Visualization;
+    uint8_t vehicle_id;
 
     std::map< std::string, std::vector<casadi_real> > casadi_vars;
     std::map< std::string, std::array<casadi_int, 2> > casadi_vars_size;
@@ -30,8 +36,8 @@ class MpcController
     std::vector<casadi_real*> casadi_results;
 
 
-    const size_t MPC_prediction_steps = 8;
-    const size_t MPC_control_steps = 4;
+    const size_t MPC_prediction_steps = 6;
+    const size_t MPC_control_steps = 3;
     const double dt_control_loop = 0.02; // the period in which update() is called
     const double dt_MPC = 0.05; // the MPC prediction time step
 
@@ -74,12 +80,14 @@ class MpcController
         double &out_steering_servo
     );
 
+    void reset_optimizer();
+
 
 
 
 public:
 
-    MpcController();
+    MpcController(uint8_t _vehicle_id);
 
     void update(
         uint64_t t_now, 

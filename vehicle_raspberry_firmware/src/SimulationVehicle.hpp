@@ -14,7 +14,7 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-#define INPUT_DELAY (1) // Input delay >= 0
+#define INPUT_DELAY (4) // Input delay >= 0
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
@@ -25,11 +25,11 @@ class SimulationVehicle
     // TODO load parameters via DDS parameters
     std::vector<double> dynamics_parameters = { 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 };
 
-    double px = 0.28;//frand()*4;
-    double py = 2.05;//frand()*4;
+    double px;
+    double py;
     double distance = 0;
-    double yaw = 1.52;//frand()*20;
-    double yaw_measured = 1.52;
+    double yaw;
+    double yaw_measured;
     double speed = 0;
     double curvature = 0;
 
@@ -53,7 +53,7 @@ class SimulationVehicle
 
 
 public:
-    SimulationVehicle(SimulationIPS& _simulationIPS);
+    SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id);
 
     VehicleState update(
         const double motor_throttle,

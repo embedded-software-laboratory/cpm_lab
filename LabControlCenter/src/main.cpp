@@ -4,20 +4,22 @@
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 #include "TimeSeriesAggregator.hpp"
+#include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/params/ParamViewUI.hpp"
+#include "ui/timer/TimerViewUI.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "TimerTrigger.hpp"
 #include "cpm/init.hpp"
-
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -45,19 +47,23 @@ int main(int argc, char *argv[])
     cssProvider->load_from_path("ui/style.css");
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
-
+    bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+    auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
+    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
-        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();}
+        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi);
+    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi, timerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 

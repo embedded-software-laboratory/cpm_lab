@@ -3,97 +3,147 @@
  *
  * Created: 21.09.2018 17:50:29
  *  Author: maczijewski
+ * Modified 19.06.2019
+ *  Author: cfrauzem
  */ 
 
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "util.h"
-#include "spi.h"
 #include "servo_timer.h"
+#include "watchdog.h"
+#include "crc.h"
+#include "spi.h"
 
 
-// SPI protocol: exchange fixed size buffers (no register addressing)
-// This (ATmega) is the SPI slave.
-// use double buffering to avoid data corruption
+// spi protocol: exchange fixed size buffers (no register addressing).
+// this (atmega) is the spi slave.
+// The communication is blocking / synchronous. 
+// spi_exchange() blocks until the transfer is complete.
+
+
 static volatile uint8_t spi_buffer_index = 0;
-
-static volatile uint8_t miso_buffer_a[SPI_BUFFER_SIZE];
-static volatile uint8_t miso_buffer_b[SPI_BUFFER_SIZE];
-static volatile uint8_t* miso_buffer_local = miso_buffer_a;
-static volatile uint8_t* miso_buffer_bus = miso_buffer_b;
-
-static volatile uint8_t mosi_buffer_a[SPI_BUFFER_SIZE];
-static volatile uint8_t mosi_buffer_b[SPI_BUFFER_SIZE];
-static volatile uint8_t* mosi_buffer_local = mosi_buffer_a;
-static volatile uint8_t* mosi_buffer_bus = mosi_buffer_b;
-
-static volatile uint8_t local_miso_buffer_has_new_data_flag = 0;
-static volatile uint32_t latest_receive_tick = 0;
+static volatile uint8_t* miso_buffer = 0;
+static volatile uint8_t miso_correct_CRC[SPI_BUFFER_SIZE];
+static volatile uint8_t miso_wrong_CRC[SPI_BUFFER_SIZE];
+static volatile uint8_t mosi_buffer[SPI_BUFFER_SIZE];
 
 
 // interrupt for end of byte transfer
 ISR(SPI_STC_vect) {
-	uint8_t received_byte = SPDR;
-	SPDR = miso_buffer_bus[spi_buffer_index]; // send next byte
-	mosi_buffer_bus[spi_buffer_index] = received_byte;
+	mosi_buffer[spi_buffer_index] = SPDR;
 	spi_buffer_index++;
+	SPDR = miso_buffer[spi_buffer_index];
 }
 
 
 // interrupt for slave select pin change
 ISR(PCINT0_vect) {
 	if(PINB & 1) { // end of spi transmission
-		SPDR = 42; // set start byte for next transmission
-		
-		// swap received buffer
-		volatile uint8_t* tmp = mosi_buffer_local;
-		mosi_buffer_local = mosi_buffer_bus;
-		mosi_buffer_bus = tmp;
-		
-		latest_receive_tick = get_tick();
-	}
-	else { // beginning of spi transmission
-		spi_buffer_index = 0;
-		
-		// swap send buffer
-		if(local_miso_buffer_has_new_data_flag) { // prevent resending old data
-			volatile uint8_t* tmp = miso_buffer_local;
-			miso_buffer_local = miso_buffer_bus;
-			miso_buffer_bus = tmp;
-			local_miso_buffer_has_new_data_flag = 0;
+		watchdog_reset(); // resume normal operation when the master raises the slave select
+	}	
+}
+
+
+
+void spi_exchange(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received) 
+{
+	// calculate miso CRCs for two cases: mosi CRC ok, and mosi CRC wrong
+	
+	// good CRC
+	{
+		CLEAR_BIT(packet_send->status_flags, 1);
+		packet_send->CRC = 0;
+		packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
+		uint8_t* p_send = (uint8_t*) packet_send;
+		for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) 
+		{
+			miso_correct_CRC[i] = p_send[i];
 		}
 	}
 	
-}
-
-
-void spi_send(spi_miso_data_t *packet) {
-	cli(); // stop buffer swap
-	uint8_t* p = (uint8_t*) packet;
-	for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++)
+	// bad CRC
 	{
-		miso_buffer_local[i] = p[i];
+		SET_BIT(packet_send->status_flags, 1);
+		packet_send->CRC = 0;
+		packet_send->CRC = crcFast((uint8_t*)(packet_send), sizeof(spi_miso_data_t));
+		
+		// copy stack data with CRC flag
+		uint8_t* p_send = (uint8_t*) packet_send;
+		for (uint8_t i = 0; i < sizeof(spi_miso_data_t); i++) 
+		{
+			miso_wrong_CRC[i] = p_send[i];
+		}
 	}
-	local_miso_buffer_has_new_data_flag = 1;
-	sei();
-}
-
-
-uint32_t spi_receive(spi_mosi_data_t *packet) {
-	cli(); // stop buffer swap
-	uint8_t* p = (uint8_t*) packet;
-	for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++)
-	{
-		p[i] = mosi_buffer_local[i];
-	}
-	sei();
-	return latest_receive_tick;
-}
-
-
-void spi_setup() {
 	
+	// first send raspberry pi miso_wrong_CRC, since we have not received a correct packet yet
+	miso_buffer = miso_wrong_CRC;
+	
+	// prepare transmission
+	spi_buffer_index = 0;
+	// set start byte for next transmission
+	SPDR = miso_buffer[spi_buffer_index]; 
+	
+	// wait for transmission start
+	// SS pin is PB1
+	// HIGH == transmission idle
+	// LOW == transmission start
+	while(PINB & 0b00000001) 
+	{
+		if (safe_mode_flag) 
+		{
+			return;
+		}
+	}
+	
+	// spi transmission active
+	while(1) 
+	{
+		if (spi_buffer_index >= SPI_BUFFER_SIZE) // data package transmission complete
+		{
+			// validate spi received mosi crc
+			spi_mosi_data_t* mosi_buffer_as_mosi_packet = (spi_mosi_data_t*) mosi_buffer;
+			const uint16_t mosi_CRC_actual = mosi_buffer_as_mosi_packet->CRC;
+			mosi_buffer_as_mosi_packet->CRC = 0;
+			const uint16_t mosi_CRC_target = crcFast(mosi_buffer, sizeof(spi_mosi_data_t));
+			
+			if (mosi_CRC_actual == mosi_CRC_target) 
+			{
+				// tell master that mosi message was received correctly
+				miso_buffer = miso_correct_CRC;
+				
+				// copy mosi buffer data to output
+				uint8_t* p_received = (uint8_t*) packet_received;
+				for (uint8_t i = 0; i < sizeof(spi_mosi_data_t); i++) 
+				{
+					p_received[i] = mosi_buffer[i];
+				}
+			}
+			
+			// reset buffer index counter
+			spi_buffer_index = 0;
+			
+			// set start byte for next transmission
+			SPDR = miso_buffer[spi_buffer_index]; 
+		}
+	
+		if (safe_mode_flag) 
+		{
+			return;
+		}
+		
+		// end of transmission
+		if (PINB & 0b00000001) 
+		{
+			return;
+		}
+	}
+}
+
+
+void spi_setup() 
+{
 	SET_BIT(SPCR, SPIE); // spi interrupt enable
 	SET_BIT(SPCR, SPE); // spi enable
 	// MSB first (default)
@@ -101,6 +151,9 @@ void spi_setup() {
 	// spi mode 0 (default)
 	
 	SET_BIT(DDRB, 3); // set MISO as output
+	
+	SET_BIT(PORTB, 1); // set SS as pull-up input
+	CLEAR_BIT(MCUCR, PUD);
 	
 	
 	// interrupt on the slave select pin

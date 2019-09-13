@@ -60,7 +60,7 @@ add_executable(ips_pipeline
     src/PoseCalculation.cpp
     src/PoseCalculation.hpp
 )
-target_link_libraries(ips_pipeline cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+target_link_libraries(ips_pipeline cpm ${OpenCV_LIBRARIES})
 
 
 add_executable(unittest

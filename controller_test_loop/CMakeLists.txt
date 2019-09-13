@@ -27,3 +27,11 @@ add_executable(controller_test_loop
 )
 target_link_libraries(controller_test_loop cpm)
 
+
+
+
+add_executable(platoon
+    src/main_platoon.cpp
+)
+target_link_libraries(platoon cpm)
+
