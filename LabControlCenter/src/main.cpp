@@ -12,6 +12,8 @@
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/params/ParamViewUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/logger/LoggerViewUI.hpp"
+#include "LogStorage.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
 #include "TrajectoryCommand.hpp"
@@ -50,6 +52,8 @@ int main(int argc, char *argv[])
     bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
     auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
+    auto logStorage = make_shared<LogStorage>();
+    auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi, timerViewUi);
+    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 
