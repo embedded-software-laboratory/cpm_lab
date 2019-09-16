@@ -9,7 +9,8 @@ function [msg]=leader(vehicle_id, t_now)
 
     trajectory_index = (t_eval) / point_period_nanoseconds;
 
-    trajectory_point = trajectory_test_loop(trajectory_index);
+    % Get current trajectory from pre-computed trajectory list
+    trajectory_point = leader_trajectory(trajectory_index);
 
     %Create msg
     trajectory = VehicleCommandTrajectory;
