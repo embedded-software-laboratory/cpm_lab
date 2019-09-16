@@ -3,6 +3,11 @@
 #include <list>
 #include <stdint.h>
 
+#include "cpm/get_topic.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/MultiVehicleReader.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/stamp_message.hpp"
 #include "geometry.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
@@ -43,14 +48,14 @@ class SimulationVehicle
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
+    cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 
     SimulationIPS& simulationIPS;
 
     // For collision checks:
     std::map<uint64_t, Pose2D> ego_pose_history;
-    void check_for_collision(const uint64_t t_now, const uint8_t vehicle_id);
+    std::map<uint8_t, uint64_t>  get_collisions(const uint64_t t_now, const uint8_t vehicle_id);
     
-    cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id);

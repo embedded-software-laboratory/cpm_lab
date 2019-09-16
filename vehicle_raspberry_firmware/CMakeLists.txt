@@ -51,6 +51,7 @@ set_source_files_properties(src/casadi_mpc_fn.c PROPERTIES COMPILE_FLAGS -O3)
 if(BUILD_SIMULATION)
     set(SOURCE
         ${SOURCE_BASE}
+        src/geometry.hpp
         src/SimulationVehicle.cxx
         src/SimulationVehicle.hpp
         src/SimulationIPS.cxx
@@ -89,27 +90,6 @@ endif()
 
 if(BUILD_SIMULATION)
     target_compile_options(vehicle_rpi_firmware PUBLIC -DVEHICLE_SIMULATION)
-
-    # unittest
-    if(NOT BUILD_ARM)
-        add_executable(unittest
-            test/catch.cpp
-            test/catch.hpp
-            test/test_SimulationVehicle.cpp
-            src/SimulationVehicle.cxx
-            src/SimulationVehicle.hpp
-            src/SimulationIPS.cxx
-            src/SimulationIPS.hpp
-            src/VehicleModel.hpp
-            src/VehicleModel.cxx
-        )
-        target_compile_options(unittest PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
-        set_target_properties(unittest PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
-
-        target_link_libraries(unittest dl nsl m pthread rt)
-        target_link_libraries(unittest nddscpp2 nddsc nddscore)
-        target_link_libraries(unittest cpm)
-    endif()
 endif()
 
 
