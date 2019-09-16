@@ -4,7 +4,7 @@ function main(matlabDomainID, vehicleIDs)
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)
     
-    
+    % Get all relevant files - IDL files for communication, XML files for communication settings etc
     git_directory = fileparts(fileparts(fileparts(script_directoy)));
     base_directory = fileparts(git_directory);
     cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
@@ -27,7 +27,7 @@ function main(matlabDomainID, vehicleIDs)
     addpath(cpm_idl_directory);
     addpath(hlc_idl_directory);
     
-    
+    % Create .m IDL files in another directory, then go back to the current one
     mkdir('../IDL_gen');
     addpath('../IDL_gen');
     cd('../IDL_gen');
@@ -73,7 +73,7 @@ function main(matlabDomainID, vehicleIDs)
     disp('Sending ready signals');
     for i = 1 : length(vehicle_ids)
         ready_msg = ReadyStatus;
-        ready_msg.source_id = num2str(vehicle_ids(i));
+        ready_msg.source_id = strcat('hlc_', num2str(vehicle_ids(i)));
         ready_stamp = TimeStamp;
         ready_stamp.nanoseconds = uint64(0);
         ready_msg.next_start_stamp = ready_stamp;
@@ -133,7 +133,7 @@ function main(matlabDomainID, vehicleIDs)
             sampleInfo = DDS.SampleInfo;
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
 
-            % Check if any new message was received (TODO: History of 1)
+            % Check if any new message was received (TODO: throw away all messages that were received during computation)
             if stateSampleCount > 0                
                 disp('Current time:');
                 disp(sample.t_now);
