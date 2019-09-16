@@ -3,7 +3,6 @@ function [msg]=leader(vehicle_id, t_now)
     set(0,'DefaultFigureVisible','off');
 
     % Get data index
-    % t_now = getTimestampNow();
     point_period_nanoseconds = 250000000;
     t_eval = ((t_now + uint64(500000000)) / point_period_nanoseconds) * point_period_nanoseconds;
 

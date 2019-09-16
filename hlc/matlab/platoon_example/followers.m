@@ -3,7 +3,6 @@ function [msg]=followers(vehicle_id, state_list, follow_id, t_now)
     set(0,'DefaultFigureVisible','off');
 
     % Get time (same as in trajectory_complex)
-    % t_now = getTimestampNow();
     point_period_nanoseconds = 250000000;
     t_eval = ((t_now + uint64(500000000)) / point_period_nanoseconds) * point_period_nanoseconds;
 
