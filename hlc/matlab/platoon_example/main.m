@@ -140,11 +140,11 @@ function main(matlabDomainID, vehicleIDs)
             
                 % Call the programs to calculate the trajectories of all HLCs
                 if (size(vehicle_ids) > 0)
-                    msg_leader = dummy_trajectory_complex_part(vehicle_ids(1), sample.t_now);
+                    msg_leader = leader(vehicle_ids(1), sample.t_now);
                     trajectoryWriter.write(msg_leader);
 
                     for i = 2 : length(vehicle_ids)
-                        msg_follower = dummy_following_part(vehicle_ids(i), sample.state_list, vehicle_ids(i - 1), sample.t_now);
+                        msg_follower = followers(vehicle_ids(i), sample.state_list, vehicle_ids(i - 1), sample.t_now);
                         trajectoryWriter.write(msg_follower);
                     end
                 end
