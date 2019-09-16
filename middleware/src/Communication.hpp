@@ -185,7 +185,7 @@ class Communication {
             std::vector<std::string> vehicle_ids_string;
             for (uint8_t vehicle_id : vehicle_ids) {
                 std::stringstream stream;
-                stream << static_cast<uint32_t>(vehicle_id);
+                stream << "hlc_" << static_cast<uint32_t>(vehicle_id);
                 vehicle_ids_string.push_back(stream.str());
             }
 

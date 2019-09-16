@@ -27,14 +27,13 @@
 #include "cpm/Timer.hpp"
 #include "cpm/VehicleIDFilteredTopic.hpp"
 
+using namespace std::placeholders;
+
 template<class MessageType> class TypedCommunication {
     private:
         //For HLC - communication
         dds::topic::Topic<MessageType> hlcCommandTopic;
-        dds::sub::Subscriber sub;
-        dds::sub::DataReader<MessageType> hlcCommandReader;
-        dds::core::cond::StatusCondition readCondition = dds::core::null;
-        rti::core::cond::AsyncWaitSet waitset;
+        cpm::AsyncReader<MessageType> hlcCommandReader;
 
         //For Vehicle communication
         dds::topic::Topic<MessageType> vehicleCommandTopic;
@@ -46,15 +45,8 @@ template<class MessageType> class TypedCommunication {
         std::map<uint8_t, uint64_t> lastHLCResponseTimes;
 
         //Handler for commands received by the HLC
-        void handler()
+        void handler(dds::sub::LoanedSamples<MessageType>& samples)
         {
-            // Take all samples - This will reset the StatusCondition
-            dds::sub::LoanedSamples<MessageType> samples = hlcCommandReader.take();
-
-            // Release status condition in case other threads can process outstanding
-            // samples
-            waitset.unlock_condition(dds::core::cond::StatusCondition(hlcCommandReader));
-
             // Process sample 
             for (auto sample : samples) {
                 if (sample.info().valid()) {
@@ -69,8 +61,7 @@ template<class MessageType> class TypedCommunication {
     public:
         TypedCommunication(dds::domain::DomainParticipant& hlcParticipant, std::string hlcCommandTopicName, std::string vehicleCommandTopicName, std::shared_ptr<cpm::Timer> _timer) :
             hlcCommandTopic(hlcParticipant, hlcCommandTopicName),
-            sub(hlcParticipant),
-            hlcCommandReader(sub, hlcCommandTopic),
+            hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, hlcCommandTopic),
 
             vehicleCommandTopic(cpm::ParticipantSingleton::Instance(), vehicleCommandTopicName),
             vehicleWriter(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), vehicleCommandTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort())),
@@ -78,12 +69,6 @@ template<class MessageType> class TypedCommunication {
             lastHLCResponseTimes()
         {
             static_assert(std::is_same<decltype(std::declval<MessageType>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
-
-            readCondition = dds::core::cond::StatusCondition(hlcCommandReader);
-            readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
-            readCondition->handler(std::bind(&TypedCommunication::handler, this));
-            waitset.attach_condition(readCondition);
-            waitset.start();
         }
 
         const std::map<uint8_t, uint64_t>& getLastHLCResponseTimes() {
