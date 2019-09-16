@@ -31,55 +31,28 @@ int main (int argc, char *argv[]) {
     std::string node_id = cpm::cmd_parameter_string("node_id", "middleware", argc, argv);
     uint64_t period_nanoseconds = cpm::cmd_parameter_uint64_t("period_nanoseconds", 250000000, argc, argv);
     uint64_t offset_nanoseconds = cpm::cmd_parameter_uint64_t("offset_nanoseconds", 1, argc, argv);
-    //uint64_t wait_timeout = cpm::cmd_parameter_uint64_t("wait_timeout", 6000000000, argc, argv); //6 seconds wait before HLC is asked for new data again
     bool simulated_time_allowed = true;
     bool simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     bool wait_for_start = cpm::cmd_parameter_bool("wait_for_start", true, argc, argv);
 
     //Communication parameters
     int hlcDomainNumber = cpm::cmd_parameter_int("domain_number", 1, argc, argv); 
-    bool useParamServer = cpm::cmd_parameter_bool("use_param_server", false, argc, argv); //If set to true: Param server can be used to change the command type at runtime
-    std::string logTopicName = cpm::cmd_parameter_string("log_topic", "logTopic", argc, argv);
-    std::string hlcStateTopicName = cpm::cmd_parameter_string("hlc_state_topic", "stateTopic", argc, argv); 
-    std::string vehicleStateTopicName = cpm::cmd_parameter_string("vehicle_state_topic", "vehicleState", argc, argv); 
-    std::string hlcTrajectoryTopicName = cpm::cmd_parameter_string("hlc_trajectory_topic", "trajectoryTopic", argc, argv); 
-    std::string vehicleTrajectoryTopicName = cpm::cmd_parameter_string("vehicle_trajectory_topic", "vehicleCommandTrajectory", argc, argv); 
-    std::string hlcSpeedCurvatureTopicName = cpm::cmd_parameter_string("hlc_speed_curvature_topic", "speedCurvatureTopic", argc, argv); 
-    std::string vehicleSpeedCurvatureTopicName = cpm::cmd_parameter_string("vehicle_speed_curvature_topic", "vehicleCommandSpeedCurvature", argc, argv); 
-    std::string hlcDirectTopicName = cpm::cmd_parameter_string("hlc_direct_topic", "directTopic", argc, argv); 
-    std::string vehicleDirectTopicName = cpm::cmd_parameter_string("vehicle_direct_topic", "vehicleCommandDirect", argc, argv); 
+    
+    //Vehicle ID(s) set in command line, correspond to HLC IDs
     int vehicleID = cpm::cmd_parameter_int("vehicle_id", 1, argc, argv); 
     std::vector<int> default_ids{ 1 };
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
 
-    std::cout << "Configuration: " << std::endl;
-    std::stringstream ids;
-    for (auto id : vehicle_ids) {
-        ids << id << " ";
-    }
-    std::cout   << "\tHLC domain number: " << hlcDomainNumber << std::endl
-                << "\tVehicle IDs (and HLC IDs): " << ids.str() << std::endl
-                << "\tNode ID: " << node_id << std::endl
-                << "\tPeriod: " << period_nanoseconds << std::endl
-                << "\tOffset: " << offset_nanoseconds << std::endl
-                << "\tParam server used: " << useParamServer << std::endl
-                << "\tLog topic: " << logTopicName << std::endl
-                << "\tHLC state topic: " << hlcStateTopicName << std::endl
-                << "\tVehicle state topic: " << vehicleStateTopicName << std::endl
-                << "\tHLC trajectory topic: " << hlcTrajectoryTopicName << std::endl
-                << "\tVehicle trajectory topic: " << vehicleTrajectoryTopicName << std::endl
-                << "\tHLC speed curvature topic: " << hlcSpeedCurvatureTopicName << std::endl
-                << "\tVehicle speed curvature topic: " << vehicleSpeedCurvatureTopicName << std::endl
-                << "\tHLC direct topic: " << hlcDirectTopicName << std::endl
-                << "\tVehicle direct topic: " << vehicleDirectTopicName << std::endl;
-
-    //Use Parameter Server to set initial parameters
-    if (useParamServer) {
-        period_nanoseconds = cpm::parameter_int("hlc/period_milliseconds"); //Cast this? (uint32_t vs uint64_t)
-        offset_nanoseconds = cpm::parameter_int("hlc/offset_milliseconds");
-        //wait_timeout = cpm::parameter_int("hlc/wait_timeout_milliseconds");
-        vehicle_ids = cpm::parameter_ints("vehicle_ids");
-    }
+    //Constants - topic names
+    const std::string logTopicName = "logTopic";
+    const std::string hlcStateTopicName = "stateTopic"; 
+    const std::string vehicleStateTopicName = "vehicleState"; 
+    const std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
+    const std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
+    const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
+    const std::string hlcDirectTopicName = "directTopic"; 
+    const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     //Get unsigned vehicle ids
     std::vector<uint8_t> unsigned_vehicle_ids;
