@@ -3,7 +3,7 @@
 
 if [ ! -d "idl_compiled" ]; then
     mkdir idl_compiled
-    find ./idl/ -type f | xargs -n 1 rtiddsgen -replace -language C++11 -d ./idl_compiled/ -I ../../cpm_base/dds_idl/
+    find ./idl/ -type f | xargs -n 1 rtiddsgen -replace -language C++11 -d ./idl_compiled/ -I ../../../cpm_base/dds_idl/
 fi
 
 clear

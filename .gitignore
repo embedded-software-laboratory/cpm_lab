@@ -36,7 +36,7 @@ matlab_scripts/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
 core
 matlab_scripts/vehicle_dynamics_identification_and_mpc/documentation
 matlab_scripts/map_print/map_print2/lane_graph.cpp
-/middleware/idl_compiled
+/hlc/middleware/idl_compiled
 std*.txt
 /hlc/matlab/IDL_gen/
 nuc_apache_package
