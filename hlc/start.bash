@@ -9,15 +9,20 @@ script_name=$2
 vehicle_id=$3
 simulated_time=$4
 
+cd /tmp/
+
 # Set correct IP in local communication script
 my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 /bin/cp -rf ./hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
-/bin/cp -rf ./hlc/middleware/QOS_LOCAL_COMMUNICATION.xml ./hlc/$script_path/
+/bin/cp -rf ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml ./hlc/$script_path/
+
+# Copy cpm lib file
+/bin/cp ./cpm_base/cpm_lib/build/libcpm.so ./hlc/middleware/build/
 
 # Start Middleware and HLC script
 # Start screen for middleware; detach and start middleware
-tmux new-session -d -s "middleware" "cd /tmp/middleware/;bash middleware_start.bash ${vehicle_id} ${simulated_time} &> middleware.txt"
+tmux new-session -d -s "middleware" "cd /tmp/hlc/;bash middleware_start.bash ${vehicle_id} ${simulated_time} &> middleware.txt"
 
 # Start screen for matlab; detach and start matlab
-tmux new-session -d -s "hlc" "cd /tmp/middleware/;bash hlc_start.bash ${script_path} ${script_name} ${vehicle_id}"
+tmux new-session -d -s "hlc" "cd /tmp/hlc/;bash hlc_start.bash ${script_path} ${script_name} ${vehicle_id}"

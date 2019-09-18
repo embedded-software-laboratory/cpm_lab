@@ -49,7 +49,7 @@ trap exit_script SIGINT SIGTERM
 #   2. create tar
 mkdir nuc_apache_package
 pushd nuc_apache_package
-tar -czvf nuc_package.tar.gz ../hlc
+tar -czvf nuc_package.tar.gz ../hlc ../../cpm_base/cpm_lib/build/libcpm.so
 popd
 #   3. publish package
 rm -f /var/www/html/nuc/nuc_package.tar.gz
