@@ -42,12 +42,13 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
         arc_length.at(i) = arc_length.at(i-1) + vector_length(dx,dy);
     }
 
-    const double max_speed = 1.3;
-    const double max_acceleration = 0.5;
+    const double max_speed = 1.2;
+    const double max_acceleration = 2;
+    const double max_deceleration = 0.4;
 
-    const double standstill_time = 1.0; // time [sec] at zero speed at the beginning and end
+    const double standstill_time = 1.5; // time [sec] at zero speed at the beginning and end
     const double acceleration_time = max_speed / max_acceleration;
-    const double deceleration_time = acceleration_time;
+    const double deceleration_time = max_speed / max_deceleration;
 
     const double acceleration_distance = 0.5 * max_speed * acceleration_time;
     const double deceleration_distance = 0.5 * max_speed * deceleration_time;
@@ -58,17 +59,6 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
 
     const double cruise_time = cruise_distance / max_speed;
     const double total_time = standstill_time + acceleration_time + cruise_time + deceleration_time + standstill_time;
-
-    /*std::cout 
-    << "  acceleration_time  " << acceleration_time
-    << "  acceleration_distance  " << acceleration_distance
-    << "  deceleration_distance  " << deceleration_distance
-    << "  total_distance  " << total_distance
-    << "  cruise_distance  " << cruise_distance
-    << "  cruise_time  " << cruise_time
-    << "  total_time  " << total_time
-    << std::endl;*/
-
 
     const uint64_t t_start = timer->get_time() + 1000000000ull;
 
@@ -104,7 +94,7 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
         if(t_sec > 0)
         {
             const double dt = fmin(t_sec, deceleration_time);
-            node_speed = max_speed - dt * max_acceleration;
+            node_speed = max_speed - dt * max_deceleration;
             node_distance += 0.5 * dt * (node_speed + max_speed);
         }
 
