@@ -378,15 +378,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
-            // Draw car image
-        ctx->save();
-        {
-            const double scale = 1./500;
-            ctx->scale(scale, scale);
-            ctx->set_source(image_map,0,0);
-            ctx->paint();
-        }
-        ctx->restore();
+    // Draw map (roads) image
+    ctx->save();
+    {
+        const double scale = 4.0/image_map->get_height();
+        ctx->scale(scale, scale);
+        ctx->set_source(image_map,0,0);
+        ctx->paint();
+    }
+    ctx->restore();
+
+    // Draw grid lines
     ctx->save();
     {
         ctx->scale(.1, .1);
