@@ -4,7 +4,7 @@
 #include <cmath>
 using std::vector;
 
-#define VEHICLE_HALF_LENGTH (0.12)
+#define VEHICLE_HALF_LENGTH (0.15)
 #define VEHICLE_HALF_WIDTH (0.06)
 
 struct PathNode

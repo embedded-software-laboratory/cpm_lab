@@ -280,11 +280,15 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
     }
 }
 
-void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, double &steering_servo) 
+void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle, double &out_steering_servo) 
 {
     receive_commands(t_now);
 
     update_remote_parameters();
+
+
+    double motor_throttle = 0;
+    double steering_servo = 0;
 
     if(latest_command_receive_time + command_timeout < t_now
         && state != ControllerState::Stop)
@@ -347,6 +351,14 @@ void Controller::get_control_signals(uint64_t t_now, double &motor_throttle, dou
 
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
+
+
+    // controls rate limiter. the signal rates must be 
+    // limited to avoid power spikes and system resets
+    const double max_rate = 0.1;
+    motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
+    steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
+
+    out_motor_throttle = motor_throttle_state;
+    out_steering_servo = steering_servo_state;
 }
-
-
