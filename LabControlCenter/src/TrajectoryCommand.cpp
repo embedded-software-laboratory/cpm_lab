@@ -42,20 +42,32 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
         arc_length.at(i) = arc_length.at(i-1) + vector_length(dx,dy);
     }
 
-    const double max_speed = 1.2;
+    double max_speed = 1.2;
     const double max_acceleration = 2;
     const double max_deceleration = 0.4;
 
     const double standstill_time = 1.5; // time [sec] at zero speed at the beginning and end
-    const double acceleration_time = max_speed / max_acceleration;
-    const double deceleration_time = max_speed / max_deceleration;
+    double acceleration_time = max_speed / max_acceleration;
+    double deceleration_time = max_speed / max_deceleration;
 
-    const double acceleration_distance = 0.5 * max_speed * acceleration_time;
-    const double deceleration_distance = 0.5 * max_speed * deceleration_time;
+    double acceleration_distance = 0.5 * max_speed * acceleration_time;
+    double deceleration_distance = 0.5 * max_speed * deceleration_time;
     const double total_distance = arc_length.back();
-    const double cruise_distance = total_distance - acceleration_distance - deceleration_distance;
+    double cruise_distance = total_distance - acceleration_distance - deceleration_distance;
 
-    if(cruise_distance < 1e-4) return; // TODO handle the case where we dont reach full speed
+    if(cruise_distance <= 0) 
+    {
+        cruise_distance = 0;
+
+        max_speed = sqrt((2 * total_distance)/
+            (1.0/max_acceleration + 1.0/max_deceleration));
+
+        acceleration_time = max_speed / max_acceleration;
+        deceleration_time = max_speed / max_deceleration;
+
+        acceleration_distance = 0.5 * max_speed * acceleration_time;
+        deceleration_distance = 0.5 * max_speed * deceleration_time;
+    }
 
     const double cruise_time = cruise_distance / max_speed;
     const double total_time = standstill_time + acceleration_time + cruise_time + deceleration_time + standstill_time;
