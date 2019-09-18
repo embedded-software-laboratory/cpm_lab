@@ -71,7 +71,6 @@ add_executable(LabControlCenter
     ui/MainWindow.hpp
     src/defaults.cpp
     src/defaults.hpp
-    src/Point.hpp
     src/Joystick.cpp
     src/Joystick.hpp
     src/ParameterServer.cpp
