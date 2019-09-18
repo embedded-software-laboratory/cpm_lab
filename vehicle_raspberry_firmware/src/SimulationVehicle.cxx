@@ -167,7 +167,7 @@ std::map<uint8_t, uint64_t>  SimulationVehicle::get_collisions(
             sin(sample_out[vehicle].pose().yaw())
         );
         const double distance = min_distance_vehicle_to_vehicle(nodeA, nodeB);
-        if (distance < 0.03)
+        if (distance < 0.001)
         {
             // add collision to result
             collisions[vehicle] = t_sample;
