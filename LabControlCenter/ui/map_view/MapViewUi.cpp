@@ -104,7 +104,7 @@ MapViewUi::MapViewUi(
                 {
                     path.emplace_back(path_painting_in_progress.at(i).x(), path_painting_in_progress.at(i).y());
                 }
-                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path, 0);
+                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path);
             }
 
             path_painting_in_progress.clear();
