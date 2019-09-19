@@ -7,7 +7,7 @@ simulated_time=$4
 # Test values
 script_path=matlab/platoon_example
 script_name=main
-vehicle_id=14
+vehicle_id=14,13
 simulated_time=true
 
 exit_script() {
@@ -35,11 +35,11 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 trap exit_script SIGINT SIGTERM
 
 # Start local software
-# tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
-# sleep 3
-# tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
-# tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
-# tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
+tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
+sleep 3
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
+tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
 
 # Publish package via http/apache for the NUCs to download -> in build_all? Was ist mit HLC scripts?
 #   1. make middleware
@@ -67,7 +67,7 @@ do
     # Start download / start script on NUCs
     sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
     # sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ controller@$ip:/tmp/
-    sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${vehicle_id} ${simulated_time}"
+    sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${val} ${simulated_time}"
 done
 
 sleep infinity
