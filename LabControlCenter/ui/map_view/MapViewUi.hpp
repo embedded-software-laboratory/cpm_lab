@@ -3,7 +3,6 @@
 #include <gtkmm.h>
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
-#include "Point.hpp"
 #include <thread>
 #include <vector>
 #include "TrajectoryCommand.hpp"

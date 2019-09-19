@@ -1,5 +1,7 @@
 #include "TrajectoryCommand.hpp"
 
+const uint64_t dt_nanos = 100000000ull;
+
 TrajectoryCommand::TrajectoryCommand()
 :topic_vehicleCommandTrajectory(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
 ,writer_vehicleCommandTrajectory(dds::pub::DataWriter<VehicleCommandTrajectory>(
@@ -7,7 +9,7 @@ TrajectoryCommand::TrajectoryCommand()
     topic_vehicleCommandTrajectory)
 )
 {
-    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand",40000000ull, 0, false);
+    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand", dt_nanos, 0, false);
 
     timer->start_async([this](uint64_t t_now){
         send_trajectory(t_now);
@@ -20,129 +22,122 @@ TrajectoryCommand::~TrajectoryCommand()
     timer->stop();
 }
 
-void TrajectoryCommand::init() {
-    timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand",40000000ull, 0, false);
-
-    timer->start_async([this](uint64_t t_now){
-        send_trajectory(t_now);
-    });
-}
-
-int find_path_loop_start_index(std::vector<Point> path)
-{
-    if(path.size() < 3) return -1;
-
-    // position and direction of last node
-    const double x = path.at(path.size()-1).x;
-    const double y = path.at(path.size()-1).y;
-    const double dx = path.at(path.size()-1).x - path.at(path.size()-2).x;
-    const double dy = path.at(path.size()-1).y - path.at(path.size()-2).y;
-
-
-    // find a suitable node in the path to close the loop
-    int loop_start_index = -1;
-    double dist_sq_min = 1e300;
-
-    for (size_t i = 0; i < path.size()-2; ++i)
-    {
-        auto point = path.at(i);
-        double dist_sq = (point.x-x)*(point.x-x) + (point.y-y)*(point.y-y);
-        double direction = point.x * dx + point.y * dy;
-
-        if(direction > 0 && dist_sq > 0.04 && dist_sq < dist_sq_min)
-        {
-            loop_start_index = i;
-            dist_sq_min = dist_sq;
-        }
-    }
-    return loop_start_index;    
-}
-
 inline double vector_length(double x, double y)
 {
     return sqrt(x*x+y*y);
 }
 
-
-void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Point> path, int n_loop)
+void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
 {
     if(path.size() < 3) return;
     if(timer == nullptr) return;
 
+    /** Generate trajectory from given path **/
+    std::vector<double> arc_length(path.size(), 0.0);
 
-    /********** Generate trajectory from given path ********/
-
-    const int loop_start_index = find_path_loop_start_index(path);
-    if(loop_start_index < 0 && n_loop > 0) return; // no closed loop found, path not possible
-
-    // Generate unrolled path
-    vector<TrajectoryPoint> trajectory;
-    int path_index = 0;
-    while(1)
+    for (size_t i = 1; i < path.size(); ++i)
     {
-        if(path_index >= int(path.size())) // path end reached? -> loop around
+        const double dx = path.at(i).x() - path.at(i-1).x();
+        const double dy = path.at(i).y() - path.at(i-1).y();
+        arc_length.at(i) = arc_length.at(i-1) + vector_length(dx,dy);
+    }
+
+    double max_speed = 1.2;
+    const double max_acceleration = 2;
+    const double max_deceleration = 0.4;
+
+    const double standstill_time = 1.5; // time [sec] at zero speed at the beginning and end
+    double acceleration_time = max_speed / max_acceleration;
+    double deceleration_time = max_speed / max_deceleration;
+
+    double acceleration_distance = 0.5 * max_speed * acceleration_time;
+    double deceleration_distance = 0.5 * max_speed * deceleration_time;
+    const double total_distance = arc_length.back();
+    double cruise_distance = total_distance - acceleration_distance - deceleration_distance;
+
+    if(cruise_distance <= 0) 
+    {
+        cruise_distance = 0;
+
+        max_speed = sqrt((2 * total_distance)/
+            (1.0/max_acceleration + 1.0/max_deceleration));
+
+        acceleration_time = max_speed / max_acceleration;
+        deceleration_time = max_speed / max_deceleration;
+
+        acceleration_distance = 0.5 * max_speed * acceleration_time;
+        deceleration_distance = 0.5 * max_speed * deceleration_time;
+    }
+
+    const double cruise_time = cruise_distance / max_speed;
+    const double total_time = standstill_time + acceleration_time + cruise_time + deceleration_time + standstill_time;
+
+    const uint64_t t_start = timer->get_time() + 1000000000ull;
+
+    vector<TrajectoryPoint> trajectory;
+    for (uint64_t t_nanos = 0; (t_nanos * 1e-9) < total_time; t_nanos += dt_nanos)
+    {
+        double t_sec = t_nanos * 1e-9;
+
+        double node_distance = 0;
+        double node_speed = 0;
+
+
+        t_sec -= standstill_time;
+
+        if(t_sec > 0)
         {
-            path_index = loop_start_index;
-            n_loop--;
-            if(n_loop < 0) // all loops done? -> finish
+            const double dt = fmin(t_sec, acceleration_time);
+            node_distance = 0.5 * dt * dt * max_acceleration;
+            node_speed = dt * max_acceleration;
+        }
+
+        t_sec -= acceleration_time;
+
+        if(t_sec > 0)
+        {
+            const double dt = fmin(t_sec, cruise_time);
+            node_distance += max_speed * dt;
+            node_speed = max_speed;
+        }
+
+        t_sec -= cruise_time;
+
+        if(t_sec > 0)
+        {
+            const double dt = fmin(t_sec, deceleration_time);
+            node_speed = max_speed - dt * max_deceleration;
+            node_distance += 0.5 * dt * (node_speed + max_speed);
+        }
+
+        t_sec -= deceleration_time;
+
+
+        if(t_sec > 0)
+        {
+            node_speed = 0;
+            node_distance = total_distance;
+        }
+
+
+        // find path index based on distance
+        int path_index = 0;
+        for (int i = 1; i < path.size(); ++i)
+        {
+            if(fabs(arc_length.at(i) - node_distance) < fabs(arc_length.at(path_index) - node_distance))
             {
-                break;
+                path_index = i;
             }
         }
 
         TrajectoryPoint p;
-        p.px(path.at(path_index).x);
-        p.py(path.at(path_index).y);
+        p.px(path.at(path_index).x());
+        p.py(path.at(path_index).y());
+        p.vx(node_speed * cos(path.at(path_index).yaw()));
+        p.vy(node_speed * sin(path.at(path_index).yaw()));
+        p.t().nanoseconds(t_start + t_nanos);
         trajectory.push_back(p);
-        path_index++;
     }
-
-    // Set directions and speed profile for the trajectory
-    for (size_t i = 1; i < trajectory.size()-1; ++i)
-    {
-        double direction_x = trajectory.at(i+1).px() - trajectory.at(i-1).px();
-        double direction_y = trajectory.at(i+1).py() - trajectory.at(i-1).py();
-        double direction_length = vector_length(direction_x, direction_y);
-        direction_x /= direction_length;
-        direction_y /= direction_length;
-
-        double reference_speed = 1.0;
-        if(i == 1 || i == trajectory.size()-2) 
-        {
-            reference_speed = 0.7;
-        }
-
-        trajectory.at(i).vx(direction_x * reference_speed);
-        trajectory.at(i).vy(direction_y * reference_speed);
-    }
-
-    // Set the timing of the trajectory nodes
-    uint64_t t_start = timer->get_time() + 2000000000ull;
-    trajectory.at(0).t().nanoseconds(t_start);
-
-    for (size_t i = 1; i < trajectory.size(); ++i)
-    {
-        const double segment_length = vector_length(
-            trajectory.at(i).px() - trajectory.at(i-1).px(), 
-            trajectory.at(i).py() - trajectory.at(i-1).py()
-        );
-        const double speed1 = vector_length(
-            trajectory.at(i).vx(), 
-            trajectory.at(i).vy()
-        );
-        const double speed2 = vector_length(
-            trajectory.at(i-1).vx(), 
-            trajectory.at(i-1).vy()
-        );
-        const double average_speed = (speed1 + speed2)/2;
-
-        const double delta_t = 1.05 * segment_length / average_speed;
-
-        trajectory.at(i).t().nanoseconds(
-            trajectory.at(i-1).t().nanoseconds() + uint64_t(1e9*delta_t)
-        );
-    }
-
 
     std::lock_guard<std::mutex> lock(_mutex);
     this->vehicle_trajectories[vehicle_id] = trajectory;
