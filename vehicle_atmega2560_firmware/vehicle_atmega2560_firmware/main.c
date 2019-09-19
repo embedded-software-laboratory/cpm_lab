@@ -118,7 +118,28 @@ int main(void)
 		}
 		else {
 			SET_BIT(spi_miso_data.status_flags, 0);
-		}		
+		}
+
+
+		//// motor derating to limit max speed
+		// speed units: 1 m/s ~ 1343
+		// speed units: 2 m/s ~ 2686
+		if(spi_mosi_data.motor_mode == SPI_MOTOR_MODE_FORWARD 
+			&& speed > 2600
+			&& spi_mosi_data.motor_pwm > 0)
+		{
+			int16_t delta_motor_pwm = (speed - 2600);
+			if(spi_mosi_data.motor_pwm > delta_motor_pwm) spi_mosi_data.motor_pwm -= delta_motor_pwm;
+			else spi_mosi_data.motor_pwm = 0;
+		}
+		else if(spi_mosi_data.motor_mode == SPI_MOTOR_MODE_REVERSE 
+			&& speed < -2600
+			&& spi_mosi_data.motor_pwm > 0)
+		{
+			int16_t delta_motor_pwm = (-speed - 2600);
+			if(spi_mosi_data.motor_pwm > delta_motor_pwm) spi_mosi_data.motor_pwm -= delta_motor_pwm;
+			else spi_mosi_data.motor_pwm = 0;
+		}
 		
 	
 		/// apply commands
