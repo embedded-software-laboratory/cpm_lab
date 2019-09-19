@@ -7,7 +7,7 @@ simulated_time=$4
 # Test values
 script_path=matlab/platoon_example
 script_name=main
-vehicle_id=1
+vehicle_id=14
 simulated_time=true
 
 exit_script() {
@@ -22,7 +22,7 @@ exit_script() {
     do
         ip=$(printf "192.168.1.2%02d" ${val})
         echo $ip
-        sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/hlc/stop.bash'
+        sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/software/hlc/stop.bash'
     done
     trap - SIGINT SIGTERM # clear the trap
 }
@@ -49,7 +49,7 @@ trap exit_script SIGINT SIGTERM
 #   2. create tar
 mkdir nuc_apache_package
 pushd nuc_apache_package
-tar -czvf nuc_package.tar.gz ../hlc ../../cpm_base/cpm_lib/build/libcpm.so
+tar -czvf nuc_package.tar.gz ../../software/hlc ../../cpm_base/cpm_lib/build/libcpm.so ../../cpm_base/dds_idl
 popd
 #   3. publish package
 rm -f /var/www/html/nuc/nuc_package.tar.gz
@@ -65,7 +65,7 @@ do
     ip=$(printf "192.168.1.2%02d" ${val})
     echo $ip
     # Start download / start script on NUCs
-    # sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
+    sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
     # sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ controller@$ip:/tmp/
     sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${vehicle_id} ${simulated_time}"
 done
