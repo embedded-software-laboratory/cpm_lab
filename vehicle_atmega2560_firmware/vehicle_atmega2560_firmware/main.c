@@ -128,7 +128,7 @@ int main(void)
 			&& speed > 2600
 			&& spi_mosi_data.motor_pwm > 0)
 		{
-			int16_t delta_motor_pwm = (speed - 2600);
+			int16_t delta_motor_pwm = (speed - 2600)/2;
 			if(spi_mosi_data.motor_pwm > delta_motor_pwm) spi_mosi_data.motor_pwm -= delta_motor_pwm;
 			else spi_mosi_data.motor_pwm = 0;
 		}
@@ -136,7 +136,7 @@ int main(void)
 			&& speed < -2600
 			&& spi_mosi_data.motor_pwm > 0)
 		{
-			int16_t delta_motor_pwm = (-speed - 2600);
+			int16_t delta_motor_pwm = (-speed - 2600)/2;
 			if(spi_mosi_data.motor_pwm > delta_motor_pwm) spi_mosi_data.motor_pwm -= delta_motor_pwm;
 			else spi_mosi_data.motor_pwm = 0;
 		}
