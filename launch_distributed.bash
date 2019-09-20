@@ -23,6 +23,8 @@ exit_script() {
         ip=$(printf "192.168.1.2%02d" ${val})
         echo $ip
         sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/software/hlc/stop.bash'
+
+        tmux kill-session -t "vehicle_${val}"
     done
     trap - SIGINT SIGTERM # clear the trap
 }
@@ -37,7 +39,7 @@ trap exit_script SIGINT SIGTERM
 # Start local software
 tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
 sleep 3
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
 tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
 
@@ -68,6 +70,9 @@ do
     sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
     # sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ controller@$ip:/tmp/
     sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${val} ${simulated_time}"
+
+    # Start vehicle
+    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_simulated.bash ${val} 3"
 done
 
 sleep infinity
