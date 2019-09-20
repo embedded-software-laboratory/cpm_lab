@@ -37,9 +37,9 @@ trap exit_script SIGINT SIGTERM
 # Start local software
 tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
 sleep 3
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
-tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
-tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
+tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=3 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
 
 # Publish package via http/apache for the NUCs to download -> in build_all? Was ist mit HLC scripts?
 #   1. make middleware
