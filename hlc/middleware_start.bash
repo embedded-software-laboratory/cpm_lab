@@ -9,6 +9,7 @@ middleware_id=$(printf "middleware_%02d" ${vehicle_id})
 # Start screen for middleware; detach and start middleware
 cd /tmp/software/hlc/middleware/build
 
+# Put this into external file / find out if it is really necessary
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/:/tmp/cpm_base/cpm_lib/build/:/opt/rti_connext_dds-5.3.1/lib/x64Linux3gcc5.4.0
 export PATH=$PATH:$HOME/bin:$HOME/.local/bin:/opt/rti_connext_dds-5.3.1:/opt/rti_connext_dds-5.3.1/bin:/opt/rti_connext_dds-5.3.1/lib/x64Linux3gcc5.4.0:/opt/rti_connext_dds-5.3.1/bin:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin
 export NDDSHOME=/opt/rti_connext_dds-5.3.1
