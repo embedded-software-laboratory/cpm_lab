@@ -42,7 +42,7 @@ for val in $vehicle_id;
 do
     # Start HLC and middleware
     tmux new-session -d -s "middleware_${val}" "cd ./hlc/;bash middleware_start.bash ${val} ${simulated_time} &> middleware.txt"
-    tmux new-session -d -s "hlc_${val}" "cd ./hlc/;bash hlc_start.bash ${script_path} ${script_name} ${val}"
+    tmux new-session -d -s "hlc_${val}" "cd ./hlc/;bash hlc_start.bash ${script_path} ${script_name} ${val} &> hlc.txt"
 
     # Start vehicle
     tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_simulated.bash ${val} 3"
