@@ -145,13 +145,15 @@ std::map<uint8_t, uint64_t>  SimulationVehicle::get_collisions(
     std::map<uint8_t, VehicleObservation> sample_out; 
     std::map<uint8_t, uint64_t> sample_age_out;
     reader_vehiclePoseSimulated.get_samples(t_now, sample_out, sample_age_out);
-    for(uint8_t vehicle = 1; vehicle < sample_out.size(); ++vehicle)
+    for(const auto& entry : sample_out)
     {
-        if (sample_age_out[vehicle] > 1000000000ull) continue; // don't consider information older than 1s
-        if (vehicle == vehicle_id) continue; // don't consider ego vehicle
+        const auto vehicle_id_in = entry.first;
+        const auto sample = entry.second;
+        // don't consider samples older than 1s
+        if (sample.header().create_stamp().nanoseconds() < t_now - 1000000000ull) continue;
+        if (vehicle_id_in == vehicle_id) continue; // don't consider ego vehicle
         // find ego pose corresponding to sample time
-        uint64_t t_sample = t_now-sample_age_out[vehicle];
-        auto ego_pose_it = ego_pose_history.find(t_sample);
+        auto ego_pose_it = ego_pose_history.find(sample.header().create_stamp().nanoseconds());
         if (ego_pose_it == ego_pose_history.end()) continue;
         // check for collision
         PathNode nodeA = PathNode(
@@ -161,16 +163,16 @@ std::map<uint8_t, uint64_t>  SimulationVehicle::get_collisions(
             sin(ego_pose_it->second.yaw())
         );
         PathNode nodeB = PathNode(
-            sample_out[vehicle].pose().x(),
-            sample_out[vehicle].pose().y(),
-            cos(sample_out[vehicle].pose().yaw()),
-            sin(sample_out[vehicle].pose().yaw())
+            sample.pose().x(),
+            sample.pose().y(),
+            cos(sample.pose().yaw()),
+            sin(sample.pose().yaw())
         );
         const double distance = min_distance_vehicle_to_vehicle(nodeA, nodeB);
         if (distance < 0.001)
         {
             // add collision to result
-            collisions[vehicle] = t_sample;
+            collisions[vehicle_id_in] = sample.header().create_stamp().nanoseconds();
         }
     }
     return collisions;

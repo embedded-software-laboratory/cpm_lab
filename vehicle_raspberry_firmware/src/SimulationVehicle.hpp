@@ -25,8 +25,6 @@ extern "C" {
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
-Pose2D transform_to_COS(const Pose2D origin_COS, const Pose2D pose_in);
-
 class SimulationVehicle
 {
     // TODO load parameters via DDS parameters
