@@ -99,12 +99,7 @@ MapViewUi::MapViewUi(
         {
             if(path_painting_in_progress.size() > 25)
             {
-                std::vector<Point> path;
-                for (size_t i = 0; i < path_painting_in_progress.size(); i+=20)
-                {
-                    path.emplace_back(path_painting_in_progress.at(i).x(), path_painting_in_progress.at(i).y());
-                }
-                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path, 0);
+                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress);
             }
 
             path_painting_in_progress.clear();

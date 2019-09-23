@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "defaults.hpp"
-#include "Point.hpp"
+#include "Pose2D.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/TimerFD.hpp"
 #include "cpm/get_topic.hpp"
@@ -22,8 +22,7 @@ class TrajectoryCommand
 public:
     TrajectoryCommand();
     ~TrajectoryCommand();
-    void set_path(uint8_t vehicle_id, std::vector<Point> path, int n_loop);
-    void init();
+    void set_path(uint8_t vehicle_id, std::vector<Pose2D> path);
     void stop(uint8_t vehicle_id);
     void stop_all();
     
