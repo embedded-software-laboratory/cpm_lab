@@ -33,6 +33,7 @@ void VehicleModel::step(
     const auto &p = dynamics_parameters;
     const double delta = steering_servo + p[9-1];
     const double f = motor_throttle;
+
     d_px = p[1-1] * speed * (1 + p[2-1] * delta*delta) * cos(yaw + p[3-1] * delta + p[10-1]);
     d_py = p[1-1] * speed * (1 + p[2-1] * delta*delta) * sin(yaw + p[3-1] * delta + p[10-1]);
     d_yaw = p[4-1] * speed * delta;
@@ -42,6 +43,15 @@ void VehicleModel::step(
     py    += dt * d_py;
     yaw   += dt * d_yaw;
     speed += dt * d_speed;
+
+    // Log warnings if model is not valid
+    // input
+    //      motor
+    //      steering
+    //      battery
+    // state
+    //      d_yaw and speed
+    //      d_speed
     
     return;
 }
