@@ -60,9 +60,9 @@ void VehicleModel::log_sim_warnings(
     // Log warnings if model is not valid
     double motor_throttle_lim = 1.0;
     double steering_servo_lim = 1.0;
-    // TODO: sensible values; a ~= mu*g?
-    double a_lon_lim = 9.81;
-    double a_lat_lim = 9.81;
+    // approx. a = mu*g
+    double a_lon_lim = 0.75*9.81;
+    double a_lat_lim = 0.75*9.81;
     // input for motor and steering
     if (fabs(motor_throttle) > motor_throttle_lim)
     {
