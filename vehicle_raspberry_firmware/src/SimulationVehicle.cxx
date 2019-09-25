@@ -150,7 +150,7 @@ std::map<uint8_t, uint64_t>  SimulationVehicle::get_collisions(
         const auto vehicle_id_in = entry.first;
         const auto sample = entry.second;
         // don't consider samples older than 1s
-        if (sample.header().create_stamp().nanoseconds() < t_now - 1000000000ull) continue;
+        if (sample.header().create_stamp().nanoseconds() + 1000000000ull < t_now) continue;
         if (vehicle_id_in == vehicle_id) continue; // don't consider ego vehicle
         // find ego pose corresponding to sample time
         auto ego_pose_it = ego_pose_history.find(sample.header().create_stamp().nanoseconds());
