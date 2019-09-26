@@ -72,7 +72,7 @@ do
     sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${val} ${simulated_time}"
 
     # Start vehicle (here for test purposes, later: use real vehicles / position them correctly)
-    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_simulated.bash ${val} 3"
+    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
 done
 
 sleep infinity

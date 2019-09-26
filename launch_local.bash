@@ -45,7 +45,7 @@ IFS=,
 for val in $vehicle_id;
 do
     # Start vehicle
-    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_simulated.bash ${val} 3"
+    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
 done
 
 sleep infinity
