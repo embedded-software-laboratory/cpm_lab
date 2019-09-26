@@ -27,17 +27,16 @@
 
         <!-- Specify where to store the recorded data. -->
         <recorder_database>
-            <database_name> my_file_name </database_name>
+            <database_name> TEMPLATE_RECORDING_FILENAME </database_name>
         </recorder_database>
-        <!-- Create a DDS DomainParticipant in domain 0 with default QoS -->
         <domain name="my_domain">
-            <domain_id>21</domain_id>
+            <domain_id>TEMPLATE_DOMAIN_ID</domain_id>
             <deserialize_mode>RTIDDS_DESERIALIZEMODE_ALWAYS</deserialize_mode>
             <participant_qos>
                 <discovery>
                     <initial_peers>
                         <element>localhost</element>
-                        <element>rtps@udpv4://192.168.1.249:25598</element>
+                        <element>TEMPLATE_DISCOVERY_URL</element>
                     </initial_peers>   
                 </discovery>
             </participant_qos>
