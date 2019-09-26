@@ -13,13 +13,13 @@ simulated_time=true
 exit_script() {
     tmux kill-session -t "LabControlCenter"
     tmux kill-session -t "rticlouddiscoveryservice"
+    tmux kill-session -t "middleware"
 
     # Stop HLCs and vehicles
     IFS=,
     for val in $vehicle_id;
     do
         tmux kill-session -t "hlc_${val}"
-        tmux kill-session -t "middleware_${val}"
         tmux kill-session -t "vehicle_${val}"
     done
     
@@ -36,13 +36,14 @@ trap exit_script SIGINT SIGTERM
 tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
 sleep 3
 tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+# Start middleware
+tmux new-session -d -s "middleware" "cd ./hlc/;bash middleware_start.bash ${vehicle_id} ${simulated_time} &> middleware.txt"
 
 IFS=,
 for val in $vehicle_id;
 do
-    # Start HLC and middleware
-    tmux new-session -d -s "middleware_${val}" "cd ./hlc/;bash middleware_start.bash ${val} ${simulated_time} &> middleware.txt"
-    tmux new-session -d -s "hlc_${val}" "cd ./hlc/;bash hlc_start.bash ${script_path} ${script_name} ${val} &> hlc.txt"
+    # Start HLC
+    tmux new-session -d -s "hlc_${val}" "cd ./hlc/;bash hlc_start_local.bash ${script_path} ${script_name} ${val} &> hlc.txt"
 
     # Start vehicle
     tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_simulated.bash ${val} 3"
