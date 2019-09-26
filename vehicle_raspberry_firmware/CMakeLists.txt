@@ -51,6 +51,7 @@ set_source_files_properties(src/casadi_mpc_fn.c PROPERTIES COMPILE_FLAGS -O3)
 if(BUILD_SIMULATION)
     set(SOURCE
         ${SOURCE_BASE}
+        src/geometry.hpp
         src/SimulationVehicle.cxx
         src/SimulationVehicle.hpp
         src/SimulationIPS.cxx
@@ -79,13 +80,11 @@ endif()
 
 add_executable(vehicle_rpi_firmware ${SOURCE})
 
-
-
 if(BUILD_ARM)
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -march=armv6 -mfpu=vfp -mfloat-abi=hard -mlong-calls)
 else()
     target_compile_options(vehicle_rpi_firmware PUBLIC -fpic -DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -m64 -Wl,--no-as-needed)
-    SET_TARGET_PROPERTIES(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
+    set_target_properties(vehicle_rpi_firmware PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
 endif()
 
 

@@ -2,21 +2,19 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/stamp_message.hpp"
 
 extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
 }
 
-
-
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id)
-:topic_vehiclePoseSimulated(cpm::ParticipantSingleton::Instance(), "vehiclePoseSimulated")
-,writer_vehiclePoseSimulated(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehiclePoseSimulated)
+:topic_vehiclePoseSimulated(cpm::get_topic<VehicleObservation>("vehiclePoseSimulated"))
+,writer_vehiclePoseSimulated(
+    dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+    topic_vehiclePoseSimulated)
+,reader_vehiclePoseSimulated(topic_vehiclePoseSimulated, MAX_NUM_VEHICLES)
 ,simulationIPS(_simulationIPS)
 {
-
     // select a starting position on the "map2" layout
     const std::vector<double> nodes_x = std::vector<double>{2.2500e+00,3.1500e+00,2.2500e+00,3.1575e+00,3.8074e+00,3.8795e+00,4.2103e+00,4.3584e+00,4.2450e+00,4.3950e+00,3.8956e+00,4.0623e+00,3.8242e+00,3.0500e+00,3.0500e+00,2.3250e+00,2.4884e+00,2.4750e+00,2.6065e+00,3.1425e+00,2.2500e+00,2.4750e+00,2.1750e+00,3.0500e+00,2.0250e+00,3.0500e+00,2.3250e+00,2.2500e+00,1.3500e+00,1.3425e+00,6.9264e-01,6.2050e-01,2.8966e-01,1.4158e-01,2.5500e-01,1.0500e-01,6.0440e-01,6.7576e-01,4.3775e-01,1.4500e+00,1.4500e+00,2.0116e+00,1.8935e+00,1.3575e+00,2.0250e+00,1.4500e+00,1.4500e+00,2.1750e+00,3.1500e+00,2.2500e+00,3.1575e+00,2.2500e+00,3.8074e+00,3.8795e+00,4.2103e+00,4.3584e+00,3.8956e+00,3.8242e+00,4.0623e+00,2.4884e+00,2.3250e+00,2.6065e+00,2.4750e+00,3.1425e+00,2.2500e+00,2.1750e+00,2.0250e+00,2.2500e+00,1.3500e+00,1.3425e+00,6.9264e-01,6.2050e-01,2.8966e-01,1.4158e-01,6.0440e-01,4.3775e-01,6.7576e-01,2.0116e+00,1.8935e+00,1.3575e+00,};
     const std::vector<double> nodes_y = std::vector<double>{3.7450e+00,3.7390e+00,3.8950e+00,3.8888e+00,3.5902e+00,3.7217e+00,2.9310e+00,2.9549e+00,2.0000e+00,2.0000e+00,2.1939e+00,2.9071e+00,2.3258e+00,2.0750e+00,2.2250e+00,2.8000e+00,3.5006e+00,2.8000e+00,3.4081e+00,3.5892e+00,2.2250e+00,2.0000e+00,2.8000e+00,1.9250e+00,2.8000e+00,1.7750e+00,2.0000e+00,2.0750e+00,3.7390e+00,3.8888e+00,3.5902e+00,3.7217e+00,2.9310e+00,2.9549e+00,2.0000e+00,2.0000e+00,2.1939e+00,2.3258e+00,2.9071e+00,2.0750e+00,2.2250e+00,3.5006e+00,3.4081e+00,3.5892e+00,2.0000e+00,1.9250e+00,1.7750e+00,2.0000e+00,2.6100e-01,2.5500e-01,1.1119e-01,1.0500e-01,4.0979e-01,2.7828e-01,1.0690e+00,1.0451e+00,1.8061e+00,1.6742e+00,1.0929e+00,4.9935e-01,1.2000e+00,5.9189e-01,1.2000e+00,4.1081e-01,1.7750e+00,1.2000e+00,1.2000e+00,1.9250e+00,2.6100e-01,1.1119e-01,4.0979e-01,2.7828e-01,1.0690e+00,1.0451e+00,1.8061e+00,1.0929e+00,1.6742e+00,4.9935e-01,5.9189e-01,4.1081e-01,};
@@ -31,11 +29,11 @@ SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehi
 }
 
 VehicleState SimulationVehicle::update(
-        const double& motor_throttle,
-        const double& steering_servo,
-        const uint64_t& t_now, 
-        const double& dt, 
-        const uint8_t& vehicle_id
+    const double motor_throttle,
+    const double steering_servo,
+    const uint64_t t_now, 
+    const double dt, 
+    const uint8_t vehicle_id
 )
 {
     // account for input delay
@@ -72,6 +70,7 @@ VehicleState SimulationVehicle::update(
     yaw_measured += dt * d_yaw + 1e-4 * frand(); // simulate random biased gyro drift
     yaw_measured = remainder(yaw_measured, 2*M_PI); // yaw in range [-PI, PI]
 
+
     // Publish simulated state
     {
         VehicleObservation simulatedState;
@@ -84,6 +83,22 @@ VehicleState SimulationVehicle::update(
 
         simulationIPS.update(simulatedState);
     }
+
+    
+    // save current pose
+    ego_pose_history[t_now] = Pose2D(px, py, yaw);
+    // Check for collision
+    std::map<uint8_t, uint64_t> collisions = get_collisions(t_now, vehicle_id);
+    for (auto const& colli : collisions)
+    {
+        cpm::Logging::Instance().write(
+            "Collision with vehicle %u at time %llu.", 
+            colli.first, colli.second);
+    }
+    // Erase trajectory points which are older than 0.5 seconds
+    const uint64_t past_threshold_time = t_now - 500000000ull;
+    auto last_valid_it = ego_pose_history.upper_bound(past_threshold_time);
+    ego_pose_history.erase(ego_pose_history.begin(), last_valid_it);
 
     /*std::cout 
     << "dt"                    << "  " << dt                    << std::endl
@@ -117,4 +132,48 @@ void SimulationVehicle::get_state(double& _px, double& _py, double& _yaw, double
     _py = py;
     _yaw = yaw;
     _speed = speed;
+}
+
+
+std::map<uint8_t, uint64_t>  SimulationVehicle::get_collisions(
+    const uint64_t t_now,
+    const uint8_t vehicle_id
+)
+{
+    std::map<uint8_t, uint64_t> collisions;
+    
+    std::map<uint8_t, VehicleObservation> sample_out; 
+    std::map<uint8_t, uint64_t> sample_age_out;
+    reader_vehiclePoseSimulated.get_samples(t_now, sample_out, sample_age_out);
+    for(const auto& entry : sample_out)
+    {
+        const auto vehicle_id_in = entry.first;
+        const auto sample = entry.second;
+        // don't consider samples older than 1s
+        if (sample.header().create_stamp().nanoseconds() + 1000000000ull < t_now) continue;
+        if (vehicle_id_in == vehicle_id) continue; // don't consider ego vehicle
+        // find ego pose corresponding to sample time
+        auto ego_pose_it = ego_pose_history.find(sample.header().create_stamp().nanoseconds());
+        if (ego_pose_it == ego_pose_history.end()) continue;
+        // check for collision
+        PathNode nodeA = PathNode(
+            ego_pose_it->second.x(),
+            ego_pose_it->second.y(),
+            cos(ego_pose_it->second.yaw()),
+            sin(ego_pose_it->second.yaw())
+        );
+        PathNode nodeB = PathNode(
+            sample.pose().x(),
+            sample.pose().y(),
+            cos(sample.pose().yaw()),
+            sin(sample.pose().yaw())
+        );
+        const double distance = min_distance_vehicle_to_vehicle(nodeA, nodeB);
+        if (distance < 0.001)
+        {
+            // add collision to result
+            collisions[vehicle_id_in] = sample.header().create_stamp().nanoseconds();
+        }
+    }
+    return collisions;
 }
