@@ -3,7 +3,6 @@
 #include <gtkmm.h>
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
-#include "Point.hpp"
 #include <thread>
 #include <vector>
 #include "TrajectoryCommand.hpp"
@@ -26,6 +25,7 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
+    Cairo::RefPtr<Cairo::ImageSurface> image_map;
     VehicleData vehicle_data;
 
 

@@ -65,7 +65,7 @@ void MultiVehicleTrajectoryPlanner::start()
 
                 for(auto &e:trajectoryPlans)
                 {
-                    while(trajectory_point_buffer[e.first].size() > 9)
+                    while(trajectory_point_buffer[e.first].size() > 50)
                     {
                         trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin());
                     }

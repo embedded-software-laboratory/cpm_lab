@@ -75,6 +75,8 @@ class Controller
     void reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
     std::shared_ptr<TrajectoryInterpolation> interpolate_trajectory_command(uint64_t t_now);
 
+    double motor_throttle_state = 0;
+    double steering_servo_state = 0;
 
     // Trajectory tacking statistics
     void trajectory_tracking_statistics_update(uint64_t t_now);

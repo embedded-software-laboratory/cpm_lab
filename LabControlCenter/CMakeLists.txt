@@ -31,6 +31,8 @@ link_directories(../../yaml-cpp/build/)
 
 
 add_executable(LabControlCenter
+    src/LogStorage.hpp
+    src/LogStorage.cpp
     src/TimerTrigger.hpp
     src/TimerTrigger.cpp
     src/TimeSeries.cpp
@@ -62,11 +64,13 @@ add_executable(LabControlCenter
     ui/timer/TimerViewUI.hpp
     ui/timer/TimerViewUI.cpp
     ui/timer/TimerModelRecord.hpp
+    ui/logger/LoggerViewUI.hpp
+    ui/logger/LoggerViewUI.cpp
+    ui/logger/LoggerModelRecord.hpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp
     src/defaults.hpp
-    src/Point.hpp
     src/Joystick.cpp
     src/Joystick.hpp
     src/ParameterServer.cpp

@@ -22,6 +22,7 @@ MapViewUi::MapViewUi(
     drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
+    image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
         vehicle_data = this->get_vehicle_data();
@@ -98,12 +99,7 @@ MapViewUi::MapViewUi(
         {
             if(path_painting_in_progress.size() > 25)
             {
-                std::vector<Point> path;
-                for (size_t i = 0; i < path_painting_in_progress.size(); i+=20)
-                {
-                    path.emplace_back(path_painting_in_progress.at(i).x(), path_painting_in_progress.at(i).y());
-                }
-                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path, 0);
+                trajectoryCommand->set_path(path_painting_in_progress_vehicle_id, path_painting_in_progress);
             }
 
             path_painting_in_progress.clear();
@@ -120,9 +116,8 @@ MapViewUi::MapViewUi(
 
 
         // if in path drawing mode
-        if(mouse_left_button)
+        if(mouse_left_button && !path_painting_in_progress.empty())
         {
-
             while(1)
             {
                 assert(!path_painting_in_progress.empty());
@@ -378,6 +373,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
+    // Draw map (roads) image
+    ctx->save();
+    {
+        const double scale = 4.0/image_map->get_height();
+        ctx->scale(scale, scale);
+        ctx->set_source(image_map,0,0);
+        ctx->paint();
+    }
+    ctx->restore();
+
+    // Draw grid lines
     ctx->save();
     {
         ctx->scale(.1, .1);
