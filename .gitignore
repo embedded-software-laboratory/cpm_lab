@@ -43,3 +43,4 @@ nuc_apache_package
 hlc/middleware.txt
 hlc/hlc.txt
 hlc/matlab.log
+hlc/hlc_*.txt
