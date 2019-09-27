@@ -6,7 +6,7 @@ simulated_time=$4
 
 # Test values
 script_path=matlab/platoon_example
-script_name=main
+script_name=main_vehicle_ids
 vehicle_id=14,13
 simulated_time=true
 

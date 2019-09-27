@@ -39,7 +39,9 @@ int main (int argc, char *argv[]) {
     int hlcDomainNumber = cpm::cmd_parameter_int("domain_number", 1, argc, argv); 
     
     //Vehicle ID(s) set in command line, correspond to HLC IDs
+    //Vehicle amount: Tell system amount of vehicles, IDs range from 1 to vehicle_amount
     int vehicleID = cpm::cmd_parameter_int("vehicle_id", 1, argc, argv); 
+    int amount_of_vehicles = cpm::cmd_parameter_int("vehicle_amount", -1, argc, argv);
     std::vector<int> default_ids{ 1 };
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
 
@@ -54,20 +56,30 @@ int main (int argc, char *argv[]) {
     const std::string hlcDirectTopicName = "directTopic"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
-    //Get unsigned vehicle ids
+    //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
-    for (int vehicle_id : vehicle_ids) {
-        if (vehicle_id >= 0 && vehicle_id <= 255) {
+    if (amount_of_vehicles > 0 && amount_of_vehicles <= 255) {
+        //Get vehicle ID list from set vehicle amount
+        uint8_t u_amount_of_vehicles = static_cast<uint8_t>(amount_of_vehicles);
+        for (uint8_t vehicle_id = 1; vehicle_id <= u_amount_of_vehicles; ++vehicle_id) {
             unsigned_vehicle_ids.push_back(static_cast<uint8_t>(vehicle_id));
         }
-        else {
-            std::cerr << "Incompatible vehicle id" << std::endl;
-            cpm::Logging::Instance().write("Incompatible vehicle ids sent - not within 0 and 255");
-        }
     }
-    if (unsigned_vehicle_ids.size() == 0) {
-        std::cerr << "No vehicle ids set!" << std::endl; //TODO LOG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        exit(EXIT_FAILURE);
+    else {
+        //Create vehicle ID list from command line id list 
+        for (int vehicle_id : vehicle_ids) {
+            if (vehicle_id >= 0 && vehicle_id <= 255) {
+                unsigned_vehicle_ids.push_back(static_cast<uint8_t>(vehicle_id));
+            }
+            else {
+                std::cerr << "Incompatible vehicle id" << std::endl;
+                cpm::Logging::Instance().write("Incompatible vehicle ids sent - not within 0 and 255");
+            }
+        }
+        if (unsigned_vehicle_ids.size() == 0) {
+            std::cerr << "No vehicle ids set!" << std::endl; //TODO LOG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            exit(EXIT_FAILURE);
+        }
     }
 
     //Initialize the timer
