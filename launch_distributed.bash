@@ -1,14 +1,53 @@
 #!/bin/bash
-script_path=$1
-script_name=$2
-vehicle_id=$3
-simulated_time=$4
+#Get command line arguments
+for i in "$@"
+do
+case $i in
+    -sp=*|--script_path=*)
+    script_path="${i#*=}"
+    shift # past argument=value
+    ;;
+    -sn=*|--script_name=*)
+    script_name="${i#*=}"
+    shift # past argument=value
+    ;;
+    -vi=*|--vehicle_ids=*)
+    vehicle_ids="${i#*=}"
+    shift # past argument=value
+    ;;
+    -va=*|--vehicle_amount=*)
+    vehicle_amount="${i#*=}"
+    shift # past argument=value
+    ;;
+    -st=*|--simulated_time=*)
+    simulated_time="${i#*=}"
+    shift # past argument=value
+    ;;
+    *)
+          # unknown option
+    ;;
+esac
+done
 
-# Test values
+# Test values -> remove this later on
 script_path=matlab/platoon_example
 script_name=main_vehicle_ids
-vehicle_id=14,13
+vehicle_ids=14,13
 simulated_time=true
+
+#Check for existence of required command line arguments
+if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ]
+then
+      echo "Usage: bash launch_*.bash --script_path=... --script_name=... --vehicle_amount=... --simulated_time=..."
+      echo "Or: bash launch_*.bash --script_path=... --script_name=... --vehicle_ids=... --simulated_time=..."
+      exit 1
+fi
+
+#If vehicle amount was set, create vehicle id list in vehicle_ids from that, style: 1,...,vehicle_amount
+if !([ -z "$vehicle_amount" ])
+then
+    vehicle_ids=$(seq -s, 1 1 ${vehicle_amount})
+fi
 
 exit_script() {
     tmux kill-session -t "LabControlCenter"
@@ -18,7 +57,7 @@ exit_script() {
 
     # Stop HLCs and vehicles
     IFS=,
-    for val in $vehicle_id;
+    for val in $vehicle_ids;
     do
         ip=$(printf "192.168.1.2%02d" ${val})
         echo $ip
@@ -62,7 +101,7 @@ rm -f /var/www/html/nuc/DDS_INITIAL_PEER
 echo $DDS_INITIAL_PEER >/var/www/html/nuc/DDS_INITIAL_PEER
 
 IFS=,
-for val in $vehicle_id;
+for val in $vehicle_ids;
 do
     ip=$(printf "192.168.1.2%02d" ${val})
     echo $ip
