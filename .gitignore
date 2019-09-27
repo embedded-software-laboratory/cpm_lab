@@ -44,3 +44,4 @@ hlc/middleware.txt
 hlc/hlc.txt
 hlc/matlab.log
 hlc/hlc_*.txt
+command_line_arguments_test.bash
