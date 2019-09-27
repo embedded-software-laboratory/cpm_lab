@@ -1,4 +1,5 @@
 #include "VehicleModel.hpp"
+#include <cpm/Logging.hpp>
 
 void VehicleModel::step(
     const std::vector<double> &dynamics_parameters,
