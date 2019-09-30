@@ -19,6 +19,10 @@ case $i in
     vehicle_amount="${i#*=}"
     shift # past argument=value
     ;;
+    -hi=*|--hlc_ids=*)
+    hlc_ids="${i#*=}"
+    shift # past argument=value
+    ;;
     -st=*|--simulated_time=*)
     simulated_time="${i#*=}"
     shift # past argument=value
@@ -36,7 +40,7 @@ done
 # simulated_time=true
 
 #Check for existence of required command line arguments
-if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ]
+if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ] || [ -z "$hlc_ids" ]
 then
       echo "Usage: bash launch_*.bash --script_path=... --script_name=... --vehicle_amount=... --simulated_time=..."
       echo "Or: bash launch_*.bash --script_path=... --script_name=... --vehicle_ids=... --simulated_time=..."
@@ -49,6 +53,10 @@ then
     vehicle_ids=$(seq -s, 1 1 ${vehicle_amount})
 fi
 
+# Get vehicle and HLC ID array
+IFS=',' read -r -a vehicle_array <<< "$vehicle_ids"
+IFS=',' read -r -a hlc_array <<< "$hlc_ids"
+
 exit_script() {
     tmux kill-session -t "LabControlCenter"
     tmux kill-session -t "rticlouddiscoveryservice"
@@ -56,14 +64,14 @@ exit_script() {
     tmux kill-session -t "ips_pipeline"
 
     # Stop HLCs and vehicles
-    IFS=,
-    for val in $vehicle_ids;
+    for index in "${!hlc_array[@]}"
     do
-        ip=$(printf "192.168.1.2%02d" ${val})
+        ip=$(printf "192.168.1.2%02d" ${hlc_array[index]})
+        id=${vehicle_array[index]}
         echo $ip
         sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/software/hlc/stop.bash'
 
-        tmux kill-session -t "vehicle_${val}"
+        tmux kill-session -t "vehicle_${id}"
     done
     trap - SIGINT SIGTERM # clear the trap
 }
@@ -100,18 +108,20 @@ echo $DDS_DOMAIN >/var/www/html/nuc/DDS_DOMAIN
 rm -f /var/www/html/nuc/DDS_INITIAL_PEER
 echo $DDS_INITIAL_PEER >/var/www/html/nuc/DDS_INITIAL_PEER
 
-IFS=,
-for val in $vehicle_ids;
+# Iterate over HLC IDs, get corresponding vehicle IDs
+for index in "${!hlc_array[@]}"
 do
-    ip=$(printf "192.168.1.2%02d" ${val})
+    ip=$(printf "192.168.1.2%02d" ${hlc_array[index]})
+    id=${vehicle_array[index]}
+
     echo $ip
     # Start download / start script on NUCs to start HLC and middleware
     sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
     # sshpass -p c0ntr0ller rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ controller@$ip:/tmp/
-    sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${val} ${simulated_time}"
+    sshpass -p c0ntr0ller ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${id} ${simulated_time}"
 
     # Start vehicle (here for test purposes, later: use real vehicles / position them correctly)
-    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
+    tmux new-session -d -s "vehicle_${id}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${id} 3 ${simulated_time}"
 done
 
 sleep infinity
