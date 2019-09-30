@@ -30,10 +30,10 @@ esac
 done
 
 # Test values -> remove this later on
-script_path=matlab/platoon_example
-script_name=main_vehicle_ids
-vehicle_ids=14,13
-simulated_time=true
+# script_path=matlab/platoon_example
+# script_name=main_vehicle_ids
+# vehicle_ids=14,13
+# simulated_time=true
 
 #Check for existence of required command line arguments
 if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ]
