@@ -39,5 +39,5 @@ for val in $vehicle_ids;
 do
     ip=$(printf "192.168.1.2%02d" ${val})
     echo $ip
-    sshpass -p c0ntr0ller ssh -t controller@$ip "echo ${password} | sudo -S apt-get update;sudo apt-get upgrade"
+    sshpass -p $password ssh -t controller@$ip "echo ${password} | sudo -S apt-get update;sudo apt-get upgrade"
 done

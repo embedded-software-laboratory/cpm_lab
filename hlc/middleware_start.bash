@@ -14,4 +14,4 @@ cd ./middleware/build
 
 echo $middleware_id
 
-./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_id} --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
+./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_id} --dds_domain=21 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
