@@ -27,10 +27,10 @@ case $i in
     simulated_time="${i#*=}"
     shift # past argument=value
     ;;
-    -pw=*|--password=*)
-    password="${i#*=}"
-    shift # past argument=value
-    ;;
+    # -pw=*|--password=*)
+    # password="${i#*=}"
+    # shift # past argument=value
+    # ;;
     *)
           # unknown option
     ;;
@@ -44,7 +44,7 @@ done
 # simulated_time=true
 
 #Check for existence of required command line arguments
-if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ] || [ -z "$hlc_ids" ] || [ -z "$password" ]
+if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ] || [ -z "$hlc_ids" ]
 then
       echo "Usage: bash launch_*.bash --script_path=... --script_name=... --vehicle_amount=... --simulated_time=..."
       echo "Or: bash launch_*.bash --script_path=... --script_name=... --vehicle_ids=... --simulated_time=..."
@@ -73,9 +73,9 @@ exit_script() {
         ip=$(printf "192.168.1.2%02d" ${hlc_array[index]})
         id=${vehicle_array[index]}
         echo $ip
-        sshpass -p $password ssh -t controller@$ip 'bash /tmp/software/hlc/stop.bash'
+        sshpass ssh -t guest@$ip 'bash /tmp/software/hlc/stop.bash'
 
-        #tmux kill-session -t "vehicle_${id}"
+        tmux kill-session -t "vehicle_${id}"
     done
     trap - SIGINT SIGTERM # clear the trap
 }
@@ -120,12 +120,12 @@ do
 
     echo $ip
     # Start download / start script on NUCs to start HLC and middleware
-    sshpass -p $password rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash controller@$ip:/tmp/
-    # sshpass -p $password rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ controller@$ip:/tmp/
-    sshpass -p $password ssh -t controller@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${id} ${simulated_time}"
+    sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash guest@$ip:/tmp/
+    # sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ guest@$ip:/tmp/
+    sshpass ssh -t guest@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${id} ${simulated_time}"
 
     # Start vehicle (here for test purposes, later: use real vehicles / position them correctly)
-    #tmux new-session -d -s "vehicle_${id}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${id} 3 ${simulated_time}"
+    tmux new-session -d -s "vehicle_${id}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${id} 21 ${simulated_time}"
 done
 
 sleep infinity
