@@ -1,9 +1,61 @@
 #!/bin/bash
+#Get command line arguments
+for i in "$@"
+do
+case $i in
+    -sp=*|--script_path=*)
+    script_path="${i#*=}"
+    shift # past argument=value
+    ;;
+    -sn=*|--script_name=*)
+    script_name="${i#*=}"
+    shift # past argument=value
+    ;;
+    -vi=*|--vehicle_ids=*)
+    vehicle_ids="${i#*=}"
+    shift # past argument=value
+    ;;
+    -va=*|--vehicle_amount=*)
+    vehicle_amount="${i#*=}"
+    shift # past argument=value
+    ;;
+    -st=*|--simulated_time=*)
+    simulated_time="${i#*=}"
+    shift # past argument=value
+    ;;
+    *)
+          # unknown option
+    ;;
+esac
+done
+
+#Check for existence of required command line arguments
+if [ -z "$script_path" ] || [ -z "$script_name" ] || ( [ -z "$vehicle_ids" ] && [ -z "$vehicle_amount" ] ) || [ -z "$simulated_time" ]
+then
+      echo "Usage: bash launch_*.bash --script_path=... --script_name=... --vehicle_amount=... --simulated_time=..."
+      echo "Or: bash launch_*.bash --script_path=... --script_name=... --vehicle_ids=... --simulated_time=..."
+      exit 1
+fi
+
+#If vehicle amount was set, create vehicle id list in vehicle_ids from that, style: 1,...,vehicle_amount
+if !([ -z "$vehicle_amount" ])
+then
+    vehicle_ids=$(seq -s, 1 1 ${vehicle_amount})
+fi
+
 exit_script() {
     tmux kill-session -t "LabControlCenter"
     tmux kill-session -t "rticlouddiscoveryservice"
-    tmux kill-session -t "BaslerLedDetection"
-    tmux kill-session -t "ips_pipeline"
+    tmux kill-session -t "middleware"
+    tmux kill-session -t "hlc"
+
+    # Stop HLCs and vehicles
+    IFS=,
+    for val in $vehicle_ids;
+    do
+        tmux kill-session -t "vehicle_${val}"
+    done
+    
     trap - SIGINT SIGTERM # clear the trap
 }
 
@@ -16,8 +68,17 @@ trap exit_script SIGINT SIGTERM
 
 tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
 sleep 3
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
-tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
-tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+# Start middleware
+tmux new-session -d -s "middleware" "cd ./hlc/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
+# Start HLCs
+tmux new-session -d -s "hlc" "cd ./hlc/;bash hlc_start_local.bash ${script_path} ${script_name} ${vehicle_ids} &> hlc.txt"
+
+IFS=,
+for val in $vehicle_ids;
+do
+    # Start vehicle
+    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
+done
 
 sleep infinity
