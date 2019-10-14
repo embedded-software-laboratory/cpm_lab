@@ -13,6 +13,7 @@
 #include "ui/params/ParamViewUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/logger/LoggerViewUI.hpp"
+#include "ui/setup/SetupViewUI.hpp"
 #include "LogStorage.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
@@ -67,7 +68,8 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto tabsViewUi = make_shared<TabsViewUI>(vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
+    auto setupViewUi = make_shared<SetupViewUI>(vehicleManualControl);
+    auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
 
