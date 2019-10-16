@@ -352,13 +352,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
 
-
-    // controls rate limiter. the signal rates must be 
-    // limited to avoid power spikes and system resets
-    const double max_rate = 0.1;
-    motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
-    steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
-
-    out_motor_throttle = motor_throttle_state;
-    out_steering_servo = steering_servo_state;
+    out_motor_throttle = motor_throttle;
+    out_steering_servo = steering_servo;
 }
