@@ -3,8 +3,14 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "VehicleManualControl.hpp"
-#include <cstdlib>
 
+//For popen
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
 
 class SetupViewUI
 {
@@ -49,6 +55,9 @@ class SetupViewUI
 
     //UI functions
     void set_sensitive(bool is_sensitive);
+
+    //Function to execute a shell command
+    std::string execute_command(const char* cmd);
 
 public:
     SetupViewUI();

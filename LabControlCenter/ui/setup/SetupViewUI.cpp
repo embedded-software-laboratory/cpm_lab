@@ -50,6 +50,7 @@ SetupViewUI::SetupViewUI()
 }
 
 SetupViewUI::~SetupViewUI() {
+    //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
     kill_deployed_applications();
 }
 
@@ -116,12 +117,14 @@ void SetupViewUI::kill_middleware() {
 }
 
 void SetupViewUI::deploy_vehicles() {
-    std::string command = 'tmux new-session -d -s "vehicle_1" "cd ~/dev/software/vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash 1 3 false"';
+    std::string command = "tmux new-session -d -s \"vehicle_1\" \"cd ~/dev/software/vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash 1 21 false\"";
+    // std::string cmd_out = execute_command(command.c_str());
+    // std::cout << cmd_out << std::endl;
     system(command.c_str());
 }
 
 void SetupViewUI::kill_vehicles() {
-    std::string command = 'tmux kill-session -t "vehicle_1"';
+    std::string command = "tmux kill-session -t \"vehicle_1\"";
     system(command.c_str());
 }
 
@@ -134,11 +137,14 @@ void SetupViewUI::kill_ips() {
 }
 
 void SetupViewUI::deploy_cloud_discovery() {
-
+    std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt\"";
+    system(command.c_str());
+    usleep(3000000);
 }
 
 void SetupViewUI::kill_cloud_discovery() {
-
+    std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
+    system(command.c_str());
 }
 
 void SetupViewUI::set_sensitive(bool is_sensitive) {
@@ -157,6 +163,20 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     switch_launch_cloud_discovery->set_sensitive(is_sensitive);
     switch_launch_ips->set_sensitive(is_sensitive);
     switch_launch_middleware->set_sensitive(is_sensitive);
+}
+
+std::string SetupViewUI::execute_command(const char* cmd) {
+    //Code from stackoverflow
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("Could not use popen - deployment failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
 }
 
 

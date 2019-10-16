@@ -73,7 +73,7 @@ if(BUILD_ARM)
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
 else()
     link_directories(../../cpm_base/cpm_lib/build/)
-    link_directories($ENV{NDDSHOME}/lib/x64Linux4gcc7.3.0)
+    link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 endif()
 
 
