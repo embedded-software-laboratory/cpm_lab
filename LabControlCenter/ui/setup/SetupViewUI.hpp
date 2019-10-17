@@ -3,6 +3,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "VehicleManualControl.hpp"
+#include "cpm/CommandLineReader.hpp"
 
 //For popen
 #include <cstdio>
@@ -10,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <array>
 
 class SetupViewUI
@@ -59,8 +61,13 @@ class SetupViewUI
     //Function to execute a shell command
     std::string execute_command(const char* cmd);
 
+    //Set command line parameters
+    bool cmd_simulated_time;
+    int cmd_domain_id;
+    std::string cmd_dds_initial_peer;
+
 public:
-    SetupViewUI();
+    SetupViewUI(int argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();

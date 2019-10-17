@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 
-SetupViewUI::SetupViewUI()
+SetupViewUI::SetupViewUI(int argc, char *argv[])
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -47,6 +47,11 @@ SetupViewUI::SetupViewUI()
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
+
+    //Extract relevant parameters from command line
+    cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+    cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
+    cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -117,10 +122,32 @@ void SetupViewUI::kill_middleware() {
 }
 
 void SetupViewUI::deploy_vehicles() {
-    std::string command = "tmux new-session -d -s \"vehicle_1\" \"cd ~/dev/software/vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash 1 21 false\"";
+    std::string sim_time_string;
+    if (switch_simulated_time->get_active())
+    {
+        sim_time_string = "true";
+    }
+    else 
+    {
+        sim_time_string = "false";
+    }
+
+    std::stringstream command;
+    command 
+        << "tmux new-session -d -s \"vehicle_1\" \"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware --simulated_time="
+        << sim_time_string
+        << " --vehicle_id=1 --dds_domain="
+        << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command << " --dds_initial_peer="
+            << cmd_dds_initial_peer;
+    }
+    command << " >stdout_1.txt 2>stderr_1.txt\"";
+
+        std::cout << command.str() << std::endl;
     // std::string cmd_out = execute_command(command.c_str());
     // std::cout << cmd_out << std::endl;
-    system(command.c_str());
+    system(command.str().c_str());
 }
 
 void SetupViewUI::kill_vehicles() {
@@ -137,9 +164,8 @@ void SetupViewUI::kill_ips() {
 }
 
 void SetupViewUI::deploy_cloud_discovery() {
-    std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt\"";
+    std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
     system(command.c_str());
-    usleep(3000000);
 }
 
 void SetupViewUI::kill_cloud_discovery() {
