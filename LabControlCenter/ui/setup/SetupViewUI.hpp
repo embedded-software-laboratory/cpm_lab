@@ -4,6 +4,7 @@
 #include <gtkmm.h>
 #include "VehicleManualControl.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "ui/file_chooser/FileChooserUI.hpp"
 
 //For popen
 #include <cstdio>
@@ -46,14 +47,18 @@ class SetupViewUI
     void deploy_hlc_scripts();
     void deploy_middleware();
     void deploy_vehicles();
+    void deploy_vehicle(int id);
     void deploy_ips();
     void deploy_cloud_discovery();
 
     void kill_hlc_scripts();
     void kill_middleware();
     void kill_vehicles();
+    void kill_vehicle(int id);
     void kill_ips();
     void kill_cloud_discovery();
+
+    std::vector<int> get_active_vehicle_ids();
 
     //UI functions
     void set_sensitive(bool is_sensitive);
@@ -65,6 +70,9 @@ class SetupViewUI
     bool cmd_simulated_time;
     int cmd_domain_id;
     std::string cmd_dds_initial_peer;
+
+    //File chooser to select script(s) + location
+    std::shared_ptr<FileChooserUI> file_chooser_window;
 
 public:
     SetupViewUI(int argc, char *argv[]);

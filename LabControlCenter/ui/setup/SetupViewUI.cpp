@@ -52,6 +52,10 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
+
+    //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
+    switch_simulated_time->set_active(cmd_simulated_time);
+    switch_simulated_time->set_sensitive(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -106,22 +110,45 @@ void SetupViewUI::kill_deployed_applications() {
 }
 
 void SetupViewUI::deploy_hlc_scripts() {
+    for (const int id : get_active_vehicle_ids())
+    {
+        //TODO: Put into separate function
+        std::string sim_time_string;
+        if (switch_simulated_time->get_active())
+        {
+            sim_time_string = "true";
+        }
+        else 
+        {
+            sim_time_string = "false";
+        }
 
+        //Generate command
+        std::stringstream command;
+        command 
+            << "tmux new-session -d "
+            << "-s \"hlc_" << id << "\" "
+            << "\"source ~/dev/software/hlc/environment_variables.bash;"
+            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r $'"
+            << "cd ~/dev/software/hlc/" << script_path->get_text().c_str()
+            << "; " << script_name->get_text().c_str() << "(1, " << id << ")'\"";
+
+        //Execute command
+        system(command.str().c_str());
+    }
 }
 
 void SetupViewUI::kill_hlc_scripts() {
-
+    for (const int id : get_active_vehicle_ids())
+    {
+        std::stringstream command;
+        command 
+            << "tmux kill-session -t \"hlc_" << id << "\"";
+        system(command.str().c_str());
+    } 
 }
 
 void SetupViewUI::deploy_middleware() {
-
-}
-
-void SetupViewUI::kill_middleware() {
-
-}
-
-void SetupViewUI::deploy_vehicles() {
     std::string sim_time_string;
     if (switch_simulated_time->get_active())
     {
@@ -132,35 +159,136 @@ void SetupViewUI::deploy_vehicles() {
         sim_time_string = "false";
     }
 
-    std::stringstream command;
-    command 
-        << "tmux new-session -d -s \"vehicle_1\" \"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware --simulated_time="
-        << sim_time_string
-        << " --vehicle_id=1 --dds_domain="
-        << cmd_domain_id;
-    if (cmd_dds_initial_peer.size() > 0) {
-        command << " --dds_initial_peer="
-            << cmd_dds_initial_peer;
-    }
-    command << " >stdout_1.txt 2>stderr_1.txt\"";
+    //TODO Pass vehicle_ids vector as function parameter
+    std::stringstream vehicle_ids_stream;
+    std::vector<int> vehicle_ids = get_active_vehicle_ids();
+    if (vehicle_ids.size() > 0)
+    {
+        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
+        {
+            vehicle_ids_stream << vehicle_ids.at(index) << ",";
+        }
+        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
+
+        //Generate command
+        std::stringstream command;
+        command 
+            << "tmux new-session -d "
+            << "-s \"middleware\" "
+            << "\"source ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
+            << " --node_id=middleware"
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            command 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        command 
+            << " >stdout_middleware.txt 2>stderr_middleware.txt\"";
 
         std::cout << command.str() << std::endl;
-    // std::string cmd_out = execute_command(command.c_str());
-    // std::cout << cmd_out << std::endl;
+
+        //Execute command
+        system(command.str().c_str());
+    }
+}
+
+void SetupViewUI::kill_middleware() {
+    //Generate command
+    std::stringstream command;
+    command 
+        << "tmux kill-session -t \"middleware\"";
+
+    //Execute command
+    system(command.str().c_str());
+}
+
+void SetupViewUI::deploy_vehicles() {
+    for (const int id : get_active_vehicle_ids())
+    {
+        deploy_vehicle(id);
+    }
+}
+
+void SetupViewUI::deploy_vehicle(int id) {
+    std::string sim_time_string;
+    if (switch_simulated_time->get_active())
+    {
+        sim_time_string = "true";
+    }
+    else 
+    {
+        sim_time_string = "false";
+    }
+
+    //Generate command
+    std::stringstream command;
+    command 
+        << "tmux new-session -d "
+        << "-s \"vehicle_" << id << "\" "
+        << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
+        << "--simulated_time=" << sim_time_string
+        << " --vehicle_id=" << id
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
+    command 
+        << " >stdout_vehicle" << id << ".txt 2>stderr_vehicle" << id << ".txt\"";
+
+    //Execute command
     system(command.str().c_str());
 }
 
 void SetupViewUI::kill_vehicles() {
-    std::string command = "tmux kill-session -t \"vehicle_1\"";
-    system(command.c_str());
+    for (const int id : get_active_vehicle_ids())
+    {
+        kill_vehicle(id);
+    } 
+}
+
+void SetupViewUI::kill_vehicle(int id) {
+    std::stringstream command;
+    command 
+        << "tmux kill-session -t \"vehicle_" << id << "\"";
+    system(command.str().c_str());
 }
 
 void SetupViewUI::deploy_ips() {
+    if (!switch_simulated_time->get_active()) 
+    {
+        //Generate command
+        std::stringstream command;
+        command 
+            << "tmux new-session -d "
+            << "-s \"ips_pipeline\" "
+            << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            command 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        command 
+            << " >stdout_ips.txt 2>stderr_ips.txt\"";
 
+        //Execute command
+        system(command.str().c_str());
+    }
 }
 
 void SetupViewUI::kill_ips() {
+    if (!switch_simulated_time->get_active()) 
+    {
+        //Generate command
+        std::stringstream command;
+        command 
+            << "tmux kill-session -t \"ips_pipeline\"";
 
+        //Execute command
+        system(command.str().c_str());
+    }
 }
 
 void SetupViewUI::deploy_cloud_discovery() {
@@ -171,6 +299,25 @@ void SetupViewUI::deploy_cloud_discovery() {
 void SetupViewUI::kill_cloud_discovery() {
     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
     system(command.c_str());
+}
+
+std::vector<int> SetupViewUI::get_active_vehicle_ids() {
+    std::vector<int> active_vehicle_ids;
+
+    if (toggle_vehicle_1->get_active())
+        active_vehicle_ids.push_back(1);
+    if (toggle_vehicle_2->get_active())
+        active_vehicle_ids.push_back(2);
+    if (toggle_vehicle_3->get_active())
+        active_vehicle_ids.push_back(3);
+    if (toggle_vehicle_4->get_active())
+        active_vehicle_ids.push_back(4);
+    if (toggle_vehicle_5->get_active())
+        active_vehicle_ids.push_back(5);
+    if (toggle_vehicle_6->get_active())
+        active_vehicle_ids.push_back(6);
+
+    return active_vehicle_ids;
 }
 
 void SetupViewUI::set_sensitive(bool is_sensitive) {
@@ -184,7 +331,7 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     toggle_vehicle_6->set_sensitive(is_sensitive);
     button_select_all_vehicles->set_sensitive(is_sensitive);
     button_select_no_vehicles->set_sensitive(is_sensitive);
-    switch_simulated_time->set_sensitive(is_sensitive);
+    //switch_simulated_time->set_sensitive(is_sensitive);
     switch_launch_simulated_vehicles->set_sensitive(is_sensitive);
     switch_launch_cloud_discovery->set_sensitive(is_sensitive);
     switch_launch_ips->set_sensitive(is_sensitive);
