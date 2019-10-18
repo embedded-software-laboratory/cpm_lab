@@ -110,42 +110,50 @@ void SetupViewUI::kill_deployed_applications() {
 }
 
 void SetupViewUI::deploy_hlc_scripts() {
-    for (const int id : get_active_vehicle_ids())
+    //TODO: Put into separate function
+    std::string sim_time_string;
+    if (switch_simulated_time->get_active())
     {
-        //TODO: Put into separate function
-        std::string sim_time_string;
-        if (switch_simulated_time->get_active())
+        sim_time_string = "true";
+    }
+    else 
+    {
+        sim_time_string = "false";
+    }
+
+    std::vector<int> vehicle_ids = get_active_vehicle_ids();
+    if (vehicle_ids.size() > 0)
+    {
+        std::stringstream vehicle_ids_stream;
+        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
         {
-            sim_time_string = "true";
+            vehicle_ids_stream << vehicle_ids.at(index) << ",";
         }
-        else 
-        {
-            sim_time_string = "false";
-        }
+        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
 
         //Generate command
         std::stringstream command;
         command 
             << "tmux new-session -d "
-            << "-s \"hlc_" << id << "\" "
-            << "\"source ~/dev/software/hlc/environment_variables.bash;"
-            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r $'"
+            << "-s \"hlc\" "
+            << "$'source ~/dev/software/hlc/environment_variables.bash;"
+            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \'"
             << "cd ~/dev/software/hlc/" << script_path->get_text().c_str()
-            << "; " << script_name->get_text().c_str() << "(1, " << id << ")'\"";
+            << "; " << script_name->get_text().c_str() << "(1, \"" << vehicle_ids_stream.str() << "\")\'"
+            << " >stdout_hlc.txt 2>stderr_hlc.txt'";
+
+        std::cout << command.str() << std::endl;
 
         //Execute command
         system(command.str().c_str());
-    }
+        }
 }
 
 void SetupViewUI::kill_hlc_scripts() {
-    for (const int id : get_active_vehicle_ids())
-    {
-        std::stringstream command;
-        command 
-            << "tmux kill-session -t \"hlc_" << id << "\"";
-        system(command.str().c_str());
-    } 
+    std::stringstream command;
+    command 
+        << "tmux kill-session -t \"hlc\"";
+    system(command.str().c_str());
 }
 
 void SetupViewUI::deploy_middleware() {
@@ -186,8 +194,6 @@ void SetupViewUI::deploy_middleware() {
         }
         command 
             << " >stdout_middleware.txt 2>stderr_middleware.txt\"";
-
-        std::cout << command.str() << std::endl;
 
         //Execute command
         system(command.str().c_str());
