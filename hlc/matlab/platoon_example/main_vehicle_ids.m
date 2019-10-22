@@ -1,4 +1,4 @@
-function main(matlabDomainID, vehicleIDs)
+function main(matlabDomainID, varargin)
 
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
@@ -41,7 +41,7 @@ function main(matlabDomainID, vehicleIDs)
     cd(script_directoy)
     
     %% variables for the communication
-    vehicle_ids = str2num(vehicleIDs);
+    vehicle_ids = varargin;
 
     matlabStateTopicName = 'stateTopic';
     matlabCommandTopicName = 'trajectoryTopic';
@@ -73,7 +73,7 @@ function main(matlabDomainID, vehicleIDs)
     disp('Sending ready signals');
     for i = 1 : length(vehicle_ids)
         ready_msg = ReadyStatus;
-        ready_msg.source_id = strcat('hlc_', num2str(vehicle_ids(i)));
+        ready_msg.source_id = strcat('hlc_', num2str(vehicle_ids{i}));
         ready_stamp = TimeStamp;
         ready_stamp.nanoseconds = uint64(0);
         ready_msg.next_start_stamp = ready_stamp;
@@ -141,7 +141,7 @@ function main(matlabDomainID, vehicleIDs)
                 % Call the programs to calculate the trajectories of all HLCs
                 if (size(vehicle_ids) > 0)
                     for i = 1 : length(vehicle_ids)
-                        msg_leader = leader(vehicle_ids(i), sample.t_now);
+                        msg_leader = leader(vehicle_ids{i}, sample.t_now);
                         trajectoryWriter.write(msg_leader);
                     end
                 end

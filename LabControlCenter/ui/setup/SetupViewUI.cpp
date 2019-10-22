@@ -17,6 +17,7 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
     builder->get_widget("toggle_vehicle_6", toggle_vehicle_6);
     builder->get_widget("button_select_all_vehicles", button_select_all_vehicles);
     builder->get_widget("button_select_no_vehicles", button_select_no_vehicles);
+    builder->get_widget("button_choose_script", button_choose_script);
     builder->get_widget("switch_simulated_time", switch_simulated_time);
     builder->get_widget("switch_launch_simulated_vehicles", switch_launch_simulated_vehicles);
     builder->get_widget("switch_launch_cloud_discovery", switch_launch_cloud_discovery);
@@ -36,6 +37,7 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
     assert(toggle_vehicle_6);
     assert(button_select_all_vehicles);
     assert(button_select_no_vehicles);
+    assert(button_choose_script);
     assert(switch_simulated_time);
     assert(switch_launch_simulated_vehicles);
     assert(switch_launch_cloud_discovery);
@@ -47,6 +49,9 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
+    button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
+    button_select_all_vehicles->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles));
+    button_select_no_vehicles->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
     //Extract relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
@@ -61,6 +66,31 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
 SetupViewUI::~SetupViewUI() {
     //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
     kill_deployed_applications();
+}
+
+using namespace std::placeholders;
+void SetupViewUI::open_file_explorer()
+{
+    std::vector<std::string> filter_name{"Application", "Matlab script"}; 
+    std::vector<std::string> filter_type{"application/x-sharedlib", "text/x-matlab"};
+    file_chooser_window = make_shared<FileChooserUI>(std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), filter_name, filter_type);
+}
+
+void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
+{
+    if (has_file)
+    {
+        auto last_slash_pos = file_string.rfind("/");
+        if (last_slash_pos != std::string::npos)
+        {
+            script_path->set_text(file_string.substr(0, last_slash_pos + 1));
+            script_name->set_text(file_string.substr(last_slash_pos + 1, file_string.size() - last_slash_pos));
+        }
+        else 
+        {
+            script_name->set_text(file_string.substr(0, file_string.size() - last_slash_pos));
+        }
+    }
 }
 
 void SetupViewUI::deploy_applications() {
@@ -131,22 +161,54 @@ void SetupViewUI::deploy_hlc_scripts() {
         }
         vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
 
-        //Generate command
+        //Get script info, generate command
+        std::string script_path_string(script_path->get_text().c_str());
+        std::string script_name_string(script_name->get_text().c_str());
         std::stringstream command;
-        command 
+
+        auto matlab_type_pos = script_name_string.rfind(".m");
+        if (matlab_type_pos != std::string::npos)
+        {
+            //Case: Matlab script
+            command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "$'source ~/dev/software/hlc/environment_variables.bash;"
-            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \'"
-            << "cd ~/dev/software/hlc/" << script_path->get_text().c_str()
-            << "; " << script_name->get_text().c_str() << "(1, \"" << vehicle_ids_stream.str() << "\")\'"
+            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
+            << "cd ~/dev/software/hlc/" << script_path_string
+            << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
             << " >stdout_hlc.txt 2>stderr_hlc.txt'";
+        }
+        else if (script_name_string.find(".") == std::string::npos)
+        {
+            //Case: Any executable 
+            command 
+            << "tmux new-session -d "
+            << "-s \"hlc\" "
+            << "\"source ~/dev/software/hlc/environment_variables.bash;"
+            << "cd " << script_path_string << ";./" << script_name_string
+            << " --node_id=hlc"
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            command 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        command 
+            << " >stdout_hlc.txt 2>stderr_hlc.txt\"";
+        }
+        else 
+        {
+            std::cout << "Warning: Could not run unknown script: Neither matlab nor C++ executable" << std::endl;
+            return;
+        }
 
         std::cout << command.str() << std::endl;
 
         //Execute command
         system(command.str().c_str());
-        }
+    }
 }
 
 void SetupViewUI::kill_hlc_scripts() {
@@ -342,6 +404,26 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     switch_launch_cloud_discovery->set_sensitive(is_sensitive);
     switch_launch_ips->set_sensitive(is_sensitive);
     switch_launch_middleware->set_sensitive(is_sensitive);
+}
+
+void SetupViewUI::select_all_vehicles()
+{
+    toggle_vehicle_1->set_active(true);
+    toggle_vehicle_2->set_active(true);
+    toggle_vehicle_3->set_active(true);
+    toggle_vehicle_4->set_active(true);
+    toggle_vehicle_5->set_active(true);
+    toggle_vehicle_6->set_active(true);
+}
+
+void SetupViewUI::select_no_vehicles()
+{
+    toggle_vehicle_1->set_active(false);
+    toggle_vehicle_2->set_active(false);
+    toggle_vehicle_3->set_active(false);
+    toggle_vehicle_4->set_active(false);
+    toggle_vehicle_5->set_active(false);
+    toggle_vehicle_6->set_active(false);
 }
 
 std::string SetupViewUI::execute_command(const char* cmd) {

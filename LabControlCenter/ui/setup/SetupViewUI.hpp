@@ -17,6 +17,7 @@
 
 class SetupViewUI
 {
+private:
     Glib::RefPtr<Gtk::Builder> builder;
 
     Gtk::Widget* parent = nullptr;
@@ -30,6 +31,7 @@ class SetupViewUI
     Gtk::ToggleButton* toggle_vehicle_6 = nullptr;
     Gtk::Button* button_select_all_vehicles = nullptr;
     Gtk::Button* button_select_no_vehicles = nullptr;
+    Gtk::Button* button_choose_script = nullptr;
     Gtk::Switch* switch_simulated_time = nullptr;
     Gtk::Switch* switch_launch_simulated_vehicles = nullptr;
     Gtk::Switch* switch_launch_cloud_discovery = nullptr;
@@ -72,7 +74,13 @@ class SetupViewUI
     std::string cmd_dds_initial_peer;
 
     //File chooser to select script(s) + location
+    void open_file_explorer();
+    void file_explorer_callback(std::string file_string, bool has_file);
     std::shared_ptr<FileChooserUI> file_chooser_window;
+
+    //Vehicle button toggles
+    void select_all_vehicles();
+    void select_no_vehicles();
 
 public:
     SetupViewUI(int argc, char *argv[]);

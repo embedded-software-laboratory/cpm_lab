@@ -8,7 +8,7 @@ include_directories(SYSTEM $ENV{NDDSHOME}/include)
 include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
 include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
 link_libraries(nddscpp2z nddscz nddscorez)
-link_directories($ENV{NDDSHOME}/lib/x64Linux4gcc7.3.0)
+link_directories($ENV{NDDSHOME}/lib/x64Linux3gcc5.4.0)
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 

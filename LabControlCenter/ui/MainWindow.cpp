@@ -135,8 +135,6 @@ void MainWindow::on_menu_params_load_file_pressed() {
 // }
 
 void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
-    std::cout << "called" << std::endl;
-
     //Make according buttons usable as the ui is closed, also for treeview content from param ui
     menu_bar_params_reload->set_sensitive(true);
     menu_bar_params_save->set_sensitive(true);
@@ -147,7 +145,7 @@ void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
     tabs_view_ui->get_param_view()->make_sensitive();
 
     //Call Param UI to process changes
-    if (has_file) {
+    if (has_file && (file_string.rfind(".yaml") == file_string.size() - 5)) {
         tabs_view_ui->get_param_view()->params_load_file_handler(file_string);
     }
 }
