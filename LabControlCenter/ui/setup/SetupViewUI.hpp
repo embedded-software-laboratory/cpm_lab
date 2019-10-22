@@ -5,6 +5,7 @@
 #include "VehicleManualControl.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
+#include "TimerTrigger.hpp"
 
 //For popen
 #include <cstdio>
@@ -40,6 +41,10 @@ private:
 
     Gtk::Button* button_deploy = nullptr;
     Gtk::Button* button_kill = nullptr;
+
+    //Timer function - replace current timer in the whole system when user switches between simulated and real time
+    std::shared_ptr<TimerTrigger>& timer_trigger;
+    bool switch_timer_set(bool use_simulated_time);
 
     //Overall deploy functions
     void deploy_applications();
@@ -83,7 +88,7 @@ private:
     void select_no_vehicles();
 
 public:
-    SetupViewUI(int argc, char *argv[]);
+    SetupViewUI(std::shared_ptr<TimerTrigger>& _timer_trigger, int argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();

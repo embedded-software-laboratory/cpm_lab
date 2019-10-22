@@ -1,8 +1,10 @@
 #include "SetupViewUI.hpp"
 #include <cstdlib>
 
+using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(int argc, char *argv[])
+SetupViewUI::SetupViewUI(std::shared_ptr<TimerTrigger>& _timer_trigger, int argc, char *argv[]) :
+    timer_trigger(_timer_trigger)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -60,12 +62,18 @@ SetupViewUI::SetupViewUI(int argc, char *argv[])
 
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);
-    switch_simulated_time->set_sensitive(false);
+    switch_simulated_time->signal_state_set().connect(sigc::mem_fun<bool, bool>(this, &SetupViewUI::switch_timer_set));
 }
 
 SetupViewUI::~SetupViewUI() {
     //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
     kill_deployed_applications();
+}
+
+bool SetupViewUI::switch_timer_set(bool use_simulated_time)
+{
+    std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
+    return false;
 }
 
 using namespace std::placeholders;
@@ -169,13 +177,15 @@ void SetupViewUI::deploy_hlc_scripts() {
         auto matlab_type_pos = script_name_string.rfind(".m");
         if (matlab_type_pos != std::string::npos)
         {
+            script_name_string = script_name_string.substr(0, matlab_type_pos);
+
             //Case: Matlab script
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "$'source ~/dev/software/hlc/environment_variables.bash;"
             << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
-            << "cd ~/dev/software/hlc/" << script_path_string
+            << "cd " << script_path_string
             << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
             << " >stdout_hlc.txt 2>stderr_hlc.txt'";
         }

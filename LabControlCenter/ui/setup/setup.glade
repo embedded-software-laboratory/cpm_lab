@@ -27,7 +27,7 @@ Script Path</property>
       <object class="GtkEntry" id="script_path">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="text" translatable="yes">/matlab/platoon_example</property>
+        <property name="text" translatable="yes">/home/cpm/dev/software/hlc/matlab/platoon_example/</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -56,7 +56,7 @@ Script Name</property>
       <object class="GtkEntry" id="script_name">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="text" translatable="yes">main_vehicle_ids</property>
+        <property name="text" translatable="yes">main_vehicle_ids.m</property>
         <property name="input_purpose">digits</property>
       </object>
       <packing>
