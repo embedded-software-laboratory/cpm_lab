@@ -3,8 +3,8 @@
 
 using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(std::shared_ptr<TimerTrigger>& _timer_trigger, int argc, char *argv[]) :
-    timer_trigger(_timer_trigger)
+SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, int argc, char *argv[]) :
+    timer_ui(_timer_ui)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -62,7 +62,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerTrigger>& _timer_trigger, int argc
 
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);
-    switch_simulated_time->signal_state_set().connect(sigc::mem_fun<bool, bool>(this, &SetupViewUI::switch_timer_set));
+    switch_simulated_time->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_timer_set));
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -70,10 +70,9 @@ SetupViewUI::~SetupViewUI() {
     kill_deployed_applications();
 }
 
-bool SetupViewUI::switch_timer_set(bool use_simulated_time)
+void SetupViewUI::switch_timer_set()
 {
-    std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
-    return false;
+    timer_ui->reset(switch_simulated_time->get_active());
 }
 
 using namespace std::placeholders;
@@ -125,6 +124,9 @@ void SetupViewUI::deploy_applications() {
 }
 
 void SetupViewUI::kill_deployed_applications() {
+    //Kill timer in UI as well, as it should not show invalid information
+    timer_ui->reset(switch_simulated_time->get_active());
+
     kill_hlc_scripts();
 
     if (switch_launch_middleware->get_active()) {
@@ -409,7 +411,7 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     toggle_vehicle_6->set_sensitive(is_sensitive);
     button_select_all_vehicles->set_sensitive(is_sensitive);
     button_select_no_vehicles->set_sensitive(is_sensitive);
-    //switch_simulated_time->set_sensitive(is_sensitive);
+    switch_simulated_time->set_sensitive(is_sensitive);
     switch_launch_simulated_vehicles->set_sensitive(is_sensitive);
     switch_launch_cloud_discovery->set_sensitive(is_sensitive);
     switch_launch_ips->set_sensitive(is_sensitive);

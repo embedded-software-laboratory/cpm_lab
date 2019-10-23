@@ -34,8 +34,16 @@ private:
     Gtk::Box* parent;
     Gtk::Button* button_start;
     Gtk::Button* button_stop;
+    Gtk::Button* button_reset;
     Gtk::TreeView* active_timers_treeview;
     Gtk::Label* current_timestep_label;
+
+    /**
+     * \brief Reset function - this function is called whenever the timer type is changed, 
+     * because in that case the simulation can be restarted, old participants become irrelevant
+     * etc. This function is called when the reset button is pressed
+     */
+    void button_reset_callback();
 
     //TreeView Layout, status storage for the UI
     TimerModelRecord timer_record;
@@ -64,6 +72,9 @@ private:
     //Helper functions
     std::string participant_status_to_ustring(ParticipantStatus response);
     std::atomic_bool system_is_running;
+    void start_ui_thread();
+    void stop_ui_thread();
+    void reset_ui();
     
     /**
      * \brief Get the time diff to the current time as string in (minutes:)seconds (minutes if seconds > 60)
@@ -74,4 +85,11 @@ public:
     TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger);
     ~TimerViewUI();
     Gtk::Widget* get_parent();
+
+    /**
+     * \brief Reset function - this function is called whenever the timer type is changed, 
+     * because in that case the simulation can be restarted, old participants become irrelevant
+     * etc. 
+     */
+    void reset(bool use_simulated_time);
 };

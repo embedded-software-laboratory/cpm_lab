@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto setupViewUi = make_shared<SetupViewUI>(timerTrigger, argc, argv);
+    auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, argc, argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

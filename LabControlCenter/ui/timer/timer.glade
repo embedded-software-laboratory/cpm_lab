@@ -151,10 +151,9 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Restart system</property>
+              <object class="GtkButton" id="button_reset">
+                <property name="label" translatable="yes">Reset timer</property>
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
               </object>
