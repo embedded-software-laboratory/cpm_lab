@@ -340,21 +340,36 @@ void SetupViewUI::deploy_ips() {
     if (!switch_simulated_time->get_active()) 
     {
         //Generate command
-        std::stringstream command;
-        command 
+        std::stringstream command_ips;
+        command_ips 
             << "tmux new-session -d "
             << "-s \"ips_pipeline\" "
             << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
             << " --dds_domain=" << cmd_domain_id;
         if (cmd_dds_initial_peer.size() > 0) {
-            command 
+            command_ips 
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
-        command 
+        command_ips 
             << " >stdout_ips.txt 2>stderr_ips.txt\"";
 
+        //Generate command
+        std::stringstream command_basler;
+        command_basler 
+            << "tmux new-session -d "
+            << "-s \"ips_basler\" "
+            << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            command_basler 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        command_basler 
+            << " >stdout_basler.txt 2>stderr_basler.txt\"";
+
         //Execute command
-        system(command.str().c_str());
+        system(command_ips.str().c_str());
+        system(command_basler.str().c_str());
     }
 }
 
@@ -362,12 +377,18 @@ void SetupViewUI::kill_ips() {
     if (!switch_simulated_time->get_active()) 
     {
         //Generate command
-        std::stringstream command;
-        command 
+        std::stringstream command_ips;
+        command_ips 
             << "tmux kill-session -t \"ips_pipeline\"";
 
+        //Generate command
+        std::stringstream command_basler;
+        command_basler
+            << "tmux kill-session -t \"ips_basler\"";
+
         //Execute command
-        system(command.str().c_str());
+        system(command_ips.str().c_str());
+        system(command_basler.str().c_str());
     }
 }
 
