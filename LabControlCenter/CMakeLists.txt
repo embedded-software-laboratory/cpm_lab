@@ -69,6 +69,8 @@ add_executable(LabControlCenter
     ui/logger/LoggerModelRecord.hpp
     ui/setup/SetupViewUI.hpp
     ui/setup/SetupViewUI.cpp
+    ui/setup/VehicleToggle.hpp
+    ui/setup/VehicleToggle.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp

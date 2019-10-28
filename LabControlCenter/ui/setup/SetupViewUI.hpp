@@ -6,6 +6,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/setup/VehicleToggle.hpp"
 
 //For popen
 #include <cstdio>
@@ -15,6 +16,7 @@
 #include <string>
 #include <sstream>
 #include <array>
+#include <vector>
 
 class SetupViewUI
 {
@@ -22,25 +24,30 @@ private:
     Glib::RefPtr<Gtk::Builder> builder;
 
     Gtk::Widget* parent = nullptr;
+
+    //Script and script parameters
     Gtk::Entry* script_path = nullptr;
-    Gtk::Entry* script_name = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_1 = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_2 = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_3 = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_4 = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_5 = nullptr;
-    Gtk::ToggleButton* toggle_vehicle_6 = nullptr;
-    Gtk::Button* button_select_all_vehicles = nullptr;
-    Gtk::Button* button_select_no_vehicles = nullptr;
+    Gtk::Entry* script_params = nullptr;
     Gtk::Button* button_choose_script = nullptr;
+    
+    //Vehicle selection
+    Gtk::Button* button_select_none = nullptr;
+    Gtk::Button* button_select_all_simulated = nullptr;
+    Gtk::Button* button_select_all_real = nullptr;
+
+    //Set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
-    Gtk::Switch* switch_launch_simulated_vehicles = nullptr;
-    Gtk::Switch* switch_launch_cloud_discovery = nullptr;
-    Gtk::Switch* switch_launch_ips = nullptr;
+    
+    //(De)Activate Middleware
     Gtk::Switch* switch_launch_middleware = nullptr;
 
+    //Start / stop simulation
     Gtk::Button* button_deploy = nullptr;
     Gtk::Button* button_kill = nullptr;
+
+    //Vehicles
+    Gtk::FlowBox* vehicle_flowbox = nullptr;
+    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
 
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
@@ -53,19 +60,17 @@ private:
     //Specific deploy functions
     void deploy_hlc_scripts();
     void deploy_middleware();
-    void deploy_vehicles();
-    void deploy_vehicle(int id);
-    void deploy_ips();
-    void deploy_cloud_discovery();
+    void deploy_sim_vehicles();
+    void deploy_sim_vehicle(uint8_t id);
 
     void kill_hlc_scripts();
     void kill_middleware();
     void kill_vehicles();
-    void kill_vehicle(int id);
-    void kill_ips();
-    void kill_cloud_discovery();
+    void kill_vehicle(uint8_t id);
 
-    std::vector<int> get_active_vehicle_ids();
+    std::vector<uint8_t> get_active_vehicle_ids();
+    std::vector<uint8_t> get_vehicle_ids_realtime();
+    std::vector<uint8_t> get_vehicle_ids_simulated();
 
     //UI functions
     void set_sensitive(bool is_sensitive);
@@ -75,7 +80,7 @@ private:
 
     //Set command line parameters
     bool cmd_simulated_time;
-    int cmd_domain_id;
+    uint8_t cmd_domain_id;
     std::string cmd_dds_initial_peer;
 
     //File chooser to select script(s) + location
@@ -84,11 +89,15 @@ private:
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
     //Vehicle button toggles
-    void select_all_vehicles();
+    void select_all_vehicles_real();
+    void select_all_vehicles_sim();
     void select_no_vehicles();
 
+    //Helper functions
+    void get_path_name(std::string& in, std::string& out_path, std::string& out_name);
+
 public:
-    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, int argc, char *argv[]);
+    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, uint8_t argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();
