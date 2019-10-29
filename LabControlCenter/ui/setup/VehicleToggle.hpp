@@ -15,13 +15,13 @@
 class VehicleToggle 
 {
 public:
-    VehicleToggle(uint8_t _id);
+    VehicleToggle(unsigned int _id);
 
     enum ToggleState{Off, Simulated, On};
 
     //Getter
     ToggleState get_state() const;
-    uint8_t get_id();
+    unsigned int get_id();
     Gtk::Widget* get_parent();
 
     //Setter
@@ -43,6 +43,6 @@ private:
     Gtk::RadioButton* vehicle_on = nullptr;
 
     //Given values
-    uint8_t id;
+    unsigned int id;
     std::function<void(ToggleState)> selection_callback;
 };

@@ -3,7 +3,7 @@
 
 using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, uint8_t argc, char *argv[]) :
+SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int argc, char *argv[]) :
     timer_ui(_timer_ui)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
@@ -45,7 +45,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, uint8_t argc, c
     assert(vehicle_flowbox);
 
     //Create vehicle toggles
-    for (uint8_t id = 1; id <= 6; ++id)
+    for (unsigned int id = 1; id <= 6; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }
@@ -141,7 +141,7 @@ void SetupViewUI::deploy_hlc_scripts() {
         sim_time_string = "false";
     }
 
-    std::vector<uint8_t> vehicle_ids = get_active_vehicle_ids();
+    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
     if (vehicle_ids.size() > 0)
     {
         std::stringstream vehicle_ids_stream;
@@ -168,7 +168,7 @@ void SetupViewUI::deploy_hlc_scripts() {
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
-            << "$'source ~/dev/software/hlc/environment_variables.bash;"
+            << "'source ~/dev/software/hlc/environment_variables.bash;"
             << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
             << "cd " << script_path_string
             << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
@@ -226,7 +226,7 @@ void SetupViewUI::deploy_middleware() {
 
     //TODO Pass vehicle_ids vector as function parameter
     std::stringstream vehicle_ids_stream;
-    std::vector<uint8_t> vehicle_ids = get_active_vehicle_ids();
+    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
     if (vehicle_ids.size() > 0)
     {
         for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
@@ -268,13 +268,13 @@ void SetupViewUI::kill_middleware() {
 }
 
 void SetupViewUI::deploy_sim_vehicles() {
-    for (const uint8_t id : get_vehicle_ids_simulated())
+    for (const unsigned int id : get_vehicle_ids_simulated())
     {
         deploy_sim_vehicle(id);
     }
 }
 
-void SetupViewUI::deploy_sim_vehicle(uint8_t id) {
+void SetupViewUI::deploy_sim_vehicle(unsigned int id) {
     std::string sim_time_string;
     if (switch_simulated_time->get_active())
     {
@@ -306,21 +306,21 @@ void SetupViewUI::deploy_sim_vehicle(uint8_t id) {
 }
 
 void SetupViewUI::kill_vehicles() {
-    for (const uint8_t id : get_active_vehicle_ids())
+    for (const unsigned int id : get_active_vehicle_ids())
     {
         kill_vehicle(id);
     } 
 }
 
-void SetupViewUI::kill_vehicle(uint8_t id) {
+void SetupViewUI::kill_vehicle(unsigned int id) {
     std::stringstream command;
     command 
         << "tmux kill-session -t \"vehicle_" << id << "\"";
     system(command.str().c_str());
 }
 
-std::vector<uint8_t> SetupViewUI::get_active_vehicle_ids() {
-    std::vector<uint8_t> active_vehicle_ids;
+std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
+    std::vector<unsigned int> active_vehicle_ids;
 
     for (auto& vehicle_toggle : vehicle_toggles)
     {
@@ -333,8 +333,8 @@ std::vector<uint8_t> SetupViewUI::get_active_vehicle_ids() {
     return active_vehicle_ids;
 }
 
-std::vector<uint8_t> SetupViewUI::get_vehicle_ids_realtime() {
-    std::vector<uint8_t> active_vehicle_ids;
+std::vector<unsigned int> SetupViewUI::get_vehicle_ids_realtime() {
+    std::vector<unsigned int> active_vehicle_ids;
 
     for (auto& vehicle_toggle : vehicle_toggles)
     {
@@ -347,8 +347,8 @@ std::vector<uint8_t> SetupViewUI::get_vehicle_ids_realtime() {
     return active_vehicle_ids;
 }
 
-std::vector<uint8_t> SetupViewUI::get_vehicle_ids_simulated() {
-    std::vector<uint8_t> active_vehicle_ids;
+std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
+    std::vector<unsigned int> active_vehicle_ids;
 
     for (auto& vehicle_toggle : vehicle_toggles)
     {

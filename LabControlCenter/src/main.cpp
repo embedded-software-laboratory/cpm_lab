@@ -27,80 +27,104 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
+#include <sstream>
+
+//For exit handlers
+#include <signal.h>
+#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std::placeholders;
 
-// void deploy_ips() {
-//     if (!switch_simulated_time->get_active()) 
-//     {
-//         //Generate command
-//         std::stringstream command_ips;
-//         command_ips 
-//             << "tmux new-session -d "
-//             << "-s \"ips_pipeline\" "
-//             << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
-//             << " --dds_domain=" << cmd_domain_id;
-//         if (cmd_dds_initial_peer.size() > 0) {
-//             command_ips 
-//                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
-//         }
-//         command_ips 
-//             << " >stdout_ips.txt 2>stderr_ips.txt\"";
+void deploy_ips(int cmd_domain_id, std::string cmd_dds_initial_peer) {
+    //Generate command
+    std::stringstream command_ips;
+    command_ips 
+        << "tmux new-session -d "
+        << "-s \"ips_pipeline\" "
+        << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command_ips 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
+    command_ips 
+        << " >stdout_ips.txt 2>stderr_ips.txt\"";
 
-//         //Generate command
-//         std::stringstream command_basler;
-//         command_basler 
-//             << "tmux new-session -d "
-//             << "-s \"ips_basler\" "
-//             << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
-//             << " --dds_domain=" << cmd_domain_id;
-//         if (cmd_dds_initial_peer.size() > 0) {
-//             command_basler 
-//                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
-//         }
-//         command_basler 
-//             << " >stdout_basler.txt 2>stderr_basler.txt\"";
+    //Generate command
+    std::stringstream command_basler;
+    command_basler 
+        << "tmux new-session -d "
+        << "-s \"ips_basler\" "
+        << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command_basler 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
+    command_basler 
+        << " >stdout_basler.txt 2>stderr_basler.txt\"";
 
-//         //Execute command
-//         system(command_ips.str().c_str());
-//         system(command_basler.str().c_str());
-//     }
-// }
+    //Execute command
+    system(command_ips.str().c_str());
+    system(command_basler.str().c_str());
+}
 
-// void kill_ips() {
-//     if (!switch_simulated_time->get_active()) 
-//     {
-//         //Generate command
-//         std::stringstream command_ips;
-//         command_ips 
-//             << "tmux kill-session -t \"ips_pipeline\"";
+void kill_ips() {
+    //Generate command
+    std::stringstream command_ips;
+    command_ips 
+        << "tmux kill-session -t \"ips_pipeline\"";
 
-//         //Generate command
-//         std::stringstream command_basler;
-//         command_basler
-//             << "tmux kill-session -t \"ips_basler\"";
+    //Generate command
+    std::stringstream command_basler;
+    command_basler
+        << "tmux kill-session -t \"ips_basler\"";
 
-//         //Execute command
-//         system(command_ips.str().c_str());
-//         system(command_basler.str().c_str());
-//     }
-// }
+    //Execute command
+    system(command_ips.str().c_str());
+    system(command_basler.str().c_str());
+}
 
-// void deploy_cloud_discovery() {
-//     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
-//     system(command.c_str());
-// }
+void deploy_cloud_discovery() {
+    std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
+    system(command.c_str());
+}
 
-// void kill_cloud_discovery() {
-//     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
-//     system(command.c_str());
-// }
+void kill_cloud_discovery() {
+    std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
+    system(command.c_str());
+}
+
+void interrupt_handler(int s) {
+    kill_ips();
+    kill_cloud_discovery();
+    exit(1);
+}
+
+void exit_handler() {
+    kill_ips();
+    kill_cloud_discovery();
+}
 
 int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("LabControlCenter");
+
+    //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
+    struct sigaction interruptHandler;
+    interruptHandler.sa_handler = interrupt_handler;
+    sigemptyset(&interruptHandler.sa_mask);
+    interruptHandler.sa_flags = 0;
+    sigaction(SIGINT, &interruptHandler, NULL);
+
+    std::atexit(exit_handler);
+
+    //Start IPS and Cloud Discovery Service which are always required to communicate with real vehicles
+    deploy_ips(cpm::cmd_parameter_int("dds_domain", 0, argc, argv), cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv));
+    deploy_cloud_discovery();
 
     //Read command line parameters (current params: auto_start and config_file)
     //TODO auto_start: User does not need to trigger the process manually / does not need to press 'start' when all participants are ready

@@ -12,13 +12,7 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     grid_vehicle_monitor->set_name("grid_vehicle_monitor");
     grid_vehicle_monitor->show();
 
-
-
-    update_loop = make_shared<cpm::TimerFD>("LabControlCenterMonitor", 100000000ull, 0, false);
-
-    update_loop = std::make_shared<cpm::TimerFD>("LabControlCenterMonitor",100000000ull, 0, false);
-    update_loop->start_async([&](uint64_t t_now){ update_dispatcher.emit(); });
-
+    //Set UI dispatcher function, create UI update thread
     update_dispatcher.connect([&](){
 
         auto vehicle_data = this->get_vehicle_data();
@@ -121,9 +115,27 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
         }
     });
 
-
+    run_thread.store(true);
+    ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }
 
+MonitoringUi::~MonitoringUi()
+{
+    run_thread.store(false);
+
+    if(ui_thread.joinable()) {
+        ui_thread.join();
+    }
+}
+
+void MonitoringUi::ui_update_loop()
+{
+    while (run_thread.load()) {
+        update_dispatcher.emit();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+}
 
 
 Gtk::Grid* MonitoringUi::get_parent()

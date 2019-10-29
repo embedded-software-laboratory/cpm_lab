@@ -1,6 +1,6 @@
 #include "VehicleToggle.hpp"
 
-VehicleToggle::VehicleToggle(uint8_t _id) :
+VehicleToggle::VehicleToggle(unsigned int _id) :
     id(_id)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/vehicle_toggle.glade");
@@ -56,7 +56,7 @@ VehicleToggle::ToggleState VehicleToggle::get_state() const
     return current_state;
 }
 
-uint8_t VehicleToggle::get_id()
+unsigned int VehicleToggle::get_id()
 {
     return id;
 }

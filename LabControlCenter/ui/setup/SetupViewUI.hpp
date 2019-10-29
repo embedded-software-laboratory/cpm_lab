@@ -61,16 +61,16 @@ private:
     void deploy_hlc_scripts();
     void deploy_middleware();
     void deploy_sim_vehicles();
-    void deploy_sim_vehicle(uint8_t id);
+    void deploy_sim_vehicle(unsigned int id);
 
     void kill_hlc_scripts();
     void kill_middleware();
     void kill_vehicles();
-    void kill_vehicle(uint8_t id);
+    void kill_vehicle(unsigned int id);
 
-    std::vector<uint8_t> get_active_vehicle_ids();
-    std::vector<uint8_t> get_vehicle_ids_realtime();
-    std::vector<uint8_t> get_vehicle_ids_simulated();
+    std::vector<unsigned int> get_active_vehicle_ids();
+    std::vector<unsigned int> get_vehicle_ids_realtime();
+    std::vector<unsigned int> get_vehicle_ids_simulated();
 
     //UI functions
     void set_sensitive(bool is_sensitive);
@@ -80,7 +80,7 @@ private:
 
     //Set command line parameters
     bool cmd_simulated_time;
-    uint8_t cmd_domain_id;
+    unsigned int cmd_domain_id;
     std::string cmd_dds_initial_peer;
 
     //File chooser to select script(s) + location
@@ -97,7 +97,7 @@ private:
     void get_path_name(std::string& in, std::string& out_path, std::string& out_name);
 
 public:
-    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, uint8_t argc, char *argv[]);
+    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();
