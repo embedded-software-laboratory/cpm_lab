@@ -1,0 +1,1 @@
+./build/LabControlCenter --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
