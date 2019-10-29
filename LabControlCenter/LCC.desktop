@@ -28,7 +28,8 @@ Categories=Development;
 
 
 # Optional actions (right click options)
-Actions=standard_launch;#launch2;launch3
+# Add more by adding a ;
+Actions=standard_launch
 
 [Desktop Action standard_launch]
 Name=Launch normally
