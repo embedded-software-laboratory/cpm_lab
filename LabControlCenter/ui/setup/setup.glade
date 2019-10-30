@@ -261,7 +261,7 @@ Further components</property>
                 <property name="spacing">8</property>
                 <child>
                   <object class="GtkLabel" id="label_launch_middleware">
-                    <property name="width_request">160</property>
+                    <property name="width_request">180</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
@@ -321,6 +321,46 @@ Further components</property>
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="position">12</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_left">3</property>
+        <property name="spacing">8</property>
+        <child>
+          <object class="GtkLabel" id="label_launch_ips">
+            <property name="width_request">180</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="valign">center</property>
+            <property name="label" translatable="yes">IPS</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="switch_launch_ips">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="halign">center</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">13</property>
       </packing>
     </child>
   </object>

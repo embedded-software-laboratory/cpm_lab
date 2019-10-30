@@ -41,6 +41,9 @@ private:
     //(De)Activate Middleware
     Gtk::Switch* switch_launch_middleware = nullptr;
 
+    //(De)Activate IPS
+    Gtk::Switch* switch_launch_ips = nullptr;
+
     //Start / stop simulation
     Gtk::Button* button_deploy = nullptr;
     Gtk::Button* button_kill = nullptr;
@@ -53,6 +56,9 @@ private:
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
 
+    //IPS switch callback
+    void switch_ips_set();
+
     //Overall deploy functions
     void deploy_applications();
     void kill_deployed_applications();
@@ -62,6 +68,8 @@ private:
     void deploy_middleware();
     void deploy_sim_vehicles();
     void deploy_sim_vehicle(unsigned int id);
+    void deploy_ips();
+    void kill_ips();
 
     void kill_hlc_scripts();
     void kill_middleware();

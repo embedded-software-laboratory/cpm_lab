@@ -21,6 +21,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
     
     builder->get_widget("switch_launch_middleware", switch_launch_middleware);
 
+    builder->get_widget("switch_launch_ips", switch_launch_ips);
+
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
 
@@ -38,6 +40,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
     assert(switch_simulated_time);
 
     assert(switch_launch_middleware);
+
+    assert(switch_launch_ips);
 
     assert(button_deploy);
     assert(button_kill);
@@ -72,6 +76,10 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);
     switch_simulated_time->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_timer_set));
+
+    //The IPS can be startet and restarted manually independent of the other components
+    builder->get_widget("switch_launch_ips", switch_launch_ips);
+    switch_launch_ips->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -82,6 +90,19 @@ SetupViewUI::~SetupViewUI() {
 void SetupViewUI::switch_timer_set()
 {
     timer_ui->reset(switch_simulated_time->get_active());
+}
+
+void SetupViewUI::switch_ips_set()
+{
+    if(switch_launch_ips->get_active())
+    {
+        deploy_ips();
+    }
+    else
+    {
+        kill_ips();
+    }
+    
 }
 
 using namespace std::placeholders;
@@ -359,6 +380,58 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
     }
 
     return active_vehicle_ids;
+}
+
+void SetupViewUI::deploy_ips() {
+    //Generate command
+    std::stringstream command_ips;
+    command_ips 
+        << "tmux new-session -d "
+        << "-s \"ips_pipeline\" "
+        << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command_ips 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
+    command_ips 
+        << " >stdout_ips.txt 2>stderr_ips.txt\"";
+
+    std::cout << command_ips.str() << std::endl;
+
+    //Generate command
+    std::stringstream command_basler;
+    command_basler 
+        << "tmux new-session -d "
+        << "-s \"ips_basler\" "
+        << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        command_basler 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
+    command_basler 
+        << " >stdout_basler.txt 2>stderr_basler.txt\"";
+
+    //Execute command
+    system(command_ips.str().c_str());
+    system(command_basler.str().c_str());
+}
+
+void SetupViewUI::kill_ips() {
+    //Generate command
+    std::stringstream command_ips;
+    command_ips 
+        << "tmux kill-session -t \"ips_pipeline\"";
+
+    //Generate command
+    std::stringstream command_basler;
+    command_basler
+        << "tmux kill-session -t \"ips_basler\"";
+
+    //Execute command
+    system(command_ips.str().c_str());
+    system(command_basler.str().c_str());
 }
 
 void SetupViewUI::set_sensitive(bool is_sensitive) {
