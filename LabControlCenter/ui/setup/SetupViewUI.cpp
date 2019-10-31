@@ -228,10 +228,7 @@ void SetupViewUI::deploy_hlc_scripts() {
 }
 
 void SetupViewUI::kill_hlc_scripts() {
-    std::stringstream command;
-    command 
-        << "tmux kill-session -t \"hlc\"";
-    system(command.str().c_str());
+    kill_session("hlc");
 }
 
 void SetupViewUI::deploy_middleware() {
@@ -279,13 +276,7 @@ void SetupViewUI::deploy_middleware() {
 }
 
 void SetupViewUI::kill_middleware() {
-    //Generate command
-    std::stringstream command;
-    command 
-        << "tmux kill-session -t \"middleware\"";
-
-    //Execute command
-    system(command.str().c_str());
+    kill_session("middleware");
 }
 
 void SetupViewUI::deploy_sim_vehicles() {
@@ -334,10 +325,10 @@ void SetupViewUI::kill_vehicles() {
 }
 
 void SetupViewUI::kill_vehicle(unsigned int id) {
-    std::stringstream command;
-    command 
-        << "tmux kill-session -t \"vehicle_" << id << "\"";
-    system(command.str().c_str());
+    std::stringstream vehicle_id;
+    vehicle_id << "vehicle_" << id;
+    
+    kill_session(vehicle_id.str());
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
@@ -383,6 +374,12 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
 }
 
 void SetupViewUI::deploy_ips() {
+    //Check if old session already exists - if so, kill it
+    if (session_exists("ips_pipeline"))
+    {
+        kill_session("ips_pipeline");
+    }
+
     //Generate command
     std::stringstream command_ips;
     command_ips 
@@ -397,7 +394,10 @@ void SetupViewUI::deploy_ips() {
     command_ips 
         << " >stdout_ips.txt 2>stderr_ips.txt\"";
 
-    std::cout << command_ips.str() << std::endl;
+    if (session_exists("ips_basler"))
+    {
+        kill_session("ips_basler");
+    }
 
     //Generate command
     std::stringstream command_basler;
@@ -419,19 +419,8 @@ void SetupViewUI::deploy_ips() {
 }
 
 void SetupViewUI::kill_ips() {
-    //Generate command
-    std::stringstream command_ips;
-    command_ips 
-        << "tmux kill-session -t \"ips_pipeline\"";
-
-    //Generate command
-    std::stringstream command_basler;
-    command_basler
-        << "tmux kill-session -t \"ips_basler\"";
-
-    //Execute command
-    system(command_ips.str().c_str());
-    system(command_basler.str().c_str());
+    kill_session("ips_pipeline");
+    kill_session("ips_basler");
 }
 
 void SetupViewUI::set_sensitive(bool is_sensitive) {
@@ -474,6 +463,23 @@ void SetupViewUI::select_no_vehicles()
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
     }
+}
+
+bool SetupViewUI::session_exists(std::string session_id)
+{
+    std::string running_sessions = execute_command("tmux ls");
+    session_id += ":";
+    return running_sessions.find(session_id) != std::string::npos;
+}
+
+void SetupViewUI::kill_session(std::string session_id)
+{
+    std::stringstream command;
+    command 
+        << "tmux kill-session -t \"" << session_id << "\"";
+
+    //Execute command
+    system(command.str().c_str());
 }
 
 std::string SetupViewUI::execute_command(const char* cmd) {

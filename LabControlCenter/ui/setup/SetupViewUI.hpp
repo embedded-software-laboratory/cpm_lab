@@ -83,9 +83,6 @@ private:
     //UI functions
     void set_sensitive(bool is_sensitive);
 
-    //Function to execute a shell command
-    std::string execute_command(const char* cmd);
-
     //Set command line parameters
     bool cmd_simulated_time;
     unsigned int cmd_domain_id;
@@ -103,6 +100,11 @@ private:
 
     //Helper functions
     void get_path_name(std::string& in, std::string& out_path, std::string& out_name);
+    bool session_exists(std::string session_id);
+    void kill_session(std::string session_id);
+
+    //Function to execute a shell command and get its output
+    std::string execute_command(const char* cmd);
 
 public:
     SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int argc, char *argv[]);
