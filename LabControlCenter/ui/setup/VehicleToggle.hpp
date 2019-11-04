@@ -10,6 +10,7 @@
 #include <gtkmm.h>
 
 #include <functional>
+#include <iostream>
 #include <sstream>
 
 class VehicleToggle 

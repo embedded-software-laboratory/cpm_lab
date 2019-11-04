@@ -43,11 +43,11 @@ void VehicleToggle::on_state_changed()
     }
     else if(vehicle_on->get_active())
     {
-        current_state = ToggleState::Off;   
+        current_state = ToggleState::On;   
     }
     else 
     {
-        current_state = ToggleState::On;
+        current_state = ToggleState::Off;
     }
 }
 

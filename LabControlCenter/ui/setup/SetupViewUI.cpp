@@ -220,8 +220,6 @@ void SetupViewUI::deploy_hlc_scripts() {
             return;
         }
 
-        std::cout << command.str() << std::endl;
-
         //Execute command
         system(command.str().c_str());
     }
