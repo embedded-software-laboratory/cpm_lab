@@ -27,12 +27,12 @@ VehicleToggle::VehicleToggle(unsigned int _id) :
     vehicle_on->join_group(*vehicle_off);
     vehicle_off->set_active(true);
 
+    current_state = ToggleState::Off;
+
     //Register button callbacks
     vehicle_off->signal_toggled().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
     vehicle_sim->signal_toggled().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
     vehicle_on->signal_toggled().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
-
-    current_state = ToggleState::On;
 }
 
 void VehicleToggle::on_state_changed()
