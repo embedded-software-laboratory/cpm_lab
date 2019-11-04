@@ -162,6 +162,12 @@ void SetupViewUI::deploy_hlc_scripts() {
         sim_time_string = "false";
     }
 
+    //Check if old session already exists - if so, kill it
+    if (session_exists("hlc"))
+    {
+        kill_session("hlc");
+    }
+
     std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
     if (vehicle_ids.size() > 0)
     {
@@ -240,6 +246,12 @@ void SetupViewUI::deploy_middleware() {
         sim_time_string = "false";
     }
 
+    //Check if old session already exists - if so, kill it
+    if (session_exists("middleware"))
+    {
+        kill_session("middleware");
+    }
+
     //TODO Pass vehicle_ids vector as function parameter
     std::stringstream vehicle_ids_stream;
     std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
@@ -295,11 +307,20 @@ void SetupViewUI::deploy_sim_vehicle(unsigned int id) {
         sim_time_string = "false";
     }
 
+    std::stringstream session_name;
+    session_name << "vehicle_" << id;
+
+    //Check if old session already exists - if so, kill it
+    if (session_exists(session_name.str()))
+    {
+        kill_session(session_name.str());
+    }
+
     //Generate command
     std::stringstream command;
     command 
         << "tmux new-session -d "
-        << "-s \"vehicle_" << id << "\" "
+        << "-s \"" << session_name.str() << "\" "
         << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
         << "--simulated_time=" << sim_time_string
         << " --vehicle_id=" << id
@@ -316,7 +337,7 @@ void SetupViewUI::deploy_sim_vehicle(unsigned int id) {
 }
 
 void SetupViewUI::kill_vehicles() {
-    for (const unsigned int id : get_active_vehicle_ids())
+    for (const unsigned int id : get_vehicle_ids_simulated())
     {
         kill_vehicle(id);
     } 
