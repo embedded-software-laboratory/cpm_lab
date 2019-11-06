@@ -42,7 +42,7 @@ private:
     Gtk::Switch* switch_launch_middleware = nullptr;
 
     //(De)Activate IPS
-    Gtk::Switch* switch_launch_ips = nullptr;
+    Gtk::Switch* switch_lab_mode = nullptr;
 
     //Start / stop simulation
     Gtk::Button* button_deploy = nullptr;

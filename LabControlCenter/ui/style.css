@@ -67,3 +67,22 @@
     background-color: #33691E;
     color: white;
 }
+
+.borderless{
+    border:none
+}
+
+.button_box{
+    background-image: linear-gradient(#C7C7C7);
+    background-color: #C7C7C7;
+}
+
+.monitoring{
+    background-image: linear-gradient(#FAFAFA);
+    background-color: #FAFAFA;
+}
+
+.menu_bar{
+    background-image: linear-gradient(#FFFFFF);
+    background-color: #FFFFFF;
+}

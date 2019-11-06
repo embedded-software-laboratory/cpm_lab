@@ -5,13 +5,35 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
 {
     this->get_vehicle_data = get_vehicle_data_callback;
 
-    grid_vehicle_monitor = Gtk::manage(new Gtk::Grid()); 
+    builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
+    builder->get_widget("parent", parent);
+    builder->get_widget("viewport_monitoring", viewport_monitoring);
+    builder->get_widget("grid_vehicle_monitor", grid_vehicle_monitor);
+    builder->get_widget("button_reset_view", button_reset_view);
+    builder->get_widget("box_buttons", box_buttons);
 
+    assert(parent);
+    assert(viewport_monitoring);
     assert(grid_vehicle_monitor);
+    assert(button_reset_view);
+    assert(box_buttons);
 
-    grid_vehicle_monitor->set_name("grid_vehicle_monitor");
-    grid_vehicle_monitor->show();
+    //Warning: Most style options are set in Glade (style classes etc) and style.css
 
+    //Initialize the UI thread that updates the view on connected / online vehicles
+    init_ui_thread();
+
+    //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
+    button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
+}
+
+MonitoringUi::~MonitoringUi()
+{
+    stop_ui_thread();
+}
+
+void MonitoringUi::init_ui_thread()
+{
     //Set UI dispatcher function, create UI update thread
     update_dispatcher.connect([&](){
 
@@ -119,7 +141,19 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }
 
-MonitoringUi::~MonitoringUi()
+void MonitoringUi::reset_ui_thread()
+{
+    stop_ui_thread();
+    //Clear grid view, create new one
+    viewport_monitoring->remove();
+    grid_vehicle_monitor = Gtk::manage(new Gtk::Grid());
+    grid_vehicle_monitor->set_name("grid_vehicle_monitor");
+    viewport_monitoring->add(*grid_vehicle_monitor);
+    grid_vehicle_monitor->show();
+    //init_ui_thread(); TODO: Old vehicle data also needs to be removed from the data structure that is used
+}
+
+void MonitoringUi::stop_ui_thread()
 {
     run_thread.store(false);
 
@@ -138,7 +172,7 @@ void MonitoringUi::ui_update_loop()
 }
 
 
-Gtk::Grid* MonitoringUi::get_parent()
+Gtk::Box* MonitoringUi::get_parent()
 {
-    return grid_vehicle_monitor;
+    return parent;
 }

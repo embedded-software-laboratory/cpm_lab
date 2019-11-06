@@ -21,7 +21,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
     
     builder->get_widget("switch_launch_middleware", switch_launch_middleware);
 
-    builder->get_widget("switch_launch_ips", switch_launch_ips);
+    builder->get_widget("switch_lab_mode", switch_lab_mode);
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
@@ -41,7 +41,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
 
     assert(switch_launch_middleware);
 
-    assert(switch_launch_ips);
+    assert(switch_lab_mode);
 
     assert(button_deploy);
     assert(button_kill);
@@ -78,8 +78,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int ar
     switch_simulated_time->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_timer_set));
 
     //The IPS can be startet and restarted manually independent of the other components
-    builder->get_widget("switch_launch_ips", switch_launch_ips);
-    switch_launch_ips->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
+    builder->get_widget("switch_lab_mode", switch_lab_mode);
+    switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -94,7 +94,7 @@ void SetupViewUI::switch_timer_set()
 
 void SetupViewUI::switch_ips_set()
 {
-    if(switch_launch_ips->get_active())
+    if(switch_lab_mode->get_active())
     {
         deploy_ips();
     }
