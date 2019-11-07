@@ -3,8 +3,9 @@
 
 using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int argc, char *argv[]) :
-    timer_ui(_timer_ui)
+SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, unsigned int argc, char *argv[]) :
+    timer_ui(_timer_ui),
+    vehicle_control(_vehicle_control)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -350,6 +351,8 @@ void SetupViewUI::kill_vehicle(unsigned int id) {
     vehicle_id << "vehicle_" << id;
     
     kill_session(vehicle_id.str());
+
+    vehicle_control->stop_vehicle(static_cast<uint8_t>(id));
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {

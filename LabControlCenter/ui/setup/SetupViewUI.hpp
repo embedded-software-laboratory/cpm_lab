@@ -3,6 +3,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "VehicleManualControl.hpp"
+#include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
@@ -56,6 +57,9 @@ private:
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
 
+    //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
+    std::shared_ptr<VehicleAutomatedControl> vehicle_control;
+
     //IPS switch callback
     void switch_ips_set();
 
@@ -107,7 +111,14 @@ private:
     std::string execute_command(const char* cmd);
 
 public:
-    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, unsigned int argc, char *argv[]);
+    /**
+     * \brief Constructor
+     * \param _timer_ui Allows to access the timer UI, to reset the timer on system restart
+     * \param _vehicleAutomatedControl Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
+     * \param argc Command line argument (from main())
+     * \param argv Command line argument (from main())
+     */
+    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, unsigned int argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();

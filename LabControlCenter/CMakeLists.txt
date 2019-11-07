@@ -45,6 +45,8 @@ add_executable(LabControlCenter
     src/VehicleManualControl.hpp
     ui/manual_control/VehicleManualControlUi.cpp
     ui/manual_control/VehicleManualControlUi.hpp
+    src/VehicleAutomatedControl.cpp
+    src/VehicleAutomatedControl.hpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp

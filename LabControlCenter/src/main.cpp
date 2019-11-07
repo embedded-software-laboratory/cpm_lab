@@ -6,6 +6,7 @@
 #include "TimeSeriesAggregator.hpp"
 #include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
+#include "VehicleAutomatedControl.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
@@ -93,6 +94,7 @@ int main(int argc, char *argv[])
     auto logStorage = make_shared<LogStorage>();
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
+    auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
@@ -105,7 +107,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();}, [=](){return timeSeriesAggregator->reset_all_data();});
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, argc, argv);
+    auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, vehicleAutomatedControl, argc, argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
