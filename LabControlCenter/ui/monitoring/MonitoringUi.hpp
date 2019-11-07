@@ -22,6 +22,7 @@ public:
     Gtk::Box* box_buttons;
     Gtk::Button* button_reset_view;
     std::function<VehicleData()> get_vehicle_data;
+    std::function<void()> reset_data;
     
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
     //Thus: Own timer implementation instead
@@ -42,7 +43,7 @@ public:
     void stop_ui_thread();
 
 public:
-    explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback);
+    explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<void()> reset_data_callback);
     ~MonitoringUi();
     Gtk::Box* get_parent();
 };

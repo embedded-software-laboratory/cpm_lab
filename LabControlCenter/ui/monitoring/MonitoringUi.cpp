@@ -1,9 +1,10 @@
 #include "MonitoringUi.hpp"
 #include <cassert>
 
-MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback)
+MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<void()> reset_data_callback)
 {
     this->get_vehicle_data = get_vehicle_data_callback;
+    this->reset_data = reset_data_callback;
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
     builder->get_widget("parent", parent);
@@ -143,14 +144,21 @@ void MonitoringUi::init_ui_thread()
 
 void MonitoringUi::reset_ui_thread()
 {
+    //Kill UI thread before clearing data
     stop_ui_thread();
+    
     //Clear grid view, create new one
     viewport_monitoring->remove();
     grid_vehicle_monitor = Gtk::manage(new Gtk::Grid());
     grid_vehicle_monitor->set_name("grid_vehicle_monitor");
     viewport_monitoring->add(*grid_vehicle_monitor);
     grid_vehicle_monitor->show();
-    //init_ui_thread(); TODO: Old vehicle data also needs to be removed from the data structure that is used
+
+    //Reset data in underlying data structure
+    this->reset_data();
+
+    //Recreate UI thread
+    init_ui_thread(); 
 }
 
 void MonitoringUi::stop_ui_thread()
