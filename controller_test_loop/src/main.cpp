@@ -4,6 +4,7 @@
 #include <map>
 #include <stdlib.h>
 #include <unistd.h>
+#include <cmath>
 #include <dds/pub/ddspub.hpp>
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
@@ -16,7 +17,89 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
+class TrajectoryIndex
+{
+private:
+    //This map keeps track of the current trajectory index of each vehicle
+    //Do not access these two 
+    std::mutex trajectory_mutex;
+    std::map<uint8_t, int64_t> vehicle_trajectory_indices;
 
+    //Reference to required data
+    std::vector<TrajectoryPoint>& trajectory_points;
+    std::mutex& observation_mutex;
+    std::map<uint8_t, VehicleObservation>& vehicle_observations;
+public:
+    //Get references to data required for the computation
+    TrajectoryIndex(std::vector<TrajectoryPoint>& _trajectory_points, std::mutex& _observation_mutex, std::map<uint8_t, VehicleObservation>& _vehicle_observations) :
+        trajectory_points(_trajectory_points),
+        observation_mutex(_observation_mutex),
+        vehicle_observations(_vehicle_observations)
+    {
+
+    }
+
+    void set_closest_trajectory_point(uint8_t id)
+    {
+        //Lock map so that it cannot be changed elsewhere, then get trajectory index
+        std::lock_guard<std::mutex> lock(observation_mutex);
+        std::lock_guard<std::mutex> lock2(trajectory_mutex);
+
+        //Only continue if the position of the vehicle is known
+        if (vehicle_observations.find(id) != vehicle_observations.end())
+        {
+            Pose2D vehicle_position = vehicle_observations.at(id).pose();
+            double distance = 0;
+            double smallest_distance = 0xffffffffffffffffull;
+            size_t smallest_index = 0;
+
+            //Find closest trajectory point
+            for (size_t index = 0; index < trajectory_points.size(); ++index)
+            {
+                //Avoid taking the square root, too expensive and not necessary
+                distance = (trajectory_points.at(index).px() - vehicle_position.x()) * (trajectory_points.at(index).px() - vehicle_position.x()) 
+                    + (trajectory_points.at(index).py() - vehicle_position.y()) * (trajectory_points.at(index).py() - vehicle_position.y());
+
+                if(distance < smallest_distance)
+                {
+                    smallest_distance = distance;
+                    smallest_index = index;
+                }
+            }
+
+            //Store its index - get one point back to make sure that the vehicle will 'catch' the trajectory properly
+            if (smallest_index > 0)
+            {
+                vehicle_trajectory_indices[id] = smallest_index - 1;
+            }
+            else
+            {
+                vehicle_trajectory_indices[id] = trajectory_points.size() - 1;
+            }
+        }
+    }
+
+    /**
+     * \brief Returns the trajectory point for the given id OR tries to calculate one - this might fail, so no valid value is returned in that case
+     */
+    int64_t get_next_trajectory_index(uint8_t id)
+    {
+        if (vehicle_trajectory_indices.find(id) != vehicle_trajectory_indices.end())
+        {
+            int64_t next_point = vehicle_trajectory_indices.at(id);
+
+            //Increment trajectory index
+            vehicle_trajectory_indices[id] = (next_point + 1) % (trajectory_points.size());
+
+            return next_point;
+        }
+        else
+        {
+            set_closest_trajectory_point(id);
+            return -1;
+        }
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -40,7 +123,8 @@ int main(int argc, char *argv[])
     );
 
 
-    std::mutex _mutex;
+    std::mutex observation_mutex;
+    std::mutex slot_mutex;
 
     // There are 'n_max_vehicles' slots for vehicles in the reference trajectory.
     // If the slot ID is zero, the slot is unused.
@@ -52,10 +136,14 @@ int main(int argc, char *argv[])
     // vehicles without a slot
     std::vector<uint8_t> unassigned_vehicle_ids;
 
+    //Object to retrieve current trajectory index for each vehicle
+    TrajectoryIndex trajectory_index(trajectory_points, observation_mutex, vehicleObservations);
+
     // receive vehicle pose from IPS
     cpm::AsyncReader<VehicleObservation> vehicleObservations_reader(
         [&](dds::sub::LoanedSamples<VehicleObservation>& samples) {
-            std::unique_lock<std::mutex> lock(_mutex);
+            std::unique_lock<std::mutex> lock(observation_mutex);
+            std::unique_lock<std::mutex> lock2(slot_mutex);
             for(auto sample : samples) 
             {
                 if(sample.info().valid())
@@ -103,34 +191,52 @@ int main(int argc, char *argv[])
     if (enable_simulated_time) {
         offset = 1000000000ull;
     }
-    auto timer = cpm::Timer::create("controller_test_loop", 40000000ull, offset, false, true, enable_simulated_time);
+    auto timer = cpm::Timer::create("controller_test_loop", point_period_nanoseconds, offset, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now) {
-        std::unique_lock<std::mutex> lock(_mutex);
+        std::unique_lock<std::mutex> lock(slot_mutex);
 
-        const uint64_t t_eval = ((t_now + 1000000000ull) / point_period_nanoseconds) * point_period_nanoseconds;
+        //Vehicles should be taken from their current position, the starting point of the trajectory should not just be anywhere depending on the current time
+        //Thus, a first-time init is required to find out where the vehicles are, and to set corresponding initial indices for each vehicle
+        //A similar thing is also done when a trajectory for a new vehicle must be created
+        static bool position_init = false;
+        if (!position_init)
+        {
+            //Find closest point in trajectory for each vehicle
+            //Store this initial index for the vehicle
+            for (const auto& id : slot_vehicle_ids)
+            {
+                if (id != 0)
+                {
+                    trajectory_index.set_closest_trajectory_point(id);
+                }
+            }
+
+            position_init = true;
+        }
+
+        const uint64_t t_eval = t_now + 1000000000ull;
 
 
         for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
         {
             const uint8_t vehicle_id = slot_vehicle_ids.at(slot_idx);
 
-            uint64_t trajectory_index = 
-                (t_eval + slot_idx * vehicle_time_gap_nanoseconds) / point_period_nanoseconds;
-
-            trajectory_index = trajectory_index % trajectory_points.size();
-
-            auto trajectory_point = trajectory_points.at(trajectory_index);
-            trajectory_point.t().nanoseconds(t_eval);
-
-
             // slot is assigned, just send the trajectory
             if(vehicle_id > 0)
             {
-                // Send trajectory point on DDS
-                VehicleCommandTrajectory vehicleCommandTrajectory;
-                vehicleCommandTrajectory.vehicle_id(vehicle_id);
-                vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
-                writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
+                int64_t index = trajectory_index.get_next_trajectory_index(vehicle_id);
+                if (index >= 0)
+                {
+                    auto trajectory_point = trajectory_points.at(static_cast<size_t>(index));
+                    trajectory_point.t().nanoseconds(t_eval);
+
+                    // Send trajectory point on DDS
+                    VehicleCommandTrajectory vehicleCommandTrajectory;
+                    vehicleCommandTrajectory.vehicle_id(vehicle_id);
+                    vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
+
+                    writer_vehicleCommandTrajectory.write(vehicleCommandTrajectory);
+                }
             }
             // Slot is unassigned, maybe it can be matched with an unassigned vehicle
             else
@@ -138,26 +244,37 @@ int main(int argc, char *argv[])
                 for (size_t i = 0; i < unassigned_vehicle_ids.size(); ++i)
                 {
                     const uint8_t unassigned_vehicle_id = unassigned_vehicle_ids[i];
-
                     if (unassigned_vehicle_id == 0) continue;
 
-                    const auto &observation = vehicleObservations[unassigned_vehicle_id];
+                    //Try again to get the trajectory index
+                    int64_t index = trajectory_index.get_next_trajectory_index(unassigned_vehicle_id);
 
-                    const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
+                    //Then try to work with that data
+                    std::lock_guard<std::mutex> lock(observation_mutex);
 
-                    if(fabs(trajectory_point.px() - observation.pose().x()) < 0.3
-                    && fabs(trajectory_point.py() - observation.pose().y()) < 0.3
-                    && fabs(sin(0.5*(ref_yaw - observation.pose().yaw()))) < 0.3)
+                    if (index >= 0)
                     {
-                        for (size_t k = 0; k < slot_vehicle_ids.size(); ++k)
-                        {
-                            assert(slot_vehicle_ids[k] != unassigned_vehicle_id);
-                        }
+                        auto trajectory_point = trajectory_points.at(static_cast<size_t>(index));
+                        trajectory_point.t().nanoseconds(t_eval);
+
+                        const auto &observation = vehicleObservations[unassigned_vehicle_id];
+
+                        const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
+
+                        // if(fabs(trajectory_point.px() - observation.pose().x()) < 0.3
+                        // && fabs(trajectory_point.py() - observation.pose().y()) < 0.3
+                        // && fabs(sin(0.5*(ref_yaw - observation.pose().yaw()))) < 0.3)
+                        // {
+                            for (size_t k = 0; k < slot_vehicle_ids.size(); ++k)
+                            {
+                                assert(slot_vehicle_ids[k] != unassigned_vehicle_id);
+                            }
 
 
-                        slot_vehicle_ids[slot_idx] = unassigned_vehicle_id;
-                        unassigned_vehicle_ids[i] = 0;
-                        break;
+                            slot_vehicle_ids[slot_idx] = unassigned_vehicle_id;
+                            unassigned_vehicle_ids[i] = 0;
+                            break;
+                        //}
                     }
                 }
             }
