@@ -20,17 +20,28 @@ VehicleAutomatedControl::VehicleAutomatedControl()
     task_loop->start_async([&](uint64_t t_now)
     {
         std::lock_guard<std::mutex> lock(stop_list_mutex);
-        for (const auto& id : vehicle_stop_list)
+        for (auto iter = vehicle_stop_list.begin(); iter != vehicle_stop_list.end();)
         {
             //Create and send stop signal for the vehicle - TODO, here test value with speed > 0
             VehicleCommandSpeedCurvature stop_command;
-            stop_command.vehicle_id(id);
-            stop_command.speed(0.5);
+            stop_command.vehicle_id(iter->first);
+            stop_command.speed(0);
             stop_command.curvature(0);
 
             cpm::stamp_message(stop_command, cpm::get_time_ns(), 1000000000ull);
 
             writer_vehicleCommandSpeedCurvature->write(stop_command);
+
+            //Delete the vehicle from the map if its message count is zero - then, enough messages should have been sent
+            if (iter->second == 0)
+            {
+                iter = vehicle_stop_list.erase(iter);
+            }
+            else 
+            {
+                iter->second = iter->second - 1;
+                ++iter;
+            }
         }
     });
 }
@@ -41,11 +52,12 @@ void VehicleAutomatedControl::stop_vehicles(std::vector<uint8_t> id_list)
     for (const auto& id : id_list)
     {
         stop_vehicle(id);
+            std::cout << "Stopping " << id << std::endl;
     }
 }
 
 void VehicleAutomatedControl::stop_vehicle(uint8_t id)
 {
     std::lock_guard<std::mutex> lock(stop_list_mutex);
-    vehicle_stop_list.push_back(id);
+    vehicle_stop_list[id] = 10; //How often the command should be sent
 }

@@ -25,7 +25,7 @@ private:
     //Vehicle commands need to be sent regularly to be interpreted correctly, so e.g. a stop signal should not be sent only once (TODO: Check that)
     std::shared_ptr<cpm::TimerFD> task_loop = nullptr;
     std::mutex stop_list_mutex;
-    std::vector<uint64_t> vehicle_stop_list; //TODO: Unordered set / different approach
+    std::map<uint32_t, uint32_t> vehicle_stop_list; //TODO: Unordered set / different approach
 
 public:
     VehicleAutomatedControl();

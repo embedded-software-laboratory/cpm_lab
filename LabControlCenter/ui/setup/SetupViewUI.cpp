@@ -343,7 +343,13 @@ void SetupViewUI::kill_vehicles() {
     for (const unsigned int id : get_vehicle_ids_simulated())
     {
         kill_vehicle(id);
-    } 
+    }
+
+    //Also make all vehicles stop immediately, so that they do not continue to drive for a while   
+    for (const auto id : get_active_vehicle_ids())
+    {
+        vehicle_control->stop_vehicle(static_cast<uint8_t>(id));
+    }
 }
 
 void SetupViewUI::kill_vehicle(unsigned int id) {
@@ -351,8 +357,6 @@ void SetupViewUI::kill_vehicle(unsigned int id) {
     vehicle_id << "vehicle_" << id;
     
     kill_session(vehicle_id.str());
-
-    vehicle_control->stop_vehicle(static_cast<uint8_t>(id));
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
