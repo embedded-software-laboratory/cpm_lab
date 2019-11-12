@@ -29,6 +29,46 @@ private:
     std::vector<TrajectoryPoint>& trajectory_points;
     std::mutex& observation_mutex;
     std::map<uint8_t, VehicleObservation>& vehicle_observations;
+
+    double get_squared_distance(double x_1, double y_1, double x_2, double y_2)
+    {
+        return (x_1 - x_2) * (x_1 - x_2) 
+            + (y_1 - y_2) * (y_1 - y_2);
+    }
+
+    bool has_collision(size_t next_index, uint8_t vehicle_id)
+    {
+        TrajectoryPoint next_pose = trajectory_points.at(next_index);
+        size_t next_other_index;
+        bool has_seen_own_id = false;
+
+        for (const auto& entry : vehicle_trajectory_indices)
+        {
+            //Only handle collisions for IDs that come before the own ID
+            if (entry.first == vehicle_id)
+            {
+                has_seen_own_id = true;
+            }
+
+            //Id comes before own id: Let that vehicle drive first. Else: Do not crash into current position of other vehicle
+            if (!has_seen_own_id)
+            {
+                next_other_index = (entry.second + 1) % (trajectory_points.size());
+            }
+            else {
+                next_other_index = entry.second;
+            }
+
+            if(get_squared_distance(next_pose.px(), next_pose.py(), trajectory_points.at(next_other_index).px(), trajectory_points.at(next_other_index).py())
+                < 0.07)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 public:
     //Get references to data required for the computation
     TrajectoryIndex(std::vector<TrajectoryPoint>& _trajectory_points, std::mutex& _observation_mutex, std::map<uint8_t, VehicleObservation>& _vehicle_observations) :
@@ -57,8 +97,7 @@ public:
             for (size_t index = 0; index < trajectory_points.size(); ++index)
             {
                 //Avoid taking the square root, too expensive and not necessary
-                distance = (trajectory_points.at(index).px() - vehicle_position.x()) * (trajectory_points.at(index).px() - vehicle_position.x()) 
-                    + (trajectory_points.at(index).py() - vehicle_position.y()) * (trajectory_points.at(index).py() - vehicle_position.y());
+                distance = get_squared_distance(trajectory_points.at(index).px(), trajectory_points.at(index).py(), vehicle_position.x(), vehicle_position.y());
 
                 if(distance < smallest_distance)
                 {
@@ -86,12 +125,20 @@ public:
     {
         if (vehicle_trajectory_indices.find(id) != vehicle_trajectory_indices.end())
         {
-            int64_t next_point = vehicle_trajectory_indices.at(id);
-
             //Increment trajectory index
-            vehicle_trajectory_indices[id] = (next_point + 1) % (trajectory_points.size());
+            int64_t old_point = vehicle_trajectory_indices.at(id);
+            int64_t next_point = (old_point + 1)  % (trajectory_points.size());
 
-            return next_point;
+            if (has_collision(next_point, id))
+            {
+                vehicle_trajectory_indices[id] = old_point;
+            }
+            else
+            {
+                vehicle_trajectory_indices[id] = next_point;
+            }
+
+            return old_point;
         }
         else
         {
