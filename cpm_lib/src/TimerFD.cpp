@@ -159,12 +159,26 @@ namespace cpm {
                 }
 
                 if (received_stop_signal()) {
-                    this->active = false;
+                    //Either stop the timer or call the stop callback function, if one exists
+                    if (m_stop_callback)
+                    {
+                        m_stop_callback();
+                    }
+                    else 
+                    {
+                        this->active = false;
+                    }
                 }
             }
         }
 
         close(timer_fd);
+    }
+
+    void TimerFD::start(std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback)
+    {
+        m_stop_callback = stop_callback;
+        start(update_callback);
     }
 
     void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback)
@@ -181,6 +195,12 @@ namespace cpm {
             Logging::Instance().write("TimerFD: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
+    }
+
+    void TimerFD::start_async(std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) 
+    {
+        m_stop_callback = stop_callback;
+        start_async(update_callback);
     }
 
     void TimerFD::stop()
