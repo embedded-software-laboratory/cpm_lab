@@ -362,3 +362,30 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     out_motor_throttle = motor_throttle_state;
     out_steering_servo = steering_servo_state;
 }
+
+void Controller::stop()
+{
+
+    usleep(1000);
+
+    //Clear reader and data, recreate after a few seconds to prevent receiving old data
+    m_trajectory_points.clear();
+
+    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
+    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+
+    asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
+    (
+        new cpm::AsyncReader<VehicleCommandTrajectory>
+        (
+            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+            {
+                reveice_trajectory_callback(samples);
+            }, 
+            cpm::ParticipantSingleton::Instance(), 
+            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+        )
+    );
+
+    //TODO: This does not work - first, stop needs to be set, second, stop prevents the actual vehicle control from being called -> handle things in get_control_signals
+}

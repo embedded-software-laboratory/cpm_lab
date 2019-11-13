@@ -84,8 +84,13 @@ class Controller
     double trajectory_tracking_statistics_lateral_errors       [TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE];
     size_t trajectory_tracking_statistics_index = 0;
 
+    //If this variable is not zero, no new commands are received until the current time is greater than its value
+    //Is used for the stop signal, to prevent receiving late signals
+    uint64_t message_receive_pause = 0;
+
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
+    void stop(); //Resets Reader and trajectory list, sets the current state to stop and prevents receiving new data for a limited amount of time
 };
