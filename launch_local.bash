@@ -1,8 +1,15 @@
 #!/bin/bash
+#Default value for DDS domain
+dds_domain=21
+
 #Get command line arguments
 for i in "$@"
 do
 case $i in
+    -dd=*|--dds_domain=*)
+    dds_domain="${i#*=}"
+    shift # past argument=value
+    ;;
     -sp=*|--script_path=*)
     script_path="${i#*=}"
     shift # past argument=value
@@ -45,7 +52,6 @@ fi
 
 exit_script() {
     tmux kill-session -t "LabControlCenter"
-    tmux kill-session -t "rticlouddiscoveryservice"
     tmux kill-session -t "middleware"
     tmux kill-session -t "hlc"
 
@@ -66,9 +72,7 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 trap exit_script SIGINT SIGTERM
 
-tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
-sleep 3
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 # Start middleware
 tmux new-session -d -s "middleware" "cd ./hlc/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
 # Start HLCs

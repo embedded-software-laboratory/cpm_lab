@@ -1,8 +1,15 @@
 #!/bin/bash
+#Default value for DDS domain (domain of real vehicles)
+dds_domain=21
+
 #Get command line arguments
 for i in "$@"
 do
 case $i in
+    -dd=*|--dds_domain=*)
+    dds_domain="${i#*=}"
+    shift # past argument=value
+    ;;
     -sp=*|--script_path=*)
     script_path="${i#*=}"
     shift # past argument=value
@@ -63,9 +70,6 @@ IFS=',' read -r -a hlc_array <<< "$hlc_ids"
 
 exit_script() {
     tmux kill-session -t "LabControlCenter"
-    tmux kill-session -t "rticlouddiscoveryservice"
-    tmux kill-session -t "BaslerLedDetection"
-    tmux kill-session -t "ips_pipeline"
 
     # Stop HLCs and vehicles
     for index in "${!hlc_array[@]}"
@@ -88,11 +92,7 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 trap exit_script SIGINT SIGTERM
 
 # Start local software (WARNING: domain hardcoded right now)
-tmux new-session -d -s "rticlouddiscoveryservice" "rticlouddiscoveryservice -transport 25598  >stdout_rticlouddiscoveryservice.txt 2>stderr_rticlouddiscoveryservice.txt"
-sleep 3
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=21 --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
-tmux new-session -d -s "BaslerLedDetection" "(cd ips2;./build/BaslerLedDetection --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_led_detection.txt 2>stderr_led_detection.txt)"
-tmux new-session -d -s "ips_pipeline" "(cd ips2;./build/ips_pipeline --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER >stdout_ips.txt 2>stderr_ips.txt)"
+tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 
 # Publish package via http/apache for the NUCs to download -> in build_all? Was ist mit HLC scripts?
 #   1. make middleware
