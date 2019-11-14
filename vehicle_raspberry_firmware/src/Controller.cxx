@@ -4,19 +4,16 @@
 #include "cpm/Logging.hpp"
 
 
-template<typename T>
-std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
-{
-    cpm::VehicleIDFilteredTopic<T> topic(cpm::get_topic<T>(name), vehicle_id);
-    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
-}
-
-Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
-:mpcController(vehicle_id)
+Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
+:mpcController(_vehicle_id)
+,vehicle_id(_vehicle_id)
 ,m_get_time(_get_time)
+,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
+,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
+,topic_vehicleCommandTrajectory(cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), _vehicle_id))
 {
-    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
-    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+    reader_CommandDirect = std::unique_ptr<cpm::Reader<VehicleCommandDirect>>(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
+    reader_CommandSpeedCurvature = std::unique_ptr<cpm::Reader<VehicleCommandSpeedCurvature>>(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
 
     asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
     (
@@ -27,7 +24,7 @@ Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
                 reveice_trajectory_callback(samples);
             }, 
             cpm::ParticipantSingleton::Instance(), 
-            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+            topic_vehicleCommandTrajectory
         )
     );
 }
@@ -363,19 +360,17 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     out_steering_servo = steering_servo_state;
 }
 
-void Controller::stop()
+void Controller::reset()
 {
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
 
-    usleep(1000);
-
-    //Clear reader and data, recreate after a few seconds to prevent receiving old data
+    //Clear reader and data
     m_trajectory_points.clear();
 
-    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
-    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+    reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
+    reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
 
-    asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
-    (
+    asyncReader_vehicleCommandTrajectory.reset(
         new cpm::AsyncReader<VehicleCommandTrajectory>
         (
             [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
@@ -383,9 +378,10 @@ void Controller::stop()
                 reveice_trajectory_callback(samples);
             }, 
             cpm::ParticipantSingleton::Instance(), 
-            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+            topic_vehicleCommandTrajectory
         )
     );
 
-    //TODO: This does not work - first, stop needs to be set, second, stop prevents the actual vehicle control from being called -> handle things in get_control_signals
+    //Set current state to stop until new commands are received
+    state = ControllerState::Stop;
 }

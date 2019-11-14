@@ -60,7 +60,7 @@ private:
             }
 
             if(get_squared_distance(next_pose.px(), next_pose.py(), trajectory_points.at(next_other_index).px(), trajectory_points.at(next_other_index).py())
-                < 0.07)
+                < 0.0)
             {
                 return true;
             }

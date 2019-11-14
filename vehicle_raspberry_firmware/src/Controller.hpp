@@ -37,9 +37,13 @@ class Controller
 
     std::function<uint64_t()> m_get_time;
 
+    cpm::VehicleIDFilteredTopic<VehicleCommandDirect> topic_vehicleCommandDirect;
     std::unique_ptr< cpm::Reader<VehicleCommandDirect> > reader_CommandDirect;
+
+    cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature;
     std::unique_ptr< cpm::Reader<VehicleCommandSpeedCurvature> > reader_CommandSpeedCurvature;
 
+    cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
     std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> > asyncReader_vehicleCommandTrajectory;
 
     VehicleState m_vehicleState;
@@ -47,6 +51,7 @@ class Controller
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
     
+    uint8_t vehicle_id;
 
     ControllerState state = ControllerState::Stop;
 
@@ -92,5 +97,5 @@ public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
-    void stop(); //Resets Reader and trajectory list, sets the current state to stop and prevents receiving new data for a limited amount of time
+    void reset(); //Resets Reader and trajectory list, sets the current state to stop
 };

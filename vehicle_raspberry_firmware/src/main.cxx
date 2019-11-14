@@ -1,3 +1,4 @@
+#include <atomic>
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -80,8 +81,6 @@ int main(int argc, char *argv[])
     cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
     cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
 
-
-
 #ifndef VEHICLE_SIMULATION
     // Hardware setup
     if (!bcm2835_init())
@@ -124,6 +123,12 @@ int main(int argc, char *argv[])
         t_prev = now;
     };
     
+    //----------------------------------------------------------------------------------------------------------------------
+
+    //Variabel for the control loop: If a stop signal was received, reset the controller, stop the vehicle, wait, then restart after a while
+    //After a while: Wait to make sure that old messages are ignored
+    std::atomic_uint32_t stop_counter; //Reset control_stop to false again after some iterations, so that the controller is not reset immediately (ignore old messages) - sleep would lead to problems regarding the VehicleObservation
+    stop_counter.store(0); //0 means normal run
 
     // Control loop
     update_loop->start(
@@ -160,8 +165,12 @@ int main(int argc, char *argv[])
                 double motor_throttle = 0;
                 double steering_servo = 0;
 
-                // Run controller
-                controller.get_control_signals(t_now, motor_throttle, steering_servo);
+                // Run controller only if no stop signal was received, else do not drive
+                //The controller gets reset at the end of the function, to make sure that before that the vehicle actually gets to stop driving
+                if(stop_counter.load() == 0)
+                {
+                    controller.get_control_signals(t_now, motor_throttle, steering_servo);
+                }
 
                 int n_transmission_attempts = 1;
                 int transmission_successful = 1;
@@ -239,13 +248,28 @@ int main(int argc, char *argv[])
                 std::string err_message = e.what();
                 cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
             }
+
+            //If a stop signal was received, stop the vehicle (was done above, get_control_signals is ignored)
+            //Then, wait one second and reset the controller to make sure that old data gets ignored for future commands
+            if (stop_counter.load() > 0)
+            {
+                //Reset if the counter will stop in the next round
+                if (stop_counter.load() == 1)
+                {
+                    controller.reset();
+                }
+
+                //Decrement the counter
+                stop_counter.store(stop_counter.load() - 1);
+            }
             
             //log_fn(__LINE__);
         },
     //Callback for stop signal
         [&](){
-            //Clear all recent commands and make the vehicle stop immediately
-            
+            //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
+            //Define x empty runs before the reset
+            stop_counter.store(50); //50Hz -> pause for one second
         }
     );
     
