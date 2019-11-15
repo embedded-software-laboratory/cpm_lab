@@ -360,6 +360,39 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     out_steering_servo = steering_servo_state;
 }
 
+void Controller::get_stop_signals(unsigned int stop_count, double &out_motor_throttle, double &out_steering_servo) 
+{
+    double motor_throttle = 0;
+    double steering_servo = 0;
+
+    if (stop_count > 100)
+    {
+        stop_count = 100;
+    }
+    const double speed_factor = 1.0 / pow(101.0 - stop_count, 2);
+    
+    const double speed_target = -0.1 * speed_factor;
+    const double curvature    = 0;
+    const double speed_measured = m_vehicleState.speed();
+
+    steering_servo = steering_curvature_calibration(curvature);
+    motor_throttle = speed_controller(speed_measured, speed_target);
+
+    motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
+    steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
+
+    std::cout << motor_throttle << " " << steering_servo << std::endl;
+
+    // controls rate limiter. the signal rates must be 
+    // limited to avoid power spikes and system resets
+    // const double max_rate = 0.1;
+    // motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
+    // steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
+
+    out_motor_throttle = motor_throttle;
+    out_steering_servo = steering_servo;
+}
+
 void Controller::reset()
 {
     std::lock_guard<std::mutex> lock(command_receive_mutex);

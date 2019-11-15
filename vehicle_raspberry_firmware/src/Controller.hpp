@@ -97,5 +97,12 @@ public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
+
+    /**
+     * \brief Uses the controller's private functions to calculate the correct values for stopping the car
+     * \param stop_count Uses the count of the stop signal to slightly adjust the speed target; 
+     *      starts with negative speed (which gets smaller over steps) to brake harder
+     */
+    void get_stop_signals(unsigned int stop_count, double &motor_throttle, double &steering_servo);
     void reset(); //Resets Reader and trajectory list, sets the current state to stop
 };

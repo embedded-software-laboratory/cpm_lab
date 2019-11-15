@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 
     //Variabel for the control loop: If a stop signal was received, reset the controller, stop the vehicle, wait, then restart after a while
     //After a while: Wait to make sure that old messages are ignored
-    std::atomic_uint32_t stop_counter; //Reset control_stop to false again after some iterations, so that the controller is not reset immediately (ignore old messages) - sleep would lead to problems regarding the VehicleObservation
+    std::atomic_uint_least32_t stop_counter; //Reset control_stop to false again after some iterations, so that the controller is not reset immediately (ignore old messages) - sleep would lead to problems regarding the VehicleObservation
     stop_counter.store(0); //0 means normal run
 
     // Control loop
@@ -171,6 +171,10 @@ int main(int argc, char *argv[])
                 {
                     controller.get_control_signals(t_now, motor_throttle, steering_servo);
                 }
+                else 
+                {
+                    controller.get_stop_signals(stop_counter.load(), motor_throttle, steering_servo);
+                }
 
                 int n_transmission_attempts = 1;
                 int transmission_successful = 1;
@@ -189,6 +193,12 @@ int main(int argc, char *argv[])
                 uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
                 if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
                 if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
+                //Use break mode if stop signal was received
+                // if(stop_counter.load() != 0)
+                // {
+                //     motor_mode = SPI_MOTOR_MODE_BRAKE;
+                // }
+
                 // Convert to low level controller units
                 spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
                 spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
