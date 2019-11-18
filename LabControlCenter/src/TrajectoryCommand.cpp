@@ -13,6 +13,9 @@ TrajectoryCommand::TrajectoryCommand()
 
     timer->start_async([this](uint64_t t_now){
         send_trajectory(t_now);
+    },
+    [](){
+        //Empty lambda callback for stop signals -> Do nothing when a stop signal is received
     });
 }
 
