@@ -78,10 +78,7 @@ void TimerViewUI::reset(bool use_simulated_time) {
     reset_ui();
 
     //Delete the old timer, replace it by a new one with new settings
-    if(use_simulated_time)
-    {
-        timer_trigger->send_stop_signal();
-    }
+    timer_trigger->send_stop_signal();
     
     std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
 

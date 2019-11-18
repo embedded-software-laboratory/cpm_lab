@@ -172,6 +172,8 @@ void TimerTrigger::send_stop_signal() {
     trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
     system_trigger_writer.write(trigger);
 
+    cpm::Logging::Instance().write("LCC: Sent stop signal");
+
     timer_running.store(false);
     if(next_signal_thread.joinable()) {
         next_signal_thread.join();
