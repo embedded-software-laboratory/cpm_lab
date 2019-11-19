@@ -171,6 +171,11 @@ void TimerTrigger::send_stop_signal() {
     SystemTrigger trigger;
     trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
     system_trigger_writer.write(trigger);
+
+    timer_running.store(false);
+    if(next_signal_thread.joinable()) {
+        next_signal_thread.join();
+    }
 }
 
 std::map<string, TimerData> TimerTrigger::get_participant_message_data() {

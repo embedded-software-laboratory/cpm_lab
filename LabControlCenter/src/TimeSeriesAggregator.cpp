@@ -204,3 +204,10 @@ VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
     std::lock_guard<std::mutex> lock(_mutex);
     return vehicle_reference_trajectories; 
 }
+
+void TimeSeriesAggregator::reset_all_data()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    timeseries_vehicles.clear();
+    vehicle_reference_trajectories.clear();
+}

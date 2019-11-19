@@ -71,6 +71,9 @@
                 </child>
               </object>
             </child>
+            <style>
+              <class name="menu_bar"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>

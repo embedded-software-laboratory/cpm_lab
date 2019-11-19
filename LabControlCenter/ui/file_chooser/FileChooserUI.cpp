@@ -3,6 +3,19 @@
 FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
+    std::vector<std::string> filter_name{"YAML files"}; 
+    std::vector<std::string> filter_type{"text/yaml"};
+    init(filter_name, filter_type);
+}
+
+FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type) :
+    on_close_callback(_on_close_callback)
+{
+    init(filter_name, filter_type);
+}
+
+void FileChooserUI::init(std::vector<std::string> filter_name, std::vector<std::string> filter_type)
+{
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileChooserDialog.glade");
 
     params_create_builder->get_widget("file_chooser_dialog", file_chooser_dialog);
@@ -23,10 +36,14 @@ FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_ca
     button_load->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_load));
 
     //Set filter
-    auto filter_yaml = Gtk::FileFilter::create();
-    filter_yaml->set_name("YAML files");
-    filter_yaml->add_mime_type("text/yaml");
-    file_chooser_dialog->add_filter(filter_yaml);
+    size_t min_index = std::min(filter_name.size(), filter_type.size());
+    for (size_t index = 0; index < min_index; ++index)
+    {
+        auto filter = Gtk::FileFilter::create();
+        filter->set_name(filter_name.at(index).c_str());
+        filter->add_mime_type(filter_type.at(index).c_str());
+        file_chooser_dialog->add_filter(filter);
+    }
 
     file_chooser_dialog->set_select_multiple(false);
 
@@ -56,7 +73,6 @@ bool FileChooserUI::on_delete(GdkEventAny* any_event) {
     if (!called_callback) {
         on_close_callback("", false); //false -> do not save changes
     }
-    std::cout << "on delete" << std::endl;
     return false;
 }
 
@@ -66,18 +82,7 @@ void FileChooserUI::on_abort() {
 
 void FileChooserUI::on_load() {
     std::string filename = file_chooser_dialog->get_filename();
-    std::string end = ".yaml";
-
-    //Check if this is a valid yaml file according to its name
-    bool is_yaml;
-    if (filename.size() > end.size()) {
-        is_yaml = filename.compare(filename.size() - end.size(), end.size(), end) == 0;
-    }
-
-    if (is_yaml) {
-        called_callback = true;
-        window->close();
-        std::cout << "calling callback" << std::endl;
-        on_close_callback(filename, true);
-    }
+    
+    window->close();
+    on_close_callback(filename, true);
 }

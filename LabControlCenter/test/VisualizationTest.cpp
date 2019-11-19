@@ -4,6 +4,7 @@
 
 #include <dds/pub/ddspub.hpp>
 
+#include "cpm/init.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -14,6 +15,7 @@
 //In this test scenario, the timers are not stopped by the program but by the LCC stop signal
 
 int main(int argc, char *argv[]) {
+    cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("Logger_test");
 
     std::cout << "Creating visualization sender..." << std::endl;
