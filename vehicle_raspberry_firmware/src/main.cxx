@@ -281,6 +281,7 @@ int main(int argc, char *argv[])
             //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
             //Define x empty runs before the reset
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
+            cpm::Logging::Instance().write("Received stop signal");
         }
     );
     

@@ -388,14 +388,6 @@ void Controller::get_stop_signals(unsigned int stop_count, uint32_t stop_steps, 
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
 
-    cpm::Logging::Instance().write(
-                "Stop signal received, using:"
-                "motor_throttle: %f  "
-                "steering_servo: %f  ",
-                motor_throttle,
-                steering_servo
-            );
-
     // controls rate limiter. the signal rates must be 
     // limited to avoid power spikes and system resets
     // const double max_rate = 0.1;
