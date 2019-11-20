@@ -28,4 +28,4 @@ add_executable( autostart
     ${SOURCES}
 )
 
-target_link_libraries(middleware cpm additional_idl)
+target_link_libraries(autostart cpm)

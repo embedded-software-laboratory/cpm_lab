@@ -4,5 +4,5 @@ mkdir build
 cd build
 
 cmake .. 
-make -j8 && ./unittest
+make -j8
 cd ..
