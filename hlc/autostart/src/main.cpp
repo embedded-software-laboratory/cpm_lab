@@ -53,27 +53,36 @@ int main (int argc, char *argv[]) {
     struct sockaddr_in *sa;
     char *address;
 
-    getifaddrs(&ifap);
-    for (ifa = ifap; ifa; ifa = ifa->ifa_next)
+    while (hlc_id == "")
     {
-        if(ifa->ifa_addr && ifa->ifa_addr->sa_family==AF_INET)
+        getifaddrs(&ifap);
+        for (ifa = ifap; ifa; ifa = ifa->ifa_next)
         {
-            sa = (struct sockaddr_in *) ifa->ifa_addr;
-            address = inet_ntoa(sa->sin_addr);
-
-            //Get address string
-            if(address != NULL)
+            if(ifa->ifa_addr && ifa->ifa_addr->sa_family==AF_INET)
             {
-                std::string addr(address);
-                auto pos = addr.find(mask);
-                if (pos != std::string::npos) {
-                    hlc_id = addr.substr(pos + mask.size(), hlc_id.size() - pos - mask.size());
-                    break;
+                sa = (struct sockaddr_in *) ifa->ifa_addr;
+                address = inet_ntoa(sa->sin_addr);
+
+                //Get address string
+                if(address != NULL)
+                {
+                    std::string addr(address);
+                    auto pos = addr.find(mask);
+                    if (pos != std::string::npos) {
+                        hlc_id = addr.substr(pos + mask.size(), hlc_id.size() - pos - mask.size());
+                        break;
+                    }
                 }
             }
         }
+        freeifaddrs(ifap);
+
+        //Log error if the own ID could not yet be determined
+        if (hlc_id == "")
+        {
+            cpm::Logging::Instance().write("ID of a NUC could not yet be determined");
+        }
     }
-    freeifaddrs(ifap);
 
     std::cout << "Set ID to " << hlc_id << std::endl;
 

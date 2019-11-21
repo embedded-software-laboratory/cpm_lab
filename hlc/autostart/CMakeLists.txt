@@ -29,3 +29,10 @@ add_executable( autostart
 )
 
 target_link_libraries(autostart cpm)
+
+add_executable( test_receiver
+    src/test_receiver.cpp
+    ${SOURCES}
+)
+
+target_link_libraries(test_receiver cpm)
