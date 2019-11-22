@@ -24,7 +24,8 @@ public:
     Gtk::Grid* grid_vehicle_monitor;
     Gtk::Box* box_buttons;
     Gtk::Button* button_reset_view;
-    Gtk::Label* label_hlcs_online;
+    Gtk::Label* label_hlc_description_short;
+    Gtk::Label* label_hlc_description_long;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<std::string>()> get_hlc_data;
     std::function<void()> reset_data;

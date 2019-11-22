@@ -13,14 +13,16 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     builder->get_widget("grid_vehicle_monitor", grid_vehicle_monitor);
     builder->get_widget("button_reset_view", button_reset_view);
     builder->get_widget("box_buttons", box_buttons);
-    builder->get_widget("label_hlcs_online", label_hlcs_online);
+    builder->get_widget("label_hlc_description_short", label_hlc_description_short);
+    builder->get_widget("label_hlc_description_long", label_hlc_description_long);
 
     assert(parent);
     assert(viewport_monitoring);
     assert(grid_vehicle_monitor);
     assert(button_reset_view);
     assert(box_buttons);
-    assert(label_hlcs_online);
+    assert(label_hlc_description_short);
+    assert(label_hlc_description_long);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -145,21 +147,22 @@ void MonitoringUi::init_ui_thread()
 
         //Show amount in entry
         std::stringstream text_stream;
-        text_stream << hlc_data.size();
-        label_hlcs_online->set_text(text_stream.str().c_str());
+        text_stream << "HLCs online: " << hlc_data.size();
+        label_hlc_description_short->set_text(text_stream.str().c_str());
 
         //Show list in entry tooltip (on mouse hover)
-        text_stream.clear();
+        std::stringstream list_stream;
+        list_stream << "Online IDs: ";
         if(hlc_data.size() > 0)
         {
             for (size_t i = 0; i < hlc_data.size() - 1; ++i)
             {
-                text_stream << hlc_data.at(i) << ", ";
+                list_stream << hlc_data.at(i) << ", ";
             }
-            text_stream << hlc_data.at(hlc_data.size() - 1);
+            list_stream << hlc_data.at(hlc_data.size() - 1);
         }
 
-        label_hlcs_online->set_tooltip_text(text_stream.str().c_str());
+        label_hlc_description_long->set_text(list_stream.str().c_str());
     });
 
     run_thread.store(true);
