@@ -79,6 +79,9 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
         }
 
         if(m_update_callback) m_update_callback();
+    },
+    [](){
+        //Empty lambda callback for stop signals -> Do nothing when a stop signal is received
     });
 }
 

@@ -20,6 +20,9 @@
 
 #include "Log.hpp"
 
+/**
+ * \brief Used to receive and store Log messages (cpm::Logging) from all participants in the current domain
+ */
 class LogStorage {
 public:
     enum FilterType {ID, Content, Timestamp, All};
