@@ -45,12 +45,36 @@ namespace cpm
          * \param update_callback the callback function
          */
         virtual void start       (std::function<void(uint64_t t_now)> update_callback) = 0;
+
+        /**
+         * Start the periodic callback of the callback function in the 
+         * calling thread. The thread is blocked until stop() is 
+         * called. When a stop signal is received, the stop_callback function is called (and may also call stop(), if desired).
+         * This allows to user to define a custom stop behaviour, e.g. that the vehicle that uses the timer only stops driving,
+         * but does not stop the internal timer.
+         * \param update_callback the callback function to call when the next timestep is reached
+         * \param stop_callback the callback function to call when the timer is stopped
+         */
+        virtual void start       (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) = 0;
+
         /**
          * Start the periodic callback of the callback function 
          * in a new thread. The calling thread is not blocked.
          * \param update_callback the callback function
          */
         virtual void start_async (std::function<void(uint64_t t_now)> update_callback) = 0;
+
+        /**
+         * Start the periodic callback of the callback function 
+         * in a new thread. The calling thread is not blocked.
+         * When a stop signal is received, the stop_callback function is called (and may also call stop(), if desired).
+         * This allows to user to define a custom stop behaviour, e.g. that the vehicle that uses the timer only stops driving,
+         * but does not stop the internal timer.
+         * \param update_callback the callback function to call when the next timestep is reached
+         * \param stop_callback the callback function to call when the timer is stopped
+         */
+        virtual void start_async (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) = 0;
+        
         /**
          * \brief Stops the periodic callback and kills the thread (if it was created using start_async).
          */

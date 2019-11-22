@@ -32,6 +32,7 @@ namespace cpm {
 
         std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
+        std::function<void()> m_stop_callback;
 
         dds::core::cond::WaitSet waitset;
 
@@ -47,7 +48,9 @@ namespace cpm {
         ~TimerSimulated();
 
         void start       (std::function<void(uint64_t t_now)> update_callback) override;
+        void start       (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
         void start_async (std::function<void(uint64_t t_now)> update_callback) override;
+        void start_async (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
         void stop() override;
         uint64_t get_time() override;
     };

@@ -54,8 +54,16 @@ namespace cpm {
                     writer_ready_status.write(ready_status);
                 }
                 else if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) {
-                    //Received stop signal
-                    this->active = false;
+                    //Received stop signal - use the user's stop function or stop the timer if none was registered
+                    if (m_stop_callback)
+                    {
+                        m_stop_callback();
+                    }
+                    else
+                    {
+                        this->active = false;
+                    }
+                    
                     return Answer::STOP;
                 }
             }
@@ -108,6 +116,12 @@ namespace cpm {
         }
     }
 
+    void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback)
+    {
+        m_stop_callback = stop_callback;
+        start(update_callback);
+    }
+
     void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_callback)
     {
         if(!runner_thread.joinable())
@@ -122,6 +136,12 @@ namespace cpm {
             Logging::Instance().write("TimerSimulated: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
+    }
+
+    void TimerSimulated::start_async(std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback)
+    {
+        m_stop_callback = stop_callback;
+        start_async(update_callback);
     }
 
     void TimerSimulated::stop()

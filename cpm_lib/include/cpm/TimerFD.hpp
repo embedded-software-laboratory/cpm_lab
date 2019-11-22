@@ -46,6 +46,7 @@ namespace cpm {
         int timer_fd = -1;
         std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
+        std::function<void()> m_stop_callback;
 
 
         void wait();
@@ -76,11 +77,33 @@ namespace cpm {
         void start       (std::function<void(uint64_t t_now)> update_callback) override;
 
         /**
+         * Start the periodic callback of the callback function in the 
+         * calling thread. The thread is blocked until stop() is 
+         * called. When a stop signal is received, the stop_callback function is called (and may also call stop(), if desired).
+         * This allows to user to define a custom stop behaviour, e.g. that the vehicle that uses the timer only stops driving,
+         * but does not stop the internal timer.
+         * \param update_callback the callback function to call when the next timestep is reached
+         * \param stop_callback the callback function to call when the timer is stopped
+         */
+        void start       (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
+
+        /**
          * Start the periodic callback of the callback function 
          * in a new thread. The calling thread is not blocked.
          * \param update_callback the callback function
          */
         void start_async (std::function<void(uint64_t t_now)> update_callback) override;
+
+        /**
+         * Start the periodic callback of the callback function 
+         * in a new thread. The calling thread is not blocked.
+         * When a stop signal is received, the stop_callback function is called (and may also call stop(), if desired).
+         * This allows to user to define a custom stop behaviour, e.g. that the vehicle that uses the timer only stops driving,
+         * but does not stop the internal timer.
+         * \param update_callback the callback function to call when the next timestep is reached
+         * \param stop_callback the callback function to call when the timer is stopped
+         */
+        void start_async (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
 
         /**
          * \brief Stops the periodic callback and kills the thread (if it was created using start_async).
