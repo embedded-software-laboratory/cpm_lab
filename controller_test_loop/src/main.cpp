@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <utility>
 #include <thread>
 #include <map>
 #include <stdlib.h>
@@ -36,10 +37,55 @@ private:
             + (y_1 - y_2) * (y_1 - y_2);
     }
 
-    bool has_collision(size_t next_index, uint8_t vehicle_id)
+    bool has_collision(double x1_before, double y1_before, double x1_after, double y1_after,
+        double x2_before, double y2_before, double x2_after, double y2_after, double tolerance)
     {
-        TrajectoryPoint next_pose = trajectory_points.at(next_index);
-        size_t next_other_index;
+        double min_x1 = std::min(x1_before - tolerance/2.0, x1_after - tolerance/2.0);
+        double min_x2 = std::min(x2_before - tolerance/2.0, x2_after - tolerance/2.0);
+        double max_x1 = std::max(x1_before + tolerance/2.0, x1_after + tolerance/2.0);
+        double max_x2 = std::max(x2_before + tolerance/2.0, x2_after + tolerance/2.0);
+
+        double min_y1 = std::min(y1_before - tolerance/2.0, y1_after - tolerance/2.0);
+        double min_y2 = std::min(y2_before - tolerance/2.0, y2_after - tolerance/2.0);
+        double max_y1 = std::max(y1_before + tolerance/2.0, y1_after + tolerance/2.0);
+        double max_y2 = std::max(y2_before + tolerance/2.0, y2_after + tolerance/2.0);
+
+        //Rectangles overlap
+        if (((min_x1 >= min_x2 && min_x1 <= max_x2) || (min_x2 >= min_x1 && min_x2 <= max_x1)) && 
+            ((min_y1 >= min_y2 && min_y1 <= max_y2) || (min_y2 >= min_y1 && min_y2 <= max_y1)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool has_collision(double x1, double y1, double x2, double y2, double tolerance)
+    {
+        double min_x1 = x1 - tolerance/2.0;
+        double min_x2 = x2 - tolerance/2.0;
+        double max_x1 = x1 + tolerance/2.0;
+        double max_x2 = x2 + tolerance/2.0;
+
+        double min_y1 = y1 - tolerance/2.0;
+        double min_y2 = y2 - tolerance/2.0;
+        double max_y1 = y1 + tolerance/2.0;
+        double max_y2 = y2 + tolerance/2.0;
+
+        //Rectangles overlap
+        if (((min_x1 >= min_x2 && min_x1 <= max_x2) || (min_x2 >= min_x1 && min_x2 <= max_x1)) && 
+            ((min_y1 >= min_y2 && min_y1 <= max_y2) || (min_y2 >= min_y1 && min_y2 <= max_y1)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool has_collision(size_t old_index, size_t next_index, uint8_t vehicle_id)
+    {
+        const TrajectoryPoint& old_pose = trajectory_points.at(old_index);
+        const TrajectoryPoint& next_pose = trajectory_points.at(next_index);
         bool has_seen_own_id = false;
 
         for (const auto& entry : vehicle_trajectory_indices)
@@ -50,19 +96,36 @@ private:
                 has_seen_own_id = true;
             }
 
-            //Id comes before own id: Let that vehicle drive first. Else: Do not crash into current position of other vehicle
-            if (!has_seen_own_id)
-            {
-                next_other_index = (entry.second + 1) % (trajectory_points.size());
-            }
-            else {
-                next_other_index = entry.second;
-            }
+            size_t old_other_index = entry.second;
+            size_t next_other_index = (entry.second + 1) % (trajectory_points.size());
+            const TrajectoryPoint& other_old_pose = trajectory_points.at(old_other_index);
+            const TrajectoryPoint& other_next_pose = trajectory_points.at(next_other_index);
 
-            if(get_squared_distance(next_pose.px(), next_pose.py(), trajectory_points.at(next_other_index).px(), trajectory_points.at(next_other_index).py())
-                < 0.0)
+            //Check if any form of collision will occur
+            if (has_collision(old_pose.px(), old_pose.py(), next_pose.px(), next_pose.py(),
+                other_old_pose.px(), other_old_pose.py(), other_next_pose.px(), other_next_pose.py(), 0.4))
             {
-                return true;
+                //Vehicle may drive if it does not have a collision in the next step and comes before the other one in the index list
+                if(!has_seen_own_id && !has_collision(next_pose.px(), next_pose.py(), other_old_pose.px(), other_old_pose.py(), 0.4))
+                {
+                    return false;
+                }
+                //In this case, the other vehicle must stop
+                if(has_seen_own_id && !has_collision(old_pose.px(), old_pose.py(), other_next_pose.px(), other_next_pose.py(), 0.4))
+                {
+                    return true;
+                }
+
+                //The vehicle with the lower rank might be in front of the other one - in this case, it may drive first
+                if(has_seen_own_id && !has_collision(next_pose.px(), next_pose.py(), other_old_pose.px(), other_old_pose.py(), 0.4))
+                {
+                    return false;
+                }
+                //In this case, the other vehicle must stop
+                if(!has_seen_own_id && !has_collision(old_pose.px(), old_pose.py(), other_next_pose.px(), other_next_pose.py(), 0.4))
+                {
+                    return true;
+                }
             }
         }
 
@@ -120,30 +183,33 @@ public:
 
     /**
      * \brief Returns the trajectory point for the given id OR tries to calculate one - this might fail, so no valid value is returned in that case
+     *      Also return whether a collision would have occurred - in that case, the vehicle needs to s
      */
-    int64_t get_next_trajectory_index(uint8_t id)
+    std::pair<int64_t,bool> get_next_trajectory_index(uint8_t id)
     {
         if (vehicle_trajectory_indices.find(id) != vehicle_trajectory_indices.end())
         {
             //Increment trajectory index
             int64_t old_point = vehicle_trajectory_indices.at(id);
             int64_t next_point = (old_point + 1)  % (trajectory_points.size());
+            bool had_collision = false;
 
-            if (has_collision(next_point, id))
+            if (has_collision(old_point, next_point, id))
             {
                 vehicle_trajectory_indices[id] = old_point;
+                had_collision = true;
             }
             else
             {
                 vehicle_trajectory_indices[id] = next_point;
             }
 
-            return old_point;
+            return std::pair<int64_t,bool>(old_point,had_collision);
         }
         else
         {
             set_closest_trajectory_point(id);
-            return -1;
+            return std::pair<int64_t,bool>(-1,true);
         }
     }
 };
@@ -271,11 +337,17 @@ int main(int argc, char *argv[])
             // slot is assigned, just send the trajectory
             if(vehicle_id > 0)
             {
-                int64_t index = trajectory_index.get_next_trajectory_index(vehicle_id);
-                if (index >= 0)
+                std::pair<int64_t,bool> index = trajectory_index.get_next_trajectory_index(vehicle_id);
+                if (index.first >= 0)
                 {
-                    auto trajectory_point = trajectory_points.at(static_cast<size_t>(index));
+                    TrajectoryPoint trajectory_point = trajectory_points.at(static_cast<size_t>(index.first));
                     trajectory_point.t().nanoseconds(t_eval);
+
+                    if (index.second)
+                    {
+                        trajectory_point.vx(0.0);
+                        trajectory_point.vy(0.0);
+                    }
 
                     // Send trajectory point on DDS
                     VehicleCommandTrajectory vehicleCommandTrajectory;
@@ -294,14 +366,14 @@ int main(int argc, char *argv[])
                     if (unassigned_vehicle_id == 0) continue;
 
                     //Try again to get the trajectory index
-                    int64_t index = trajectory_index.get_next_trajectory_index(unassigned_vehicle_id);
+                    std::pair<int64_t,bool> index = trajectory_index.get_next_trajectory_index(unassigned_vehicle_id);
 
                     //Then try to work with that data
                     std::lock_guard<std::mutex> lock(observation_mutex);
 
-                    if (index >= 0)
+                    if (index.first >= 0)
                     {
-                        auto trajectory_point = trajectory_points.at(static_cast<size_t>(index));
+                        auto trajectory_point = trajectory_points.at(static_cast<size_t>(index.first));
                         trajectory_point.t().nanoseconds(t_eval);
 
                         const auto &observation = vehicleObservations[unassigned_vehicle_id];

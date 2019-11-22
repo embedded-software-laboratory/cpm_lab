@@ -3,17 +3,25 @@
 #include <list>
 #include <stdint.h>
 
+#include "cpm/get_topic.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/MultiVehicleReader.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/stamp_message.hpp"
+#include "geometry.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
+#include <dds/sub/ddssub.hpp>
 
 extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
-#define INPUT_DELAY (4) // Input delay >= 0
+#define INPUT_DELAY 4 // Input delay >= 0
+#define MAX_NUM_VEHICLES 30
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
@@ -38,18 +46,24 @@ class SimulationVehicle
 
     dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
+    cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 
     SimulationIPS& simulationIPS;
+
+    // For collision checks:
+    std::map<uint64_t, Pose2D> ego_pose_history;
+    std::map<uint8_t, uint64_t>  get_collisions(const uint64_t t_now, const uint8_t vehicle_id);
+    
 
 public:
     SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id);
 
     VehicleState update(
-        const double& motor_throttle,
-        const double& steering_servo,
-        const uint64_t& t_now, 
-        const double& dt, 
-        const uint8_t& vehicle_id
+        const double motor_throttle,
+        const double steering_servo,
+        const uint64_t t_now, 
+        const double dt, 
+        const uint8_t vehicle_id
     );
 
     void get_state(double& _x, double& _y, double& _yaw, double& _speed);

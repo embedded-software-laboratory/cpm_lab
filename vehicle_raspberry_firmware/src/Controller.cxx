@@ -46,7 +46,7 @@ void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleComm
         }
     }
 
-    // Erase trajectory points which are older than 1 second
+    // Erase trajectory points which are older than 10 second
     const uint64_t past_threshold_time = latest_command_receive_time - 10000000000ull;
     auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
     m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
@@ -349,15 +349,8 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
 
-
-    // controls rate limiter. the signal rates must be 
-    // limited to avoid power spikes and system resets
-    const double max_rate = 0.1;
-    motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
-    steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
-
-    out_motor_throttle = motor_throttle_state;
-    out_steering_servo = steering_servo_state;
+    out_motor_throttle = motor_throttle;
+    out_steering_servo = steering_servo;
 }
 
 void Controller::get_stop_signals(unsigned int stop_count, uint32_t stop_steps, double &out_motor_throttle, double &out_steering_servo) 
