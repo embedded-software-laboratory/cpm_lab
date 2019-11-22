@@ -4,19 +4,16 @@
 #include "cpm/Logging.hpp"
 
 
-template<typename T>
-std::unique_ptr<cpm::Reader<T>> make_reader(std::string name, uint8_t vehicle_id)
-{
-    cpm::VehicleIDFilteredTopic<T> topic(cpm::get_topic<T>(name), vehicle_id);
-    return std::unique_ptr<cpm::Reader<T>>(new cpm::Reader<T>(topic));
-}
-
-Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
-:mpcController(vehicle_id)
+Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
+:mpcController(_vehicle_id)
+,vehicle_id(_vehicle_id)
 ,m_get_time(_get_time)
+,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
+,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
+,topic_vehicleCommandTrajectory(cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), _vehicle_id))
 {
-    reader_CommandDirect = make_reader<VehicleCommandDirect>("vehicleCommandDirect", vehicle_id);
-    reader_CommandSpeedCurvature = make_reader<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature", vehicle_id);
+    reader_CommandDirect = std::unique_ptr<cpm::Reader<VehicleCommandDirect>>(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
+    reader_CommandSpeedCurvature = std::unique_ptr<cpm::Reader<VehicleCommandSpeedCurvature>>(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
 
     asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
     (
@@ -27,7 +24,7 @@ Controller::Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time)
                 reveice_trajectory_callback(samples);
             }, 
             cpm::ParticipantSingleton::Instance(), 
-            cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), vehicle_id)
+            topic_vehicleCommandTrajectory
         )
     );
 }
@@ -354,4 +351,68 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
     out_motor_throttle = motor_throttle;
     out_steering_servo = steering_servo;
+}
+
+void Controller::get_stop_signals(unsigned int stop_count, uint32_t stop_steps, double &out_motor_throttle, double &out_steering_servo) 
+{
+    double motor_throttle = 0;
+    double steering_servo = 0;
+
+    //Get and store vehicle speed at start of stopping -> adjust breaking depending on this value
+    if (stop_count == static_cast<unsigned int>(stop_steps))
+    {
+        speed_at_stop = m_vehicleState.speed();
+    }
+    double speed_factor = static_cast<double>(speed_at_stop) * 
+        exp(2.0 * (static_cast<double>(stop_count) - static_cast<double>(stop_steps))); //stop_count goes down -> factor gets smaller
+    
+    double speed_target = -0.05 * speed_factor;
+    const double curvature    = 0;
+    const double speed_measured = m_vehicleState.speed();
+
+    if (speed_target < 0.0001)
+    {
+        speed_target = 0.0;
+    }
+
+    steering_servo = steering_curvature_calibration(curvature);
+    motor_throttle = speed_controller(speed_measured, speed_target);
+
+    motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
+    steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
+
+    // controls rate limiter. the signal rates must be 
+    // limited to avoid power spikes and system resets
+    // const double max_rate = 0.1;
+    // motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
+    // steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
+
+    out_motor_throttle = motor_throttle;
+    out_steering_servo = steering_servo;
+}
+
+void Controller::reset()
+{
+    std::lock_guard<std::mutex> lock(command_receive_mutex);
+
+    //Clear reader and data
+    m_trajectory_points.clear();
+
+    reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
+    reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
+
+    asyncReader_vehicleCommandTrajectory.reset(
+        new cpm::AsyncReader<VehicleCommandTrajectory>
+        (
+            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
+            {
+                reveice_trajectory_callback(samples);
+            }, 
+            cpm::ParticipantSingleton::Instance(), 
+            topic_vehicleCommandTrajectory
+        )
+    );
+
+    //Set current state to stop until new commands are received
+    state = ControllerState::Stop;
 }

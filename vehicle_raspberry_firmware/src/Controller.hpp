@@ -37,9 +37,13 @@ class Controller
 
     std::function<uint64_t()> m_get_time;
 
+    cpm::VehicleIDFilteredTopic<VehicleCommandDirect> topic_vehicleCommandDirect;
     std::unique_ptr< cpm::Reader<VehicleCommandDirect> > reader_CommandDirect;
+
+    cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature> topic_vehicleCommandSpeedCurvature;
     std::unique_ptr< cpm::Reader<VehicleCommandSpeedCurvature> > reader_CommandSpeedCurvature;
 
+    cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
     std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> > asyncReader_vehicleCommandTrajectory;
 
     VehicleState m_vehicleState;
@@ -47,6 +51,7 @@ class Controller
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
     
+    uint8_t vehicle_id;
 
     ControllerState state = ControllerState::Stop;
 
@@ -81,8 +86,23 @@ class Controller
     double trajectory_tracking_statistics_lateral_errors       [TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE];
     size_t trajectory_tracking_statistics_index = 0;
 
+    //If this variable is not zero, no new commands are received until the current time is greater than its value
+    //Is used for the stop signal, to prevent receiving late signals
+    uint64_t message_receive_pause = 0;
+
+    //Used to remember speed when stop signal is received
+    double speed_at_stop = 0.0;
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
+
+    /**
+     * \brief Uses the controller's private functions to calculate the correct values for stopping the car
+     * \param stop_count Uses the count of the stop signal to slightly adjust the speed target; 
+     *      starts with negative speed (which gets smaller over steps) to brake harder
+     * \param stop_steps Start value of stop_count
+     */
+    void get_stop_signals(unsigned int stop_count, uint32_t stop_steps, double &motor_throttle, double &steering_servo);
+    void reset(); //Resets Reader and trajectory list, sets the current state to stop
 };
