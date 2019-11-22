@@ -43,6 +43,9 @@ VehicleAutomatedControl::VehicleAutomatedControl()
                 ++iter;
             }
         }
+    },
+    [](){
+        //Empty lambda callback for stop signals -> Do nothing when a stop signal is received
     });
 }
 
