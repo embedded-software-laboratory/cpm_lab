@@ -10,7 +10,7 @@ middleware_id="middleware"
 cd ./middleware/build
 
 #Load environment variables, like RTI location, library location, Matlab location...
-source ./environment_variables.bash
+. ./environment_variables.bash
 
 echo $middleware_id
 

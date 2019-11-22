@@ -1,0 +1,1 @@
+bash ./launch_distributed.bash -sp=matlab/platoon_example -sn=main_vehicle_ids -va=6 -st=false -hi=5,10,11,13,14,15

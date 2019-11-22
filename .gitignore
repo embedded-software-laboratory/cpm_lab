@@ -40,8 +40,10 @@ matlab_scripts/map_print/map_print2/lane_graph.cpp
 std*.txt
 /hlc/matlab/IDL_gen/
 nuc_apache_package
+*.log
 hlc/middleware.txt
 hlc/hlc.txt
 hlc/matlab.log
 hlc/hlc_*.txt
 command_line_arguments_test.bash
+LabControlCenter/matlab.log

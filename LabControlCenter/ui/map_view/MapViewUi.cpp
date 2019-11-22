@@ -361,7 +361,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
 
             //Flip font
-            Cairo::Matrix font_matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0);
+            Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
             ctx->set_font_matrix(font_matrix);
 
             //Draw text

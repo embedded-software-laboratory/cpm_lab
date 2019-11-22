@@ -33,4 +33,5 @@ public:
     TimeSeriesAggregator();
     VehicleData get_vehicle_data();
     VehicleTrajectories get_vehicle_trajectory_commands();
+    void reset_all_data(); //Reset the data structures if desired by the user (e.g. bc the simulation was stopped)
 };

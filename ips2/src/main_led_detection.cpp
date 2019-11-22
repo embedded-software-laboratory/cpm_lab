@@ -82,8 +82,8 @@ void worker_led_detection()
         {
             std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
             auto t =  std::to_string(get_time_ns());
-            cv::imwrite("debug_" + t + "_raw.png",frame->image);
-            cv::imwrite("debug_" + t + "_thresh.png",img_binary);
+            //cv::imwrite("debug_" + t + "_raw.png",frame->image);
+            //cv::imwrite("debug_" + t + "_thresh.png",img_binary);
         }
         n_points_previous = frame->points_x.size();
         

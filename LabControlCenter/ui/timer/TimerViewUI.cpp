@@ -10,12 +10,14 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     ui_builder->get_widget("parent", parent);
     ui_builder->get_widget("button_start", button_start);
     ui_builder->get_widget("button_stop", button_stop);
+    ui_builder->get_widget("button_reset", button_reset);
     ui_builder->get_widget("active_timers_treeview", active_timers_treeview);
     ui_builder->get_widget("current_timestep_label", current_timestep_label);
 
     assert(parent);
     assert(button_start);
     assert(button_stop);
+    assert(button_reset);
     assert(active_timers_treeview);
     assert(current_timestep_label);
 
@@ -40,23 +42,76 @@ TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
     //Register callbacks for button presses
     button_start->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_start_callback));
     button_stop->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_stop_callback));
+    button_reset->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_reset_callback));
 
     //Create thread and register dispatcher callback
-    ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
-    run_thread.store(true);
-    ui_thread = std::thread(&TimerViewUI::update_ui, this);
+    start_ui_thread();
 
     //Boolean variable to find out if the system has been started
     system_is_running.store(false);
 }
 
 TimerViewUI::~TimerViewUI() {
+    stop_ui_thread();
+}
+
+void TimerViewUI::button_reset_callback() {
+    //Kill current UI thread as it might rely on other values that need to be reset
+    stop_ui_thread();
+
+    reset_ui();
+
+    //Delete the old timer, replace it by a new one with the same settings as before
+    bool use_simulated_time;
+    uint64_t current_time;
+    timer_trigger->get_current_simulated_time(use_simulated_time, current_time);
+    std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
+
+    //Recreate UI thread and register dispatcher callback
+    start_ui_thread();
+}
+
+void TimerViewUI::reset(bool use_simulated_time) {
+    //Kill current UI thread as it might rely on other values that need to be reset
+    stop_ui_thread();
+
+    reset_ui();
+
+    //Delete the old timer, replace it by a new one with new settings
+    if(use_simulated_time)
+    {
+        timer_trigger->send_stop_signal();
+    }
+    
+    std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
+
+    //Recreate UI thread and register dispatcher callback
+    start_ui_thread();
+}
+
+void TimerViewUI::start_ui_thread() {
+    ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
+    run_thread.store(true);
+    ui_thread = std::thread(&TimerViewUI::update_ui, this);
+}
+
+void TimerViewUI::stop_ui_thread() {
     run_thread.store(false);
 
     if(ui_thread.joinable()) {
         ui_thread.join();
     }
 }
+
+void TimerViewUI::reset_ui() {
+    //Reset values that are connected to the timer
+    timer_list_storage->clear();
+    system_is_running.store(false);
+
+    //Change UI button sensitivity
+    button_start->set_sensitive(true);
+}
+
 
 void TimerViewUI::dispatcher_callback() {
     //Update treeview
