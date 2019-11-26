@@ -67,7 +67,7 @@ private:
     void deploy_applications();
     void kill_deployed_applications();
 
-    //Specific deploy functions
+    //Specific local deploy functions
     void deploy_hlc_scripts();
     void deploy_middleware();
     void deploy_sim_vehicles();
@@ -79,6 +79,9 @@ private:
     void kill_middleware();
     void kill_vehicles();
     void kill_vehicle(unsigned int id);
+
+    //Specific remote deploy functions
+    void deploy_remote_hlc(unsigned int id);
 
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();
