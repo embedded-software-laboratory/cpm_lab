@@ -39,6 +39,8 @@ add_executable(LabControlCenter
     src/TimeSeries.hpp
     src/TimeSeriesAggregator.cpp
     src/TimeSeriesAggregator.hpp
+    src/HLCReadyAggregator.cpp
+    src/HLCReadyAggregator.hpp
     src/VisualizationCommandsAggregator.cpp
     src/VisualizationCommandsAggregator.hpp
     src/VehicleManualControl.cpp

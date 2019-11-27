@@ -5,7 +5,10 @@
 
 #include <atomic>
 #include <chrono>
+#include <sstream>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
@@ -21,7 +24,10 @@ public:
     Gtk::Grid* grid_vehicle_monitor;
     Gtk::Box* box_buttons;
     Gtk::Button* button_reset_view;
+    Gtk::Label* label_hlc_description_short;
+    Gtk::Label* label_hlc_description_long;
     std::function<VehicleData()> get_vehicle_data;
+    std::function<std::vector<std::string>()> get_hlc_data;
     std::function<void()> reset_data;
     
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
@@ -43,7 +49,7 @@ public:
     void stop_ui_thread();
 
 public:
-    explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<void()> reset_data_callback);
+    explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback);
     ~MonitoringUi();
     Gtk::Box* get_parent();
 };

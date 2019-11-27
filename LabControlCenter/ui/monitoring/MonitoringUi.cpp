@@ -1,9 +1,10 @@
 #include "MonitoringUi.hpp"
 #include <cassert>
 
-MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<void()> reset_data_callback)
+MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback)
 {
     this->get_vehicle_data = get_vehicle_data_callback;
+    this->get_hlc_data = get_hlc_data_callback;
     this->reset_data = reset_data_callback;
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
@@ -12,16 +13,20 @@ MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callbac
     builder->get_widget("grid_vehicle_monitor", grid_vehicle_monitor);
     builder->get_widget("button_reset_view", button_reset_view);
     builder->get_widget("box_buttons", box_buttons);
+    builder->get_widget("label_hlc_description_short", label_hlc_description_short);
+    builder->get_widget("label_hlc_description_long", label_hlc_description_long);
 
     assert(parent);
     assert(viewport_monitoring);
     assert(grid_vehicle_monitor);
     assert(button_reset_view);
     assert(box_buttons);
+    assert(label_hlc_description_short);
+    assert(label_hlc_description_long);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
-    //Initialize the UI thread that updates the view on connected / online vehicles
+    //Initialize the UI thread that updates the view on connected / online vehicles as well as connected / online hlcs
     init_ui_thread();
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
@@ -136,6 +141,28 @@ void MonitoringUi::init_ui_thread()
                 }
             }
         }
+
+        //HLC entry update
+        auto hlc_data = this->get_hlc_data();
+
+        //Show amount in entry
+        std::stringstream text_stream;
+        text_stream << "HLCs online: " << hlc_data.size();
+        label_hlc_description_short->set_text(text_stream.str().c_str());
+
+        //Show list in entry tooltip (on mouse hover)
+        std::stringstream list_stream;
+        list_stream << "Online IDs: ";
+        if(hlc_data.size() > 0)
+        {
+            for (size_t i = 0; i < hlc_data.size() - 1; ++i)
+            {
+                list_stream << hlc_data.at(i) << ", ";
+            }
+            list_stream << hlc_data.at(hlc_data.size() - 1);
+        }
+
+        label_hlc_description_long->set_text(list_stream.str().c_str());
     });
 
     run_thread.store(true);

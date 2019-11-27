@@ -4,6 +4,7 @@
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 #include "TimeSeriesAggregator.hpp"
+#include "HLCReadyAggregator.hpp"
 #include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
@@ -97,6 +98,7 @@ int main(int argc, char *argv[])
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
@@ -104,7 +106,11 @@ int main(int argc, char *argv[])
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
-    auto monitoringUi = make_shared<MonitoringUi>([=](){return timeSeriesAggregator->get_vehicle_data();}, [=](){return timeSeriesAggregator->reset_all_data();});
+    auto monitoringUi = make_shared<MonitoringUi>(
+        [=](){return timeSeriesAggregator->get_vehicle_data();}, 
+        [=](){return hlcReadyAggregator->get_hlc_ids_string();},
+        [=](){return timeSeriesAggregator->reset_all_data();}
+    );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, vehicleAutomatedControl, argc, argv);
