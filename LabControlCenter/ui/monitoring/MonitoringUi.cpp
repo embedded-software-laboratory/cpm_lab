@@ -129,23 +129,46 @@ void MonitoringUi::init_ui_thread()
 
 
                             if(rows_restricted[i] == "battery_voltage")
-                            {
-                                if     (value > 6.6) label->get_style_context()->add_class("ok");
-                                else if(value > 6.3) label->get_style_context()->add_class("warn");
-                                else                 label->get_style_context()->add_class("alert");
-                            }
-                            else if(rows_restricted[i] == "battery_level") 
-                            {
-                                if     (value > 50)     label->get_style_context()->add_class("ok");
-                                else if(value > 20)     label->get_style_context()->add_class("warn");
-                                else                    label->get_style_context()->add_class("alert");
-                            }
-                            else if(rows_restricted[i] == "clock_delta") 
-                            {
-                                if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
-                                else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
-                                else                       label->get_style_context()->add_class("alert");
-                            }
+                        {
+                            if     (value > 6.6) label->get_style_context()->add_class("ok");
+                            else if(value > 6.3) label->get_style_context()->add_class("warn");
+                            else                 label->get_style_context()->add_class("alert");
+                        }
+                        else if(rows_restricted[i] == "clock_delta") 
+                        {
+                            if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
+                            else if(fabs(value) < 200) label->get_style_context()->add_class("warn");
+                            else 
+                                {
+                                    label->get_style_context()->add_class("alert");
+                                    //std::cout << "Warning: Clock delta too high. Shutting down ..." << std::endl;
+                                    cpm::Logging::Instance().write("Warning: Clock delta too high. Shutting down ...");
+                                    // TODO send stop-signal
+                                }
+                        }
+                        else if(rows_restricted[i] == "battery_level") 
+                        {
+                            if     (fabs(value) > 30)  label->get_style_context()->add_class("ok");
+                            else if(fabs(value) > 10)  label->get_style_context()->add_class("warn");
+                            else
+                                { 
+                                    label->get_style_context()->add_class("alert");
+                                    //std::cout << "Warning: Battery level too low. Shutting down ..." << std::endl;
+                                    cpm::Logging::Instance().write("Warning: Battery level too low. Shutting down ...");
+                                    // TODO send stop-signal
+                                }
+                        }
+                        else if(rows_restricted[i] == "pose_x") // For test, battery level and clock delta are fixed in simulation 
+                        {
+                            if     (fabs(value) > 3)  label->get_style_context()->add_class("ok");
+                            else if(fabs(value) > 2)  label->get_style_context()->add_class("warn");
+                            else 
+                                {
+                                    label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write("Warning: pose too low. Shutting down ...");
+                                    // TODO send stop-signal 
+                                }
+                        }
 
                         }
                         else 
@@ -176,8 +199,12 @@ void MonitoringUi::init_ui_thread()
             }
         }
 
+<<<<<<< HEAD
         //HLC entry update
         auto hlc_data = this->get_hlc_data();
+=======
+                    
+>>>>>>> battery level and clock delta are now monitored and logged
 
         //Show amount in entry
         std::stringstream text_stream;
