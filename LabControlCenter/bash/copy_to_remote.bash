@@ -17,10 +17,6 @@ case $i in
     SCRIPT_ARGS="${i#*=}"
     shift # past argument=value
     ;;
-    --middleware_id=*)
-    MIDDLEWARE_ID="${i#*=}"
-    shift # past argument=value
-    ;;
     --middleware_arguments=*)
     MIDDLEWARE_ARGS="${i#*=}"
     shift # past argument=value
@@ -60,7 +56,7 @@ scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/softw
 # Let the NUC handle the rest
 if [ -z "${MIDDLEWARE_ID}" ] 
 then
-    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --middleware_id=${MIDDLEWARE_ID} --script_arguments=${SCRIPT_ARGS} --middleware_arguments=${MIDDLEWARE_ARGS}"
+    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS} --middleware_arguments=${MIDDLEWARE_ARGS}"
 else
     sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS}"
 fi

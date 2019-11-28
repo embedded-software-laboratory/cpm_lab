@@ -11,10 +11,6 @@ case $i in
     SCRIPT_ARGS="${i#*=}"
     shift # past argument=value
     ;;
-    --middleware_id=*)
-    MIDDLEWARE_ID="${i#*=}"
-    shift # past argument=value
-    ;;
     --middleware_arguments=*)
     MIDDLEWARE_ARGS="${i#*=}"
     shift # past argument=value
@@ -34,9 +30,9 @@ sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./hlc/middleware/build/QOS_LOCAL_COMMUNICAT
 /bin/cp -rf ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml ./hlc/$script_path/
 
 # Start middleware
-if ! [ -z "${MIDDLEWARE_ID}" ] 
+if ! [ -z "${MIDDLEWARE_ARGS}" ] 
 then
-    tmux new-session -d -s "middleware" "cd /tmp/software/;bash tmux_middleware.bash --middleware_id=${MIDDLEWARE_ID} --middleware_arguments=${MIDDLEWARE_ARGS} &> tmux_middleware.txt"
+    tmux new-session -d -s "middleware" "cd /tmp/software/;bash tmux_middleware.bash --middleware_arguments=${MIDDLEWARE_ARGS} &> tmux_middleware.txt"
 fi
 
 # Start script

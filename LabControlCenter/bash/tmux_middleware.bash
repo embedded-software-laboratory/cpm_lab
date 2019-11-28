@@ -3,10 +3,6 @@
 for i in "$@"
 do
 case $i in
-    --middleware_id=*)
-    MIDDLEWARE_ID="${i#*=}"
-    shift # past argument=value
-    ;;
     --middleware_arguments=*)
     MIDDLEWARE_ARGS="${i#*=}"
     shift # past argument=value
@@ -25,4 +21,4 @@ cd ./middleware/build
 
 echo $middleware_id
 
-./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_id} --dds_domain=21 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
+./middleware {MIDDLEWARE_ARGS}
