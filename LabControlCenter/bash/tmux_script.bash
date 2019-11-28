@@ -25,8 +25,9 @@ PATH_TO_SCRIPT="${SCRIPT_PATH%/*}" #Get string before last /
 . ./environment_variables.bash
 
 #Start either a Matlab script using Matlab or a C++ script
-if [${SCRIPT_NAME} == *".m"*]
+if [[ ${SCRIPT_NAME} =~ ".m" ]]
 then
+    SCRIPT_NAME="${SCRIPT_NAME%%.*}" #remove .m
     /opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r "cd '/tmp/software${PATH_TO_SCRIPT}'; ${SCRIPT_NAME}(${SCRIPT_ARGS})"
 else
     .${SCRIPT_PATH} ${SCRIPT_ARGS}
