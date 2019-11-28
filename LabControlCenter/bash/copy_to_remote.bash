@@ -1,5 +1,5 @@
 #!/bin/bash
-# IP and SCRIPT_PATH must be set, SCRIPT_ARGS and MIDDLEWARE_ARGS are not mandatory. If MIDDLEWARE_ID is set, the middleware is used, else it isn't.
+# IP and SCRIPT_PATH must be set, SCRIPT_ARGS and MIDDLEWARE_ARGS are not mandatory. If MIDDLEWARE_ARGS is set, the middleware is used, else it isn't (you must set a node id for the middleware).
 # SCRIPT_PATH must contain the script name + type-ending as well
 #Get command line arguments
 for i in "$@"
@@ -39,7 +39,7 @@ EOF
 # Create .tar that contains all relevant files and copy to host
 mkdir nuc_program_package
 pushd nuc_program_package
-if [ -z "${MIDDLEWARE_ID}" ] 
+if [ -z "${MIDDLEWARE_ARGS}" ] 
 then
     tar czvf - nuc_package.tar.gz ${SCRIPT_PATH} ~/dev/cpm_base/cpm_lib/build/libcpm.so ~/dev/cpm_base/dds_idl | ssh guest@${IP} "cd /tmp/software;tar xzvf -"
 else
@@ -54,9 +54,9 @@ scp ~/dev/software/LabControlCenter/bash/tmux_middleware.bash guest@${IP}:/tmp/s
 scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/software
 
 # Let the NUC handle the rest
-if [ -z "${MIDDLEWARE_ID}" ] 
-then
-    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS} --middleware_arguments=${MIDDLEWARE_ARGS}"
-else
-    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS}"
-fi
+# if [ -z "${MIDDLEWARE_ARGS}" ] 
+# then
+#     sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS} --middleware_arguments=${MIDDLEWARE_ARGS}"
+# else
+#     sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments=${SCRIPT_ARGS}"
+# fi

@@ -17,8 +17,6 @@ done
 . ./environment_variables.bash
 
 # Start screen for middleware; detach and start middleware
-cd ./middleware/build
-
-echo $middleware_id
+cd ./home/cpm/dev/software/hlc/middleware/build
 
 ./middleware {MIDDLEWARE_ARGS}
