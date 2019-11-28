@@ -363,85 +363,72 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
-    // //Get the IP address from the current id
-    // std::stringstream ip_stream;
-    // ip_stream << "192.168.1.2";
-    // if (id < 10)
-    // {
-    //     stream << "0";
-    // }
-    // stream << id;
+    //Get the IP address from the current id
+    std::stringstream ip_stream;
+    ip_stream << "192.168.1.2";
+    if (id < 10)
+    {
+        ip_stream << "0";
+    }
+    ip_stream << id;
 
-    // //Copy all relevant data over to the remote system
-    // std::stringstream copy_command;
-    // //Okay, do this using a template script instead, I think that's better in this case
-    // copy_command << "bash ./copy_to_remote.bash";
+    //Get the path of the script that is to be called
+    std::string script_string(script_path->get_text().c_str());
 
-    // //TODO: Put into separate function
-    // std::string sim_time_string;
-    // if (switch_simulated_time->get_active())
-    // {
-    //     sim_time_string = "true";
-    // }
-    // else 
-    // {
-    //     sim_time_string = "false";
-    // }
+    //Put all relevant arguments together
+    //Script-arguments from user
+    std::string parameters(script_params->get_text().c_str());
 
-    // //TODO: Check if old session already exists - if so, kill it
+    //Default arguments + user arguments
+    std::stringstream script_argument_stream;
+    std::stringstream middleware_argument_stream;
+    auto matlab_type_pos = script_string.rfind(".m");
+    if (matlab_type_pos != std::string::npos)
+    {
+        //Case: Matlab script - TODO: This is only to test one of my scripts, find standard param order (simulated time is here the )
+        script_argument_stream << "1", vehicle_ids_stream.str();
 
-    // //Get script info, generate command
-    // std::string script_string(script_path->get_text().c_str());
-    // std::string script_path_string;
-    // std::string script_name_string;
-    // get_path_name(script_string, script_path_string, script_name_string);
-    // std::string parameters(script_params->get_text().c_str());
-    // std::stringstream command;
+        middleware_argument_stream
+            << " --node_id=middleware_" << vehicle_ids_stream.str()
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            middleware_argument_stream 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+    }
+    else if (script_name_string.find(".") == std::string::npos)
+    {
+        std::string sim_time_string;
+        if (switch_simulated_time->get_active())
+        {
+            sim_time_string = "true";
+        }
+        else 
+        {
+            sim_time_string = "false";
+        }
+        
+        //Case: Any executable 
+        script_argument_stream
+            << " --node_id=hlc"
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            script_argument_stream 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+    }
 
-    // auto matlab_type_pos = script_name_string.rfind(".m");
-    // if (matlab_type_pos != std::string::npos)
-    // {
-    //     script_name_string = script_name_string.substr(0, matlab_type_pos);
-
-    //     //Case: Matlab script
-    //     command 
-    //     << "tmux new-session -d "
-    //     << "-s \"hlc\" "
-    //     << "'source ~/dev/software/hlc/environment_variables.bash;"
-    //     << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
-    //     << "cd " << script_path_string
-    //     << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
-    //     << " >stdout_hlc.txt 2>stderr_hlc.txt'";
-    // }
-    // else if (script_name_string.find(".") == std::string::npos)
-    // {
-    //     //Case: Any executable 
-    //     command 
-    //     << "tmux new-session -d "
-    //     << "-s \"hlc\" "
-    //     << "\"source ~/dev/software/hlc/environment_variables.bash;"
-    //     << "cd " << script_path_string << ";./" << script_name_string
-    //     << " --node_id=hlc"
-    //     << " --simulated_time=" << sim_time_string
-    //     << " --vehicle_ids=" << vehicle_ids_stream.str()
-    //     << " --dds_domain=" << cmd_domain_id;
-    // if (cmd_dds_initial_peer.size() > 0) {
-    //     command 
-    //         << " --dds_initial_peer=" << cmd_dds_initial_peer;
-    // }
-    // command 
-    //     << " " << parameters << " >stdout_hlc.txt 2>stderr_hlc.txt\"";
-    // }
-    // else 
-    // {
-    //     std::cout << "Warning: Could not run unknown script: Neither matlab nor C++ executable" << std::endl;
-    //     return;
-    // }
-
-    // std::cout << command.str() << std::endl;
-
-    // //Execute command
-    // execute_command(command.str().c_str());
+    //Copy all relevant data over to the remote system
+    std::stringstream copy_command;
+    //Okay, do this using a template script instead, I think that's better in this case
+    copy_command << "bash ./copy_to_remote.bash --ip=" << ip_stream.str() 
+        << " --script_path=" << script_string 
+        << " --script_arguments=" 
+        << " --middleware_arguments=";
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
