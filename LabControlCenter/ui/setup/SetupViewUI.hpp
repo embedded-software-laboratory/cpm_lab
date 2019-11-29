@@ -53,6 +53,9 @@ private:
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
 
+    //Test remote functionality (TODO: not final, remove later)
+    Gtk::Button* button_test_remote;
+
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
@@ -82,6 +85,7 @@ private:
 
     //Specific remote deploy functions
     void deploy_remote_hlc(unsigned int id);
+    void test_remote();
 
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();

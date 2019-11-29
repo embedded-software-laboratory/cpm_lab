@@ -29,6 +29,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
 
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
 
+    builder->get_widget("button_test_remote", button_test_remote);
+
     assert(parent);
     assert(script_path);
     assert(script_params);
@@ -48,6 +50,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     assert(button_kill);
 
     assert(vehicle_flowbox);
+
+    assert(button_test_remote);
 
     //Create vehicle toggles
     for (unsigned int id = 1; id <= 6; ++id)
@@ -81,6 +85,9 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     //The IPS can be startet and restarted manually independent of the other components
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
+
+    //Remote test button
+    button_test_remote->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::test_remote));
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -379,6 +386,27 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
     //Script-arguments from user
     std::string parameters(script_params->get_text().c_str());
 
+    std::string sim_time_string;
+    if (switch_simulated_time->get_active())
+    {
+        sim_time_string = "true";
+    }
+    else 
+    {
+        sim_time_string = "false";
+    }
+
+    std::stringstream vehicle_ids_stream;
+    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
+    if (vehicle_ids.size() > 0)
+    {
+        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
+        {
+            vehicle_ids_stream << vehicle_ids.at(index) << ",";
+        }
+        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
+    }
+
     //Default arguments + user arguments
     std::stringstream script_argument_stream;
     std::stringstream middleware_argument_stream;
@@ -398,18 +426,8 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
     }
-    else if (script_name_string.find(".") == std::string::npos)
-    {
-        std::string sim_time_string;
-        if (switch_simulated_time->get_active())
-        {
-            sim_time_string = "true";
-        }
-        else 
-        {
-            sim_time_string = "false";
-        }
-        
+    else if (script_string.find(".") == std::string::npos)
+    {        
         //Case: Any executable 
         script_argument_stream
             << " --node_id=hlc"
@@ -427,8 +445,18 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
     //Okay, do this using a template script instead, I think that's better in this case
     copy_command << "bash ./copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_string 
-        << " --script_arguments=" 
-        << " --middleware_arguments=";
+        << " --script_arguments='" << script_argument_stream.str() << "'";
+    if(matlab_type_pos != std::string::npos)
+    {
+        copy_command
+            << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
+    }
+
+    std::cout << copy_command.str() << std::endl;
+}
+
+void SetupViewUI::test_remote() {
+    deploy_remote_hlc(13);
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
