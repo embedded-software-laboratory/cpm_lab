@@ -3,9 +3,10 @@
 
 using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, unsigned int argc, char *argv[]) :
+SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, std::function<std::vector<uint8_t>()> _get_hlc_ids, unsigned int argc, char *argv[]) :
     timer_ui(_timer_ui),
-    vehicle_control(_vehicle_control)
+    vehicle_control(_vehicle_control),
+    get_hlc_ids(_get_hlc_ids)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -19,17 +20,14 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     builder->get_widget("button_select_all_real", button_select_all_real);
 
     builder->get_widget("switch_simulated_time", switch_simulated_time);
-    
-    builder->get_widget("switch_launch_middleware", switch_launch_middleware);
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
 
-    builder->get_widget("button_deploy", button_deploy);
+    builder->get_widget("button_deploy_local", button_deploy_local);
+    builder->get_widget("button_deploy_remote", button_deploy_remote);
     builder->get_widget("button_kill", button_kill);
 
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
-
-    builder->get_widget("button_test_remote", button_test_remote);
 
     assert(parent);
     assert(script_path);
@@ -42,16 +40,14 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     
     assert(switch_simulated_time);
 
-    assert(switch_launch_middleware);
-
     assert(switch_lab_mode);
 
-    assert(button_deploy);
+    assert(button_deploy_local);
     assert(button_kill);
 
     assert(vehicle_flowbox);
 
-    assert(button_test_remote);
+    assert(button_deploy_remote);
 
     //Create vehicle toggles
     for (unsigned int id = 1; id <= 6; ++id)
@@ -66,7 +62,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     }
 
     //Register button callbacks
-    button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
+    button_deploy_local->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
+    button_deploy_remote->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_remote));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_real->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_real));
@@ -85,9 +82,6 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     //The IPS can be startet and restarted manually independent of the other components
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
-
-    //Remote test button
-    button_test_remote->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::test_remote));
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -135,9 +129,7 @@ void SetupViewUI::deploy_applications() {
 
     deploy_hlc_scripts();
 
-    if (switch_launch_middleware->get_active()) {
-        deploy_middleware();
-    }
+    deploy_middleware();
 
     deploy_sim_vehicles();
 }
@@ -148,9 +140,7 @@ void SetupViewUI::kill_deployed_applications() {
 
     kill_hlc_scripts();
 
-    if (switch_launch_middleware->get_active()) {
-        kill_middleware();
-    }
+    kill_middleware();
 
     kill_vehicles();
 
@@ -366,18 +356,18 @@ void SetupViewUI::kill_vehicle(unsigned int id) {
     kill_session(vehicle_id.str());
 }
 
-void SetupViewUI::deploy_remote_hlc(unsigned int id) 
+void SetupViewUI::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids) 
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
     //Get the IP address from the current id
     std::stringstream ip_stream;
     ip_stream << "192.168.1.2";
-    if (id < 10)
+    if (hlc_id < 10)
     {
         ip_stream << "0";
     }
-    ip_stream << id;
+    ip_stream << hlc_id;
 
     //Get the path of the script that is to be called
     std::string script_string(script_path->get_text().c_str());
@@ -396,17 +386,6 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
         sim_time_string = "false";
     }
 
-    std::stringstream vehicle_ids_stream;
-    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
-    if (vehicle_ids.size() > 0)
-    {
-        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
-        {
-            vehicle_ids_stream << vehicle_ids.at(index) << ",";
-        }
-        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
-    }
-
     //Default arguments + user arguments
     std::stringstream script_argument_stream;
     std::stringstream middleware_argument_stream;
@@ -414,17 +393,7 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
     if (matlab_type_pos != std::string::npos)
     {
         //Case: Matlab script - TODO: This is only to test one of my scripts, find standard param order (simulated time is here the )
-        script_argument_stream << "1", vehicle_ids_stream.str();
-
-        middleware_argument_stream
-            << " --node_id=middleware_" << vehicle_ids_stream.str()
-            << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids_stream.str()
-            << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
-            middleware_argument_stream 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
-        }
+        script_argument_stream << "1", vehicle_ids;
     }
     else if (script_string.find(".") == std::string::npos)
     {        
@@ -432,31 +401,67 @@ void SetupViewUI::deploy_remote_hlc(unsigned int id)
         script_argument_stream
             << " --node_id=hlc"
             << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --vehicle_ids=" << vehicle_ids
             << " --dds_domain=" << cmd_domain_id;
         if (cmd_dds_initial_peer.size() > 0) {
             script_argument_stream 
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
     }
+    //Settings for Middleware
+    middleware_argument_stream
+        << " --node_id=middleware_" << vehicle_ids
+        << " --simulated_time=" << sim_time_string
+        << " --vehicle_ids=" << vehicle_ids
+        << " --dds_domain=" << cmd_domain_id;
+    if (cmd_dds_initial_peer.size() > 0) {
+        middleware_argument_stream 
+            << " --dds_initial_peer=" << cmd_dds_initial_peer;
+    }
 
     //Copy all relevant data over to the remote system
     std::stringstream copy_command;
     //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "bash ./copy_to_remote.bash --ip=" << ip_stream.str() 
+    copy_command << "bash /home/cpm/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_string 
-        << " --script_arguments='" << script_argument_stream.str() << "'";
-    if(matlab_type_pos != std::string::npos)
-    {
-        copy_command
-            << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
-    }
+        << " --script_arguments='" << script_argument_stream.str() << "'"
+        << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
-    std::cout << copy_command.str() << std::endl;
+    execute_command(copy_command.str().c_str());
 }
 
-void SetupViewUI::test_remote() {
-    deploy_remote_hlc(13);
+void SetupViewUI::deploy_remote() {
+    //Grey out UI until kill is clicked
+    set_sensitive(false);
+
+    deploy_sim_vehicles();
+
+    //Deploy on each HLC
+    //Get current online vehicle and hlc IDs
+    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
+    std::vector<uint8_t> hlc_ids;
+    if (get_hlc_ids)
+    {
+        hlc_ids = get_hlc_ids();
+    }
+    else 
+    {
+        std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
+        return;
+    }
+    
+    //Match lowest vehicle ID to lowest HLC ID
+    std::sort(vehicle_ids.begin(), vehicle_ids.end());
+    std::sort(hlc_ids.begin(), hlc_ids.end());
+    size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
+
+    for (size_t i = 0; i < min_hlc_vehicle; ++i)
+    {
+        //Deploy on hlc with given vehicle id(s)
+        std::stringstream vehicle_id_stream;
+        vehicle_id_stream << vehicle_ids.at(i);
+        deploy_remote_hlc(static_cast<unsigned int>(hlc_ids.at(i)), vehicle_id_stream.str());
+    }
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
@@ -560,8 +565,6 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     button_select_all_real->set_sensitive(is_sensitive);
 
     switch_simulated_time->set_sensitive(is_sensitive);
-
-    switch_launch_middleware->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)
     {

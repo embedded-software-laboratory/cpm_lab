@@ -11,6 +11,7 @@
 
 //For popen
 #include <cstdio>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -38,23 +39,18 @@ private:
 
     //Set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
-    
-    //(De)Activate Middleware
-    Gtk::Switch* switch_launch_middleware = nullptr;
 
     //(De)Activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
 
     //Start / stop simulation
-    Gtk::Button* button_deploy = nullptr;
+    Gtk::Button* button_deploy_local = nullptr;
+    Gtk::Button* button_deploy_remote = nullptr;
     Gtk::Button* button_kill = nullptr;
 
     //Vehicles
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
-
-    //Test remote functionality (TODO: not final, remove later)
-    Gtk::Button* button_test_remote;
 
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
@@ -62,6 +58,9 @@ private:
 
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
+
+    //Function to get a list of all currently online HLCs
+    std::function<std::vector<uint8_t>()> get_hlc_ids;
 
     //IPS switch callback
     void switch_ips_set();
@@ -84,8 +83,13 @@ private:
     void kill_vehicle(unsigned int id);
 
     //Specific remote deploy functions
-    void deploy_remote_hlc(unsigned int id);
-    void test_remote();
+    /**
+     * \brief Deploy the script specified in the UI with the given parameters on the HLC with the given ID. The script is responsible for one or multiple vehicle ids
+     * \param hlc_id The ID of the HLC
+     * \param vehicle_ids One or multiple vehicle IDs, comma-separated
+     */
+    void deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids);
+    void deploy_remote();
 
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();
@@ -125,7 +129,7 @@ public:
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
-    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, unsigned int argc, char *argv[]);
+    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, std::function<std::vector<uint8_t>()> _get_hlc_ids, unsigned int argc, char *argv[]);
     ~SetupViewUI();
 
     Gtk::Widget* get_parent();
