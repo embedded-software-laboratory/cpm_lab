@@ -17,6 +17,21 @@ sed -e "s/TEMPLATE_IP/${my_ip}/g" \
 <../QOS_LOCAL_COMMUNICATION.xml.template \
 >./QOS_LOCAL_COMMUNICATION.xml
 
+# Make middleware and unittest
 cmake .. 
-make -j8 && ./unittest
-cd ..
+make -j8
+
+# Publish middleware package via http/apache for the HLCs to download
+cd /tmp
+mkdir middleware_package
+cp /home/cpm/dev/software/hlc/middleware/build/middleware ./middleware_package
+cp /home/cpm/dev/software/hlc/middleware/build/libadditional_idl.so ./middleware_package
+cp /home/cpm/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
+cp /home/cpm/dev/software/hlc/middleware/idl/VehicleStateList.idl ./middleware_package
+tar -czvf middleware_package.tar.gz middleware_package
+rm -f /var/www/html/nuc/middleware_package.tar.gz
+cp ./build/middleware_package.tar.gz /var/www/html/nuc
+
+# Perform unittest
+cd /home/cpm/dev/software/hlc/middleware/build 
+./unittest

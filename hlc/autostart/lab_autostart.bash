@@ -8,5 +8,17 @@ export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat
 
 export DDS_INITIAL_PEER=rtps@udpv4://192.168.1.249:25598
 
+# Get relevant HLC software - cpm library, middleware and autostart program that signals that the HLC is ready
+cd /tmp
+rm -rf ./software
+mkdir software
+cd ./software
+wget http://192.168.1.249/nuc/middleware_package.tar.gz
+tar -xzvf middleware_package.tar.gz
+wget http://192.168.1.249/nuc/cpm_library_package.tar.gz
+tar -xzvf cpm_library_package.tar.gz
+wget http://192.168.1.249/nuc/autostart_package.tar.gz
+tar -xzvf autostart_package.tar.gz
+
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
-~/dev/autostart/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
+~/tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
