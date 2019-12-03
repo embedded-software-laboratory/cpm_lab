@@ -10,7 +10,8 @@ class VehicleManualControlUi
 {
     Glib::RefPtr<Gtk::Builder> builder;
 
-    Gtk::Widget* parent = nullptr;
+    Gtk::ScrolledWindow* parent = nullptr;
+    Gtk::Widget* box1 = nullptr;
     Gtk::Button* button_restart  = nullptr;
     Gtk::Button* button_stop = nullptr;
     Gtk::Entry* entry_js_device = nullptr;

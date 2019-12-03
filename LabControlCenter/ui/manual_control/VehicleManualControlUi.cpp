@@ -8,7 +8,8 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
 
     builder = Gtk::Builder::create_from_file("ui/manual_control/manual_control_ui2.glade");
 
-    builder->get_widget("box1", parent);
+    builder->get_widget("parent", parent);
+    builder->get_widget("box1", box1);
     builder->get_widget("button_restart", button_restart);
     builder->get_widget("button_stop", button_stop);
     builder->get_widget("entry_js_device", entry_js_device);
@@ -17,6 +18,7 @@ VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> 
     builder->get_widget("progressbar_steering", progressbar_steering);
 
     assert(parent);
+    assert(box1);
     assert(button_restart);
     assert(button_stop);
     assert(entry_js_device);
