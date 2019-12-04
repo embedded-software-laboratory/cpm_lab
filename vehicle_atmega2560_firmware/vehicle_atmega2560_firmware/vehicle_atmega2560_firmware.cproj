@@ -68,6 +68,8 @@
       </ToolNumber>
       <ToolName>Custom Programming Tool</ToolName>
     </custom>
+    <ResetRule>0</ResetRule>
+    <EraseKey />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -213,6 +215,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="spi_packets.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="twi.c">
