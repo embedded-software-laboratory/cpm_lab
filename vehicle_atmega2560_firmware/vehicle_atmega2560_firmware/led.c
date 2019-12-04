@@ -65,7 +65,7 @@ void led_setup() {
 	OCR5A = 40000-1;
 	
 	// servo center position (1.5 msec)
-	OCR5C = 3000;
+//	OCR5C = 3000;
 	
 	// TOP interrupt for tick timer
 	// 50Hz i.e. 20ms
@@ -73,7 +73,7 @@ void led_setup() {
 	SET_BIT(TIFR5, TOV5);
 }
 
-ISR(TIMER5_CAPT_vec)
+ISR(TIMER5_CAPT_vect)
 {
 	tick_count++;
 	if(tick_count % identification_LED_period_ticks[vehicle_id] < identification_LED_enabled_ticks[vehicle_id])
