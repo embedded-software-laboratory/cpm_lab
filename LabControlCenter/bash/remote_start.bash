@@ -21,19 +21,18 @@ case $i in
 esac
 done
 
-cd /tmp/software/home/cpm/dev/software
-
 # Set correct IP in local communication script
+cd /tmp/software/middleware_package
 my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-/bin/cp -rf ./hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
-sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
-/bin/cp -rf ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml ./hlc/$script_path/
+/bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml.template ./QOS_LOCAL_COMMUNICATION.xml
+sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
+/bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml /tmp/scripts
 
 # Start middleware
 if ! [ -z "${MIDDLEWARE_ARGS}" ] 
 then
-    tmux new-session -d -s "middleware" "cd /tmp/software/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> tmux_middleware.txt"
+    tmux new-session -d -s "middleware" "cd /tmp/scripts/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> tmux_middleware.txt"
 fi
 
 # Start script
-tmux new-session -d -s "script" "cd /tmp/software/;bash tmux_script.bash --script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' &> tmux_script.txt"
+tmux new-session -d -s "script" "cd /tmp/scripts/;bash tmux_script.bash --script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' &> tmux_script.txt"

@@ -27,36 +27,31 @@ case $i in
 esac
 done
 
-cd /tmp
-
-# Create software directory in remote /tmp folder
+# Create scripts directory in remote /tmp folder
 ssh guest@${IP} << 'EOF'
     cd /tmp
-    rm -rf ./software
-    mkdir software
+    rm -rf ./scripts
+    mkdir scripts
 EOF
 
 # Create .tar that contains all relevant files and copy to host
-mkdir nuc_program_package
-pushd nuc_program_package
-if [ -z "${MIDDLEWARE_ARGS}" ] 
-then
-    tar czvf - nuc_package.tar.gz ${SCRIPT_PATH} ~/dev/cpm_base/cpm_lib/build/libcpm.so ~/dev/cpm_base/dds_idl | ssh guest@${IP} "cd /tmp/software;tar xzvf -"
-else
-    tar czvf - nuc_package.tar.gz ${SCRIPT_PATH} ~/dev/software/hlc ~/dev/cpm_base/cpm_lib/build/libcpm.so ~/dev/cpm_base/dds_idl | ssh guest@${IP} "cd /tmp/software;tar xzvf -"
-fi
-popd
+cd /tmp
+mkdir scripts
+SCRIPT_FOLDER="${SCRIPT_PATH%/*}" #Get string before last /
+/bin/cp -R ${SCRIPT_FOLDER} ./scripts
+chmod a+rwx ./scripts
+tar czvf - nuc_package.tar.gz scripts | ssh guest@${IP} "cd /tmp/scripts;tar xzvf -"
 
 # Copy further file modification orders to the NUC
-scp ~/dev/software/LabControlCenter/bash/remote_start.bash guest@${IP}:/tmp/software
-scp ~/dev/software/LabControlCenter/bash/environment_variables.bash guest@${IP}:/tmp/software
-scp ~/dev/software/LabControlCenter/bash/tmux_middleware.bash guest@${IP}:/tmp/software
-scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/software
+scp ~/dev/software/LabControlCenter/bash/remote_start.bash guest@${IP}:/tmp/scripts
+scp ~/dev/software/LabControlCenter/bash/environment_variables.bash guest@${IP}:/tmp/scripts
+scp ~/dev/software/LabControlCenter/bash/tmux_middleware.bash guest@${IP}:/tmp/scripts
+scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/scripts
 
 # Let the NUC handle the rest
 if ! [ -z "${MIDDLEWARE_ARGS}" ] 
 then
-    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"
+    sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"
 else
-    sshpass ssh -t guest@${IP} 'bash /tmp/software/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}'"
+    sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}'"
 fi

@@ -30,7 +30,7 @@ cp /home/cpm/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./
 cp /home/cpm/dev/software/hlc/middleware/idl/VehicleStateList.idl ./middleware_package
 tar -czvf middleware_package.tar.gz middleware_package
 rm -f /var/www/html/nuc/middleware_package.tar.gz
-cp ./build/middleware_package.tar.gz /var/www/html/nuc
+cp ./middleware_package.tar.gz /var/www/html/nuc
 
 # Perform unittest
 cd /home/cpm/dev/software/hlc/middleware/build 
