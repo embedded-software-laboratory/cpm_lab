@@ -14,7 +14,7 @@
 
 
 void led_set_state(spi_mosi_data_t* spi_mosi_data);
-
+void toggle_led();
 void led_setup();
 
 
