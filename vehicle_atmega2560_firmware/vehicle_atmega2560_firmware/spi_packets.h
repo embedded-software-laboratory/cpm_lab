@@ -27,10 +27,7 @@ typedef struct
 	int16_t servo_command;
 	uint16_t CRC;
 	uint8_t motor_mode;
-	uint8_t LED1_enabled;
-	uint8_t LED2_enabled;
-	uint8_t LED3_enabled;
-	uint8_t LED4_enabled;
+	uint8_t vehicle_id;
 } __attribute__((packed)) spi_mosi_data_t;
 
 
