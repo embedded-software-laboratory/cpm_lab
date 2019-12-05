@@ -30,10 +30,10 @@ void tests_apply(uint32_t tick, spi_miso_data_t *packet_send, spi_mosi_data_t *p
 {
 	if((PINA & 1) == 0) // Test Pin A0 low
 	{
-		packet_received->LED1_enabled = packet_send->odometer_steps & 1;
-		packet_received->LED2_enabled = (packet_send->odometer_steps >> 1) & 1;
-		packet_received->LED3_enabled = (packet_send->odometer_steps >> 2) & 1;
-		packet_received->LED4_enabled = (packet_send->odometer_steps >> 3) & 1;
+		//packet_received->LED1_enabled = packet_send->odometer_steps & 1;
+		//packet_received->LED2_enabled = (packet_send->odometer_steps >> 1) & 1;
+		//packet_received->LED3_enabled = (packet_send->odometer_steps >> 2) & 1;
+		//packet_received->LED4_enabled = (packet_send->odometer_steps >> 3) & 1;
 		
 		packet_received->motor_mode = SPI_MOTOR_MODE_BRAKE;
 		if(packet_send->odometer_steps > 5) 

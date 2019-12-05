@@ -60,12 +60,12 @@ typedef struct
 
 
 #ifdef __cplusplus
-static_assert(sizeof(spi_mosi_data_t) == 15, "spi_mosi_data_t unexpected size, not packed?");
+static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
 static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
 static_assert(sizeof(spi_mosi_data_t) <= SPI_BUFFER_SIZE, "SPI buffer too small");
 static_assert(sizeof(spi_miso_data_t) <= SPI_BUFFER_SIZE, "SPI buffer too small");
 #else
-_Static_assert(sizeof(spi_mosi_data_t) == 15, "spi_mosi_data_t unexpected size, not packed?");
+_Static_assert(sizeof(spi_mosi_data_t) == 12, "spi_mosi_data_t unexpected size, not packed?");
 _Static_assert(sizeof(spi_miso_data_t) == 27, "spi_miso_data_t unexpected size, not packed?");
 _Static_assert(sizeof(spi_mosi_data_t) <= SPI_BUFFER_SIZE, "SPI buffer too small");
 _Static_assert(sizeof(spi_miso_data_t) <= SPI_BUFFER_SIZE, "SPI buffer too small");
