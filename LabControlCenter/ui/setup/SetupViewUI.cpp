@@ -393,13 +393,13 @@ void SetupViewUI::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids
     if (matlab_type_pos != std::string::npos)
     {
         //Case: Matlab script - TODO: This is only to test one of my scripts, find standard param order (simulated time is here the )
-        script_argument_stream << "1", vehicle_ids;
+        script_argument_stream << "1," << vehicle_ids;
     }
     else if (script_string.find(".") == std::string::npos)
     {        
         //Case: Any executable 
         script_argument_stream
-            << " --node_id=hlc"
+            << " --node_id=hlc_" << vehicle_ids
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids
             << " --dds_domain=" << cmd_domain_id;

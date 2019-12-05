@@ -8,6 +8,9 @@ export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat
 
 export DDS_INITIAL_PEER=rtps@udpv4://192.168.1.249:25598
 
+# Ping to make sure that an internet connection is available
+
+
 # Get relevant HLC software - cpm library, middleware and autostart program that signals that the HLC is ready
 cd /tmp
 rm -rf ./software
