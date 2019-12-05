@@ -29,6 +29,12 @@ void led_set_state(spi_mosi_data_t* spi_mosi_data) {
 		SET_BIT(PORTC, 1);
 		SET_BIT(PORTC, 2);
 	}	
+	if (vehicle_id != 0)
+	{
+		SET_BIT(PORTC, 0);
+		SET_BIT(PORTC, 1);
+		SET_BIT(PORTC, 2);
+	}
 	
 	
 }
