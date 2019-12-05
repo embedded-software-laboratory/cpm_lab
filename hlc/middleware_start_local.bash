@@ -6,11 +6,11 @@ vehicle_id=$1
 simulated_time=$2
 middleware_id="middleware"
 
-# Start screen for middleware; detach and start middleware
-cd ./middleware/build
-
 #Load environment variables, like RTI location, library location, Matlab location...
 . ./environment_variables.bash
+
+# Start screen for middleware; detach and start middleware
+cd ./middleware/build
 
 echo $middleware_id
 
