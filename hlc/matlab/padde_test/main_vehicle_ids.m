@@ -1,6 +1,6 @@
 function main(matlabDomainID, varargin)
 
-    clc
+%     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)
     
@@ -28,15 +28,15 @@ function main(matlabDomainID, varargin)
     addpath(hlc_idl_directory);
     
     % Create .m IDL files in another directory, then go back to the current one
-    mkdir('../IDL_gen');
+    % mkdir('../IDL_gen');
     addpath('../IDL_gen');
-    cd('../IDL_gen');
+    % cd('../IDL_gen');
 
-    DDS.import('VehicleStateList.idl','matlab', 'f')
-    DDS.import('VehicleState.idl','matlab', 'f')
-    DDS.import('VehicleCommandTrajectory.idl','matlab', 'f')
-    DDS.import('SystemTrigger.idl','matlab','f')
-    DDS.import('ReadyStatus.idl','matlab','f')
+    % DDS.import('VehicleStateList.idl','matlab', 'f')
+    % DDS.import('VehicleState.idl','matlab', 'f')
+    % DDS.import('VehicleCommandTrajectory.idl','matlab', 'f')
+    % DDS.import('SystemTrigger.idl','matlab','f')
+    % DDS.import('ReadyStatus.idl','matlab','f')
     
     cd(script_directoy)
     
