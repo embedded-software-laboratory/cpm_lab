@@ -11,6 +11,10 @@
 #include "util.h"
 #include "led.h"
 
+uint8_t identification_LED_period_ticks[26]  = { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 };
+uint8_t identification_LED_enabled_ticks[26] = { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
+uint8_t vehicle_id = 1;
+uint32_t tick_count = 0;
 
 void led_set_state(spi_mosi_data_t* spi_mosi_data) {
 	CLEAR_BIT(PORTC, 0);
@@ -61,7 +65,7 @@ void led_setup() {
 	OCR5A = 40000-1;
 	
 	// servo center position (1.5 msec)
-	OCR5C = 3000;
+//	OCR5C = 3000;
 	
 	// TOP interrupt for tick timer
 	// 50Hz i.e. 20ms
@@ -69,7 +73,7 @@ void led_setup() {
 	SET_BIT(TIFR5, TOV5);
 }
 
-ISR(TIMER5_CAPT_vec)
+ISR(TIMER5_CAPT_vect)
 {
 	tick_count++;
 	if(tick_count % identification_LED_period_ticks[vehicle_id] < identification_LED_enabled_ticks[vehicle_id])
