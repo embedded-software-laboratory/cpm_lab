@@ -2,6 +2,6 @@ build/
 .vscode/
 cpm_lib/dds/
 cpm_lib/include/cpm/dds/
+cpm_lib/cpm_library_package/*
 build_arm/
 *.gz
-cpm_library_package/*
