@@ -5,11 +5,12 @@ function main(matlabDomainID, varargin)
     cd(script_directoy)
     
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
+    % Important: These paths are relevant for remote deployment - in other words: this script cannot be deployed locally currently
     git_directory = fileparts(fileparts(fileparts(script_directoy)));
     base_directory = fileparts(git_directory);
-    cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
-    hlc_idl_directory = [git_directory '/hlc/middleware/idl'];
-    middleware_local_qos_xml = [git_directory '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    cpm_idl_directory = ['/tmp/software/cpm_library_package/dds_idl'];
+    hlc_idl_directory = ['/tmp/software/middleware_package'];
+    middleware_local_qos_xml = [script_directoy '/QOS_LOCAL_COMMUNICATION.xml'];
     
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])

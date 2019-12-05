@@ -38,9 +38,11 @@ EOF
 cd /tmp
 mkdir scripts
 SCRIPT_FOLDER="${SCRIPT_PATH%/*}" #Get string before last /
+SCRIPT_FOLDER_NAME="${SCRIPT_FOLDER##*/}" #Get string after last /
 /bin/cp -R ${SCRIPT_FOLDER} ./scripts
 chmod a+rwx ./scripts
-tar czvf - nuc_package.tar.gz scripts | ssh guest@${IP} "cd /tmp/scripts;tar xzvf -"
+cd ./scripts
+tar czvf - nuc_package.tar.gz ./${SCRIPT_FOLDER_NAME} | ssh guest@${IP} "cd /tmp/scripts;tar xzvf -"
 
 # Copy further file modification orders to the NUC
 scp ~/dev/software/LabControlCenter/bash/remote_start.bash guest@${IP}:/tmp/scripts
@@ -49,9 +51,4 @@ scp ~/dev/software/LabControlCenter/bash/tmux_middleware.bash guest@${IP}:/tmp/s
 scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/scripts
 
 # Let the NUC handle the rest
-if ! [ -z "${MIDDLEWARE_ARGS}" ] 
-then
-    sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"
-else
-    sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}'"
-fi
+sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"

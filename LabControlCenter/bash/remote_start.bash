@@ -29,10 +29,7 @@ sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
 /bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml /tmp/scripts
 
 # Start middleware
-if ! [ -z "${MIDDLEWARE_ARGS}" ] 
-then
-    tmux new-session -d -s "middleware" "cd /tmp/scripts/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> tmux_middleware.txt"
-fi
+tmux new-session -d -s "middleware" "cd /tmp/scripts/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> tmux_middleware.txt"
 
 # Start script
 tmux new-session -d -s "script" "cd /tmp/scripts/;bash tmux_script.bash --script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' &> tmux_script.txt"
