@@ -19,4 +19,4 @@ done
 # Start screen for middleware; detach and start middleware
 cd /tmp/software/middleware_package
 
-./middleware ${MIDDLEWARE_ARGS}
+./middleware ${MIDDLEWARE_ARGS} &> middleware.log
