@@ -73,7 +73,9 @@ private:
     std::shared_ptr<UploadWindow> upload_window;
     void ui_dispatch();
     void notify_upload_finished();
-    std::atomic_uint8_t notify_count;
+    void kill_all_threads();
+    size_t notify_count;
+    std::mutex notify_callback_in_use;
 
     //IPS switch callback
     void switch_ips_set();

@@ -85,12 +85,15 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
 
     //Take care of GUI thread and worker thread separately
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
-    notify_count.store(0);
+    notify_count = 0;
 }
 
 SetupViewUI::~SetupViewUI() {
     //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
     kill_deployed_applications();
+
+    //Join all old threads
+    kill_all_threads();
 }
 
 void SetupViewUI::switch_timer_set()
@@ -129,34 +132,42 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 void SetupViewUI::ui_dispatch()
 {
     //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-    if (upload_threads.size() == 0 && upload_window)
+    if (upload_threads.size() != 0 && upload_window)
     {
         upload_window->close();
     }
+
+    //Join all old threads
+    kill_all_threads();
 }
 
 void SetupViewUI::notify_upload_finished()
 {
     //Just try to join all worker threads here
-    notify_count.fetch_add(1);
-    if (notify_count.load() == upload_threads.size())
+    std::lock_guard<std::mutex> lock(notify_callback_in_use);
+    ++notify_count;
+    std::cout << notify_count << std::endl;
+    if (notify_count == upload_threads.size())
     {
-        //Join all threads, then close the upload window again
-        for (auto& thread : upload_threads)
-        {
-            if (thread.joinable())
-            {
-                thread.join();
-            }
-        }
-
         //Clear values for future use
-        upload_threads.clear();
-        notify_count.store(0);
+        notify_count = 0;
 
         //Close upload window again
         ui_dispatcher.emit();
     }
+}
+
+void SetupViewUI::kill_all_threads()
+{
+    //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
+    for (auto& thread : upload_threads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+        }
+    }
+    upload_threads.clear();
 }
 
 void SetupViewUI::deploy_applications() {
@@ -228,6 +239,9 @@ void SetupViewUI::kill_deployed_applications() {
     kill_middleware();
 
     kill_vehicles();
+
+    //Join all old threads
+    kill_all_threads();
 
     //Undo grey out
     set_sensitive(true);
