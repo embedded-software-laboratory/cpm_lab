@@ -8,6 +8,7 @@
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/setup/VehicleToggle.hpp"
+#include "ui/setup/UploadWindow.hpp"
 
 //For popen
 #include <cstdio>
@@ -43,9 +44,11 @@ private:
     //(De)Activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
 
+    //(De)Activate remote deployment on HLCs (NUCs)
+    Gtk::Switch* switch_deploy_remote = nullptr;
+
     //Start / stop simulation
-    Gtk::Button* button_deploy_local = nullptr;
-    Gtk::Button* button_deploy_remote = nullptr;
+    Gtk::Button* button_deploy = nullptr;
     Gtk::Button* button_kill = nullptr;
 
     //Vehicles
@@ -61,6 +64,9 @@ private:
 
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
+
+    //Loading window while HLC scripts are being updated
+    std::shared_ptr<UploadWindow> upload_window;
 
     //IPS switch callback
     void switch_ips_set();
@@ -89,7 +95,6 @@ private:
      * \param vehicle_ids One or multiple vehicle IDs, comma-separated
      */
     void deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids);
-    void deploy_remote();
 
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();

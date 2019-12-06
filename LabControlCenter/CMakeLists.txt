@@ -75,6 +75,8 @@ add_executable(LabControlCenter
     ui/setup/SetupViewUI.cpp
     ui/setup/VehicleToggle.hpp
     ui/setup/VehicleToggle.cpp
+    ui/setup/UploadWindow.hpp
+    ui/setup/UploadWindow.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
     src/defaults.cpp

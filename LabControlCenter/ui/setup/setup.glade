@@ -65,22 +65,6 @@ Script Path</property>
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="button_choose_script">
-        <property name="label">gtk-open</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="use_stock">True</property>
-        <property name="image_position">right</property>
-        <property name="always_show_image">True</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">2</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkEntry" id="script_path">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -93,15 +77,19 @@ Script Path</property>
       </packing>
     </child>
     <child>
-      <object class="GtkEntry" id="script_params">
+      <object class="GtkButton" id="button_choose_script">
+        <property name="label">gtk-open</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="input_purpose">digits</property>
+        <property name="receives_default">True</property>
+        <property name="use_stock">True</property>
+        <property name="image_position">right</property>
+        <property name="always_show_image">True</property>
       </object>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">4</property>
+        <property name="position">3</property>
       </packing>
     </child>
     <child>
@@ -119,6 +107,18 @@ Script Command Line Parameters (TODO: Reserved keywords?)</property>
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="position">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkEntry" id="script_params">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="input_purpose">digits</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">5</property>
       </packing>
     </child>
     <child>
@@ -165,48 +165,7 @@ Vehicles</property>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">6</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkFlowBox" id="simulated_time_flowbox">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="min_children_per_line">1</property>
-        <property name="max_children_per_line">2</property>
-        <child>
-          <object class="GtkFlowBoxChild">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <child>
-              <object class="GtkLabel" id="label_simulated_time">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">Simulated Time</property>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkFlowBoxChild">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="halign">start</property>
-            <child>
-              <object class="GtkSwitch" id="switch_simulated_time">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">8</property>
+        <property name="position">7</property>
       </packing>
     </child>
     <child>
@@ -268,6 +227,88 @@ Vehicles</property>
       </packing>
     </child>
     <child>
+      <object class="GtkFlowBox" id="simulated_time_flowbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="min_children_per_line">1</property>
+        <property name="max_children_per_line">2</property>
+        <child>
+          <object class="GtkFlowBoxChild">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <object class="GtkLabel" id="label_simulated_time">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Simulated Time</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkFlowBoxChild">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="halign">start</property>
+            <child>
+              <object class="GtkSwitch" id="switch_simulated_time">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">9</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkFlowBox" id="deploy_remote_flowbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="min_children_per_line">1</property>
+        <property name="max_children_per_line">2</property>
+        <child>
+          <object class="GtkFlowBoxChild">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <object class="GtkLabel" id="label_deploy_remote">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Deploy Remote</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkFlowBoxChild">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="halign">start</property>
+            <child>
+              <object class="GtkSwitch" id="switch_deploy_remote">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">10</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkButton" id="button_kill">
         <property name="label" translatable="yes">Kill</property>
         <property name="visible">True</property>
@@ -277,12 +318,12 @@ Vehicles</property>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">12</property>
+        <property name="position">11</property>
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="button_deploy_local">
-        <property name="label" translatable="yes">Deploy Local</property>
+      <object class="GtkButton" id="button_deploy">
+        <property name="label" translatable="yes">Deploy</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
@@ -291,19 +332,6 @@ Vehicles</property>
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="position">12</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="button_deploy_remote">
-        <property name="label" translatable="yes">Deploy Remote</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">13</property>
       </packing>
     </child>
   </object>

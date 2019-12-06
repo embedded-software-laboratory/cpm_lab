@@ -21,10 +21,11 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
 
     builder->get_widget("switch_simulated_time", switch_simulated_time);
 
+    builder->get_widget("switch_deploy_remote", switch_deploy_remote);
+
     builder->get_widget("switch_lab_mode", switch_lab_mode);
 
-    builder->get_widget("button_deploy_local", button_deploy_local);
-    builder->get_widget("button_deploy_remote", button_deploy_remote);
+    builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
 
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
@@ -40,14 +41,14 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     
     assert(switch_simulated_time);
 
+    assert(switch_deploy_remote);
+
     assert(switch_lab_mode);
 
-    assert(button_deploy_local);
+    assert(button_deploy);
     assert(button_kill);
 
     assert(vehicle_flowbox);
-
-    assert(button_deploy_remote);
 
     //Create vehicle toggles
     for (unsigned int id = 1; id <= 6; ++id)
@@ -62,8 +63,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     }
 
     //Register button callbacks
-    button_deploy_local->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
-    button_deploy_remote->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_remote));
+    button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_real->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_real));
@@ -104,7 +104,6 @@ void SetupViewUI::switch_ips_set()
     {
         kill_ips();
     }
-    
 }
 
 using namespace std::placeholders;
@@ -127,11 +126,50 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
-    deploy_hlc_scripts();
-
-    deploy_middleware();
-
+    //Deploy simulated vehicles locally
     deploy_sim_vehicles();
+
+    //Remote deployment of scripts on HLCs or local deployment depending on switch state
+    if(switch_deploy_remote->get_active())
+    {
+        //Deploy on each HLC
+        //Get current online vehicle and hlc IDs
+        std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
+        std::vector<uint8_t> hlc_ids;
+        if (get_hlc_ids)
+        {
+            hlc_ids = get_hlc_ids();
+        }
+        else 
+        {
+            std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
+            return;
+        }
+        
+        //Match lowest vehicle ID to lowest HLC ID
+        std::sort(vehicle_ids.begin(), vehicle_ids.end());
+        std::sort(hlc_ids.begin(), hlc_ids.end());
+        size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
+
+        //Show window indicating that the upload process currently takes place
+        upload_window = make_shared<UploadWindow>(vehicle_ids, hlc_ids);
+
+        for (size_t i = 0; i < min_hlc_vehicle; ++i)
+        {
+            //Deploy on hlc with given vehicle id(s)
+            std::stringstream vehicle_id_stream;
+            vehicle_id_stream << vehicle_ids.at(i);
+            deploy_remote_hlc(static_cast<unsigned int>(hlc_ids.at(i)), vehicle_id_stream.str());
+        }
+
+        upload_window->close();
+    }
+    else
+    {
+        deploy_hlc_scripts();
+
+        deploy_middleware();
+    }
 }
 
 void SetupViewUI::kill_deployed_applications() {
@@ -428,40 +466,6 @@ void SetupViewUI::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
     execute_command(copy_command.str().c_str());
-}
-
-void SetupViewUI::deploy_remote() {
-    //Grey out UI until kill is clicked
-    set_sensitive(false);
-
-    deploy_sim_vehicles();
-
-    //Deploy on each HLC
-    //Get current online vehicle and hlc IDs
-    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
-    std::vector<uint8_t> hlc_ids;
-    if (get_hlc_ids)
-    {
-        hlc_ids = get_hlc_ids();
-    }
-    else 
-    {
-        std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
-        return;
-    }
-    
-    //Match lowest vehicle ID to lowest HLC ID
-    std::sort(vehicle_ids.begin(), vehicle_ids.end());
-    std::sort(hlc_ids.begin(), hlc_ids.end());
-    size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
-
-    for (size_t i = 0; i < min_hlc_vehicle; ++i)
-    {
-        //Deploy on hlc with given vehicle id(s)
-        std::stringstream vehicle_id_stream;
-        vehicle_id_stream << vehicle_ids.at(i);
-        deploy_remote_hlc(static_cast<unsigned int>(hlc_ids.at(i)), vehicle_id_stream.str());
-    }
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
