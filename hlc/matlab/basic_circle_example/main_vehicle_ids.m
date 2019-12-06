@@ -1,11 +1,9 @@
-function main(matlabDomainID, varargin)
+function main_vehicle_ids(matlabDomainID, varargin)
 
-%     clc
-    script_directoy = fileparts([mfilename('fullpath') '.m']);
-    cd(script_directoy)
+    script_dir = fileparts(mfilename('fullpath'));
     
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
-    git_directory = fileparts(fileparts(fileparts(script_directoy)));
+    git_directory = fileparts(fileparts(fileparts(script_dir)));
     base_directory = fileparts(git_directory);
     cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
     hlc_idl_directory = [git_directory '/hlc/middleware/idl'];
@@ -15,7 +13,7 @@ function main(matlabDomainID, varargin)
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
     end
     
-    setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
+    setenv("NDDS_QOS_PROFILES", ['file://' script_dir '/QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
     
     if ~exist(cpm_idl_directory, 'dir')
         error(['Missing directory "' cpm_idl_directory '"']);
@@ -28,17 +26,16 @@ function main(matlabDomainID, varargin)
     addpath(hlc_idl_directory);
     
     % Create .m IDL files in another directory, then go back to the current one
-    % mkdir('../IDL_gen');
-    addpath('../IDL_gen');
+    % TODO: import after cpm_lib build and addpath here
     % cd('../IDL_gen');
-
     % DDS.import('VehicleStateList.idl','matlab', 'f')
     % DDS.import('VehicleState.idl','matlab', 'f')
     % DDS.import('VehicleCommandTrajectory.idl','matlab', 'f')
     % DDS.import('SystemTrigger.idl','matlab','f')
     % DDS.import('ReadyStatus.idl','matlab','f')
+    addpath('../IDL_gen');
     
-    cd(script_directoy)
+    % cd(script_dir)
     
     %% variables for the communication
     vehicle_ids = varargin;
@@ -48,8 +45,6 @@ function main(matlabDomainID, varargin)
     systemTriggerTopicName = 'system_trigger_hlc';
     readyStatusTopicName = 'ready_hlc';
     trigger_stop = uint64(18446744073709551615);
-
-    phaseTime = 40;
 
     %% create participants
     matlabParticipant = DDS.DomainParticipant('MatlabLibrary::LocalCommunicationProfile', matlabDomainID);
@@ -64,10 +59,7 @@ function main(matlabDomainID, varargin)
     stateReader.WaitSet = true;
     stateReader.WaitSetTimeout = 10;
 
-    %% Do not display figures
-    set(0,'DefaultFigureVisible','off');
-
-    % Send first ready signal 
+    %% Send ready signal 
     % Signal needs to be sent for all assigned vehicle ids
     % Also for simulated time case - period etc are set in Middleware, so timestamp field is meaningless
     disp('Sending ready signals');
