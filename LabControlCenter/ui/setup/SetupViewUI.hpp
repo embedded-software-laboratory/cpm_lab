@@ -10,15 +10,16 @@
 #include "ui/setup/VehicleToggle.hpp"
 #include "ui/setup/UploadWindow.hpp"
 
-//For popen
-#include <cstdio>
+#include <atomic>
+#include <array>
+#include <cstdio> //For popen
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <sstream>
-#include <array>
+#include <thread>
 #include <vector>
 
 class SetupViewUI
@@ -66,7 +67,13 @@ private:
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
     //Loading window while HLC scripts are being updated
+    //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    std::vector<std::thread> upload_threads;
     std::shared_ptr<UploadWindow> upload_window;
+    void ui_dispatch();
+    void notify_upload_finished();
+    std::atomic_uint8_t notify_count;
 
     //IPS switch callback
     void switch_ips_set();

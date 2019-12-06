@@ -82,6 +82,10 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     //The IPS can be startet and restarted manually independent of the other components
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
+
+    //Take care of GUI thread and worker thread separately
+    ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
+    notify_count.store(0);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -122,6 +126,39 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
     }
 }
 
+void SetupViewUI::ui_dispatch()
+{
+    //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
+    if (upload_threads.size() == 0 && upload_window)
+    {
+        upload_window->close();
+    }
+}
+
+void SetupViewUI::notify_upload_finished()
+{
+    //Just try to join all worker threads here
+    notify_count.fetch_add(1);
+    if (notify_count.load() == upload_threads.size())
+    {
+        //Join all threads, then close the upload window again
+        for (auto& thread : upload_threads)
+        {
+            if (thread.joinable())
+            {
+                thread.join();
+            }
+        }
+
+        //Clear values for future use
+        upload_threads.clear();
+        notify_count.store(0);
+
+        //Close upload window again
+        ui_dispatcher.emit();
+    }
+}
+
 void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
@@ -154,15 +191,25 @@ void SetupViewUI::deploy_applications() {
         //Show window indicating that the upload process currently takes place
         upload_window = make_shared<UploadWindow>(vehicle_ids, hlc_ids);
 
+        //Deploy on each HLC individually, using different threads
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
             //Deploy on hlc with given vehicle id(s)
             std::stringstream vehicle_id_stream;
             vehicle_id_stream << vehicle_ids.at(i);
-            deploy_remote_hlc(static_cast<unsigned int>(hlc_ids.at(i)), vehicle_id_stream.str());
-        }
 
-        upload_window->close();
+            //Create variables for the thread
+            unsigned int hlc_id = static_cast<unsigned int>(hlc_ids.at(i));
+            std::string vehicle_string = vehicle_id_stream.str();
+
+            //Create thread
+            upload_threads.push_back(std::thread(
+                [this, hlc_id, vehicle_string] () {
+                    this->deploy_remote_hlc(hlc_id, vehicle_string);
+                    this->notify_upload_finished();
+                }
+            ));
+        }
     }
     else
     {
