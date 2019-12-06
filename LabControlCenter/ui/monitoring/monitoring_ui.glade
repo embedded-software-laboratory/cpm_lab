@@ -24,10 +24,51 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
+          <object class="GtkBox" id="box_hlcs_online">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">8</property>
+            <child>
+              <object class="GtkExpander" id="expander_hlcs_description">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="margin_left">3</property>
+                <property name="margin_right">8</property>
+                <property name="margin_top">3</property>
+                <property name="spacing">1</property>
+                <property name="resize_toplevel">True</property>
+                <child>
+                  <object class="GtkLabel" id="label_hlc_description_long">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">1</property>
+                    <property name="margin_right">1</property>
+                    <property name="margin_top">1</property>
+                    <property name="margin_bottom">1</property>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label_hlc_description_short">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">HLCs online: None</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
         </child>
         <style>
           <class name="borderless"/>

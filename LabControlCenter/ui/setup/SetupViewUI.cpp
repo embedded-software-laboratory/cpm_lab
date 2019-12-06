@@ -9,7 +9,8 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
-    builder->get_widget("setup_box", parent);
+    builder->get_widget("parent", parent);
+    builder->get_widget("setup_box", setup_box);
     builder->get_widget("script_path", script_path);
     builder->get_widget("script_params", script_params);
     builder->get_widget("button_choose_script", button_choose_script);
@@ -30,6 +31,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
 
     assert(parent);
+    assert(setup_box);
     assert(script_path);
     assert(script_params);
     assert(button_choose_script);
