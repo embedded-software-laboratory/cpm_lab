@@ -127,14 +127,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->remove_class("warn");
                             label->get_style_context()->remove_class("alert");
 
-
-                            if(rows_restricted[i] == "battery_voltage")
-                        {
-                            if     (value > 6.6) label->get_style_context()->add_class("ok");
-                            else if(value > 6.3) label->get_style_context()->add_class("warn");
-                            else                 label->get_style_context()->add_class("alert");
-                        }
-                        else if(rows_restricted[i] == "clock_delta") 
+                        if(rows_restricted[i] == "clock_delta") 
                         {
                             if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
                             else if(fabs(value) < 200) label->get_style_context()->add_class("warn");
@@ -158,14 +151,14 @@ void MonitoringUi::init_ui_thread()
                                     // TODO send stop-signal
                                 }
                         }
-                        else if(rows_restricted[i] == "pose_x") // For test, battery level and clock delta are fixed in simulation 
+                        else if(rows_restricted[i] == "speed") 
                         {
-                            if     (fabs(value) > 3)  label->get_style_context()->add_class("ok");
-                            else if(fabs(value) > 2)  label->get_style_context()->add_class("warn");
+                            if     (fabs(value) < 3)  label->get_style_context()->add_class("ok");
+                            else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
                             else 
                                 {
                                     label->get_style_context()->add_class("alert");
-                                    cpm::Logging::Instance().write("Warning: pose too low. Shutting down ...");
+                                    cpm::Logging::Instance().write("Warning: speed too high. Shutting down ...");
                                     // TODO send stop-signal 
                                 }
                         }
@@ -199,12 +192,8 @@ void MonitoringUi::init_ui_thread()
             }
         }
 
-<<<<<<< HEAD
         //HLC entry update
         auto hlc_data = this->get_hlc_data();
-=======
-                    
->>>>>>> battery level and clock delta are now monitored and logged
 
         //Show amount in entry
         std::stringstream text_stream;
