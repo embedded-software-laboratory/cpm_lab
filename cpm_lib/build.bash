@@ -23,7 +23,7 @@ mkdir $DIR/build/cpm_library_package
 cp -R $DIR/../dds_idl/ $DIR/build/cpm_library_package
 cp $DIR/build/libcpm.so $DIR/build/cpm_library_package
 tar -czvf cpm_library_package.tar.gz -C $DIR/build/ cpm_library_package
-rm -f /var/www/html/nuc/cpm_library_package.tar.gz
-mv $DIR/build/cpm_library_package.tar.gz /var/www/html/nuc
+sudo rm -f /var/www/html/nuc/cpm_library_package.tar.gz
+sudo mv $DIR/build/cpm_library_package.tar.gz /var/www/html/nuc
 
 $DIR/build/unittest
