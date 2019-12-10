@@ -74,8 +74,10 @@ private:
     void ui_dispatch();
     void notify_upload_finished();
     void kill_all_threads();
+    std::atomic_uint8_t thread_count;
     size_t notify_count;
     std::mutex notify_callback_in_use;
+    std::atomic_bool upload_success; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online
 
     //IPS switch callback
     void switch_ips_set();
@@ -104,6 +106,7 @@ private:
      * \param vehicle_ids One or multiple vehicle IDs, comma-separated
      */
     void deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids);
+    void kill_remote_hlc(unsigned int hlc_id);
 
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();

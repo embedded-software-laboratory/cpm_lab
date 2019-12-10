@@ -85,7 +85,9 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
 
     //Take care of GUI thread and worker thread separately
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
+    thread_count.store(0);
     notify_count = 0;
+    upload_success.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -139,17 +141,42 @@ void SetupViewUI::ui_dispatch()
 
     //Join all old threads
     kill_all_threads();
+
+    //Free the UI if the upload was not successful
+    if (!upload_success.load())
+    {
+        set_sensitive(true);
+    }
 }
 
 void SetupViewUI::notify_upload_finished()
 {
     //Just try to join all worker threads here
     std::lock_guard<std::mutex> lock(notify_callback_in_use);
-    ++notify_count;
-    std::cout << notify_count << std::endl;
-    if (notify_count == upload_threads.size())
+
+    //This should never be the case
+    //If this happens, the thread count has been initialized incorrectly
+    if (thread_count.load() == 0)
     {
-        //Clear values for future use
+        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+    }
+
+    //Also count notify amount s.t one can check if the thread count has been set properly
+    thread_count.fetch_sub(1);
+    ++notify_count;
+
+    std::cout << thread_count.load() << std::endl;
+    if (thread_count.load() == 0)
+    {
+        notify_count = 0;
+
+        //Close upload window again
+        ui_dispatcher.emit();
+    }
+    else if (notify_count == upload_threads.size())
+    {
+        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+
         notify_count = 0;
 
         //Close upload window again
@@ -174,13 +201,11 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
-    //Deploy simulated vehicles locally
-    deploy_sim_vehicles();
-
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
         //Deploy on each HLC
+
         //Get current online vehicle and hlc IDs
         std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
         std::vector<uint8_t> hlc_ids;
@@ -193,16 +218,38 @@ void SetupViewUI::deploy_applications() {
             std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
             return;
         }
+
+        //Show window indicating that the upload process currently takes place
+        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
+        upload_window = make_shared<UploadWindow>(vehicle_ids, hlc_ids);
+
+        //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
+        if (hlc_ids.size() == 0 || vehicle_ids.size() == 0)
+        {
+            //Waits a few seconds before the window is closed again 
+            //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
+            upload_success.store(false); //No HLCs available
+            thread_count.store(1);
+            upload_threads.push_back(std::thread(
+                [this] () {
+                    usleep(3000000);
+                    this->notify_upload_finished();
+                }
+            ));
+            return;
+        }
+
+        //Deploy simulated vehicles locally
+        deploy_sim_vehicles();
         
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
-        //Show window indicating that the upload process currently takes place
-        upload_window = make_shared<UploadWindow>(vehicle_ids, hlc_ids);
-
         //Deploy on each HLC individually, using different threads
+        upload_success.store(true); //HLCs are available
+        thread_count.store(min_hlc_vehicle);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
             //Deploy on hlc with given vehicle id(s)
@@ -224,6 +271,8 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
+        deploy_sim_vehicles();
+
         deploy_hlc_scripts();
 
         deploy_middleware();
@@ -234,9 +283,39 @@ void SetupViewUI::kill_deployed_applications() {
     //Kill timer in UI as well, as it should not show invalid information
     timer_ui->reset(switch_simulated_time->get_active());
 
-    kill_hlc_scripts();
+    //Kill scripts locally or remotely
+    if(switch_deploy_remote->get_active())
+    {
+        std::vector<uint8_t> hlc_ids;
+        if (get_hlc_ids)
+        {
+            hlc_ids = get_hlc_ids();
+        }
+        else 
+        {
+            std::cerr << "No lookup function to get HLC IDs given, cannot kill on HLCs" << std::endl;
+            return;
+        }
 
-    kill_middleware();
+        //If a HLC went offline in between, we assume that it crashed and thus just use this script on all remaining running HLCs
+        thread_count.store(hlc_ids.size());
+        for (const auto& hlc_id : hlc_ids)
+        {
+            //Create thread
+            upload_threads.push_back(std::thread(
+                [this, hlc_id] () {
+                    this->kill_remote_hlc(hlc_id);
+                    this->notify_upload_finished();
+                }
+            ));
+        }
+    }
+    else 
+    {
+        kill_hlc_scripts();
+
+        kill_middleware();
+    }
 
     kill_vehicles();
 
@@ -527,6 +606,24 @@ void SetupViewUI::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
     execute_command(copy_command.str().c_str());
+}
+
+void SetupViewUI::kill_remote_hlc(unsigned int hlc_id) 
+{
+    //Get the IP address from the current id
+    std::stringstream ip_stream;
+    ip_stream << "192.168.1.2";
+    if (hlc_id < 10)
+    {
+        ip_stream << "0";
+    }
+    ip_stream << hlc_id;
+
+    //Kill the middleware and script tmux sessions running on the remote system
+    std::stringstream kill_command;
+    kill_command << "bash /home/cpm/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
+
+    execute_command(kill_command.str().c_str());
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {

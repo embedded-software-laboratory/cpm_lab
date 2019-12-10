@@ -12,13 +12,27 @@ UploadWindow::UploadWindow(std::vector<unsigned int> vehicle_ids, std::vector<ui
 
     upload_window->set_deletable(true); //No close button
 
-    //Set label text
+    //Set label text depending on situation - no upload, missing HLC, correct upload
     std::stringstream label_string;
-    label_string << "Your script is now being uploaded to the following HLCs (associated vehicle IDs in brackets):\n|";
-    size_t lower_index = std::min(vehicle_ids.size(), hlc_ids.size());
-    for (int i = 0; i < lower_index; ++i)
+    if (hlc_ids.size() == 0)
     {
-        label_string << static_cast<unsigned int>(hlc_ids.at(i)) << " - (" << vehicle_ids.at(i) << ") | ";
+        label_string << "ERROR: No HLCs are online, aborting deployment...";
+    }
+    else if (vehicle_ids.size() == 0)
+    {
+        label_string << "ERROR: No vehicles selected, aborting deployment...";
+    }
+    else {
+        label_string << "Your script is now being uploaded to the following HLCs (associated vehicle IDs in brackets):\n|";
+        size_t lower_index = std::min(vehicle_ids.size(), hlc_ids.size());
+        for (int i = 0; i < lower_index; ++i)
+        {
+            label_string << static_cast<unsigned int>(hlc_ids.at(i)) << " - (" << vehicle_ids.at(i) << ") | ";
+        }
+        if (vehicle_ids.size() > hlc_ids.size())
+        {
+            label_string << "\n\nWARNING: Less HLCs than selected vehicle IDs available";
+        }
     }
     label_upload->set_text(label_string.str().c_str());
 
