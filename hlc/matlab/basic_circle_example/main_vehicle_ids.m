@@ -3,11 +3,8 @@ function main_vehicle_ids(matlabDomainID, varargin)
     script_dir = fileparts(mfilename('fullpath'));
     
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
-    git_directory = fileparts(fileparts(fileparts(script_dir)));
-    base_directory = fileparts(git_directory);
-    cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
-    hlc_idl_directory = [git_directory '/hlc/middleware/idl'];
-    middleware_local_qos_xml = [git_directory '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    software_dir = fileparts(fileparts(fileparts(script_dir)));
+    middleware_local_qos_xml = [software_dir '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
     
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
@@ -15,27 +12,37 @@ function main_vehicle_ids(matlabDomainID, varargin)
     
     setenv("NDDS_QOS_PROFILES", ['file://' script_dir '/QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
     
-    if ~exist(cpm_idl_directory, 'dir')
-        error(['Missing directory "' cpm_idl_directory '"']);
+    
+    
+    %% Import IDL files to .m files in another directory, then go back to the current one
+    script_dir = pwd;
+    software_dir = fileparts(fileparts(fileparts(script_dir)));
+    dds_idl_matlab = '../dds_idl_matlab';
+    if ~exist(dds_idl_matlab, 'dir')
+        % IDL files from cpm library
+        cpm_idl_directory = fullfile(software_dir, '../cpm_base/dds_idl');
+        if ~exist(cpm_idl_directory, 'dir')
+            error(['Missing directory "' cpm_idl_directory '"']);
+        end
+        addpath(cpm_idl_directory);
+        % IDL files from hlc
+        hlc_idl_directory = [software_dir '/hlc/middleware/idl'];
+        if ~exist(hlc_idl_directory, 'dir')
+            error(['Missing directory "' hlc_idl_directory '"']);
+        end
+        addpath(hlc_idl_directory);
+        % import idl files
+        idl_files = [dir(fullfile(cpm_idl_directory, '*.idl')); ...
+                     dir(fullfile(hlc_idl_directory, '*.idl'))];
+        mkdir(dds_idl_matlab);
+        cd(dds_idl_matlab);
+        for f = {idl_files.name}
+            DDS.import(f{1},'matlab', 'f')
+        end
+        cd(script_dir)
     end
-    if ~exist(hlc_idl_directory, 'dir')
-        error(['Missing directory "' hlc_idl_directory '"']);
-    end
+    addpath(dds_idl_matlab);
     
-    addpath(cpm_idl_directory);
-    addpath(hlc_idl_directory);
-    
-    % Create .m IDL files in another directory, then go back to the current one
-    % TODO: import after cpm_lib build and addpath here
-    % cd('../IDL_gen');
-    % DDS.import('VehicleStateList.idl','matlab', 'f')
-    % DDS.import('VehicleState.idl','matlab', 'f')
-    % DDS.import('VehicleCommandTrajectory.idl','matlab', 'f')
-    % DDS.import('SystemTrigger.idl','matlab','f')
-    % DDS.import('ReadyStatus.idl','matlab','f')
-    addpath('../IDL_gen');
-    
-    % cd(script_dir)
     
     %% variables for the communication
     vehicle_ids = varargin;
@@ -46,15 +53,39 @@ function main_vehicle_ids(matlabDomainID, varargin)
     readyStatusTopicName = 'ready_hlc';
     trigger_stop = uint64(18446744073709551615);
 
-    %% create participants
+    %% create participant
     matlabParticipant = DDS.DomainParticipant('MatlabLibrary::LocalCommunicationProfile', matlabDomainID);
 
-    %% create reader and writer
+    % create reader and writer
     stateReader = DDS.DataReader(DDS.Subscriber(matlabParticipant), 'VehicleStateList', matlabStateTopicName);
     trajectoryWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'VehicleCommandTrajectory', matlabCommandTopicName);
     systemTriggerReader = DDS.DataReader(DDS.Subscriber(matlabParticipant), 'SystemTrigger', systemTriggerTopicName, 'TriggerLibrary::ReadyTrigger');
     readyStatusWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'ReadyStatus', readyStatusTopicName, 'TriggerLibrary::ReadyTrigger');
+    
+%     %% test take()
+%     readyStatusReader = DDS.DataReader(DDS.Subscriber(matlabParticipant), 'ReadyStatus', readyStatusTopicName, 'TriggerLibrary::ReadyTrigger');
+%     ready_msg_read = ReadyStatus;
+%     [ready_msg_read, status, sampleCount, sampleInfo] = readyStatusReader.take();
+%     for i = 1:8
+%         ready_msg_sent = ReadyStatus;
+%         ready_msg_sent.source_id = strcat('hlc_', num2str(i));
+%         ready_stamp = TimeStamp;
+%         ready_stamp.nanoseconds = uint64(0);
+%         ready_msg_sent.next_start_stamp = ready_stamp;
+%         readyStatusWriter.write(ready_msg_sent);
+%         if mod(i,7) == 0
+%             ready_msg_read = ReadyStatus;
+%             [ready_msg_read, status, sampleCount, sampleInfo] = readyStatusReader.take();
+%         end
+%     end
+%     readyStatusReader.WaitSet = true;
+%     readyStatusReader.WaitSetTimeout = 10;
+%     ready_msg_read = ReadyStatus;
+%     [ready_msg_read, status, sampleCount, sampleInfo] = readyStatusReader.take();
+%     ready_msg_read = ReadyStatus;
+%     [ready_msg_read, status, sampleCount, sampleInfo] = readyStatusReader.take();
 
+       
     %% wait for data if read() is used
     stateReader.WaitSet = true;
     stateReader.WaitSetTimeout = 10;
@@ -72,7 +103,7 @@ function main_vehicle_ids(matlabDomainID, varargin)
         readyStatusWriter.write(ready_msg);
     end
 
-    % Wait for start signal
+    %% Wait for start signal
     disp('Waiting for start or stop signal');
     got_stop = false;
     got_start = false;

@@ -45,5 +45,6 @@ hlc/middleware.txt
 hlc/hlc.txt
 hlc/matlab.log
 hlc/hlc_*.txt
+hlc/matlab/dds_idl_matlab
 command_line_arguments_test.bash
 LabControlCenter/matlab.log
