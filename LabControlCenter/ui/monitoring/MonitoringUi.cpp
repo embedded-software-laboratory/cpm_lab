@@ -135,7 +135,7 @@ void MonitoringUi::init_ui_thread()
                                 {
                                     label->get_style_context()->add_class("alert");
                                     //std::cout << "Warning: Clock delta too high. Shutting down ..." << std::endl;
-                                    cpm::Logging::Instance().write("Warning: Clock delta too high. Shutting down ...");
+                                    cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Shutting down ...", vehicle_id);
                                     // TODO send stop-signal
                                 }
                         }
@@ -147,7 +147,7 @@ void MonitoringUi::init_ui_thread()
                                 { 
                                     label->get_style_context()->add_class("alert");
                                     //std::cout << "Warning: Battery level too low. Shutting down ..." << std::endl;
-                                    cpm::Logging::Instance().write("Warning: Battery level too low. Shutting down ...");
+                                    cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
                                     // TODO send stop-signal
                                 }
                         }
@@ -158,7 +158,7 @@ void MonitoringUi::init_ui_thread()
                             else 
                                 {
                                     label->get_style_context()->add_class("alert");
-                                    cpm::Logging::Instance().write("Warning: speed too high. Shutting down ...");
+                                    cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Shutting down ...", vehicle_id);
                                     // TODO send stop-signal 
                                 }
                         }
