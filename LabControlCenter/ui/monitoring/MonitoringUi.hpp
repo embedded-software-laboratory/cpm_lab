@@ -42,7 +42,7 @@ public:
     //full rows
     const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
-    const vector<string> rows_restricted = {"battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw","speed"};
+    const vector<string> rows_restricted = {"battery_level", "clock_delta", "speed", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw"};
     
     //Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
