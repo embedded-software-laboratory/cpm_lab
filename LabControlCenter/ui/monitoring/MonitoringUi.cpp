@@ -134,8 +134,18 @@ void MonitoringUi::init_ui_thread()
                             else 
                                 {
                                     label->get_style_context()->add_class("alert");
-                                    //std::cout << "Warning: Clock delta too high. Shutting down ..." << std::endl;
-                                    cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Shutting down ...", vehicle_id);
+                                    //std::cout << "Warning: Clock delta too high. Restarting ..." << std::endl;
+                                    cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
+                                    std::string reboot;
+                                    if(vehicle_id<10)
+                                    {
+                                        reboot = reboot_script + "0" + std::to_string(vehicle_id);
+                                    }
+                                    else
+                                    {
+                                        reboot = reboot_script + std::to_string(vehicle_id);
+                                    }
+                                    std::system(reboot.c_str());
                                     // TODO send stop-signal
                                 }
                         }

@@ -31,6 +31,8 @@ public:
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<std::string>()> get_hlc_data;
     std::function<void()> reset_data;
+
+    std::string reboot_script = "bash reboot_raspberry.bash 192.168.1.1";
     
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
     //Thus: Own timer implementation instead
