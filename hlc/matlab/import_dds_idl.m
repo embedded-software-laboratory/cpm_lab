@@ -1,5 +1,5 @@
 function import_dds_idl
-    dds_idl_matlab = 'dds_idl_matlab'
+    dds_idl_matlab = 'dds_idl_matlab';
     if ~exist(dds_idl_matlab, 'dir')
         % IDL files from cpm library
         cpm_idl_directory = fullfile('../../../cpm_base/dds_idl');

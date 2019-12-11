@@ -1,14 +1,11 @@
 function main(matlabDomainID, vehicle_id)    
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
-    script_dir = fileparts(mfilename('fullpath'));
-    software_dir = fileparts(fileparts(fileparts(script_dir)));
-    middleware_local_qos_xml = [software_dir '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    middleware_local_qos_xml = '../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
     end    
-    setenv("NDDS_QOS_PROFILES", ['file://' script_dir '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
-    
-        
+    setenv("NDDS_QOS_PROFILES", ['file://' pwd '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
+            
     %% Import IDL files
     run('../import_dds_idl.m');
     
