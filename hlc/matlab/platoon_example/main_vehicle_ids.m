@@ -1,4 +1,4 @@
-function main(matlabDomainID, varargin)
+function main_vehicle_ids(matlabDomainID, varargin)
 
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
@@ -15,7 +15,7 @@ function main(matlabDomainID, varargin)
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
     end
     
-    setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
+    setenv("NDDS_QOS_PROFILES", ['file://' script_directoy '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
     
     if ~exist(cpm_idl_directory, 'dir')
         error(['Missing directory "' cpm_idl_directory '"']);
