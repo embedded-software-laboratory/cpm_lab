@@ -6,17 +6,15 @@ if [ ! -d "idl_compiled" ]; then
     find ./idl/ -type f | xargs -n 1 rtiddsgen -replace -legacyPlugin -language C++11 -d ./idl_compiled/ -I ../../../cpm_base/dds_idl/
 fi
 
-clear
-
-mkdir build
-cd build
+mkdir -p build
 
 # Copy local communication QoS, use correct IP
-my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-sed -e "s/TEMPLATE_IP/${my_ip}/g" \
-<../QOS_LOCAL_COMMUNICATION.xml.template \
->./QOS_LOCAL_COMMUNICATION.xml
+IP_SELF="$(hostname -i)"
+sed -e "s/TEMPLATE_IP/${IP_SELF}/g" \
+<./QOS_LOCAL_COMMUNICATION.xml.template \
+>./build/QOS_LOCAL_COMMUNICATION.xml
 
+cd build
 cmake .. 
 make -j8 && ./unittest
 cd ..

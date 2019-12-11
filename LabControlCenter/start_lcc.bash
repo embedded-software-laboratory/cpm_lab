@@ -1,4 +1,4 @@
-cd /home/cpm/dev/software/LabControlCenter
+cd ~/dev/software/LabControlCenter
 
 # Load environment Variables
 export IP_SELF="$(hostname -I)"
