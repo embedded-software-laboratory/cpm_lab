@@ -120,7 +120,7 @@ VehicleState SimulationVehicle::update(
     vehicleState.imu_yaw                     (yaw_measured);
     vehicleState.imu_yaw_rate                (d_yaw);
     vehicleState.speed                       (speed);
-    vehicleState.battery_voltage             (7.8 - 0.2 * fabs(d_speed));
+    vehicleState.battery_voltage             (7.8 - 0.03 * fabs(d_speed));
     vehicleState.motor_current               (fabs((d_speed) * 0.2));
     return vehicleState;
 }
