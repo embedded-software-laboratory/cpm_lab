@@ -52,7 +52,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     assert(vehicle_flowbox);
 
     //Create vehicle toggles
-    for (unsigned int id = 1; id <= 6; ++id)
+    for (unsigned int id = 1; id <= 10; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }
