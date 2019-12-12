@@ -75,6 +75,11 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 
+    //Create deploy class
+    deploy_functions = std::make_shared<Deploy>(cmd_domain_id, cmd_dds_initial_peer, [&](uint8_t id){
+        vehicle_control->stop_vehicle(id);
+    });
+
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);
     switch_simulated_time->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_timer_set));
@@ -107,11 +112,11 @@ void SetupViewUI::switch_ips_set()
 {
     if(switch_lab_mode->get_active())
     {
-        deploy_ips();
+        deploy_functions->deploy_ips();
     }
     else
     {
-        kill_ips();
+        deploy_functions->kill_ips();
     }
 }
 
@@ -240,7 +245,7 @@ void SetupViewUI::deploy_applications() {
         }
 
         //Deploy simulated vehicles locally
-        deploy_sim_vehicles();
+        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
         
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
@@ -263,7 +268,7 @@ void SetupViewUI::deploy_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
-                    this->deploy_remote_hlc(hlc_id, vehicle_string);
+                    deploy_functions->deploy_remote_hlc(hlc_id, vehicle_string, switch_simulated_time->get_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
                     this->notify_upload_finished();
                 }
             ));
@@ -271,11 +276,9 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        deploy_sim_vehicles();
+        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
 
-        deploy_hlc_scripts();
-
-        deploy_middleware();
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_active_vehicle_ids(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
 }
 
@@ -304,7 +307,7 @@ void SetupViewUI::kill_deployed_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
-                    this->kill_remote_hlc(hlc_id);
+                    deploy_functions->kill_remote_hlc(hlc_id);
                     this->notify_upload_finished();
                 }
             ));
@@ -312,318 +315,16 @@ void SetupViewUI::kill_deployed_applications() {
     }
     else 
     {
-        kill_hlc_scripts();
-
-        kill_middleware();
+        deploy_functions->kill_local_hlc();
     }
 
-    kill_vehicles();
+    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_active_vehicle_ids());
 
     //Join all old threads
     kill_all_threads();
 
     //Undo grey out
     set_sensitive(true);
-}
-
-void SetupViewUI::deploy_hlc_scripts() {
-    //TODO: Put into separate function
-    std::string sim_time_string;
-    if (switch_simulated_time->get_active())
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
-
-    //Check if old session already exists - if so, kill it
-    if (session_exists("hlc"))
-    {
-        kill_session("hlc");
-    }
-
-    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
-    if (vehicle_ids.size() > 0)
-    {
-        std::stringstream vehicle_ids_stream;
-        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
-        {
-            vehicle_ids_stream << vehicle_ids.at(index) << ",";
-        }
-        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
-
-        //Get script info, generate command
-        std::string script_string(script_path->get_text().c_str());
-        std::string script_path_string;
-        std::string script_name_string;
-        get_path_name(script_string, script_path_string, script_name_string);
-        std::string parameters(script_params->get_text().c_str());
-        std::stringstream command;
-
-        auto matlab_type_pos = script_name_string.rfind(".m");
-        if (matlab_type_pos != std::string::npos)
-        {
-            script_name_string = script_name_string.substr(0, matlab_type_pos);
-
-            //Case: Matlab script
-            command 
-            << "tmux new-session -d "
-            << "-s \"hlc\" "
-            << "'source ~/dev/software/hlc/environment_variables.bash;"
-            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
-            << "cd " << script_path_string
-            << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
-            << " >stdout_hlc.txt 2>stderr_hlc.txt'";
-        }
-        else if (script_name_string.find(".") == std::string::npos)
-        {
-            //Case: Any executable 
-            command 
-            << "tmux new-session -d "
-            << "-s \"hlc\" "
-            << "\"source ~/dev/software/hlc/environment_variables.bash;"
-            << "cd " << script_path_string << ";./" << script_name_string
-            << " --node_id=hlc"
-            << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids_stream.str()
-            << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
-            command 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
-        }
-        command 
-            << " " << parameters << " >stdout_hlc.txt 2>stderr_hlc.txt\"";
-        }
-        else 
-        {
-            std::cout << "Warning: Could not run unknown script: Neither matlab nor C++ executable" << std::endl;
-            return;
-        }
-
-        std::cout << command.str() << std::endl;
-
-        //Execute command
-        system(command.str().c_str());
-    }
-}
-
-void SetupViewUI::kill_hlc_scripts() {
-    kill_session("hlc");
-}
-
-void SetupViewUI::deploy_middleware() {
-    std::string sim_time_string;
-    if (switch_simulated_time->get_active())
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
-
-    //Check if old session already exists - if so, kill it
-    if (session_exists("middleware"))
-    {
-        kill_session("middleware");
-    }
-
-    //TODO Pass vehicle_ids vector as function parameter
-    std::stringstream vehicle_ids_stream;
-    std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
-    if (vehicle_ids.size() > 0)
-    {
-        for (size_t index = 0; index < vehicle_ids.size() - 1; ++index)
-        {
-            vehicle_ids_stream << vehicle_ids.at(index) << ",";
-        }
-        vehicle_ids_stream << vehicle_ids.at(vehicle_ids.size() - 1);
-
-        //Generate command
-        std::stringstream command;
-        command 
-            << "tmux new-session -d "
-            << "-s \"middleware\" "
-            << "\"source ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
-            << " --node_id=middleware"
-            << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids_stream.str()
-            << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
-            command 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
-        }
-        command 
-            << " >stdout_middleware.txt 2>stderr_middleware.txt\"";
-
-        //Execute command
-        system(command.str().c_str());
-    }
-}
-
-void SetupViewUI::kill_middleware() {
-    kill_session("middleware");
-}
-
-void SetupViewUI::deploy_sim_vehicles() {
-    for (const unsigned int id : get_vehicle_ids_simulated())
-    {
-        deploy_sim_vehicle(id);
-    }
-}
-
-void SetupViewUI::deploy_sim_vehicle(unsigned int id) {
-    std::string sim_time_string;
-    if (switch_simulated_time->get_active())
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
-
-    std::stringstream session_name;
-    session_name << "vehicle_" << id;
-
-    //Check if old session already exists - if so, kill it
-    if (session_exists(session_name.str()))
-    {
-        kill_session(session_name.str());
-    }
-
-    //Generate command
-    std::stringstream command;
-    command 
-        << "tmux new-session -d "
-        << "-s \"" << session_name.str() << "\" "
-        << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
-        << "--simulated_time=" << sim_time_string
-        << " --vehicle_id=" << id
-        << " --dds_domain=" << cmd_domain_id;
-    if (cmd_dds_initial_peer.size() > 0) {
-        command 
-            << " --dds_initial_peer=" << cmd_dds_initial_peer;
-    }
-    command 
-        << " >stdout_vehicle" << id << ".txt 2>stderr_vehicle" << id << ".txt\"";
-
-    //Execute command
-    system(command.str().c_str());
-}
-
-void SetupViewUI::kill_vehicles() {
-    for (const unsigned int id : get_vehicle_ids_simulated())
-    {
-        kill_vehicle(id);
-    }
-
-    //Also make all vehicles stop immediately, so that they do not continue to drive for a while   
-    for (const auto id : get_active_vehicle_ids())
-    {
-        vehicle_control->stop_vehicle(static_cast<uint8_t>(id));
-    }
-}
-
-void SetupViewUI::kill_vehicle(unsigned int id) {
-    std::stringstream vehicle_id;
-    vehicle_id << "vehicle_" << id;
-    
-    kill_session(vehicle_id.str());
-}
-
-void SetupViewUI::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids) 
-{
-    // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
-
-    //Get the IP address from the current id
-    std::stringstream ip_stream;
-    ip_stream << "192.168.1.2";
-    if (hlc_id < 10)
-    {
-        ip_stream << "0";
-    }
-    ip_stream << hlc_id;
-
-    //Get the path of the script that is to be called
-    std::string script_string(script_path->get_text().c_str());
-
-    //Put all relevant arguments together
-    //Script-arguments from user
-    std::string parameters(script_params->get_text().c_str());
-
-    std::string sim_time_string;
-    if (switch_simulated_time->get_active())
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
-
-    //Default arguments + user arguments
-    std::stringstream script_argument_stream;
-    std::stringstream middleware_argument_stream;
-    auto matlab_type_pos = script_string.rfind(".m");
-    if (matlab_type_pos != std::string::npos)
-    {
-        //Case: Matlab script - TODO: This is only to test one of my scripts, find standard param order (simulated time is here the )
-        script_argument_stream << "1," << vehicle_ids;
-    }
-    else if (script_string.find(".") == std::string::npos)
-    {        
-        //Case: Any executable 
-        script_argument_stream
-            << " --node_id=hlc_" << vehicle_ids
-            << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids
-            << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
-            script_argument_stream 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
-        }
-    }
-    //Settings for Middleware
-    middleware_argument_stream
-        << " --node_id=middleware_" << vehicle_ids
-        << " --simulated_time=" << sim_time_string
-        << " --vehicle_ids=" << vehicle_ids
-        << " --dds_domain=" << cmd_domain_id;
-    if (cmd_dds_initial_peer.size() > 0) {
-        middleware_argument_stream 
-            << " --dds_initial_peer=" << cmd_dds_initial_peer;
-    }
-
-    //Copy all relevant data over to the remote system
-    std::stringstream copy_command;
-    //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "bash /home/cpm/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
-        << " --script_path=" << script_string 
-        << " --script_arguments='" << script_argument_stream.str() << "'"
-        << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
-
-    execute_command(copy_command.str().c_str());
-}
-
-void SetupViewUI::kill_remote_hlc(unsigned int hlc_id) 
-{
-    //Get the IP address from the current id
-    std::stringstream ip_stream;
-    ip_stream << "192.168.1.2";
-    if (hlc_id < 10)
-    {
-        ip_stream << "0";
-    }
-    ip_stream << hlc_id;
-
-    //Kill the middleware and script tmux sessions running on the remote system
-    std::stringstream kill_command;
-    kill_command << "bash /home/cpm/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
-
-    execute_command(kill_command.str().c_str());
 }
 
 std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
@@ -668,56 +369,6 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
     return active_vehicle_ids;
 }
 
-void SetupViewUI::deploy_ips() {
-    //Check if old session already exists - if so, kill it
-    if (session_exists("ips_pipeline"))
-    {
-        kill_session("ips_pipeline");
-    }
-
-    //Generate command
-    std::stringstream command_ips;
-    command_ips 
-        << "tmux new-session -d "
-        << "-s \"ips_pipeline\" "
-        << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
-        << " --dds_domain=" << cmd_domain_id;
-    if (cmd_dds_initial_peer.size() > 0) {
-        command_ips 
-            << " --dds_initial_peer=" << cmd_dds_initial_peer;
-    }
-    command_ips 
-        << " >stdout_ips.txt 2>stderr_ips.txt\"";
-
-    if (session_exists("ips_basler"))
-    {
-        kill_session("ips_basler");
-    }
-
-    //Generate command
-    std::stringstream command_basler;
-    command_basler 
-        << "tmux new-session -d "
-        << "-s \"ips_basler\" "
-        << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
-        << " --dds_domain=" << cmd_domain_id;
-    if (cmd_dds_initial_peer.size() > 0) {
-        command_basler 
-            << " --dds_initial_peer=" << cmd_dds_initial_peer;
-    }
-    command_basler 
-        << " >stdout_basler.txt 2>stderr_basler.txt\"";
-
-    //Execute command
-    system(command_ips.str().c_str());
-    system(command_basler.str().c_str());
-}
-
-void SetupViewUI::kill_ips() {
-    kill_session("ips_pipeline");
-    kill_session("ips_basler");
-}
-
 void SetupViewUI::set_sensitive(bool is_sensitive) {
     script_path->set_sensitive(is_sensitive);
     script_params->set_sensitive(is_sensitive);
@@ -759,51 +410,6 @@ void SetupViewUI::select_no_vehicles()
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
-    }
-}
-
-bool SetupViewUI::session_exists(std::string session_id)
-{
-    std::string running_sessions = execute_command("tmux ls");
-    session_id += ":";
-    return running_sessions.find(session_id) != std::string::npos;
-}
-
-void SetupViewUI::kill_session(std::string session_id)
-{
-    std::stringstream command;
-    command 
-        << "tmux kill-session -t \"" << session_id << "\"";
-
-    //Execute command
-    system(command.str().c_str());
-}
-
-std::string SetupViewUI::execute_command(const char* cmd) {
-    //Code from stackoverflow
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("Could not use popen - deployment failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}
-
-void SetupViewUI::get_path_name(std::string& in, std::string& out_path, std::string& out_name)
-{
-    auto last_slash_pos = in.rfind("/");
-    if (last_slash_pos != std::string::npos)
-    {
-        out_path = in.substr(0, last_slash_pos + 1);
-        out_name = in.substr(last_slash_pos + 1, in.size() - last_slash_pos);
-    }
-    else 
-    {
-        out_name = in.substr(0, in.size() - last_slash_pos);
     }
 }
 

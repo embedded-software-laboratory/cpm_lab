@@ -7,6 +7,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/setup/Deploy.hpp"
 #include "ui/setup/VehicleToggle.hpp"
 #include "ui/setup/UploadWindow.hpp"
 
@@ -86,28 +87,6 @@ private:
     void deploy_applications();
     void kill_deployed_applications();
 
-    //Specific local deploy functions
-    void deploy_hlc_scripts();
-    void deploy_middleware();
-    void deploy_sim_vehicles();
-    void deploy_sim_vehicle(unsigned int id);
-    void deploy_ips();
-    void kill_ips();
-
-    void kill_hlc_scripts();
-    void kill_middleware();
-    void kill_vehicles();
-    void kill_vehicle(unsigned int id);
-
-    //Specific remote deploy functions
-    /**
-     * \brief Deploy the script specified in the UI with the given parameters on the HLC with the given ID. The script is responsible for one or multiple vehicle ids
-     * \param hlc_id The ID of the HLC
-     * \param vehicle_ids One or multiple vehicle IDs, comma-separated
-     */
-    void deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids);
-    void kill_remote_hlc(unsigned int hlc_id);
-
     std::vector<unsigned int> get_active_vehicle_ids();
     std::vector<unsigned int> get_vehicle_ids_realtime();
     std::vector<unsigned int> get_vehicle_ids_simulated();
@@ -130,13 +109,8 @@ private:
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
-    //Helper functions
-    void get_path_name(std::string& in, std::string& out_path, std::string& out_name);
-    bool session_exists(std::string session_id);
-    void kill_session(std::string session_id);
-
-    //Function to execute a shell command and get its output
-    std::string execute_command(const char* cmd);
+    //Class containing all functions that are relevant for deployment
+    std::shared_ptr<Deploy> deploy_functions;
 
 public:
     /**
