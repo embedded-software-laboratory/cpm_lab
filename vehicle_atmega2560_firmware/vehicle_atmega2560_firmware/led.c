@@ -17,6 +17,8 @@ uint8_t vehicle_id = 0;
 uint32_t tick_count = 0;
 
 void led_set_state(spi_mosi_data_t* spi_mosi_data) {
+	if ((PINA & 1) == 0) return; // test mode
+	
 	CLEAR_BIT(PORTC, 0);
 	CLEAR_BIT(PORTC, 1);
 	CLEAR_BIT(PORTC, 2);
@@ -49,6 +51,8 @@ void led_setup() {
 
 void toggle_led()
 {
+	if ((PINA & 1) == 0) return; // test mode 
+	
 	tick_count++;
 	if(tick_count % identification_LED_period_ticks[vehicle_id] < identification_LED_enabled_ticks[vehicle_id])
         {
@@ -58,4 +62,15 @@ void toggle_led()
 		{
 			CLEAR_BIT(PORTC, 7);
 		}
+}
+
+void test_led(uint8_t led1, uint8_t led2, uint8_t led3, uint8_t led4){
+	CLEAR_BIT(PORTC, 0);
+	CLEAR_BIT(PORTC, 1);
+	CLEAR_BIT(PORTC, 2);
+	
+	if (led1) SET_BIT(PORTC, 0);
+	if (led2) SET_BIT(PORTC, 1);
+	if (led3) SET_BIT(PORTC, 2);
+	if (led4) SET_BIT(PORTC, 7);
 }

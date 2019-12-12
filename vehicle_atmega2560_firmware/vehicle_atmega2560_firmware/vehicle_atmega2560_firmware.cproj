@@ -53,7 +53,7 @@
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
           <JtagSelectedDeviceIndexInChain>0</JtagSelectedDeviceIndexInChain>
-          <JtagDaisyChainDevices>Device/TAP with ID 0x4980103F,1233129535,4</JtagDaisyChainDevices>
+          <JtagDaisyChainDevices>Device/TAP with ID 0x5980103F,1501564991,4</JtagDaisyChainDevices>
         </InterfaceProperties>
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
@@ -62,7 +62,7 @@
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <avrtoolinterface>JTAG</avrtoolinterface>
-    <avrtoolinterfaceclock>125000</avrtoolinterfaceclock>
+    <avrtoolinterfaceclock>200000</avrtoolinterfaceclock>
     <custom>
       <ToolOptions>
         <InterfaceProperties>
