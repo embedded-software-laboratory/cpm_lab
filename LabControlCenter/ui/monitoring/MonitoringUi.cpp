@@ -1,4 +1,5 @@
 #include "MonitoringUi.hpp"
+#include <numeric>
 #include <cassert>
 
 MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback)
@@ -151,10 +152,14 @@ void MonitoringUi::init_ui_thread()
                         }
                         else if(rows_restricted[i] == "battery_level") 
                         {
-                            if     (fabs(value) > 30)  label->get_style_context()->add_class("ok");
-                            else if(fabs(value) > 10)  label->get_style_context()->add_class("warn");
+                            int n = 100;
+                            std::vector<double> values = sensor_timeseries->get_last_n_values(n);
+                            auto max = std::max_element(values.begin(), values.end());
+
+                            if     (fabs(*max) > 30)  label->get_style_context()->add_class("ok");
+                            else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
                             else
-                                { 
+                                {  
                                     label->get_style_context()->add_class("alert");
                                     //std::cout << "Warning: Battery level too low. Shutting down ..." << std::endl;
                                     cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
