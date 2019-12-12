@@ -34,5 +34,7 @@ then
     SCRIPT_NAME="${SCRIPT_NAME%%.*}" #remove .m
     /opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r "cd '/tmp/scripts/${SCRIPT_FOLDER_NAME}'; ${SCRIPT_NAME}(${SCRIPT_ARGS})"
 else
-    ./${SCRIPT_FOLDER_NAME} ${SCRIPT_ARGS}
+    echo ${SCRIPT_FOLDER_NAME} >& script_log_1.txt
+    echo ${SCRIPT_ARGS} >& script_log_2.txt
+    ./${SCRIPT_FOLDER_NAME}/${SCRIPT_NAME} ${SCRIPT_ARGS}
 fi

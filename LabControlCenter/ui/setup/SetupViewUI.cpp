@@ -721,10 +721,14 @@ void SetupViewUI::kill_ips() {
 void SetupViewUI::set_sensitive(bool is_sensitive) {
     script_path->set_sensitive(is_sensitive);
     script_params->set_sensitive(is_sensitive);
+
+    button_choose_script->set_sensitive(is_sensitive);
     
     button_select_none->set_sensitive(is_sensitive);
     button_select_all_simulated->set_sensitive(is_sensitive);
     button_select_all_real->set_sensitive(is_sensitive);
+
+    button_deploy->set_sensitive(is_sensitive);
 
     switch_simulated_time->set_sensitive(is_sensitive);
 

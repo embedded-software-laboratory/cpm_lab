@@ -28,6 +28,10 @@ my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
 /bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml /tmp/scripts
 
+# Kill potential previous sessions
+tmux kill-session -t "middleware"
+tmux kill-session -t "script"
+
 # Start middleware
 tmux new-session -d -s "middleware" "cd /tmp/scripts/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> tmux_middleware.txt"
 
