@@ -10,16 +10,7 @@ Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, s
 
 void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params) 
 {
-    //TODO: Put into separate function
-    std::string sim_time_string;
-    if (use_simulated_time)
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
+    std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
     if (session_exists("hlc"))
@@ -131,15 +122,7 @@ void Deploy::deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids
 
 void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time) 
 {
-    std::string sim_time_string;
-    if (use_simulated_time)
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
+    std::string sim_time_string = bool_to_string(use_simulated_time);
 
     std::stringstream session_name;
     session_name << "vehicle_" << id;
@@ -205,15 +188,7 @@ void Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     }
     ip_stream << hlc_id;
 
-    std::string sim_time_string;
-    if (use_simulated_time)
-    {
-        sim_time_string = "true";
-    }
-    else 
-    {
-        sim_time_string = "false";
-    }
+    std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Default arguments + user arguments
     std::stringstream script_argument_stream;
@@ -373,5 +348,17 @@ void Deploy::get_path_name(std::string& in, std::string& out_path, std::string& 
     else 
     {
         out_name = in.substr(0, in.size() - last_slash_pos);
+    }
+}
+
+std::string Deploy::bool_to_string(bool var)
+{
+    if (var)
+    {
+        return "true";
+    }
+    else 
+    {
+        return "false";
     }
 }

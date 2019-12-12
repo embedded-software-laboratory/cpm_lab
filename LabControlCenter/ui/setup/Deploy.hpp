@@ -54,6 +54,7 @@ private:
     void get_path_name(std::string& in, std::string& out_path, std::string& out_name);
     bool session_exists(std::string session_id);
     void kill_session(std::string session_id);
+    std::string bool_to_string(bool var);
 
      //Function to execute a shell command and get its output
     std::string execute_command(const char* cmd);
