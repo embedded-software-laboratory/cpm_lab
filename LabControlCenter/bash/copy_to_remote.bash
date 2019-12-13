@@ -36,10 +36,11 @@ EOF
 
 # Create .tar that contains all relevant files and copy to host
 cd /tmp
+rm -rf ./scripts
 mkdir scripts
-SCRIPT_FOLDER="${SCRIPT_PATH%/*}" #Get string before last /
-SCRIPT_FOLDER_NAME="${SCRIPT_FOLDER##*/}" #Get string after last /
-/bin/cp -R ${SCRIPT_FOLDER} ./scripts
+SCRIPT_FOLDER_PATH="${SCRIPT_PATH%/*}" #Get string before last /
+SCRIPT_FOLDER_NAME="${SCRIPT_FOLDER_PATH##*/}" #Get string after last /
+/bin/cp -R ${SCRIPT_FOLDER_PATH} ./scripts
 chmod a+rwx ./scripts
 cd ./scripts
 tar czvf - nuc_package.tar.gz ./${SCRIPT_FOLDER_NAME} | ssh guest@${IP} "cd /tmp/scripts;tar xzvf -"
