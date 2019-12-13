@@ -74,10 +74,14 @@ void MonitoringUi::init_ui_thread()
                     label = Gtk::manage(new Gtk::Label()); 
                     label->set_width_chars(25);
                     label->set_xalign(0);
-                    label->set_text(
-                        vehicle_data.begin()->second.at(rows_restricted[i])->get_name() + " [" + 
-                        vehicle_data.begin()->second.at(rows_restricted[i])->get_unit() + "]"
-                    );
+                    //Some rows may be empty (serve as separator) - ignore those
+                    if (rows_restricted[i] != "")
+                    {
+                        label->set_text(
+                            vehicle_data.begin()->second.at(rows_restricted[i])->get_name() + " [" + 
+                            vehicle_data.begin()->second.at(rows_restricted[i])->get_unit() + "]"
+                        );
+                    }
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
                 }
@@ -91,8 +95,67 @@ void MonitoringUi::init_ui_thread()
             for (size_t i = 0; i < rows_restricted.size(); ++i)
             {
                 auto vehicle_sensor_timeseries = entry.second;
-                if(vehicle_sensor_timeseries.count(rows_restricted[i]))
+                //Ignore rows that serve as separator -> only set empty strings there
+                if (rows_restricted[i] != "")
                 {
+                    if(vehicle_sensor_timeseries.count(rows_restricted[i]))
+                    {
+                        Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
+
+                        if(!label)
+                        {
+                            label = Gtk::manage(new Gtk::Label()); 
+                            label->set_width_chars(10);
+                            label->set_xalign(1);
+                            label->show_all();
+                            grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
+                        }
+
+                        auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
+
+                        if(sensor_timeseries->has_new_data(0.5))
+                        {
+                            const auto value = sensor_timeseries->get_latest_value();
+                            label->set_text(sensor_timeseries->format_value(value));
+
+                            label->get_style_context()->remove_class("ok");
+                            label->get_style_context()->remove_class("warn");
+                            label->get_style_context()->remove_class("alert");
+
+
+                            if(rows_restricted[i] == "battery_voltage")
+                            {
+                                if     (value > 6.6) label->get_style_context()->add_class("ok");
+                                else if(value > 6.3) label->get_style_context()->add_class("warn");
+                                else                 label->get_style_context()->add_class("alert");
+                            }
+                            else if(rows_restricted[i] == "battery_level") 
+                            {
+                                if     (value > 50)     label->get_style_context()->add_class("ok");
+                                else if(value > 20)     label->get_style_context()->add_class("warn");
+                                else                    label->get_style_context()->add_class("alert");
+                            }
+                            else if(rows_restricted[i] == "clock_delta") 
+                            {
+                                if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
+                                else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
+                                else                       label->get_style_context()->add_class("alert");
+                            }
+
+                        }
+                        else 
+                        {
+                            label->set_text("---");
+
+                            label->get_style_context()->remove_class("ok");
+                            label->get_style_context()->remove_class("warn");
+                            label->get_style_context()->add_class("alert");
+                        }
+                    }
+                }
+                else 
+                {
+                    //Add empty row, which only serves as a separator for better readability
                     Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
 
                     if(!label)
@@ -102,47 +165,6 @@ void MonitoringUi::init_ui_thread()
                         label->set_xalign(1);
                         label->show_all();
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
-                    }
-
-                    auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
-
-                    if(sensor_timeseries->has_new_data(0.5))
-                    {
-                        const auto value = sensor_timeseries->get_latest_value();
-                        label->set_text(sensor_timeseries->format_value(value));
-
-                        label->get_style_context()->remove_class("ok");
-                        label->get_style_context()->remove_class("warn");
-                        label->get_style_context()->remove_class("alert");
-
-
-                        if(rows_restricted[i] == "battery_voltage")
-                        {
-                            if     (value > 6.6) label->get_style_context()->add_class("ok");
-                            else if(value > 6.3) label->get_style_context()->add_class("warn");
-                            else                 label->get_style_context()->add_class("alert");
-                        }
-                        else if(rows_restricted[i] == "battery_level") 
-                        {
-                            if     (value > 50)     label->get_style_context()->add_class("ok");
-                            else if(value > 20)     label->get_style_context()->add_class("warn");
-                            else                    label->get_style_context()->add_class("alert");
-                        }
-                        else if(rows_restricted[i] == "clock_delta") 
-                        {
-                            if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
-                            else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
-                            else                       label->get_style_context()->add_class("alert");
-                        }
-
-                    }
-                    else 
-                    {
-                        label->set_text("---");
-
-                        label->get_style_context()->remove_class("ok");
-                        label->get_style_context()->remove_class("warn");
-                        label->get_style_context()->add_class("alert");
                     }
                 }
             }
