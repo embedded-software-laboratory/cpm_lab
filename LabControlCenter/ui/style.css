@@ -19,6 +19,10 @@
     background-color: #f00;
 }
 
+#grid_vehicle_monitor label.small_text {
+    font-size: 1px;
+}
+
 
 #parameters_start_server_toggle{
     background-image: linear-gradient(#B71C1C);

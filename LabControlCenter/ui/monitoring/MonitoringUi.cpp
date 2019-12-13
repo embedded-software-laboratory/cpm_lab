@@ -82,6 +82,11 @@ void MonitoringUi::init_ui_thread()
                             vehicle_data.begin()->second.at(rows_restricted[i])->get_unit() + "]"
                         );
                     }
+                    else 
+                    {
+                        //Set other label style to make the row smaller than the surrounding rows
+                        label->get_style_context()->add_class("small_text");
+                    }
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
                 }
@@ -163,6 +168,7 @@ void MonitoringUi::init_ui_thread()
                         label = Gtk::manage(new Gtk::Label()); 
                         label->set_width_chars(10);
                         label->set_xalign(1);
+                        label->get_style_context()->add_class("small_text");
                         label->show_all();
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                     }
