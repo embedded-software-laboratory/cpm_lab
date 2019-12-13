@@ -23,9 +23,16 @@
 #include <thread>
 #include <vector>
 
+/**
+ * \brief This UI class is responsible for the Setup Tab in the LCC
+ * It is used to 
+ * 1) Set the variables required to start a local / distributed lab run, e.g. selection of a script + parameters, usage of the IPS in lab mode etc
+ * 2) Run the selected script + vehicles (real and simulated possible) either on the current machine or on the lab's HLCs
+ */
 class SetupViewUI
 {
 private:
+    //Builder and pointer to UI elements
     Glib::RefPtr<Gtk::Builder> builder;
 
     Gtk::Widget* parent = nullptr;
@@ -53,7 +60,7 @@ private:
     Gtk::Button* button_deploy = nullptr;
     Gtk::Button* button_kill = nullptr;
 
-    //Vehicles
+    //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
 
@@ -70,31 +77,32 @@ private:
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
-    std::vector<std::thread> upload_threads;
-    std::shared_ptr<UploadWindow> upload_window;
-    void ui_dispatch();
-    void notify_upload_finished();
-    void kill_all_threads();
-    std::atomic_uint8_t thread_count;
-    size_t notify_count;
-    std::mutex notify_callback_in_use;
-    std::atomic_bool upload_success; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online
+    std::vector<std::thread> upload_threads; //threads that are responsible for uploading scripts to the HLCs
+    std::shared_ptr<UploadWindow> upload_window; //window that shows an upload message
+    void ui_dispatch(); //dispatcher callback for the UI thread
+    void notify_upload_finished(); //notify function that gets called by the upload threads when they have finished their work
+    void kill_all_threads(); //function to join all threads
+    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
+    size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
+    std::mutex notify_callback_in_use; //the notify_upload_finished function should only be accessible by one thread at once, thus use this mutex
+    std::atomic_bool upload_success; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
 
-    //IPS switch callback
+    //IPS switch callback (-> lab mode)
     void switch_ips_set();
 
-    //Overall deploy functions
+    //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
     void kill_deployed_applications();
 
-    std::vector<unsigned int> get_active_vehicle_ids();
-    std::vector<unsigned int> get_vehicle_ids_realtime();
+    //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
+    std::vector<unsigned int> get_vehicle_ids_active();
+    std::vector<unsigned int> get_vehicle_ids_real();
     std::vector<unsigned int> get_vehicle_ids_simulated();
 
-    //UI functions
+    //UI function - set sensitivity of the UI after pressing deploy (grey out fields in the Setup tab)
     void set_sensitive(bool is_sensitive);
 
-    //Set command line parameters
+    //Get parameters that were set in the command line (upon starting the LCC)
     bool cmd_simulated_time;
     unsigned int cmd_domain_id;
     std::string cmd_dds_initial_peer;
@@ -104,24 +112,26 @@ private:
     void file_explorer_callback(std::string file_string, bool has_file);
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
-    //Vehicle button toggles
+    //Vehicle button toggle callbacks, to set which vehicles are real / simulated / deactivated
     void select_all_vehicles_real();
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
-    //Class containing all functions that are relevant for deployment
+    //Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
 
 public:
     /**
      * \brief Constructor
      * \param _timer_ui Allows to access the timer UI, to reset the timer on system restart
-     * \param _vehicleAutomatedControl Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
+     * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
+     * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
     SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, std::function<std::vector<uint8_t>()> _get_hlc_ids, unsigned int argc, char *argv[]);
     ~SetupViewUI();
 
+    //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 };

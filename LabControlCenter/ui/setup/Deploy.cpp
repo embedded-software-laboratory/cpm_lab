@@ -13,10 +13,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
-    if (session_exists("hlc"))
-    {
-        kill_session("hlc");
-    }
+    kill_session("hlc");
 
     if (active_vehicle_ids.size() > 0)
     {
@@ -79,10 +76,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         system(command.str().c_str());
 
         //Check if old session already exists - if so, kill it
-        if (session_exists("middleware"))
-        {
-            kill_session("middleware");
-        }
+        kill_session("middleware");
 
         //Generate command
         std::stringstream middleware_command;
@@ -128,10 +122,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     session_name << "vehicle_" << id;
 
     //Check if old session already exists - if so, kill it
-    if (session_exists(session_name.str()))
-    {
-        kill_session(session_name.str());
-    }
+    kill_session(session_name.str());
 
     //Generate command
     std::stringstream command;
@@ -257,10 +248,7 @@ void Deploy::kill_remote_hlc(unsigned int hlc_id)
 void Deploy::deploy_ips() 
 {
     //Check if old session already exists - if so, kill it
-    if (session_exists("ips_pipeline"))
-    {
-        kill_session("ips_pipeline");
-    }
+    kill_session("ips_pipeline");
 
     //Generate command
     std::stringstream command_ips;
@@ -276,10 +264,8 @@ void Deploy::deploy_ips()
     command_ips 
         << " >stdout_ips.txt 2>stderr_ips.txt\"";
 
-    if (session_exists("ips_basler"))
-    {
-        kill_session("ips_basler");
-    }
+    //Kill previous ips basler session if it still exists
+    kill_session("ips_basler");
 
     //Generate command
     std::stringstream command_basler;
@@ -314,12 +300,15 @@ bool Deploy::session_exists(std::string session_id)
 
 void Deploy::kill_session(std::string session_id)
 {
-    std::stringstream command;
-    command 
-        << "tmux kill-session -t \"" << session_id << "\"";
+    if (session_exists(session_id))
+    {
+        std::stringstream command;
+        command 
+            << "tmux kill-session -t \"" << session_id << "\"";
 
-    //Execute command
-    system(command.str().c_str());
+        //Execute command
+        system(command.str().c_str());
+    }
 }
 
 std::string Deploy::execute_command(const char* cmd) 

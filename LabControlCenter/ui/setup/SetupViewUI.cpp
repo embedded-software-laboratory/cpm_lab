@@ -212,7 +212,7 @@ void SetupViewUI::deploy_applications() {
         //Deploy on each HLC
 
         //Get current online vehicle and hlc IDs
-        std::vector<unsigned int> vehicle_ids = get_active_vehicle_ids();
+        std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
         if (get_hlc_ids)
         {
@@ -278,7 +278,7 @@ void SetupViewUI::deploy_applications() {
     {
         deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
 
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_active_vehicle_ids(), script_path->get_text().c_str(), script_params->get_text().c_str());
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
 }
 
@@ -318,7 +318,7 @@ void SetupViewUI::kill_deployed_applications() {
         deploy_functions->kill_local_hlc();
     }
 
-    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_active_vehicle_ids());
+    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
 
     //Join all old threads
     kill_all_threads();
@@ -327,7 +327,7 @@ void SetupViewUI::kill_deployed_applications() {
     set_sensitive(true);
 }
 
-std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
+std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
     std::vector<unsigned int> active_vehicle_ids;
 
     for (auto& vehicle_toggle : vehicle_toggles)
@@ -341,7 +341,7 @@ std::vector<unsigned int> SetupViewUI::get_active_vehicle_ids() {
     return active_vehicle_ids;
 }
 
-std::vector<unsigned int> SetupViewUI::get_vehicle_ids_realtime() {
+std::vector<unsigned int> SetupViewUI::get_vehicle_ids_real() {
     std::vector<unsigned int> active_vehicle_ids;
 
     for (auto& vehicle_toggle : vehicle_toggles)
