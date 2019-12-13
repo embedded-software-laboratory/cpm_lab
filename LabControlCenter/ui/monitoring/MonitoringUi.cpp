@@ -62,10 +62,10 @@ void MonitoringUi::init_ui_thread()
             }
         }
 
-        // Left header
+        // Left header - rows contains all relevant row names, row_restricted containts the row(s) (names) that are relevant to the user (and are thus shown)
         if(!vehicle_data.empty())
         {
-            for (size_t i = 0; i < rows.size(); ++i)
+            for (size_t i = 0; i < rows_restricted.size(); ++i)
             {
                 Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(0, i + 1));
 
@@ -75,23 +75,23 @@ void MonitoringUi::init_ui_thread()
                     label->set_width_chars(25);
                     label->set_xalign(0);
                     label->set_text(
-                        vehicle_data.begin()->second.at(rows[i])->get_name() + " [" + 
-                        vehicle_data.begin()->second.at(rows[i])->get_unit() + "]"
+                        vehicle_data.begin()->second.at(rows_restricted[i])->get_name() + " [" + 
+                        vehicle_data.begin()->second.at(rows_restricted[i])->get_unit() + "]"
                     );
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, 0, i + 1, 1, 1);
                 }
             }
         }
-
+        //Print actual information for each vehicle, using the const string vector rows_restricted to get the desired content
         for(const auto& entry: vehicle_data)
         {
             const auto vehicle_id = entry.first;
 
-            for (size_t i = 0; i < rows.size(); ++i)
+            for (size_t i = 0; i < rows_restricted.size(); ++i)
             {
                 auto vehicle_sensor_timeseries = entry.second;
-                if(vehicle_sensor_timeseries.count(rows[i]))
+                if(vehicle_sensor_timeseries.count(rows_restricted[i]))
                 {
                     Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
 
@@ -104,7 +104,7 @@ void MonitoringUi::init_ui_thread()
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                     }
 
-                    auto sensor_timeseries = vehicle_sensor_timeseries.at(rows[i]);
+                    auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
 
                     if(sensor_timeseries->has_new_data(0.5))
                     {
@@ -116,13 +116,13 @@ void MonitoringUi::init_ui_thread()
                         label->get_style_context()->remove_class("alert");
 
 
-                        if(rows[i] == "battery_voltage")
+                        if(rows_restricted[i] == "battery_voltage")
                         {
                             if     (value > 6.6) label->get_style_context()->add_class("ok");
                             else if(value > 6.3) label->get_style_context()->add_class("warn");
                             else                 label->get_style_context()->add_class("alert");
                         }
-                        else if(rows[i] == "clock_delta") 
+                        else if(rows_restricted[i] == "clock_delta") 
                         {
                             if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
                             else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
@@ -150,7 +150,7 @@ void MonitoringUi::init_ui_thread()
         text_stream << "HLCs online: " << hlc_data.size();
         label_hlc_description_short->set_text(text_stream.str().c_str());
 
-        //Show list in entry tooltip (on mouse hover)
+        //Show list in entry tooltip (on mouse hover) - now not tooltip but real list
         std::stringstream list_stream;
         list_stream << "Online IDs: ";
         if(hlc_data.size() > 0)
