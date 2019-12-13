@@ -177,6 +177,11 @@ void MonitoringUi::init_ui_thread()
                                     // TODO send stop-signal 
                                 }
                         }
+                        else if(rows[i] == "ips") 
+                        {
+                            label->get_style_context()->add_class("ok");
+                            label->set_text("available");
+                        }
 
                         }
                         else 

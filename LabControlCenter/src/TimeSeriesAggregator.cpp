@@ -45,14 +45,8 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id]["pose_yaw"] = make_shared<TimeSeries>(
         "Yaw", "%6.3f", "rad");
 
-    timeseries_vehicles[vehicle_id]["ips_x"] = make_shared<TimeSeries>(
-        "IPS Position X", "%6.2f", "m");
-
-    timeseries_vehicles[vehicle_id]["ips_y"] = make_shared<TimeSeries>(
-        "IPS Position Y", "%6.2f", "m");
-
-    timeseries_vehicles[vehicle_id]["ips_yaw"] = make_shared<TimeSeries>(
-        "IPS Yaw", "%6.3f", "rad");
+    timeseries_vehicles[vehicle_id]["ips"] = make_shared<TimeSeries>(
+        "IPS", "%s", "y/n");
 
     timeseries_vehicles[vehicle_id]["speed"] = make_shared<TimeSeries>(
         "Speed", "%5.2f", "m/s");
@@ -125,9 +119,7 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
                 create_vehicle_timeseries(state.vehicle_id());
             }
 
-            timeseries_vehicles[state.vehicle_id()]["ips_x"]  ->push_sample(now, state.pose().x());
-            timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
-            timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
+            timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, state.pose().x());
 
         }
     }
