@@ -128,6 +128,12 @@ void MonitoringUi::init_ui_thread()
                             else if(fabs(value) < 500) label->get_style_context()->add_class("warn");
                             else                       label->get_style_context()->add_class("alert");
                         }
+                        else if(rows_restricted[i] == "battery_voltage") 
+                        {
+                            if     (value > 50)     label->get_style_context()->add_class("ok");
+                            else if(value > 20)     label->get_style_context()->add_class("warn");
+                            else                    label->get_style_context()->add_class("alert");
+                        }
 
                     }
                     else 
