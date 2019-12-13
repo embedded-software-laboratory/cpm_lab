@@ -11,7 +11,7 @@
 
 #grid_vehicle_monitor label.warn {
     color: white;
-    background-color: #eb0;
+    background-color: rgb(238, 135, 0);
 }
 
 #grid_vehicle_monitor label.alert {
