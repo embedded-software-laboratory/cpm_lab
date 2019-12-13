@@ -6,7 +6,7 @@ vehicle_id=$1
 simulated_time=$2
 middleware_id="middleware"
 
-export IP_SELF="$(hostname -i)"
+export IP_SELF="$(hostname -I)"
 export IP_SELF="$(echo $IP_SELF)"
 export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
