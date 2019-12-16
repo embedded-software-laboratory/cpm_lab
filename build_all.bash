@@ -16,8 +16,10 @@ bash build.bash
 popd
 
 
+pushd hlc
 pushd middleware
 bash build.bash
+popd
 popd
 
 

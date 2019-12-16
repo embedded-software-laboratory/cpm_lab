@@ -6,12 +6,11 @@ vehicle_id=$1
 simulated_time=$2
 middleware_id="middleware"
 
+export IP_SELF="$(hostname -I)"
+export IP_SELF="$(echo $IP_SELF)"
+export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
+
 # Start screen for middleware; detach and start middleware
 cd ./middleware/build
 
-#Load environment variables, like RTI location, library location, Matlab location...
-. ./environment_variables.bash
-
-echo $middleware_id
-
-./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_id} --dds_domain=3 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
+./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_id} --dds_domain=${DDS_DOMAIN} --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}

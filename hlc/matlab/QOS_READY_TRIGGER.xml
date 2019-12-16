@@ -91,6 +91,9 @@ RTI Connext user manual.
               <reliability>
                   <kind>RELIABLE_RELIABILITY_QOS</kind>
                </reliability>
+               <durability>
+                  <kind>TRANSIENT_LOCAL_DURABILITY_QOS</kind>
+               </durability>
           </datawriter_qos>
           <datareader_qos>
               <history>
@@ -98,7 +101,7 @@ RTI Connext user manual.
               </history>
               <reliability>
                   <kind>RELIABLE_RELIABILITY_QOS</kind>
-              </reliability> 
+              </reliability>
           </datareader_qos>
         </qos_profile>
 

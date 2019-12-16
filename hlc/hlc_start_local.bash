@@ -1,9 +1,11 @@
 #!/bin/bash
 script_path=$1
-script_name=$2
-vehicle_id=$3
+vehicle_id=$2
 
-#Load environment variables, like RTI location, library location, Matlab location...
-. ./environment_variables.bash
+script_dir=$(dirname "$script_path")
+script_name=$(basename --suffix=.m "$script_path")
 
-/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r "cd '~/dev/software/hlc/${script_path}'; ${script_name}(1, '${vehicle_id}')" #1 is the local comm. domain ID, cannot be changed currently (is probably also not necessary)
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0
+
+ # first parameter in .m function is the local comm. domain ID=1
+matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -sd $script_dir -r "$script_name(1, ${vehicle_id})"
