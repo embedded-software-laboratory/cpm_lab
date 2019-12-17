@@ -29,7 +29,7 @@ private:
 
     //Reader to receive samples, map / mutex to thread-safely store and access them
     std::shared_ptr<cpm::AsyncReader<Visualization>> viz_reader;
-    std::map<std::string, Visualization> received_viz_map;
+    std::map<uint64_t, Visualization> received_viz_map;
     std::mutex received_viz_map_mutex;
 public:
     VisualizationCommandsAggregator();
