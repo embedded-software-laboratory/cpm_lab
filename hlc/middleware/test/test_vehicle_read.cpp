@@ -29,13 +29,13 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     
     //Communication parameters
     int hlcDomainNumber = 1; 
-    std::string hlcStateTopicName = "stateTopic"; 
+    std::string hlcStateTopicName = "mw_vehicleState"; 
     std::string vehicleStateTopicName = "vehicleState"; 
-    std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    std::string hlcTrajectoryTopicName = "mw_vehicleCommandTrajectory"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-    std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
+    std::string hlcSpeedCurvatureTopicName = "mw_vehicleCommandSpeedCurvature"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    std::string hlcDirectTopicName = "directTopic"; 
+    std::string hlcDirectTopicName = "mw_vehicleCommandDirect"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     std::vector<uint8_t> vehicle_ids = { 0, 1 };
     int testMessagesAmount = 18;

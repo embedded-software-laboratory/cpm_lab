@@ -46,14 +46,14 @@ int main (int argc, char *argv[]) {
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
 
     //Constants - topic names
-    const std::string logTopicName = "logTopic";
-    const std::string hlcStateTopicName = "stateTopic"; 
+    const std::string logTopicName = "log";
+    const std::string hlcStateTopicName = "mw_vehicleState"; 
     const std::string vehicleStateTopicName = "vehicleState"; 
-    const std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    const std::string hlcTrajectoryTopicName = "mw_vehicleCommandTrajectory"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
-    const std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
+    const std::string hlcSpeedCurvatureTopicName = "mw_vehicleCommandSpeedCurvature"; 
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    const std::string hlcDirectTopicName = "directTopic"; 
+    const std::string hlcDirectTopicName = "mw_vehicleCommandDirect"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
