@@ -15,6 +15,10 @@ if [ ! -d "dds" ]; then
     ./rtigen.bash
 fi
 
+if [ ! -d "dds_idl_matlab" ]; then
+    /opt/MATLAB/R2019a/bin/matlab -logfile rtigen_matlab.log -sd "./" -batch "rtigen_matlab.m"
+fi
+
 cd $DIR/build
 cmake ..
 make -C $DIR/build -j8
