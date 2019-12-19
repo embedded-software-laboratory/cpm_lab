@@ -2,5 +2,6 @@ build/
 .vscode/
 cpm_lib/dds/
 cpm_lib/include/cpm/dds/
+cpm_lib/dds_idl_matlab
 build_arm/
 *.gz
