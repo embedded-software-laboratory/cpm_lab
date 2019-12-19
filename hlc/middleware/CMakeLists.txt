@@ -17,17 +17,8 @@ include_directories(SYSTEM ../../../cpm_base/cpm_lib/include/)
 include_directories(SYSTEM ../../../cpm_base/cpm_lib/include/cpm/dds/)
 link_directories(../../../cpm_base/cpm_lib/build/)
 
-# Middleware - specific IDL files
-include_directories(./idl_compiled)
-
 
 include_directories(src)
-
-file(GLOB SOURCE_DDS "idl_compiled/*")
-
-add_library(additional_idl SHARED
-    ${SOURCE_DDS}
-)
 
 set (SOURCES 
     src/Communication.hpp
@@ -39,7 +30,7 @@ add_executable( middleware
     ${SOURCES}
 )
 
-target_link_libraries(middleware cpm additional_idl)
+target_link_libraries(middleware cpm)
 
 add_executable(unittest 
     test/catch.cpp
@@ -50,4 +41,4 @@ add_executable(unittest
     ${SOURCES}
 )
 
-target_link_libraries(unittest cpm additional_idl)
+target_link_libraries(unittest cpm)
