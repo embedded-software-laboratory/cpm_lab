@@ -182,6 +182,14 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             label->set_text("available");
                         }
+                        else if(rows[i] == "pose_x")
+                        {
+                            // TODO: is vehicle on its reference trajectory? else stop 
+                        }
+                        else if(rows[i] == "pose_y")
+                        {
+                            // TODO: is vehicle on its reference trajectory? else stop 
+                        }
 
                         }
                         else 
