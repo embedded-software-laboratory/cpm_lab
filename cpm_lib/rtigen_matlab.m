@@ -1,4 +1,5 @@
 function rtigen_matlab
+    setenv("LD_LIBRARY_PATH", ['/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0']);
     dds_idl_matlab = 'dds_idl_matlab';
 
     % IDL files from cpm library

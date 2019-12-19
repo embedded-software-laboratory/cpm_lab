@@ -19,7 +19,6 @@ fi
 if [ ! -d "dds_idl_matlab" ] 
 then
     # Path required for Matlab to know NDDS libraries (was shown by matlab)
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0
     echo "Generating Matlab IDL files..."
     /opt/MATLAB/R2019a/bin/matlab -sd "./" -batch "rtigen_matlab"
 fi
