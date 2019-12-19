@@ -68,6 +68,7 @@ void test_led(uint8_t led1, uint8_t led2, uint8_t led3, uint8_t led4){
 	CLEAR_BIT(PORTC, 0);
 	CLEAR_BIT(PORTC, 1);
 	CLEAR_BIT(PORTC, 2);
+	CLEAR_BIT(PORTC, 7);
 	
 	if (led1) SET_BIT(PORTC, 0);
 	if (led2) SET_BIT(PORTC, 1);
