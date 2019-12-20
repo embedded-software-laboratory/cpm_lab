@@ -29,7 +29,7 @@ TEST_CASE( "TimerFD_stop_signal" ) {
 
     //Writer to send system triggers to the timer 
     dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "system_trigger"), 
+        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "systemTrigger"), 
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> reader_ReadyStatus(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
