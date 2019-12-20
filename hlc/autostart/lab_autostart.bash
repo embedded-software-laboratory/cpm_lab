@@ -28,5 +28,22 @@ wget http://192.168.1.249/nuc/autostart_package.tar.gz
 tar -xzvf autostart_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
+# NEW: Now mimic the folder structure the scripts expect (for the guest user)
+cd /home/guest/
+rm -rf ./dev
+mkdir -p dev/cpm_base/cpm_lib
+cd ./dev/cpm_base/cpm_lib
+mkdir build
+cp /tmp/software/cpm_library_package/libcpm.so ./build
+cp -R /tmp/software/cpm_library_package/dds_idl_matlab ./
+
+cd /home/guest/dev
+mkdir -p software/hlc/middleware/build
+cp /tmp/software/middleware_package/middleware ./software/hlc/middleware/build
+# Set correct IP in local communication script
+my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
+sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
+
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
 /tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER

@@ -21,13 +21,6 @@ case $i in
 esac
 done
 
-# Set correct IP in local communication script
-cd /tmp/software/middleware_package
-my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-/bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml.template ./QOS_LOCAL_COMMUNICATION.xml
-sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
-/bin/cp -rf ./QOS_LOCAL_COMMUNICATION.xml /tmp/scripts
-
 # Kill potential previous sessions
 tmux kill-session -t "middleware"
 tmux kill-session -t "script"
