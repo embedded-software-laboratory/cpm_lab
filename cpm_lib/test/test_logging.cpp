@@ -26,7 +26,7 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().set_id(id);
 
     //Create logging logs_reader
-    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "Logs"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
+    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "log"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
 
     //Sleep 100ms to make sure that the logger reader is ready to receive messages
     rti::util::sleep(dds::core::Duration::from_millisecs(100));

@@ -20,7 +20,7 @@ namespace cpm {
     )
     :period_nanoseconds(_period_nanoseconds)
     ,offset_nanoseconds(_offset_nanoseconds)
-    ,ready_topic(cpm::get_topic<ReadyStatus>("ready"))
+    ,ready_topic(cpm::get_topic<ReadyStatus>("readyStatus"))
     ,trigger_topic(cpm::get_topic<SystemTrigger>("system_trigger"))
     ,node_id(_node_id)
     ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))

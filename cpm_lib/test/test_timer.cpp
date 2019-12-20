@@ -43,7 +43,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
         (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<ReadyStatus>("ready"),
+        cpm::get_topic<ReadyStatus>("readyStatus"),
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data

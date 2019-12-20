@@ -17,7 +17,7 @@ namespace cpm {
     )
     :period_nanoseconds(_period_nanoseconds)
     ,offset_nanoseconds(_offset_nanoseconds)
-    ,ready_topic(cpm::ParticipantSingleton::Instance(), "ready")
+    ,ready_topic(cpm::ParticipantSingleton::Instance(), "readyStatus")
     ,trigger_topic(cpm::ParticipantSingleton::Instance(), "system_trigger")
     ,writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
     ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
