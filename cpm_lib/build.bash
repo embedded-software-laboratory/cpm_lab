@@ -35,6 +35,7 @@ then
     rm -rf $DIR/build/cpm_library_package
     mkdir $DIR/build/cpm_library_package
     cp -R $DIR/../dds_idl/ $DIR/build/cpm_library_package
+    cp -R $DIR/dds_idl_matlab/ $DIR/build/cpm_library_package
     cp $DIR/build/libcpm.so $DIR/build/cpm_library_package
     tar -czvf cpm_library_package.tar.gz -C $DIR/build/ cpm_library_package
     sudo rm -f /var/www/html/nuc/cpm_library_package.tar.gz
