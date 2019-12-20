@@ -47,13 +47,9 @@ int main (int argc, char *argv[]) {
 
     //Constants - topic names
     const std::string logTopicName = "log";
-    const std::string hlcStateTopicName = "local_vehicleState"; 
-    const std::string vehicleStateTopicName = "vehicleState"; 
-    const std::string hlcTrajectoryTopicName = "local_vehicleCommandTrajectory"; 
+    const std::string vehicleStateListTopicName = "vehicleStateList"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
-    const std::string hlcSpeedCurvatureTopicName = "local_vehicleCommandSpeedCurvature"; 
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    const std::string hlcDirectTopicName = "local_vehicleCommandDirect"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
@@ -88,7 +84,16 @@ int main (int argc, char *argv[]) {
 
     //Initialize the communication (TODO later: depending on message type for commands, can change dynamically)
     std::cout << "Initializing Communication..." << std::endl;
-    std::shared_ptr<Communication> communication = std::make_shared<Communication>(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, unsigned_vehicle_ids);
+    std::shared_ptr<Communication> communication = std::make_shared<Communication>(
+        hlcDomainNumber,
+        vehicleStateListTopicName,
+        vehicleTrajectoryTopicName,
+        vehicleSpeedCurvatureTopicName,
+        vehicleDirectTopicName,
+        vehicleID,
+        timer,
+        unsigned_vehicle_ids
+    );
 
     //Wait for HLC program to send ready signal
     communication->wait_for_hlc_ready_msg(unsigned_vehicle_ids);

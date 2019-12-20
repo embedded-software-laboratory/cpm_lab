@@ -43,10 +43,10 @@ function main(matlabDomainID, vehicleIDs)
     %% variables for the communication
     vehicle_ids = str2num(vehicleIDs);
 
-    matlabStateTopicName = 'local_vehicleState';
-    matlabCommandTopicName = 'local_vehicleCommandTrajectory';
-    systemTriggerTopicName = 'local_systemTrigger';
-    readyStatusTopicName = 'local_readyStatus';
+    matlabStateTopicName = 'vehicleStateList';
+    matlabCommandTopicName = 'vehicleCommandTrajectory';
+    systemTriggerTopicName = 'systemTrigger';
+    readyStatusTopicName = 'readyStatus';
     trigger_stop = uint64(18446744073709551615);
 
     phaseTime = 40;

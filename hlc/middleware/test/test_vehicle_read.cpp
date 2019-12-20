@@ -29,13 +29,9 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     
     //Communication parameters
     int hlcDomainNumber = 1; 
-    std::string hlcStateTopicName = "local_vehicleState"; 
-    std::string vehicleStateTopicName = "vehicleState"; 
-    std::string hlcTrajectoryTopicName = "local_vehicleCommandTrajectory"; 
+    std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-    std::string hlcSpeedCurvatureTopicName = "local_vehicleCommandSpeedCurvature"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    std::string hlcDirectTopicName = "local_vehicleCommandDirect"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     std::vector<uint8_t> vehicle_ids = { 0, 1 };
     int testMessagesAmount = 18;
@@ -51,8 +47,16 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     //Initialize the timer
     std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, false, simulated_time_allowed, simulated_time);
 
-    //Initialize the communication 
-    std::shared_ptr<Communication> communication = std::make_shared<Communication>(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicle_ids.at(0), timer, vehicle_ids);
+    //Initialize the communication
+    std::shared_ptr<Communication> communication = std::make_shared<Communication>(
+        hlcDomainNumber,
+        vehicleStateListTopicName,
+        vehicleTrajectoryTopicName,
+        vehicleSpeedCurvatureTopicName,
+        vehicleDirectTopicName,
+        vehicle_ids.at(0),
+        timer,
+        vehicle_ids);
 
     //Test data
     std::vector<uint64_t> received_timestamps_vehicle_0;
@@ -68,9 +72,9 @@ TEST_CASE( "VehicleCommunication_Read" ) {
 
     //Send random data from two vehicle dummies to the Middleware
     dds::pub::DataWriter<VehicleState> vehicle_0_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateTopicName));
+        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName));
     dds::pub::DataWriter<VehicleState> vehicle_1_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateTopicName));
+        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName));
 
     for (int stamp_number = 0; stamp_number <= testMessagesAmount; ++stamp_number) {
         //Create random variable
