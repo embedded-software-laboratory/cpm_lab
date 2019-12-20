@@ -10,10 +10,10 @@ function main(matlabDomainID, vehicle_id)
     run('../import_dds_idl.m');
     
     %% variables for the communication
-    topic_vehicleStateList = 'mw_vehicleState';
+    topic_vehicleStateList = 'local_vehicleState';
     topic_vehicleCommandDirect = 'vehicleCommandDirect';
-    topic_systemTrigger = 'mw_systemTrigger';
-    readyStatusTopicName = 'mw_readyStatus';
+    topic_systemTrigger = 'local_systemTrigger';
+    readyStatusTopicName = 'local_readyStatus';
     trigger_stop = uint64(18446744073709551615);
 
     %% create DDS participant

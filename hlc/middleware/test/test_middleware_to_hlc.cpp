@@ -34,13 +34,13 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     
     //Communication parameters
     int hlcDomainNumber = 1; 
-    std::string hlcStateTopicName = "mw_vehicleState"; 
+    std::string hlcStateTopicName = "local_vehicleState"; 
     std::string vehicleStateTopicName = "vehicleState"; 
-    std::string hlcTrajectoryTopicName = "mw_vehicleCommandTrajectory"; 
+    std::string hlcTrajectoryTopicName = "local_vehicleCommandTrajectory"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-    std::string hlcSpeedCurvatureTopicName = "mw_vehicleCommandSpeedCurvature"; 
+    std::string hlcSpeedCurvatureTopicName = "local_vehicleCommandSpeedCurvature"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    std::string hlcDirectTopicName = "mw_vehicleCommandDirect"; 
+    std::string hlcDirectTopicName = "local_vehicleCommandDirect"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     int vehicleID = 0; 
     std::vector<uint8_t> vehicle_ids = { 0 };

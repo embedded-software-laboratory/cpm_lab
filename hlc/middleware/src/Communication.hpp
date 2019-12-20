@@ -93,7 +93,7 @@ class Communication {
         ,hlcStateTopic(hlcParticipant, hlcStateTopicName)
         ,pub(hlcParticipant)
         ,hlcStateWriter(pub, hlcStateTopic)
-        ,ready_topic(hlcParticipant, "mw_readyStatus")
+        ,ready_topic(hlcParticipant, "local_readyStatus")
         ,hlc_ready_status_reader(
             dds::sub::Subscriber(hlcParticipant),
             ready_topic,
@@ -101,7 +101,7 @@ class Communication {
                 << dds::core::policy::Reliability::Reliable()
                 << dds::core::policy::History::KeepAll()
                 << dds::core::policy::Durability::TransientLocal()))
-        ,trigger_topic(hlcParticipant, "mw_systemTrigger")
+        ,trigger_topic(hlcParticipant, "local_systemTrigger")
         ,hlc_system_trigger_writer(
             dds::pub::Publisher(hlcParticipant),
             trigger_topic,

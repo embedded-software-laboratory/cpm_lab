@@ -47,13 +47,13 @@ int main (int argc, char *argv[]) {
 
     //Constants - topic names
     const std::string logTopicName = "log";
-    const std::string hlcStateTopicName = "mw_vehicleState"; 
+    const std::string hlcStateTopicName = "local_vehicleState"; 
     const std::string vehicleStateTopicName = "vehicleState"; 
-    const std::string hlcTrajectoryTopicName = "mw_vehicleCommandTrajectory"; 
+    const std::string hlcTrajectoryTopicName = "local_vehicleCommandTrajectory"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
-    const std::string hlcSpeedCurvatureTopicName = "mw_vehicleCommandSpeedCurvature"; 
+    const std::string hlcSpeedCurvatureTopicName = "local_vehicleCommandSpeedCurvature"; 
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    const std::string hlcDirectTopicName = "mw_vehicleCommandDirect"; 
+    const std::string hlcDirectTopicName = "local_vehicleCommandDirect"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
