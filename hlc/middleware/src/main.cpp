@@ -17,7 +17,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 
 #include "Communication.hpp"
 

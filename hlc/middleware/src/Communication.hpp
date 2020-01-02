@@ -23,7 +23,7 @@
 #include <dds/core/ddscore.hpp>
 
 #include "VehicleState.hpp"
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
