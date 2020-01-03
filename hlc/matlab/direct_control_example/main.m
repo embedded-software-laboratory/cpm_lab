@@ -7,41 +7,47 @@ function main(matlabDomainID, vehicle_id)
     setenv("NDDS_QOS_PROFILES", ['file://' pwd '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
             
     %% Import IDL files
-    % TODO: Use imported files from cpm_lib
-    run('../import_dds_idl.m');
+    dds_idl_matlab = '../../../../cpm_base/cpm_lib/dds_idl_matlab/';
+    assert(logical(exist(dds_idl_matlab, 'dir')));
+    addpath(dds_idl_matlab);
     
-    %% variables for the communication
-    topic_vehicleStateList = 'vehicleStateList';
-    topic_vehicleCommandDirect = 'local_vehicleCommandDirect';
-    topic_systemTrigger = 'systemTrigger';
-    readyStatusTopicName = 'readyStatus';
-    trigger_stop = uint64(18446744073709551615);
-
-    %% create DDS participant
+    %% variables for DDS communication
+    % DDS Participant for local communication with middleware
     matlabParticipant = DDS.DomainParticipant(...
         'MatlabLibrary::LocalCommunicationProfile',...
         matlabDomainID);
-    % create DDS readers and writers
-    writer_vehicleCommandTrajectory = DDS.DataWriter(...
+    % Infrastructure
+    topic_readyStatus = 'readyStatus';
+    writer_readyStatus = DDS.DataWriter(...
         DDS.Publisher(matlabParticipant),...
-        'vehicleCommandTrajectory',...
-        topic_vehicleCommandDirect);
-    systemTriggerReader = DDS.DataReader(...
+        'ReadyStatus',...
+        topic_readyStatus,...
+        'TriggerLibrary::ReadyTrigger');
+
+    topic_systemTrigger = 'systemTrigger';
+    reader_systemTrigger = DDS.DataReader(...
         DDS.Subscriber(matlabParticipant),...
         'SystemTrigger',...
         topic_systemTrigger,...
         'TriggerLibrary::ReadyTrigger');
-    stateReader = DDS.DataReader(...
+    trigger_stop = uint64(18446744073709551615);
+
+    % Control
+    topic_vehicleStateList = 'vehicleStateList';
+    reader_vehicleStateList = DDS.DataReader(...
         DDS.Subscriber(matlabParticipant),...
-        'vehicleStateList',...
+        'VehicleStateList',...
         topic_vehicleStateList);
-    readyStatusWriter = DDS.DataWriter(...
+
+    topic_vehicleCommandDirect = 'vehicleCommandDirect';
+    writer_vehicleCommandDirect = DDS.DataWriter(...
         DDS.Publisher(matlabParticipant),...
-        'ReadyStatus',...
-        readyStatusTopicName,...
-        'TriggerLibrary::ReadyTrigger');
+        'VehicleCommandDirect',...
+        topic_vehicleCommandDirect);
     
-    %% Send ready signal
+    
+    %% Sync start with infrastructure
+    % Send ready signal
     % Signal needs to be sent for all assigned vehicle ids
     % Also for simulated time case - period etc are set in Middleware,
     % so timestamp field is meaningless
@@ -51,69 +57,49 @@ function main(matlabDomainID, vehicle_id)
     ready_stamp = TimeStamp;
     ready_stamp.nanoseconds = uint64(0);
     ready_msg.next_start_stamp = ready_stamp;
-    readyStatusWriter.write(ready_msg);
+    writer_readyStatus.write(ready_msg);
 
-    %% Wait for start or stop signal
+    % Wait for start or stop signal
     disp('Waiting for start or stop signal');
-    systemTriggerReader.WaitSet = true;
-    systemTriggerReader.WaitSetTimeout = 3600;
-    got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop);
+    reader_systemTrigger.WaitSet = true;
+    reader_systemTrigger.WaitSetTimeout = 3600;
+    got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
+    if got_stop
+        disp('Aborting HLC.');
+    else
+        disp('Running HLC...');
+    end
     
     %% Run the HLC
     % Set reader properties
-    systemTriggerReader.WaitSet = false;
-    stateReader.WaitSet = true;
-    stateReader.WaitSetTimeout = 60;
-    % Define reference trajectory
-    reference_trajectory_index = 1;
-    reference_trajectory_time = 0;
-    map_center_x = 2.25;
-    map_center_y = 2.0;
-    trajectory_px    = [         1,          0,         -1,          0] + map_center_x;
-    trajectory_py    = [         0,          1,          0,         -1] + map_center_y;
-    trajectory_vx    = [         0,         -1,          0,          1];
-    trajectory_vy    = [         1,          0,         -1,          0];
-    segment_duration = [1550000000, 1550000000, 1550000000, 1550000000];
+    reader_systemTrigger.WaitSet = false;
+    reader_vehicleStateList.WaitSet = true;
+    reader_vehicleStateList.WaitSetTimeout = 60;
+    
     while (~got_stop)
-        disp('Waiting for data');
-        [sample, ~, sample_count, ~] = stateReader.take();
+        % Read vehicle states
+        [sample, ~, sample_count, ~] = reader_vehicleStateList.take();
         assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
         fprintf('Current time: %d\n',sample.t_now);
         
-        if (reference_trajectory_time == 0)
-            reference_trajectory_time = sample.t_now;
-        end
+        % Determine control inputs for the vehicle
+        % right curve with moderate forward speed
+        vehicle_command_direct = VehicleCommandDirect;
+        vehicle_command_direct.header.create_stamp.nanoseconds = uint64(sample.t_now);
+        vehicle_command_direct.header.valid_after_stamp.nanoseconds = uint64(sample.t_now);
+        vehicle_command_direct.vehicle_id = uint8(vehicle_id);
+        vehicle_command_direct.motor_throttle =  0.3;
+        vehicle_command_direct.steering_servo = -0.45;
         
-        % Send the current trajectory point to the vehicle
-        trajectory_point = TrajectoryPoint;
-        trajectory_point.t.nanoseconds = uint64(reference_trajectory_time);
-        trajectory_point.px = trajectory_px(reference_trajectory_index);
-        trajectory_point.py = trajectory_py(reference_trajectory_index);
-        trajectory_point.vx = trajectory_vx(reference_trajectory_index);
-        trajectory_point.vy = trajectory_vy(reference_trajectory_index);
-        vehicle_command_trajectory = VehicleCommandTrajectory;
-        vehicle_command_trajectory.vehicle_id = uint8(vehicle_id);
-        vehicle_command_trajectory.trajectory_points = trajectory_point;
-        writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+        writer_vehicleCommandDirect.write(vehicle_command_direct);
                 
-        % Advance the reference state to T+2sec.
-        % The reference state must be in the future,
-        % to allow some time for the vehicle to receive
-        % the message and anticipate the next turn.
-        while (reference_trajectory_time < sample.t_now + 2000000000)
-            reference_trajectory_time = ...
-                reference_trajectory_time + segment_duration(reference_trajectory_index);
-            reference_trajectory_index = ...
-                mod(reference_trajectory_index, length(segment_duration)) + 1;
-        end
-                
-        disp('Checking system trigger for stop signal');
-        got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop);
+        % Check for stop signal
+        got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
     end
 end
 
-function got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop)
-    [trigger, ~, sample_count, ~] = systemTriggerReader.take();
+function got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop)
+    [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
     got_stop = false;
     if sample_count > 0
         % look at most recent signal with (end)
