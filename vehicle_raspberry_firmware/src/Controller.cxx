@@ -305,14 +305,15 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         state = ControllerState::Stop;
     }
 
-    if(state == ControllerState::Stop) 
-    {
-        motor_throttle = 0;
-        steering_servo = 0;
-        return;
-    }
-
     switch(state) {
+
+        case ControllerState::Stop:
+        {
+            // TODO: port stop function from main.cxx to here, use here as well
+            motor_throttle = 0;
+            steering_servo = 0;
+        }
+        break;
 
         case ControllerState::SpeedCurvature:
         {
