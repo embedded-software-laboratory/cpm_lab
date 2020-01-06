@@ -16,6 +16,7 @@
 
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
+using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
 
 class MonitoringUi
 {
@@ -31,6 +32,7 @@ public:
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<std::string>()> get_hlc_data;
     std::function<void()> reset_data;
+    std::function<VehicleTrajectories()> get_vehicle_trajectory;
 
     std::string reboot_script = "bash reboot_raspberry.bash 192.168.1.1";
     
@@ -56,7 +58,12 @@ public:
     void stop_ui_thread();
 
 public:
-    explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback);
+    explicit MonitoringUi(
+        std::function<VehicleData()> get_vehicle_data_callback, 
+        std::function<std::vector<std::string>()> get_hlc_data_callback,
+        std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback, 
+        std::function<void()> reset_data_callback
+    );
     ~MonitoringUi();
     Gtk::Box* get_parent();
     void reset_vehicle_view();

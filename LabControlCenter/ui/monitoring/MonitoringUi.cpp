@@ -2,10 +2,11 @@
 #include <numeric>
 #include <cassert>
 
-MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback)
+MonitoringUi::MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback, std::function<void()> reset_data_callback)
 {
     this->get_vehicle_data = get_vehicle_data_callback;
     this->get_hlc_data = get_hlc_data_callback;
+    this->get_vehicle_trajectory = _get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
@@ -185,6 +186,56 @@ void MonitoringUi::init_ui_thread()
                         else if(rows[i] == "pose_x")
                         {
                             // TODO: is vehicle on its reference trajectory? else stop 
+                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
+                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
+
+                            // break if no trajectory available 
+                            if(trajectory->first != vehicle_id) break;
+
+                            // TODO: compare position to reference 
+
+                            const auto& trajectory_points = trajectory->second;
+
+                            /*std::vector<TrajectoryPoint> trajectory_segment;
+                            for (const auto& trajectory_point : trajectory_points)
+                            {
+                                trajectory_segment.push_back(trajectory_point.second);
+                            }        
+
+                            if(trajectory_segment.size() > 1)
+                            {
+                                // trajectory interpolation
+                                for (int i = 2; i < int(trajectory_segment.size()); ++i)
+                                {
+                                    const int n_interp = 20;
+                                    
+                                    for (int interp_step = 1; interp_step < n_interp; ++interp_step)
+                                    {
+                                        const uint64_t delta_t = 
+                                            trajectory_segment[i].t().nanoseconds() 
+                                            - trajectory_segment[i-1].t().nanoseconds();
+
+                                        TrajectoryInterpolation interp(
+                                            (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
+                                            trajectory_segment[i-1],  
+                                            trajectory_segment[i]
+                                        );
+                                        
+                                    }
+
+                                }
+
+                                // trajectory points
+                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                                {
+                                    trajectory_segment[i].px(),
+                                    trajectory_segment[i].py(),
+
+                                    if(abs(value-trajectory_segment[i].px()) > 0.1)
+                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Shutting down ...", vehicle_id);
+                                    // TODO send stop-signal 
+                                }
+                            }*/
                         }
                         else if(rows[i] == "pose_y")
                         {
