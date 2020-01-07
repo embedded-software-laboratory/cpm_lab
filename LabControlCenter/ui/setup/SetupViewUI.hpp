@@ -35,7 +35,8 @@ private:
     //Builder and pointer to UI elements
     Glib::RefPtr<Gtk::Builder> builder;
 
-    Gtk::Widget* parent = nullptr;
+    Gtk::ScrolledWindow* parent = nullptr;
+    Gtk::Widget* setup_box = nullptr;
 
     //Script and script parameters
     Gtk::Entry* script_path = nullptr;

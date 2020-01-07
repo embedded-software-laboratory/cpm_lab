@@ -17,7 +17,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 
 #include "Communication.hpp"
 
@@ -162,7 +162,7 @@ int main (int argc, char *argv[]) {
                 uint64_t passed_time = (t_now - it->second);
                 if (passed_time > period_nanoseconds) {
                     std::stringstream stream;
-                    stream << "Timestep missed by HLC number " << (it->first) << ", last response: " << (it->second) 
+                    stream << "Timestep missed by HLC number " << static_cast<uint32_t>(it->first) << ", last response: " << (it->second) 
                         << ", current time: " << t_now 
                         << ", periods missed: " << passed_time / period_nanoseconds;
                     cpm::Logging::Instance().write(stream.str().c_str());
@@ -172,7 +172,7 @@ int main (int argc, char *argv[]) {
             for (uint8_t id : unsigned_vehicle_ids) {
                 if (lastHLCResponseTimes.find(id) == lastHLCResponseTimes.end()) {
                     std::stringstream stream;
-                    stream << "HLC number " << id << " has not yet sent any data";
+                    stream << "HLC number " << static_cast<uint32_t>(id) << " has not yet sent any data";
                     cpm::Logging::Instance().write(stream.str().c_str());
                 }
             }

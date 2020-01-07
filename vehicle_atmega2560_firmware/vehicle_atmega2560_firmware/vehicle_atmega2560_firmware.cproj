@@ -27,16 +27,16 @@
     <BootSegment>2</BootSegment>
     <eraseonlaunchrule>0</eraseonlaunchrule>
     <AsfFrameworkConfig>
-      <framework-data xmlns="">
-        <options />
-        <configurations />
-        <files />
-        <documentation help="" />
-        <offline-documentation help="" />
-        <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.32.0" />
-        </dependencies>
-      </framework-data>
+      <framework-data>
+  <options />
+  <configurations />
+  <files />
+  <documentation help="" />
+  <offline-documentation help="" />
+  <dependencies>
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.39.0" />
+  </dependencies>
+</framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <avrtoolserialnumber>J41800010006</avrtoolserialnumber>
@@ -68,6 +68,8 @@
       </ToolNumber>
       <ToolName>Custom Programming Tool</ToolName>
     </custom>
+    <ResetRule>0</ResetRule>
+    <EraseKey />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -213,6 +215,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="spi_packets.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="tests.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="twi.c">

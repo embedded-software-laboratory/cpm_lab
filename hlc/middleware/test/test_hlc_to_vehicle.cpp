@@ -19,7 +19,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Logging.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 #include "Parameter.hpp"
 
 #include "Communication.hpp"
@@ -57,13 +57,34 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         bool simulated_time = false;
 
         //Initialize the timer
-        std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, false, simulated_time_allowed, simulated_time);
+        std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(
+            node_id,
+            period_nanoseconds,
+            offset_nanoseconds,
+            false,
+            simulated_time_allowed,
+            simulated_time);
 
         //Initialize the communication 
-        Communication communication(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, vehicle_ids);
+        Communication communication(
+            hlcDomainNumber,
+            hlcStateTopicName,
+            vehicleStateTopicName,
+            hlcTrajectoryTopicName,
+            vehicleTrajectoryTopicName,
+            hlcSpeedCurvatureTopicName,
+            vehicleSpeedCurvatureTopicName,
+            hlcDirectTopicName,
+            vehicleDirectTopicName,
+            vehicleID,
+            timer,
+            vehicle_ids);
 
         //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. In this function, round numbers are stored - the number of each round should be received.
-        dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(), vehicleSpeedCurvatureTopicName));
+        dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(
+            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
+            dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(),
+            vehicleSpeedCurvatureTopicName));
         dds::core::cond::StatusCondition readCondition(vehicleReader);
         rti::core::cond::AsyncWaitSet waitset;
         readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
