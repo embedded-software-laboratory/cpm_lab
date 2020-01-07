@@ -35,15 +35,12 @@ ssh guest@${IP} << 'EOF'
 EOF
 
 # Create .tar that contains all relevant files and copy to host
-cd /tmp
-rm -rf ./scripts
-mkdir scripts
-SCRIPT_FOLDER_PATH="${SCRIPT_PATH%/*}" #Get string before last /
-SCRIPT_FOLDER_NAME="${SCRIPT_FOLDER_PATH##*/}" #Get string after last /
-/bin/cp -R ${SCRIPT_FOLDER_PATH} ./scripts
-chmod a+rwx ./scripts
-cd ./scripts
-tar czvf - nuc_package.tar.gz ./${SCRIPT_FOLDER_NAME} | ssh guest@${IP} "cd /tmp/scripts;tar xzvf -"
+#Omit /home/username and script name
+PATH_TO_SCRIPT="${SCRIPT_PATH#*home/}"
+PATH_TO_SCRIPT="${PATH_TO_SCRIPT#*/}"
+PATH_TO_SCRIPT="${PATH_TO_SCRIPT%/*}" #Get string before last / (omit name of script)
+cd ~
+tar czvf - nuc_package.tar.gz ./${PATH_TO_SCRIPT} | ssh guest@${IP} "cd ~;tar xzvf -"
 
 # Copy further file modification orders to the NUC
 scp ~/dev/software/LabControlCenter/bash/remote_start.bash guest@${IP}:/tmp/scripts

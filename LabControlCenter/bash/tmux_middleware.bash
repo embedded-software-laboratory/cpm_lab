@@ -17,6 +17,6 @@ done
 . ./environment_variables.bash
 
 # Start screen for middleware; detach and start middleware
-cd /tmp/software/middleware_package
+cd ~/dev/software/hlc/middleware/build
 
 ./middleware ${MIDDLEWARE_ARGS} &> middleware.log
