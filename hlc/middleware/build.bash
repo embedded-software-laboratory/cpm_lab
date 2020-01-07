@@ -16,9 +16,7 @@ make -j8
 cd /tmp
 mkdir middleware_package
 cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
-cp ~/dev/software/hlc/middleware/build/libadditional_idl.so ./middleware_package
 cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-cp ~/dev/software/hlc/middleware/idl/VehicleStateList.idl ./middleware_package
 tar -czvf middleware_package.tar.gz middleware_package
 rm -f /var/www/html/nuc/middleware_package.tar.gz
 cp ./middleware_package.tar.gz /var/www/html/nuc
