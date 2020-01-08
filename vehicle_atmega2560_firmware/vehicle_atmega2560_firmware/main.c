@@ -23,7 +23,6 @@
 #include "crc.h"
 #include "watchdog.h"
 #include "tests.h"
-#include "timer.h"
 
 
 int main(void)
@@ -36,7 +35,7 @@ int main(void)
 	motor_setup();
 	odometer_setup();
 	spi_setup();
-	timer_setup();
+	servo_timer_setup();
 	led_setup();
 	adc_setup();
 	const bool imu_init_status = imu_setup(); // must be after twi_init()
