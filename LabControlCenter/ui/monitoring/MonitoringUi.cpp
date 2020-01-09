@@ -203,7 +203,7 @@ void MonitoringUi::init_ui_thread()
                             {
                                 
                                 TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
-                                uint64_t delta_t = INT64_MAX; 
+                                size_t delta_t = __LONG_MAX__; 
                                 uint64_t tmp;
 
                                 // trajectory points
@@ -213,45 +213,15 @@ void MonitoringUi::init_ui_thread()
                                     delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
                                     if(delta_t < tmp) current_trajectory_segment = trajectory_segment[i];                                   
                                 }
-                                if(abs(value-current_trajectory_segment.px()) > 0.1 && delta_t < 300000)
-                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Shutting down ...", vehicle_id);
+                                //cpm::Logging::Instance().write("%d on reference.", delta_t);
+                                if(fabs(value-current_trajectory_segment.px()) > 0.3)
+                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f, dt %lu Shutting down ...", vehicle_id, fabs(value-current_trajectory_segment.px()), delta_t);
                                     // TODO send stop-signal 
                             }
                         }
                         else if(rows[i] == "pose_y")
                         {
-                            // is vehicle on its reference trajectory? else stop 
-                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
-                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
-
-                            // break if no trajectory available 
-                            if(trajectory->first != vehicle_id) break;
-
-                            const auto& trajectory_points = trajectory->second;
-                            std::vector<TrajectoryPoint> trajectory_segment;
-                            for (const auto& trajectory_point : trajectory_points)
-                            {
-                                trajectory_segment.push_back(trajectory_point.second);
-                            }        
-
-                            if(trajectory_segment.size() > 1)
-                            {
-                                
-                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
-                                uint64_t delta_t = INT64_MAX; 
-                                uint64_t tmp;
-
-                                // trajectory points
-                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
-                                {
-                                    tmp = delta_t;
-                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
-                                    if(delta_t < tmp) current_trajectory_segment = trajectory_segment[i];                                   
-                                }
-                                if(abs(value-current_trajectory_segment.py()) > 0.1 && delta_t < 300000)
-                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Shutting down ...", vehicle_id);
-                                    // TODO send stop-signal 
-                            } 
+                            
                         }
 
                         }
