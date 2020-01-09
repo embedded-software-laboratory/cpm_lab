@@ -43,7 +43,7 @@ cp /tmp/software/middleware_package/middleware ./software/hlc/middleware/build
 # Set correct IP in local communication script
 my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
-sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./QOS_LOCAL_COMMUNICATION.xml
+sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
 /tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
