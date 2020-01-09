@@ -221,7 +221,43 @@ void MonitoringUi::init_ui_thread()
                         }
                         else if(rows[i] == "pose_y")
                         {
-                            
+                            // is vehicle on its reference trajectory? else stop 
+                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
+                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
+
+                            // break if no trajectory available 
+                            if(trajectory->first != vehicle_id) break;
+
+                            const auto& trajectory_points = trajectory->second;
+                            std::vector<TrajectoryPoint> trajectory_segment;
+                            for (const auto& trajectory_point : trajectory_points)
+                            {
+                                trajectory_segment.push_back(trajectory_point.second);
+                            }        
+
+                            if(trajectory_segment.size() > 1)
+                            {
+                                
+                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                                size_t delta_t = __LONG_MAX__; 
+                                uint64_t tmp;
+
+                                // trajectory points
+                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                                {
+                                    tmp = delta_t;
+                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
+                                    if(delta_t < tmp) 
+                                    { 
+                                       current_trajectory_segment = trajectory_segment[i];                                   
+                                       tmp = delta_t;
+                                    }
+                                }
+                                //cpm::Logging::Instance().write("%d on reference.", delta_t);
+                                if(fabs(value-current_trajectory_segment.py()) > 0.3 && delta_t > 3000000000)
+                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f, dt %lu Shutting down ...", vehicle_id, fabs(value-current_trajectory_segment.px()), delta_t);
+                                    // TODO send stop-signal 
+                            }
                         }
 
                         }
