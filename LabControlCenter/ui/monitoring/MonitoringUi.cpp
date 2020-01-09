@@ -185,18 +185,15 @@ void MonitoringUi::init_ui_thread()
                         }
                         else if(rows[i] == "pose_x")
                         {
-                            // TODO: is vehicle on its reference trajectory? else stop 
+                            // is vehicle on its reference trajectory? else stop 
                             VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
                             VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
 
                             // break if no trajectory available 
                             if(trajectory->first != vehicle_id) break;
 
-                            // TODO: compare position to reference 
-
                             const auto& trajectory_points = trajectory->second;
-
-                            /*std::vector<TrajectoryPoint> trajectory_segment;
+                            std::vector<TrajectoryPoint> trajectory_segment;
                             for (const auto& trajectory_point : trajectory_points)
                             {
                                 trajectory_segment.push_back(trajectory_point.second);
@@ -204,42 +201,57 @@ void MonitoringUi::init_ui_thread()
 
                             if(trajectory_segment.size() > 1)
                             {
-                                // trajectory interpolation
-                                for (int i = 2; i < int(trajectory_segment.size()); ++i)
-                                {
-                                    const int n_interp = 20;
-                                    
-                                    for (int interp_step = 1; interp_step < n_interp; ++interp_step)
-                                    {
-                                        const uint64_t delta_t = 
-                                            trajectory_segment[i].t().nanoseconds() 
-                                            - trajectory_segment[i-1].t().nanoseconds();
-
-                                        TrajectoryInterpolation interp(
-                                            (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
-                                            trajectory_segment[i-1],  
-                                            trajectory_segment[i]
-                                        );
-                                        
-                                    }
-
-                                }
+                                
+                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                                uint64_t delta_t = INT64_MAX; 
+                                uint64_t tmp;
 
                                 // trajectory points
                                 for(size_t i = 1; i < trajectory_segment.size(); ++i)
                                 {
-                                    trajectory_segment[i].px(),
-                                    trajectory_segment[i].py(),
-
-                                    if(abs(value-trajectory_segment[i].px()) > 0.1)
+                                    tmp = delta_t;
+                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
+                                    if(delta_t < tmp) current_trajectory_segment = trajectory_segment[i];                                   
+                                }
+                                if(abs(value-current_trajectory_segment.px()) > 0.1 && delta_t < 300000)
                                     cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Shutting down ...", vehicle_id);
                                     // TODO send stop-signal 
-                                }
-                            }*/
+                            }
                         }
                         else if(rows[i] == "pose_y")
                         {
-                            // TODO: is vehicle on its reference trajectory? else stop 
+                            // is vehicle on its reference trajectory? else stop 
+                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
+                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
+
+                            // break if no trajectory available 
+                            if(trajectory->first != vehicle_id) break;
+
+                            const auto& trajectory_points = trajectory->second;
+                            std::vector<TrajectoryPoint> trajectory_segment;
+                            for (const auto& trajectory_point : trajectory_points)
+                            {
+                                trajectory_segment.push_back(trajectory_point.second);
+                            }        
+
+                            if(trajectory_segment.size() > 1)
+                            {
+                                
+                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                                uint64_t delta_t = INT64_MAX; 
+                                uint64_t tmp;
+
+                                // trajectory points
+                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                                {
+                                    tmp = delta_t;
+                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
+                                    if(delta_t < tmp) current_trajectory_segment = trajectory_segment[i];                                   
+                                }
+                                if(abs(value-current_trajectory_segment.py()) > 0.1 && delta_t < 300000)
+                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Shutting down ...", vehicle_id);
+                                    // TODO send stop-signal 
+                            } 
                         }
 
                         }
