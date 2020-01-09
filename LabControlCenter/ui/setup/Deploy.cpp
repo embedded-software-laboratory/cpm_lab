@@ -219,7 +219,7 @@ void Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     //Copy all relevant data over to the remote system
     std::stringstream copy_command;
     //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "bash /home/cpm/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
+    copy_command << "bash ~/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
@@ -240,7 +240,7 @@ void Deploy::kill_remote_hlc(unsigned int hlc_id)
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "bash /home/cpm/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "bash ~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     execute_command(kill_command.str().c_str());
 }

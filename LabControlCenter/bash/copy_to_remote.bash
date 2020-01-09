@@ -40,7 +40,7 @@ PATH_TO_SCRIPT="${SCRIPT_PATH#*home/}"
 PATH_TO_SCRIPT="${PATH_TO_SCRIPT#*/}"
 PATH_TO_SCRIPT="${PATH_TO_SCRIPT%/*}" #Get string before last / (omit name of script)
 cd ~
-tar czvf - nuc_package.tar.gz ./${PATH_TO_SCRIPT} | ssh guest@${IP} "cd ~;tar xzvf -"
+tar czvf - ./${PATH_TO_SCRIPT} | ssh guest@${IP} "cd ~;tar xzvf -"
 
 # Copy further file modification orders to the NUC
 scp ~/dev/software/LabControlCenter/bash/remote_start.bash guest@${IP}:/tmp/scripts
@@ -49,4 +49,4 @@ scp ~/dev/software/LabControlCenter/bash/tmux_middleware.bash guest@${IP}:/tmp/s
 scp ~/dev/software/LabControlCenter/bash/tmux_script.bash guest@${IP}:/tmp/scripts
 
 # Let the NUC handle the rest
-#sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"
+sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"

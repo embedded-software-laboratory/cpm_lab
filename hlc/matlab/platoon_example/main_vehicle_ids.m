@@ -5,8 +5,8 @@ function main_vehicle_ids(matlabDomainID, varargin)
     cd(script_directoy)
     
     % Initialize data readers/writers...
-    init_path = fullfile('../');
-    if ~exist("../init_script.m", 'file')
+    init_path = fullfile('./');
+    if ~exist("./init_script.m", 'file')
         error(['Missing file "' init_path '"/init_script.m']);
     end
     addpath(init_path)
