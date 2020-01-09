@@ -1,12 +1,32 @@
+#!/bin/bash
+simulation=0
+
+#Get command line arguments
+for arg in "$@"
+do
+    case $arg in
+        -s|--simulation)
+        simulation=1
+        shift # Remove --simulation from processing
+        ;;
+        *)
+        shift # Remove generic argument from processing
+        ;;
+    esac
+done
 
 # Get cpm lib
 pushd ..
 if [ ! -d "cpm_base" ]; then
     git clone https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
 fi
+
 cd cpm_base
 cd cpm_lib
-bash build_arm.bash  
+if [ $simulation == 0 ]
+then
+    bash build_arm.bash  
+fi
 bash build.bash
 popd
 
@@ -14,7 +34,6 @@ popd
 pushd LabControlCenter
 bash build.bash
 popd
-
 
 pushd hlc
 pushd middleware
@@ -24,7 +43,12 @@ popd
 
 
 pushd vehicle_raspberry_firmware
-bash build.bash
+if [ $simulation == 0 ]
+then
+    bash build.bash
+else
+    bash build.bash --simulation
+fi
 popd
 
 
@@ -37,7 +61,9 @@ pushd central_routing_example
 bash build.bash
 popd
 
-
-pushd ips2
-bash build.bash
-popd
+if [ $simulation == 0 ]
+then
+    pushd ips2
+    bash build.bash
+    popd
+fi

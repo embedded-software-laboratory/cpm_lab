@@ -1,5 +1,19 @@
 #!/bin/bash
+simulation=0
 
+#Get command line arguments
+for arg in "$@"
+do
+    case $arg in
+        -s|--simulation)
+        simulation=1
+        shift # Remove --simulation from processing
+        ;;
+        *)
+        shift # Remove generic argument from processing
+        ;;
+    esac
+done
 
 mkdir build_arm
 mkdir build_arm_sim
@@ -12,7 +26,8 @@ cmake .. -DBUILD_ARM=OFF -DBUILD_SIMULATION=ON
 make -j20
 popd
 
-
+if [ $simulation == 0 ]
+then
 # Build for simulation on Raspberry
 pushd build_arm_sim
 cmake .. -DBUILD_ARM=ON -DBUILD_SIMULATION=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
@@ -50,3 +65,4 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 rm -f /var/www/html/raspberry/DDS_INITIAL_PEER
 echo $DDS_INITIAL_PEER >/var/www/html/raspberry/DDS_INITIAL_PEER
+fi
