@@ -25,7 +25,7 @@ UploadWindow::UploadWindow(std::vector<unsigned int> vehicle_ids, std::vector<ui
     else {
         label_string << "Your script is now being uploaded to the following HLCs (associated vehicle IDs in brackets):\n|";
         size_t lower_index = std::min(vehicle_ids.size(), hlc_ids.size());
-        for (int i = 0; i < lower_index; ++i)
+        for (size_t i = 0; i < lower_index; ++i)
         {
             label_string << static_cast<unsigned int>(hlc_ids.at(i)) << " - (" << vehicle_ids.at(i) << ") | ";
         }
