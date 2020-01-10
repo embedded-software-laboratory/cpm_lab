@@ -1,4 +1,6 @@
 #!/bin/bash
+# This file is used on the remote system (NUC)
+# DESCRIPTION: Kill previous sessions of the middleware and the selected script, then launch the currently selected script + middleware in a new tmux session (using tmux_....bash scripts)
 #Get command line arguments
 for i in "$@"
 do

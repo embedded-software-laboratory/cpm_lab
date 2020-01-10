@@ -1,4 +1,6 @@
 #!/bin/bash
+# This file is used on the remote system (NUC)
+# DESCRIPTION: Start the middleware. Load relevant environment variables beforehand.
 #Get command line arguments
 for i in "$@"
 do
