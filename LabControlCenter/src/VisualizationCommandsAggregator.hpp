@@ -38,4 +38,5 @@ public:
      * \brief Returns all viz messages that have been received
      */
     std::vector<Visualization> get_all_visualization_messages();
+    void reset_visualization_commands();
 };
