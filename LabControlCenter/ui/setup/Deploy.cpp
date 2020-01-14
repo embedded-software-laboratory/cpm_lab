@@ -40,9 +40,9 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "'. ~/dev/software/hlc/environment_variables.bash;"
-            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
-            << "cd " << script_path_string
-            << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
+            << "/opt/MATLAB/R2019a/bin/matlab -logfile matlab.log"
+            << " -sd \"" << script_path_string
+            << "\" -batch \"" << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
             << " >stdout_hlc.txt 2>stderr_hlc.txt'";
         }
         else if (script_name_string.find(".") == std::string::npos)
