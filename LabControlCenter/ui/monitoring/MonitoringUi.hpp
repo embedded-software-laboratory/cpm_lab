@@ -13,6 +13,7 @@
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
+#include "ui/setup/Deploy.hpp"
 
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
