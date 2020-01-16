@@ -30,6 +30,7 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
+    std::shared_ptr<Deploy> deploy_functions;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<std::string>()> get_hlc_data;
     std::function<void()> reset_data;
@@ -60,6 +61,7 @@ public:
 
 public:
     explicit MonitoringUi(
+        std::shared_ptr<Deploy> _deploy_functions,  
         std::function<VehicleData()> get_vehicle_data_callback, 
         std::function<std::vector<std::string>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback, 

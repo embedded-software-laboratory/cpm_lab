@@ -106,6 +106,14 @@ int main(int argc, char *argv[])
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
+    unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
+    std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
+    //Create deploy class
+    std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
+        cmd_domain_id, 
+        cmd_dds_initial_peer, 
+        [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);
+    });
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
@@ -113,6 +121,7 @@ int main(int argc, char *argv[])
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto monitoringUi = make_shared<MonitoringUi>(
+        deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
         [=](){return hlcReadyAggregator->get_hlc_ids_string();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
@@ -121,6 +130,7 @@ int main(int argc, char *argv[])
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto setupViewUi = make_shared<SetupViewUI>(
+        deploy_functions,
         vehicleAutomatedControl, 
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
         [=](bool simulated_time){return timerViewUi->reset(simulated_time);}, 

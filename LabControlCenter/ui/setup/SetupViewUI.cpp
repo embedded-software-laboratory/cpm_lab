@@ -6,6 +6,7 @@ using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
     (
+    std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
     std::function<void(bool)> _reset_timer,
@@ -18,6 +19,7 @@ SetupViewUI::SetupViewUI
     char *argv[]
     ) 
     :
+    deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
     get_hlc_ids(_get_hlc_ids),
     reset_timer(_reset_timer),
@@ -96,13 +98,6 @@ SetupViewUI::SetupViewUI
 
     //Extract relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
-    cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
-
-    //Create deploy class
-    deploy_functions = std::make_shared<Deploy>(cmd_domain_id, cmd_dds_initial_peer, [&](uint8_t id){
-        vehicle_control->stop_vehicle(id);
-    });
 
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);

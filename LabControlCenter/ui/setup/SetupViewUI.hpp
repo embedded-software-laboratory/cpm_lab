@@ -133,8 +133,6 @@ private:
 
     //Get parameters that were set in the command line (upon starting the LCC)
     bool cmd_simulated_time;
-    unsigned int cmd_domain_id;
-    std::string cmd_dds_initial_peer;
 
     //File chooser to select script(s) + location
     void open_file_explorer();
@@ -166,6 +164,7 @@ public:
      * \param argv Command line argument (from main())
      */
     SetupViewUI(
+        std::shared_ptr<Deploy> deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
         std::function<void(bool)> _reset_timer,
