@@ -49,3 +49,9 @@ std::vector<Visualization> VisualizationCommandsAggregator::get_all_visualizatio
 
     return viz_vector;
 }
+
+void VisualizationCommandsAggregator::reset_visualization_commands() 
+{
+    std::lock_guard<std::mutex> lock(received_viz_map_mutex);
+    received_viz_map.clear();
+}

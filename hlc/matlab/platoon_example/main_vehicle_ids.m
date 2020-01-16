@@ -1,5 +1,4 @@
 function main_vehicle_ids(matlabDomainID, varargin)
-
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)

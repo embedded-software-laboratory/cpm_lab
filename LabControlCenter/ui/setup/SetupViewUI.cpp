@@ -3,10 +3,26 @@
 
 using namespace std::placeholders;
 
-SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, std::function<std::vector<uint8_t>()> _get_hlc_ids, unsigned int argc, char *argv[]) :
-    timer_ui(_timer_ui),
+SetupViewUI::SetupViewUI
+    (
+    std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
+    std::function<std::vector<uint8_t>()> _get_hlc_ids,
+    std::function<void(bool)> _reset_timer,
+    std::function<void()> _reset_time_series_aggregator,
+    std::function<void()> _reset_trajectories,
+    std::function<void()> _reset_vehicle_view,
+    std::function<void()> _reset_visualization_commands,
+    unsigned int argc, 
+    char *argv[]
+    ) 
+    :
     vehicle_control(_vehicle_control),
-    get_hlc_ids(_get_hlc_ids)
+    get_hlc_ids(_get_hlc_ids),
+    reset_timer(_reset_timer),
+    reset_time_series_aggregator(_reset_time_series_aggregator),
+    reset_trajectories(_reset_trajectories),
+    reset_vehicle_view(_reset_vehicle_view),
+    reset_visualization_commands(_reset_visualization_commands)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -107,7 +123,7 @@ SetupViewUI::~SetupViewUI() {
 
 void SetupViewUI::switch_timer_set()
 {
-    timer_ui->reset(switch_simulated_time->get_active());
+    reset_timer(switch_simulated_time->get_active());
 }
 
 void SetupViewUI::switch_ips_set()
@@ -285,9 +301,6 @@ void SetupViewUI::deploy_applications() {
 }
 
 void SetupViewUI::kill_deployed_applications() {
-    //Kill timer in UI as well, as it should not show invalid information
-    timer_ui->reset(switch_simulated_time->get_active());
-
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
@@ -324,6 +337,15 @@ void SetupViewUI::kill_deployed_applications() {
 
     //Join all old threads
     kill_all_threads();
+
+    //Kill timer in UI as well, as it should not show invalid information
+    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+    //Reset all relevant UI parts
+    reset_timer(switch_simulated_time->get_active());
+    reset_time_series_aggregator();
+    reset_trajectories();
+    reset_vehicle_view();
+    reset_visualization_commands();
 
     //Undo grey out
     set_sensitive(true);
