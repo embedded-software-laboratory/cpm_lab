@@ -6,6 +6,12 @@ namespace cpm {
         loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "Logs")),
         logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
     {
+        //Get log level / logging verbosity
+        log_level = cpm::parameter_int("log_level");
+        if (log_level < 0 || log_level > 2)
+        {
+            log_level = 1;
+        }
 
         // Formatted start time for log filename
         char time_format_buffer[100];
