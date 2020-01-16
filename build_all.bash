@@ -7,6 +7,7 @@ do
     case $arg in
         -s|--simulation)
         simulation=1
+	echo "Building in simulation mode: no IPS, no ARM builds."
         shift # Remove --simulation from processing
         ;;
         *)
