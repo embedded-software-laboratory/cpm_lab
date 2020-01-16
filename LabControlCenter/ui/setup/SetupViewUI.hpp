@@ -67,6 +67,9 @@ private:
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+    
+    //Class containing all functions that are relevant for deployment, local and remote
+    std::shared_ptr<Deploy> deploy_functions;
 
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
