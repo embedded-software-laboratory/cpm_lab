@@ -3,7 +3,7 @@
 namespace cpm {
 
     Logging::Logging() :
-        loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "log")),
+        loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "Logs")),
         logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
     {
 

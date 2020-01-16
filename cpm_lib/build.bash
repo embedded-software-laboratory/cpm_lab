@@ -22,15 +22,18 @@ cmake ..
 make -C $DIR/build -j8 && $DIR/build/unittest
 cd $DIR
 
-# Publish cpm_library package via http/apache for the HLCs to download
-if [ ! -d "/var/www/html/nuc" ]; then
+if [ -d "/var/www/html/" ]; then
+    # Apache installed
+    # Publish cpm_library package via http/apache for the HLCs to download
     sudo mkdir -p "/var/www/html/nuc"
-    sudo chmod a+rwx "/var/www/html/nuc"
+    rm -rf $DIR/cpm_library_package
+    mkdir $DIR/cpm_library_package
+    cp -R $DIR/../dds_idl/ $DIR/cpm_library_package
+    cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
+    cp $DIR/libcpm.so $DIR/cpm_library_package
+    tar -czvf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
+    sudo rm -f /var/www/html/nuc/cpm_library_package.tar.gz
+    sudo mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc
+else
+    echo "WARNING: apache2 not installed - vehicles / hlcs will not be able to download if this is the master pc, install via 'sudo apt-get install apache2'"
 fi
-rm -rf $DIR/cpm_library_package
-mkdir $DIR/cpm_library_package
-cp -R $DIR/../dds_idl/ $DIR/cpm_library_package
-cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
-cp $DIR/build/libcpm.so $DIR/cpm_library_package
-tar -czvf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
-mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc
