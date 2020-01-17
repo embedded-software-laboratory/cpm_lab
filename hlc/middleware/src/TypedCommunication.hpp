@@ -62,26 +62,6 @@ template<class MessageType> class TypedCommunication {
                     //Then update the last response time of the HLC that sent the data
                     uint64_t receive_timestamp = timer->get_time();
                     lastHLCResponseTimes[sample.data().vehicle_id()] = receive_timestamp;
-
-                    //Evaluation: Log received HLC timestamp + valid_after timestamp
-                    //Different behaviour if no Header is present
-                    uint64_t valid_after_timestamp;
-                    if(std::is_same<MessageType, VehicleCommandTrajectory>::value)
-                    {
-                        if (sample.data().trajectory_points.size() > 0)
-                        {
-                            valid_after_timestamp = sample.data().trajectory_points.get(0).t().nanoseconds();
-                            //TODO: No, we somehow need the current deadline here (see cpm timer)
-                        }
-                        else 
-                        {
-                            valid_after_timestamp = 0;
-                        }
-                    }
-                    else if (std::is_same<MessageType, VehicleCommandDirect>::value || std::is_same<MessageType, VehicleCommandSpeedCurvature>::value)
-                    {
-                        valid_after_timestamp = sample.data().header().valid_after_stamp();
-                    }
                 }
             }
         }
