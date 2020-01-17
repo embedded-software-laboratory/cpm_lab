@@ -167,6 +167,14 @@ int main (int argc, char *argv[]) {
                         << ", periods missed: " << passed_time / period_nanoseconds;
                     cpm::Logging::Instance().write(stream.str().c_str());
                 }
+
+                //Evaluation log
+                cpm::Logging::Instance().write(
+                    "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
+                    it->first, 
+                    it->second, 
+                    t_now
+                );
             }
             //Also log an error if no HLC data has yet been received
             for (uint8_t id : unsigned_vehicle_ids) {

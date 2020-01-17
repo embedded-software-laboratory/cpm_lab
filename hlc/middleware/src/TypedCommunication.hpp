@@ -82,7 +82,6 @@ template<class MessageType> class TypedCommunication {
                     {
                         valid_after_timestamp = sample.data().header().valid_after_stamp();
                     }
-                    cpm::Logging::Instance().write("Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", sample.data().vehicle_id(), receive_timestamp, valid_after_timestamp);
                 }
             }
         }

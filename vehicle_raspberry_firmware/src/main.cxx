@@ -132,10 +132,9 @@ int main(int argc, char *argv[])
         //Callback for update signal
         [&](uint64_t t_now) 
         {
-            //Log control cycle period, apply timestamp
-            uint64_t control_cycle_timestamp, apply_cycle_timestamp;
+            //Log control cycle period
             //For evaluation log of vehicle cycle period
-            control_cycle_timestamp = update_loop->get_time();
+            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
@@ -174,9 +173,6 @@ int main(int argc, char *argv[])
 
 
     #ifdef VEHICLE_SIMULATION
-                //For evaluation log of application of vehicle data
-                apply_cycle_timestamp = update_loop->get_time();
-
                 VehicleState vehicleState = simulationVehicle.update(
                     motor_throttle,
                     steering_servo,
@@ -204,9 +200,6 @@ int main(int argc, char *argv[])
                 spi_miso_data_t spi_miso_data;
 
                 //auto t_transfer_start = update_loop->get_time();
-
-                //For evaluation log of application of vehicle data
-                apply_cycle_timestamp = update_loop->get_time();
 
                 spi_transfer(
                     spi_mosi_data,
@@ -250,8 +243,6 @@ int main(int argc, char *argv[])
                     localization.reset();
                 }
                 loop_count++;
-
-                cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu, apply cycle timestamp: %llu", vehicle_id, control_cycle_timestamp, apply_cycle_timestamp);
             }
             catch(const dds::core::Exception& e)
             {
