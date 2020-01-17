@@ -3,12 +3,14 @@
 /**
  * \class Communication.hpp
  * \brief This class can be used to create all readers and writers required for the middleware whose type can change, e.g. if instead of the trajectory the speed + curvature are used as commands
+ * WARNING: There is no error handling for incompatible types
  */
 #include <string>
 #include <functional>
 #include <memory>
 #include <map>
 #include <cassert>
+#include <type_traits>
 
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/core/QosProvider.hpp>
@@ -21,7 +23,11 @@
 #include <dds/core/ddscore.hpp>
 
 #include "VehicleState.hpp"
+#include "VehicleCommandDirect.hpp"
+#include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandSpeedCurvature.hpp"
 
+#include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
 #include "cpm/Timer.hpp"
@@ -54,7 +60,29 @@ template<class MessageType> class TypedCommunication {
                     sendToVehicle(sample.data());
 
                     //Then update the last response time of the HLC that sent the data
-                    lastHLCResponseTimes[sample.data().vehicle_id()] = timer->get_time();
+                    uint64_t receive_timestamp = timer->get_time();
+                    lastHLCResponseTimes[sample.data().vehicle_id()] = receive_timestamp;
+
+                    //Evaluation: Log received HLC timestamp + valid_after timestamp
+                    //Different behaviour if no Header is present
+                    uint64_t valid_after_timestamp;
+                    if(std::is_same<MessageType, VehicleCommandTrajectory>::value)
+                    {
+                        if (sample.data().trajectory_points.size() > 0)
+                        {
+                            valid_after_timestamp = sample.data().trajectory_points.get(0).t().nanoseconds();
+                            //TODO: No, we somehow need the current deadline here (see cpm timer)
+                        }
+                        else 
+                        {
+                            valid_after_timestamp = 0;
+                        }
+                    }
+                    else if (std::is_same<MessageType, VehicleCommandDirect>::value || std::is_same<MessageType, VehicleCommandSpeedCurvature>::value)
+                    {
+                        valid_after_timestamp = sample.data().header().valid_after_stamp();
+                    }
+                    cpm::Logging::Instance().write("Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", sample.data().vehicle_id(), receive_timestamp, valid_after_timestamp);
                 }
             }
         }
