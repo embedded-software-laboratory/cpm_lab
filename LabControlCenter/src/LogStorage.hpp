@@ -4,6 +4,8 @@
 #include <atomic>
 #include <cassert>
 #include <ctime>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -38,11 +40,18 @@ private:
     std::mutex log_buffer_mutex;
     std::mutex log_storage_mutex;
 
+    //File for logging
+    std::ofstream file;
+    std::string filename = "all_received_logs.csv"; 
+    //Mutex s.t. only one thread has access to the file
+    std::mutex file_mutex;
+
     //Clear elements so that count last elements are kept
     void keep_last_elements(std::vector<Log>& vector, size_t count);
 
 public:
     LogStorage();
+    ~LogStorage();
 
     std::vector<Log> get_new_logs();
     
