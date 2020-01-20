@@ -81,6 +81,7 @@ int main (int argc, char *argv[]) {
     //Initialize the timer
     std::cout << "Initializing Timer..." << std::endl;
     std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, wait_for_start, simulated_time_allowed, simulated_time);
+    std::cout << "...done." << std::endl;
 
     //Initialize the communication (TODO later: depending on message type for commands, can change dynamically)
     std::cout << "Initializing Communication..." << std::endl;
@@ -94,9 +95,12 @@ int main (int argc, char *argv[]) {
         timer,
         unsigned_vehicle_ids
     );
+    std::cout << "...done." << std::endl;
 
     //Wait for HLC program to send ready signal
+    std::cout << "Waiting for HLC..." << std::endl;
     communication->wait_for_hlc_ready_msg(unsigned_vehicle_ids);
+    std::cout << "...done." << std::endl;
 
     //Wait for start signal (done by the timer after start)
     //Start the communication with the HLC

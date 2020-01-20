@@ -1,4 +1,4 @@
-function main(matlabDomainID, vehicle_id)    
+function main(matlabDomainID, vehicle_id)
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
     middleware_local_qos_xml = '../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
     if ~exist(middleware_local_qos_xml,'file')
@@ -7,40 +7,46 @@ function main(matlabDomainID, vehicle_id)
     setenv("NDDS_QOS_PROFILES", ['file://' pwd '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
             
     %% Import IDL files
-    run('../import_dds_idl.m');
+    dds_idl_matlab = '../../../../cpm_base/cpm_lib/dds_idl_matlab/';
+    assert(logical(exist(dds_idl_matlab, 'dir')));
+    addpath(dds_idl_matlab);
     
-    %% variables for the communication
-    matlabStateTopicName = 'vehicleStateList';
-    matlabCommandTopicName = 'vehicleCommandTrajectory';
-    systemTriggerTopicName = 'systemTrigger';
-    readyStatusTopicName = 'readyStatus';
-    trigger_stop = uint64(18446744073709551615);
-
-    %% create DDS participant
+    %% variables for DDS communication
+    % DDS Participant for local communication with middleware
     matlabParticipant = DDS.DomainParticipant(...
         'MatlabLibrary::LocalCommunicationProfile',...
         matlabDomainID);
-    % create DDS readers and writers
-    systemTriggerReader = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'SystemTrigger',...
-        systemTriggerTopicName,...
-        'TriggerLibrary::ReadyTrigger');
-    stateReader = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'VehicleStateList',...
-        matlabStateTopicName);
-    readyStatusWriter = DDS.DataWriter(...
+    % Infrastructure
+    topic_readyStatus = 'readyStatus';
+    writer_readyStatus = DDS.DataWriter(...
         DDS.Publisher(matlabParticipant),...
         'ReadyStatus',...
-        readyStatusTopicName,...
+        topic_readyStatus,...
         'TriggerLibrary::ReadyTrigger');
+
+    topic_systemTrigger = 'systemTrigger';
+    reader_systemTrigger = DDS.DataReader(...
+        DDS.Subscriber(matlabParticipant),...
+        'SystemTrigger',...
+        topic_systemTrigger,...
+        'TriggerLibrary::ReadyTrigger');
+    trigger_stop = uint64(18446744073709551615);
+
+    % Control
+    topic_vehicleStateList = 'vehicleStateList';
+    reader_vehicleStateList = DDS.DataReader(...
+        DDS.Subscriber(matlabParticipant),...
+        'VehicleStateList',...
+        topic_vehicleStateList);
+
+    topic_vehicleCommandTrajectory = 'vehicleCommandTrajectory';
     writer_vehicleCommandTrajectory = DDS.DataWriter(...
         DDS.Publisher(matlabParticipant),...
         'VehicleCommandTrajectory',...
-        matlabCommandTopicName);
+        topic_vehicleCommandTrajectory);
     
-    %% Send ready signal
+    %% Sync start with infrastructure
+    % Send ready signal
     % Signal needs to be sent for all assigned vehicle ids
     % Also for simulated time case - period etc are set in Middleware,
     % so timestamp field is meaningless
@@ -50,19 +56,25 @@ function main(matlabDomainID, vehicle_id)
     ready_stamp = TimeStamp;
     ready_stamp.nanoseconds = uint64(0);
     ready_msg.next_start_stamp = ready_stamp;
-    readyStatusWriter.write(ready_msg);
+    writer_readyStatus.write(ready_msg);
 
-    %% Wait for start or stop signal
+    % Wait for start or stop signal
     disp('Waiting for start or stop signal');
-    systemTriggerReader.WaitSet = true;
-    systemTriggerReader.WaitSetTimeout = 3600;
-    got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop);
-    
+    reader_systemTrigger.WaitSet = true;
+    reader_systemTrigger.WaitSetTimeout = 3600;
+    got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
+    if got_stop
+        disp('Aborting HLC.');
+    else
+        disp('Running HLC...');
+    end
+
     %% Run the HLC
     % Set reader properties
-    systemTriggerReader.WaitSet = false;
-    stateReader.WaitSet = true;
-    stateReader.WaitSetTimeout = 60;
+    reader_systemTrigger.WaitSet = false;
+    reader_vehicleStateList.WaitSet = true;
+    reader_vehicleStateList.WaitSetTimeout = 60;
+
     % Define reference trajectory
     reference_trajectory_index = 1;
     reference_trajectory_time = 0;
@@ -73,9 +85,10 @@ function main(matlabDomainID, vehicle_id)
     trajectory_vx    = [         0,         -1,          0,          1];
     trajectory_vy    = [         1,          0,         -1,          0];
     segment_duration = [1550000000, 1550000000, 1550000000, 1550000000];
+    
     while (~got_stop)
         disp('Waiting for data');
-        [sample, ~, sample_count, ~] = stateReader.take();
+        [sample, ~, sample_count, ~] = reader_vehicleStateList.take();
         assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
         fprintf('Current time: %d\n',sample.t_now);
         
@@ -107,12 +120,12 @@ function main(matlabDomainID, vehicle_id)
         end
                 
         disp('Checking system trigger for stop signal');
-        got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop);
+        got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
     end
 end
 
-function got_stop = check_for_stop_signal(systemTriggerReader, trigger_stop)
-    [trigger, ~, sample_count, ~] = systemTriggerReader.take();
+function got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop)
+    [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
     got_stop = false;
     if sample_count > 0
         % look at most recent signal with (end)
