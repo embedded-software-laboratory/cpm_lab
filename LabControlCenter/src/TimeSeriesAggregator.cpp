@@ -36,6 +36,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 {
     timeseries_vehicles[vehicle_id] = map<string, shared_ptr<TimeSeries>>();
 
+    timeseries_vehicles[vehicle_id]["reference_deviation"] = make_shared<TimeSeries>(
+        "Reference Deviation", "%6.2f", "m");
+
     timeseries_vehicles[vehicle_id]["pose_x"] = make_shared<TimeSeries>(
         "Position X", "%6.2f", "m");
 
@@ -91,7 +94,7 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             {
                 create_vehicle_timeseries(state.vehicle_id());
             }
-
+            timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
             timeseries_vehicles[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
             timeseries_vehicles[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());

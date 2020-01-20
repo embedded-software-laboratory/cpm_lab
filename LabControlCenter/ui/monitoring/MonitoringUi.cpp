@@ -214,6 +214,53 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             label->set_text("available");
                         }
+                        else if(rows_restricted[i] == "reference_deviation") 
+                        {
+                            // is vehicle on its reference trajectory? else stop 
+
+                            auto pose_x = vehicle_sensor_timeseries.at("pose_x")->get_latest_value();
+                            auto pose_y = vehicle_sensor_timeseries.at("pose_y")->get_latest_value();
+
+                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
+                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
+
+                            // break if no trajectory available 
+                            if(trajectory->first != vehicle_id) break;
+
+                            const auto& trajectory_points = trajectory->second;
+                            std::vector<TrajectoryPoint> trajectory_segment;
+                            for (const auto& trajectory_point : trajectory_points)
+                            {
+                                trajectory_segment.push_back(trajectory_point.second);
+                            }        
+
+                            if(trajectory_segment.size() > 1)
+                            {
+                                
+                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                                size_t delta_t = __LONG_MAX__; 
+                                uint64_t tmp;
+
+                                // trajectory points
+                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                                {
+                                    tmp = delta_t;
+                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
+                                    if(delta_t < tmp) 
+                                    { 
+                                       current_trajectory_segment = trajectory_segment[i];                                   
+                                       tmp = delta_t;
+                                    }
+                                }
+                                double error = pow(pose_x-current_trajectory_segment.px(),2)+pow(pose_y-current_trajectory_segment.py(),2);
+                                if(fabs(error) > 3) {
+                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
+                                    deploy_functions->kill_vehicles({},vehicle_ids);
+                                }
+                            }
+                            label->get_style_context()->add_class("ok");
+                            label->set_text("ok");
+                        }
 
                         }
                         else 
