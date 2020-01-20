@@ -113,7 +113,16 @@ int main(int argc, char *argv[])
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, vehicleAutomatedControl, argc, argv);
+    auto setupViewUi = make_shared<SetupViewUI>(
+        vehicleAutomatedControl, 
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        [=](bool simulated_time){return timerViewUi->reset(simulated_time);}, 
+        [=](){return timeSeriesAggregator->reset_all_data();}, 
+        [=](){return trajectoryCommand->stop_all();}, 
+        [=](){return monitoringUi->reset_vehicle_view();}, 
+        [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
+        argc, 
+        argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

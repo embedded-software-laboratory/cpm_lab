@@ -31,12 +31,12 @@ int main(void)
 	
 	watchdog_disable(); // allow for longer setup procedures
 	
-	led_setup();
 	twi_init();
 	motor_setup();
 	odometer_setup();
 	spi_setup();
 	servo_timer_setup();
+	led_setup();
 	adc_setup();
 	const bool imu_init_status = imu_setup(); // must be after twi_init()
 	crcInit();
@@ -59,13 +59,7 @@ int main(void)
 		
 		if(safe_mode_flag) 
 		{
-			// Flash LEDs to indicate safe mode
-			if (get_tick() % 25 == 0) {
-				spi_mosi_data.LED1_enabled = 1;
-				spi_mosi_data.LED2_enabled = 1;
-				spi_mosi_data.LED3_enabled = 1;
-				spi_mosi_data.LED4_enabled = 1;
-			}
+			spi_mosi_data.vehicle_id = 0;
 			
 			tests_apply(get_tick(), &spi_miso_data, &spi_mosi_data);
 			

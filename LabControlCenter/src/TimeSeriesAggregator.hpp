@@ -12,6 +12,12 @@
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
 
+/**
+ * \class TimeSeriesAggregator
+ * \brief Keeps received data from vehicles and vehicle trajectories in map with custom data structure that regards multiple messages + timestamps
+ *
+*/
+
 class TimeSeriesAggregator
 {
     VehicleData timeseries_vehicles;

@@ -19,7 +19,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Logging.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 #include "Parameter.hpp"
 
 #include "Communication.hpp"

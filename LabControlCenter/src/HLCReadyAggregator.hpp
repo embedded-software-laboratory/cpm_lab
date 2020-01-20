@@ -32,4 +32,5 @@ private:
 public:
     HLCReadyAggregator();
     std::vector<std::string> get_hlc_ids_string();
+    std::vector<uint8_t> get_hlc_ids_uint8_t();
 };

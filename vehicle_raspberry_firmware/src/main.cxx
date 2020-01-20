@@ -96,10 +96,6 @@ int main(int argc, char *argv[])
     const bool allow_simulated_time = true;
 #endif
 
-
-	const vector<uint8_t> identification_LED_period_ticks  { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 };
-    const vector<uint8_t> identification_LED_enabled_ticks { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
-    
     // Loop setup
     int64_t loop_count = 0;
 
@@ -151,17 +147,8 @@ int main(int argc, char *argv[])
                 spi_mosi_data_t spi_mosi_data;
                 memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
 
-                // LED identification signal
-                {
-                    spi_mosi_data.LED1_enabled = 1;
-                    spi_mosi_data.LED2_enabled = 1;
-                    spi_mosi_data.LED3_enabled = 1;
-
-                    if(loop_count % identification_LED_period_ticks.at(vehicle_id) < identification_LED_enabled_ticks.at(vehicle_id))
-                    {
-                        spi_mosi_data.LED4_enabled = 1;
-                    }
-                }
+                // vehicle ID for LED flashing 
+                spi_mosi_data.vehicle_id = vehicle_id;
 
                 double motor_throttle = 0;
                 double steering_servo = 0;
