@@ -209,7 +209,7 @@ void MonitoringUi::init_ui_thread()
                                     deploy_functions->kill_vehicles({},vehicle_ids);
                                 }
                         }
-                        else if(rows[i] == "ips") 
+                        else if(rows_restricted[i] == "ips") 
                         {
                             label->get_style_context()->add_class("ok");
                             label->set_text("available");
