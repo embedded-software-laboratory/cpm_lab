@@ -59,19 +59,16 @@ function main(matlabDomainID, vehicle_id)
     writer_readyStatus.write(ready_msg);
 
     % Wait for start or stop signal
-    disp('Waiting for start or stop signal');
-    reader_systemTrigger.WaitSet = true;
-    reader_systemTrigger.WaitSetTimeout = 3600;
-    got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
-    if got_stop
-        disp('Aborting HLC.');
-    else
-        disp('Running HLC...');
+    disp('Waiting for start or stop signal');    
+    got_stop = false;
+    got_start = false;
+    while (~got_stop && ~got_start)
+        [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
     end
+    
 
     %% Run the HLC
     % Set reader properties
-    reader_systemTrigger.WaitSet = false;
     reader_vehicleStateList.WaitSet = true;
     reader_vehicleStateList.WaitSetTimeout = 60;
 
@@ -87,10 +84,10 @@ function main(matlabDomainID, vehicle_id)
     segment_duration = [1550000000, 1550000000, 1550000000, 1550000000];
     
     while (~got_stop)
-        disp('Waiting for data');
+        % Read vehicle states
         [sample, ~, sample_count, ~] = reader_vehicleStateList.take();
         assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
-        fprintf('Current time: %d\n',sample.t_now);
+        fprintf('Received sample at time: %d\n',sample.t_now);
         
         if (reference_trajectory_time == 0)
             reference_trajectory_time = sample.t_now;
@@ -118,19 +115,22 @@ function main(matlabDomainID, vehicle_id)
             reference_trajectory_index = ...
                 mod(reference_trajectory_index, length(segment_duration)) + 1;
         end
-                
-        disp('Checking system trigger for stop signal');
-        got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop);
+        
+        % Check for stop signal
+        [~, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
     end
 end
 
-function got_stop = check_for_stop_signal(reader_systemTrigger, trigger_stop)
+function [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop)
     [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
     got_stop = false;
+    got_start = false;
     if sample_count > 0
         % look at most recent signal with (end)
         if trigger(end).next_start().nanoseconds() == trigger_stop
             got_stop = true;
+        else
+            got_start = true;
         end
     end
 end
