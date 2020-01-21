@@ -36,3 +36,8 @@ add_executable( test_receiver
 )
 
 target_link_libraries(test_receiver cpm)
+
+add_executable( download_error_logger
+    src_error_logger/main.cpp
+    ${SOURCES}
+)

@@ -20,12 +20,34 @@ cd /tmp
 rm -rf ./software
 mkdir software
 cd ./software
-wget http://192.168.1.249/nuc/middleware_package.tar.gz
+out=$(wget http://192.168.1.249/nuc/middleware_package.tar.gz)
+if [ $? -ne 0 ]; then
+	#Behaviour in case the package is missing
+	#TODO: Start some software here that sends this info to the LCC
+	exit 1
+fi
 tar -xzvf middleware_package.tar.gz
-wget http://192.168.1.249/nuc/cpm_library_package.tar.gz
+out=$(wget http://192.168.1.249/nuc/cpm_library_package.tar.gz)
+if [ $? -ne 0 ]; then
+	#Behaviour in case the package is missing
+	#TODO: Start some software here that sends this info to the LCC
+	exit 1
+fi
 tar -xzvf cpm_library_package.tar.gz
-wget http://192.168.1.249/nuc/autostart_package.tar.gz
+out=$(wget http://192.168.1.249/nuc/autostart_package.tar.gz)
+if [ $? -ne 0 ]; then
+	#Behaviour in case the package is missing
+	#TODO: Start some software here that sends this info to the LCC
+	exit 1
+fi
 tar -xzvf autostart_package.tar.gz
+out=$(wget http://192.168.1.249/nuc/matlab_package.tar.gz)
+if [ $? -ne 0 ]; then
+	#Behaviour in case the package is missing
+	#TODO: Start some software here that sends this info to the LCC
+	exit 1
+fi
+tar -xzvf matlab_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
 # NEW: Now mimic the folder structure the scripts expect (for the guest user)
@@ -44,6 +66,15 @@ cp /tmp/software/middleware_package/middleware ./software/hlc/middleware/build
 my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
+
+cd /home/guest/dev/software/hlc
+mkdir matlab
+cd ./matlab
+cp /tmp/software/matlab_package/import_dds_idl.m ./
+cp /tmp/software/matlab_package/init_script.m ./
+cp /tmp/software/matlab_package/QOS_READY_TRIGGER.xml ./
+
+cd ~
 
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
 /tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
