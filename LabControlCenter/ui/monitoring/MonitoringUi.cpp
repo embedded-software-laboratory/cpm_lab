@@ -253,13 +253,20 @@ void MonitoringUi::init_ui_thread()
                                     }
                                 }
                                 double error = pow(pose_x-current_trajectory_segment.px(),2)+pow(pose_y-current_trajectory_segment.py(),2);
-                                if(fabs(error) > 3) {
+                                if(fabs(error) > 3) 
+                                {
                                     cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
                                     deploy_functions->kill_vehicles({},vehicle_ids);
+                                    label->get_style_context()->add_class("alert");
+                                    label->set_text("high");
+                                }
+                                else 
+                                {
+                                    label->get_style_context()->add_class("ok");
+                                    label->set_text("low");
                                 }
                             }
-                            label->get_style_context()->add_class("ok");
-                            label->set_text("ok");
+                            
                         }
 
                         }

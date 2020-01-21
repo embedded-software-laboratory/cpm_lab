@@ -37,7 +37,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id] = map<string, shared_ptr<TimeSeries>>();
 
     timeseries_vehicles[vehicle_id]["reference_deviation"] = make_shared<TimeSeries>(
-        "Reference Deviation", "%6.2f", "m");
+        "Reference Deviation", "%6.2f", "h/l");
 
     timeseries_vehicles[vehicle_id]["pose_x"] = make_shared<TimeSeries>(
         "Position X", "%6.2f", "m");
