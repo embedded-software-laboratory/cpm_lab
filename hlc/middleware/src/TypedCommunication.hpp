@@ -59,14 +59,19 @@ template<class MessageType> class TypedCommunication {
             }
         }
     public:
-        TypedCommunication(dds::domain::DomainParticipant& hlcParticipant, std::string hlcCommandTopicName, std::string vehicleCommandTopicName, std::shared_ptr<cpm::Timer> _timer) :
-            hlcCommandTopic(hlcParticipant, hlcCommandTopicName),
-            hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, hlcCommandTopic),
-
-            vehicleCommandTopic(cpm::ParticipantSingleton::Instance(), vehicleCommandTopicName),
-            vehicleWriter(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), vehicleCommandTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort())),
-            timer(_timer),
-            lastHLCResponseTimes()
+        TypedCommunication(
+            dds::domain::DomainParticipant& hlcParticipant,
+            std::string vehicleCommandTopicName,
+            std::shared_ptr<cpm::Timer> _timer)
+        :hlcCommandTopic(hlcParticipant, vehicleCommandTopicName)
+        ,hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, hlcCommandTopic)
+        ,vehicleCommandTopic(cpm::ParticipantSingleton::Instance(), vehicleCommandTopicName)
+        ,vehicleWriter(
+            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+            vehicleCommandTopic,
+            (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()))
+        ,timer(_timer)
+        ,lastHLCResponseTimes()
         {
             static_assert(std::is_same<decltype(std::declval<MessageType>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
         }

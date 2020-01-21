@@ -17,7 +17,7 @@ TabsViewUI::TabsViewUI(std::shared_ptr<SetupViewUI> setupViewUi, std::shared_ptr
     Glib::ustring manual_control_label("Manual Control");
     Glib::ustring parameters_label("Parameters");
     Glib::ustring timer_label("Timer");
-    Glib::ustring logger_label("Logs");
+    Glib::ustring logger_label("log");
 
     right_notebook->insert_page(*(setupViewUi->get_parent()), setup_label, -1);
     right_notebook->insert_page(*(vehicleManualControlUi->get_parent()), manual_control_label, -1);
