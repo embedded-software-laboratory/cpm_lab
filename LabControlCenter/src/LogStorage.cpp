@@ -26,7 +26,7 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
 
             //Write logs immediately to csv file (taken from cpm library)
             //For the log file: csv, so escape '"'
-            std::string str = sample.data().id();
+            std::string str = sample.data().content();
             std::string log_string = std::string(str);
             std::string escaped_quote = std::string("\"\"");
             size_t pos = 0;
