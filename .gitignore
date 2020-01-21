@@ -1,6 +1,7 @@
 *.o
 *.a
 *.so
+*.csv
 build/
 build_arm/
 build_arm_sim/
