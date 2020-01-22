@@ -102,7 +102,16 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
 }
 
 void LogStorage::keep_last_elements(std::vector<Log>& vector, size_t count) {
+    //Does not use lock() because it is supposed to be called from a function where lock() has been called before
     if (vector.size() > count) {
         vector.erase(vector.begin(), vector.end() - count);
     }
+}
+
+void LogStorage::reset() 
+{
+    std::unique_lock<std::mutex> lock(log_storage_mutex);
+    std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
+    log_storage.clear();
+    log_buffer.clear();
 }

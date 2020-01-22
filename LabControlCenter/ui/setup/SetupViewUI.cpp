@@ -12,6 +12,7 @@ SetupViewUI::SetupViewUI
     std::function<void()> _reset_trajectories,
     std::function<void()> _reset_vehicle_view,
     std::function<void()> _reset_visualization_commands,
+    std::function<void()> _reset_logs,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -22,7 +23,8 @@ SetupViewUI::SetupViewUI
     reset_time_series_aggregator(_reset_time_series_aggregator),
     reset_trajectories(_reset_trajectories),
     reset_vehicle_view(_reset_vehicle_view),
-    reset_visualization_commands(_reset_visualization_commands)
+    reset_visualization_commands(_reset_visualization_commands),
+    reset_logs(_reset_logs)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -223,6 +225,18 @@ void SetupViewUI::kill_all_threads()
 void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
+
+    //Reset old UI elements (difference to kill: Also reset the Logs)
+    //Kill timer in UI as well, as it should not show invalid information
+    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+    //Reset all relevant UI parts
+    reset_timer(switch_simulated_time->get_active());
+    usleep(100000); //Make sure that the stop signal does not arrive at newly created participants (IS THIS SAFE ENOUGH?)
+    reset_time_series_aggregator();
+    reset_trajectories();
+    reset_vehicle_view();
+    reset_visualization_commands();
+    reset_logs();
 
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
