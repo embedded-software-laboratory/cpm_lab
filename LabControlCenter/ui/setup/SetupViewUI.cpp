@@ -209,6 +209,7 @@ void SetupViewUI::notify_upload_finished()
 
 void SetupViewUI::kill_all_threads()
 {
+    std::cout << "I'd bet it gets stuck here" << std::endl;
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     for (auto& thread : upload_threads)
     {
@@ -218,6 +219,7 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
+    std::cout << "Nope, it doesn't" << std::endl;
 }
 
 void SetupViewUI::deploy_applications() {

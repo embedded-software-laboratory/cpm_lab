@@ -141,6 +141,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
         << " >stdout_vehicle" << id << ".txt 2>stderr_vehicle" << id << ".txt\"";
 
     //Execute command
+    //TODO: (nach Besprechung, ob das so okay ist) - nutze fork/execl/kill um das abbrechen zu können (merke PIDs, breche bei Kill ab)
     system(command.str().c_str());
 }
 
