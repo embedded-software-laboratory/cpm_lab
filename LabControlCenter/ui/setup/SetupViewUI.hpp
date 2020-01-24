@@ -127,6 +127,8 @@ private:
 
     //Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
+    unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
+    unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
 public:
     /**

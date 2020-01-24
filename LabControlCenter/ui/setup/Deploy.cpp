@@ -167,7 +167,7 @@ void Deploy::kill_vehicle(unsigned int id)
     kill_session(vehicle_id.str());
 }
 
-void Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params) 
+bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds) 
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
@@ -225,10 +225,11 @@ void Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
-    execute_command(copy_command.str().c_str());
+    //Spawn and manage new process
+    return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds);
 }
 
-void Deploy::kill_remote_hlc(unsigned int hlc_id) 
+bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds) 
 {
     //Get the IP address from the current id
     std::stringstream ip_stream;
@@ -243,7 +244,8 @@ void Deploy::kill_remote_hlc(unsigned int hlc_id)
     std::stringstream kill_command;
     kill_command << "bash ~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
 
-    execute_command(kill_command.str().c_str());
+    //Spawn and manage new process
+    return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds);
 }
 
 void Deploy::deploy_ips() 
@@ -350,5 +352,101 @@ std::string Deploy::bool_to_string(bool var)
     else 
     {
         return "false";
+    }
+}
+
+bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
+{
+    //Spawn and manage new process
+    int process_id = execute_command_get_pid(cmd);
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
+    while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_time).count() < static_cast<int64_t>(timeout_seconds))
+    {
+        //Check current program state
+        PROCESS_STATE state = get_child_process_state(process_id);
+
+        if (state == PROCESS_STATE::DONE)
+        {
+            return true;
+        }
+        else if (state == PROCESS_STATE::ERROR)
+        {
+            return false;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    //Now kill the process, as it has not yet finished its execution
+    kill_process(process_id);
+    return false;
+}
+
+int Deploy::execute_command_get_pid(const char* cmd)
+{
+    int process_id = fork();
+    if (process_id == 0)
+    {
+        //Actions to take within the new child process
+        execlp(cmd, cmd, nullptr);
+
+        //Error if execlp returns
+        std::cerr << "Exec error: " << errno << "!" << std::endl;
+
+        exit(1);
+    }
+    else if (process_id > 0)
+    {
+        //We are in the parent process and got the child's PID
+        return process_id;
+    }
+    else 
+    {
+        //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
+        //TODO: Change behaviour
+        std::cerr << "There was an error during the creation of a child process for program execution" << std::endl;
+        exit(1);
+    }
+}
+
+Deploy::PROCESS_STATE Deploy::get_child_process_state(int process_id)
+{
+    int process_status;
+    pid_t result = waitpid(process_id, &process_status, WNOHANG);
+
+    if (result == 0)
+    {
+        return PROCESS_STATE::RUNNING;
+    }
+    else if (result == -1)
+    {
+        return PROCESS_STATE::ERROR;
+    }
+    else
+    {
+        return PROCESS_STATE::DONE;
+    }
+    
+}
+
+void Deploy::kill_process(int process_id)
+{
+    //Tell the process to terminate - this way, it can terminate gracefully
+    kill(process_id, SIGTERM);
+
+    //Wait for the process to terminate
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    //Check if the process terminated as desired
+    PROCESS_STATE state = get_child_process_state(process_id);
+
+    //If the process has not yet terminated, force a termination and clean up
+    if (state != PROCESS_STATE::DONE)
+    {
+        kill(process_id, SIGKILL);
+        int status;
+        waitpid(process_id, &status, 0); //0 -> no flags here
     }
 }

@@ -209,7 +209,6 @@ void SetupViewUI::notify_upload_finished()
 
 void SetupViewUI::kill_all_threads()
 {
-    std::cout << "I'd bet it gets stuck here" << std::endl;
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     for (auto& thread : upload_threads)
     {
@@ -219,7 +218,6 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
-    std::cout << "Nope, it doesn't" << std::endl;
 }
 
 void SetupViewUI::deploy_applications() {
@@ -288,7 +286,12 @@ void SetupViewUI::deploy_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
-                    deploy_functions->deploy_remote_hlc(hlc_id, vehicle_string, switch_simulated_time->get_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+                    bool deploy_worked = deploy_functions->deploy_remote_hlc(hlc_id, vehicle_string, switch_simulated_time->get_active(), script_path->get_text().c_str(), script_params->get_text().c_str(), remote_deploy_timeout);
+                    if (!deploy_worked)
+                    {
+                        //TODO: Do more than this / abort execution? -> Put this as return value in "notify_upload_finished(return_value)"?
+                        std::cerr << "Warning: Remote deploy failed on ID " << hlc_id << std::endl;
+                    }
                     this->notify_upload_finished();
                 }
             ));
@@ -324,7 +327,12 @@ void SetupViewUI::kill_deployed_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
-                    deploy_functions->kill_remote_hlc(hlc_id);
+                    bool kill_worked = deploy_functions->kill_remote_hlc(hlc_id, remote_kill_timeout);
+                    if (!kill_worked)
+                    {
+                        //TODO: Do more than this / abort execution? -> Put this as return value in "notify_upload_finished(return_value)"?
+                        std::cerr << "Warning: Remote kill failed on ID " << hlc_id << std::endl;
+                    }
                     this->notify_upload_finished();
                 }
             ));
