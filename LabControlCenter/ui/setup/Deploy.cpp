@@ -220,7 +220,7 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     //Copy all relevant data over to the remote system
     std::stringstream copy_command;
     //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "bash ~/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
+    copy_command << "~/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
@@ -242,7 +242,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds)
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "bash ~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     //Spawn and manage new process
     return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds);
@@ -357,6 +357,7 @@ std::string Deploy::bool_to_string(bool var)
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
 {
+    std::cout << "Executing" << std::endl;
     //Spawn and manage new process
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -364,6 +365,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_time).count() < static_cast<int64_t>(timeout_seconds))
     {
+        std::cout << "Waiting" << std::endl;
         //Check current program state
         PROCESS_STATE state = get_child_process_state(process_id);
 
@@ -380,6 +382,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     }
 
     //Now kill the process, as it has not yet finished its execution
+    std::cout << "Killing" << std::endl;
     kill_process(process_id);
     return false;
 }
@@ -390,7 +393,8 @@ int Deploy::execute_command_get_pid(const char* cmd)
     if (process_id == 0)
     {
         //Actions to take within the new child process
-        execlp(cmd, cmd, nullptr);
+        //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
+        execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
         std::cerr << "Exec error: " << errno << "!" << std::endl;
