@@ -43,3 +43,12 @@ void UploadWindow::close()
 {
     upload_window->close();
 }
+
+void UploadWindow::add_error_message(std::string msg)
+{
+    auto previous_text = label_upload->get_text();
+    std::stringstream label_string;
+    label_string << previous_text.c_str() << std::endl
+        << msg;
+    label_upload->set_text(label_string.str().c_str());
+}

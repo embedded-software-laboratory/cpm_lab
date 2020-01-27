@@ -156,23 +156,37 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 
 void SetupViewUI::ui_dispatch()
 {
-    //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-    if (upload_threads.size() != 0 && upload_window)
+    std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
+    if (error_msg.size() > 0)
     {
-        upload_window->close();
+        for (auto &msg : error_msg)
+        {
+            upload_window->add_error_message(msg);
+        }
+        error_msg.clear();
     }
-
-    //Join all old threads
-    kill_all_threads();
-
-    //Free the UI if the upload was not successful
-    if (!upload_success.load())
+    else 
     {
-        set_sensitive(true);
+        //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
+        //Plus now, kill is not grayed out anymore
+        if (upload_threads.size() != 0 && upload_window)
+        {
+            upload_window->close();
+            button_kill->set_sensitive(true);
+        }
+
+        //Join all old threads
+        kill_all_threads();
+
+        //Free the UI if the upload was not successful
+        if (!upload_success.load())
+        {
+            set_sensitive(true);
+        }
     }
 }
 
-void SetupViewUI::notify_upload_finished()
+void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 {
     //Just try to join all worker threads here
     std::lock_guard<std::mutex> lock(notify_callback_in_use);
@@ -184,6 +198,16 @@ void SetupViewUI::notify_upload_finished()
         std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
     }
 
+    //Trigger error msg if the upload failed
+    if (!upload_success)
+    {
+        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
+        std::stringstream error_msg_stream;
+        error_msg_stream << "ERROR: Upload failed for HLC ID " << hlc_id << std::endl;
+        error_msg.push_back(error_msg_stream.str());
+        ui_dispatcher.emit();
+    }
+
     //Also count notify amount s.t one can check if the thread count has been set properly
     thread_count.fetch_sub(1);
     ++notify_count;
@@ -193,7 +217,8 @@ void SetupViewUI::notify_upload_finished()
     {
         notify_count = 0;
 
-        //Close upload window again
+        //Close upload window again, but only after a while
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         ui_dispatcher.emit();
     }
     else if (notify_count == upload_threads.size())
@@ -202,7 +227,8 @@ void SetupViewUI::notify_upload_finished()
 
         notify_count = 0;
 
-        //Close upload window again
+        //Close upload window again, but only after a while
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         ui_dispatcher.emit();
     }
 }
@@ -256,7 +282,7 @@ void SetupViewUI::deploy_applications() {
             upload_threads.push_back(std::thread(
                 [this] () {
                     usleep(3000000);
-                    this->notify_upload_finished();
+                    this->notify_upload_finished(0, true);
                 }
             ));
             return;
@@ -287,12 +313,7 @@ void SetupViewUI::deploy_applications() {
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
                     bool deploy_worked = deploy_functions->deploy_remote_hlc(hlc_id, vehicle_string, switch_simulated_time->get_active(), script_path->get_text().c_str(), script_params->get_text().c_str(), remote_deploy_timeout);
-                    if (!deploy_worked)
-                    {
-                        //TODO: Do more than this / abort execution? -> Put this as return value in "notify_upload_finished(return_value)"?
-                        std::cerr << "Warning: Remote deploy failed on ID " << hlc_id << std::endl;
-                    }
-                    this->notify_upload_finished();
+                    this->notify_upload_finished(hlc_id, deploy_worked);
                 }
             ));
         }
@@ -328,12 +349,7 @@ void SetupViewUI::kill_deployed_applications() {
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
                     bool kill_worked = deploy_functions->kill_remote_hlc(hlc_id, remote_kill_timeout);
-                    if (!kill_worked)
-                    {
-                        //TODO: Do more than this / abort execution? -> Put this as return value in "notify_upload_finished(return_value)"?
-                        std::cerr << "Warning: Remote kill failed on ID " << hlc_id << std::endl;
-                    }
-                    this->notify_upload_finished();
+                    this->notify_upload_finished(hlc_id, kill_worked);
                 }
             ));
         }
@@ -414,6 +430,7 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     button_select_all_real->set_sensitive(is_sensitive);
 
     button_deploy->set_sensitive(is_sensitive);
+    button_kill->set_sensitive(is_sensitive);
 
     switch_simulated_time->set_sensitive(is_sensitive);
 
