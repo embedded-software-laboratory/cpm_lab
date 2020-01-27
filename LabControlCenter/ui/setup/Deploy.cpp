@@ -375,6 +375,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
         }
         else if (state == PROCESS_STATE::ERROR)
         {
+            kill_process(process_id);
             return false;
         }
 
