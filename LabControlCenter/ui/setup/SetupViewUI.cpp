@@ -111,6 +111,7 @@ SetupViewUI::SetupViewUI
     thread_count.store(0);
     notify_count = 0;
     participants_available.store(false);
+    kill_called.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -182,6 +183,7 @@ void SetupViewUI::ui_dispatch()
         if (kill_called.load())
         {
             perform_post_kill_cleanup();
+            kill_called.store(false);
         }
 
         //Free the UI if the upload was not successful
@@ -241,7 +243,6 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 
 void SetupViewUI::kill_all_threads()
 {
-    std::cout << "Killing all threads" << std::endl;
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     for (auto& thread : upload_threads)
     {

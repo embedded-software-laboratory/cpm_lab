@@ -399,6 +399,9 @@ int Deploy::execute_command_get_pid(const char* cmd)
     int process_id = fork();
     if (process_id == 0)
     {
+        //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
+        setpgid(0, 0);
+        
         //Actions to take within the new child process
         //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
         execl("/bin/sh", "bash", "-c", cmd, NULL);
@@ -445,6 +448,12 @@ Deploy::PROCESS_STATE Deploy::get_child_process_state(int process_id)
 void Deploy::kill_process(int process_id)
 {
     //Tell the process to terminate - this way, it can terminate gracefully
+    //We mostly use bash, were whole process groups might be created - to kill those, we need the negative id
+    if (process_id > 0)
+    {
+        process_id *= (-1);
+    }
+
     kill(process_id, SIGTERM);
 
     //Wait for the process to terminate
