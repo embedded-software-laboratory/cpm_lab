@@ -95,13 +95,16 @@ private:
      */
     void notify_upload_finished(uint8_t hlc_id, bool upload_success);
     void kill_all_threads(); //function to join all threads
+    bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
     size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
     std::mutex notify_callback_in_use; //the notify_upload_finished function should only be accessible by one thread at once, thus use this mutex
-    std::atomic_bool upload_success; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
+    std::atomic_bool participants_available; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
     //Horrible way to log an error message, because the UI cannot be accessed directly - if error_msg.size() > 0, emit just triggers that an error msg is added
     std::mutex error_msg_mutex;
     std::vector<std::string> error_msg;
+    std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
+    void perform_post_kill_cleanup();
 
     //IPS switch callback (-> lab mode)
     void switch_ips_set();

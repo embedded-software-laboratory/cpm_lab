@@ -167,7 +167,7 @@ void Deploy::kill_vehicle(unsigned int id)
     kill_session(vehicle_id.str());
 }
 
-bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds) 
+bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
@@ -226,10 +226,10 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
     //Spawn and manage new process
-    return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds);
+    return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds, is_online);
 }
 
-bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds) 
+bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online) 
 {
     //Get the IP address from the current id
     std::stringstream ip_stream;
@@ -245,7 +245,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds)
     kill_command << "~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     //Spawn and manage new process
-    return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds);
+    return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);
 }
 
 void Deploy::deploy_ips() 
@@ -355,7 +355,7 @@ std::string Deploy::bool_to_string(bool var)
     }
 }
 
-bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
+bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
 {
     std::cout << "Executing" << std::endl;
     //Spawn and manage new process
@@ -375,6 +375,12 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
         }
         else if (state == PROCESS_STATE::ERROR)
         {
+            kill_process(process_id);
+            return false;
+        }
+        else if (! is_online())
+        {
+            //The HLC is no longer online, so abort
             kill_process(process_id);
             return false;
         }

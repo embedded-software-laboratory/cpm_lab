@@ -72,16 +72,18 @@ public:
      * \param script_path Path to the script, including the script name (and possible file ending)
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds);
+    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online);
     /**
      * \brief Kill the script + middleware on the given HLC (again determine the IP from the HLC ID)
      * \param hlc_id ID of the HLC on which to kill the programs
      * \param timeout_seconds Timeout in seconds until the kill process should be terminated
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds);
+    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online);
 
 private:
     //Used for process forking
@@ -127,12 +129,13 @@ private:
     std::string execute_command(const char* cmd);
 
     /**
-     * \brief Creates a command and manages it until it finished or a timeout occured; uses the three functions below
+     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
      * \param cmd Command string to be executed
      * \param timeout_seconds Timout until the process termination is forced
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
      */
-    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds);
+    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online);
 
     /**
      * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further

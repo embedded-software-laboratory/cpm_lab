@@ -25,5 +25,12 @@ public:
      * \param msg The error message to append
      */
     void add_error_message(std::string msg);
+
+    /**
+     * \brief For custom text
+     * \param text The text to show
+     */
+    void set_text(std::string text);
+
     void close();
 };

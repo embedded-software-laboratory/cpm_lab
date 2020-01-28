@@ -110,7 +110,7 @@ SetupViewUI::SetupViewUI
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
     thread_count.store(0);
     notify_count = 0;
-    upload_success.store(false);
+    participants_available.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -178,8 +178,14 @@ void SetupViewUI::ui_dispatch()
         //Join all old threads
         kill_all_threads();
 
+        //If kill caused the UI dispatch, clean up after everything has been killed
+        if (kill_called.load())
+        {
+            perform_post_kill_cleanup();
+        }
+
         //Free the UI if the upload was not successful
-        if (!upload_success.load())
+        if (!participants_available.load())
         {
             set_sensitive(true);
         }
@@ -203,7 +209,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
     {
         std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
         std::stringstream error_msg_stream;
-        error_msg_stream << "ERROR: Upload failed for HLC ID " << hlc_id << std::endl;
+        error_msg_stream << "ERROR: Connection or upload failed for HLC ID " << static_cast<int>(hlc_id) << std::endl;
         error_msg.push_back(error_msg_stream.str());
         ui_dispatcher.emit();
     }
@@ -235,6 +241,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 
 void SetupViewUI::kill_all_threads()
 {
+    std::cout << "Killing all threads" << std::endl;
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     for (auto& thread : upload_threads)
     {
@@ -244,6 +251,13 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
+}
+
+bool SetupViewUI::check_if_online(uint8_t hlc_id)
+{
+    //Check if the HLC is still online (in get_hlc_ids)
+    std::vector<uint8_t> hlc_ids = get_hlc_ids();
+    return std::find(hlc_ids.begin(), hlc_ids.end(), static_cast<uint8_t>(hlc_id)) != hlc_ids.end();
 }
 
 void SetupViewUI::deploy_applications() {
@@ -277,7 +291,7 @@ void SetupViewUI::deploy_applications() {
         {
             //Waits a few seconds before the window is closed again 
             //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
-            upload_success.store(false); //No HLCs available
+            participants_available.store(false); //No HLCs available
             thread_count.store(1);
             upload_threads.push_back(std::thread(
                 [this] () {
@@ -297,7 +311,7 @@ void SetupViewUI::deploy_applications() {
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
         //Deploy on each HLC individually, using different threads
-        upload_success.store(true); //HLCs are available
+        participants_available.store(true); //HLCs are available
         thread_count.store(min_hlc_vehicle);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
@@ -312,7 +326,15 @@ void SetupViewUI::deploy_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
-                    bool deploy_worked = deploy_functions->deploy_remote_hlc(hlc_id, vehicle_string, switch_simulated_time->get_active(), script_path->get_text().c_str(), script_params->get_text().c_str(), remote_deploy_timeout);
+                    bool deploy_worked = deploy_functions->deploy_remote_hlc(
+                        hlc_id, 
+                        vehicle_string, 
+                        switch_simulated_time->get_active(), 
+                        script_path->get_text().c_str(), 
+                        script_params->get_text().c_str(), 
+                        remote_deploy_timeout,
+                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
+                    );
                     this->notify_upload_finished(hlc_id, deploy_worked);
                 }
             ));
@@ -341,6 +363,15 @@ void SetupViewUI::kill_deployed_applications() {
             return;
         }
 
+        //Show window indicating that the upload process currently takes place
+        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
+        upload_window = make_shared<UploadWindow>(std::vector<unsigned int>(), hlc_ids);
+        upload_window->set_text("Killing on remote HLCs...");
+        
+        //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
+        kill_called.store(true);
+
+
         //If a HLC went offline in between, we assume that it crashed and thus just use this script on all remaining running HLCs
         thread_count.store(hlc_ids.size());
         for (const auto& hlc_id : hlc_ids)
@@ -348,7 +379,11 @@ void SetupViewUI::kill_deployed_applications() {
             //Create thread
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
-                    bool kill_worked = deploy_functions->kill_remote_hlc(hlc_id, remote_kill_timeout);
+                    bool kill_worked = deploy_functions->kill_remote_hlc(
+                        hlc_id, 
+                        remote_kill_timeout,
+                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
+                    );
                     this->notify_upload_finished(hlc_id, kill_worked);
                 }
             ));
@@ -361,9 +396,11 @@ void SetupViewUI::kill_deployed_applications() {
 
     deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
 
-    //Join all old threads
-    kill_all_threads();
+    //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed)
+}
 
+void SetupViewUI::perform_post_kill_cleanup()
+{
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts
