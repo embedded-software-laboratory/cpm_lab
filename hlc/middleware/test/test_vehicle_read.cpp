@@ -72,9 +72,9 @@ TEST_CASE( "VehicleCommunication_Read" ) {
 
     //Send random data from two vehicle dummies to the Middleware
     dds::pub::DataWriter<VehicleState> vehicle_0_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName));
+        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
     dds::pub::DataWriter<VehicleState> vehicle_1_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName));
+        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
 
     for (int stamp_number = 0; stamp_number <= testMessagesAmount; ++stamp_number) {
         //Create random variable

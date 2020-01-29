@@ -108,7 +108,7 @@ class Communication {
             cpm::get_topic<SystemTrigger>(cpm::ParticipantSingleton::Instance(), "systemTrigger"),
             true)
 
-        ,vehicleStateTopic(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName)
+        ,vehicleStateTopic(cpm::ParticipantSingleton::Instance(), "vehicleState")
         ,vehicleReader(vehicleStateTopic, vehicle_ids)
 
         ,vehicleObservationTopic(cpm::ParticipantSingleton::Instance(), "vehicleObservation")
