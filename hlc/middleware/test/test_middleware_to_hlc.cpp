@@ -34,13 +34,9 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     
     //Communication parameters
     int hlcDomainNumber = 1; 
-    std::string hlcStateTopicName = "stateTopic"; 
-    std::string vehicleStateTopicName = "vehicleState"; 
-    std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-    std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    std::string hlcDirectTopicName = "directTopic"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     int vehicleID = 0; 
     std::vector<uint8_t> vehicle_ids = { 0 };
@@ -56,11 +52,19 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, false, simulated_time_allowed, simulated_time);
 
     //Initialize the communication 
-    std::shared_ptr<Communication> communication = std::make_shared<Communication>(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, vehicle_ids);
+    std::shared_ptr<Communication> communication = std::make_shared<Communication>(
+        hlcDomainNumber,
+        vehicleStateListTopicName,
+        vehicleTrajectoryTopicName,
+        vehicleSpeedCurvatureTopicName,
+        vehicleDirectTopicName,
+        vehicleID,
+        timer,
+        vehicle_ids);
 
     //HLC Writer
     dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);
-    dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, hlcSpeedCurvatureTopicName));
+    dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName));
 
     //Data for checks
     std::vector<uint64_t> hlc_current_round_received;
@@ -71,7 +75,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     size_t hlc_reader_round_pos = 0;
 
     //Test which data was received by the HLC
-	dds::sub::DataReader<VehicleStateList> hlcReader(dds::sub::Subscriber(participant), dds::topic::find<dds::topic::Topic<VehicleStateList>>(participant, hlcStateTopicName));
+	dds::sub::DataReader<VehicleStateList> hlcReader(dds::sub::Subscriber(participant), dds::topic::find<dds::topic::Topic<VehicleStateList>>(participant, vehicleStateListTopicName));
     dds::core::cond::StatusCondition readCondition = dds::core::cond::StatusCondition(hlcReader);
     rti::core::cond::AsyncWaitSet waitset;
     readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
