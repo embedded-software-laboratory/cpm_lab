@@ -1,5 +1,6 @@
 #include "SetupViewUI.hpp"
 #include <cstdlib>
+#include <chrono>
 
 using namespace std::placeholders;
 
@@ -214,7 +215,8 @@ void SetupViewUI::deploy_applications() {
     // LabCam
     if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
         std::cerr << "RECORDING LABCAM" << std::endl;
-        labcam->startRecording("/tmp/", "recording");
+        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
+        labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
