@@ -14,7 +14,7 @@ make -j8
 
 # Publish middleware package via http/apache for the HLCs to download
 cd /tmp
-mkdir middleware_package
+mkdir -p middleware_package
 cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
 cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
 tar -czvf middleware_package.tar.gz middleware_package

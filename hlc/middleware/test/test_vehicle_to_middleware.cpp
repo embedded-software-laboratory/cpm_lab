@@ -72,7 +72,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
         //Send test data from a virtual vehicle - only the round number matters here, which is transmitted using the timestamp value
-        dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateListTopicName);
+        dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState");
         dds::pub::Publisher publisher = dds::pub::Publisher(cpm::ParticipantSingleton::Instance());
         dds::pub::DataWriter<VehicleState> vehicleWriter(publisher, topic);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
