@@ -29,6 +29,9 @@ link_directories(SYSTEM ../../cpm_base/cpm_lib/build/)
 include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
+# labcam
+include_directories(labcam/include)
+add_subdirectory(labcam)
 
 add_executable(LabControlCenter
     src/LogStorage.hpp
@@ -94,7 +97,7 @@ add_executable(LabControlCenter
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
+target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib ${GTKMM_LIBRARIES})
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
 

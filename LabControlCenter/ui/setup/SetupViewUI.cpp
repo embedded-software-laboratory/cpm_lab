@@ -25,6 +25,7 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     builder->get_widget("switch_deploy_remote", switch_deploy_remote);
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
+    builder->get_widget("switch_record_labcam", switch_record_labcam);
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
@@ -42,10 +43,9 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     assert(button_select_all_real);
     
     assert(switch_simulated_time);
-
     assert(switch_deploy_remote);
-
     assert(switch_lab_mode);
+    assert(switch_record_labcam);
 
     assert(button_deploy);
     assert(button_kill);
@@ -63,6 +63,9 @@ SetupViewUI::SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
     }
+
+    // Create labcam
+    labcam = new LabCamIface();
 
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
@@ -208,9 +211,20 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
+    // LabCam
+    if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
+        std::cerr << "RECORDING LABCAM" << std::endl;
+        labcam->startRecording("/tmp/", "recording");
+    }else{
+        std::cerr << "NOT RECORDING LABCAM" << std::endl;
+    }
+
+
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
+
+
         //Deploy on each HLC
 
         //Get current online vehicle and hlc IDs
@@ -285,6 +299,9 @@ void SetupViewUI::deploy_applications() {
 }
 
 void SetupViewUI::kill_deployed_applications() {
+
+    labcam->stopRecording();
+
     //Kill timer in UI as well, as it should not show invalid information
     timer_ui->reset(switch_simulated_time->get_active());
 

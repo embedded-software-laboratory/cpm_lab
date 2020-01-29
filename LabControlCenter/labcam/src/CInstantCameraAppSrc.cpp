@@ -56,7 +56,7 @@
 	9. The output of sourceBin (it's src pad) is then the input to the rest of the pipeline
 	*/
 
-#include "CInstantCameraAppSrc.h"
+#include "labcam/CInstantCameraAppSrc.h"
 
 using namespace Pylon;
 using namespace GenApi;
@@ -363,6 +363,7 @@ bool CInstantCameraAppSrc::StartCamera()
 		{
 			cout << "Camera will now expect a hardware trigger on: " << GenApi::CEnumerationPtr(GetNodeMap().GetNode("TriggerSource"))->ToString() << "..." << endl;
 		}
+		cout << "StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);" << endl;
 		StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
 
 		// Note: At this point, the camera is acquiring and transmitting images, and the driver's Grab Engine is grabbing them.

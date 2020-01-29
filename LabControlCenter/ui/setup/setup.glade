@@ -159,14 +159,15 @@ Script Command Line Parameters (TODO: Reserved keywords?)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_vehicle">
+              <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="valign">center</property>
                 <property name="label" translatable="yes">
-Vehicles</property>
-                <property name="ellipsize">start</property>
+Vehicles
+</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -315,6 +316,104 @@ Vehicles</property>
               </packing>
             </child>
             <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">
+Lab Camera
+</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">11</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFlowBox" id="recorder_control_flowbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="min_children_per_line">1</property>
+                <property name="max_children_per_line">2</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_recorder_control">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Record</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkSwitch" id="switch_record_labcam">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">start</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">12</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFlowBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="max_children_per_line">2</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_recorder_control1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Camera Status                  </property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkLabel" id="label_camera_status">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Not Initialized</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">13</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="button_kill">
                 <property name="label" translatable="yes">Kill</property>
                 <property name="visible">True</property>
@@ -324,7 +423,7 @@ Vehicles</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">11</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -337,7 +436,7 @@ Vehicles</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">12</property>
+                <property name="position">15</property>
               </packing>
             </child>
           </object>
