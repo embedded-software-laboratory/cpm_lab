@@ -4,8 +4,8 @@ using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
     /*Set up communication*/
-    ready_status_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<ReadyStatus>("ready"), dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()),
-    system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("system_trigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
+    ready_status_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<ReadyStatus>("readyStatus"), dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()),
+    system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
 {    
     current_simulated_time = 0;
     simulation_started.store(false);

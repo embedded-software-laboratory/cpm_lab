@@ -3,7 +3,7 @@
 using namespace std::placeholders;
 LogStorage::LogStorage() :
     /*Set up communication*/
-    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("Logs"), true)
+    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("log"), true)
 {    
 }
 

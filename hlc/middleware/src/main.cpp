@@ -46,14 +46,10 @@ int main (int argc, char *argv[]) {
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
 
     //Constants - topic names
-    const std::string logTopicName = "logTopic";
-    const std::string hlcStateTopicName = "stateTopic"; 
-    const std::string vehicleStateTopicName = "vehicleState"; 
-    const std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    const std::string logTopicName = "log";
+    const std::string vehicleStateListTopicName = "vehicleStateList"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
-    const std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    const std::string hlcDirectTopicName = "directTopic"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
@@ -85,13 +81,26 @@ int main (int argc, char *argv[]) {
     //Initialize the timer
     std::cout << "Initializing Timer..." << std::endl;
     std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, wait_for_start, simulated_time_allowed, simulated_time);
+    std::cout << "...done." << std::endl;
 
     //Initialize the communication (TODO later: depending on message type for commands, can change dynamically)
     std::cout << "Initializing Communication..." << std::endl;
-    std::shared_ptr<Communication> communication = std::make_shared<Communication>(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, unsigned_vehicle_ids);
+    std::shared_ptr<Communication> communication = std::make_shared<Communication>(
+        hlcDomainNumber,
+        vehicleStateListTopicName,
+        vehicleTrajectoryTopicName,
+        vehicleSpeedCurvatureTopicName,
+        vehicleDirectTopicName,
+        vehicleID,
+        timer,
+        unsigned_vehicle_ids
+    );
+    std::cout << "...done." << std::endl;
 
     //Wait for HLC program to send ready signal
+    std::cout << "Waiting for HLC..." << std::endl;
     communication->wait_for_hlc_ready_msg(unsigned_vehicle_ids);
+    std::cout << "...done." << std::endl;
 
     //Wait for start signal (done by the timer after start)
     //Start the communication with the HLC

@@ -55,4 +55,5 @@ public:
     explicit MonitoringUi(std::function<VehicleData()> get_vehicle_data_callback, std::function<std::vector<std::string>()> get_hlc_data_callback, std::function<void()> reset_data_callback);
     ~MonitoringUi();
     Gtk::Box* get_parent();
+    void reset_vehicle_view();
 };

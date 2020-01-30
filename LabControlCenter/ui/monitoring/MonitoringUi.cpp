@@ -245,3 +245,8 @@ Gtk::Box* MonitoringUi::get_parent()
 {
     return parent;
 }
+
+void MonitoringUi::reset_vehicle_view()
+{
+    reset_ui_thread();
+}

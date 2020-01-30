@@ -81,6 +81,13 @@ private:
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
+    //Functions to reset all UI elements after a simulation was performed
+    std::function<void(bool)> reset_timer;
+    std::function<void()> reset_time_series_aggregator;
+    std::function<void()> reset_trajectories;
+    std::function<void()> reset_vehicle_view;
+    std::function<void()> reset_visualization_commands;
+
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
@@ -130,13 +137,27 @@ private:
 public:
     /**
      * \brief Constructor
-     * \param _timer_ui Allows to access the timer UI, to reset the timer on system restart
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _reset_timer Reset timer & set up a new one for the next simulation
+     * \param _reset_time_series_aggregator Reset received vehicle data
+     * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
+     * \param _reset_vehicle_view Reset list of connected vehicles
+     * \param _reset_visualization_commands Reset all visualization commands that were sent before
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
-    SetupViewUI(std::shared_ptr<TimerViewUI> _timer_ui, std::shared_ptr<VehicleAutomatedControl> _vehicle_control, std::function<std::vector<uint8_t>()> _get_hlc_ids, unsigned int argc, char *argv[]);
+    SetupViewUI(
+        std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
+        std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::function<void(bool)> _reset_timer,
+        std::function<void()> _reset_time_series_aggregator,
+        std::function<void()> _reset_trajectories,
+        std::function<void()> _reset_vehicle_view,
+        std::function<void()> _reset_visualization_commands,
+        unsigned int argc, 
+        char *argv[]
+        );
     ~SetupViewUI();
 
     //Get the parent widget to put the view in a parent container

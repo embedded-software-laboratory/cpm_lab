@@ -39,10 +39,10 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
-            << "'source ~/dev/software/hlc/environment_variables.bash;"
-            << "/opt/MATLAB/R2019a/bin/matlab -nodisplay -nosplash -logfile matlab.log -nodesktop -r \""
-            << "cd " << script_path_string
-            << "; " << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
+            << "'. ~/dev/software/hlc/environment_variables.bash;"
+            << "matlab -logfile matlab.log"
+            << " -sd \"" << script_path_string
+            << "\" -batch \"" << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
             << " >stdout_hlc.txt 2>stderr_hlc.txt'";
         }
         else if (script_name_string.find(".") == std::string::npos)
@@ -51,7 +51,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
-            << "\"source ~/dev/software/hlc/environment_variables.bash;"
+            << "\". ~/dev/software/hlc/environment_variables.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=hlc"
             << " --simulated_time=" << sim_time_string
@@ -83,7 +83,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         middleware_command 
             << "tmux new-session -d "
             << "-s \"middleware\" "
-            << "\"source ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
+            << "\". ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
@@ -96,7 +96,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             << " >stdout_middleware.txt 2>stderr_middleware.txt\"";
 
         //Execute command
-        system(command.str().c_str());
+        system(middleware_command.str().c_str());
     }
 }
 

@@ -38,13 +38,9 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
     {
         //Communication parameters
         int hlcDomainNumber = 1; 
-        std::string hlcStateTopicName = "stateTopic"; 
-        std::string vehicleStateTopicName = "vehicleState"; 
-        std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+        std::string vehicleStateListTopicName = "vehicleStateList"; 
         std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-        std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-        std::string hlcDirectTopicName = "directTopic"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
         std::vector<uint8_t> vehicle_ids = { 0 };
@@ -68,17 +64,14 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         //Initialize the communication 
         Communication communication(
             hlcDomainNumber,
-            hlcStateTopicName,
-            vehicleStateTopicName,
-            hlcTrajectoryTopicName,
+            vehicleStateListTopicName,
             vehicleTrajectoryTopicName,
-            hlcSpeedCurvatureTopicName,
             vehicleSpeedCurvatureTopicName,
-            hlcDirectTopicName,
             vehicleDirectTopicName,
             vehicleID,
             timer,
-            vehicle_ids);
+            vehicle_ids
+        );
 
         //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. In this function, round numbers are stored - the number of each round should be received.
         dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(
@@ -107,7 +100,7 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
 
         //Send test data from a virtual HLC - only the round number matters here, which is transmitted using the timestamp value
         dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);    
-        dds::topic::Topic<VehicleCommandSpeedCurvature> topic = dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, hlcSpeedCurvatureTopicName);
+        dds::topic::Topic<VehicleCommandSpeedCurvature> topic = dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName);
         dds::pub::Publisher publisher = dds::pub::Publisher(participant);
         dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(publisher, topic);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
