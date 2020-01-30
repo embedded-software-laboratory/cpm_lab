@@ -225,8 +225,6 @@ void SetupViewUI::deploy_applications() {
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
-
-
         //Deploy on each HLC
 
         //Get current online vehicle and hlc IDs

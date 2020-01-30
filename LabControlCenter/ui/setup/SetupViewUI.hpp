@@ -72,6 +72,7 @@ private:
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
 
+    // Interface to LabCam
     LabCamIface* labcam;
 
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called

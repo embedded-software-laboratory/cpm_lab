@@ -33,7 +33,7 @@ using namespace std;
 class CInstantCameraAppSrc : public CInstantCamera
 {
 public:
-	CInstantCameraAppSrc(string serialnumber = "");
+	CInstantCameraAppSrc(string serialnumber = "22792310");
 	~CInstantCameraAppSrc();
 
 	int GetWidth();
