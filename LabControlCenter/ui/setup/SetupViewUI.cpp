@@ -315,6 +315,10 @@ void SetupViewUI::deploy_applications() {
 }
 
 void SetupViewUI::kill_deployed_applications() {
+
+    // Stop LabCam
+    labcam->stopRecording();
+
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
