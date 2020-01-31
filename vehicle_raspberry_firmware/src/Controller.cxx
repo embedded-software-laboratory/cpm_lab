@@ -50,6 +50,13 @@ void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleComm
     const uint64_t past_threshold_time = latest_command_receive_time - 10000000000ull;
     auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
     m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
+
+    //Evaluation: Log received timestamp
+    cpm::Logging::Instance().write(
+            "Vehicle %u received trajectory message timestamp at time %llu", 
+            vehicle_id, 
+            latest_command_receive_time
+        );
 }
 
 
@@ -78,12 +85,28 @@ void Controller::receive_commands(uint64_t t_now)
         m_vehicleCommandDirect = sample_CommandDirect;
         state = ControllerState::Direct;
         latest_command_receive_time = t_now;
+
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            "Vehicle %u read direct message timestamp: %llu, at time %llu", 
+            vehicle_id, 
+            sample_CommandDirect.header().create_stamp().nanoseconds(), 
+            latest_command_receive_time
+        );
     }
     else if(sample_CommandSpeedCurvature_age < command_timeout)
     {
         m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;  
         state = ControllerState::SpeedCurvature;
         latest_command_receive_time = t_now;
+
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
+            vehicle_id, 
+            sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
+            latest_command_receive_time
+        );
     }
 }
 

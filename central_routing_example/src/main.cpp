@@ -12,6 +12,7 @@
 #include "lane_graph_tools.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -32,6 +33,12 @@ int main(int argc, char *argv[])
         assert(i<255);
         vehicle_ids.push_back(i);
     }
+    std::stringstream vehicle_ids_stream;
+    for (auto id : vehicle_ids)
+    {
+        vehicle_ids_stream << "|" << id;
+    }
+    std::string vehicle_ids_string = vehicle_ids_stream.str();
 
 
     const uint64_t dt_nanos = 400000000ull;
@@ -59,7 +66,11 @@ int main(int argc, char *argv[])
 
         if(planner.is_started())
         {
+            auto computation_start_time = timer->get_time();
             auto commands = planner.get_trajectory_commands();
+            auto computation_end_time = timer->get_time();
+
+            cpm::Logging::Instance().write("Vehicle IDs: %s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string, computation_start_time, computation_end_time);
             for(auto& command:commands)
             {
                 writer_vehicleCommandTrajectory.write(command);
