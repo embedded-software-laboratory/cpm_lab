@@ -269,6 +269,7 @@ void SetupViewUI::deploy_applications() {
     if(switch_deploy_remote->get_active())
     {
         //Deploy on each HLC
+        button_kill->set_sensitive(false);
 
         //Get current online vehicle and hlc IDs
         std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
@@ -468,7 +469,6 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     button_select_all_real->set_sensitive(is_sensitive);
 
     button_deploy->set_sensitive(is_sensitive);
-    button_kill->set_sensitive(is_sensitive);
 
     switch_simulated_time->set_sensitive(is_sensitive);
 
