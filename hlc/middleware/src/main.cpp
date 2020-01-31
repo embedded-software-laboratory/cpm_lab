@@ -52,6 +52,12 @@ int main (int argc, char *argv[]) {
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
+    std::cout << "DEBUG: - configuration" << std::endl
+        << "Node ID: " << node_id
+        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv)
+        << "Simulated time: " << simulated_time
+        << "Wait for start: " << wait_for_start;
+
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
     if (amount_of_vehicles > 0 && amount_of_vehicles <= 255) {

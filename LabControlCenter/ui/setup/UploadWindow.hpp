@@ -20,5 +20,17 @@ private:
 public:
     UploadWindow(std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids);
 
+    /**
+     * \brief If an upload failed, then show an according message to the user
+     * \param msg The error message to append
+     */
+    void add_error_message(std::string msg);
+
+    /**
+     * \brief For custom text
+     * \param text The text to show
+     */
+    void set_text(std::string text);
+
     void close();
 };
