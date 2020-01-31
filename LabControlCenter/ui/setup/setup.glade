@@ -107,7 +107,7 @@ Script Path</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-Script Command Line Parameters (TODO: Reserved keywords?)</property>
+Script Command Line Parameters</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>

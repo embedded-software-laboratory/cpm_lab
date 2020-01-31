@@ -42,7 +42,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             << "'. ~/dev/software/hlc/environment_variables.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
-            << "\" -batch \"" << script_name_string << "(1, " << vehicle_ids_stream.str() << ")\""
+            << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
             << " >stdout_hlc.txt 2>stderr_hlc.txt'";
         }
         else if (script_name_string.find(".") == std::string::npos)
@@ -187,8 +187,8 @@ void Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     auto matlab_type_pos = script_path.rfind(".m");
     if (matlab_type_pos != std::string::npos)
     {
-        //Case: Matlab script - TODO: This is only to test one of my scripts, find standard param order (simulated time is here the )
-        script_argument_stream << "1," << vehicle_ids;
+        //Case: Matlab script
+        script_argument_stream << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids;
     }
     else if (script_path.find(".") == std::string::npos)
     {        
