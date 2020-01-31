@@ -64,4 +64,9 @@ public:
      * \param continue_search should be true initially, set to false to abort the search before it finished - the algorithm then returns immediately
      */
     std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search);
+
+    /**
+    * \brief Reset all data structures / delete all log data
+    */
+    void reset();
 };

@@ -75,12 +75,13 @@ private:
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
-    //Functions to reset all UI elements after a simulation was performed
+    //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool)> reset_timer;
     std::function<void()> reset_time_series_aggregator;
     std::function<void()> reset_trajectories;
     std::function<void()> reset_vehicle_view;
     std::function<void()> reset_visualization_commands;
+    std::function<void()> reset_logs;
 
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
@@ -151,6 +152,7 @@ public:
      * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
      * \param _reset_vehicle_view Reset list of connected vehicles
      * \param _reset_visualization_commands Reset all visualization commands that were sent before
+     * \param _reset_logs Reset all logs that were sent before
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
@@ -162,6 +164,7 @@ public:
         std::function<void()> _reset_trajectories,
         std::function<void()> _reset_vehicle_view,
         std::function<void()> _reset_visualization_commands,
+        std::function<void()> _reset_logs,
         unsigned int argc, 
         char *argv[]
         );
