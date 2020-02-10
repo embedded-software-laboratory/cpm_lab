@@ -132,6 +132,10 @@ int main(int argc, char *argv[])
         //Callback for update signal
         [&](uint64_t t_now) 
         {
+            //Log control cycle period
+            //For evaluation log of vehicle cycle period
+            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+
             //log_fn(__LINE__);
             try 
             {
@@ -196,6 +200,7 @@ int main(int argc, char *argv[])
                 spi_miso_data_t spi_miso_data;
 
                 //auto t_transfer_start = update_loop->get_time();
+
                 spi_transfer(
                     spi_mosi_data,
                     &spi_miso_data,
@@ -238,7 +243,6 @@ int main(int argc, char *argv[])
                     localization.reset();
                 }
                 loop_count++;
-
             }
             catch(const dds::core::Exception& e)
             {

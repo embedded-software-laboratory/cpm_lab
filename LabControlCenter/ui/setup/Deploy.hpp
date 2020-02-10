@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <array>
+#include <chrono> //For time measurements (timeout for remote deployment)
 #include <cstdio> //For popen
 #include <functional>
 #include <iostream>
@@ -16,6 +17,11 @@
 #include <sstream>
 #include <thread>
 #include <vector>
+
+//To spawn a process & get its PID
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 class Deploy 
 {
@@ -65,12 +71,24 @@ public:
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
      * \param script_path Path to the script, including the script name (and possible file ending)
      * \param script_params Additional script parameters
+     * \param timeout_seconds Time to wait until the exection is aborted
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
+     * \return True if the execution did not have to be aborted and no process-related error occured, false otherwise
      */
-    void deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params);
-    //Kill the script + middleware on the given HLC (again determine the IP from the HLC ID)
-    void kill_remote_hlc(unsigned int hlc_id);
+    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online);
+    /**
+     * \brief Kill the script + middleware on the given HLC (again determine the IP from the HLC ID)
+     * \param hlc_id ID of the HLC on which to kill the programs
+     * \param timeout_seconds Timeout in seconds until the kill process should be terminated
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
+     * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise
+     */
+    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online);
 
 private:
+    //Used for process forking
+    enum PROCESS_STATE {DONE, RUNNING, ERROR};
+
     //These values/functions are set once at startup (as command line parameters), never change and are thus stored in this class
     unsigned int cmd_domain_id; 
     std::string cmd_dds_initial_peer;
@@ -109,4 +127,32 @@ private:
      * \return Output of the shell command
      */
     std::string execute_command(const char* cmd);
+
+    /**
+     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
+     * \param cmd Command string to be executed
+     * \param timeout_seconds Timout until the process termination is forced
+     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
+     * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
+     */
+    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online);
+
+    /**
+     * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further
+     * \return Output of the shell command
+     */
+    int execute_command_get_pid(const char* cmd);
+
+    /**
+     * \brief Function to find out which state a process spawned before is currently in
+     * \param process_id The process id of the child process that was spawned before
+     * \return The current state of the process
+     */
+    PROCESS_STATE get_child_process_state(int process_id);
+
+    /**
+     * \brief Kill a process - first allow it to terminate gracefully, else force-kill it
+     * \param process_id The ID of the process
+     */
+    void kill_process(int process_id);
 };

@@ -4,6 +4,8 @@
 #include <atomic>
 #include <cassert>
 #include <ctime>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -38,11 +40,18 @@ private:
     std::mutex log_buffer_mutex;
     std::mutex log_storage_mutex;
 
+    //File for logging
+    std::ofstream file;
+    std::string filename = "all_received_logs.csv"; 
+    //Mutex s.t. only one thread has access to the file
+    std::mutex file_mutex;
+
     //Clear elements so that count last elements are kept
     void keep_last_elements(std::vector<Log>& vector, size_t count);
 
 public:
     LogStorage();
+    ~LogStorage();
 
     std::vector<Log> get_new_logs();
     
@@ -55,4 +64,9 @@ public:
      * \param continue_search should be true initially, set to false to abort the search before it finished - the algorithm then returns immediately
      */
     std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search);
+
+    /**
+    * \brief Reset all data structures / delete all log data
+    */
+    void reset();
 };

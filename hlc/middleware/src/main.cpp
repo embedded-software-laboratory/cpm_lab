@@ -52,6 +52,12 @@ int main (int argc, char *argv[]) {
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
+    std::cout << "DEBUG: - configuration" << std::endl
+        << "Node ID: " << node_id
+        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv)
+        << "Simulated time: " << simulated_time
+        << "Wait for start: " << wait_for_start;
+
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
     if (amount_of_vehicles > 0 && amount_of_vehicles <= 255) {
@@ -120,13 +126,13 @@ int main (int argc, char *argv[]) {
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);
 
-        //Log the received vehicle data size / sample size
-        std::stringstream stream;
-        stream << "Got latest messages, state array size: " << states.size();
-        if (states.size() > 0) {
-            stream << " - sample data: " << states.at(0).battery_voltage();
-        }
-        cpm::Logging::Instance().write(stream.str().c_str());
+        //Log the received vehicle data size / sample size -> TODO: for verbose log level
+        // std::stringstream stream;
+        // stream << "Got latest messages, state array size: " << states.size();
+        // if (states.size() > 0) {
+        //     stream << " - sample data: " << states.at(0).battery_voltage();
+        // }
+        // cpm::Logging::Instance().write(stream.str().c_str());
 
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
@@ -176,6 +182,14 @@ int main (int argc, char *argv[]) {
                         << ", periods missed: " << passed_time / period_nanoseconds;
                     cpm::Logging::Instance().write(stream.str().c_str());
                 }
+
+                //Evaluation log
+                cpm::Logging::Instance().write(
+                    "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
+                    it->first, 
+                    it->second, 
+                    t_now
+                );
             }
             //Also log an error if no HLC data has yet been received
             for (uint8_t id : unsigned_vehicle_ids) {

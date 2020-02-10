@@ -81,12 +81,13 @@ private:
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
-    //Functions to reset all UI elements after a simulation was performed
+    //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool)> reset_timer;
     std::function<void()> reset_time_series_aggregator;
     std::function<void()> reset_trajectories;
     std::function<void()> reset_vehicle_view;
     std::function<void()> reset_visualization_commands;
+    std::function<void()> reset_logs;
 
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
@@ -94,12 +95,23 @@ private:
     std::vector<std::thread> upload_threads; //threads that are responsible for uploading scripts to the HLCs
     std::shared_ptr<UploadWindow> upload_window; //window that shows an upload message
     void ui_dispatch(); //dispatcher callback for the UI thread
-    void notify_upload_finished(); //notify function that gets called by the upload threads when they have finished their work
+    /**
+     * \brief Notify function that gets called by the upload threads when they have finished their work
+     * \param hlc_id ID the thread was responsible for
+     * \param upload_success Whether the upload was successful
+     */
+    void notify_upload_finished(uint8_t hlc_id, bool upload_success);
     void kill_all_threads(); //function to join all threads
+    bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
     size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
     std::mutex notify_callback_in_use; //the notify_upload_finished function should only be accessible by one thread at once, thus use this mutex
-    std::atomic_bool upload_success; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
+    std::atomic_bool participants_available; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
+    //Horrible way to log an error message, because the UI cannot be accessed directly - if error_msg.size() > 0, emit just triggers that an error msg is added
+    std::mutex error_msg_mutex;
+    std::vector<std::string> error_msg;
+    std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
+    void perform_post_kill_cleanup();
 
     //IPS switch callback (-> lab mode)
     void switch_ips_set();
@@ -133,6 +145,8 @@ private:
 
     //Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
+    unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
+    unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
 public:
     /**
@@ -144,6 +158,7 @@ public:
      * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
      * \param _reset_vehicle_view Reset list of connected vehicles
      * \param _reset_visualization_commands Reset all visualization commands that were sent before
+     * \param _reset_logs Reset all logs that were sent before
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
@@ -155,6 +170,7 @@ public:
         std::function<void()> _reset_trajectories,
         std::function<void()> _reset_vehicle_view,
         std::function<void()> _reset_visualization_commands,
+        std::function<void()> _reset_logs,
         unsigned int argc, 
         char *argv[]
         );

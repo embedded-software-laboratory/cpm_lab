@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
         [=](){return trajectoryCommand->stop_all();}, 
         [=](){return monitoringUi->reset_vehicle_view();}, 
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
+        [=](){return loggerViewUi->reset();}, 
         argc, 
         argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);

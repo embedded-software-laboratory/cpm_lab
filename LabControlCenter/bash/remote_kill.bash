@@ -16,6 +16,12 @@ case $i in
 esac
 done
 
+trap exit_script SIGINT SIGTERM
+
+# Ping to make sure that the NUC is available - we want blocking behaviour in case it is not, this is handled by the C++ program
+# Write to /dev/null to suppress output
+until ping -c1 ${IP} >/dev/null 2>&1; do sleep 0.1; done
+
 ssh guest@${IP} << 'EOF'
     tmux kill-session -t "middleware"
     tmux kill-session -t "script"

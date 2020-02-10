@@ -13,13 +13,28 @@ cmake ..
 make -j8
 
 # Publish middleware package via http/apache for the HLCs to download
-cd /tmp
-mkdir -p middleware_package
-cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
-cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-tar -czvf middleware_package.tar.gz middleware_package
-rm -f /var/www/html/nuc/middleware_package.tar.gz
-cp ./middleware_package.tar.gz /var/www/html/nuc
+# DIR holds the location of build.bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $DIR
+
+if [ ! -d "/var/www/html/nuc" ]; then
+    sudo mkdir -p "/var/www/html/nuc"
+    sudo chmod a+rwx "/var/www/html/nuc"
+fi
+rm -rf $DIR/middleware_package
+mkdir $DIR/middleware_package
+cp ~/dev/software/hlc/middleware/build/middleware $DIR/middleware_package
+cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template $DIR/middleware_package
+tar -czvf middleware_package.tar.gz ./middleware_package
+mv $DIR/middleware_package.tar.gz /var/www/html/nuc
+rm -rf $DIR/middleware_package
+
+# mkdir middleware_package
+# cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
+# cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
+# tar -czvf middleware_package.tar.gz middleware_package
+# rm -f /var/www/html/nuc/middleware_package.tar.gz
+# cp ./middleware_package.tar.gz /var/www/html/nuc
 
 # Perform unittest
 cd ~/dev/software/hlc/middleware/build 
