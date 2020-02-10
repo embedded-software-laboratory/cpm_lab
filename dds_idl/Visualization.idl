@@ -14,7 +14,7 @@ enum VisualizationType
 struct Visualization 
 {
     //Id to be able to delete the viz later on
-    string id; //@key
+    unsigned long long id; //@key
 
     VisualizationType type;
     unsigned long long time_to_live;
