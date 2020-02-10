@@ -1,5 +1,6 @@
 #include "SetupViewUI.hpp"
 #include <cstdlib>
+#include <chrono>
 
 using namespace std::placeholders;
 
@@ -43,6 +44,7 @@ SetupViewUI::SetupViewUI
     builder->get_widget("switch_deploy_remote", switch_deploy_remote);
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
+    builder->get_widget("switch_record_labcam", switch_record_labcam);
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
@@ -60,10 +62,9 @@ SetupViewUI::SetupViewUI
     assert(button_select_all_real);
     
     assert(switch_simulated_time);
-
     assert(switch_deploy_remote);
-
     assert(switch_lab_mode);
+    assert(switch_record_labcam);
 
     assert(button_deploy);
     assert(button_kill);
@@ -81,6 +82,9 @@ SetupViewUI::SetupViewUI
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
     }
+
+    // Create labcam
+    labcam = new LabCamIface();
 
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
@@ -279,6 +283,15 @@ void SetupViewUI::deploy_applications() {
     reset_visualization_commands();
     reset_logs();
 
+    // LabCam
+    if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
+        std::cerr << "RECORDING LABCAM" << std::endl;
+        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
+        labcam->startRecording("/tmp/", ctime(&timenow));
+    }else{
+        std::cerr << "NOT RECORDING LABCAM" << std::endl;
+    }
+
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
@@ -365,6 +378,10 @@ void SetupViewUI::deploy_applications() {
 }
 
 void SetupViewUI::kill_deployed_applications() {
+
+    // Stop LabCam
+    labcam->stopRecording();
+
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {

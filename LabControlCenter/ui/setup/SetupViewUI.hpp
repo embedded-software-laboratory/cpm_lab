@@ -11,6 +11,8 @@
 #include "ui/setup/VehicleToggle.hpp"
 #include "ui/setup/UploadWindow.hpp"
 
+#include "labcam/LabCamIface.hpp"
+
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
@@ -50,6 +52,7 @@ private:
 
     //Set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
+    Gtk::Switch* switch_record_labcam = nullptr;
 
     //(De)Activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
@@ -68,6 +71,9 @@ private:
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
+
+    // Interface to LabCam
+    LabCamIface* labcam;
 
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
