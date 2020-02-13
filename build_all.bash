@@ -40,6 +40,12 @@ pushd hlc
 pushd middleware
 bash build.bash
 popd
+pushd autostart
+bash build.bash
+popd
+pushd matlab
+bash create_nuc_package.bash
+popd
 popd
 
 
