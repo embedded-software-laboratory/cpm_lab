@@ -84,8 +84,14 @@ private:
     //Check for scroll event to turn off automatic scrolling
     bool scroll_callback(GdkEventScroll* scroll_event);
 
+    //Variable for the reset action (is performed within the UI)
+    std::atomic_bool reset_logs;
+
 public:
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
     ~LoggerViewUI();
     Gtk::Widget* get_parent();
+
+    //Might be called from outside, e.g. when a new 'simulation' is run
+    void reset();
 };
