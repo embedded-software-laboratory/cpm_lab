@@ -142,4 +142,7 @@ void LogStorage::reset()
     std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
     log_storage.clear();
     log_buffer.clear();
+
+    //Reset UI file - alternative: Create new UI file name for next run, now write to this
+    file.clear();
 }

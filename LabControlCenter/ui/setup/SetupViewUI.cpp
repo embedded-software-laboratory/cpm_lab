@@ -273,7 +273,6 @@ void SetupViewUI::deploy_applications() {
 
     //Reset old UI elements (difference to kill: Also reset the Logs)
     //Kill timer in UI as well, as it should not show invalid information
-    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts
     reset_timer(switch_simulated_time->get_active());
     usleep(100000); //Make sure that the stop signal does not arrive at newly created participants (IS THIS SAFE ENOUGH?)
@@ -281,6 +280,9 @@ void SetupViewUI::deploy_applications() {
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
+    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+    //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
+    //Alternative: Counter in log file, logs are not resetted but a new log file xy_2.log, xy_3.log etc is created (starts at 1 at application start)
     reset_logs();
 
     // LabCam
