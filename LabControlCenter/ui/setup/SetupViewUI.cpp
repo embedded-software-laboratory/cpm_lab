@@ -425,11 +425,14 @@ void SetupViewUI::kill_deployed_applications() {
     else 
     {
         deploy_functions->kill_local_hlc();
+        perform_post_kill_cleanup();
     }
 
     deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
 
-    //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed)
+    //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
+    //But only if threads are used, so only in case of remote deployment
+    //For local deployment, perform_post_kill_cleanup is called directly
 }
 
 void SetupViewUI::perform_post_kill_cleanup()
