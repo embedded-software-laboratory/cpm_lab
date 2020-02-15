@@ -107,11 +107,6 @@ int main (int argc, char *argv[]) {
             cpm::Logging::Instance().write("The middleware QoS file is missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/software/hlc/import_dds_idl.m"))
-        {
-            cpm::Logging::Instance().write("The matlab import file is missing on NUC %s", hlc_id.c_str());
-        }
-
         if (!file_exists("/home/guest/dev/software/hlc/init_script.m"))
         {
             cpm::Logging::Instance().write("The matlab import file is missing on NUC %s", hlc_id.c_str());
