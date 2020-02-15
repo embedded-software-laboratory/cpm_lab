@@ -1,6 +1,6 @@
 % This script is intended to be used by every single Matlab HLC script; it loads all required files and sets up all required writers/reader
 % WARNING: The state reader waitset does not get initialized here, in case you want to do something else
-function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_skript(matlab_domain_id)
+function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlab_domain_id)
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     previous_folder = cd(script_directoy); % Remember folder of calling function

@@ -1,5 +1,6 @@
-function main(matlabDomainID, vehicleIDs)
-
+function main(vehicleIDs)
+    matlabDomainID = 1;
+    
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     cd(script_directoy)

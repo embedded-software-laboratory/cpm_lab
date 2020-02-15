@@ -7,7 +7,7 @@ cmake ..
 make -j8
 cd ..
 
-# Publish autostart package via http/apache for the HLCs to download
+# Publish autostart package via http/apache for the HLCs to download - TODO: Change tmp-version to local version after merge, similar to middleware build
 cd /tmp
 mkdir autostart_package
 cp ~/dev/software/hlc/autostart/build/autostart ./autostart_package

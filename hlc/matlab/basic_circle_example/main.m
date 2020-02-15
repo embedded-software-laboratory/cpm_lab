@@ -1,4 +1,6 @@
-function main(matlabDomainID, vehicle_id)
+function main(vehicle_id)
+    matlabDomainID = 1;
+    
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
     middleware_local_qos_xml = '../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
     if ~exist(middleware_local_qos_xml,'file')
