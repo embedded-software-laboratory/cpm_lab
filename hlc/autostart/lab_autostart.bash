@@ -86,7 +86,6 @@ chmod -R a+rwx ../software # Make folder accessible to guest user
 cd /home/guest/dev/software/hlc
 mkdir matlab
 cd ./matlab
-cp /tmp/software/matlab_package/import_dds_idl.m ./
 cp /tmp/software/matlab_package/init_script.m ./
 cp /tmp/software/matlab_package/QOS_READY_TRIGGER.xml ./
 

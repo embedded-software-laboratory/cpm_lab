@@ -5,7 +5,6 @@
 # Publish NUC package via http/apache for the HLCs to download
 cd /tmp
 mkdir matlab_package
-cp ~/dev/software/hlc/matlab/import_dds_idl.m ./matlab_package
 cp ~/dev/software/hlc/matlab/init_script.m ./matlab_package
 cp ~/dev/software/hlc/matlab/QOS_READY_TRIGGER.xml ./matlab_package
 tar -czvf matlab_package.tar.gz matlab_package
