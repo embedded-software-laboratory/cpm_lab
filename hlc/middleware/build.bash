@@ -13,11 +13,11 @@ cmake ..
 make -j8
 
 # Publish middleware package via http/apache for the HLCs to download
-# DIR holds the location of build.bash
 if [ ! -d "/var/www/html/nuc" ]; then
     sudo mkdir -p "/var/www/html/nuc"
     sudo chmod a+rwx "/var/www/html/nuc"
 fi
+# DIR holds the location of build.bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 rm -rf middleware_package
