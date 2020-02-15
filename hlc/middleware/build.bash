@@ -20,7 +20,8 @@ if [ ! -d "/var/www/html/nuc" ]; then
 fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
-mkdir -p middleware_package
+rm -rf middleware_package
+mkdir middleware_package
 cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
 cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
 tar -czvf middleware_package.tar.gz middleware_package
@@ -28,14 +29,6 @@ rm -f /var/www/html/nuc/middleware_package.tar.gz
 cp ./middleware_package.tar.gz /var/www/html/nuc
 rm -rf middleware_package
 rm -rf middleware_package.tar.gz
-
-# mkdir middleware_package
-# cp ~/dev/software/hlc/middleware/build/middleware ./middleware_package
-# cp ~/dev/software/hlc/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-# tar -czvf middleware_package.tar.gz middleware_package
-# rm -f /var/www/html/nuc/middleware_package.tar.gz
-# cp ./middleware_package.tar.gz /var/www/html/nuc
-# merge comment
 
 # Perform unittest
 cd ~/dev/software/hlc/middleware/build 
