@@ -1,6 +1,4 @@
-function main(vehicle_id)
-    matlabDomainID = 1;
-    
+function main(matlabDomainID, vehicle_id)    
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
     middleware_local_qos_xml = '../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
     if ~exist(middleware_local_qos_xml,'file')
@@ -41,11 +39,12 @@ function main(vehicle_id)
         'VehicleStateList',...
         topic_vehicleStateList);
 
-    topic_vehicleCommandTrajectory = 'vehicleCommandTrajectory';
-    writer_vehicleCommandTrajectory = DDS.DataWriter(...
+    topic_vehicleCommandDirect = 'vehicleCommandDirect';
+    writer_vehicleCommandDirect = DDS.DataWriter(...
         DDS.Publisher(matlabParticipant),...
-        'VehicleCommandTrajectory',...
-        topic_vehicleCommandTrajectory);
+        'VehicleCommandDirect',...
+        topic_vehicleCommandDirect);
+    
     
     %% Sync start with infrastructure
     % Send ready signal
@@ -68,22 +67,10 @@ function main(vehicle_id)
         [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
     end
     
-
     %% Run the HLC
     % Set reader properties
     reader_vehicleStateList.WaitSet = true;
     reader_vehicleStateList.WaitSetTimeout = 60;
-
-    % Define reference trajectory
-    reference_trajectory_index = 1;
-    reference_trajectory_time = 0;
-    map_center_x = 2.25;
-    map_center_y = 2.0;
-    trajectory_px    = [         1,          0,         -1,          0] + map_center_x;
-    trajectory_py    = [         0,          1,          0,         -1] + map_center_y;
-    trajectory_vx    = [         0,         -1,          0,          1];
-    trajectory_vy    = [         1,          0,         -1,          0];
-    segment_duration = [1550000000, 1550000000, 1550000000, 1550000000];
     
     while (~got_stop)
         % Read vehicle states
@@ -91,33 +78,17 @@ function main(vehicle_id)
         assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
         fprintf('Received sample at time: %d\n',sample.t_now);
         
-        if (reference_trajectory_time == 0)
-            reference_trajectory_time = sample.t_now;
-        end
+        % Determine control inputs for the vehicle
+        % right curve with moderate forward speed
+        vehicle_command_direct = VehicleCommandDirect;
+        vehicle_command_direct.header.create_stamp.nanoseconds = uint64(sample.t_now);
+        vehicle_command_direct.header.valid_after_stamp.nanoseconds = uint64(sample.t_now);
+        vehicle_command_direct.vehicle_id = uint8(vehicle_id);
+        vehicle_command_direct.motor_throttle =  0.3;
+        vehicle_command_direct.steering_servo = -0.45;
         
-        % Send the current trajectory point to the vehicle
-        trajectory_point = TrajectoryPoint;
-        trajectory_point.t.nanoseconds = uint64(reference_trajectory_time);
-        trajectory_point.px = trajectory_px(reference_trajectory_index);
-        trajectory_point.py = trajectory_py(reference_trajectory_index);
-        trajectory_point.vx = trajectory_vx(reference_trajectory_index);
-        trajectory_point.vy = trajectory_vy(reference_trajectory_index);
-        vehicle_command_trajectory = VehicleCommandTrajectory;
-        vehicle_command_trajectory.vehicle_id = uint8(vehicle_id);
-        vehicle_command_trajectory.trajectory_points = trajectory_point;
-        writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+        writer_vehicleCommandDirect.write(vehicle_command_direct);
                 
-        % Advance the reference state to T+2sec.
-        % The reference state must be in the future,
-        % to allow some time for the vehicle to receive
-        % the message and anticipate the next turn.
-        while (reference_trajectory_time < sample.t_now + 2000000000)
-            reference_trajectory_time = ...
-                reference_trajectory_time + segment_duration(reference_trajectory_index);
-            reference_trajectory_index = ...
-                mod(reference_trajectory_index, length(segment_duration)) + 1;
-        end
-        
         % Check for stop signal
         [~, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
     end
