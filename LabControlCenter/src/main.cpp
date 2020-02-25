@@ -48,10 +48,16 @@ void kill_cloud_discovery() {
     system(command.c_str());
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 void interrupt_handler(int s) {
     kill_cloud_discovery();
     exit(1);
 }
+
+#pragma GCC diagnostic pop
 
 void exit_handler() {
     kill_cloud_discovery();

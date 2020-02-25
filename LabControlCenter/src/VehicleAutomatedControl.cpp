@@ -17,6 +17,10 @@ VehicleAutomatedControl::VehicleAutomatedControl()
     //Initialize the timer (task loop) - here, different tasks like stopping the vehicle are performed
     task_loop = std::make_shared<cpm::TimerFD>("LCCAutomatedControl", 20000000ull, 0, false);
     
+    //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     task_loop->start_async([&](uint64_t t_now)
     {
         std::lock_guard<std::mutex> lock(stop_list_mutex);
@@ -47,6 +51,8 @@ VehicleAutomatedControl::VehicleAutomatedControl()
     [](){
         //Empty lambda callback for stop signals -> Do nothing when a stop signal is received
     });
+
+    #pragma GCC diagnostic pop
 }
 
 void VehicleAutomatedControl::stop_vehicles(std::vector<uint8_t> id_list)

@@ -69,7 +69,7 @@ MpcController::MpcController(uint8_t _vehicle_id)
 
         assert(casadi_vars.count(name) == 0);
         casadi_vars[name] = std::vector<casadi_real>(n_rows * n_cols, 1e-12); // Can not be zero exactly, because the CadADi gradient is wrong at zero
-        casadi_vars_size[name] = std::array<casadi_int, 2>{n_rows, n_cols};
+        casadi_vars_size[name] = std::array<casadi_int, 2>{{n_rows, n_cols}};
         casadi_real* p_buffer = casadi_vars[name].data();
 
         if (i_var < n_in) 
@@ -106,19 +106,21 @@ MpcController::MpcController(uint8_t _vehicle_id)
     assert(casadi_vars_size["var_u0"][0] == 1);
     assert(casadi_vars_size["var_u0"][1] == 2);
 
-    assert(casadi_vars_size["var_u"][0] == MPC_control_steps);
+    //TODO an Code-Reviewer: Ist das die sinnvollste Möglichkeit, mit den ungleichen Typen umzugehen?
+    //Alternative: Ändere Typ von MPC_control_steps entsprechend bereits vorab
+    assert(casadi_vars_size["var_u"][0] == static_cast<casadi_int>(MPC_control_steps));
     assert(casadi_vars_size["var_u"][1] == 3);
 
-    assert(casadi_vars_size["var_momentum"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_momentum"][0] == static_cast<casadi_int>(MPC_control_steps));
     assert(casadi_vars_size["var_momentum"][1] == 3);
 
     assert(casadi_vars_size["var_params"][0] == 10);
     assert(casadi_vars_size["var_params"][1] == 1);
 
-    assert(casadi_vars_size["var_reference_trajectory_x"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["var_reference_trajectory_x"][0] == static_cast<casadi_int>(MPC_prediction_steps));
     assert(casadi_vars_size["var_reference_trajectory_x"][1] == 1);
 
-    assert(casadi_vars_size["var_reference_trajectory_y"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["var_reference_trajectory_y"][0] == static_cast<casadi_int>(MPC_prediction_steps));
     assert(casadi_vars_size["var_reference_trajectory_y"][1] == 1);
 
     assert(casadi_vars_size["var_learning_rate"][0] == 1);
@@ -127,19 +129,19 @@ MpcController::MpcController(uint8_t _vehicle_id)
     assert(casadi_vars_size["var_momentum_rate"][0] == 1);
     assert(casadi_vars_size["var_momentum_rate"][1] == 1);
 
-    assert(casadi_vars_size["trajectory_x"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["trajectory_x"][0] == static_cast<casadi_int>(MPC_prediction_steps));
     assert(casadi_vars_size["trajectory_x"][1] == 1);
 
-    assert(casadi_vars_size["trajectory_y"][0] == MPC_prediction_steps);
+    assert(casadi_vars_size["trajectory_y"][0] == static_cast<casadi_int>(MPC_prediction_steps));
     assert(casadi_vars_size["trajectory_y"][1] == 1);
 
     assert(casadi_vars_size["objective"][0] == 1);
     assert(casadi_vars_size["objective"][1] == 1);
 
-    assert(casadi_vars_size["var_momentum_next"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_momentum_next"][0] == static_cast<casadi_int>(MPC_control_steps));
     assert(casadi_vars_size["var_momentum_next"][1] == 3);
 
-    assert(casadi_vars_size["var_u_next"][0] == MPC_control_steps);
+    assert(casadi_vars_size["var_u_next"][0] == static_cast<casadi_int>(MPC_control_steps));
     assert(casadi_vars_size["var_u_next"][1] == 3);
 }
 
@@ -362,9 +364,10 @@ bool MpcController::interpolate_reference_trajectory(
 
     if(t_trajectory_min >= t_start)
     {
+        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            "Warning: Trajectory Controller: "
-            "The trajectory command starts in the future.");
+            "Warning: Trajectory Controller: The trajectory command starts in the %s.", "future");
+
         return false;
     }
 

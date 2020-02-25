@@ -376,9 +376,9 @@ int main(int argc, char *argv[])
                         auto trajectory_point = trajectory_points.at(static_cast<size_t>(index.first));
                         trajectory_point.t().nanoseconds(t_eval);
 
-                        const auto &observation = vehicleObservations[unassigned_vehicle_id];
+                        //const auto &observation = vehicleObservations[unassigned_vehicle_id];
 
-                        const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
+                        //const double ref_yaw = atan2(trajectory_point.vy(), trajectory_point.vx());
 
                         // if(fabs(trajectory_point.px() - observation.pose().x()) < 0.3
                         // && fabs(trajectory_point.py() - observation.pose().y()) < 0.3

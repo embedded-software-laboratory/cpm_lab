@@ -331,11 +331,17 @@ bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const G
     }
 }
 
+//Suppress warning for unused parameter (scroll_event)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool LoggerViewUI::scroll_callback(GdkEventScroll* scroll_event) {
     //React to a mouse scroll event (but propagate it further)
     autoscroll_check_button->set_active(false);
     return false;
 }
+
+#pragma GCC diagnostic pop
 
 Gtk::Widget* LoggerViewUI::get_parent() {
     return parent;
