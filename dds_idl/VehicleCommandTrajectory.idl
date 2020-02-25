@@ -40,6 +40,7 @@ struct TrajectoryPoint
 struct VehicleCommandTrajectory 
 {
     octet vehicle_id; //@key
+    Header header;
     sequence<TrajectoryPoint> trajectory_points;
 };
 #endif
