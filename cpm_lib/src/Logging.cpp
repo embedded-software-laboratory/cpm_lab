@@ -3,7 +3,7 @@
 namespace cpm {
 
     Logging::Logging() :
-        loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "Logs")),
+        loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "log")),
         logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
     {
         //Get log level / logging verbosity
