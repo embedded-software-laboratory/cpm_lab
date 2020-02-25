@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <functional>
@@ -14,6 +15,7 @@
 #include <rti/core/ListenerBinder.hpp>
 #include <dds/core/vector.hpp>
 
+#include "cpm/init.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
 #include "cpm/ParticipantSingleton.hpp"
@@ -29,11 +31,17 @@
  */
 
 TEST_CASE( "HLCToVehicleCommunication" ) {
+    //Set different domain ID than 1 for the domain of the vehicle
+    std::vector<char*> argv;
+    std::string domain_argument = "--dds_domain=3";
+    argv.push_back(const_cast<char*>(domain_argument.c_str()));
+    cpm::init(argv.size() - 1, argv.data());
     cpm::Logging::Instance().set_id("middleware_test");
 
     //Data for the tests
     uint64_t max_rounds = 5;
     std::vector<uint64_t> received_round_numbers;
+    std::mutex round_numbers_mutex;    
 
     {
         //Communication parameters
@@ -73,11 +81,13 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
             vehicle_ids
         );
 
-        //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. In this function, round numbers are stored - the number of each round should be received.
+        //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. 
+        //In this function, round numbers are stored - the number of each round should be received.
         dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(
             dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
             dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(),
-            vehicleSpeedCurvatureTopicName));
+            vehicleSpeedCurvatureTopicName
+        ));
         dds::core::cond::StatusCondition readCondition(vehicleReader);
         rti::core::cond::AsyncWaitSet waitset;
         readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
@@ -86,6 +96,7 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
             waitset.unlock_condition(dds::core::cond::StatusCondition(vehicleReader));
 
             // Store received data for later checks
+            std::lock_guard<std::mutex> lock(round_numbers_mutex);
             for (auto sample : samples) {
                 if (sample.info().valid()) {
                     received_round_numbers.push_back(sample.data().header().create_stamp().nanoseconds());
@@ -96,9 +107,10 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         waitset.start();
 
         //Sleep for some milliseconds just to make sure that the reader has been initialized properly
-        rti::util::sleep(dds::core::Duration::from_millisecs(50));
+        rti::util::sleep(dds::core::Duration::from_millisecs(200));
 
         //Send test data from a virtual HLC - only the round number matters here, which is transmitted using the timestamp value
+        //The data is sent to the middleware (-> middleware participant, because of the domain ID), and the middleware should send it to the vehicle
         dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);    
         dds::topic::Topic<VehicleCommandSpeedCurvature> topic = dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName);
         dds::pub::Publisher publisher = dds::pub::Publisher(participant);
@@ -112,7 +124,9 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
     }
 
     //Perform checks (wait a while before doing so, to make sure that everything has been received)
-    rti::util::sleep(dds::core::Duration::from_millisecs(500));
+    rti::util::sleep(dds::core::Duration::from_millisecs(1000));
+
+    std::lock_guard<std::mutex> lock(round_numbers_mutex);
     for(uint64_t i = 0; i <= max_rounds; ++i) {
         CHECK((std::find(received_round_numbers.begin(), received_round_numbers.end(), i) != received_round_numbers.end()));
     }
