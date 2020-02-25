@@ -26,10 +26,10 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
     
     %% variables for the communication
-    matlabStateTopicName = 'stateTopic';
-    matlabCommandTopicName = 'trajectoryTopic';
-    systemTriggerTopicName = 'system_trigger_hlc';
-    readyStatusTopicName = 'ready_hlc';
+    matlabStateTopicName = 'vehicleStateList';
+    matlabCommandTopicName = 'vehicleCommandTrajectory';
+    systemTriggerTopicName = 'systemTrigger';
+    readyStatusTopicName = 'readyStatus';
     trigger_stop = uint64(18446744073709551615);
 
     phaseTime = 40;
