@@ -30,6 +30,26 @@ namespace cpm
         rti::core::cond::AsyncWaitSet waitset;
 
         /**
+         * \brief Returns qos for the settings s.t. the constructor becomes more readable
+         */
+        dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool is_transient_local)
+        {
+            //Initialize reader
+            if (is_transient_local)
+            {
+                return (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll() << dds::core::policy::Durability::TransientLocal());
+            }
+            else if (is_reliable)
+            {
+                return (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll());
+            }
+            else
+            {
+                return (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort() << dds::core::policy::History::KeepAll());
+            }
+        }
+
+        /**
          * \brief Handler that takes unread samples, releases the waitset and calls the callback function provided by the user
          * \param func The callback function provided by the user
          */
@@ -41,18 +61,21 @@ namespace cpm
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic The topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
          */
         AsyncReader(
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
             dds::domain::DomainParticipant& _participant, 
             dds::topic::Topic<MessageType> topic, 
-            bool is_reliable = false
+            bool is_reliable = false,
+            bool is_transient_local = false
         );
         AsyncReader(
             std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
             dds::domain::DomainParticipant& _participant, 
             dds::topic::ContentFilteredTopic<MessageType> topic, 
-            bool is_reliable = false
+            bool is_reliable = false,
+            bool is_transient_local = false
         );
 
     };
@@ -64,10 +87,11 @@ namespace cpm
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
         dds::domain::DomainParticipant & _participant, 
         dds::topic::Topic<MessageType> topic,
-        bool is_reliable
+        bool is_reliable,
+        bool is_transient_local
     )
     :sub(_participant)
-    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort() << dds::core::policy::History::KeepAll()))
+    ,reader(sub, topic, get_qos(is_reliable, is_transient_local))
     ,read_condition(reader)
     {
         //Call the callback function whenever any new data is available
@@ -89,10 +113,11 @@ namespace cpm
         std::function<void(dds::sub::LoanedSamples<MessageType>&)> func, 
         dds::domain::DomainParticipant & _participant, 
         dds::topic::ContentFilteredTopic<MessageType> topic,
-        bool is_reliable
+        bool is_reliable,
+        bool is_transient_local
     )
     :sub(_participant)
-    ,reader(sub, topic, (is_reliable ? (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()) : dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::BestEffort() << dds::core::policy::History::KeepAll()))
+    ,reader(sub, topic, get_qos(is_reliable, is_transient_local))
     ,read_condition(reader)
     {
         //Call the callback function whenever any new data is available

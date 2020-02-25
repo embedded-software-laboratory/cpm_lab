@@ -7,11 +7,24 @@ namespace cpm {
         logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
     {
         //Get log level / logging verbosity
-        log_level = cpm::parameter_int("log_level");
-        if (log_level < 0 || log_level > 2)
-        {
-            log_level = 1;
-        }
+        log_level_reader = std::make_shared<cpm::AsyncReader<LogLevel>>(
+            [this](dds::sub::LoanedSamples<LogLevel>& samples){
+                for(auto sample : samples)
+                {
+                    if(sample.info().valid())
+                    {
+                        log_level.store(sample.data().log_level());
+                    }
+                }
+            },
+            cpm::ParticipantSingleton::Instance(),
+            cpm::get_topic<LogLevel>("logLevel"),
+            true,
+            true
+        );
+
+        //Default log level value
+        log_level.store(1);
 
         // Formatted start time for log filename
         char time_format_buffer[100];
