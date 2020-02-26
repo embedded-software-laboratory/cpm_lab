@@ -6,6 +6,8 @@
 
 #include "LogLevel.hpp"
 
+#include <memory>
+
 /**
  * \class LogLevelSetter
  * \brief This Singleton is nothing more than a writer that allows to set the log level for all participants within the domain of the cpm library participant Singleton

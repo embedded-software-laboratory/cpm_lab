@@ -126,13 +126,13 @@ int main (int argc, char *argv[]) {
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);
 
-        //Log the received vehicle data size / sample size -> TODO: for verbose log level
-        // std::stringstream stream;
-        // stream << "Got latest messages, state array size: " << states.size();
-        // if (states.size() > 0) {
-        //     stream << " - sample data: " << states.at(0).battery_voltage();
-        // }
-        // cpm::Logging::Instance().write(stream.str().c_str());
+        //Log the received vehicle data size / sample size for verbose log level
+        std::stringstream stream;
+        stream << "Got latest messages, state array size: " << states.size();
+        if (states.size() > 0) {
+            stream << " - sample data: " << states.at(0).battery_voltage();
+        }
+        cpm::Logging::Instance().write(3, stream.str().c_str());
 
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed

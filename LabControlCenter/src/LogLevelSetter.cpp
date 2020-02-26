@@ -12,9 +12,9 @@ LogLevelSetter::LogLevelSetter() :
 
 LogLevelSetter& LogLevelSetter::Instance()
 {
-    static LogLevelSetter _instance;
+    static thread_local std::unique_ptr<LogLevelSetter> _instance(new LogLevelSetter());
 
-    return _instance;
+    return *_instance.get();
 }
 
 void LogLevelSetter::set_log_level(unsigned short log_level)

@@ -14,6 +14,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("autoscroll_check_button", autoscroll_check_button);
     ui_builder->get_widget("logs_search_entry", logs_search_entry);
     ui_builder->get_widget("logs_search_type", logs_search_type);
+    ui_builder->get_widget("log_level_combobox", log_level_combobox);
 
     assert(parent);
     assert(logs_treeview);
@@ -22,6 +23,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     assert(autoscroll_check_button);
     assert(logs_search_entry);
     assert(logs_search_type);
+    assert(log_level_combobox);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
