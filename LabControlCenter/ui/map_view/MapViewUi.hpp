@@ -38,6 +38,10 @@ class MapViewUi
 
     int vehicle_id_in_focus = -1;
 
+    //(Leons comment, not his code) My understanding: These values can be set in MapViewUi.cpp and are applied whenever 
+    //the callback function draw() is triggered (as I see it: after every mouse/scroll wheel event etc)
+    //mouse_left_button is used to determine whether a vehicle trajectory should be drawn
+    //mouse_right_button has now been added by me to allow for changing the view (by dragging) - this only works if the left button is not clicked as well!
     double zoom = 175;
     double pan_x = 100;
     double pan_y = 730;
@@ -46,6 +50,11 @@ class MapViewUi
     double mouse_y = 0;
 
     bool mouse_left_button = false;
+    bool mouse_right_button = false;
+
+    //Used for dragging the view with the right mouse button
+    double old_event_x = 0;
+    double old_event_y = 0;
 
 
 
