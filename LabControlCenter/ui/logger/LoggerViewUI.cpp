@@ -137,14 +137,14 @@ void LoggerViewUI::dispatcher_callback() {
         //Update treeview using the newest entries if no filter is applied
         if (!filter_active.load()) {
             //Delete old logs when limit is reached
-            delete_old_logs(100);
+            delete_old_logs(max_log_amount);
 
             //Add only new entries if the whole log list is shown, or add all again after a search was performed
             if (search_reset.load()) {
                 search_reset.store(false);
                 reset_list_store();
 
-                for(const auto& entry : log_storage->get_all_logs()) {
+                for(const auto& entry : log_storage->get_recent_logs(max_log_amount)) {
                     add_log_entry(entry);
                 }
             }

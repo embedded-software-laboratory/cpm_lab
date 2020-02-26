@@ -39,6 +39,9 @@ private:
     Gtk::ComboBoxText* logs_search_type;
     Gtk::ComboBoxText* log_level_combobox;
 
+    //Max. amount of logs shown in the UI (performance reasons)
+    const long max_log_amount = 100;
+
     //Callback function for log_level_combobox
     void on_log_level_changed();
     //Values for log_level_combobox

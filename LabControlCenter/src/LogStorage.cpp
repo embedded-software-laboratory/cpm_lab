@@ -64,6 +64,13 @@ std::vector<Log> LogStorage::get_all_logs() {
     return log_copy;
 }
 
+std::vector<Log> LogStorage::get_recent_logs(const long log_amount) {
+    std::lock_guard<std::mutex> lock(log_storage_mutex);
+    std::vector<Log> log_copy = log_storage;
+    keep_last_elements(log_copy, log_amount);
+    return log_copy;
+}
+
 std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search) {
     //Copy log_storage and perform search on copy only
     std::unique_lock<std::mutex> lock(log_storage_mutex);
