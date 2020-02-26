@@ -71,11 +71,18 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
 
     //Callback function of the timer
     int count = 0; //The thread should be stopped before it is called three times
+
+    //Ignore warning that t_start is unused
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     timer.start([&](uint64_t t_start){
         CHECK(count <= 2); //This task should not be called too often
         usleep( 100000 ); // simluate variable runtime
         ++count;
     });
+
+    #pragma GCC diagnostic pop
 
     if (signal_thread.joinable()) {
         signal_thread.join();

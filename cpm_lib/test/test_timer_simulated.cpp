@@ -94,9 +94,17 @@ TEST_CASE( "TimerSimulated_accuracy" ) {
 
             //Wait, no new ready signal should be received
             waitset.wait(dds::core::Duration(0, 500000000));
+
+            //Ignore warning that sample is not used
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
             for (auto sample : reader_ReadyStatus.take()) {
+                //No new sample should be received -> We never want to enter this loop
                 CHECK(false);
             }
+
+            #pragma GCC diagnostic pop
 
             //Send correct start signal
             trigger.next_start(TimeStamp(next_start));
