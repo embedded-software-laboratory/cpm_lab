@@ -65,6 +65,14 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->set_active_text(type_all_ustring);
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
 
+    //Set values for the log_level_combobox
+    log_level_combobox->append(log_level_0_ustring);
+    log_level_combobox->append(log_level_1_ustring);
+    log_level_combobox->append(log_level_2_ustring);
+    log_level_combobox->append(log_level_3_ustring);
+    log_level_combobox->set_active_text(log_level_1_ustring);
+    log_level_combobox->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_log_level_changed));
+
     //Tooltip callbacks (if content is too long, text on hover)
     logs_treeview->set_has_tooltip(true);
     logs_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &LoggerViewUI::tooltip_callback));
@@ -93,6 +101,25 @@ LoggerViewUI::~LoggerViewUI() {
     if (search_thread.joinable()) {
         search_thread.join();
     }
+}
+
+void LoggerViewUI::on_log_level_changed()
+{
+    //Get the current filter string and the filter type
+    auto set_log_level = log_level_combobox->get_active_text();
+
+    if (set_log_level == log_level_0_ustring) {
+        LogLevelSetter::Instance().set_log_level(0);
+    }
+    else if (set_log_level == log_level_1_ustring) {
+        LogLevelSetter::Instance().set_log_level(1);
+    }
+    else if (set_log_level == log_level_2_ustring) {
+        LogLevelSetter::Instance().set_log_level(2);
+    }
+    else {
+        LogLevelSetter::Instance().set_log_level(3);
+    } 
 }
 
 void LoggerViewUI::dispatcher_callback() {

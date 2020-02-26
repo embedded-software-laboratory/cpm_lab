@@ -15,6 +15,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+#include "LogLevelSetter.hpp"
 #include "LoggerModelRecord.hpp"
 #include "TimerTrigger.hpp"
 
@@ -36,6 +37,15 @@ private:
     Gtk::CheckButton* autoscroll_check_button;
     Gtk::SearchEntry* logs_search_entry;
     Gtk::ComboBoxText* logs_search_type;
+    Gtk::ComboBoxText* log_level_combobox;
+
+    //Callback function for log_level_combobox
+    void on_log_level_changed();
+    //Values for log_level_combobox
+    Glib::ustring log_level_0_ustring = "0";
+    Glib::ustring log_level_1_ustring = "1";
+    Glib::ustring log_level_2_ustring = "2";
+    Glib::ustring log_level_3_ustring = "3";
 
     //TreeView Layout, status storage for the UI
     LoggerModelRecord log_record;
