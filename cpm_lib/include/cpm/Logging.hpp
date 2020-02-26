@@ -116,45 +116,8 @@ namespace cpm {
              */
             template<class ...Args> void write(const char* f, Args&& ...args) {
                 //Only log the message if the log_level of the message is <= the current level - else, it is not relevant enough
-                if (1 <= log_level.load())
-                {
-                    int size = snprintf(nullptr, 0, f, args...); //Determine the size of the resulting string without actually writing it
-                    std::string str(size, ' ');
-                    snprintf(& str[0], size + 1, f, args...);
-
-                    //Before flushing make sure that the Logger was initialized properly / that its ID was set
-                    check_id();
-            
-                    //Get the current time, use this timestamp for logging purposes
-                    uint64_t time_now = get_time();
-
-                    //For the log file: csv, so escape '"'
-                    std::string log_string = std::string(str);
-                    std::string escaped_quote = std::string("\"\"");
-                    size_t pos = 0;
-                    while ((pos = log_string.find('"', pos)) != std::string::npos) {
-                        log_string.replace(pos, 1, escaped_quote);
-                        pos += escaped_quote.size();
-                    }
-                    //Also put the whole string in quotes
-                    log_string.insert(0, "\"");
-                    log_string += "\"";
-
-                    //Mutex for writing the message (file, writer) - is released when going out of scope
-                    std::lock_guard<std::mutex> lock(log_mutex);
-
-                    //Add the message to the log file
-                    file.open(filename, std::ios::app);
-                    file << id << "," << time_now << "," << log_string << std::endl;
-                    file.close();
-
-                    //Send the log message via RTI
-                    Log log(id, str, TimeStamp(time_now));
-                    logger.write(log);
-
-                    //Show the log message on the console
-                    std::cerr << "Log at time " << time_now << ": " << str << std::endl;
-                }
+                //The default log-level, if none is specified, is 1 (highest priority)
+                write(1, f, args...);
             }
     };
 }
