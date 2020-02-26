@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defaults.hpp"
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -26,7 +27,10 @@
 
 #include "src/LogStorage.hpp"
 
-
+/**
+ * \brief Class for the Logs Tab in the LCC. Show most recent logs (->max_log_amount), is connected to LogStorage & allows for search in more than most_recent_logs
+ * using Regex, allows to set the log_level for the whole domain
+ */
 class LoggerViewUI {
 private:
     Glib::RefPtr<Gtk::Builder> ui_builder;
@@ -44,11 +48,9 @@ private:
 
     //Callback function for log_level_combobox
     void on_log_level_changed();
-    //Values for log_level_combobox
-    Glib::ustring log_level_0_ustring = "0";
-    Glib::ustring log_level_1_ustring = "1";
-    Glib::ustring log_level_2_ustring = "2";
-    Glib::ustring log_level_3_ustring = "3";
+    //Labels for log_level_combobox
+    std::vector<Glib::ustring> log_level_labels; //Vector used so that we can infer the level number from the index (no need to transform the ustring to a number)
+    const unsigned short log_levels = 3; //Change this if you want to allow more log levels than 0-3
 
     //TreeView Layout, status storage for the UI
     LoggerModelRecord log_record;

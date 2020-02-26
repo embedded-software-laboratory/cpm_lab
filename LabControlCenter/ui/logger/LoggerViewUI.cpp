@@ -67,12 +67,25 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->set_active_text(type_all_ustring);
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
 
-    //Set values for the log_level_combobox
-    log_level_combobox->append(log_level_0_ustring);
-    log_level_combobox->append(log_level_1_ustring);
-    log_level_combobox->append(log_level_2_ustring);
-    log_level_combobox->append(log_level_3_ustring);
-    log_level_combobox->set_active_text(log_level_1_ustring);
+    //Create and set labels for the log_level_combobox
+    for (unsigned short i = 0; i <= log_levels; ++i)
+    {
+        std::stringstream level_stream;
+        level_stream << i;
+        Glib::ustring level_string = Glib::ustring(level_stream.str());
+        log_level_labels.push_back(level_string);
+        log_level_combobox->append(level_string);
+    }
+    //Set default label for log_level_combobox
+    if (log_levels == 0)
+    {
+        log_level_combobox->set_active_text(log_level_labels.at(0));
+    }
+    else 
+    {
+        log_level_combobox->set_active_text(log_level_labels.at(1));
+    }
+    //Set callback for log_level_combobox
     log_level_combobox->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_log_level_changed));
 
     //Tooltip callbacks (if content is too long, text on hover)
@@ -107,21 +120,24 @@ LoggerViewUI::~LoggerViewUI() {
 
 void LoggerViewUI::on_log_level_changed()
 {
-    //Get the current filter string and the filter type
+    //Get the newly set log level
     auto set_log_level = log_level_combobox->get_active_text();
 
-    if (set_log_level == log_level_0_ustring) {
-        LogLevelSetter::Instance().set_log_level(0);
+    //Find its position in the log_level vector (which is equal to the log_level, see constructor)
+    auto pos_it = std::find(log_level_labels.begin(), log_level_labels.end(), set_log_level);
+    unsigned short log_level;
+    if (pos_it != log_level_labels.end())
+    {
+        log_level = std::distance(log_level_labels.begin(), pos_it);
     }
-    else if (set_log_level == log_level_1_ustring) {
-        LogLevelSetter::Instance().set_log_level(1);
+    else
+    {
+        cpm::Logging::Instance().write(1, "ERROR: Log level set that does not exist!");
+        log_level = 1;
     }
-    else if (set_log_level == log_level_2_ustring) {
-        LogLevelSetter::Instance().set_log_level(2);
-    }
-    else {
-        LogLevelSetter::Instance().set_log_level(3);
-    } 
+    
+    //Set the new log level
+    LogLevelSetter::Instance().set_log_level(log_level);
 }
 
 void LoggerViewUI::dispatcher_callback() {
