@@ -89,6 +89,9 @@ private:
     std::function<void()> reset_visualization_commands;
     std::function<void()> reset_logs;
 
+    //Function to get the main window
+    std::function<Gtk::Window&()> get_main_window;
+
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
@@ -175,6 +178,12 @@ public:
         char *argv[]
         );
     ~SetupViewUI();
+
+    /**
+     * \brief Set the callback function that returns a reference to the application's main window
+     * \param _get_main_window Returns reference to the main window, which is "needed" for window creation (works without it, but not without Gtk complaining in the terminal)
+     */
+    void set_main_window_callback(std::function<Gtk::Window&()> _get_main_window);
 
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();

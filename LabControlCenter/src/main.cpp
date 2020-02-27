@@ -127,6 +127,10 @@ int main(int argc, char *argv[])
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
+    //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created
+    //(Wherever we want to create windows)
+    setupViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
+    paramViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 

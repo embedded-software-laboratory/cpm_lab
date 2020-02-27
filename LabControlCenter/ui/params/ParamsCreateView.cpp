@@ -1,25 +1,25 @@
 #include "ParamsCreateView.hpp"
 
-ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
+ParamsCreateView::ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
     is_edit_window(false),
     float_precision(_float_precision)
 {
-    init_members();
+    init_members(main_window);
 
     //Create empty fields - TODO field types depend on input type, listener for type change, also TODO: unify with other constructor when final structure is known
     create_inputs();
 }
 
-ParamsCreateView::ParamsCreateView(std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, ParameterWithDescription _param, int _float_precision) :
+ParamsCreateView::ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, ParameterWithDescription _param, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
     param(_param),
     is_edit_window(true),
     float_precision(_float_precision)
 {
-    init_members();
+    init_members(main_window);
 
     params_create_add_button->set_label("Save");
 
@@ -108,7 +108,7 @@ void ParamsCreateView::on_type_changed() {
     }
 }
 
-void ParamsCreateView::init_members() {
+void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder = Gtk::Builder::create_from_file("ui/params/params_create.glade");
 
     params_create_builder->get_widget("params_create_dialog", parent);
@@ -126,6 +126,9 @@ void ParamsCreateView::init_members() {
     assert(params_create_abort_button);
     assert(params_create_add_button);
     assert(params_create_values_grid);
+
+    //Set parent for dialog window s.t. Gtk does not show warnings
+    window->set_transient_for(main_window);
 
     //Set values so that the other cannot be used until the parameter is set
     window->set_deletable(true); //No close button, user must use "abort" or "add"

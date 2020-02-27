@@ -1,20 +1,20 @@
 #include "FileChooserUI.hpp"
 
-FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_callback) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
     std::vector<std::string> filter_name{"YAML files"}; 
     std::vector<std::string> filter_type{"text/yaml"};
-    init(filter_name, filter_type);
+    init(parent, filter_name, filter_type);
 }
 
-FileChooserUI::FileChooserUI(std::function<void(std::string, bool)> _on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type) :
     on_close_callback(_on_close_callback)
 {
-    init(filter_name, filter_type);
+    init(parent, filter_name, filter_type);
 }
 
-void FileChooserUI::init(std::vector<std::string> filter_name, std::vector<std::string> filter_type)
+void FileChooserUI::init(Gtk::Window& parent, std::vector<std::string> filter_name, std::vector<std::string> filter_type)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileChooserDialog.glade");
 
@@ -27,6 +27,9 @@ void FileChooserUI::init(std::vector<std::string> filter_name, std::vector<std::
     assert(window);
     assert(button_abort);
     assert(button_load);
+
+    //Set parent for dialog window s.t. Gtk does not show warnings
+    window->set_transient_for(parent);
 
     //Set values so that the other cannot be used until the parameter is set
     window->set_deletable(true); //No close button, user must use "abort" or "add"

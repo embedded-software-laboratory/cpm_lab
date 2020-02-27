@@ -21,7 +21,7 @@ private:
     Gtk::Button* button_abort;
     Gtk::Button* button_load;
 
-    void init(std::vector<std::string> filter_name, std::vector<std::string> filter_type);
+    void init(Gtk::Window& parent, std::vector<std::string> filter_name, std::vector<std::string> filter_type);
 
     //Callback function on close (must always be called!)
     std::function<void(std::string, bool)> on_close_callback;
@@ -35,6 +35,6 @@ private:
     bool handle_button_released(GdkEventKey* event);
     bool called_callback = false;
 public:
-    FileChooserUI(std::function<void(std::string, bool)> on_close_callback);
-    FileChooserUI(std::function<void(std::string, bool)> on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type);
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type);
 };
