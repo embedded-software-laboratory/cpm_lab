@@ -37,18 +37,20 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
             //Case: Matlab script
             command 
+            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "'. ~/dev/software/hlc/environment_variables.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
             << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
-            << " >stdout_hlc.txt 2>stderr_hlc.txt'";
+            << " >~/dev/lcc_script_logs/stdout_hlc.txt 2>~/dev/lcc_script_logs/stderr_hlc.txt'";
         }
         else if (script_name_string.find(".") == std::string::npos)
         {
             //Case: Any executable 
             command 
+            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "\". ~/dev/software/hlc/environment_variables.bash;"
@@ -62,7 +64,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
         command 
-            << " " << script_params << " >stdout_hlc.txt 2>stderr_hlc.txt\"";
+            << " " << script_params << " >~/dev/lcc_script_logs/stdout_hlc.txt 2>~/dev/lcc_script_logs/stderr_hlc.txt\"";
         }
         else 
         {
@@ -81,6 +83,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         //Generate command
         std::stringstream middleware_command;
         middleware_command 
+            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"middleware\" "
             << "\". ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
@@ -93,7 +96,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
         middleware_command 
-            << " >stdout_middleware.txt 2>stderr_middleware.txt\"";
+            << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
 
         //Execute command
         system(middleware_command.str().c_str());
@@ -127,6 +130,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     //Generate command
     std::stringstream command;
     command 
+        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"" << session_name.str() << "\" "
         << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
@@ -138,7 +142,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command 
-        << " >stdout_vehicle" << id << ".txt 2>stderr_vehicle" << id << ".txt\"";
+        << " >~/dev/lcc_script_logs/stdout_vehicle" << id << ".txt 2>~/dev/lcc_script_logs/stderr_vehicle" << id << ".txt\"";
 
     //Execute command
     //TODO: (nach Besprechung, ob das so okay ist) - nutze fork/execl/kill um das abbrechen zu können (merke PIDs, breche bei Kill ab)
@@ -256,6 +260,7 @@ void Deploy::deploy_ips()
     //Generate command
     std::stringstream command_ips;
     command_ips 
+        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"ips_pipeline\" "
         << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
@@ -265,7 +270,7 @@ void Deploy::deploy_ips()
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command_ips 
-        << " >stdout_ips.txt 2>stderr_ips.txt\"";
+        << " >~/dev/lcc_script_logs/stdout_ips.txt 2>~/dev/lcc_script_logs/stderr_ips.txt\"";
 
     //Kill previous ips basler session if it still exists
     kill_session("ips_basler");
@@ -273,6 +278,7 @@ void Deploy::deploy_ips()
     //Generate command
     std::stringstream command_basler;
     command_basler 
+        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"ips_basler\" "
         << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
@@ -282,7 +288,7 @@ void Deploy::deploy_ips()
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command_basler 
-        << " >stdout_basler.txt 2>stderr_basler.txt\"";
+        << " >~/dev/lcc_script_logs/stdout_basler.txt 2>~/dev/lcc_script_logs/stderr_basler.txt\"";
 
     //Execute command
     system(command_ips.str().c_str());
