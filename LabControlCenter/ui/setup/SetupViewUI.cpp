@@ -148,12 +148,24 @@ void SetupViewUI::switch_ips_set()
 using namespace std::placeholders;
 void SetupViewUI::open_file_explorer()
 {
-    std::vector<std::string> filter_name{"Application", "Matlab script"}; 
-    std::vector<std::string> filter_type{"application/x-sharedlib", "text/x-matlab"};
+    //Filter to show only executables / .m files
+    FileChooserUI::Filter application_filter;
+    application_filter.name = "Application/Matlab";
+    application_filter.mime_filter_types = std::vector<std::string> {"application/x-sharedlib", "text/x-matlab"};
+
+    //Filter to show everything
+    FileChooserUI::Filter all_filter;
+    all_filter.name = "All";
+    all_filter.pattern_filter_types = std::vector<std::string> {"*"};
+
     //Only create the window if we can get the main window
     if (get_main_window)
     {
-        file_chooser_window = make_shared<FileChooserUI>(get_main_window(), std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), filter_name, filter_type);
+        file_chooser_window = make_shared<FileChooserUI>(
+            get_main_window(), 
+            std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+        );
     }
     else
     {

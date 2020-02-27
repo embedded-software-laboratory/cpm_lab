@@ -3,18 +3,19 @@
 FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
-    std::vector<std::string> filter_name{"YAML files"}; 
-    std::vector<std::string> filter_type{"text/yaml"};
-    init(parent, filter_name, filter_type);
+    FileChooserUI::Filter yaml_filter;
+    yaml_filter.name = "YAML files";
+    yaml_filter.mime_filter_types = std::vector<std::string> {{"text/yaml"}};
+    init(parent, std::vector<FileChooserUI::Filter> {{yaml_filter}});
 }
 
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<std::string> filter_name, std::vector<std::string> filter_type) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters) :
     on_close_callback(_on_close_callback)
 {
-    init(parent, filter_name, filter_type);
+    init(parent, filters);
 }
 
-void FileChooserUI::init(Gtk::Window& parent, std::vector<std::string> filter_name, std::vector<std::string> filter_type)
+void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter> filters)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileChooserDialog.glade");
 
@@ -38,14 +39,23 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<std::string> filter_na
     button_abort->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_abort));
     button_load->signal_clicked().connect(sigc::mem_fun(this, &FileChooserUI::on_load));
 
-    //Set filter
-    size_t min_index = std::min(filter_name.size(), filter_type.size());
-    for (size_t index = 0; index < min_index; ++index)
+    //Set filter (filter name and which types to filter for)
+    for (auto filter : filters)
     {
-        auto filter = Gtk::FileFilter::create();
-        filter->set_name(filter_name.at(index).c_str());
-        filter->add_mime_type(filter_type.at(index).c_str());
-        file_chooser_dialog->add_filter(filter);
+        auto gtk_filter = Gtk::FileFilter::create();
+        gtk_filter->set_name(filter.name.c_str());
+        
+        for (auto filter_type : filter.mime_filter_types)
+        {
+            gtk_filter->add_mime_type(filter_type.c_str());
+        }
+        
+        for (auto filter_type : filter.pattern_filter_types)
+        {
+            gtk_filter->add_pattern(filter_type.c_str());
+        }
+
+        file_chooser_dialog->add_filter(gtk_filter);
     }
 
     file_chooser_dialog->set_select_multiple(false);
