@@ -85,6 +85,12 @@ public:
      */
     bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online);
 
+    /**
+     * \brief Used to create the folder ~/dev/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
+     * \param name name of the log folder
+     */
+    void create_log_folder(std::string name);
+
 private:
     //Used for process forking
     enum PROCESS_STATE {DONE, RUNNING, ERROR};

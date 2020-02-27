@@ -33,9 +33,6 @@ PATH_TO_SCRIPT="${PATH_TO_SCRIPT%/*}" #Get string before last / (omit name of sc
 # Copy local communication XML - eval must be used to evaluate the script, as it is given as a string and not as a bash command
 eval "cp -rf ~/dev/software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml  ${PATH_TO_SCRIPT}"
 
-# Create folder for (error) logs
-mkdir -p ~/dev/lcc_script_logs
-
 cd /tmp/
 #Create debug log file to check if the script path and name were extracted correctly
 echo "Path to script: ${PATH_TO_SCRIPT} and script name: ${SCRIPT_NAME}" > ~/dev/lcc_script_logs/script_path.log

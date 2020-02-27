@@ -27,8 +27,9 @@ done
 tmux kill-session -t "middleware"
 tmux kill-session -t "script"
 
+
 # Create folder for (error) logs
-mkdir -p ~/dev/lcc_script_logs
+rm -rf ~/dev/lcc_script_logs;mkdir -p ~/dev/lcc_script_logs
 
 # Start middleware
 tmux new-session -d -s "middleware" "cd /tmp/scripts/;bash tmux_middleware.bash --middleware_arguments='${MIDDLEWARE_ARGS}' &> ~/dev/lcc_script_logs/tmux_middleware.txt"

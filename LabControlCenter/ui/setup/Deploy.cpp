@@ -37,7 +37,6 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
             //Case: Matlab script
             command 
-            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "'. ~/dev/software/hlc/environment_variables.bash;"
@@ -50,7 +49,6 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         {
             //Case: Any executable 
             command 
-            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"hlc\" "
             << "\". ~/dev/software/hlc/environment_variables.bash;"
@@ -83,7 +81,6 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         //Generate command
         std::stringstream middleware_command;
         middleware_command 
-            << "mkdir -p ~/dev/lcc_script_logs;"
             << "tmux new-session -d "
             << "-s \"middleware\" "
             << "\". ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
@@ -130,7 +127,6 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     //Generate command
     std::stringstream command;
     command 
-        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"" << session_name.str() << "\" "
         << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
@@ -260,7 +256,6 @@ void Deploy::deploy_ips()
     //Generate command
     std::stringstream command_ips;
     command_ips 
-        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"ips_pipeline\" "
         << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
@@ -278,7 +273,6 @@ void Deploy::deploy_ips()
     //Generate command
     std::stringstream command_basler;
     command_basler 
-        << "mkdir -p ~/dev/lcc_script_logs;"
         << "tmux new-session -d "
         << "-s \"ips_basler\" "
         << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
@@ -359,6 +353,18 @@ std::string Deploy::bool_to_string(bool var)
     {
         return "false";
     }
+}
+
+void Deploy::create_log_folder(std::string name)
+{
+    //Generate command
+    std::stringstream command_folder;
+    command_folder 
+        << "rm -rf ~/dev/" << name << ";"
+        << "mkdir -p ~/dev/" << name;
+
+    //Execute command
+    system(command_folder.str().c_str());
 }
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)

@@ -18,9 +18,6 @@ done
 #Load environment variables, like RTI location, library location, Matlab location...
 . ./environment_variables.bash
 
-# Create folder for (error) logs
-mkdir -p ~/dev/lcc_script_logs
-
 # Start screen for middleware; detach and start middleware
 cd ~/dev/software/hlc/middleware/build
 
