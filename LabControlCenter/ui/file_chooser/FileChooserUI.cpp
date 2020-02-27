@@ -61,6 +61,7 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     file_chooser_dialog->set_select_multiple(false);
 
     file_chooser_dialog->signal_key_release_event().connect(sigc::mem_fun(this, &FileChooserUI::handle_button_released));
+    file_chooser_dialog->signal_button_press_event().connect(sigc::mem_fun(this, &FileChooserUI::handle_double_click));
     file_chooser_dialog->add_events(Gdk::KEY_RELEASE_MASK);
 
     //Listen for delete event - so that callback function is always called properly
@@ -76,6 +77,45 @@ bool FileChooserUI::handle_button_released(GdkEventKey* event) {
         }
         else if (event->keyval == GDK_KEY_Escape) {
             on_abort();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool FileChooserUI::handle_double_click(GdkEventButton* event)
+{
+    if (event->type == GDK_2BUTTON_PRESS)
+    {
+        // //We need to make sure that the selected file is not a folder
+        // bool is_a_file = true;
+        // try
+        // {
+        //     Glib::RefPtr<Gio::File> file = file_chooser_dialog->get_file();
+        //     file->read();
+        // }
+        // catch (Gio::Error err)
+        // {
+        //     //Error like IS_DIRECTORY is thrown - I could not find any other quick method to check if it is a file or a directory
+        //     is_a_file = false;
+        // }
+        // catch (...)
+        // {
+        //     //Maybe take further measures here
+        //     is_a_file = false;
+        // }
+
+        struct stat info;
+        bool is_a_file = true;
+
+        if(stat( file_chooser_dialog->get_filename().c_str(), &info ) != 0)
+            is_a_file = false; //Cannot be accessed
+        else if(info.st_mode & S_IFDIR)
+            is_a_file = false; //Is a directory
+        
+        if (is_a_file)
+        {
+            on_load();
             return true;
         }
     }

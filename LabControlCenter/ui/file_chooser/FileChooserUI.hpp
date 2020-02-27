@@ -9,6 +9,7 @@
 #include <functional>
 #include <iostream>
 #include <locale>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -42,6 +43,7 @@ private:
 
     //Key events - act depending on which button was released
     bool handle_button_released(GdkEventKey* event);
+    bool handle_double_click(GdkEventButton* event);
     bool called_callback = false;
 public:
     FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
