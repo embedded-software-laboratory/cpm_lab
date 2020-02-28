@@ -30,16 +30,28 @@ TEST_CASE( "TimerFD_start_again" ) {
     std::string timer_id = "2";
     cpm::TimerFD timer(timer_id, period, offset, false);
 
+    //Ignore warning that t_start is unused
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
 
     //Check if start_async works as expected as well and store timestamps
     timer.start_async([&](uint64_t t_start){
         usleep(100);
     });
 
+    #pragma GCC diagnostic pop
+
     //Check that the timer cannot be used while it is running
     usleep(1000000);
+
+    //Ignore warning that t_start is unused
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     CHECK_THROWS_AS(timer.start([](uint64_t t_start) {}), cpm::ErrorTimerStart);
     CHECK_THROWS_AS(timer.start_async([](uint64_t t_start) {}), cpm::ErrorTimerStart);
+
+    #pragma GCC diagnostic pop
 
 
     timer.stop();

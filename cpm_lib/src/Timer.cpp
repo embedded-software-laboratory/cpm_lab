@@ -21,7 +21,7 @@ std::shared_ptr<Timer> Timer::create(
         return std::make_shared<TimerSimulated>(node_id, period_nanoseconds, offset_nanoseconds);
     }
     else if (simulated_time && !simulated_time_allowed) {
-        Logging::Instance().write("Timer Error: simulated time requested but not allowed.");
+        Logging::Instance().write("%s", "Timer Error: simulated time requested but not allowed.");
         fprintf(stderr, "Error: simulated time requested but not allowed.\n");
         fflush(stderr); 
         exit(EXIT_FAILURE);

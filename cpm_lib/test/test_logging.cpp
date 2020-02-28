@@ -40,7 +40,7 @@ TEST_CASE( "Logging" ) {
 
     //Log first test data and write it to the stringstream for comparison
     actual_content << first_test;
-    cpm::Logging::Instance().write(first_test.c_str());
+    cpm::Logging::Instance().write("%s", first_test.c_str());
 
     //Store the current file content of the log file - it should match the actual_content stringstream
     usleep(100000); //Sleep 100ms to let the Logger access the file first
@@ -63,7 +63,7 @@ TEST_CASE( "Logging" ) {
     //Write second message to Logger
     std::stringstream stream;
     stream << second_test << with_more;
-    cpm::Logging::Instance().write(stream.str().c_str());
+    cpm::Logging::Instance().write("%s", stream.str().c_str());
     stream.clear();
 
     rti::util::sleep(dds::core::Duration::from_millisecs(50));
