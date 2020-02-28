@@ -181,4 +181,5 @@ void LogStorage::reset()
     std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
     log_storage.clear();
     log_buffer.clear();
+    invalid_utf8_detected.store(false);
 }
