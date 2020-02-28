@@ -178,12 +178,6 @@ MapViewUi::MapViewUi(
             pan_x += mouse_dist_x;
             pan_y += mouse_dist_y;
 
-            std::cout << std::endl;
-            std::cout << "Mouse distance x:" << mouse_dist_x << std::endl;
-            std::cout << "Mouse distance y:" << mouse_dist_y << std::endl;
-            std::cout << "Pan x:" << pan_x << std::endl;
-            std::cout << "Pan y:" << pan_y << std::endl;
-
             old_event_x = event->x;
             old_event_y = event->y;
         }
