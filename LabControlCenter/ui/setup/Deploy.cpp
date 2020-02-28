@@ -39,7 +39,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
-            << "'. ~/dev/software/hlc/environment_variables.bash;"
+            << "'. ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
             << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
@@ -51,7 +51,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"hlc\" "
-            << "\". ~/dev/software/hlc/environment_variables.bash;"
+            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=hlc"
             << " --simulated_time=" << sim_time_string
@@ -83,7 +83,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         middleware_command 
             << "tmux new-session -d "
             << "-s \"middleware\" "
-            << "\". ~/dev/software/hlc/environment_variables.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
+            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
