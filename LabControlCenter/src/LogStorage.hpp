@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <glib.h>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/Timer.hpp"
@@ -48,6 +50,19 @@ private:
 
     //Clear elements so that count last elements are kept
     void keep_last_elements(std::vector<Log>& vector, size_t count);
+
+    /**
+     * \brief Gtk will complain about non-valid UTF-8 strings when added to the UI
+     * Thus, this function appends a warning that the message is invalid to invalid log messages
+     * The user thus finds out that some of his log messages of his program (-> node_id) are invalid
+     * This function checks all parts of the message, but only changes the log message
+     * Gtk will still show warnings for invalid messages (Pango), but the user, when looking at the logs,
+     * should notice that his log messages are invalid, and where to find them (to be able to correct them)
+     * 
+     * Also affects invalid_utf8_detected: If true, no more logs are stored
+     */
+    void assert_utf8_validity(Log& log);
+    std::atomic_bool invalid_utf8_detected; //If true: Storing logs is stopped (to make the error prominent)
 
 public:
     LogStorage();
