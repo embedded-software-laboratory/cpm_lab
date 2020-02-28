@@ -55,6 +55,9 @@ private:
     std::atomic<bool> parameter_view_unchangeable; //If true, another window is opened that might modify parameters, thus other modification is not allowed
     bool create_window_open = false; //To check whether a new parameter was added or if the selected parameter was modified
 
+    //Function to get the main window
+    std::function<Gtk::Window&()> get_main_window;
+
     //Read all data from parameter storage
     void read_storage_data();
 
@@ -99,4 +102,10 @@ public:
     //Calls to make the UI (in)sensitive during changes
     void make_sensitive();
     void make_insensitive();
+
+    /**
+     * \brief Set the callback function that returns a reference to the application's main window
+     * \param _get_main_window Returns reference to the main window, which is "needed" for window creation (works without it, but not without Gtk complaining in the terminal)
+     */
+    void set_main_window_callback(std::function<Gtk::Window&()> _get_main_window);
 };

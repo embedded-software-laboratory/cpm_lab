@@ -16,6 +16,9 @@
 #define MAX_INT32_SYMBOL (2147483647l)
 #define MIN_INT32_SYMBOL (-2147483648l)
 
+/**
+ * \brief This class creates a window where params can be changed, deleted or created
+ */
 class ParamsCreateView {
 private:
     Glib::RefPtr<Gtk::Builder> params_create_builder;
@@ -36,7 +39,7 @@ private:
     Gtk::Entry* info_entry;
 
     //Function used by both constructors
-    void init_members();
+    void init_members(Gtk::Window& parent);
     void create_inputs();
     void on_type_changed(); //Changes the value input
 
@@ -68,6 +71,6 @@ private:
     bool is_edit_window; //Behaviour different if new param created or old param edited
     int float_precision; //Precision of floats
 public:
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, int float_precision);
-    ParamsCreateView(std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, ParameterWithDescription param, int float_precision);
+    ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, int float_precision);
+    ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, ParameterWithDescription param, int float_precision);
 };
