@@ -35,7 +35,7 @@ eval "cp -rf ~/dev/software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml  ${
 
 cd /tmp/
 #Create debug log file to check if the script path and name were extracted correctly
-echo "Path to script: ${PATH_TO_SCRIPT} and script name: ${SCRIPT_NAME}" > script_path.log
+echo "Path to script: ${PATH_TO_SCRIPT} and script name: ${SCRIPT_NAME}" > ~/dev/lcc_script_logs/script_path.log
 
 #Start either a Matlab script using Matlab or a C++ script
 if [[ ${SCRIPT_NAME} =~ ".m" ]]
@@ -45,5 +45,5 @@ then
     /opt/MATLAB/R2019a/bin/matlab -logfile matlab.log -sd "${PATH_TO_SCRIPT}" -batch "${SCRIPT_NAME}(${SCRIPT_ARGS})"
 else
     #Evaluate the C++ script
-    eval "${PATH_TO_SCRIPT}/${SCRIPT_NAME} ${SCRIPT_ARGS} &> script.log"
+    eval "${PATH_TO_SCRIPT}/${SCRIPT_NAME} ${SCRIPT_ARGS} &> ~/dev/lcc_script_logs/script.log"
 fi

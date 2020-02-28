@@ -292,6 +292,9 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
+    //Create log folder for all applications that are started on this machine
+    deploy_functions->create_log_folder("lcc_script_logs");
+
     //Reset old UI elements (difference to kill: Also reset the Logs)
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
