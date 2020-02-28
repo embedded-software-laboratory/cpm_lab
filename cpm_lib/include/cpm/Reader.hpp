@@ -6,8 +6,8 @@
  * the newest valid received sample according to the 
  * timestamp of the DDS type T. Use this reader if 
  * a synchronous use of samples is desired.
- * This reader uses a ring buffer that holds the latest
- * N samples. Any used DDS type is required to 
+ * This reader uses a buffer that holds the latest
+ * samples. Any used DDS type is required to 
  * include the Header.idl: It contains timestamps that specify 
  * from when on a sample is valid (valid_after_stamp) 
  * and a stamp for when a sample was created (create_stamp). 
@@ -20,10 +20,10 @@
  */
 
 #include <dds/sub/ddssub.hpp>
+#include <iterator>
 #include <mutex>
+#include <vector>
 #include "cpm/ParticipantSingleton.hpp"
-
-#define CPM_READER_RING_BUFFER_SIZE (64)
 
 namespace cpm
 {
@@ -33,18 +33,64 @@ namespace cpm
         dds::sub::DataReader<T> dds_reader;
         std::mutex m_mutex;
 
-        T ring_buffer[CPM_READER_RING_BUFFER_SIZE];
-        size_t ring_buffer_index = 0; // index of next write == index of oldest element
+        std::vector<const T> messages_buffer;
 
-        void flush_dds_reader()
+        /**
+         * \brief Store all received messages since the last call to get_samples in the data structure
+         * The current time is used to determine whether a message should be stored at all
+         * \param t_now Current time
+         */
+        void flush_dds_reader(const uint64_t& t_now)
         {
             auto samples = dds_reader.take();
-            for(auto sample: samples)
+            for(auto it = samples.begin(); it != samples.end(); ++it)
             {
+                auto& sample = *it;
                 if(sample.info().valid()) 
                 {
-                    ring_buffer[ring_buffer_index] = sample.data();
-                    ring_buffer_index = (ring_buffer_index+1) % CPM_READER_RING_BUFFER_SIZE;
+                    //Add the sample only if no newer sample has been received that is already valid
+                    if (std::next(it, 1) != samples.end())
+                    {
+                        auto& next_sample = *(std::next(it, 1));
+                        if (next_sample.data().header().valid_after_stamp().nanoseconds() <= t_now)
+                            continue;
+                    }
+
+                    //ACHTUNG: Zurzeit falsch, die Werte müssen nicht sortiert sein !!!!!!!!!!!!!
+                    // -> Finde bessere Lösung, vgl. remove_old_messages, wo der neueste Zeitpunkt genutzt wird
+                    // Das muss auch noch geändert werden, denn dort wird zurzeit auch noch t_now verwendet / bzw es scheint so
+                    // -> Vergleiche aktuelle Daten mit größter valider Zeit!
+
+                    messages_buffer.push_back(sample.data());
+                }
+            }
+        }
+
+        /**
+         * \brief Remove all old messages since the last call to get_samples in the data structure
+         */
+        void remove_old_msgs(const uint64_t& t_now)
+        {
+            //First, find out the newest 
+            auto it = messages_buffer.begin();
+            while (it != messages_buffer.end())
+            {
+                auto& msg = *it;
+                //Remove the sample only if a newer sample is available
+                if (std::next(it, 1) != samples.end())
+                {
+                    auto& next_sample = *(std::next(it, 1));
+                    if (next_sample.data().header().valid_after_stamp().nanoseconds() <= t_now)
+                    {
+                        //Remove the msg, get a new iterator to the next position to proceed
+                        it = messages_buffer.erase(it);
+                    }
+                    else
+                    {
+                        //Get the iterator to the next position / proceed to check the age of the next element
+                        ++it;
+                    }
+                    
                 }
             }
         }
@@ -64,7 +110,9 @@ namespace cpm
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
-        { }
+        { 
+            static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), uint64_t>::value, "IDL type must have a Header.");
+        }
         
         /**
          * \brief Constructor using a filtered topic to create a Reader
@@ -75,7 +123,9 @@ namespace cpm
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic,
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
-        { }
+        { 
+            static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), uint64_t>::value, "IDL type must have a Header.");
+        }
         
         /**
          * \brief get the newest valid sample that was received by the reader
@@ -88,7 +138,7 @@ namespace cpm
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            flush_dds_reader();
+            flush_dds_reader(t_now);
 
             sample_out = T();
             sample_out.header().create_stamp().nanoseconds(0);
@@ -112,6 +162,11 @@ namespace cpm
                     sample_age_out = t_now - sample_out.header().valid_after_stamp().nanoseconds();
                 }
             }
+
+            //Delete samples that are older than the selected sample (regarding valid_after)
+            //TODO: At reviewer: Should messages that are too old regarding their creation stamp be deleted as well?
+            //      If so: A 'timeout' for this could be set in the constructor
+            remove_old_msgs(sample_out.header().valid_after_stamp().nanoseconds());
         }
     };
 
