@@ -146,7 +146,7 @@ MpcController::MpcController(uint8_t _vehicle_id)
 void MpcController::update(
     uint64_t t_now, 
     const VehicleState &vehicleState,
-    const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+    const VehicleCommandTrajectory &commandTrajectory,
     double &out_motor_throttle, 
     double &out_steering_servo
 )
@@ -160,7 +160,7 @@ void MpcController::update(
 
     if(!interpolate_reference_trajectory(
         t_now, 
-        trajectory_points,
+        commandTrajectory,
         mpc_reference_trajectory_x,
         mpc_reference_trajectory_y
     ))
@@ -341,11 +341,13 @@ void MpcController::reset_optimizer()
 
 bool MpcController::interpolate_reference_trajectory(
     uint64_t t_now, 
-    const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+    const VehicleCommandTrajectory &commandTrajectory,
     std::vector<double> &out_mpc_reference_trajectory_x,
     std::vector<double> &out_mpc_reference_trajectory_y
 )
 {
+    const auto& trajectory_points = commandTrajectory.trajectory_points();
+
     if(trajectory_points.size() < 2)
     {
         return false;
@@ -356,8 +358,8 @@ bool MpcController::interpolate_reference_trajectory(
     const uint64_t t_end = t_start + (MPC_prediction_steps-1) * (dt_MPC * 1e9);
 
     // interval of the trajectory command
-    const uint64_t t_trajectory_min = trajectory_points.begin()->first;
-    const uint64_t t_trajectory_max = trajectory_points.rbegin()->first;
+    const uint64_t t_trajectory_min = trajectory_points.begin()->t().nanoseconds();
+    const uint64_t t_trajectory_max = (trajectory_points.end()-1)->t().nanoseconds(); //RTI vectors don't have rbegin()
 
 
     if(t_trajectory_min >= t_start)
@@ -385,17 +387,43 @@ bool MpcController::interpolate_reference_trajectory(
     {
         const uint64_t t_interpolation = t_start + i * (dt_MPC * 1e9);
 
+        //Get end point w.r.t. t_interpolation
+        //Get current segment (trajectory points) in current trajectory for interpolation
+        auto start_point = TrajectoryPoint();
+        auto end_point = TrajectoryPoint();
+        start_point.t().nanoseconds(0);
+        end_point.t().nanoseconds(0);
 
-        const auto iterator_segment_end = trajectory_points.lower_bound(t_interpolation);
+        //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
+        for (int i = 1; i < trajectory_points.size(); ++i)
+        {
+            if (trajectory_points.at(i).t().nanoseconds() >= t_now)
+            {
+                end_point = trajectory_points.at(i);
+                start_point = trajectory_points.at(i - 1);
+                break;
+            }
+        }
 
-        assert(iterator_segment_end != trajectory_points.end());
-        assert(iterator_segment_end != trajectory_points.begin());
+        //Log an error if we could not find a valid trajectory segment w.r.t. end
+        if (end_point.t().nanoseconds() == 0)
+        {
+            cpm::Logging::Instance().write(
+                "%s"
+                "No valid interpolation data could be found within the current trajectory segment - no end value could be found!"
+            );
+        }
 
-        auto iterator_segment_start = iterator_segment_end;
-        iterator_segment_start--;
-
-        const TrajectoryPoint start_point = (*iterator_segment_start).second;
-        const TrajectoryPoint end_point = (*iterator_segment_end).second;
+        //Log an error if we could not find a valid trajectory segment w.r.t. start
+        if (start_point.t().nanoseconds() >= t_now)
+        {
+            cpm::Logging::Instance().write(
+                "%s"
+                "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
+            );
+        }
+    
+        assert(t_now <= end_point.t().nanoseconds());
 
         assert(t_interpolation >= start_point.t().nanoseconds());
         assert(t_interpolation <= end_point.t().nanoseconds());

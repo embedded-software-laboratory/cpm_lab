@@ -14,49 +14,7 @@ Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
 {
     reader_CommandDirect = std::unique_ptr<cpm::Reader<VehicleCommandDirect>>(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature = std::unique_ptr<cpm::Reader<VehicleCommandSpeedCurvature>>(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
-
-    asyncReader_vehicleCommandTrajectory = std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> >
-    (
-        new cpm::AsyncReader<VehicleCommandTrajectory>
-        (
-            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
-            {
-                reveice_trajectory_callback(samples);
-            }, 
-            cpm::ParticipantSingleton::Instance(), 
-            topic_vehicleCommandTrajectory
-        )
-    );
-}
-
-void Controller::reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
-{
-    std::lock_guard<std::mutex> lock(command_receive_mutex);
-    for(auto sample : samples) 
-    {
-        if(sample.info().valid())
-        {
-            auto dds_trajectory_points = sample.data().trajectory_points();                                    
-            for(auto trajectory_point : dds_trajectory_points) 
-            {
-                m_trajectory_points[trajectory_point.t().nanoseconds()] = trajectory_point;
-            }
-            state = ControllerState::Trajectory;
-            latest_command_receive_time = m_get_time();
-        }
-    }
-
-    // Erase trajectory points which are older than 10 second
-    const uint64_t past_threshold_time = latest_command_receive_time - 10000000000ull;
-    auto last_valid_it = m_trajectory_points.upper_bound(past_threshold_time);
-    m_trajectory_points.erase(m_trajectory_points.begin(), last_valid_it);
-
-    //Evaluation: Log received timestamp
-    cpm::Logging::Instance().write(
-            "Vehicle %u received trajectory message timestamp at time %llu", 
-            vehicle_id, 
-            latest_command_receive_time
-        );
+    reader_CommandTrajectory = std::unique_ptr<cpm::Reader<VehicleCommandTrajectory>>(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
 }
 
 
@@ -76,8 +34,12 @@ void Controller::receive_commands(uint64_t t_now)
     VehicleCommandSpeedCurvature sample_CommandSpeedCurvature;
     uint64_t sample_CommandSpeedCurvature_age;
 
+    VehicleCommandTrajectory sample_CommandTrajectory;
+    uint64_t sample_CommandTrajectory_age;
+
     reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
     reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
+    reader_CommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
 
 
     if(sample_CommandDirect_age < command_timeout)
@@ -105,6 +67,20 @@ void Controller::receive_commands(uint64_t t_now)
             "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
+            latest_command_receive_time
+        );
+    }
+    else if (sample_CommandTrajectory_age < command_timeout)
+    {
+        m_vehicleCommandTrajectory = sample_CommandTrajectory;  
+        state = ControllerState::Trajectory;
+        latest_command_receive_time = t_now;
+
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            "Vehicle %u read trajectory curvature message timestamp: %llu, at time %llu", 
+            vehicle_id, 
+            sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
             latest_command_receive_time
         );
     }
@@ -148,21 +124,58 @@ void Controller::update_remote_parameters()
 
 std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_command(uint64_t t_now)
 {
-    // Find active segment
-    auto iterator_segment_end = m_trajectory_points.lower_bound(t_now);
-    if(iterator_segment_end != m_trajectory_points.end()
-        && iterator_segment_end != m_trajectory_points.begin()) 
+    //m_vehicleCommandTrajectory is updated in receive_commands, which gets called in get_control_signals
+    //The reason for this confusing structure is that it was most compatible to the already existing solution for the other data types
+    if(m_vehicleCommandTrajectory.header().create_stamp().nanoseconds() > 0) 
     {
-        auto iterator_segment_start = iterator_segment_end;
-        iterator_segment_start--;
-        TrajectoryPoint start_point = (*iterator_segment_start).second;
-        TrajectoryPoint end_point = (*iterator_segment_end).second;
+        //Get current segment (trajectory points) in current trajectory for interpolation
+        auto start_point = TrajectoryPoint();
+        auto end_point = TrajectoryPoint();
+        start_point.t().nanoseconds(0);
+        end_point.t().nanoseconds(0);
+
+        //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
+        for (int i = 1; i < m_vehicleCommandTrajectory.trajectory_points().size(); ++i)
+        {
+            if (m_vehicleCommandTrajectory.trajectory_points().at(i).t().nanoseconds() >= t_now)
+            {
+                end_point = m_vehicleCommandTrajectory.trajectory_points().at(i);
+                start_point = m_vehicleCommandTrajectory.trajectory_points().at(i - 1);
+                break;
+            }
+        }
+
+        //Log an error if we could not find a valid trajectory segment w.r.t. end
+        if (end_point.t().nanoseconds() == 0)
+        {
+            cpm::Logging::Instance().write(
+                "%s"
+                "No valid interpolation data could be found within the current trajectory segment - no end value could be found!"
+            );
+        }
+
+        //Log an error if we could not find a valid trajectory segment w.r.t. start
+        if (start_point.t().nanoseconds() >= t_now)
+        {
+            cpm::Logging::Instance().write(
+                "%s"
+                "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
+            );
+        }
+    
         assert(t_now >= start_point.t().nanoseconds());
         assert(t_now <= end_point.t().nanoseconds());
 
         // We have a valid trajectory segment.
         // Interpolate for the current time.
         return std::make_shared<TrajectoryInterpolation>(t_now, start_point, end_point);
+    }
+    else 
+    {
+        cpm::Logging::Instance().write(
+            "%s"
+            "No valid trajectory data exists at this point in time!"
+        );
     }
     return nullptr;
 }
@@ -355,7 +368,7 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
             // Run controller
             mpcController.update(
-                t_now, m_vehicleState, m_trajectory_points,
+                t_now, m_vehicleState, m_vehicleCommandTrajectory,
                 motor_throttle, steering_servo);
             //trajectory_controller_linear(t_now, motor_throttle, steering_servo);
         }
@@ -418,23 +431,9 @@ void Controller::reset()
 {
     std::lock_guard<std::mutex> lock(command_receive_mutex);
 
-    //Clear reader and data
-    m_trajectory_points.clear();
-
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
-
-    asyncReader_vehicleCommandTrajectory.reset(
-        new cpm::AsyncReader<VehicleCommandTrajectory>
-        (
-            [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples)
-            {
-                reveice_trajectory_callback(samples);
-            }, 
-            cpm::ParticipantSingleton::Instance(), 
-            topic_vehicleCommandTrajectory
-        )
-    );
+    reader_CommandTrajectory.reset(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
 
     //Set current state to stop until new commands are received
     state = ControllerState::Stop;

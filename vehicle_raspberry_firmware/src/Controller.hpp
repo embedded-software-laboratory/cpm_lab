@@ -44,12 +44,13 @@ class Controller
     std::unique_ptr< cpm::Reader<VehicleCommandSpeedCurvature> > reader_CommandSpeedCurvature;
 
     cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
-    std::unique_ptr< cpm::AsyncReader<VehicleCommandTrajectory> > asyncReader_vehicleCommandTrajectory;
+    std::unique_ptr< cpm::Reader<VehicleCommandTrajectory> > reader_CommandTrajectory;
 
     VehicleState m_vehicleState;
 
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
+    VehicleCommandTrajectory m_vehicleCommandTrajectory;
     
     uint8_t vehicle_id;
 
@@ -61,9 +62,7 @@ class Controller
 
     double speed_throttle_error_integral = 0;
 
-    std::map<uint64_t, TrajectoryPoint> m_trajectory_points;
     std::mutex command_receive_mutex;
-
 
     // TODO remove linear trajectory controller related stuff, once the MPC works well
     double trajectory_controller_lateral_P_gain;
@@ -77,7 +76,6 @@ class Controller
 
     void receive_commands(uint64_t t_now);
 
-    void reveice_trajectory_callback(dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples);
     std::shared_ptr<TrajectoryInterpolation> interpolate_trajectory_command(uint64_t t_now);
 
     // Trajectory tacking statistics
