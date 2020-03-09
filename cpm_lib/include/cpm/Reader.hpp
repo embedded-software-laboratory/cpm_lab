@@ -136,7 +136,7 @@ namespace cpm
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { 
-            //static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), uint64_t>::value, "IDL type must have a Header.");
+            static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), rti::core::uint64>::value, "IDL type must have a Header.");
         }
         
         /**
@@ -149,7 +149,7 @@ namespace cpm
             (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
         { 
-            //static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), uint64_t>::value, "IDL type must have a Header.");
+            static_assert(std::is_same<decltype(std::declval<T>().header().create_stamp().nanoseconds()), rti::core::uint64>::value, "IDL type must have a Header.");
         }
         
         /**
