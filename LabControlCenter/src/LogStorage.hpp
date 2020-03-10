@@ -59,10 +59,8 @@ private:
      * Gtk will still show warnings for invalid messages (Pango), but the user, when looking at the logs,
      * should notice that his log messages are invalid, and where to find them (to be able to correct them)
      * 
-     * Also affects invalid_utf8_detected: If true, no more logs are stored
      */
     void assert_utf8_validity(Log& log);
-    std::atomic_bool invalid_utf8_detected; //If true: Storing logs is stopped (to make the error prominent)
 
 public:
     LogStorage();

@@ -7,8 +7,6 @@ LogStorage::LogStorage() :
 {    
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
     file << "ID,Timestamp,Content" << std::endl;
-
-    invalid_utf8_detected.store(false);
 }
 
 LogStorage::~LogStorage()
@@ -22,7 +20,7 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
     std::lock_guard<std::mutex> lock_2(log_buffer_mutex); 
 
     for (auto sample : samples) {
-        if (sample.info().valid() && !(invalid_utf8_detected.load())) {
+        if (sample.info().valid()) {
             //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
             //The warning will still show up, but the log message is altered s.t. the user can find the error
             Log received_log = sample.data();
@@ -155,8 +153,6 @@ void LogStorage::assert_utf8_validity(Log& log)
     //If non-conformant, append an error message to the log string, s.t. this message shows up in the UI (Logs)
     if (! (log_msg_valid && log_id_valid))
     {
-        invalid_utf8_detected.store(true);
-
         std::stringstream changed_log_message_stream;
         changed_log_message_stream << "INVALID UTF-8 ENCODING IN: ";
 
@@ -181,5 +177,4 @@ void LogStorage::reset()
     std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
     log_storage.clear();
     log_buffer.clear();
-    invalid_utf8_detected.store(false);
 }
