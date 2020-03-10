@@ -143,6 +143,6 @@ void LogStorage::reset()
     log_storage.clear();
     log_buffer.clear();
 
-    //Reset UI file - alternative: Create new UI file name for next run, now write to this
+    //Reset UI file
     file.clear();
 }
