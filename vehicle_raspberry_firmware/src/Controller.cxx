@@ -41,6 +41,10 @@ void Controller::receive_commands(uint64_t t_now)
     reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
     reader_CommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
 
+    cpm::Logging::Instance().write(
+            "Sample age: %llu", 
+            sample_CommandTrajectory_age
+        );
 
     if(sample_CommandDirect_age < command_timeout)
     {
@@ -78,7 +82,7 @@ void Controller::receive_commands(uint64_t t_now)
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
-            "Vehicle %u read trajectory curvature message timestamp: %llu, at time %llu", 
+            "Vehicle %u read trajectory message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
             latest_command_receive_time

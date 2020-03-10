@@ -397,7 +397,7 @@ bool MpcController::interpolate_reference_trajectory(
         //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
         for (int i = 1; i < trajectory_points.size(); ++i)
         {
-            if (trajectory_points.at(i).t().nanoseconds() >= t_now)
+            if (trajectory_points.at(i).t().nanoseconds() >= t_interpolation)
             {
                 end_point = trajectory_points.at(i);
                 start_point = trajectory_points.at(i - 1);
@@ -415,11 +415,11 @@ bool MpcController::interpolate_reference_trajectory(
         }
 
         //Log an error if we could not find a valid trajectory segment w.r.t. start
-        if (start_point.t().nanoseconds() >= t_now)
+        if (start_point.t().nanoseconds() >= t_interpolation || start_point.t().nanoseconds() == 0)
         {
             cpm::Logging::Instance().write(
                 "%s"
-                "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
+                "No valid interpolation data could be found within the current trajectory segment - start newer than expected or no start found!"
             );
         }
     
