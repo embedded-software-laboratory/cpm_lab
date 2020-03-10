@@ -15,6 +15,7 @@
  */
 
 TEST_CASE( "Reader" ) {
+    cpm::Logging::Instance().set_id("test_reader");
 
     auto participant = cpm::ParticipantSingleton::Instance();
     dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "asldkjfhslakdj");

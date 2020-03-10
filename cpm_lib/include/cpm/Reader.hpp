@@ -74,7 +74,7 @@ namespace cpm
             {
                 auto& msg = *it;
                 //Remove the sample only if the currently newest sample is newer regarding its creation
-                if (msg.header().create_stamp().nanoseconds() <= current_newest_sample.header().create_stamp().nanoseconds())
+                if (msg.header().create_stamp().nanoseconds() < current_newest_sample.header().create_stamp().nanoseconds())
                 {
                     //Remove the msg, get a new iterator to the next position to proceed
                     it = messages_buffer.erase(it);
