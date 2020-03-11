@@ -66,9 +66,24 @@ public:
     LogStorage();
     ~LogStorage();
 
+    /**
+     * \brief Get all Log messages that have been received since the last time this function was called (up to 100 recent logs are remembered)
+     * \return Vector of log messages
+     */
     std::vector<Log> get_new_logs();
     
+    /**
+     * \brief Get all Log messages that have been received (remembers up to 10000 Log messages before old Log messages are deleted)
+     * \return Vector of log messages
+     */
     std::vector<Log> get_all_logs();
+
+    /**
+     * \brief Get the log_amount most recent Log messages of all that have been received
+     * \param log_amount How many logs should be returned (max value)
+     * \return Vector of log messages
+     */
+    std::vector<Log> get_recent_logs(const long log_amount);
 
     /**
      * \brief Performs a search that is supposed to be run asynchronously in a new thread - using a future is recommended to obtain the result. The search can be aborted by setting continue_search to false (should thus be false at start) - this is useful in case the user starts a new search before the old one is completed
