@@ -316,7 +316,7 @@ void MpcController::optimize_control_inputs(
     }
     else
     {
-        cpm::Logging::Instance().write(2,
+        cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
             "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
@@ -362,7 +362,7 @@ bool MpcController::interpolate_reference_trajectory(
 
     if(t_trajectory_min >= t_start)
     {
-        cpm::Logging::Instance().write(2,
+        cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
             "The trajectory command starts in the future.");
         return false;
@@ -370,7 +370,7 @@ bool MpcController::interpolate_reference_trajectory(
 
     if(t_trajectory_max < t_end)
     {
-        cpm::Logging::Instance().write(2,
+        cpm::Logging::Instance().write(
             "Warning: Trajectory Controller: "
             "The trajectory command has insufficient lead time. "
             "Increase lead time by %.2f ms.",
@@ -404,7 +404,7 @@ bool MpcController::interpolate_reference_trajectory(
 
         if(fabs(trajectory_interpolation.acceleration_x) > 20.0)
         {
-            cpm::Logging::Instance().write(2,
+            cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_x = %f",
@@ -414,7 +414,7 @@ bool MpcController::interpolate_reference_trajectory(
 
         if(fabs(trajectory_interpolation.acceleration_y) > 20.0)
         {
-            cpm::Logging::Instance().write(2,
+            cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_y = %f",
@@ -424,7 +424,7 @@ bool MpcController::interpolate_reference_trajectory(
 
         if(fabs(trajectory_interpolation.curvature) > 50.0)
         {
-            cpm::Logging::Instance().write(2,
+            cpm::Logging::Instance().write(
                 "Warning: Trajectory Controller: "
                 "Large curvature in reference trajectory. "
                 "curvature = %f",

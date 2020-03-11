@@ -87,7 +87,7 @@ void Controller::receive_commands(uint64_t t_now)
         latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
-        cpm::Logging::Instance().write(3,
+        cpm::Logging::Instance().write(
             "Vehicle %u read direct message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandDirect.header().create_stamp().nanoseconds(), 
@@ -101,7 +101,7 @@ void Controller::receive_commands(uint64_t t_now)
         latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
-        cpm::Logging::Instance().write(3,
+        cpm::Logging::Instance().write(
             "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
@@ -281,7 +281,7 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
             const double longitudinal_error_std = sqrt(longitudinal_error_variance);
             const double lateral_error_std = sqrt(lateral_error_variance);
 
-            cpm::Logging::Instance().write(3,
+            cpm::Logging::Instance().write(
                 "Vehicle Controller Tracking Errors:"
                 "long,mean: %f  "
                 "long,std: %f  "
@@ -313,7 +313,7 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     if(latest_command_receive_time + command_timeout < t_now
         && state != ControllerState::Stop)
     {
-        cpm::Logging::Instance().write(0,
+        cpm::Logging::Instance().write(
             "Warning: Vehicle Controller: "
             "No new commands received. Stopping.");
         state = ControllerState::Stop;
@@ -322,7 +322,7 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
         && state == ControllerState::Trajectory)
     {
-        cpm::Logging::Instance().write(0,
+        cpm::Logging::Instance().write(
             "Warning: Vehicle Controller: "
             "Lost IPS position reference. Stopping.");
         state = ControllerState::Stop;
