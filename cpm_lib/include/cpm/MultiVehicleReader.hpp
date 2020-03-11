@@ -19,8 +19,7 @@ namespace cpm
         dds::sub::DataReader<T> dds_reader;
         std::mutex m_mutex;
 
-        std::vector<size_t> buffer_indices{};
-        std::vector<std::vector<T>> ring_buffers;
+        std::vector<std::vector<T>> vehicle_buffers;
 
         std::vector<uint8_t> vehicle_ids;
 
@@ -36,8 +35,7 @@ namespace cpm
                     long pos = std::distance(vehicle_ids.begin(), std::find(vehicle_ids.begin(), vehicle_ids.end(), vehicle));
 
                     if (pos < static_cast<long>(vehicle_ids.size()) && pos >= 0) {
-                        ring_buffers.at(pos).at(buffer_indices.at(pos)) = sample.data();
-                        buffer_indices.at(pos) = (buffer_indices.at(pos) + 1) % CPM_READER_RING_BUFFER_SIZE;
+                        vehicle_buffers.at(pos).push_back(sample.data());
                     }
                 }
             }
@@ -49,16 +47,10 @@ namespace cpm
         )
         { 
             //Set size for buffers
-            buffer_indices.resize(num_of_vehicles);
-            ring_buffers.resize(num_of_vehicles);
-            for (std::vector<T>& buffer : ring_buffers) {
-                buffer.resize(CPM_READER_RING_BUFFER_SIZE);
-            }
+            vehicle_buffers.resize(num_of_vehicles);
 
-            //All buffer indices should be 0 when the program is started
             //Also: Create vehicle id list from 1 to num_of_vehicles
             for (long pos = 0; pos < static_cast<long>(num_of_vehicles); ++pos) {
-                buffer_indices.at(pos) = 0;
                 vehicle_ids.push_back(pos + 1);
             }
         }
@@ -69,18 +61,9 @@ namespace cpm
         {             
             //Set size for buffers
             int num_of_vehicles = _vehicle_ids.size();
-            buffer_indices.resize(num_of_vehicles);
-            ring_buffers.resize(num_of_vehicles);
-            for (std::vector<T>& buffer : ring_buffers) {
-                buffer.resize(CPM_READER_RING_BUFFER_SIZE);
-            }
+            vehicle_buffers.resize(num_of_vehicles);
 
             vehicle_ids = _vehicle_ids;
-
-            //All buffer indices should be 0 when the program is started
-            for (long pos = 0; pos < static_cast<long>(num_of_vehicles); ++pos) {
-                buffer_indices.at(pos) = 0;
-            }
         }
 
         MultiVehicleReader(const MultiVehicleReader &other) 
@@ -88,8 +71,7 @@ namespace cpm
             std::lock_guard<std::mutex> lock(m_mutex);
 
             dds_reader = other.dds_reader;
-            buffer_indices = other.buffer_indices;
-            ring_buffers = other.ring_buffers;
+            vehicle_buffers = other.vehicle_buffers;
             vehicle_ids = other.vehicle_ids;
         }
         
@@ -115,15 +97,8 @@ namespace cpm
 
             // select samples
             for (long pos = 0; pos < static_cast<long>(vehicle_ids.size()); ++pos) {
-                for (long i = 0; i < CPM_READER_RING_BUFFER_SIZE; ++i)
+                for (auto& current_sample : vehicle_buffers.at(pos))
                 {
-                    auto& current_sample = 
-                        ring_buffers
-                        .at(pos)
-                        .at(
-                            (i + buffer_indices.at(pos)) % CPM_READER_RING_BUFFER_SIZE
-                        );
-
                     if(current_sample.header().valid_after_stamp().nanoseconds() > t_now) 
                     {
                         // Data is "in the future", ignore for now
@@ -137,6 +112,30 @@ namespace cpm
                         sample_out[vehicle_ids.at(pos)] = current_sample;
                         sample_age_out[vehicle_ids.at(pos)] = 
                             t_now - current_sample.header().valid_after_stamp().nanoseconds();
+                    }
+                }
+            }
+
+            //Clear old data
+
+            //Delete all messages that are older than the currently newest sample
+            //Take a look at the create_stamp only for this
+            //We do this because we do not need these messages anymore, and as they take up space
+            for (long pos = 0; pos < static_cast<long>(vehicle_ids.size()); ++pos) {
+                auto it = vehicle_buffers.at(pos).begin();
+                while (it != vehicle_buffers.at(pos).end())
+                {
+                    auto& msg = *it;
+                    //Remove the sample only if the currently newest sample is newer regarding its creation
+                    if (msg.header().create_stamp().nanoseconds() < sample_out[vehicle_ids.at(pos)].header().create_stamp().nanoseconds())
+                    {
+                        //Remove the msg, get a new iterator to the next position to proceed
+                        it = vehicle_buffers.at(pos).erase(it);
+                    }
+                    else
+                    {
+                        //Get the iterator to the next position / proceed to check the age of the next element
+                        ++it;
                     }
                 }
             }

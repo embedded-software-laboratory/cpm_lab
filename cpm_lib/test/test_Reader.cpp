@@ -2,6 +2,7 @@
 #include "cpm/dds/VehicleState.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
+#include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
 
 #include <dds/sub/ddssub.hpp>
