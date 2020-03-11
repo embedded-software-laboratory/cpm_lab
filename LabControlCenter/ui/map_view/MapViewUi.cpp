@@ -280,12 +280,12 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     for(const auto& entry : vehicleTrajectories) 
     {
         const auto vehicle_id = entry.first;
-        const auto& trajectory_points = entry.second;
+        const auto& trajectory = entry.second;
 
         std::vector<TrajectoryPoint> trajectory_segment;
-        for (const auto& trajectory_point : trajectory_points)
+        for (const auto& trajectory_point : trajectory.trajectory_points())
         {
-            trajectory_segment.push_back(trajectory_point.second);
+            trajectory_segment.push_back(trajectory_point);
         }        
 
         if(trajectory_segment.size() > 1)

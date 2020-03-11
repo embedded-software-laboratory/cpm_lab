@@ -41,11 +41,6 @@ void Controller::receive_commands(uint64_t t_now)
     reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
     reader_CommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
 
-    cpm::Logging::Instance().write(
-            "Sample age: %llu", 
-            sample_CommandTrajectory_age
-        );
-
     if(sample_CommandDirect_age < command_timeout)
     {
         m_vehicleCommandDirect = sample_CommandDirect;
