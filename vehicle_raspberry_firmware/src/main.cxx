@@ -112,12 +112,12 @@ int main(int argc, char *argv[])
 
     
     // Timing / profiling helper
-    uint64_t t_prev = update_loop->get_time();
-    auto log_fn = [&](int line){
-        uint64_t now = update_loop->get_time();
-        cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
-        t_prev = now;
-    };
+    // uint64_t t_prev = update_loop->get_time();
+    // auto log_fn = [&](int line){
+    //     uint64_t now = update_loop->get_time();
+    //     cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
+    //     t_prev = now;
+    // };
     
     //----------------------------------------------------------------------------------------------------------------------
 
@@ -272,7 +272,9 @@ int main(int argc, char *argv[])
             //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
             //Define x empty runs before the reset
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
-            cpm::Logging::Instance().write("Received stop signal");
+
+            //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+            cpm::Logging::Instance().write("Received stop %s", "signal");
         }
     );
     

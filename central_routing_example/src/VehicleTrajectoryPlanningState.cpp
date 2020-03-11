@@ -115,7 +115,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
-        int earliest_collision__speed_profile_index = 1<<30;
+        size_t earliest_collision__speed_profile_index = 1<<30;
         int colliding_vehicle_id = 0;
 
         // Find the earliest collision

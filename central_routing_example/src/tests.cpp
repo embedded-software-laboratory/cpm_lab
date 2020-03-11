@@ -3,7 +3,7 @@
 
 int main()
 {
-    for (int i_start_edge = 0; i_start_edge < laneGraphTools.n_edges; ++i_start_edge)
+    for (size_t i_start_edge = 0; i_start_edge < laneGraphTools.n_edges; ++i_start_edge)
     {
         vector<size_t> current_route_edge_indices;
         current_route_edge_indices.push_back(i_start_edge);
