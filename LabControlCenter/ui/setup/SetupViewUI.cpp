@@ -148,9 +148,30 @@ void SetupViewUI::switch_ips_set()
 using namespace std::placeholders;
 void SetupViewUI::open_file_explorer()
 {
-    std::vector<std::string> filter_name{"Application", "Matlab script"}; 
-    std::vector<std::string> filter_type{"application/x-sharedlib", "text/x-matlab"};
-    file_chooser_window = make_shared<FileChooserUI>(std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), filter_name, filter_type);
+    //Filter to show only executables / .m files
+    FileChooserUI::Filter application_filter;
+    application_filter.name = "Application/Matlab";
+    application_filter.mime_filter_types = std::vector<std::string> {"application/x-sharedlib", "text/x-matlab"};
+
+    //Filter to show everything
+    FileChooserUI::Filter all_filter;
+    all_filter.name = "All";
+    all_filter.pattern_filter_types = std::vector<std::string> {"*"};
+
+    //Only create the window if we can get the main window
+    if (get_main_window)
+    {
+        file_chooser_window = make_shared<FileChooserUI>(
+            get_main_window(), 
+            std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+        );
+    }
+    else
+    {
+        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+    }
+    
 }
 
 void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
@@ -271,9 +292,11 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
+    //Create log folder for all applications that are started on this machine
+    deploy_functions->create_log_folder("lcc_script_logs");
+
     //Reset old UI elements (difference to kill: Also reset the Logs)
     //Kill timer in UI as well, as it should not show invalid information
-    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts
     reset_timer(switch_simulated_time->get_active());
     usleep(100000); //Make sure that the stop signal does not arrive at newly created participants (IS THIS SAFE ENOUGH?)
@@ -281,6 +304,8 @@ void SetupViewUI::deploy_applications() {
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
+    
+    //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
     reset_logs();
 
     // LabCam
@@ -313,7 +338,14 @@ void SetupViewUI::deploy_applications() {
 
         //Show window indicating that the upload process currently takes place
         //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        upload_window = make_shared<UploadWindow>(vehicle_ids, hlc_ids);
+        if (get_main_window)
+        {
+            upload_window = make_shared<UploadWindow>(get_main_window(), vehicle_ids, hlc_ids);
+        }
+        else
+        {
+            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+        }
 
         //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
         if (hlc_ids.size() == 0 || vehicle_ids.size() == 0)
@@ -398,8 +430,15 @@ void SetupViewUI::kill_deployed_applications() {
 
         //Show window indicating that the upload process currently takes place
         //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        upload_window = make_shared<UploadWindow>(std::vector<unsigned int>(), hlc_ids);
-        upload_window->set_text("Killing on remote HLCs...");
+        if (get_main_window)
+        {
+            upload_window = make_shared<UploadWindow>(get_main_window(), std::vector<unsigned int>(), hlc_ids);
+            upload_window->set_text("Killing on remote HLCs...");
+        }
+        else
+        {
+            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+        }
         
         //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
         kill_called.store(true);
@@ -536,6 +575,10 @@ void SetupViewUI::select_no_vehicles()
     }
 }
 
+void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
+{
+    get_main_window = _get_main_window;
+}
 
 Gtk::Widget* SetupViewUI::get_parent()
 {

@@ -162,8 +162,14 @@ void LoggerViewUI::dispatcher_callback() {
 }
 
 void LoggerViewUI::add_log_entry(const Log& entry) {
-    Glib::ustring log_id_ustring(entry.id());
-    Glib::ustring log_msg_ustring(entry.content());
+    //Note: We get a pango UTF-8 warning depending on which strings we are adding - we must make sure that they are UTF-8 encoded
+    //This is done in LogStorage - a warning is added to the log, s.t. a user can correct it
+    //The log is not deleted (the Gtk warning still shows up) s.t. the user can easier find out where to find their error
+    std::string log_id_string(entry.id());
+    std::string log_msg_string(entry.content());
+
+    Glib::ustring log_id_ustring(log_id_string);
+    Glib::ustring log_msg_ustring(log_msg_string);
 
     Gtk::TreeModel::Row row;
     row = *(log_list_store->append());

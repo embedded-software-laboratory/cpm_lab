@@ -14,6 +14,7 @@
 #include <thread>
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <glib.h>
 
 #include "LoggerModelRecord.hpp"
 #include "TimerTrigger.hpp"

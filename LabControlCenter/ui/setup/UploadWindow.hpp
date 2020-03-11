@@ -18,7 +18,7 @@ private:
     Gtk::Window* upload_window;
     Gtk::Label* label_upload;
 public:
-    UploadWindow(std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids);
+    UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids);
 
     /**
      * \brief If an upload failed, then show an according message to the user

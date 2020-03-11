@@ -21,4 +21,4 @@ done
 # Start screen for middleware; detach and start middleware
 cd ~/dev/software/hlc/middleware/build
 
-./middleware ${MIDDLEWARE_ARGS} &> middleware.log
+./middleware ${MIDDLEWARE_ARGS} &> ~/dev/lcc_script_logs/middleware.log

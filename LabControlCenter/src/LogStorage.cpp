@@ -21,12 +21,17 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
 
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            log_storage.push_back(sample.data());
-            log_buffer.push_back(sample.data());
+            //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
+            //The warning will still show up, but the log message is altered s.t. the user can find the error
+            Log received_log = sample.data();
+            assert_utf8_validity(received_log);
+
+            log_storage.push_back(received_log);
+            log_buffer.push_back(received_log);
 
             //Write logs immediately to csv file (taken from cpm library)
             //For the log file: csv, so escape '"'
-            std::string str = sample.data().content();
+            std::string str = received_log.content();
             std::string log_string = std::string(str);
             std::string escaped_quote = std::string("\"\"");
             size_t pos = 0;
@@ -42,7 +47,7 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
             std::lock_guard<std::mutex> lock(file_mutex);
 
             //Add the message to the log file
-            file << sample.data().id() << "," << sample.data().stamp().nanoseconds() << "," << log_string << std::endl;
+            file << received_log.id() << "," << received_log.stamp().nanoseconds() << "," << log_string << std::endl;
         }
     }
 
@@ -136,10 +141,43 @@ void LogStorage::keep_last_elements(std::vector<Log>& vector, size_t count) {
     }
 }
 
+void LogStorage::assert_utf8_validity(Log& log)
+{
+    std::string log_id_string(log.id());
+    std::string log_msg_string(log.content());
+
+    //Use a glib function to check utf8 conformance
+    bool log_msg_valid = g_utf8_validate(log_msg_string.c_str(), -1, NULL);
+    bool log_id_valid = g_utf8_validate(log_id_string.c_str(), -1, NULL);
+
+    //If non-conformant, append an error message to the log string, s.t. this message shows up in the UI (Logs)
+    if (! (log_msg_valid && log_id_valid))
+    {
+        std::stringstream changed_log_message_stream;
+        changed_log_message_stream << "INVALID UTF-8 ENCODING IN: ";
+
+        if (! log_id_valid)
+        {
+            changed_log_message_stream << " ID | ";
+        }
+        if (! log_msg_valid)
+        {
+            changed_log_message_stream << " CONTENT | ";
+        }
+
+        changed_log_message_stream << " --- msg was: " << log_msg_string;
+
+        log.content(changed_log_message_stream.str());
+    }
+}
+
 void LogStorage::reset() 
 {
     std::unique_lock<std::mutex> lock(log_storage_mutex);
     std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
     log_storage.clear();
     log_buffer.clear();
+
+    //Reset UI file
+    file.clear();
 }

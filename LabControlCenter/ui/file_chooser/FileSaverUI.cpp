@@ -1,6 +1,6 @@
 #include "FileSaverUI.hpp"
 
-FileSaverUI::FileSaverUI(std::function<void(std::string, bool)> _on_close_callback) :
+FileSaverUI::FileSaverUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileSaverDialog.glade");
@@ -14,6 +14,9 @@ FileSaverUI::FileSaverUI(std::function<void(std::string, bool)> _on_close_callba
     assert(window);
     assert(button_abort);
     assert(button_save);
+
+    //Set parent for dialog window s.t. Gtk does not show warnings
+    window->set_transient_for(parent);
 
     //Set values so that the other cannot be used until the parameter is set
     window->set_deletable(true); //No close button, user must use "abort" or "add"

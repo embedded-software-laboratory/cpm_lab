@@ -34,11 +34,14 @@ int main(int argc, char *argv[])
         vehicle_ids.push_back(i);
     }
     std::stringstream vehicle_ids_stream;
-    for (auto id : vehicle_ids)
+    vehicle_ids_stream << "Vehicle IDs: ";
+    for (uint8_t id : vehicle_ids)
     {
-        vehicle_ids_stream << "|" << id;
+        vehicle_ids_stream << static_cast<uint32_t>(id) << "|"; //Cast s.t. uint8_t is not interpreted as a character
     }
     std::string vehicle_ids_string = vehicle_ids_stream.str();
+
+    std::cout << vehicle_ids_string << std::endl;
 
 
     const uint64_t dt_nanos = 400000000ull;
@@ -70,7 +73,7 @@ int main(int argc, char *argv[])
             auto commands = planner.get_trajectory_commands();
             auto computation_end_time = timer->get_time();
 
-            cpm::Logging::Instance().write("Vehicle IDs: %s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string, computation_start_time, computation_end_time);
+            cpm::Logging::Instance().write("%s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string.c_str(), computation_start_time, computation_end_time);
             for(auto& command:commands)
             {
                 writer_vehicleCommandTrajectory.write(command);

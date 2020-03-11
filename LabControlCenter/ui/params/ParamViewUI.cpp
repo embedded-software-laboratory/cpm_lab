@@ -189,11 +189,16 @@ void ParamViewUI::delete_selected_row() {
 using namespace std::placeholders;
 void ParamViewUI::open_param_create_window() {
     //Get a "lock" for the window if it does not already exist, else ignore the user request
-    if(! parameter_view_unchangeable.exchange(true)) {
+    //Also, a reference to the main window must already exist
+    if(! parameter_view_unchangeable.exchange(true) && get_main_window) {
         make_insensitive();
         create_window_open = true;
-        create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
+        create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
     } 
+    else if (!get_main_window)
+    {
+        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param create dialog");
+    }
 }
 
 void ParamViewUI::open_param_edit_window() {
@@ -211,8 +216,12 @@ void ParamViewUI::open_param_edit_window() {
         if (get_selected_row(name)) {
             ParameterWithDescription param;
             //Get the parameter
-            if (parameter_storage->get_parameter(name, param)) {
-                create_window = make_shared<ParamsCreateView>(std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
+            if (parameter_storage->get_parameter(name, param) && get_main_window) {
+                create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
+            }
+            else if (!get_main_window)
+            {
+                cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param edit dialog");
             }
         }
         else {
@@ -304,4 +313,9 @@ void ParamViewUI::make_sensitive() {
 
 void ParamViewUI::make_insensitive() {
     parent->set_sensitive(false);
+}
+
+void ParamViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
+{
+    get_main_window = _get_main_window;
 }
