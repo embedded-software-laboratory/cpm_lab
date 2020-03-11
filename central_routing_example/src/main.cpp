@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         if(planner.is_started())
         {
             auto computation_start_time = timer->get_time();
-            auto commands = planner.get_trajectory_commands();
+            auto commands = planner.get_trajectory_commands(t_now);
             auto computation_end_time = timer->get_time();
 
             cpm::Logging::Instance().write("Vehicle IDs: %s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string, computation_start_time, computation_end_time);
