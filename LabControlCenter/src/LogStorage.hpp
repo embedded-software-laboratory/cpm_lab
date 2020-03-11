@@ -66,7 +66,7 @@ public:
     std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search);
 
     /**
-    * \brief Reset all data structures / delete all log data
+    * \brief Reset all data structures / delete all log data. Is called from the UI element only -> if you want to reset the storage, just call reset on the UI!
     */
     void reset();
 };
