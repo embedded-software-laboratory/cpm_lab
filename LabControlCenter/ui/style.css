@@ -25,13 +25,15 @@
 
 
 #parameters_start_server_toggle{
-    background-image: linear-gradient(#B71C1C);
+    /* background-image: linear-gradient(#B71C1C); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #B71C1C;
     color: white;
 }
 
 #parameters_start_server_toggle:checked{
-    background-image: linear-gradient(#33691E);
+    /* background-image: linear-gradient(#33691E); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #33691E;
     color: white;
 }
@@ -49,25 +51,29 @@
 }
 
 #file_chooser_abort{
-    background-image: linear-gradient(#B71C1C);
+    /* background-image: linear-gradient(#B71C1C); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #B71C1C;
     color: white;
 }
 
 #file_chooser_load{
-    background-image: linear-gradient(#33691E);
+    /* background-image: linear-gradient(#33691E); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #33691E;
     color: white;
 }
 
 #file_saver_abort{
-    background-image: linear-gradient(#B71C1C);
+    /* background-image: linear-gradient(#B71C1C); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #B71C1C;
     color: white;
 }
 
 #file_saver_save{
-    background-image: linear-gradient(#33691E);
+    /* background-image: linear-gradient(#33691E); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #33691E;
     color: white;
 }
@@ -77,16 +83,19 @@
 }
 
 .button_box{
-    background-image: linear-gradient(#C7C7C7);
+    /* background-image: linear-gradient(#C7C7C7); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #C7C7C7;
 }
 
 .monitoring{
-    background-image: linear-gradient(#FAFAFA);
+    /* background-image: linear-gradient(#FAFAFA); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #FAFAFA;
 }
 
 .menu_bar{
-    background-image: linear-gradient(#FFFFFF);
+    /* background-image: linear-gradient(#FFFFFF); */
+    background-image: none; /*This must be set (in case an image is present at default), because else background-color is ignored*/
     background-color: #FFFFFF;
 }
