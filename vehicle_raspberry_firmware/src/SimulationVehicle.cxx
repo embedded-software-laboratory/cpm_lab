@@ -91,7 +91,7 @@ VehicleState SimulationVehicle::update(
     std::map<uint8_t, uint64_t> collisions = get_collisions(t_now, vehicle_id);
     for (auto const& colli : collisions)
     {
-        cpm::Logging::Instance().write(
+        cpm::Logging::Instance().write(0,
             "Collision with vehicle %u at time %llu.", 
             colli.first, colli.second);
     }

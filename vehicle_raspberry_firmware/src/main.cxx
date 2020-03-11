@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         {
             //Log control cycle period
             //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+            cpm::Logging::Instance().write(3,"Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
                 }
                 else 
                 {
-                    cpm::Logging::Instance().write(
+                    cpm::Logging::Instance().write(1,
                         "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
                         n_transmission_attempts);
                 }
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
             {
                 //std::cerr << "Exception: " << e.what() << std::endl;
                 std::string err_message = e.what();
-                cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
+                cpm::Logging::Instance().write(1,"Exception: %s", err_message.c_str());
             }
 
             //If a stop signal was received, stop the vehicle (was done above, get_control_signals is ignored)
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
             //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
             //Define x empty runs before the reset
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
-            cpm::Logging::Instance().write("Received stop signal");
+            cpm::Logging::Instance().write(1,"Received stop signal");
         }
     );
     
