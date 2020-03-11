@@ -126,13 +126,13 @@ int main (int argc, char *argv[]) {
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);
 
-        //Log the received vehicle data size / sample size -> TODO: for verbose log level
-        // std::stringstream stream;
-        // stream << "Got latest messages, state array size: " << states.size();
-        // if (states.size() > 0) {
-        //     stream << " - sample data: " << states.at(0).battery_voltage();
-        // }
-        // cpm::Logging::Instance().write(stream.str().c_str());
+        //Log the received vehicle data size / sample size for verbose log level
+        std::stringstream stream;
+        stream << "Got latest messages, state array size: " << states.size();
+        if (states.size() > 0) {
+            stream << " - sample data: " << states.at(0).battery_voltage();
+        }
+        cpm::Logging::Instance().write(3, stream.str().c_str());
 
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
@@ -173,6 +173,12 @@ int main (int argc, char *argv[]) {
         }
         else {
             //Log error for each HLC if a time step was missed
+            //Method:   Check last time step that was logged when a message from the HLC was received in TypedCommunication
+            //          (If there is none, see below - an error is logged then that no message was ever received)
+            //          Compare this received_time with the current period_time t_now - if no message was received in the last timestep,
+            //          then the time between both timestamps is always greater than period_nanoseconds (one period) -> an error can be logged
+            //          This does NOT work if the message is received in between starting the next period and fetching the last response times
+            //          But: The time discrepancy should be so small that this behaviour is not considered problematic
             for (std::map<uint8_t, uint64_t>::iterator it = lastHLCResponseTimes.begin(); it != lastHLCResponseTimes.end(); ++it) {
                 uint64_t passed_time = (t_now - it->second);
                 if (passed_time > period_nanoseconds) {
@@ -183,13 +189,13 @@ int main (int argc, char *argv[]) {
                     cpm::Logging::Instance().write(stream.str().c_str());
                 }
 
-                //Evaluation log
-                cpm::Logging::Instance().write(
-                    "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
-                    it->first, 
-                    it->second, 
-                    t_now
-                );
+                //Evaluation log - only for higher log level
+                // cpm::Logging::Instance().write(
+                //     "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
+                //     it->first, 
+                //     it->second, 
+                //     t_now
+                // );
             }
             //Also log an error if no HLC data has yet been received
             for (uint8_t id : unsigned_vehicle_ids) {

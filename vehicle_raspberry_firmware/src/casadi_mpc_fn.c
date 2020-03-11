@@ -60,6 +60,10 @@ casadi_real casadi_sq(casadi_real x) { return x*x;}
 
 casadi_real casadi_sign(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
 
+//Suppress warning for unused parameters (iw, w, mem)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /* casadi_mpc_fn:(var_x0[1x4],var_u0[1x2],var_u[3x3],var_momentum[3x3],var_params[10],var_reference_trajectory_x[6],var_reference_trajectory_y[6],var_learning_rate,var_momentum_rate)->(trajectory_x[6],trajectory_y[6],objective,var_momentum_next[3x3],var_u_next[3x3]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a10, a100, a101, a102, a103, a104, a105, a106, a107, a108, a109, a11, a110, a111, a112, a113, a114, a115, a116, a117, a118, a119, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a4, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a5, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a6, a60, a61, a62, a63, a64, a65, a66, a67, a68, a69, a7, a70, a71, a72, a73, a74, a75, a76, a77, a78, a79, a8, a80, a81, a82, a83, a84, a85, a86, a87, a88, a89, a9, a90, a91, a92, a93, a94, a95, a96, a97, a98, a99;
@@ -761,6 +765,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[4]!=0) res[4][8]=a76;
   return 0;
 }
+
+#pragma GCC diagnostic pop
 
 CASADI_SYMBOL_EXPORT int casadi_mpc_fn(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);

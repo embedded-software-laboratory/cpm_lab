@@ -55,12 +55,18 @@ bool FileSaverUI::handle_button_released(GdkEventKey* event) {
     return false;
 }
 
+//Suppress warning for unused parameter (any_event)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool FileSaverUI::on_delete(GdkEventAny* any_event) {
     if (!called_callback) {
         on_close_callback("", false); //false -> do not save changes
     }
     return false;
 }
+
+#pragma GCC diagnostic pop
 
 void FileSaverUI::on_abort() {
     window->close();

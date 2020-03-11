@@ -5,12 +5,13 @@
 
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
-:mpcController(_vehicle_id)
-,vehicle_id(_vehicle_id)
+:
+mpcController(_vehicle_id)
 ,m_get_time(_get_time)
 ,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
 ,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
 ,topic_vehicleCommandTrajectory(cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), _vehicle_id))
+,vehicle_id(_vehicle_id)
 {
     reader_CommandDirect = std::unique_ptr<cpm::Reader<VehicleCommandDirect>>(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature = std::unique_ptr<cpm::Reader<VehicleCommandSpeedCurvature>>(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
@@ -232,7 +233,7 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
 
         const double x = m_vehicleState.pose().x();
         const double y = m_vehicleState.pose().y();
-        const double yaw = m_vehicleState.pose().yaw();
+        //const double yaw = m_vehicleState.pose().yaw();
 
         double longitudinal_error =  cos(yaw_ref) * (x-x_ref)  + sin(yaw_ref) * (y-y_ref);
         double lateral_error      = -sin(yaw_ref) * (x-x_ref)  + cos(yaw_ref) * (y-y_ref);
@@ -313,18 +314,22 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     if(latest_command_receive_time + command_timeout < t_now
         && state != ControllerState::Stop)
     {
+        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
             "Warning: Vehicle Controller: "
-            "No new commands received. Stopping.");
+            "No new commands received. %s", "Stopping.");
+
         state = ControllerState::Stop;
     }
 
     if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
         && state == ControllerState::Trajectory)
     {
+        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
             "Warning: Vehicle Controller: "
-            "Lost IPS position reference. Stopping.");
+            "Lost IPS position reference. %s", "Stopping.");
+
         state = ControllerState::Stop;
     }
 

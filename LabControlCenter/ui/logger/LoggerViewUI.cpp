@@ -14,6 +14,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("autoscroll_check_button", autoscroll_check_button);
     ui_builder->get_widget("logs_search_entry", logs_search_entry);
     ui_builder->get_widget("logs_search_type", logs_search_type);
+    ui_builder->get_widget("log_level_combobox", log_level_combobox);
 
     assert(parent);
     assert(logs_treeview);
@@ -22,6 +23,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     assert(autoscroll_check_button);
     assert(logs_search_entry);
     assert(logs_search_type);
+    assert(log_level_combobox);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
@@ -65,6 +67,27 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->set_active_text(type_all_ustring);
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
 
+    //Create and set labels for the log_level_combobox
+    for (unsigned short i = 0; i <= log_levels; ++i)
+    {
+        std::stringstream level_stream;
+        level_stream << i;
+        Glib::ustring level_string = Glib::ustring(level_stream.str());
+        log_level_labels.push_back(level_string);
+        log_level_combobox->append(level_string);
+    }
+    //Set default label for log_level_combobox
+    if (log_levels == 0)
+    {
+        log_level_combobox->set_active_text(log_level_labels.at(0));
+    }
+    else 
+    {
+        log_level_combobox->set_active_text(log_level_labels.at(1));
+    }
+    //Set callback for log_level_combobox
+    log_level_combobox->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_log_level_changed));
+
     //Tooltip callbacks (if content is too long, text on hover)
     logs_treeview->set_has_tooltip(true);
     logs_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &LoggerViewUI::tooltip_callback));
@@ -95,6 +118,28 @@ LoggerViewUI::~LoggerViewUI() {
     }
 }
 
+void LoggerViewUI::on_log_level_changed()
+{
+    //Get the newly set log level
+    auto set_log_level = log_level_combobox->get_active_text();
+
+    //Find its position in the log_level vector (which is equal to the log_level, see constructor)
+    auto pos_it = std::find(log_level_labels.begin(), log_level_labels.end(), set_log_level);
+    unsigned short log_level;
+    if (pos_it != log_level_labels.end())
+    {
+        log_level = std::distance(log_level_labels.begin(), pos_it);
+    }
+    else
+    {
+        cpm::Logging::Instance().write(1, "ERROR: Log level set that does not exist!");
+        log_level = 1;
+    }
+    
+    //Set the new log level
+    LogLevelSetter::Instance().set_log_level(log_level);
+}
+
 void LoggerViewUI::dispatcher_callback() {
     if (reset_logs.load())
     {
@@ -108,14 +153,14 @@ void LoggerViewUI::dispatcher_callback() {
         //Update treeview using the newest entries if no filter is applied
         if (!filter_active.load()) {
             //Delete old logs when limit is reached
-            delete_old_logs(100);
+            delete_old_logs(max_log_amount);
 
             //Add only new entries if the whole log list is shown, or add all again after a search was performed
             if (search_reset.load()) {
                 search_reset.store(false);
                 reset_list_store();
 
-                for(const auto& entry : log_storage->get_all_logs()) {
+                for(const auto& entry : log_storage->get_recent_logs(max_log_amount)) {
                     add_log_entry(entry);
                 }
             }
@@ -337,11 +382,17 @@ bool LoggerViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const G
     }
 }
 
+//Suppress warning for unused parameter (scroll_event)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool LoggerViewUI::scroll_callback(GdkEventScroll* scroll_event) {
     //React to a mouse scroll event (but propagate it further)
     autoscroll_check_button->set_active(false);
     return false;
 }
+
+#pragma GCC diagnostic pop
 
 Gtk::Widget* LoggerViewUI::get_parent() {
     return parent;

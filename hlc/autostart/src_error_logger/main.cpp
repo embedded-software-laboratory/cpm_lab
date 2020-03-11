@@ -86,6 +86,10 @@ int main (int argc, char *argv[]) {
 
     std::cout << "Set ID to " << hlc_id << std::endl;
 
+    //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     timer->start([&](uint64_t t_now) {
         if (!std::experimental::filesystem::is_directory("/home/guest/dev/cpm_base/cpm_lib/dds_idl_matlab"))
         {
@@ -120,6 +124,8 @@ int main (int argc, char *argv[]) {
         //This software only is started in case that packages are missing - if none of the conditions above hold, still log a general error message
         cpm::Logging::Instance().write("Files are missing on NUC %s", hlc_id.c_str());
     });
+
+    #pragma GCC diagnostic pop
 
     return 0;
 }
