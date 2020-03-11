@@ -171,22 +171,38 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
         const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
+        size_t trajectory_index = 0;
 
         for (size_t i = 0; i < trajectory.size(); ++i)
         {
             // find active trajectory point
             if(t_now + 1500000000ull < trajectory.at(i).t().nanoseconds())
             {
-                auto trajectoryPoint = trajectory.at(i);
-                VehicleCommandTrajectory command;
-                command.vehicle_id(vehicle_id);
-                command.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
-                writer_vehicleCommandTrajectory.write(command);
+                trajectory_index = i;
                 break;
             }
 
-            // TODO delete trajectory if it is in the past
+            // TODO delete trajectory if it is in the past (Janis' TODO, I don't know if this is still necessary)
         }
+
+        //For interpolation: Create trajectory that starts before and ends after the found point (if possible)
+        std::vector<TrajectoryPoint> trajectory_points;
+        if (trajectory_index > 0)
+        {
+            trajectory_points.push_back(trajectory.at(trajectory_index - 1));
+        }
+        for (size_t i = trajectory_index; i < trajectory.size() && i < trajectory_index + 20; ++i)
+        {
+            //+20 because we cannot add too many points, else RTI causes a crash
+            trajectory_points.push_back(trajectory.at(i));
+        }
+
+        VehicleCommandTrajectory command;
+        command.vehicle_id(vehicle_id);
+        command.trajectory_points(rti::core::vector<TrajectoryPoint>(trajectory_points));
+        command.header().create_stamp().nanoseconds(t_now);
+        command.header().valid_after_stamp().nanoseconds(trajectory.at(trajectory_index).t().nanoseconds());
+        writer_vehicleCommandTrajectory.write(command);
 
     }
 }
