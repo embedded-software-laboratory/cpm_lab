@@ -309,9 +309,8 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         case ControllerState::Stop:
         {
-            // TODO: port stop function from main.cxx to here, use here as well
-            motor_throttle = 0;
-            steering_servo = 0;
+            // Use function that calculates motor values for stopping immediately - which is also already used in main
+            get_stop_signals(1, 1, motor_throttle, steering_servo);
         }
         break;
 
