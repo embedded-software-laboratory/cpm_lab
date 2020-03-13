@@ -90,19 +90,22 @@ class Controller
     //Is used for the stop signal, to prevent receiving late signals
     uint64_t message_receive_pause = 0;
 
-    //Used to remember speed when stop signal is received
+    //Used to remember speed when stop signal is received, or when stop mode is enabled
     double speed_at_stop = 0.0;
+
+    //Used for stop steps in stop mode
+    unsigned int stop_count = 5; 
+    unsigned int STOP_STEPS = 5;
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);
     void get_control_signals(uint64_t stamp_now, double &motor_throttle, double &steering_servo);
 
     /**
-     * \brief Uses the controller's private functions to calculate the correct values for stopping the car
-     * \param stop_count Uses the count of the stop signal to slightly adjust the speed target; 
-     *      starts with negative speed (which gets smaller over steps) to brake harder
-     * \param stop_steps Start value of stop_count
+     * \brief Uses a P controller based on speed_controller (which uses a PI controller) to calculate the correct values for stopping the car (only for that)
+     * \param motor_throttle Motor setting required to stop
+     * \param steering_servo Steering value
      */
-    void get_stop_signals(unsigned int stop_count, uint32_t stop_steps, double &motor_throttle, double &steering_servo);
+    void get_stop_signals(double &motor_throttle, double &steering_servo);
     void reset(); //Resets Reader and trajectory list, sets the current state to stop
 };
