@@ -19,7 +19,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Logging.hpp"
 #include "VehicleState.hpp"
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 #include "Parameter.hpp"
 
 #include "Communication.hpp"
@@ -39,13 +39,9 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
     {
         //Communication parameters
         int hlcDomainNumber = 1; 
-        std::string hlcStateTopicName = "stateTopic"; 
-        std::string vehicleStateTopicName = "vehicleState"; 
-        std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+        std::string vehicleStateListTopicName = "vehicleStateList"; 
         std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
-        std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-        std::string hlcDirectTopicName = "directTopic"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
         std::vector<uint8_t> vehicle_ids = { 0 };
@@ -61,13 +57,22 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, false, simulated_time_allowed, simulated_time);
 
         //Initialize the communication 
-        Communication communication(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, vehicle_ids);
+        Communication communication(
+            hlcDomainNumber,
+            vehicleStateListTopicName,
+            vehicleTrajectoryTopicName,
+            vehicleSpeedCurvatureTopicName,
+            vehicleDirectTopicName,
+            vehicleID,
+            timer,
+            vehicle_ids
+        );
 
         //Sleep for some milliseconds just to make sure that the readers have been initialized properly
         rti::util::sleep(dds::core::Duration::from_millisecs(100));
 
         //Send test data from a virtual vehicle - only the round number matters here, which is transmitted using the timestamp value
-        dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), vehicleStateTopicName);
+        dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState");
         dds::pub::Publisher publisher = dds::pub::Publisher(cpm::ParticipantSingleton::Instance());
         dds::pub::DataWriter<VehicleState> vehicleWriter(publisher, topic);
         for (uint64_t i = 0; i <= max_rounds; ++i) {

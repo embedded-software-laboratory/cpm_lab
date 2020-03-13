@@ -32,20 +32,26 @@ std::vector<Visualization> VisualizationCommandsAggregator::get_all_visualizatio
     std::lock_guard<std::mutex> lock(received_viz_map_mutex);
 
     //Delete old viz messages depending on time stamp
-    std::vector<std::string> delete_ids;
-    for (std::map<std::string, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
+    std::vector<uint64_t> delete_ids;
+    for (std::map<uint64_t, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
         if (it->second.time_to_live() < time_now) {
             delete_ids.push_back(it->first);
         }
     }
-    for (std::string id : delete_ids) {
+    for (uint64_t id : delete_ids) {
         received_viz_map.erase(id);
     }
     
     //Get current viz messages
-    for (std::map<std::string, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
+    for (std::map<uint64_t, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
         viz_vector.push_back(it->second);
     }
 
     return viz_vector;
+}
+
+void VisualizationCommandsAggregator::reset_visualization_commands() 
+{
+    std::lock_guard<std::mutex> lock(received_viz_map_mutex);
+    received_viz_map.clear();
 }

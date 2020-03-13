@@ -76,6 +76,9 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
 
     //Scroll event callback
     logs_treeview->signal_scroll_event().connect(sigc::mem_fun(*this, &LoggerViewUI::scroll_callback));
+
+    //Log reset triggered by another module
+    reset_logs.store(false);
 }
 
 LoggerViewUI::~LoggerViewUI() {
@@ -93,47 +96,57 @@ LoggerViewUI::~LoggerViewUI() {
 }
 
 void LoggerViewUI::dispatcher_callback() {
-    //Update treeview using the newest entries if no filter is applied
-    if (!filter_active.load()) {
-        //Delete old logs when limit is reached
-        delete_old_logs(100);
+    if (reset_logs.load())
+    {
+        log_storage->reset();
+        reset_list_store();
+        std::cout << "LOGS RESET" << std::endl;
+        reset_logs.store(false);
+    }
+    else
+    {
+        //Update treeview using the newest entries if no filter is applied
+        if (!filter_active.load()) {
+            //Delete old logs when limit is reached
+            delete_old_logs(100);
 
-        //Add only new entries if the whole log list is shown, or add all again after a search was performed
-        if (search_reset.load()) {
-            search_reset.store(false);
-            reset_list_store();
+            //Add only new entries if the whole log list is shown, or add all again after a search was performed
+            if (search_reset.load()) {
+                search_reset.store(false);
+                reset_list_store();
 
-            for(const auto& entry : log_storage->get_all_logs()) {
-                add_log_entry(entry);
+                for(const auto& entry : log_storage->get_all_logs()) {
+                    add_log_entry(entry);
+                }
+            }
+            else {
+                for(const auto& entry : log_storage->get_new_logs()) {
+                    add_log_entry(entry);
+                }
             }
         }
         else {
-            for(const auto& entry : log_storage->get_new_logs()) {
-                add_log_entry(entry);
-            }
-        }
-    }
-    else {
-        //Obtain entries that match the filter - use an async thread w. future to do so
-        //This way a search can be aborted if the user changes the search in between - and it does not block the UI thread
-        //Lock mutex so that, when the future is valid, the promise can not be reset until it has been obtained
-        std::unique_lock<std::mutex> lock(promise_reset_mutex);
-        if(search_future.valid()) {
-            //log_list_store.clear(); -> Sorgt nach Aufruf für Absturz bei append()!
-            reset_list_store();
-            Gtk::TreeModel::Row search_row;
-            search_row = *(log_list_store->append());   
-            search_row[log_record.log_id] = "";
-            search_row[log_record.log_content] = "Searching...";
-            search_row[log_record.log_stamp] = 0;
+            //Obtain entries that match the filter - use an async thread w. future to do so
+            //This way a search can be aborted if the user changes the search in between - and it does not block the UI thread
+            //Lock mutex so that, when the future is valid, the promise can not be reset until it has been obtained
+            std::unique_lock<std::mutex> lock(promise_reset_mutex);
+            if(search_future.valid()) {
+                //log_list_store.clear(); -> Sorgt nach Aufruf für Absturz bei append()!
+                reset_list_store();
+                Gtk::TreeModel::Row search_row;
+                search_row = *(log_list_store->append());   
+                search_row[log_record.log_id] = "";
+                search_row[log_record.log_content] = "Searching...";
+                search_row[log_record.log_stamp] = 0;
 
-            if (search_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                std::vector<Log> search_results = search_future.get();
+                if (search_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                    std::vector<Log> search_results = search_future.get();
 
-                //Update the UI accordingly   
-                reset_list_store();            
-                for(const auto& entry : search_results) {
-                    add_log_entry(entry);
+                    //Update the UI accordingly   
+                    reset_list_store();            
+                    for(const auto& entry : search_results) {
+                        add_log_entry(entry);
+                    }
                 }
             }
         }
@@ -326,4 +339,9 @@ bool LoggerViewUI::scroll_callback(GdkEventScroll* scroll_event) {
 
 Gtk::Widget* LoggerViewUI::get_parent() {
     return parent;
+}
+
+void LoggerViewUI::reset()
+{
+    reset_logs.store(true);
 }

@@ -17,7 +17,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
-#include "../idl_compiled/VehicleStateList.hpp"
+#include "VehicleStateList.hpp"
 
 #include "Communication.hpp"
 
@@ -46,15 +46,17 @@ int main (int argc, char *argv[]) {
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
 
     //Constants - topic names
-    const std::string logTopicName = "logTopic";
-    const std::string hlcStateTopicName = "stateTopic"; 
-    const std::string vehicleStateTopicName = "vehicleState"; 
-    const std::string hlcTrajectoryTopicName = "trajectoryTopic"; 
+    const std::string logTopicName = "log";
+    const std::string vehicleStateListTopicName = "vehicleStateList"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
-    const std::string hlcSpeedCurvatureTopicName = "speedCurvatureTopic"; 
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
-    const std::string hlcDirectTopicName = "directTopic"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
+
+    std::cout << "DEBUG: - configuration" << std::endl
+        << "Node ID: " << node_id
+        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv)
+        << "Simulated time: " << simulated_time
+        << "Wait for start: " << wait_for_start;
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
@@ -85,13 +87,26 @@ int main (int argc, char *argv[]) {
     //Initialize the timer
     std::cout << "Initializing Timer..." << std::endl;
     std::shared_ptr<cpm::Timer> timer = cpm::Timer::create(node_id, period_nanoseconds, offset_nanoseconds, wait_for_start, simulated_time_allowed, simulated_time);
+    std::cout << "...done." << std::endl;
 
     //Initialize the communication (TODO later: depending on message type for commands, can change dynamically)
     std::cout << "Initializing Communication..." << std::endl;
-    std::shared_ptr<Communication> communication = std::make_shared<Communication>(hlcDomainNumber, hlcStateTopicName, vehicleStateTopicName, hlcTrajectoryTopicName, vehicleTrajectoryTopicName, hlcSpeedCurvatureTopicName, vehicleSpeedCurvatureTopicName, hlcDirectTopicName, vehicleDirectTopicName, vehicleID, timer, unsigned_vehicle_ids);
+    std::shared_ptr<Communication> communication = std::make_shared<Communication>(
+        hlcDomainNumber,
+        vehicleStateListTopicName,
+        vehicleTrajectoryTopicName,
+        vehicleSpeedCurvatureTopicName,
+        vehicleDirectTopicName,
+        vehicleID,
+        timer,
+        unsigned_vehicle_ids
+    );
+    std::cout << "...done." << std::endl;
 
     //Wait for HLC program to send ready signal
+    std::cout << "Waiting for HLC..." << std::endl;
     communication->wait_for_hlc_ready_msg(unsigned_vehicle_ids);
+    std::cout << "...done." << std::endl;
 
     //Wait for start signal (done by the timer after start)
     //Start the communication with the HLC
@@ -111,13 +126,13 @@ int main (int argc, char *argv[]) {
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);
 
-        //Log the received vehicle data size / sample size
-        std::stringstream stream;
-        stream << "Got latest messages, state array size: " << states.size();
-        if (states.size() > 0) {
-            stream << " - sample data: " << states.at(0).battery_voltage();
-        }
-        cpm::Logging::Instance().write(stream.str().c_str());
+        //Log the received vehicle data size / sample size -> TODO: for verbose log level
+        // std::stringstream stream;
+        // stream << "Got latest messages, state array size: " << states.size();
+        // if (states.size() > 0) {
+        //     stream << " - sample data: " << states.at(0).battery_voltage();
+        // }
+        // cpm::Logging::Instance().write(stream.str().c_str());
 
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
@@ -167,6 +182,14 @@ int main (int argc, char *argv[]) {
                         << ", periods missed: " << passed_time / period_nanoseconds;
                     cpm::Logging::Instance().write(stream.str().c_str());
                 }
+
+                //Evaluation log
+                cpm::Logging::Instance().write(
+                    "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
+                    it->first, 
+                    it->second, 
+                    t_now
+                );
             }
             //Also log an error if no HLC data has yet been received
             for (uint8_t id : unsigned_vehicle_ids) {

@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     dds::pub::DataWriter<Visualization> viz_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<Visualization>("visualization"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable());
 
     Visualization viz;
-    viz.id("1");
+    viz.id(1);
     viz.type(VisualizationType::LineStrips);
     viz.time_to_live(3000000000);
     viz.size(1.0);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     viz_writer.write(viz);
 
     Visualization viz2;
-    viz2.id("2");
+    viz2.id(2);
     viz2.type(VisualizationType::Polygon);
     viz2.time_to_live(5000000000);
     viz2.size(0.05);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     viz_writer.write(viz2);
 
     Visualization viz3;
-    viz3.id("3");
+    viz3.id(3);
     viz3.type(VisualizationType::StringMessage);
     viz3.time_to_live(10000000000);
     viz3.size(1.0);

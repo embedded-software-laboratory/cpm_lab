@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.22.1 -->
 <interface>
-  <requires lib="gtk+" version="3.12"/>
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkScrolledWindow" id="parent">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
@@ -81,7 +81,7 @@ Script Path</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">3</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -107,13 +107,13 @@ Script Path</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-Script Command Line Parameters (TODO: Reserved keywords?)</property>
+Script Command Line Parameters</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">5</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -126,22 +126,6 @@ Script Command Line Parameters (TODO: Reserved keywords?)</property>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">5</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_vehicle">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="valign">center</property>
-                <property name="label" translatable="yes">
-Vehicles</property>
-                <property name="ellipsize">start</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">7</property>
               </packing>
             </child>
             <child>
@@ -167,6 +151,23 @@ Vehicles</property>
                     </child>
                   </object>
                 </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">6</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">
+Vehicles
+</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -229,7 +230,7 @@ Vehicles</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">9</property>
+                <property name="position">8</property>
               </packing>
             </child>
             <child>
@@ -274,26 +275,9 @@ Vehicles</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_further_components">
+              <object class="GtkFlowBox" id="deploy_remote_flowbox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="valign">center</property>
-                <property name="label" translatable="yes">
-Further components</property>
-                <property name="ellipsize">start</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">11</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkFlowBox" id="flowbox_further_components">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="homogeneous">True</property>
                 <property name="min_children_per_line">1</property>
                 <property name="max_children_per_line">2</property>
                 <child>
@@ -301,37 +285,25 @@ Further components</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkLabel" id="label_deploy_remote">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="spacing">8</property>
-                        <child>
-                          <object class="GtkLabel" id="label_launch_middleware">
-                            <property name="width_request">180</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="valign">center</property>
-                            <property name="label" translatable="yes">Middleware</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSwitch" id="switch_launch_middleware">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="halign">center</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Deploy Remote</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkSwitch" id="switch_deploy_remote">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">start</property>
                       </object>
                     </child>
                   </object>
@@ -340,15 +312,100 @@ Further components</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="position">10</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">
+Lab Camera
+</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="position">11</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button_deploy">
-                <property name="label" translatable="yes">Deploy</property>
+              <object class="GtkFlowBox" id="recorder_control_flowbox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
+                <property name="can_focus">False</property>
+                <property name="min_children_per_line">1</property>
+                <property name="max_children_per_line">2</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_recorder_control">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Record</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkSwitch" id="switch_record_labcam">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">start</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">12</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFlowBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="max_children_per_line">2</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_recorder_control1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Camera Status                  </property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkLabel" id="label_camera_status">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Not Initialized</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -366,7 +423,20 @@ Further components</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">13</property>
+                <property name="position">14</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_deploy">
+                <property name="label" translatable="yes">Deploy</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">15</property>
               </packing>
             </child>
           </object>

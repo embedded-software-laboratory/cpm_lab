@@ -56,6 +56,8 @@ MapViewUi::MapViewUi(
             zoom_speed = 1.1;            
         } 
 
+        //(Leons comment, not his code) In my understanding: In between scales [30, 900] zooming is allowed, and we can zoom in and out with the mouse wheel
+        //These values are applied in our draw() function, which is called by a callback function of the drawingArea itself (so: handled by Gtk)
         if(zoom_speed != 1)
         {
             pan_x = event->x - zoom_speed * (event->x - pan_x);
@@ -70,6 +72,7 @@ MapViewUi::MapViewUi(
 
     drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = true;
+        if(event->button == 3) mouse_right_button = true;
 
         // start path drawing mode
         if(mouse_left_button)
@@ -87,12 +90,18 @@ MapViewUi::MapViewUi(
                 path_painting_in_progress.push_back(pose);
             }
         }
+        else if (mouse_right_button)
+        {
+            old_event_x = event->x;
+            old_event_y = event->y;
+        }
 
         return true;
     });
 
     drawingArea->signal_button_release_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = false;
+        if(event->button == 3) mouse_right_button = false;
 
         // end path drawing mode
         if(!mouse_left_button)
@@ -160,6 +169,23 @@ MapViewUi::MapViewUi(
                     break;
                 }
             }
+        }
+        else if(!mouse_left_button && mouse_right_button)
+        {
+            double mouse_dist_x = (event->x - old_event_x);
+            double mouse_dist_y = (event->y - old_event_y);
+
+            pan_x += mouse_dist_x;
+            pan_y += mouse_dist_y;
+
+            std::cout << std::endl;
+            std::cout << "Mouse distance x:" << mouse_dist_x << std::endl;
+            std::cout << "Mouse distance y:" << mouse_dist_y << std::endl;
+            std::cout << "Pan x:" << pan_x << std::endl;
+            std::cout << "Pan y:" << pan_y << std::endl;
+
+            old_event_x = event->x;
+            old_event_y = event->y;
         }
 
         return true;

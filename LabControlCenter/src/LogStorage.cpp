@@ -3,8 +3,16 @@
 using namespace std::placeholders;
 LogStorage::LogStorage() :
     /*Set up communication*/
-    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("Logs"), true)
+    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("log"), true)
 {    
+    file.open(filename, std::ofstream::out | std::ofstream::trunc);
+    file << "ID,Timestamp,Content" << std::endl;
+}
+
+LogStorage::~LogStorage()
+{
+    //Close the file in the destructor
+    file.close();
 }
 
 void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) { 
@@ -15,6 +23,26 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
         if (sample.info().valid()) {
             log_storage.push_back(sample.data());
             log_buffer.push_back(sample.data());
+
+            //Write logs immediately to csv file (taken from cpm library)
+            //For the log file: csv, so escape '"'
+            std::string str = sample.data().content();
+            std::string log_string = std::string(str);
+            std::string escaped_quote = std::string("\"\"");
+            size_t pos = 0;
+            while ((pos = log_string.find('"', pos)) != std::string::npos) {
+                log_string.replace(pos, 1, escaped_quote);
+                pos += escaped_quote.size();
+            }
+            //Also put the whole string in quotes
+            log_string.insert(0, "\"");
+            log_string += "\"";
+
+            //Mutex for writing the message (file, writer) - is released when going out of scope
+            std::lock_guard<std::mutex> lock(file_mutex);
+
+            //Add the message to the log file
+            file << sample.data().id() << "," << sample.data().stamp().nanoseconds() << "," << log_string << std::endl;
         }
     }
 
@@ -102,7 +130,16 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
 }
 
 void LogStorage::keep_last_elements(std::vector<Log>& vector, size_t count) {
+    //Does not use lock() because it is supposed to be called from a function where lock() has been called before
     if (vector.size() > count) {
         vector.erase(vector.begin(), vector.end() - count);
     }
+}
+
+void LogStorage::reset() 
+{
+    std::unique_lock<std::mutex> lock(log_storage_mutex);
+    std::unique_lock<std::mutex> lock_2(log_buffer_mutex);
+    log_storage.clear();
+    log_buffer.clear();
 }

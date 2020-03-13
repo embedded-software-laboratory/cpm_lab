@@ -113,10 +113,24 @@ int main(int argc, char *argv[])
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto setupViewUi = make_shared<SetupViewUI>(timerViewUi, vehicleAutomatedControl, argc, argv);
+    auto setupViewUi = make_shared<SetupViewUI>(
+        vehicleAutomatedControl, 
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        [=](bool simulated_time){return timerViewUi->reset(simulated_time);}, 
+        [=](){return timeSeriesAggregator->reset_all_data();}, 
+        [=](){return trajectoryCommand->stop_all();}, 
+        [=](){return monitoringUi->reset_vehicle_view();}, 
+        [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
+        [=](){return loggerViewUi->reset();}, 
+        argc, 
+        argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
+    //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created
+    //(Wherever we want to create windows)
+    setupViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
+    paramViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 

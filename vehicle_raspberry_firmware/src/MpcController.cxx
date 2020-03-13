@@ -257,7 +257,7 @@ void MpcController::optimize_control_inputs(
 
         // publish visualization of predicted trajectory
         Visualization vis;
-        vis.id("mpc_prediction_" + std::to_string(vehicle_id));
+        vis.id(vehicle_id);
         vis.type(VisualizationType::LineStrips);
         vis.time_to_live(2000000000ull);
         vis.size(0.03);

@@ -12,6 +12,7 @@
 #include <avr/interrupt.h>
 #include "util.h"
 #include "servo_timer.h"
+#include "led.h"
 
 
 #define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
@@ -70,6 +71,8 @@ uint32_t get_tick() {
 // used timer3 because convenient: could have used different timer
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
+	// use the same timer for LEDs, as it has the same frequency-requirements 
+	toggle_led();
 }
 
 
