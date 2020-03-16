@@ -359,7 +359,9 @@ bool MpcController::interpolate_reference_trajectory(
 
     // interval of the trajectory command
     const uint64_t t_trajectory_min = trajectory_points.begin()->t().nanoseconds();
-    const uint64_t t_trajectory_max = (trajectory_points.end()-1)->t().nanoseconds(); //RTI vectors don't have rbegin()
+    //RTI vectors don't have rbegin()
+    assert(trajectory_points.end() != trajectory_points.begin());
+    const uint64_t t_trajectory_max = (trajectory_points.end()-1)->t().nanoseconds();
 
 
     if(t_trajectory_min >= t_start)
