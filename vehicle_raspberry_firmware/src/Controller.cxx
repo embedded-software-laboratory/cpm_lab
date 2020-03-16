@@ -71,17 +71,31 @@ void Controller::receive_commands(uint64_t t_now)
     }
     else if (sample_CommandTrajectory_age < command_timeout)
     {
-        m_vehicleCommandTrajectory = sample_CommandTrajectory;  
-        state = ControllerState::Trajectory;
-        latest_command_receive_time = t_now;
+        //First, we must also check if we have already reached the last point of the received trajectory, 
+        //as we might already have reached it up until now if we did not receive any new data within the command_timeout
+        //In that case, we would not be able to interpolate to reach a new state, but that would also not be necessary, as we would already have reached it
+        //This happens e.g. when the sender has sent its last trajectory - we want the vehicle to go into stop mode then, not to crash because the last (old) command is invalid
+        assert(sample_CommandTrajectory.trajectory_points().end() != sample_CommandTrajectory.trajectory_points().begin()); //RTI does not have rbegin(), so we use end - 1 instead - crash on empty trajectories (Log before that?)
+        auto last_command = *(sample_CommandTrajectory.trajectory_points().end() - 1);
+        if (last_command.t().nanoseconds() >= t_now) //As stated before, the last point must still be our goal, else it is not interesting anymore
+        {
+            m_vehicleCommandTrajectory = sample_CommandTrajectory;  
+            state = ControllerState::Trajectory;
+            latest_command_receive_time = t_now;
 
-        //Evaluation: Log received timestamp
-        cpm::Logging::Instance().write(
-            "Vehicle %u read trajectory message timestamp: %llu, at time %llu", 
-            vehicle_id, 
-            sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
-            latest_command_receive_time
-        );
+            //Evaluation: Log received timestamp
+            cpm::Logging::Instance().write(
+                "Vehicle %u read trajectory message timestamp: %llu, at time %llu", 
+                vehicle_id, 
+                sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
+                latest_command_receive_time
+            );
+        }
+        else
+        {
+            state = ControllerState::Stop;
+        }
+        //Log else? Would be good for debugging, but lead to spamming after a last point was reached
     }
 }
 

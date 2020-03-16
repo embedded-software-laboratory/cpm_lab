@@ -174,7 +174,7 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
         size_t trajectory_index = 0;
         bool trajectory_found = false; //One could also use another type for the index and start with -1, but I did not prefer the necessary typecasts over using a boolean instead
 
-        for (size_t i = 0; i < trajectory.size() - 2; ++i) //-1 because we need valid data for interpolation at the vehicle (else: vehicle crashes for safety reasons)
+        for (size_t i = 0; i < trajectory.size(); ++i) 
         {
             // find active trajectory point
             if(t_now + 1500000000ull < trajectory.at(i).t().nanoseconds())
