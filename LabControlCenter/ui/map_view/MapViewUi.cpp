@@ -1,6 +1,8 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
@@ -393,14 +395,42 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
-    // Draw map (roads) image
-    ctx->save();
+    // Draw map (roads) image 
+    /*ctx->save();
     {
         const double scale = 4.0/image_map->get_height();
         ctx->scale(scale, scale);
         ctx->set_source(image_map,0,0);
         ctx->paint();
     }
+    ctx->restore();*/
+
+    //vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
+    //vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
+    vector<double> lanelet_x;
+    vector<double> lanelet_y;
+
+    xmlDocPtr doc; /* the resulting document tree */
+
+    auto filename = "C-USA_US101-30_1_T-1.xml";
+    doc = xmlReadFile(filename, NULL, 0);
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse %s\n", filename);
+	return;
+    }
+    printf("%s\n",doc->children->name);
+    xmlFreeDoc(doc);
+
+    xmlCleanupParser();
+
+    for (size_t i = 1; i < lanelet_x.size(); ++i)
+    {
+        if(i == 1) ctx->move_to(lanelet_x[i], lanelet_y[i]);
+        else ctx->line_to(lanelet_x[i], lanelet_y[i]);
+    }
+    ctx->set_source_rgb(1,0,0);
+    ctx->set_line_width(0.01);
+    ctx->stroke();
     ctx->restore();
 
     // Draw grid lines

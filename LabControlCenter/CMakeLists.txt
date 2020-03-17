@@ -29,6 +29,10 @@ link_directories(SYSTEM ../../cpm_base/cpm_lib/build/)
 include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
+# commonroad integration
+include_directories(SYSTEM ../../../../../usr/include/libxml2/)
+link_directories(SYSTEM ../../../../../usr/include/libxml2/libxml)
+
 # labcam
 include_directories(labcam/include)
 add_subdirectory(labcam)
