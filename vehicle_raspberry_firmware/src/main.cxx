@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
     //Variabel for the control loop: If a stop signal was received, reset the controller, stop the vehicle, wait, then restart after a while
     //After a while: Wait to make sure that old messages are ignored
-    uint32_t STOP_STEPS = 50; //50Hz -> pause for one second
+    unsigned int STOP_STEPS = 50; //50Hz -> pause for one second
     std::atomic_uint_least32_t stop_counter; //Reset control_stop to false again after some iterations, so that the controller is not reset immediately (ignore old messages) - sleep would lead to problems regarding the VehicleObservation
     stop_counter.store(0); //0 means normal run
 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
                 }
                 else 
                 {
-                    controller.get_stop_signals(stop_counter.load(), STOP_STEPS, motor_throttle, steering_servo);
+                    controller.get_stop_signals(motor_throttle, steering_servo);
                 }
 
                 int n_transmission_attempts = 1;
