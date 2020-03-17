@@ -24,11 +24,20 @@ int main(int argc, char *argv[])
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    int vehicle_id_int = cpm::cmd_parameter_int("vehicle_id", 4, argc, argv);
-    uint8_t vehicle_id;
-    assert(vehicle_id_int > 0);
-    assert(vehicle_id_int < 255);
-    vehicle_id = vehicle_id_int;
+    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
+    std::vector<uint8_t> vehicle_ids;
+    for(auto i:vehicle_ids_int)
+    {
+        assert(i>0);
+        assert(i<255);
+        vehicle_ids.push_back(i);
+    }
+    assert(vehicle_ids.size() > 0);
+    uint8_t vehicle_id = vehicle_ids.at(0);
+
+    //Give user time to drag-and-drop the vehicle to the right position in simulation
+    //(The vehicle does not consider 'mixed' trajectories as before, when trajectories were sent e.g. by both the LCC and the program)
+    sleep(10);
 
 
     // Writer for sending trajectory commands
@@ -107,7 +116,7 @@ int main(int argc, char *argv[])
         // Send the current trajectory 
         rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
         VehicleCommandTrajectory vehicle_command_trajectory;
-        vehicle_command_trajectory.vehicle_id(1); //TODO: Use vehicle_id again! (Which somehow defaults to 4 when called by LCC)
+        vehicle_command_trajectory.vehicle_id(vehicle_id);
         vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
         vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
         vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
