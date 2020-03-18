@@ -406,12 +406,14 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
 
     //vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
     //vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
-    vector<double> lanelet_x;
-    vector<double> lanelet_y;
+    
+    
+    //vector<double> lanelet_x;
+    //vector<double> lanelet_y;
 
-    xmlDocPtr doc; /* the resulting document tree */
+    //xmlDocPtr doc; /* the resulting document tree */
 
-    auto filename = "C-USA_US101-30_1_T-1.xml";
+    /*auto filename = "C-USA_US101-30_1_T-1.xml";
     doc = xmlReadFile(filename, NULL, 0);
     if (doc == NULL) {
         fprintf(stderr, "Failed to parse %s\n", filename);
@@ -430,7 +432,7 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
     ctx->set_source_rgb(1,0,0);
     ctx->set_line_width(0.01);
     ctx->stroke();
-    ctx->restore();
+    ctx->restore();*/
 
     // Draw grid lines
     ctx->save();
