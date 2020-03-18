@@ -6,6 +6,7 @@ using namespace std;
 // handler for bus call messages
 gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 {
+	bus = bus;
 	try
 	{
 		GMainLoop *loop = (GMainLoop *)data;

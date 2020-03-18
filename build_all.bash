@@ -16,10 +16,18 @@ do
     esac
 done
 
+#make simulation variable available in all bash scripts called
+export SIMULATION=$simulation
+pushd LabControlCenter
+bash build.bash
+popd
+
+exit;
+
 # Get cpm lib
 pushd ..
 if [ ! -d "cpm_base" ]; then
-    git clone https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
+	git clone --recursive git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
 fi
 
 cd cpm_base
