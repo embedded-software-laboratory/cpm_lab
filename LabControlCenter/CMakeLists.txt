@@ -5,6 +5,13 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
 link_libraries(dl nsl m pthread rt)
 
+message("Simulation Switch = ${SIMULATION}")
+
+# Pass simulation to C code
+if(SIMULATION)
+    add_definitions(-DSIMULATION)
+endif()
+
 # RTI DDS
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
 include_directories(SYSTEM $ENV{NDDSHOME}/include)
@@ -30,8 +37,10 @@ include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
 # labcam
-include_directories(labcam/include)
-add_subdirectory(labcam)
+if(NOT SIMULATION)
+    include_directories(labcam/include)
+    add_subdirectory(labcam)
+endif()
 
 add_executable(LabControlCenter
     src/LogLevelSetter.hpp
@@ -99,7 +108,13 @@ add_executable(LabControlCenter
     src/main.cpp
 )
 
-target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib ${GTKMM_LIBRARIES})
+
+if(NOT SIMULATION)
+    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib ${GTKMM_LIBRARIES})
+else()
+    target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
+endif()
+
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
 target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
 

@@ -2,20 +2,18 @@ cmake_minimum_required(VERSION 3.1)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE STRING "Modules for CMake" FORCE)
 
 # OpenCV
 set(OPENCV_ROOT /opt/opencv400)
 include_directories(${OPENCV_ROOT}/include/opencv4)
 link_directories(${OPENCV_ROOT}/lib)
-set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_dnn opencv_features2d opencv_flann opencv_gapi opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
-
-
+set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
 
 # Pylon
-set(PYLON_ROOT /opt/pylon5)
-include_directories(SYSTEM ${PYLON_ROOT}/include)
-link_directories(${PYLON_ROOT}/lib64)
-set(Pylon_LIBRARIES GenApi_gcc_v3_0_Basler_pylon_v5_0 GCBase_gcc_v3_0_Basler_pylon_v5_0 pylonbase pylonutility)
+find_package(Pylon REQUIRED)
+include_directories(${PYLON_INCLUDE_DIRS})
+message("-- found Pylon Version ${PYLON_VERSION}")
 
 
 # RTI DDS
@@ -43,7 +41,7 @@ link_libraries(dl nsl m pthread rt)
 add_executable(BaslerLedDetection
     src/main_led_detection.cpp
 )
-target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${Pylon_LIBRARIES})
+target_link_libraries(BaslerLedDetection cpm ${OpenCV_LIBRARIES} ${PYLON_LIBRARIES})
 
 
 
