@@ -17,6 +17,6 @@ popd
 mkdir build
 
 cd build
-cmake .. -DSIMULATION=$SIMULATION
+cmake .. -DSIMULATION=$SIMULATION 
 make -j8
 cd ..

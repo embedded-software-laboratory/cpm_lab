@@ -1,8 +1,7 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include <libxml++-2.6/libxml++/libxml++.h>
 
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"

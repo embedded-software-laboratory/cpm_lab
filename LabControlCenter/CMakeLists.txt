@@ -37,8 +37,8 @@ include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
 # commonroad integration
-include_directories(SYSTEM ../../../../../usr/include/libxml2/)
-link_directories(SYSTEM ../../../../../usr/include/libxml2/libxml)
+include_directories(../../../../../usr/include/libxml++-2.6/)
+include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
 
 # labcam
 if(NOT SIMULATION)
