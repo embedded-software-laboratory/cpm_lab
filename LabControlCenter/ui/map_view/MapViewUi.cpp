@@ -327,104 +327,32 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     }
 }
 
-void MapViewUi::draw_path_painting(const DrawingContext& ctx)
-{
-    if(path_painting_in_progress.size() > 1 && path_painting_in_progress_vehicle_id >= 0)
-    {
-        // Draw path lines
-        ctx->set_source_rgb(0.6,0,0);
-        ctx->move_to(path_painting_in_progress[0].x(), path_painting_in_progress[0].y());
-        for (size_t i = 1; i < path_painting_in_progress.size(); ++i)
-        {
-            ctx->line_to(path_painting_in_progress[i].x(), path_painting_in_progress[i].y());
-        }
-        ctx->set_line_width(0.01);
-        ctx->stroke();
-    }
-}
-
-//Draw all received viz commands on the screen
-void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
-    //Get commands
-    std::vector<Visualization> visualization_commands = get_visualization_msgs_callback();
-
-    for(const auto& entry : visualization_commands) 
-    {
-        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
-            && entry.points().size() > 1) 
-        {
-            const auto& message_points = entry.points();
-
-            //Set beginning point
-            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
-            ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
-
-            for (size_t i = 1; i < message_points.size(); ++i)
-            {
-                //const auto& current_point = message_points.at(i);
-
-                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
-            }  
-
-            //Line from end to beginning point to close the polygon
-            if (entry.type() == VisualizationType::Polygon) {
-                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
-            }
-
-            ctx->set_line_width(entry.size());
-            ctx->stroke();      
-        }
-        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
-            //Set font properties
-            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
-            ctx->set_font_size(entry.size());
-
-            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
-
-            //Flip font
-            Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
-            ctx->set_font_matrix(font_matrix);
-
-            //Draw text
-            ctx->show_text(entry.string_message().c_str());
-        }
-    }
-}
-
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
-    // Draw map (roads) image 
-    /*ctx->save();
+    // Draw map (roads) image     
+    
+    std::string filepath = "/home/kloock/dev/software/LabControlCenter/ui/map_view/C-USA_US101-30_1_T-1.xml";
+
+    xmlpp::DomParser parser;
+    vector<double> lanelet_x;
+    vector<double> lanelet_y;
+
+    try
     {
-        const double scale = 4.0/image_map->get_height();
-        ctx->scale(scale, scale);
-        ctx->set_source(image_map,0,0);
-        ctx->paint();
+        parser.parse_file(filepath);
+
+        if(!parser) cpm::Logging::Instance().write("%s", "ERROR: can not parse file");
+        const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
+
     }
-    ctx->restore();*/
-
-    //vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
-    //vector<double> trajectory_y = vehicle_timeseries.at("pose_y")->get_last_n_values(100);
-    
-    
-    //vector<double> lanelet_x;
-    //vector<double> lanelet_y;
-
-    //xmlDocPtr doc; /* the resulting document tree */
-
-    /*auto filename = "C-USA_US101-30_1_T-1.xml";
-    doc = xmlReadFile(filename, NULL, 0);
-    if (doc == NULL) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
-	return;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Exception caught: " << ex.what() << std::endl;
     }
-    printf("%s\n",doc->children->name);
-    xmlFreeDoc(doc);
 
-    xmlCleanupParser();
 
-    for (size_t i = 1; i < lanelet_x.size(); ++i)
+    /*for (size_t i = 1; i < lanelet_x.size(); ++i)
     {
         if(i == 1) ctx->move_to(lanelet_x[i], lanelet_y[i]);
         else ctx->line_to(lanelet_x[i], lanelet_y[i]);

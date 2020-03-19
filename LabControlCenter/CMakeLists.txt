@@ -39,6 +39,7 @@ link_directories(../../yaml-cpp/build/)
 # commonroad integration
 include_directories(../../../../../usr/include/libxml++-2.6/)
 include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
+link_directories(../../../../../usr/lib/x86_64-linux-gnu/)
 
 # labcam
 if(NOT SIMULATION)
@@ -114,9 +115,9 @@ add_executable(LabControlCenter
 
 
 if(NOT SIMULATION)
-    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib ${GTKMM_LIBRARIES})
+    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib xml++-2.6 ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
+    target_link_libraries(LabControlCenter cpm yaml-cpp xml++-2.6 ${GTKMM_LIBRARIES})
 endif()
 
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
