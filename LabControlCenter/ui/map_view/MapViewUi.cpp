@@ -327,6 +327,151 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     }
 }
 
+void MapViewUi::draw_path_painting(const DrawingContext& ctx)
+{
+    if(path_painting_in_progress.size() > 1 && path_painting_in_progress_vehicle_id >= 0)
+    {
+        // Draw path lines
+        ctx->set_source_rgb(0.6,0,0);
+        ctx->move_to(path_painting_in_progress[0].x(), path_painting_in_progress[0].y());
+        for (size_t i = 1; i < path_painting_in_progress.size(); ++i)
+        {
+            ctx->line_to(path_painting_in_progress[i].x(), path_painting_in_progress[i].y());
+        }
+        ctx->set_line_width(0.01);
+        ctx->stroke();
+    }
+}
+
+//Draw all received viz commands on the screen
+void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
+    //Get commands
+    std::vector<Visualization> visualization_commands = get_visualization_msgs_callback();
+
+    for(const auto& entry : visualization_commands) 
+    {
+        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
+            && entry.points().size() > 1) 
+        {
+            const auto& message_points = entry.points();
+
+            //Set beginning point
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
+
+            for (size_t i = 1; i < message_points.size(); ++i)
+            {
+                //const auto& current_point = message_points.at(i);
+
+                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+            }  
+
+            //Line from end to beginning point to close the polygon
+            if (entry.type() == VisualizationType::Polygon) {
+                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+            }
+
+            ctx->set_line_width(entry.size());
+            ctx->stroke();      
+        }
+        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            //Set font properties
+            ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
+            ctx->set_font_size(entry.size());
+
+            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+
+            //Flip font
+            Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
+            ctx->set_font_matrix(font_matrix);
+
+            //Draw text
+            ctx->show_text(entry.string_message().c_str());
+        }
+    }
+}
+
+void print_node(const xmlpp::Node* node, unsigned int indentation = 0)
+{
+  const Glib::ustring indent(indentation, ' ');
+  std::cout << std::endl; //Separate nodes by an empty line.
+
+  const auto nodeContent = dynamic_cast<const xmlpp::ContentNode*>(node);
+  const auto nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
+  const auto nodeComment = dynamic_cast<const xmlpp::CommentNode*>(node);
+
+  if(nodeText && nodeText->is_white_space()) //Let's ignore the indenting - you don't always want to do this.
+    return;
+
+  const auto nodename = node->get_name();
+
+  if(!nodeText && !nodeComment && !nodename.empty()) //Let's not say "name: text".
+  {
+    const auto namespace_prefix = node->get_namespace_prefix();
+
+    std::cout << indent << "Node name = " ;
+    if(!namespace_prefix.empty())
+      std::cout << namespace_prefix << ":";
+    std::cout << nodename << std::endl;
+  }
+  else if(nodeText) //Let's say when it's text. - e.g. let's say what that white space is.
+  {
+    std::cout << indent << "Text Node" << std::endl;
+  }
+
+  //Treat the various node types differently:
+  if(nodeText)
+  {
+    std::cout << indent << "text = \"" << (nodeText->get_content()) << "\"" << std::endl;
+  }
+  else if(nodeComment)
+  {
+    std::cout << indent << "comment = " << (nodeComment->get_content()) << std::endl;
+  }
+  else if(nodeContent)
+  {
+    std::cout << indent << "content = " << (nodeContent->get_content()) << std::endl;
+  }
+  else if(const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node))
+  {
+    //A normal Element node:
+
+    //line() works only for ElementNodes.
+    std::cout << indent << "     line = " << node->get_line() << std::endl;
+
+    //Print attributes:
+    for (const auto& attribute : nodeElement->get_attributes())
+    {
+      const auto namespace_prefix = attribute->get_namespace_prefix();
+
+      std::cout << indent << "  Attribute ";
+      if(!namespace_prefix.empty())
+        std::cout << (namespace_prefix) << ":";
+      std::cout << (attribute->get_name()) << " = "
+                << (attribute->get_value()) << std::endl;
+    }
+
+    const auto attribute = nodeElement->get_attribute("title");
+    if(attribute)
+    {
+      std::cout << indent;
+      if (dynamic_cast<const xmlpp::AttributeNode*>(attribute))
+        std::cout << "AttributeNode ";
+      else if (dynamic_cast<const xmlpp::AttributeDeclaration*>(attribute))
+        std::cout << "AttributeDeclaration ";
+      std::cout << "title = " << (attribute->get_value()) << std::endl;
+    }
+  }
+
+  if(!nodeContent)
+  {
+    //Recurse through child nodes:
+    for(const auto& child : node->get_children())
+    {
+      print_node(child, indentation + 2); //recursive
+    }
+  }
+}
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
@@ -344,6 +489,7 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
 
         if(!parser) cpm::Logging::Instance().write("%s", "ERROR: can not parse file");
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
+        print_node(pNode);
 
     }
     catch(const std::exception& ex)
