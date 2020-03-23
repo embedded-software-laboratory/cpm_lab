@@ -29,17 +29,6 @@ struct Location
 };
 
 /**
- * \enum CommonRoadObject
- * \brief Holds all object types that are associated with an ID 
- * Used for an ID map to speed up search when an ID is looked up
- * Might be unecessary, as the search is type-dependent anyway
- */
-enum CommonRoadObject
-{
-   Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, PlanningProblem 
-};
-
-/**
  * \class CommonRoadScenario
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a commonroad scenario specified in an XML file, which is loaded once and then replaced by more efficient C++ access methods (instead of parsing the XML over and over again)
@@ -57,7 +46,7 @@ private:
     uint64_t time_step_size;
 
     //Commonroad data
-    std::vector<std::string> tags; //Enum possible, but irrelevant for this implementation
+    std::vector<std::string> tags; //TODO: Enum
     Location location;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
@@ -67,11 +56,6 @@ private:
     std::map<int, StaticObstacle> static_obstacles;
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
-
-    //'Help' data - map ID to commonroad type s.t. matching object can be found faster
-    //CommonRoadObject defined in enum
-    //Could make search faster, alternatively just look in all maps - @Max what would you prefer?
-    std::map<int, CommonRoadObject> id_to_object;
 
 public:
     /**
@@ -86,16 +70,16 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * \param width The min. width of all lanes in the scenario
-     * TODO: Interface for transform instead of function in each object? Makes requirement stronger
      */
-    void transform_to_lane_width(unsigned int width);
+    void transform_to_lane_width(double width);
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
+     * Due to the different return types for each class, no interface was defined for this function.
+     * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
      * TODO: Change return type to whatever the name of the IDL type is
-     * TODO: Interface for transform instead of function in each object? Makes requirement stronger
      */
     void to_dds_msg(); 
 
-    //TODO: Getter, by type and by ID
+    //TODO: Getter, by type and by ID, and constructor
 };
