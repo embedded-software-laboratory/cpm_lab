@@ -8,9 +8,9 @@
 
 /**
  * \enum ObstacleTypeStatic
- * \brief Specifies static obstacle types, as in commonroad
+ * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
  */
-enum ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary};
+enum ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary, NotInSpec};
 
 /**
  * \class StaticObstacle

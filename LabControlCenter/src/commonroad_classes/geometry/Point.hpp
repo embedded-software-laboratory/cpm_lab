@@ -9,7 +9,7 @@ class Point
 private:
     double x;
     double y;
-    double z;
+    double z; //must not be set (then ??)
 public:
     /**
      * \brief Constructor, set up a point object

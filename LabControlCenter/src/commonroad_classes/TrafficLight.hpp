@@ -9,15 +9,15 @@
 
 /**
  * \enum TrafficLightColor
- * \brief Specifies a traffic light color, as in commonroad
+ * \brief Specifies a traffic light color, as in commonroad, NotInSpec for types that should not exist
  */
-enum TrafficLightColor {Red, RedYellow, Yellow, Green};
+enum TrafficLightColor {Red, RedYellow, Yellow, Green, NotInSpec};
 
 /**
  * \enum Direction
- * \brief Specifies a direction, as in commonroad
+ * \brief Specifies a direction, as in commonroad, NotInSpec for types that should not exist
  */
-enum Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRight, All};
+enum Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRight, All, NotInSpec};
 
 /**
  * \struct TrafficCycleElement
@@ -36,7 +36,7 @@ struct TrafficCycleElement
 struct TrafficLightCycle
 {
     std::vector<TrafficCycleElement> cycle_elements;
-    std::vector<unsigned int> time_offsets;
+    unsigned int time_offset;
 };
 
 /**

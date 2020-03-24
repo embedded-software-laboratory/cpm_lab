@@ -140,3 +140,11 @@ add_executable(VisualizationTest
 )
 
 target_link_libraries(VisualizationTest cpm)
+
+add_executable(CommonRoadTest
+    test/CommonRoadTest.cpp
+)
+
+target_link_libraries(CommonRoadTest cpm xml++-2.6 ${GTKMM_LIBRARIES})
+target_include_directories(CommonRoadTest PUBLIC ${GTKMM_INCLUDE_DIRS})
+target_compile_options(CommonRoadTest PUBLIC ${GTKMM_CFLAGS_OTHER})

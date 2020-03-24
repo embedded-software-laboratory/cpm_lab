@@ -13,7 +13,7 @@
 class Position
 {
 private:
-    //TODO: Solve below w. inheritance? Or keep it this way?
+    //TODO: Solve below w. inheritance? Or keep it this way? -> Probably easier to keep it this way
 
     //According to the specification, a position might not be given exactly (as a point)
     bool is_exact;

@@ -13,6 +13,16 @@
 #include "commonroad_classes/PlanningProblem.hpp"
 
 /**
+ * \enum Tag
+ * \brief This enum is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
+ */
+enum Tag {
+    Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
+    MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
+    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, NotInSpec
+};
+
+/**
  * \struct Location
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs

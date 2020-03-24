@@ -9,9 +9,9 @@
 class Rectangle
 {
 private:
-    Point center;
+    Point center; //must not be set (then in ??)
     double length; //TODO: In constructor: Check if >= 0, must be unsigned
-    double orientation;
+    double orientation; //must not be set (then ??)
     double width;  //TODO: In constructor: Check if >= 0, must be unsigned
 
 public:

@@ -11,7 +11,8 @@ class SignalState
 {
 private:
     //Commonroad data
-    IntervalOrExact time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    IntervalOrExact time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    //These values are set to false if they do not exist
     bool horn;
     bool indicator_left;
     bool indicator_right;

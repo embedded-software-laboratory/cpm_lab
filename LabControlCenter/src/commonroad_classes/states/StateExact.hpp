@@ -15,7 +15,7 @@ class StateExact : public InterfaceTransform
 {
 private:
     //Commonroad data
-    Position position;
+    Position position; //Exact position!
     double orientation;
     uint64_t time;
     double velocity;

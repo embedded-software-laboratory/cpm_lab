@@ -9,7 +9,7 @@
 class Circle
 {
 private:
-    Point center;
+    Point center; //must not be set (then in ??)
     double radius; //TODO: In constructor: Check if >= 0, must be unsigned
 
 public:

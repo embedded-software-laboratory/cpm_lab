@@ -11,7 +11,7 @@
 class Polygon
 {
 private:
-    std::vector<Point> points;
+    std::vector<Point> points; //min. 3
 
 public:
     //TODO: constructor

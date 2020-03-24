@@ -6,19 +6,35 @@
 #include "commonroad_classes/geometry/Point.hpp"
 
 /**
+ * \enum LaneletType
+ * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
+ */
+enum LaneletType {
+    Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, NotInSpec
+};
+
+/**
+ * \enum VehicleType
+ * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
+ */
+enum VehicleType {
+    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, NotInSpec
+};
+
+/**
  * \enum DrivingDirection
- * \brief Stores driving direction, used by Adjacent
+ * \brief Stores driving direction, used by Adjacent; NotInSpec for types that should not exist
  */
 enum DrivingDirection {
-    Same, Opposite
+    Same, Opposite, NotInSpec
 };
 
 /**
  * \enum LineMarking
- * \brief Holds all line marking types defined by the specification, used by Bound
+ * \brief Holds all line marking types defined by the specification, used by Bound; NotInSpec for types that should not exist
  */
 enum LineMarking {
-    Unspecified, Dashed, Solid, BroadDashed, BroadSolid
+    Unspecified, Dashed, Solid, BroadDashed, BroadSolid, NotInSpec
 };
 
 /**
@@ -29,6 +45,9 @@ struct Adjacent
 {
     int ref_id;
     DrivingDirection direction;
+
+    //In case it does not exist, not in spec
+    bool exists;
 };
 
 /**
@@ -37,7 +56,7 @@ struct Adjacent
  */
 struct Bound
 {
-    std::vector<Point> points;
+    std::vector<Point> points; //min. 2
     LineMarking line_marking;
 };
 
@@ -50,8 +69,8 @@ struct StopLine
     Point point_1;
     Point point_2;
     LineMarking line_marking;
-    std::vector<int> traffic_sign_refs;
-    int traffic_light_ref; //-1 if empty?
+    std::vector<int> traffic_sign_refs; //trafficsignref
+    std::vector<int> traffic_light_ref; //only one possible, but easier to handle if nonexistent, trafficlightref
 };
 
 /**
@@ -64,16 +83,16 @@ class Lanelet
 private:
     Bound left_bound;
     Bound right_bound;
-    std::vector<int> predecessors; //Multiple possible e.g. in case of a fork
-    std::vector<int> successors;   //Multiple possible e.g. in case of a fork
+    std::vector<int> predecessors; //Multiple possible e.g. in case of a fork; laneletref
+    std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
     Adjacent adjacent_left;  //-1 if empty? TODO!
     Adjacent adjacent_right; //-1 if empty? TODO!
     StopLine stop_line;
-    std::string lanelet_type; //Enum possible
-    std::vector<std::string> user_one_way; //Enum possible
-    std::vector<std::string> user_bidirectional; //Enum possible
-    std::vector<int> traffic_sign_refs;
-    std::vector<int> traffic_light_refs;
+    LaneletType lanelet_type; //Enum possible
+    std::vector<VehicleType> user_one_way; //Enum possible
+    std::vector<VehicleType> user_bidirectional; //Enum possible
+    std::vector<int> traffic_sign_refs; //trafficsignref
+    std::vector<int> traffic_light_refs; //trafficlightref
 
 public:
     //TODO: Constructor

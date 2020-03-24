@@ -12,9 +12,9 @@
 
 /**
  * \enum ObstacleTypeDynamic
- * \brief Specifies dynamic obstacle types, as in commonroad
+ * \brief Specifies dynamic obstacle types, as in commonroad, NotInSpec for types that should not exist
  */
-enum ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
+enum ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, NotInSpec};
 
 /**
  * \class DynamicObstacle
@@ -32,7 +32,7 @@ private:
 
     //Choice in specification - thus, only one of these two value will be valid for each object
     std::vector<State> trajectory;
-    std::vector<Occupancy> occupancies;
+    std::vector<Occupancy> occupancy_set;
 
     std::vector<SignalState> signal_series;
 

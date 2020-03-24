@@ -16,7 +16,7 @@ private:
     //Commonroad data
     Position position;
     IntervalOrExact orientation;
-    IntervalOrExact time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    IntervalOrExact time; //Time values should probably be within the range of double - gets transformed in getter to nanoseconds view; also: State and InitialState differ in spec, as in InitialState time must be exact - we did not make an extra type for this here, as we expect conform xml types
     IntervalOrExact velocity;
     IntervalOrExact acceleration;
     IntervalOrExact yaw_rate;
