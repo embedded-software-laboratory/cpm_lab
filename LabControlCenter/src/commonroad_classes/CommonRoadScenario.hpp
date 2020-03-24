@@ -15,15 +15,32 @@
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include "commonroad_classes/PlanningProblem.hpp"
 
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//TODO: Put Enums etc inside class definition??
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 /**
  * \enum class Tag
  * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
+ * From 2020 specs
  */
 enum class Tag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
     SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, NotInSpec
 };
+
+/**
+ * \enum Attributes
+ * \brief Expected attributes of this class according to specs; WARNING: Due to conformance to 2018-specs (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2018b.xsd) some things are redundant
+ */
+enum class Attributes {BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags, Unknown};
+
+/**
+ * \enum Elements
+ * \brief Expected elements of this class according to specs
+ */
+enum class Elements {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, PlanningProblem, Unknown};
 
 /**
  * \struct Location
@@ -57,9 +74,10 @@ private:
     std::string date;
     std::string source;
     uint64_t time_step_size;
+    std::vector<std::string> tags; //From 2018 specs
 
     //Commonroad data
-    std::vector<std::string> tags; //TODO: enum class
+    std::vector<Tag> scenario_tags; //From 2020 specs
     Location location;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
@@ -72,7 +90,7 @@ private:
 
     /**
      * \brief Parse the given xml node and store its contents in the according object
-     * Then recurse, until everything has been translated
+     * We only take a look at the scenario's children - these are then translated by using the appropriate function of their corresponding classes
      * \param node The root node (on first call), then, in recursions, deeper nodes within the XML structure
      */
     void parse_xml(const xmlpp::Node* node);
