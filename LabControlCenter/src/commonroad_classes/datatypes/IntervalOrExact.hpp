@@ -13,18 +13,18 @@ private:
     double interval_start;
     double interval_end;
     double exact_value;
-    bool is_exact;
+    bool exact; //is_exact
 public:
     /**
      * \brief Simple constructor to directly set the exact value
      * Also tells the class that it is not an IntervalOrExact
      */
-    IntervalOrExact(double exact)
+    IntervalOrExact(double _exact)
     {
         interval_start = 0;
         interval_end = 0;
-        exact_value = exact;
-        is_exact = true;
+        exact_value = _exact;
+        exact = true;
     }
 
     /**
@@ -36,13 +36,13 @@ public:
         interval_start = start;
         interval_end = end;
         exact_value = 0;
-        is_exact = false;
+        exact = false;
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
     bool is_exact()
     {
-        return is_exact;
+        return exact;
     }
 
     double get_exact_value()
@@ -66,7 +66,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    virtual void transform_coordinate_system(double scale) override
+    void transform_coordinate_system(double scale) override
     {
         interval_start *= scale;
         interval_end *= scale;

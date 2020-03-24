@@ -1,5 +1,8 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -13,10 +16,10 @@
 #include "commonroad_classes/PlanningProblem.hpp"
 
 /**
- * \enum Tag
- * \brief This enum is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
+ * \enum class Tag
+ * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
  */
-enum Tag {
+enum class Tag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
     SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, NotInSpec
@@ -56,7 +59,7 @@ private:
     uint64_t time_step_size;
 
     //Commonroad data
-    std::vector<std::string> tags; //TODO: Enum
+    std::vector<std::string> tags; //TODO: enum class
     Location location;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
@@ -66,6 +69,13 @@ private:
     std::map<int, StaticObstacle> static_obstacles;
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
+
+    /**
+     * \brief Parse the given xml node and store its contents in the according object
+     * Then recurse, until everything has been translated
+     * \param node The root node (on first call), then, in recursions, deeper nodes within the XML structure
+     */
+    void parse_xml(const xmlpp::Node* node);
 
 public:
     /**
@@ -81,7 +91,7 @@ public:
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * \param width The min. width of all lanes in the scenario
      */
-    void transform_to_lane_width(double width);
+    void transform_to_lane_width(double width) {}
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
@@ -89,7 +99,7 @@ public:
      * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
      * TODO: Change return type to whatever the name of the IDL type is
      */
-    void to_dds_msg(); 
+    void to_dds_msg() {}
 
     //TODO: Getter, by type and by ID, and constructor
 };

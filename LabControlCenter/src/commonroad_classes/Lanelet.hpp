@@ -6,34 +6,34 @@
 #include "commonroad_classes/geometry/Point.hpp"
 
 /**
- * \enum LaneletType
+ * \enum class LaneletType
  * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
  */
-enum LaneletType {
+enum class LaneletType {
     Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, NotInSpec
 };
 
 /**
- * \enum VehicleType
+ * \enum class VehicleType
  * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
  */
-enum VehicleType {
+enum class VehicleType {
     Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, NotInSpec
 };
 
 /**
- * \enum DrivingDirection
+ * \enum class DrivingDirection
  * \brief Stores driving direction, used by Adjacent; NotInSpec for types that should not exist
  */
-enum DrivingDirection {
+enum class DrivingDirection {
     Same, Opposite, NotInSpec
 };
 
 /**
- * \enum LineMarking
+ * \enum class LineMarking
  * \brief Holds all line marking types defined by the specification, used by Bound; NotInSpec for types that should not exist
  */
-enum LineMarking {
+enum class LineMarking {
     Unspecified, Dashed, Solid, BroadDashed, BroadSolid, NotInSpec
 };
 
@@ -88,9 +88,9 @@ private:
     Adjacent adjacent_left;  //-1 if empty? TODO!
     Adjacent adjacent_right; //-1 if empty? TODO!
     StopLine stop_line;
-    LaneletType lanelet_type; //Enum possible
-    std::vector<VehicleType> user_one_way; //Enum possible
-    std::vector<VehicleType> user_bidirectional; //Enum possible
+    LaneletType lanelet_type; //enum class possible
+    std::vector<VehicleType> user_one_way; //enum class possible
+    std::vector<VehicleType> user_bidirectional; //enum class possible
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_refs; //trafficlightref
 
@@ -98,8 +98,8 @@ public:
     //TODO: Constructor
 
     //TODO: From interface
-    void transform_to_lane_width(unsigned int width);
-    void to_dds_msg(); 
+    void transform_to_lane_width(unsigned int width) {}
+    void to_dds_msg() {}
 
     //TODO: Getter (no setter, bc we do not want to manipulate data except for transformation)
 };

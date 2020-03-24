@@ -14,11 +14,11 @@ public:
     /**
      * \brief Constructor, set up a point object
      */
-    Point(double x, double y, double z);
+    Point(double x, double y, double z) {}
 
     //TODO: From interface
-    void transform_to_lane_width(unsigned int width);
-    void to_dds_msg(); 
+    void transform_to_lane_width(unsigned int width) {}
+    void to_dds_msg() {}
 
     //TODO: Getter
 };

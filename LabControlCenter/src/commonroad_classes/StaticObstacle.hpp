@@ -7,10 +7,10 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 
 /**
- * \enum ObstacleTypeStatic
+ * \enum class ObstacleTypeStatic
  * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
  */
-enum ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary, NotInSpec};
+enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary, NotInSpec};
 
 /**
  * \class StaticObstacle
@@ -33,5 +33,5 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    virtual void transform_coordinate_system(double scale) override;
+    void transform_coordinate_system(double scale) override {}
 };

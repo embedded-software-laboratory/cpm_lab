@@ -8,16 +8,16 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 
 /**
- * \enum TrafficLightColor
+ * \enum class TrafficLightColor
  * \brief Specifies a traffic light color, as in commonroad, NotInSpec for types that should not exist
  */
-enum TrafficLightColor {Red, RedYellow, Yellow, Green, NotInSpec};
+enum class TrafficLightColor {Red, RedYellow, Yellow, Green, NotInSpec};
 
 /**
- * \enum Direction
+ * \enum class Direction
  * \brief Specifies a direction, as in commonroad, NotInSpec for types that should not exist
  */
-enum Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRight, All, NotInSpec};
+enum class Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRight, All, NotInSpec};
 
 /**
  * \struct TrafficCycleElement
@@ -62,5 +62,5 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    virtual void transform_coordinate_system(double scale) override;
+    void transform_coordinate_system(double scale) override {}
 };

@@ -136,7 +136,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    virtual void transform_coordinate_system(double scale) override;
+    void transform_coordinate_system(double scale) override {}
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
@@ -144,7 +144,7 @@ public:
      * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
      * TODO: Change return type to whatever the name of the IDL type is
      */
-    void to_dds_msg(); 
+    void to_dds_msg() {} 
 
     //TODO: Getter
 };

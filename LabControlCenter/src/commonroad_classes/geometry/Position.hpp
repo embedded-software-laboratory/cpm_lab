@@ -31,11 +31,11 @@ public:
     //TODO: constructor
 
     //TODO: Draw function, maybe given a cairo context
-    void draw();
+    void draw() {}
 
     //TODO: From interface
-    void transform_to_lane_width(unsigned int width);
-    void to_dds_msg(); 
+    void transform_to_lane_width(unsigned int width) {}
+    void to_dds_msg() {} 
 
     //TODO: Getter
 };

@@ -26,5 +26,5 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    virtual void transform_coordinate_system(double scale) override;
+    void transform_coordinate_system(double scale) override {}
 };
