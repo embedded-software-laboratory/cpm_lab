@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "commonroad_classes/Lanelet.hpp"
@@ -34,13 +35,14 @@ enum class Tag {
  * \enum Attributes
  * \brief Expected attributes of this class according to specs; WARNING: Due to conformance to 2018-specs (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2018b.xsd) some things are redundant
  */
-enum class Attributes {BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags, Unknown};
+enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags, NotInSpec};
 
 /**
  * \enum Elements
  * \brief Expected elements of this class according to specs
+ * Obstacle: From 2018 specs
  */
-enum class Elements {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, PlanningProblem, Unknown};
+enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem, NotInSpec};
 
 /**
  * \struct Location
@@ -56,6 +58,7 @@ struct Location
     std::string zipcode;
     std::string name;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
+    //For 2018 versions, this means that country / location information are missing too
 };
 
 /**
@@ -94,6 +97,21 @@ private:
      * \param node The root node (on first call), then, in recursions, deeper nodes within the XML structure
      */
     void parse_xml(const xmlpp::Node* node);
+
+    //TODO: Both of these following functions as part of another interface?
+    /**
+     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node attributes (or NotInSpec)
+     * This allows for the usage of switch-statement, conformance checking and better readability
+     * \param node_name The name of the XML node
+     */
+    Attribute string_to_attribute(std::string node_name);
+
+    /**
+     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node elements (or NotInSpec)
+     * This allows for the usage of switch-statement, conformance checking and better readability
+     * \param node_name The name of the XML node
+     */
+    Element string_to_element(std::string node_name);
 
 public:
     /**

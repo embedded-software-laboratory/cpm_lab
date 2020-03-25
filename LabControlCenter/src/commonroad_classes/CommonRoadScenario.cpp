@@ -34,10 +34,9 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
             //Type name like "id", "ref", ...: attribute->get_name()
             //Value: attribute->get_value()
 
-            //TODO: Transfrom string to enum with external function, then use switch on enum to set values
-            //Leads to cleaner code, also do this in parse_xml
+            //This enum-switch behaviour leads to cleaner code
             //Also allows to check for conformance to expected nodes in each object translation function (thus also do this for other objects)
-        }
+            translate_attribute(attribute->get_name(), attribute->get_value());
 
         //We want to go through the first layer of the CommonRoadScenario only - the objects that we want to store take the parsing from here 
         //Thus, we go through the children of the scenario and parse each of them using according constructors
@@ -112,3 +111,96 @@ void CommonRoadScenario::parse_xml(const xmlpp::Node* node)
 //     {
 //         parse_xml(child); //recursive
 //     }
+
+void CommonRoadScenario::translate_attribute(std::string node_name, std::string node_value)
+{
+    if (node_name == "commonRoadVersion")
+    {
+        common_road_version = node_value;
+    }
+    else if (node_name == "benchmarkID")
+    {
+        benchmark_id = node_value;
+    }
+    else if (node_name == "date")
+    {
+        date = node_value;
+    }
+    else if (node_name == "author")
+    {
+        author = node_value;
+    }
+    else if (node_name == "affiliation")
+    {
+        affiliation = node_value;
+    }
+    else if (node_name == "source")
+    {
+        source = node_value;
+    }
+    else if (node_name == "timeStepSize")
+    {
+        benchmark_id = node_value;
+    }
+    else if (node_name == "tags")
+    {
+        std::stringstream tag_stream(node_value);
+        std::string tag;
+        while (std::getline(tag_stream, tag, ' '))
+        {
+            tags.push_back(tag);
+        }
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Attribute of Commonroad scenario unknown" << std::endl;
+    }
+}
+
+Element CommonRoadScenario::string_to_element(std::string node_name)
+{
+    if (node_name == "location")
+    {
+        return Element::Location;
+    }
+    else if (node_name == "scenarioTags")
+    {
+        return Element::ScenarioTags;
+    }
+    else if (node_name == "lanelet")
+    {
+        return Element::Lanelet;
+    }
+    else if (node_name == "trafficSign")
+    {
+        return Element::TrafficSign;
+    }
+    else if (node_name == "trafficLight")
+    {
+        return Element::TrafficLight;
+    }
+    else if (node_name == "intersection")
+    {
+        return Element::Intersection;
+    }
+    else if (node_name == "staticObstacle")
+    {
+        return Element::StaticObstacle;
+    }
+    else if (node_name == "dynamicObstacle")
+    {
+        return Element::DynamicObstacle;
+    }
+    else if (node_name == "obstacle")
+    {
+        return Element::Obstacle;
+    }
+    else if (node_name == "planningProblem")
+    {
+        return Element::PlanningProblem;
+    }
+    else
+    {
+        return Element::NotInSpec;
+    }
+}
