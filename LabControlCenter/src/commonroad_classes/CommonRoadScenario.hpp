@@ -21,6 +21,12 @@
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 /**
+ * \enum ObstacleType
+ * \brief Obstacle types according to spec, for 2018 specs Obstacle
+ */
+enum class ObstacleType {Static, Dynamic, NotInSpec};
+
+/**
  * \enum class Tag
  * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
  * From 2020 specs
@@ -91,27 +97,20 @@ private:
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
 
+    //TODO: Both of these following functions as part of another interface?
+    /**
+     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node attributes (warning if non-existant)
+     * \param node_name The name of the XML node
+     * \param node_vale The value of the XML node (always string)
+     */
+    void translate_attribute(std::string node_name, std::string node_value);
+
     /**
      * \brief Parse the given xml node and store its contents in the according object
      * We only take a look at the scenario's children - these are then translated by using the appropriate function of their corresponding classes
      * \param node The root node (on first call), then, in recursions, deeper nodes within the XML structure
      */
-    void parse_xml(const xmlpp::Node* node);
-
-    //TODO: Both of these following functions as part of another interface?
-    /**
-     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node attributes (or NotInSpec)
-     * This allows for the usage of switch-statement, conformance checking and better readability
-     * \param node_name The name of the XML node
-     */
-    Attribute string_to_attribute(std::string node_name);
-
-    /**
-     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node elements (or NotInSpec)
-     * This allows for the usage of switch-statement, conformance checking and better readability
-     * \param node_name The name of the XML node
-     */
-    Element string_to_element(std::string node_name);
+    void translate_element(const xmlpp::Node* node);
 
 public:
     /**
