@@ -1,6 +1,7 @@
 #pragma once
 
 #include <libxml++-2.6/libxml++/libxml++.h>
+#include <libxml++-2.6/libxml++/keepblanks.h>
 
 #include <iostream>
 #include <map>
@@ -24,14 +25,14 @@
  * \enum ObstacleType
  * \brief Obstacle types according to spec, for 2018 specs Obstacle
  */
-enum class ObstacleType {Static, Dynamic, NotInSpec};
+enum class ObstacleRole {Static, Dynamic, NotInSpec};
 
 /**
- * \enum class Tag
+ * \enum class ScenarioTag
  * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
  * From 2020 specs
  */
-enum class Tag {
+enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
     SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, NotInSpec
@@ -86,7 +87,7 @@ private:
     std::vector<std::string> tags; //From 2018 specs
 
     //Commonroad data
-    std::vector<Tag> scenario_tags; //From 2020 specs
+    std::vector<ScenarioTag> scenario_tags; //From 2020 specs
     Location location;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
@@ -108,9 +109,33 @@ private:
     /**
      * \brief Parse the given xml node and store its contents in the according object
      * We only take a look at the scenario's children - these are then translated by using the appropriate function of their corresponding classes
-     * \param node The root node (on first call), then, in recursions, deeper nodes within the XML structure
+     * \param node The root node (on first call), then, in recursions within the object's constructors, deeper nodes within the XML structure
      */
     void translate_element(const xmlpp::Node* node);
+
+    /**
+     * \brief Parse the given xml location node and store its contents 
+     * \param node The location node 
+     */
+    void translate_location(const xmlpp::Node* node);
+
+    /**
+     * \brief Parse the given xml scenario tag node and store its contents 
+     * \param node The scenario tag node 
+     */
+    void translate_scenario_tags(const xmlpp::Node* node);
+
+    /**
+     * \brief Get the obstacle role of an obstacle node
+     * \param node Obstacle node
+     */
+    ObstacleRole get_obstacle_role(const xmlpp::Node* node);
+
+    /**
+     * \brief Get the ID tag from a list of attributes
+     * \param attributes List of element attributes
+     */
+    int get_id(const xmlpp::Element::AttributeList attributes);
 
 public:
     /**
