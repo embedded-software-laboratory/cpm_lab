@@ -135,7 +135,7 @@ private:
      * \brief Get the ID tag from a list of attributes
      * \param attributes List of element attributes
      */
-    int get_id(const xmlpp::Element::AttributeList attributes);
+    int get_id(const xmlpp::Element* attributes);
 
 public:
     /**

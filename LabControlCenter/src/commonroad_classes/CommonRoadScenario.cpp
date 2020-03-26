@@ -25,7 +25,7 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
         {
             //TODO: Throw error
         }
-        if (nodename != "commonRoad")
+        if (nodename.compare("commonRoad") != 0)
         {
             //TODO: Throw error
         }
@@ -52,31 +52,31 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
 
 void CommonRoadScenario::translate_attribute(std::string node_name, std::string node_value)
 {
-    if (node_name == "commonRoadVersion")
+    if (node_name.compare("commonRoadVersion") == 0)
     {
         common_road_version = node_value;
     }
-    else if (node_name == "benchmarkID")
+    else if (node_name.compare("benchmarkID") == 0)
     {
         benchmark_id = node_value;
     }
-    else if (node_name == "date")
+    else if (node_name.compare("date") == 0)
     {
         date = node_value;
     }
-    else if (node_name == "author")
+    else if (node_name.compare("author") == 0)
     {
         author = node_value;
     }
-    else if (node_name == "affiliation")
+    else if (node_name.compare("affiliation") == 0)
     {
         affiliation = node_value;
     }
-    else if (node_name == "source")
+    else if (node_name.compare("source") == 0)
     {
         source = node_value;
     }
-    else if (node_name == "timeStepSize")
+    else if (node_name.compare("timeStepSize") == 0)
     {
         try {
             time_step_size = std::stoull(node_value);
@@ -87,7 +87,7 @@ void CommonRoadScenario::translate_attribute(std::string node_name, std::string 
             time_step_size = 0;
         }
     }
-    else if (node_name == "tags")
+    else if (node_name.compare("tags") == 0)
     {
         std::stringstream tag_stream(node_value);
         std::string tag;
@@ -116,54 +116,58 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
     //nodename is the name of the node, e.g. "lanelet"
     //-> Switch based on node name!
-    if (node_name == "location")
+    if (node_name.compare("location") == 0)
     {
         translate_location(node);
     }
-    else if (node_name == "scenarioTags")
+    else if (node_name.compare("scenarioTags") == 0)
     {
         translate_scenario_tags(node);
     }
-    else if (node_name == "lanelet")
+    else if (node_name.compare("lanelet") == 0)
     {
-        //lanelets[get_id(node_element->get_attributes())] = Lanelet(node);
+        //lanelets[get_id(node_element)] = Lanelet(node);
     }
-    else if (node_name == "trafficSign")
+    else if (node_name.compare("trafficSign") == 0)
     {
-        //traffic_signs[get_id(node_element->get_attributes())] = TrafficSign(node);
+        //traffic_signs[get_id(node_element)] = TrafficSign(node);
     }
-    else if (node_name == "trafficLight")
+    else if (node_name.compare("trafficLight") == 0)
     {
-        //traffic_lights[get_id(node_element->get_attributes())] = TrafficLight(node);
+        //traffic_lights[get_id(node_element)] = TrafficLight(node);
     }
-    else if (node_name == "intersection")
+    else if (node_name.compare("intersection") == 0)
     {
-        //intersections[get_id(node_element->get_attributes())] = Intersection(node);
+        //intersections[get_id(node_element)] = Intersection(node);
     }
-    else if (node_name == "staticObstacle")
+    else if (node_name.compare("staticObstacle") == 0)
     {
-        //static_obstacles[get_id(node_element->get_attributes())] = StaticObstacle(node);
+        //static_obstacles[get_id(node_element)] = StaticObstacle(node);
     }
-    else if (node_name == "dynamicObstacle")
+    else if (node_name.compare("dynamicObstacle") == 0)
     {
-        //dynamic_obstacles[get_id(node_element->get_attributes())] = DynamicObstacle(node);
+        //dynamic_obstacles[get_id(node_element)] = DynamicObstacle(node);
     }
-    else if (node_name == "obstacle")
+    else if (node_name.compare("obstacle") == 0)
     {
         ObstacleRole obstacle_role = get_obstacle_role(node);
         if (obstacle_role == ObstacleRole::Static)
         {
-            //static_obstacles[get_id(node_element->get_attributes())] = StaticObstacle(node);
+            //static_obstacles[get_id(node_element)] = StaticObstacle(node);
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
-            //dynamic_obstacles[get_id(node_element->get_attributes())] = DynamicObstacle(node);
+            //dynamic_obstacles[get_id(node_element)] = DynamicObstacle(node);
         }
         
     }
-    else if (node_name == "planningProblem")
+    else if (node_name.compare("planningProblem") == 0)
     {
-        //planning_problems[get_id(node_element->get_attributes())] = PlanningProblem(node);
+        //planning_problems[get_id(node_element)] = PlanningProblem(node);
+    }
+    else if (node_name.compare("comment") == 0)
+    {
+        //Ignore
     }
     else
     {
@@ -173,28 +177,64 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
 void CommonRoadScenario::translate_location(const xmlpp::Node* node) 
 {
+    //Require existence of these nodes (according to specs)
+    const auto child_country = node->get_first_child("country");
+    if (!child_country)
+        std::cerr << "TODO: Better warning // Node element country missing in location" << std::endl;
+
+    const auto child_state = node->get_first_child("federalState");
+    if (!child_state)
+        std::cerr << "TODO: Better warning // Node element country missing in location" << std::endl;
+
+    const auto child_lat = node->get_first_child("gpsLatitude");
+    if (!child_lat)
+        std::cerr << "TODO: Better warning // Node element country missing in location" << std::endl;
+
+    const auto child_long = node->get_first_child("gpsLongitude");
+    if (!child_long)
+        std::cerr << "TODO: Better warning // Node element country missing in location" << std::endl;
+
+    //Still go through all childs, because we should also notice nodes that should not be there
+    //And because we do that anyway, we can also translate everything there instead
     for(const auto& child : node->get_children())
     {
         //Find out which object we are dealing with, pass on translation to these objects (if possible)
         const auto child_name = child->get_name();
         const xmlpp::TextNode* child_text = dynamic_cast<const xmlpp::TextNode*>(child);
+        const xmlpp::Element* child_element = dynamic_cast<const xmlpp::Element*>(child);
+        const xmlpp::ContentNode* child_content = dynamic_cast<const xmlpp::ContentNode*>(child);
 
-        if(child_name.empty() || !(child_text))
+        if (child_element)
         {
-            //TODO: Throw error
-            std::cerr << "TODO: Better warning // Node element empty in location parse" << std::endl;
-            return;
+            std::cout << "Is element, not text: " << child_name << std::endl;
+        }
+        if (child_content)
+        {
+            std::cout << "Is content, not text: " << child_name << std::endl;
+        }
+        if (child_text)
+        {
+            std::cout << "Is text: " << child_name << std::endl;
         }
 
-        if (child_name == "country")
+        std::cout << child_name << std::endl;
+
+        if((child_name.empty() || !(child_text))) //Country is handled differently, I do not know why
+        {
+            //TODO: Throw error
+            std::cerr << "TODO: Better warning // Node element empty in location parse " << child_name << std::endl;
+            continue;
+        }
+
+        if (child_name.compare("country") == 0)
         {
             location.country = child_text->get_content();
         }
-        else if (child_name == "federalState")
+        else if (child_name.compare("federalState") == 0)
         {
             location.federal_state = child_text->get_content();
         }
-        else if (child_name == "gpsLatitude")
+        else if (child_name.compare("gpsLatitude") == 0)
         {
             try
             {
@@ -206,7 +246,7 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
                 std::cerr << "TODO: Better warning // Wrong number format for gps latitude" << std::endl;
             }
         }
-        else if (child_name == "gpsLongitude")
+        else if (child_name.compare("gpsLongitude") == 0)
         {
             try
             {
@@ -218,15 +258,15 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
                 std::cerr << "TODO: Better warning // Wrong number format for gps longitude" << std::endl;
             }
         }
-        else if (child_name == "zipcode")
+        else if (child_name.compare("zipcode") == 0)
         {
             location.zipcode = child_text->get_content();
         }
-        else if (child_name == "name")
+        else if (child_name.compare("name") == 0)
         {
             location.name = child_text->get_content();
         }
-        else if (child_name == "geoTransformation")
+        else if (child_name.compare("geoTransformation") == 0)
         {
             //Gets ignored
         }
@@ -243,111 +283,111 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
     {
         const auto node_name = child->get_name();
 
-        if (node_name == "interstate")
+        if (node_name.compare("interstate") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Interstate);
         }
-        else if (node_name == "highway")
+        else if (node_name.compare("highway") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Highway);
         }
-        else if (node_name == "urban")
+        else if (node_name.compare("urban") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Urban);
         }   
-        else if (node_name == "comfort")
+        else if (node_name.compare("comfort") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Comfort);
         }
-        else if (node_name == "critical")
+        else if (node_name.compare("critical") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Critical);
         }
-        else if (node_name == "evasive")
+        else if (node_name.compare("evasive") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Evasive);
         }
-        else if (node_name == "cut_in")
+        else if (node_name.compare("cut_in") == 0)
         {
             scenario_tags.push_back(ScenarioTag::CutIn);
         }
-        else if (node_name == "illegal_cutin")
+        else if (node_name.compare("illegal_cutin") == 0)
         {
             scenario_tags.push_back(ScenarioTag::IllegalCutIn);
         }
-        else if (node_name == "intersection")
+        else if (node_name.compare("intersection") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Intersection);
         }
-        else if (node_name == "lane_change")
+        else if (node_name.compare("lane_change") == 0)
         {
             scenario_tags.push_back(ScenarioTag::LaneChange);
         }
-        else if (node_name == "lane_following")
+        else if (node_name.compare("lane_following") == 0)
         {
             scenario_tags.push_back(ScenarioTag::LaneFollowing);
         }
-        else if (node_name == "merging_lanes")
+        else if (node_name.compare("merging_lanes") == 0)
         {
             scenario_tags.push_back(ScenarioTag::MergingLanes);
         }
-        else if (node_name == "multi_lane")
+        else if (node_name.compare("multi_lane") == 0)
         {
             scenario_tags.push_back(ScenarioTag::MultiLane);
         }
-        else if (node_name == "no_oncoming_traffic")
+        else if (node_name.compare("no_oncoming_traffic") == 0)
         {
             scenario_tags.push_back(ScenarioTag::NoOncomingTraffic);
         }
-        else if (node_name == "on_coming_traffic")
+        else if (node_name.compare("on_coming_traffic") == 0)
         {
             scenario_tags.push_back(ScenarioTag::OnComingTraffic);
         }
-        else if (node_name == "parallel_lanes")
+        else if (node_name.compare("parallel_lanes") == 0)
         {
             scenario_tags.push_back(ScenarioTag::ParallelLanes);
         }
-        else if (node_name == "race_track")
+        else if (node_name.compare("race_track") == 0)
         {
             scenario_tags.push_back(ScenarioTag::RaceTrack);
         }
-        else if (node_name == "roundabout")
+        else if (node_name.compare("roundabout") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Roundabout);
         }
-        else if (node_name == "rural")
+        else if (node_name.compare("rural") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Rural);
         }
-        else if (node_name == "simulated")
+        else if (node_name.compare("simulated") == 0)
         {
             scenario_tags.push_back(ScenarioTag::Simulated);
         }
-        else if (node_name == "single_lane")
+        else if (node_name.compare("single_lane") == 0)
         {
             scenario_tags.push_back(ScenarioTag::SingeLane);
         }
-        else if (node_name == "slip_road")
+        else if (node_name.compare("slip_road") == 0)
         {
             scenario_tags.push_back(ScenarioTag::SlipRoad);
         }
-        else if (node_name == "speed_limit")
+        else if (node_name.compare("speed_limit") == 0)
         {
             scenario_tags.push_back(ScenarioTag::SpeedLimit);
         }
-        else if (node_name == "traffic_jam")
+        else if (node_name.compare("traffic_jam") == 0)
         {
             scenario_tags.push_back(ScenarioTag::TrafficJam);
         }
-        else if (node_name == "turn_left")
+        else if (node_name.compare("turn_left") == 0)
         {
             scenario_tags.push_back(ScenarioTag::TurnLeft);
         }
-        else if (node_name == "turn_right")
+        else if (node_name.compare("turn_right") == 0)
         {
             scenario_tags.push_back(ScenarioTag::TurnRight);
         }
-        else if (node_name == "two_lane")
+        else if (node_name.compare("two_lane") == 0)
         {
             scenario_tags.push_back(ScenarioTag::TwoLane);
         }
@@ -358,68 +398,58 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
     }
 }
 
-int CommonRoadScenario::get_id(const xmlpp::Element::AttributeList attributes) 
+int CommonRoadScenario::get_id(const xmlpp::Element* element_node) 
 {
-    for (const auto& attribute : attributes)
-    {
-        if (attribute->get_name() == "id")
-        {
-            try
-            {
-                return std::stoi(attribute->get_value());
-            }
-            catch(...)
-            {
-                std::cerr << "TODO: Better warning // Could not translate node ID" << std::endl;
-                return -1;
-            }
-            
-        }
-    }
+    const auto attribute_id = element_node->get_attribute("id");
 
-    std::cerr << "TODO: Better warning // Could not find node ID" << std::endl;
-    return -1;
+    if (attribute_id)
+    {
+        try
+        {
+            std::cout << "ID is: " << std::stoi(attribute_id->get_value()) << std::endl;
+            return std::stoi(attribute_id->get_value());
+        }
+        catch(...)
+        {
+            std::cerr << "TODO: Better warning // Could not translate node ID" << std::endl;
+            return -1;
+        }
+        
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Could not find node ID" << std::endl;
+        return -1;   
+    }
 }
 
 ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 {
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //TODO: USE GET_ATTRIBUTE / ELEMENT ETC, ALSO FOR GET_IT!!
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //Role is itself an element node, with its content in another child node
+    //Possible TODO: Catch error? role_node might not have any child
+    const xmlpp::Node* role_node = node->get_first_child("role");
+    const xmlpp::TextNode* child_text = dynamic_cast<const xmlpp::TextNode*>(role_node->get_first_child());
 
-    for(const auto& child : node->get_children())
+    if(!(child_text))
     {
-        //Find out which object we are dealing with, pass on translation to these objects (if possible)
-        const auto child_name = child->get_name();
-
-        if (child_name == "obstacleRole")
-        {
-            const xmlpp::TextNode* child_text = dynamic_cast<const xmlpp::TextNode*>(child);
-
-            if(!(child_text))
-            {
-                //TODO: Throw error
-                std::cerr << "TODO: Better warning // Wrong node value in obstacleRole" << std::endl;
-                return ObstacleRole::NotInSpec;
-            }
-            
-            if (child_text->get_content() == "static")
-            {
-                return ObstacleRole::Static;
-            }
-            else if (child_text->get_content() == "dynamic")
-            {
-                return ObstacleRole::Dynamic;
-            }
-            else
-            {
-                std::cerr << "TODO: Better warning // Node element not conformant to specs (commonroad)" << std::endl;
-                return ObstacleRole::NotInSpec;
-            }
-        }
+        //TODO: Throw error
+        std::cerr << "TODO: Better warning // Wrong node value in obstacleRole" << std::endl;
+        return ObstacleRole::NotInSpec;
     }
-
-    return ObstacleRole::NotInSpec;
+    
+    if (child_text->get_content().compare("static") == 0)
+    {
+        return ObstacleRole::Static;
+    }
+    else if (child_text->get_content().compare("dynamic") == 0)
+    {
+        return ObstacleRole::Dynamic;
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Node element not conformant to specs (obstacle)" << std::endl;
+        return ObstacleRole::NotInSpec;
+    }
 }
 
 
