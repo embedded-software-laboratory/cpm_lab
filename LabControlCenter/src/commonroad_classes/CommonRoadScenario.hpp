@@ -1,7 +1,6 @@
 #pragma once
 
 #include <libxml++-2.6/libxml++/libxml++.h>
-#include <libxml++-2.6/libxml++/keepblanks.h>
 
 #include <iostream>
 #include <map>
@@ -16,6 +15,8 @@
 #include "commonroad_classes/StaticObstacle.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include "commonroad_classes/PlanningProblem.hpp"
+
+#include "commonroad_classes/XMLTranslation.hpp"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO: Put Enums etc inside class definition??
@@ -61,7 +62,7 @@ struct Location
     std::string country;
     std::string federal_state;
     int gps_latitude;
-    int gpd_longitude;
+    int gps_longitude;
     std::string zipcode;
     std::string name;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
@@ -100,11 +101,10 @@ private:
 
     //TODO: Both of these following functions as part of another interface?
     /**
-     * \brief This function provides a translation of a node description in XML (as string) to one of the expected node attributes (warning if non-existant)
-     * \param node_name The name of the XML node
-     * \param node_vale The value of the XML node (always string)
+     * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
+     * \param node root_node
      */
-    void translate_attribute(std::string node_name, std::string node_value);
+    void translate_attributes(const xmlpp::Node* root_node);
 
     /**
      * \brief Parse the given xml node and store its contents in the according object
@@ -130,12 +130,6 @@ private:
      * \param node Obstacle node
      */
     ObstacleRole get_obstacle_role(const xmlpp::Node* node);
-
-    /**
-     * \brief Get the ID tag from a list of attributes
-     * \param attributes List of element attributes
-     */
-    int get_id(const xmlpp::Element* attributes);
 
 public:
     /**

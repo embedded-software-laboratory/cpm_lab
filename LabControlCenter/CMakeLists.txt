@@ -164,6 +164,9 @@ add_executable(CommonRoadTest
     src/commonroad_classes/TrafficSign.hpp
     src/commonroad_classes/TrafficSign.cpp
 
+    src/commonroad_classes/XMLTranslation.hpp
+    src/commonroad_classes/XMLTranslation.cpp
+
     src/commonroad_classes/datatypes/Interval.hpp
     src/commonroad_classes/datatypes/IntervalOrExact.hpp
 
