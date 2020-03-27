@@ -84,7 +84,7 @@ private:
     std::string common_road_version;
     std::string date;
     std::string source;
-    uint64_t time_step_size;
+    double time_step_size;
     std::vector<std::string> tags; //From 2018 specs
 
     //Commonroad data

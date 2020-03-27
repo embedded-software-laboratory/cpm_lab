@@ -35,6 +35,8 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
 
         //We want to go through the first layer of the CommonRoadScenario only - the objects that we want to store take the parsing from here 
         //Thus, we go through the children of the scenario and parse each of them using according constructors
+
+        //TODO: Maybe use XMLTranslation units here as well instead!
         for(const auto& child : pNode->get_children())
         {
             translate_element(child);
@@ -85,7 +87,7 @@ void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
     author = xml_translation::get_attribute_text(root_node, "author", true);
     affiliation = xml_translation::get_attribute_text(root_node, "affiliation", true);
     source = xml_translation::get_attribute_text(root_node, "source", true);
-    time_step_size = static_cast<uint64_t>(xml_translation::get_attribute_uint(root_node, "timeStepSize", true));
+    time_step_size = static_cast<uint64_t>(xml_translation::get_attribute_double(root_node, "timeStepSize", true));
     
     std::string tags_list = xml_translation::get_attribute_text(root_node, "tags", false);
     if (tags_list != "empty")
@@ -101,7 +103,11 @@ void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
 
     //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
 
-    //TODO: Error messages are missing if elements are missing -> Investigate why! (Probably just a simple error)
+    //TODO: Translate time step size to uint64_t - nanoseconds representation?
+
+    //TODO: Wrong location latitude/longitude values because unset in case Location does not exist (2018 version) -> Fix that!
+
+    //TODO: Look over XMLTranslation once more before continuing to write other classes
 }
 
 void CommonRoadScenario::translate_element(const xmlpp::Node* node)
