@@ -99,6 +99,48 @@ std::string xml_translation::get_first_child_text(const xmlpp::Node* node)
     return get_node_text(node_element->get_first_child());
 }
 
+int xml_translation::get_first_child_int(const xmlpp::Node* node)
+{
+    //Get the content of the node as string, then convert it to an integer
+    try
+    {
+        return std::stoi(xml_translation::get_first_child_text(node));
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
+        return -1;
+    }
+}
+
+unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node)
+{
+    //Get the content of the node as string, then convert it to an unsigned long long
+    try
+    {
+        return std::stoull(xml_translation::get_first_child_text(node));
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate node content to unsigned long long: " << node->get_name() << std::endl;
+        return 0;
+    }
+}
+
+double xml_translation::get_first_child_double(const xmlpp::Node* node)
+{
+    //Get the content of the node as string, then convert it to a double
+    try
+    {
+        return std::stod(xml_translation::get_first_child_text(node));
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_name() << std::endl;
+        return -1;
+    }
+}
+
 std::string xml_translation::get_child_child_text(const xmlpp::Node* node, std::string child_name, bool warn)
 {
     const auto child = xml_translation::get_child_if_exists(node, child_name, warn);
@@ -134,8 +176,8 @@ unsigned long long xml_translation::get_child_child_uint(const xmlpp::Node* node
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
-        return -1;
+            std::cerr << "TODO: Better warning // Could not translate node content to unsigned long long: " << node->get_name() << std::endl;
+        return 0;
     }
 }
 
@@ -149,8 +191,8 @@ double xml_translation::get_child_child_double(const xmlpp::Node* node, std::str
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
-        return -1;
+            std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_name() << std::endl;
+        return -1.0;
     }
 }
 
@@ -211,7 +253,7 @@ unsigned long long xml_translation::get_attribute_uint(const xmlpp::Node* node, 
 
 double xml_translation::get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool warn)
 {
-    //Get the content of the node as string, then convert it to a ull
+    //Get the content of the node as string, then convert it to a double
     try
     {
         return std::stod(xml_translation::get_attribute_text(node, attribute_name, warn));
@@ -219,7 +261,46 @@ double xml_translation::get_attribute_double(const xmlpp::Node* node, std::strin
     catch(...)
     {
         if(warn)
-            std::cerr << "TODO: Better warning // Could not translate node attribute to unsigned long long: " << node->get_name() << ", " << attribute_name << std::endl;
+            std::cerr << "TODO: Better warning // Could not translate node attribute to double: " << node->get_name() << ", " << attribute_name << std::endl;
+        return -1.0;
+    }
+}
+
+int xml_translation::string_to_int(std::string text)
+{
+    try
+    {
+        return std::stoi(text);
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate text to int" << std::endl;
+        return -1;
+    }
+}
+
+unsigned long long xml_translation::string_to_uint(std::string text)
+{
+    try
+    {
+        return std::stoull(text);
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate text to unsigned long long" << std::endl;
         return 0;
+    }
+}
+
+double xml_translation::string_to_double(std::string text)
+{
+    try
+    {
+        return std::stod(text);
+    }
+    catch(...)
+    {
+        std::cerr << "TODO: Better warning // Could not translate text to double" << std::endl;
+        return -1.0;
     }
 }

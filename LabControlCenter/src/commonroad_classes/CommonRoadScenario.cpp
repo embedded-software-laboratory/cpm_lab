@@ -77,6 +77,12 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
     std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
     std::cout << "\tName: " << location.name << std::endl;
     std::cout << "\tZipcode: " << location.zipcode << std::endl;
+
+    //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
+
+    //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
+
+    //TODO: Translate time step size to uint64_t - nanoseconds representation?
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -100,14 +106,6 @@ void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
             tags.push_back(tag);
         }
     }
-
-    //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
-
-    //TODO: Translate time step size to uint64_t - nanoseconds representation?
-
-    //TODO: Wrong location latitude/longitude values because unset in case Location does not exist (2018 version) -> Fix that!
-
-    //TODO: Look over XMLTranslation once more before continuing to write other classes
 }
 
 void CommonRoadScenario::translate_element(const xmlpp::Node* node)
@@ -126,6 +124,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     //-> Switch based on node name!
     if (node_name.compare("location") == 0)
     {
+        location.exists = true;
         translate_location(node);
     }
     else if (node_name.compare("scenarioTags") == 0)
@@ -134,7 +133,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        //lanelets[xml_translation::get_attribute_int(node_element, "id")] = Lanelet(node);
+        lanelets[xml_translation::get_attribute_int(node_element, "id")] = Lanelet(node);
     }
     else if (node_name.compare("trafficSign") == 0)
     {

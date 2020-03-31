@@ -56,17 +56,21 @@ enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, 
  * \struct Location
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs
+ * Initial values in case it does not exist
  */
 struct Location 
 {
     std::string country;
     std::string federal_state;
-    int gps_latitude;
-    int gps_longitude;
+    int gps_latitude = -1;
+    int gps_longitude = -1;
     std::string zipcode;
     std::string name;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
     //For 2018 versions, this means that country / location information are missing too
+
+    //In case it does not exist, not part of specs
+    bool exists = false;
 };
 
 /**
@@ -84,7 +88,7 @@ private:
     std::string common_road_version;
     std::string date;
     std::string source;
-    double time_step_size;
+    double time_step_size = -1.0;
     std::vector<std::string> tags; //From 2018 specs
 
     //Commonroad data
