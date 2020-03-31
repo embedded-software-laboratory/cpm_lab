@@ -1,31 +1,35 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
 #include <string>
 #include <vector>
 
 #include "commonroad_classes/geometry/Position.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/XMLTranslation.hpp"
 
 /**
- * \struct TrafficSignElement
+ * \struct TrafficSignPost
  * \brief Specifies a traffic sign element
  * The commonroad XML file specifies specific string values, this restriction is not applied here (for simplicity)
  */
-struct TrafficSignElement
+struct TrafficSignPost
 {
     std::string traffic_sign_id;
     std::vector<std::string> additional_values;
 };
 
 /**
- * \struct TrafficSignPost
+ * \struct TrafficSignElement
  * \brief Specifies a traffic sign post
  * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
+ * TODO: Look up default values, position must not be specified!
  */
-struct TrafficSignPost
+struct TrafficSignElement
 {
-    std::vector<TrafficSignElement> traffic_sign_elements;
+    std::vector<TrafficSignPost> traffic_sign_elements;
     Position position; //Must be exact according to spec!
     std::vector<bool> is_virtual;
 };
@@ -34,13 +38,21 @@ struct TrafficSignPost
  * \class TrafficSign
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic sign specified in an XML file
+ * 2020 only! (Not specified in 2018 specs)
  */
 class TrafficSign : public InterfaceTransform
 {
 private:
-    std::vector<TrafficSignPost> traffic_sign_posts;
+    std::vector<TrafficSignElement> traffic_sign_elements;
 
 public:
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * \param node A trafficSign node
+     */
+    TrafficSign(const xmlpp::Node* node);
+
     //TODO: Constructor, getter
 
     /**

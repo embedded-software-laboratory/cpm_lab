@@ -137,7 +137,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("trafficSign") == 0)
     {
-        //traffic_signs[xml_translation::get_attribute_int(node, "id")] = TrafficSign(node);
+        traffic_signs.insert({xml_translation::get_attribute_int(node, "id"), TrafficSign(node)});
     }
     else if (node_name.compare("trafficLight") == 0)
     {
