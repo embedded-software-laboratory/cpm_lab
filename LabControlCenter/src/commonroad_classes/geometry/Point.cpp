@@ -15,3 +15,11 @@ Point::Point(const xmlpp::Node* node)
     //Test output
     std::cout << "New point created: " << "(" << x << ", " << y << ", " << z << ")" << std::endl;
 }
+
+Point::Point()
+{
+    //Note: Do not use this explicitly
+    x = 0;
+    y = 0;
+    z = 0;
+}

@@ -53,48 +53,6 @@ namespace xml_translation
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node TODO: throw error
-     * Then, it translates all elements according to the transformation function and returns the list of all elements (of a given name, if specified)
-     * \param node An XML node 
-     * \param node_transform Transformation function that takes a node and translates it to a type T
-     * \param child_name Expected name of the child node - optional, return all if not set
-     * \return Translated list of all child nodes (with name child_name) (if it does not exist, returns empty list)
-     */
-    template<class T>
-    std::vector<T> get_children(const xmlpp::Node* node, std::function<T (xmlpp::Node* node)> node_transfrom, std::string child_name = "")
-    {
-        //Check if it is an element node
-        const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
-        if(!(node_element))
-        {
-            std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
-            return nullptr;
-        }
-
-        xmlpp::Node::NodeList children;
-        std::vector<T> transformed_children;
-
-        //Get all children (of the given name)
-        if (child_name != "")
-        {
-            children = node_element->get_children(child_name);
-        }
-        else
-        {
-            children = node_element->get_children();
-        }
-
-        //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
-        for (const auto child : children)
-        {
-            transformed_children.push_back(node_transfrom(child));
-        }
-
-        return transformed_children;
-    }
-
-    /**
-     * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Always warns if it is not an Element node TODO: throw error
      * \param node An XML node 
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
@@ -187,50 +145,6 @@ namespace xml_translation
     //**********************************************************************
 
     /**
-     * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Always warns if it is not an Element node TODO: throw error
-     * Then, it translates the attribute of all elements with the given attribute according to the transformation function and returns the list of all resulting ojects T (of a given name, if specified)
-     * Example: <a ref="1"/> <a ref="2"/> -> [1, 2]
-     * \param node An XML node 
-     * \param attribute_transform Transformation function that takes an attribute and translates it to a type T
-     * \param node_name Expected name of the node
-     * \param attribute_name Expected name of the attribute
-     * \return Translated list of all child nodes (with name child_name) (if it does not exist, returns empty list)
-     */
-    template<class T>
-    std::vector<T> get_elements_with_attribute(const xmlpp::Node* node, std::function<T (std::string)> attribute_transform, std::string node_name, std::string attribute_name)
-    {
-        //Check if it is an element node
-        const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
-        if(!(node_element))
-        {
-            std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
-            return nullptr;
-        }
-
-        xmlpp::Node::NodeList children;
-        std::vector<T> transformed_attributes;
-
-        //Get all children (of the given name)
-        if (child_name != "")
-        {
-            children = node_element->get_children(child_name);
-        }
-        else
-        {
-            children = node_element->get_children();
-        }
-
-        //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
-        for (const auto child : children)
-        {
-            transformed_attributes.push_back(node_transfrom(xml_translation::get_attribute_text(child, attribute_name, true)));
-        }
-
-        return transformed_attributes;
-    }
-
-    /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function TODO:Throw error, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Then, it gets its content in form of a string
      * Shows /throws an error if desired, always warns if node is not of type Element
@@ -282,26 +196,109 @@ namespace xml_translation
      * \brief Gets a string TODO: throws an error (if desired)
      * Transforms the string to an int, TODO: throws an error (if desired) if no transformation is possible
      * \param text A string that represents an int value
-     * \param warn Only warn if set to true, optional
      * \return The int value of the string, else -1
      */
-    int string_to_int(std::string text, bool warn = false);
+    int string_to_int(std::string text);
 
     /**
      * \brief Gets a string TODO: throws an error (if desired)
      * Transforms the string to an unsigned long long, TODO: throws an error (if desired) if no transformation is possible
      * \param text A string that represents an unsigned long long value
-     * \param warn Only warn if set to true, optional
      * \return The unsigned long long value of the string, else 0
      */
-    unsigned long long string_to_uint(std::string text, bool warn = false);
+    unsigned long long string_to_uint(std::string text);
 
     /**
      * \brief Gets a string TODO: throws an error (if desired)
      * Transforms the string to an double, TODO: throws an error (if desired) if no transformation is possible
      * \param text A string that represents an double value
-     * \param warn Only warn if set to true, optional
      * \return The double value of the string, else -1.0
      */
-    double string_to_double(std::string text, bool warn = false);
+    double string_to_double(std::string text);
+
+    //**********************************************************************
+    //Template functions (need to put at end in order to use functions from above)
+    //**********************************************************************
+
+    /**
+     * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
+     * Always warns if it is not an Element node TODO: throw error
+     * Then, it translates all elements according to the transformation function and returns the list of all elements (of a given name, if specified)
+     * \param node An XML node 
+     * \param node_transform Transformation function that takes a node and translates it to a type T
+     * \param child_name Expected name of the child node - optional, return all if not set
+     * \return Translated list of all child nodes (with name child_name) (if it does not exist, returns empty list)
+     */
+    template<class T>
+    void get_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node, T& out)> node_transfrom, std::vector<T>& output, std::string child_name = "")
+    {
+        //Check if it is an element node
+        const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
+        if(!(node_element))
+        {
+            std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+        }
+
+        xmlpp::Node::NodeList children;
+
+        //Get all children (of the given name)
+        if (child_name != "")
+        {
+            children = node_element->get_children(child_name);
+        }
+        else
+        {
+            children = node_element->get_children();
+        }
+
+        //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
+        for (const auto child : children)
+        {
+            T transformed_value;
+            node_transfrom(child, transformed_value);
+            output.push_back(transformed_value);
+        }
+    }
+
+    /**
+     * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
+     * Always warns if it is not an Element node TODO: throw error
+     * Then, it translates the attribute of all elements with the given attribute according to the transformation function and returns the list of all resulting ojects T (of a given name, if specified)
+     * Example: <a ref="1"/> <a ref="2"/> -> [1, 2]
+     * \param node An XML node 
+     * \param attribute_transform Transformation function that takes an attribute and translates it to a type T
+     * \param node_name Expected name of the node
+     * \param attribute_name Expected name of the attribute
+     * \return Translated list of all child nodes (with name child_name) (if it does not exist, returns empty list)
+     */
+    template<class T>
+    void get_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string, T& out)> attribute_transform, std::string node_name, std::string attribute_name, std::vector<T>& output)
+    {
+        //Check if it is an element node
+        const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
+        if(!(node_element))
+        {
+            std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+        }
+
+        xmlpp::Node::NodeList children;
+
+        //Get all children (of the given name)
+        if (node_name != "")
+        {
+            children = node_element->get_children(node_name);
+        }
+        else
+        {
+            children = node_element->get_children();
+        }
+
+        //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
+        for (const auto child : children)
+        {
+            T transformed_value;
+            attribute_transform(xml_translation::get_attribute_text(child, attribute_name, true), transformed_value);
+            output.push_back(transformed_value);
+        }
+    }
 }

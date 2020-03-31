@@ -20,21 +20,48 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     user_bidirectional = translate_users(node, "userBidirectional");
     traffic_sign_refs = translate_refs(node, "trafficSignRef");
     traffic_light_refs = translate_refs(node, "trafficLightRef");
+
+    //Test output
+    std::cout << "Lanelet ------------------------------" << std::endl;
+    std::cout << "Left bound marking: TODO" << std::endl;
+    std::cout << "Right bound marking: TODO" << std::endl;
+
+    std::cout << "Predecessors refs: ";
+    for (int ref : predecessors)
+    {
+        std:: cout << "| " << ref;
+    }
+    std::cout << std::endl;
+
+    std::cout << "Successor refs: ";
+    for (int ref : successors)
+    {
+        std:: cout << "| " << ref;
+    }
+    std::cout << std::endl;
+
+    std::cout << "Adjacent left: " << adjacent_left.exists << "(exists), " << adjacent_left.ref_id << " (ID), (TODO: print direction)" << std::endl;
+    std::cout << "Adjacent right: " << adjacent_right.exists << "(exists), " << adjacent_right.ref_id << " (ID), (TODO: print direction)" << std::endl;
+
+    std::cout << "Speed limit (2018): " << speed_limit << std::endl;
+
+    std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
 }
 
 Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
 {
-    bound_node = xml_translation::get_child_if_exists(node, name, true); //True because this is a required part of both specs (2018 and 2020)
+    const auto bound_node = xml_translation::get_child_if_exists(node, name, true); //True because this is a required part of both specs (2018 and 2020)
 
     //Same for both specs
     Bound bound;
 
-    bound.points = xml_translation::get_children(
+    xml_translation::get_children<Point>(
         bound_node, 
-        [] (const xmlpp::Node* child) 
+        [] (const xmlpp::Node* child, Point& point_out) 
         {
-            return Point(child);
+            point_out = Point(child);
         }, 
+        bound.points,
         "point"
     );
 
@@ -60,45 +87,49 @@ Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
 std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string name)
 {
     //Refs are optional, so this element might not exist in the XML file
-    return xml_translation::get_elements_with_attribute(
+    std::vector<int> refs;
+    
+    //Get refs
+    xml_translation::get_elements_with_attribute<int>(
         node,
-        [] (std::string text) {
-            return xml_translation::string_to_int(text);
+        [] (std::string text, int& int_out) {
+            int_out = xml_translation::string_to_int(text);
         },
         name,
-        "ref"
+        "ref",
+        refs
     );
+
+    return refs;
 }
 
 Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
 {
     //Adjacents are optional, so this element might not exist
-    return xml_translation::get_children(
-        node,
-        [] (const xmlpp::Node* child) 
+    const auto adjacent_node = xml_translation::get_child_if_exists(node, name, false);
+    Adjacent adjacent;
+
+    if (adjacent_node)
+    {
+        adjacent.exists = true;
+        adjacent.ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true);
+    
+        std::string direction_string = xml_translation::get_attribute_text(adjacent_node, "drivingDir", true);
+        if(direction_string.compare("same") == 0)
         {
-            Adjacent adjacent;
+            adjacent.direction = DrivingDirection::Same;
+        }
+        else if(direction_string.compare("same") == 0)
+        {
+            adjacent.direction = DrivingDirection::Opposite;
+        }
+        else {
+            std::cerr << "TODO: Better warning // Specified driving direction not part of specs, saved as NotInSpec, in line " << adjacent_node->get_line() << std::endl;
+            adjacent.direction = DrivingDirection::NotInSpec;
+        }   
+    }
 
-            adjacent.ref_id = xml_translation::get_attribute_int(child, "ref", true);
-            
-            std::string direction_string = xml_translation::get_attribute_text(child, "drivingDir", true);
-            if(direction_string.compare("same") == 0)
-            {
-                adjacent.direction = DrivingDirection::Same;
-            }
-            else if(direction_string.compare("same") == 0)
-            {
-                adjacent.direction = DrivingDirection::Opposite;
-            }
-            else {
-                std::cerr << "TODO: Better warning // Specified driving direction not part of specs, saved as NotInSpec, in line " << child->get_line() << std::endl;
-                adjacent.direction = DrivingDirection::NotInSpec;
-            }
-
-            return adjacent;
-        },
-        name
-    );
+    return adjacent;
 }
 
 StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
@@ -112,22 +143,20 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
         line.exists = true;
 
         //Translate line points
-        std::vector<Point> line_points = xml_translation::get_children(
+        xml_translation::get_children<Point>(
             line_node, 
-            [] (const xmlpp::Node* child) 
+            [] (const xmlpp::Node* child, Point& point_out) 
             {
-                return Point(child);
+                point_out = Point(child);
             }, 
+            stop_line.points,
             "point"
         );
 
-        if (line_points.size() != 2)
+        if (stop_line.points.size() != 2)
         {
             std::cerr << "TODO: Better warning // Specified stop line has too many points, not part of specs, in line " << line_node->get_line() << std::endl;
         }
-
-        line.point_1 = line_points.at(0);
-        line.point_2 = line_points.at(1);
 
         //Translate line marking
         const auto line_marking = xml_translation::get_child_if_exists(line_node, "lineMarking", true);
@@ -147,15 +176,132 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
 LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
 {
     //2020 specs only (TODO: Warn if missing in 2020 XML)
-    
+    //get_child_child_text is not used here to be able to show the line where the error occured if the value matches none of the enumeration values
+    const auto lanelet_type_node = xml_translation::get_child_if_exists(node, name, false);
+    if (lanelet_type_node)
+    {
+        std::string lanelet_type_string = xml_translation::get_first_child_text(lanelet_type_node);
+
+        if (lanelet_type_string.compare("urban") == 0)
+        {
+            return LaneletType::Urban;
+        }
+        else if (lanelet_type_string.compare("country") == 0)
+        {
+            return LaneletType::Country;
+        }
+        else if (lanelet_type_string.compare("highway") == 0)
+        {
+            return LaneletType::Highway;
+        }
+        else if (lanelet_type_string.compare("sidewalk") == 0)
+        {
+            return LaneletType::Sidewalk;
+        }
+        else if (lanelet_type_string.compare("crosswalk") == 0)
+        {
+            return LaneletType::Crosswalk;
+        }
+        else if (lanelet_type_string.compare("busLane") == 0)
+        {
+            return LaneletType::BusLane;
+        }
+        else if (lanelet_type_string.compare("bicycleLane") == 0)
+        {
+            return LaneletType::BicycleLane;
+        }
+        else if (lanelet_type_string.compare("exitRamp") == 0)
+        {
+            return LaneletType::ExitRamp;
+        }
+        else if (lanelet_type_string.compare("mainCarriageWay") == 0)
+        {
+            return LaneletType::MainCarriageWay;
+        }
+        else if (lanelet_type_string.compare("accessRamp") == 0)
+        {
+            return LaneletType::AccessRamp;
+        }
+        else if (lanelet_type_string.compare("driveWay") == 0)
+        {
+            return LaneletType::DriveWay;
+        }
+        else if (lanelet_type_string.compare("busStop") == 0)
+        {
+            return LaneletType::BusStop;
+        }
+        else 
+        {
+            std::cerr << "TODO: Better warning // Specified lanelet type not part of specs, saved as NotInSpec, in line " << lanelet_type_node->get_line() << std::endl;
+            return LaneletType::NotInSpec;
+        }
+    }
+
+    return LaneletType::Unspecified;
 }
 
-VehicleType Lanelet::translate_users(const xmlpp::Node* node, std::string name)
+std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::string name)
 {
-    //Users are optional, so this element might not exist
+    //Users are optional, so this element might not exist (also: 2020 specs only) 
+    std::vector<VehicleType> vehicle_vector;
+
+    //Fill vector with existing values
+    xml_translation::get_children<VehicleType>(
+        node, 
+        [] (const xmlpp::Node* child, VehicleType& type_out) 
+        {
+            std::string user_string = xml_translation::get_first_child_text(child);
+
+            if (user_string.compare("vehicle") == 0)
+            {
+                type_out = VehicleType::Vehicle;
+            }
+            else if (user_string.compare("car") == 0)
+            {
+                type_out = VehicleType::Car;
+            }
+            else if (user_string.compare("truck") == 0)
+            {
+                type_out = VehicleType::Truck;
+            }
+            else if (user_string.compare("bus") == 0)
+            {
+                type_out = VehicleType::Bus;
+            }
+            else if (user_string.compare("motorcycle") == 0)
+            {
+                type_out = VehicleType::Motorcycle;
+            }
+            else if (user_string.compare("bicycle") == 0)
+            {
+                type_out = VehicleType::Bicycle;
+            }
+            else if (user_string.compare("pedestrian") == 0)
+            {
+                type_out = VehicleType::Pedestrian;
+            }
+            else if (user_string.compare("priorityVehicle") == 0)
+            {
+                type_out = VehicleType::PriorityVehicle;
+            }
+            else if (user_string.compare("train") == 0)
+            {
+                type_out = VehicleType::Train;
+            }
+            else 
+            {
+                std::cerr << "TODO: Better warning // Specified vehicle type not part of specs, saved as NotInSpec, in line " << child->get_line() << std::endl;
+                type_out = VehicleType::NotInSpec;
+            }
+        }, 
+        vehicle_vector,
+        name
+    );
+
+    return vehicle_vector;
 }
 
-LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line node)
+LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 {
     std::string line_marking_text = xml_translation::get_first_child_text(line_node);
     if (line_marking_text.compare("dashed") == 0)

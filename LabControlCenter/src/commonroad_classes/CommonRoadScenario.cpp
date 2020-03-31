@@ -133,44 +133,44 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets[xml_translation::get_attribute_int(node_element, "id")] = Lanelet(node);
+        lanelets.insert({xml_translation::get_attribute_int(node, "id"), Lanelet(node)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
-        //traffic_signs[xml_translation::get_attribute_int(node_element, "id")] = TrafficSign(node);
+        //traffic_signs[xml_translation::get_attribute_int(node, "id")] = TrafficSign(node);
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        //traffic_lights[xml_translation::get_attribute_int(node_element, "id")] = TrafficLight(node);
+        //traffic_lights[xml_translation::get_attribute_int(node, "id")] = TrafficLight(node);
     }
     else if (node_name.compare("intersection") == 0)
     {
-        //intersections[xml_translation::get_attribute_int(node_element, "id")] = Intersection(node);
+        //intersections[xml_translation::get_attribute_int(node, "id")] = Intersection(node);
     }
     else if (node_name.compare("staticObstacle") == 0)
     {
-        //static_obstacles[xml_translation::get_attribute_int(node_element, "id")] = StaticObstacle(node);
+        //static_obstacles[xml_translation::get_attribute_int(node, "id")] = StaticObstacle(node);
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
-        //dynamic_obstacles[xml_translation::get_attribute_int(node_element, "id")] = DynamicObstacle(node);
+        //dynamic_obstacles[xml_translation::get_attribute_int(node, "id")] = DynamicObstacle(node);
     }
     else if (node_name.compare("obstacle") == 0)
     {
         ObstacleRole obstacle_role = get_obstacle_role(node);
         if (obstacle_role == ObstacleRole::Static)
         {
-            //static_obstacles[xml_translation::get_attribute_int(node_element, "id")] = StaticObstacle(node);
+            //static_obstacles[xml_translation::get_attribute_int(node, "id")] = StaticObstacle(node);
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
-            //dynamic_obstacles[xml_translation::get_attribute_int(node_element, "id")] = DynamicObstacle(node);
+            //dynamic_obstacles[xml_translation::get_attribute_int(node, "id")] = DynamicObstacle(node);
         }
         
     }
     else if (node_name.compare("planningProblem") == 0)
     {
-        //planning_problems[xml_translation::get_attribute_int(node_element, "id")] = PlanningProblem(node);
+        //planning_problems[xml_translation::get_attribute_int(node, "id")] = PlanningProblem(node);
     }
     else if (node_name.compare("comment") == 0)
     {

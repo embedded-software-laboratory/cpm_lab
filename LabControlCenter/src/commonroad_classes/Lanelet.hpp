@@ -15,7 +15,7 @@
  * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
  */
 enum class LaneletType {
-    Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, NotInSpec
+    Unspecified, Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, NotInSpec
 };
 
 /**
@@ -45,11 +45,15 @@ enum class LineMarking {
 /**
  * \struct Adjacent
  * \brief Holds information on adjacent road tiles and their driving direction
+ * Initial values in case it does not exist
  */
 struct Adjacent
 {
     int ref_id = -1;
     DrivingDirection direction;
+
+    //In case it does not exist, not part of specs
+    bool exists = false;
 };
 
 /**
@@ -65,12 +69,11 @@ struct Bound
 /**
  * \struct StopLine
  * \brief Defines position of a stop line on the lanelet (w. possible reference to traffic signs etc)
- * Initial values in case it does not exist
+ * Initial value in case it does not exist
  */
 struct StopLine
 {
-    Point point_1;
-    Point point_2;
+    std::vector<Point> points; //Must consist of exactly two points
     LineMarking line_marking;
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_ref; //only one possible, but easier to handle if nonexistent, trafficlightref
@@ -155,7 +158,7 @@ public:
      * \brief Translates a line marking string given from a node to a line marking Enum
      * \param line_node A line marking node
      */
-    LineMarking translate_line_marking(const xmlpp::Node* line node);
+    LineMarking translate_line_marking(const xmlpp::Node* line_node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

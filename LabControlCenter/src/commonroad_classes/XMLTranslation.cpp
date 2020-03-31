@@ -196,7 +196,6 @@ double xml_translation::get_child_child_double(const xmlpp::Node* node, std::str
     }
 }
 
-
 std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool warn)
 {
     //Convert to text node and check if it really exists
