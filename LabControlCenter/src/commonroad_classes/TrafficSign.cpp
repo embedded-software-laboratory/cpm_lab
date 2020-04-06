@@ -39,6 +39,9 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
 
             //TODO: Create TrafficSignPost elements depending on the line values (use std bound functions for search etc!)
 
+            //TODO: Entscheidung zwischen Default-Konstruktoren, unique_ptr, shared_ptr und optional treffen, um optionale und später initialisierte Werte zu behandeln
+            //Damit lassen sich die aktuellen Fehlermeldungen beheben und die Implementierung kann fortgesetzt werden
+
             //Get position value, which must not be specified (is handled by default constructor of position if missing) -> TODO
             const auto position_node = xml_translation::get_child_if_exists(child, "position", false);
             if (position_node)
