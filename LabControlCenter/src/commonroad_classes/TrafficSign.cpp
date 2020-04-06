@@ -6,8 +6,10 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
     //Each element has its own position and can either be virtual or not virtual
     xml_translation::get_children(
         node,
-        [*] (xmlpp::Node* child, TrafficSignElement& element)
+        [&] (xmlpp::Node* child)
         {
+            TrafficSignElement element;
+
             //TrafficSignElement groups several trafficSignPosts
             //We may have none or multiple additional values per ID
             //Thus, we take a look at the line number as well s.t. we know how these values are connected
@@ -18,22 +20,20 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
 
             xml_translation::get_children(
                 child,
-                [*] (xmlpp::Node* id_child, std::string& id)
+                [&] (xmlpp::Node* id_child)
                 {
-                    id = xml_translation::get_first_child_text(id_child);
+                    traffic_sign_ids.push_back(xml_translation::get_first_child_text(id_child));
                     traffic_sign_id_lines.push_back(id_child->get_line());
                 },
-                traffic_sign_ids,
                 "trafficSignID"
             );
             xml_translation::get_children(
                 child,
-                [*] (xmlpp::Node* value_child, std::string& value)
+                [&] (xmlpp::Node* value_child)
                 {
-                    value = xml_translation::get_first_child_text(value_child);
+                    additional_values.push_back(xml_translation::get_first_child_text(value_child));
                     additional_values_lines.push_back(value_child->get_line());
                 },
-                additional_values,
                 "additionalValue"
             );
 
@@ -43,42 +43,34 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             const auto position_node = xml_translation::get_child_if_exists(child, "position", false);
             if (position_node)
             {
-                element.position = Position(position_node);
+                element.position = std::unique_ptr<Position>(new Position(position_node));
             }
 
             //The nodes can be set to be virtual as well in another array
             xml_translation::get_children(
                 child, 
-                [*] (xmlpp::Node* virtual_child, bool& is_virtual)
+                [&] (xmlpp::Node* virtual_child)
                 {
                     std::string virtual_string = xml_translation::get_first_child_text(virtual_child);
                     if (virtual_string.compare("true") == 0)
                     {
-                        is_virtual = true;
+                        element.is_virtual.push_back(true);
                     }
                     else if (virtual_string.compare("false") == 0)
                     {
-                        is_virtual = false;
+                        element.is_virtual.push_back(false);
                     } 
                     else 
                     {
                         std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << virtual_child->get_line() << std::endl;
-                        is_virtual = false;
+                        element.is_virtual.push_back(false);
                     }
                 },
-                element.is_virtual,
                 "virtual"
             );
+
+            traffic_sign_elements.push_back(element);
         },
-        traffic_sign_elements,
         "trafficSignElement"
     );
 }
-
-// <trafficSign id="84">
-//     <trafficSignElement>
-//       <trafficSignID>274</trafficSignID>
-//       <additionalValue>16.666666666666668</additionalValue>
-//     </trafficSignElement>
-//     <virtual>true</virtual>
-//   </trafficSign>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "commonroad_classes/geometry/Position.hpp"
 
@@ -15,7 +16,7 @@ class StateExact : public InterfaceTransform
 {
 private:
     //Commonroad data
-    Position position; //Exact position!
+    std::unique_ptr<Position> position; //Exact position!
     double orientation;
     uint64_t time;
     double velocity;
@@ -27,24 +28,7 @@ public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
      */
-    StateExact(
-        Position _position,
-        double _orientation,
-        uint64_t _time,
-        double _velocity,
-        double _acceleration,
-        double _yaw_rate,
-        double _slip_angle
-    )
-    :
-    position(_position),
-    orientation(_orientation),
-    time(_time),
-    velocity(_velocity),
-    acceleration(_acceleration),
-    yaw_rate(_yaw_rate),
-    slip_angle(_slip_angle)
-    {}
+    StateExact(const xmlpp::Node* node){}
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

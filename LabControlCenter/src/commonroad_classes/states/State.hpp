@@ -1,5 +1,9 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include <memory>
+
 #include "commonroad_classes/geometry/Position.hpp"
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 
@@ -14,121 +18,47 @@ class State : public InterfaceTransform
 {
 private:
     //Commonroad data
-    Position position;
-    IntervalOrExact orientation;
-    IntervalOrExact time; //Time values should probably be within the range of double - gets transformed in getter to nanoseconds view; also: State and InitialState differ in spec, as in InitialState time must be exact - we did not make an extra type for this here, as we expect conform xml types
-    IntervalOrExact velocity;
-    IntervalOrExact acceleration;
-    IntervalOrExact yaw_rate;
-    IntervalOrExact slip_angle;
-    IntervalOrExact steering_angle;
-    IntervalOrExact roll_angle;
-    IntervalOrExact roll_rate;
-    IntervalOrExact pitch_angle;
-    IntervalOrExact pitch_rate;
-    IntervalOrExact velocity_y;
-    IntervalOrExact position_z;
-    IntervalOrExact velocity_z;
-    IntervalOrExact roll_angle_front;
-    IntervalOrExact roll_rate_front;
-    IntervalOrExact velocity_y_front;
-    IntervalOrExact position_z_front;
-    IntervalOrExact velocity_z_front;
-    IntervalOrExact roll_angle_rear;
-    IntervalOrExact roll_rate_rear;
-    IntervalOrExact velocity_y_rear;
-    IntervalOrExact position_z_rear;
-    IntervalOrExact velocity_z_rear;
-    IntervalOrExact left_front_wheel_angular_speed;
-    IntervalOrExact right_front_wheel_angular_speed;
-    IntervalOrExact left_rear_wheel_angular_speed;
-    IntervalOrExact right_rear_wheel_angular_speed;
-    IntervalOrExact delta_y_front;
-    IntervalOrExact delta_y_rear;
-    IntervalOrExact curvature;
-    IntervalOrExact curvature_change;
-    IntervalOrExact jerk;
-    IntervalOrExact jounce;
+    std::unique_ptr<Position> position;
+    std::unique_ptr<IntervalOrExact> orientation;
+    std::unique_ptr<IntervalOrExact> time; //Time values should probably be within the range of double - gets transformed in getter to nanoseconds view; also: State and InitialState differ in spec, as in InitialState time must be exact - we did not make an extra type for this here, as we expect conform xml types
+    std::unique_ptr<IntervalOrExact> velocity;
+    std::unique_ptr<IntervalOrExact> acceleration;
+    std::unique_ptr<IntervalOrExact> yaw_rate;
+    std::unique_ptr<IntervalOrExact> slip_angle;
+    std::unique_ptr<IntervalOrExact> steering_angle;
+    std::unique_ptr<IntervalOrExact> roll_angle;
+    std::unique_ptr<IntervalOrExact> roll_rate;
+    std::unique_ptr<IntervalOrExact> pitch_angle;
+    std::unique_ptr<IntervalOrExact> pitch_rate;
+    std::unique_ptr<IntervalOrExact> velocity_y;
+    std::unique_ptr<IntervalOrExact> position_z;
+    std::unique_ptr<IntervalOrExact> velocity_z;
+    std::unique_ptr<IntervalOrExact> roll_angle_front;
+    std::unique_ptr<IntervalOrExact> roll_rate_front;
+    std::unique_ptr<IntervalOrExact> velocity_y_front;
+    std::unique_ptr<IntervalOrExact> position_z_front;
+    std::unique_ptr<IntervalOrExact> velocity_z_front;
+    std::unique_ptr<IntervalOrExact> roll_angle_rear;
+    std::unique_ptr<IntervalOrExact> roll_rate_rear;
+    std::unique_ptr<IntervalOrExact> velocity_y_rear;
+    std::unique_ptr<IntervalOrExact> position_z_rear;
+    std::unique_ptr<IntervalOrExact> velocity_z_rear;
+    std::unique_ptr<IntervalOrExact> left_front_wheel_angular_speed;
+    std::unique_ptr<IntervalOrExact> right_front_wheel_angular_speed;
+    std::unique_ptr<IntervalOrExact> left_rear_wheel_angular_speed;
+    std::unique_ptr<IntervalOrExact> right_rear_wheel_angular_speed;
+    std::unique_ptr<IntervalOrExact> delta_y_front;
+    std::unique_ptr<IntervalOrExact> delta_y_rear;
+    std::unique_ptr<IntervalOrExact> curvature;
+    std::unique_ptr<IntervalOrExact> curvature_change;
+    std::unique_ptr<IntervalOrExact> jerk;
+    std::unique_ptr<IntervalOrExact> jounce;
 
 public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
-     * Thus, this rather ugly (bc. large) constructor is used instead
      */
-    State(
-        Position _position,
-        IntervalOrExact _orientation,
-        IntervalOrExact _time,
-        IntervalOrExact _velocity,
-        IntervalOrExact _acceleration,
-        IntervalOrExact _yaw_rate,
-        IntervalOrExact _slip_angle,
-        IntervalOrExact _steering_angle,
-        IntervalOrExact _roll_angle,
-        IntervalOrExact _roll_rate,
-        IntervalOrExact _pitch_angle,
-        IntervalOrExact _pitch_rate,
-        IntervalOrExact _velocity_y,
-        IntervalOrExact _position_z,
-        IntervalOrExact _velocity_z,
-        IntervalOrExact _roll_angle_front,
-        IntervalOrExact _roll_rate_front,
-        IntervalOrExact _velocity_y_front,
-        IntervalOrExact _position_z_front,
-        IntervalOrExact _velocity_z_front,
-        IntervalOrExact _roll_angle_rear,
-        IntervalOrExact _roll_rate_rear,
-        IntervalOrExact _velocity_y_rear,
-        IntervalOrExact _position_z_rear,
-        IntervalOrExact _velocity_z_rear,
-        IntervalOrExact _left_front_wheel_angular_speed,
-        IntervalOrExact _right_front_wheel_angular_speed,
-        IntervalOrExact _left_rear_wheel_angular_speed,
-        IntervalOrExact _right_rear_wheel_angular_speed,
-        IntervalOrExact _delta_y_front,
-        IntervalOrExact _delta_y_rear,
-        IntervalOrExact _curvature,
-        IntervalOrExact _curvature_change,
-        IntervalOrExact _jerk,
-        IntervalOrExact _jounce
-    )
-    :
-    position(_position),
-    orientation(_orientation),
-    time(_time),
-    velocity(_velocity),
-    acceleration(_acceleration),
-    yaw_rate(_yaw_rate),
-    slip_angle(_slip_angle),
-    steering_angle(_steering_angle),
-    roll_angle(_roll_angle),
-    roll_rate(_roll_rate),
-    pitch_angle(_pitch_angle),
-    pitch_rate(_pitch_rate),
-    velocity_y(_velocity_y),
-    position_z(_position_z),
-    velocity_z(_velocity_z),
-    roll_angle_front(_roll_angle_front),
-    roll_rate_front(_roll_rate_front),
-    velocity_y_front(_velocity_y_front),
-    position_z_front(_position_z_front),
-    velocity_z_front(_velocity_z_front),
-    roll_angle_rear(_roll_angle_rear),
-    roll_rate_rear(_roll_rate_rear),
-    velocity_y_rear(_velocity_y_rear),
-    position_z_rear(_position_z_rear),
-    velocity_z_rear(_velocity_z_rear),
-    left_front_wheel_angular_speed(_left_front_wheel_angular_speed),
-    right_front_wheel_angular_speed(_right_front_wheel_angular_speed),
-    left_rear_wheel_angular_speed(_left_rear_wheel_angular_speed),
-    right_rear_wheel_angular_speed(_right_rear_wheel_angular_speed),
-    delta_y_front(_delta_y_front),
-    delta_y_rear(_delta_y_rear),
-    curvature(_curvature),
-    curvature_change(_curvature_change),
-    jerk(_jerk),
-    jounce(_jounce)
-    {}
+    State(const xmlpp::Node* node){}
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

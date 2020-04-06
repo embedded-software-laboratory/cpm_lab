@@ -22,11 +22,6 @@ public:
     Point(const xmlpp::Node* node);
 
     /**
-     * \brief Default constructor, required for template functions in XMLTranslation (as we cannot template the return value)
-     */
-    Point();
-
-    /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system

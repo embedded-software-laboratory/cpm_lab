@@ -1,5 +1,9 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include <memory>
+
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 
 /**
@@ -11,7 +15,7 @@ class SignalState
 {
 private:
     //Commonroad data
-    IntervalOrExact time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::unique_ptr<IntervalOrExact> time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
     //These values are set to false if they do not exist
     bool horn;
     bool indicator_left;
@@ -24,24 +28,7 @@ public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
      */
-    SignalState(
-        IntervalOrExact _time,
-        bool _horn,
-        bool _indicator_left,
-        bool _indicator_right,
-        bool _braking_lights,
-        bool _hazard_warning_lights,
-        bool _flashing_blue_lights
-    )
-    :
-    time(_time),
-    horn(_horn),
-    indicator_left(_indicator_left),
-    indicator_right(_indicator_right),
-    braking_lights(_braking_lights),
-    hazard_warning_lights(_hazard_warning_lights),
-    flashing_blue_lights(_flashing_blue_lights)
-    {}
+    SignalState(const xmlpp::Node* node){}
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

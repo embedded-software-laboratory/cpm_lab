@@ -2,6 +2,7 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,7 +31,7 @@ struct TrafficSignPost
 struct TrafficSignElement
 {
     std::vector<TrafficSignPost> traffic_sign_elements;
-    Position position; //Must be exact according to spec!
+    std::unique_ptr<Position> position; //Must be exact according to spec! Ptr because we do not have a default constructor
     std::vector<bool> is_virtual;
 };
 

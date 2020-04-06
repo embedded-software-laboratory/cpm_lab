@@ -303,3 +303,60 @@ double xml_translation::string_to_double(std::string text)
         return -1.0;
     }
 }
+
+void xml_translation::get_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "")
+{
+    //Check if it is an element node
+    const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
+    if(!(node_element))
+    {
+        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+    }
+
+    xmlpp::Node::NodeList children;
+
+    //Get all children (of the given name)
+    if (child_name != "")
+    {
+        children = node_element->get_children(child_name);
+    }
+    else
+    {
+        children = node_element->get_children();
+    }
+
+    //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
+    for (const auto child : children)
+    {
+        node_function(child);
+    }
+}
+
+void xml_translation::get_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name)
+{
+    //Check if it is an element node
+    const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
+    if(!(node_element))
+    {
+        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+    }
+
+    xmlpp::Node::NodeList children;
+
+    //Get all children (of the given name)
+    if (node_name != "")
+    {
+        children = node_element->get_children(node_name);
+    }
+    else
+    {
+        children = node_element->get_children();
+    }
+
+    //Transform from child list to transformed child list by translating each children to type T using the given function node_transform
+    for (const auto child : children)
+    {
+        attribute_function(xml_translation::get_attribute_text(child, attribute_name, true));
+    }
+}
+

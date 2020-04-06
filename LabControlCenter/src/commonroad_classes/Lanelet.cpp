@@ -55,13 +55,12 @@ Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
     //Same for both specs
     Bound bound;
 
-    xml_translation::get_children<Point>(
+    xml_translation::get_children(
         bound_node, 
-        [] (const xmlpp::Node* child, Point& point_out) 
+        [&] (const xmlpp::Node* child) 
         {
-            point_out = Point(child);
+            bound.points.push_back(Point(child));
         }, 
-        bound.points,
         "point"
     );
 
@@ -90,14 +89,13 @@ std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string na
     std::vector<int> refs;
     
     //Get refs
-    xml_translation::get_elements_with_attribute<int>(
+    xml_translation::get_elements_with_attribute(
         node,
-        [] (std::string text, int& int_out) {
-            int_out = xml_translation::string_to_int(text);
+        [&] (std::string text) {
+            refs.push_back(xml_translation::string_to_int(text));
         },
         name,
-        "ref",
-        refs
+        "ref"
     );
 
     return refs;
@@ -143,13 +141,12 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
         line.exists = true;
 
         //Translate line points
-        xml_translation::get_children<Point>(
+        xml_translation::get_children(
             line_node, 
-            [] (const xmlpp::Node* child, Point& point_out) 
+            [&] (const xmlpp::Node* child) 
             {
-                point_out = Point(child);
+                stop_line.points.push_back(Point(child));
             }, 
-            stop_line.points,
             "point"
         );
 
@@ -246,11 +243,12 @@ std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::
     std::vector<VehicleType> vehicle_vector;
 
     //Fill vector with existing values
-    xml_translation::get_children<VehicleType>(
+    xml_translation::get_children(
         node, 
-        [] (const xmlpp::Node* child, VehicleType& type_out) 
+        [&] (const xmlpp::Node* child) 
         {
             std::string user_string = xml_translation::get_first_child_text(child);
+            VehicleType type_out;
 
             if (user_string.compare("vehicle") == 0)
             {
@@ -293,8 +291,9 @@ std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::
                 std::cerr << "TODO: Better warning // Specified vehicle type not part of specs, saved as NotInSpec, in line " << child->get_line() << std::endl;
                 type_out = VehicleType::NotInSpec;
             }
+
+            vehicle_vector.push_back(type_out);
         }, 
-        vehicle_vector,
         name
     );
 

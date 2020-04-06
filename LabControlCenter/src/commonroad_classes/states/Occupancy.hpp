@@ -1,5 +1,8 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include <memory>
 #include <cstdint>
 
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
@@ -14,21 +17,14 @@ class Occupancy
 {
 private:
     //Commonroad data
-    Shape shape;
-    IntervalOrExact time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::unique_ptr<Shape> shape;
+    std::unique_ptr<Shape> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
 
 public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
      */
-    Occupancy(
-        Shape _shape,
-        IntervalOrExact _time
-    )
-    :
-    shape(_shape),
-    time(_time)
-    {}
+    Occupancy(const xmlpp::Node* node){}
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
