@@ -141,7 +141,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        //traffic_lights[xml_translation::get_attribute_int(node, "id")] = TrafficLight(node);
+        traffic_lights[xml_translation::get_attribute_int(node, "id")] = TrafficLight(node);
     }
     else if (node_name.compare("intersection") == 0)
     {

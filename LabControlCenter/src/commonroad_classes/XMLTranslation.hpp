@@ -106,7 +106,7 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
-     * \return Value of the first child-child of the first child with name child_name of node, or 'empty' in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or 'empty' in case of an error
      */
     std::string get_child_child_text(const xmlpp::Node* node, std::string child_name, bool warn = false);
 
@@ -116,7 +116,7 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
-     * \return Value of the first child-child of the first child with name child_name of node, or -1 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or -1 in case of an error
      */
     int get_child_child_int(const xmlpp::Node* node, std::string child_name, bool warn = false);
 
@@ -126,7 +126,7 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
-     * \return Value of the first child-child of the first child with name child_name of node, or 0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or 0 in case of an error
      */
     unsigned long long get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool warn = false);
 
@@ -136,7 +136,7 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
-     * \return Value of the first child-child of the first child with name child_name of node, or -1.0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or -1.0 in case of an error
      */
     double get_child_child_double(const xmlpp::Node* node, std::string child_name, bool warn = false);
 

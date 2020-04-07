@@ -141,4 +141,6 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             std::cout << std::endl;
         }
     }
+
+    //TODO: Warn if number of elements is zero?
 }

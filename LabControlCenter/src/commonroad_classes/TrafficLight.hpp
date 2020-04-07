@@ -1,5 +1,7 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
 #include <string>
 #include <vector>
 
@@ -12,6 +14,7 @@
 #include "commonroad_classes/geometry/Position.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/XMLTranslation.hpp"
 
 /**
  * \enum class TrafficLightColor
@@ -60,7 +63,9 @@ private:
     bool is_active; //Probably defaults to true, as it must not occur
 
 public:
-    //TODO: Constructor, getter
+    TrafficLight(const xmlpp::Node* node);
+
+    //TODO: Getter
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
