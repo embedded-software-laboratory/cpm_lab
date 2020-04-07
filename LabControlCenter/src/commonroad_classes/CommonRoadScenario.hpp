@@ -93,7 +93,7 @@ private:
 
     //Commonroad data
     std::vector<ScenarioTag> scenario_tags; //From 2020 specs
-    Location location;
+    Location location; //TODO: Optional?
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;

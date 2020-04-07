@@ -37,17 +37,60 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
                 "additionalValue"
             );
 
-            //TODO: Create TrafficSignPost elements depending on the line values (use std bound functions for search etc!)
+            //Create TrafficSignPost elements depending on the line values (use std bound functions for search etc!)
+            size_t values_index = 0; //Store up to which index additional_values have already been stored in previous elements
+            for (size_t sign_index = 0; sign_index < traffic_sign_ids.size(); ++sign_index)
+            {
+                //Set up traffic post consisting of one ID and possibly several additional values
+                TrafficSignPost traffic_post;
+                traffic_post.traffic_sign_id = traffic_sign_ids.at(sign_index);
 
-            //TODO: Entscheidung zwischen Default-Konstruktoren, unique_ptr, shared_ptr und optional treffen, um optionale und später initialisierte Werte zu behandeln
-            //Damit lassen sich die aktuellen Fehlermeldungen beheben und die Implementierung kann fortgesetzt werden
+                if (sign_index == traffic_sign_ids.size() - 1)
+                {
+                    //Last element, take all remaining additional values
+                    if (additional_values.size() > values_index)
+                    {
+                        std::copy(additional_values.begin() + values_index, additional_values.end(), std::back_inserter(traffic_post.additional_values));
+                    }
+                }
+                else
+                {
+                    //Take all additional values up to upper bound (using the starting line of the next traffic post)
+                    int next_post_line = traffic_sign_id_lines.at(sign_index + 1);
+                    auto next_additional_it = std::upper_bound(additional_values_lines.begin(), additional_values_lines.end(), next_post_line);
 
-            //Get position value, which must not be specified (is handled by default constructor of position if missing) -> TODO
+                    if (next_additional_it != additional_values_lines.end())
+                    {
+                        //There is an upper bound, copy up to next additional values of next element
+                        auto next_additional_index = std::distance(additional_values_lines.begin(), next_additional_it);
+                        std::copy(additional_values.begin() + values_index, additional_values.begin() + next_additional_index, std::back_inserter(traffic_post.additional_values));
+
+                        values_index = next_additional_index;
+                    }
+                    else if (additional_values.size() > values_index)
+                    {
+                        //There is no upper bound, but there are still elements left - take all remaining values
+                        std::copy(additional_values.begin() + values_index, additional_values.end(), std::back_inserter(traffic_post.additional_values));
+
+                        values_index = additional_values.size();
+                    }
+                }
+                
+                element.traffic_sign_posts.push_back(traffic_post);
+            }
+
+            //Get position value, which must not be specified
             const auto position_node = xml_translation::get_child_if_exists(child, "position", false);
             if (position_node)
             {
-                element.position = std::unique_ptr<Position>(new Position(position_node));
+                element.position = std::optional<Position>{std::in_place, position_node};
             }
+            else
+            {
+                //Use default-value constructor (parameter is irrelevant)
+                element.position = std::optional<Position>{std::in_place, 0};
+            }
+            
 
             //The nodes can be set to be virtual as well in another array
             xml_translation::get_children(
@@ -76,4 +119,26 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
         },
         "trafficSignElement"
     );
+
+    //Test output
+    std::cout << "Traffic sign translated: " << std::endl;
+    std::cout << "\tNumber of elements: " << traffic_sign_elements.size() << std::endl;
+    std::cout << "\tNow iterating..." << std::endl;
+    for (const auto traffic_sign_element : traffic_sign_elements)
+    {
+        std::cout << "\tTraffic sign element:" << std::endl;
+        std::cout << "\t\t Is virtual - size: " << traffic_sign_element.is_virtual.size() << std::endl;
+        std::cout << "\t\t Position has value: " << traffic_sign_element.position.has_value() << std::endl;
+        std::cout << "\t\t Posts:" << std::endl;
+        for (const auto traffic_sign_post : traffic_sign_element.traffic_sign_posts)
+        {
+            std::cout << "\t\t\t Post ID: " << traffic_sign_post.traffic_sign_id << std::endl;
+            std::cout << "\t\t\t Additional values: ";
+            for (const auto additional_value : traffic_sign_post.additional_values)
+            {
+                std::cout << " | " << additional_value;
+            }
+            std::cout << std::endl;
+        }
+    }
 }

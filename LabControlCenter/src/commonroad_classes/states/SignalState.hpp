@@ -2,7 +2,11 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
-#include <memory>
+#include <optional>
+//Optional is used for 3 reasons:
+//1. Some values are optional according to the specification
+//2. Some values might be missing if the file is not spec-conform, which is easy to handle when we do not require that they exist (though we still check for their existance)
+//3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
 
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 
@@ -15,7 +19,7 @@ class SignalState
 {
 private:
     //Commonroad data
-    std::unique_ptr<IntervalOrExact> time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
     //These values are set to false if they do not exist
     bool horn;
     bool indicator_left;

@@ -5,6 +5,12 @@
 #include <memory>
 #include <vector>
 
+#include <optional>
+//Optional is used for 3 reasons:
+//1. Some values are optional according to the specification
+//2. Some values might be missing if the file is not spec-conform, which is easy to handle when we do not require that they exist (though we still check for their existance)
+//3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
+
 #include "commonroad_classes/geometry/Circle.hpp"
 #include "commonroad_classes/geometry/Polygon.hpp"
 #include "commonroad_classes/geometry/Rectangle.hpp"
@@ -24,7 +30,7 @@ private:
     bool is_exact;
     
     //Exact position (positionExact)
-    std::unique_ptr<Point> point;
+    std::optional<Point> point;
 
     //Inexact position (positionInterval)
     std::vector<Circle> circles;
@@ -39,16 +45,10 @@ public:
     Position(const xmlpp::Node* node);
 
     /**
-     * Set up move and copy semantics (rule of five) because we use a unique_ptr
+     * \brief Second constructor, value is irrelevant - value given s.t. no default constructor exists
+     * Call this if you need to use the specified default value from the specs because the value was not set explicitly
      */
-    Position(const Position&) = delete;               // Copy constructor
-    Position& operator=(const Position&) = delete;  // Copy assignment
-    Position(Position&& other) : point(std::move(other.point)) {}   
-    Position& operator=(Position&& other) 
-    {
-        point = std::move(other.point);
-        return *this;
-    }
+    Position(int irrelevant_int);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
