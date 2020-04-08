@@ -49,6 +49,19 @@ struct TrafficLightCycle
 };
 
 /**
+ * \struct TrafficLightElement
+ * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
+ */
+struct TrafficLightElement
+{
+    //Commonroad types
+    TrafficLightCycle cycle;
+    std::optional<Position> position; //TODO: Position is specified as being always exact
+    Direction direction;
+    bool is_active; //Probably defaults to true, as it must not occur
+};
+
+/**
  * \class TrafficLight
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic light specified in an XML file
@@ -56,11 +69,7 @@ struct TrafficLightCycle
 class TrafficLight : public InterfaceTransform
 {
 private:
-    //Commonroad types
-    TrafficLightCycle cycle;
-    std::optional<Position> position; //TODO: Position is specified as being always exact
-    Direction direction;
-    bool is_active; //Probably defaults to true, as it must not occur
+    std::vector<TrafficLightElement> traffic_light_elements;
 
 public:
     TrafficLight(const xmlpp::Node* node);

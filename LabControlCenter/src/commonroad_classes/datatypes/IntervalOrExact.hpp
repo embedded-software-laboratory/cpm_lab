@@ -1,5 +1,8 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
 /**
@@ -16,27 +19,14 @@ private:
     bool exact; //is_exact
 public:
     /**
-     * \brief Simple constructor to directly set the exact value
-     * Also tells the class that it is not an IntervalOrExact
+     * \brief Constructor
      */
-    IntervalOrExact(double _exact)
+    IntervalOrExact(const xmlpp::Node* node)
     {
-        interval_start = 0;
-        interval_end = 0;
-        exact_value = _exact;
-        exact = true;
-    }
+        //TODO: Make sure that this is an interval node type
+        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
-    /**
-     * \brief Simple constructor to directly set the IntervalOrExact
-     * Also tells the class that it is not an exact value
-     */
-    IntervalOrExact(double start, double end)
-    {
-        interval_start = start;
-        interval_end = end;
-        exact_value = 0;
-        exact = false;
+        //TODO: Sadly, sequences are allowed here as well, so we can have more than one interval
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)

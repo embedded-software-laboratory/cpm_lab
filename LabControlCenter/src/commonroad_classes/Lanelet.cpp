@@ -55,7 +55,7 @@ Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
     //Same for both specs
     Bound bound;
 
-    xml_translation::get_children(
+    xml_translation::iterate_children(
         bound_node, 
         [&] (const xmlpp::Node* child) 
         {
@@ -89,7 +89,7 @@ std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string na
     std::vector<int> refs;
     
     //Get refs
-    xml_translation::get_elements_with_attribute(
+    xml_translation::iterate_elements_with_attribute(
         node,
         [&] (std::string text) {
             refs.push_back(xml_translation::string_to_int(text));
@@ -141,7 +141,7 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
         line.exists = true;
 
         //Translate line points
-        xml_translation::get_children(
+        xml_translation::iterate_children(
             line_node, 
             [&] (const xmlpp::Node* child) 
             {
@@ -243,7 +243,7 @@ std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::
     std::vector<VehicleType> vehicle_vector;
 
     //Fill vector with existing values
-    xml_translation::get_children(
+    xml_translation::iterate_children(
         node, 
         [&] (const xmlpp::Node* child) 
         {

@@ -196,6 +196,33 @@ double xml_translation::get_child_child_double(const xmlpp::Node* node, std::str
     }
 }
 
+double xml_translation::get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool warn)
+{
+    //Get the content of the node as string, then convert it to an integer
+    try
+    {
+        const auto child_node = xml_translation::get_child_if_exists(node, child_name, warn);
+        if (child_node)
+        {
+            return std::stod(xml_translation::get_child_child_text(child_node, "exact", warn));
+        }
+        else
+        {
+            //TODO: Use optional here as well, return optional? 
+            if (warn)
+                std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_line() << ", " << node->get_name() << std::endl;
+            return -1;
+        }
+        
+    }
+    catch(...)
+    {
+        if (warn)
+            std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_line() << ", " << node->get_name() << std::endl;
+        return -1;
+    }
+}
+
 std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool warn)
 {
     //Convert to text node and check if it really exists
@@ -304,7 +331,7 @@ double xml_translation::string_to_double(std::string text)
     }
 }
 
-void xml_translation::get_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "")
+void xml_translation::iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "")
 {
     //Check if it is an element node
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
@@ -332,7 +359,7 @@ void xml_translation::get_children(const xmlpp::Node* node, std::function<void (
     }
 }
 
-void xml_translation::get_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name)
+void xml_translation::iterate_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name)
 {
     //Check if it is an element node
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);

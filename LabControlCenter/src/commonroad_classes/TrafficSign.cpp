@@ -4,7 +4,7 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
 {
     //We can have multiple sign elements for one sign, consisting of multiple posts
     //Each element has its own position and can either be virtual or not virtual
-    xml_translation::get_children(
+    xml_translation::iterate_children(
         node,
         [&] (xmlpp::Node* child)
         {
@@ -18,7 +18,7 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             std::vector<std::string> additional_values;
             std::vector<int> additional_values_lines;
 
-            xml_translation::get_children(
+            xml_translation::iterate_children(
                 child,
                 [&] (xmlpp::Node* id_child)
                 {
@@ -27,7 +27,7 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
                 },
                 "trafficSignID"
             );
-            xml_translation::get_children(
+            xml_translation::iterate_children(
                 child,
                 [&] (xmlpp::Node* value_child)
                 {
@@ -93,7 +93,7 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             
 
             //The nodes can be set to be virtual as well in another array
-            xml_translation::get_children(
+            xml_translation::iterate_children(
                 child, 
                 [&] (xmlpp::Node* virtual_child)
                 {

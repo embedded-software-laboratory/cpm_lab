@@ -140,6 +140,17 @@ namespace xml_translation
      */
     double get_child_child_double(const xmlpp::Node* node, std::string child_name, bool warn = false);
 
+    /**
+     * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
+     * Always warns if it is not an Element node TODO: throw error
+     * Goes another step deeper to extract the value in the "exact" node for exact decimal values
+     * \param element_node An XML node
+     * \param child_name Expected name of the child node
+     * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
+     * \return Value of the first child of the first child with name child_name of node, or -1.0 in case of an error
+     */
+    double get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool warn = false);
+
     //**********************************************************************
     //Attributes
     //**********************************************************************
@@ -228,7 +239,7 @@ namespace xml_translation
      * \param node_function Function that takes a node 
      * \param child_name Expected name of the child node - optional, return all if not set
      */
-    void get_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name);
+    void iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -240,5 +251,5 @@ namespace xml_translation
      * \param node_name Expected name of the node
      * \param attribute_name Expected name of the attribute
      */
-    void get_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name);
+    void iterate_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name);
 }

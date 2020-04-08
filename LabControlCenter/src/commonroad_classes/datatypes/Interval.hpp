@@ -1,5 +1,8 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
 /**
@@ -16,10 +19,12 @@ public:
     /**
      * \brief Simple constructor to directly set the interval values
      */
-    Interval(double start, double end)
+    Interval(const xmlpp::Node* node)
     {
-        interval_start = start;
-        interval_end = end;
+        //TODO: Make sure that this is an interval node type
+        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
+
+        //TODO: Sadly, sequences are allowed here as well, so we can have more than one interval
     }
 
     //Getter (no setter, as we only want to set Interval at translation or change it using transform_...)

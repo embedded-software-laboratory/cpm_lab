@@ -1,5 +1,10 @@
 #pragma once
 
+#include <libxml++-2.6/libxml++/libxml++.h>
+
+#include <cassert>
+#include <vector>
+
 #include <optional>
 //Optional is used for 3 reasons:
 //1. Some values are optional according to the specification
@@ -10,6 +15,17 @@
 #include "commonroad_classes/states/GoalState.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/XMLTranslation.hpp"
+
+/**
+ * \struct PlanningProblemElement
+ * \brief Not in specs, but these allow sequences of initialState and several goalStates in PlanningProblem
+ */
+struct PlanningProblemElement
+{
+    std::optional<StateExact> initial_state;
+    std::vector<GoalState> goal_states;
+};
 
 
 /**
@@ -20,11 +36,12 @@
 class PlanningProblem : public InterfaceTransform
 {
 private:
-    std::optional<StateExact> initial_state;
-    std::optional<GoalState> goal_state;
+    std::vector<PlanningProblemElement> planning_problems;
 
 public:
-    //TODO: Constructor, getter
+    PlanningProblem(const xmlpp::Node* node);
+
+    //TODO: Getter
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

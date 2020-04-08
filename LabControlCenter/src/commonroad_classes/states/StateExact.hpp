@@ -23,9 +23,9 @@ private:
     //Commonroad data
     std::optional<Position> position; //Exact position!
     double orientation;
-    uint64_t time;
+    double time; //In some parts, this is a double (though it shouldn't be a double here) - double chosen for consistency
     double velocity;
-    double acceleration;
+    std::optional<double> acceleration; //Must not exist
     double yaw_rate;
     double slip_angle;
 
@@ -33,7 +33,7 @@ public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
      */
-    StateExact(const xmlpp::Node* node){}
+    StateExact(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

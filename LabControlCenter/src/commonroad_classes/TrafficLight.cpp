@@ -2,16 +2,25 @@
 
 TrafficLight::TrafficLight(const xmlpp::Node* node)
 {
+    TrafficLightElement element;
+
+    /********************************************/
+    //TODO: Element is not part of the specification
+    //But: TrafficLight can contain a sequence of cycle,position,direction,active
+    //This must probably be handled by using line numbers or, alternatively, by iterating all children with the according names
+    //Then, several elements can be constructed from that
+    //At the moment, only the first element is translated, this must be changed
+
     //Get position value, which must not be specified
     const auto position_node = xml_translation::get_child_if_exists(node, "position", false);
     if (position_node)
     {
-        position = std::optional<Position>{std::in_place, position_node};
+        element.position = std::optional<Position>{std::in_place, position_node};
     }
     else
     {
         //Use default-value constructor (parameter is irrelevant)
-        position = std::optional<Position>{std::in_place, 0};
+        element.position = std::optional<Position>{std::in_place, 0};
     }
 
     //Get direction value, which must not exist
@@ -21,36 +30,36 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
         std::string direction_string = xml_translation::get_first_child_text(direction_node);
         if (direction_string.compare("right") == 0)
         {
-            direction = Direction::Right;
+            element.direction = Direction::Right;
         }
         else if (direction_string.compare("straight") == 0)
         {
-            direction = Direction::Straight;
+            element.direction = Direction::Straight;
         }
         else if (direction_string.compare("left") == 0)
         {
-            direction = Direction::Left;
+            element.direction = Direction::Left;
         }
         else if (direction_string.compare("leftStraight") == 0)
         {
-            direction = Direction::LeftStraight;
+            element.direction = Direction::LeftStraight;
         }
         else if (direction_string.compare("straightRight") == 0)
         {
-            direction = Direction::StraightRight;
+            element.direction = Direction::StraightRight;
         }
         else if (direction_string.compare("leftRight") == 0)
         {
-            direction = Direction::LeftRight;
+            element.direction = Direction::LeftRight;
         }
         else if (direction_string.compare("all") == 0)
         {
-            direction = Direction::All;
+            element.direction = Direction::All;
         }
         else 
         {
             std::cerr << "TODO: Better warning // Node element not conformant to specs (direction) in: " << direction_node->get_line() << std::endl;
-            direction = Direction::NotInSpec;
+            element.direction = Direction::NotInSpec;
         }
     }
 
@@ -61,16 +70,16 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
         std::string active_string = xml_translation::get_first_child_text(active_node);
         if (active_string.compare("true") == 0)
         {
-            is_active = true;
+            element.is_active = true;
         }
         else if (active_string.compare("false") == 0)
         {
-            is_active = false;
+            element.is_active = false;
         } 
         else 
         {
-            std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << virtual_child->get_line() << std::endl;
-            is_active = false;
+            std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << active_node->get_line() << std::endl;
+            element.is_active = false;
         }
     }
     else
@@ -82,7 +91,7 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     const auto cycle_node = xml_translation::get_child_if_exists(node, "cycle", false);
     if (cycle_node)
     {
-
+        //TODO: Translate this part
     }
     else
     {
@@ -90,5 +99,9 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     }
     
     //TODO: Maybe use functions for better readability
-    //TODO: trafficLIght uses a sequence, just like trafficSign, so we need to use the same "wrapping" function and change the structure in the .hpp slightly
+    
+    //Test output
+    std::cout << "TrafficLight: " << std::endl;
+    std::cout << "\tIs active: " << element.is_active << std::endl;
+    std::cout << "\tHas position: " << element.position.has_value() << std::endl;
 }

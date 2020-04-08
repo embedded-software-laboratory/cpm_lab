@@ -9,6 +9,7 @@
 //3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
 
 #include "commonroad_classes/geometry/Position.hpp"
+#include "commonroad_classes/datatypes/Interval.hpp"
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
@@ -23,15 +24,15 @@ class GoalState : public InterfaceTransform
 private:
     //Commonroad data
     std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
-    std::optional<Position> position;
-    double orientation;
-    double velocity;
+    std::optional<Position> position; //Must not be defined 
+    std::optional<Interval> orientation; //Must not be defined
+    std::optional<Interval> velocity; //Must not be defined
 
 public:
     /**
      * \brief Constructor, set up a goalstate object
      */
-    GoalState(const xmlpp::Node* node) {};
+    GoalState(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
