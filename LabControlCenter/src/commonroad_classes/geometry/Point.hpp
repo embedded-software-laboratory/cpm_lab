@@ -46,5 +46,8 @@ public:
 
     void to_dds_msg() {}
 
-    //TODO: Getter
+    //Getter
+    double get_x();
+    double get_y();
+    double get_z();
 };

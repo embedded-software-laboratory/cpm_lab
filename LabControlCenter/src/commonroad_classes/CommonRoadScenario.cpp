@@ -342,9 +342,11 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
 {
     //Draw lanelets
+    ctx->save();
     ctx->set_source_rgb(0,0,1.0);
     for (auto lanelet_entry : lanelets)
     {
         lanelet_entry.second.draw(ctx, scale);
     }
+    ctx->restore();
 }

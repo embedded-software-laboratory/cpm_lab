@@ -334,7 +334,12 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 
 void Lanelet::draw(const DrawingContext& ctx, double scale)
 {
-    //Current state: Only draw boundaries, do not draw lines in between
+    //Current state: Only draw boundaries
+    ctx->save();
+    ctx->set_line_width(0.005);
+
+    //Draw points - I do not know why save() and restore() exist, but we cannot pause drawing a line and do something else between even though they are used in Point
+    //Thus, points must be drawn before the line is drawn
     for (auto point : left_bound.points)
     {
         point.draw(ctx, scale);
@@ -343,4 +348,28 @@ void Lanelet::draw(const DrawingContext& ctx, double scale)
     {
         point.draw(ctx, scale);
     }
+
+    //Draw lines between points
+    if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
+    {
+        ctx->begin_new_path();
+        ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
+        for (auto point : left_bound.points)
+        {
+            //Draw lines between points
+            ctx->line_to(point.get_x() * scale, point.get_y() * scale);
+        }
+        ctx->stroke();
+
+        ctx->begin_new_path();
+        ctx->move_to(right_bound.points.at(0).get_x() * scale, right_bound.points.at(0).get_y() * scale);
+        for (auto point : right_bound.points)
+        {
+            //Draw lines between points
+            ctx->line_to(point.get_x() * scale, point.get_y() * scale);
+        }
+        ctx->stroke();
+    }
+
+    ctx->restore();
 }
