@@ -17,6 +17,7 @@
 #include "commonroad_classes/PlanningProblem.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -79,7 +80,7 @@ struct Location
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a commonroad scenario specified in an XML file, which is loaded once and then replaced by more efficient C++ access methods (instead of parsing the XML over and over again)
  */
-class CommonRoadScenario : public InterfaceTransform
+class CommonRoadScenario : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Meta information (only relevant maybe for UI except for time_step_size)
@@ -152,6 +153,14 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale) override {}
+
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0) override {};
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

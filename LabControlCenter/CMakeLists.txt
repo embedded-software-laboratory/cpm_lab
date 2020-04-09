@@ -150,7 +150,6 @@ add_executable(CommonRoadTest
     src/commonroad_classes/Crossing.cpp
     src/commonroad_classes/DynamicObstacle.hpp
     src/commonroad_classes/DynamicObstacle.cpp
-    src/commonroad_classes/InterfaceTransform.hpp
     src/commonroad_classes/Intersection.hpp
     src/commonroad_classes/Intersection.cpp
     src/commonroad_classes/Lanelet.hpp
@@ -163,6 +162,9 @@ add_executable(CommonRoadTest
     src/commonroad_classes/TrafficLight.cpp
     src/commonroad_classes/TrafficSign.hpp
     src/commonroad_classes/TrafficSign.cpp
+
+    src/commonroad_classes/InterfaceTransform.hpp
+    src/commonroad_classes/InterfaceDraw.hpp
 
     src/commonroad_classes/XMLTranslation.hpp
     src/commonroad_classes/XMLTranslation.cpp
