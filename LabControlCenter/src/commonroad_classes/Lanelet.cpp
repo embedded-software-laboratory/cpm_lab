@@ -329,3 +329,18 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
         return LineMarking::NotInSpec;
     }
 }
+
+/******************************Interface functions***********************************/
+
+void Lanelet::draw(const DrawingContext& ctx, double scale)
+{
+    //Current state: Only draw boundaries, do not draw lines in between
+    for (auto point : left_bound.points)
+    {
+        point.draw(ctx, scale);
+    }
+    for (auto point : right_bound.points)
+    {
+        point.draw(ctx, scale);
+    }
+}

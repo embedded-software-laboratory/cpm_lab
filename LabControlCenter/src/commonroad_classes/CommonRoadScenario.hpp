@@ -160,7 +160,7 @@ public:
      * \param ctx A DrawingContext, used to draw on
      * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
      */
-    void draw(const DrawingContext& ctx, double scale = 1.0) override {};
+    void draw(const DrawingContext& ctx, double scale = 1.0) override;
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

@@ -7,6 +7,7 @@
 
 #include "commonroad_classes/geometry/Point.hpp"
 
+#include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
@@ -87,7 +88,7 @@ struct StopLine
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store Lanelets specified in the XML file (segments of a lane, with references to following and adjacent lanes)
  */
-class Lanelet : public InterfaceTransform
+class Lanelet : public InterfaceTransform, public InterfaceDraw
 {
 private:
     Bound left_bound;
@@ -167,6 +168,14 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale) override {}
+
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0) override;
     
     void to_dds_msg() {}
 

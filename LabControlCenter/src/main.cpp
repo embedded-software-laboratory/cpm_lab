@@ -26,6 +26,8 @@
 #include "TimerTrigger.hpp"
 #include "cpm/init.hpp"
 
+#include "commonroad_classes/CommonRoadScenario.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
@@ -86,6 +88,11 @@ int main(int argc, char *argv[])
 
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
+    //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
+    std::string filepath_2018 = "/home/cpm-lab/dev/software/LabControlCenter/test/C-USA_US101-30_1_T-1.xml";
+    std::string filepath_2020 = "/home/cpm-lab/dev/software/LabControlCenter/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
+    auto commonroad_scenario = std::make_shared<CommonRoadScenario>(filepath_2018);
+
     auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);
     storage->register_on_param_changed_callback(std::bind(&ParameterServer::resend_param_callback, &server, _1));
@@ -108,6 +115,7 @@ int main(int argc, char *argv[])
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
+        commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}

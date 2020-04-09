@@ -19,4 +19,23 @@ Point::Point(const xmlpp::Node* node)
 Point::Point(int irrelevant_int)
 {
     //TODO: Find out default value
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
+}
+
+void Point::draw(const DrawingContext& ctx, double scale)
+{
+    //Current state: Leave out z-value
+    //Idea for z-value: Add shade, or change saturation based on current cairo value, or put small number for height into point
+    ctx->save();
+    ctx->set_line_width(0.03);
+    ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
+    ctx->begin_new_path();
+    ctx->move_to(x * scale, y * scale);
+    ctx->line_to(x * scale, y * scale);
+    //ctx->arc(x * scale, y * scale, 0.01, 0.0, 2*M_PI); //Draw a small circle where the point should be
+    //ctx->fill_preserve();
+    ctx->stroke();
+    ctx->restore();
 }

@@ -337,40 +337,14 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
     }
 }
 
+/******************************Interface functions***********************************/
 
-//Old parse structure (relevant parts only)
-// const auto nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
-
-//   if(nodeText && nodeText->is_white_space()) //Let's ignore the indenting - you don't always want to do this.
-//     return;
-
-//   const auto nodename = node->get_name();
-
-//   if(!nodeText && !nodename.empty()) //Let's not say "name: text".
-//   {
-//     //nodename is the name of the node, e.g. "lanelet"
-//   }
-
-//   //Treat the various node types differently:
-//   if(nodeText)
-//   {
-//     //Value of the above node, CatchConvertError(nodeText->get_content())
-//      //This is only relevant for values in between brackets, e.g. <x> 1 </x>
-//   }
-//   else if(const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node))
-//   {
-//     //A normal Element node:
-
-//     //Print attributes:
-//     for (const auto& attribute : nodeElement->get_attributes())
-//     {
-//       //Type name like "id", "ref", ...: attribute->get_name()
-//       //Value: attribute->get_value()
-//     }
-//    }
-
-//     //Recurse through child nodes:
-//     for(const auto& child : node->get_children())
-//     {
-//         parse_xml(child); //recursive
-//     }
+void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
+{
+    //Draw lanelets
+    ctx->set_source_rgb(0,0,1.0);
+    for (auto lanelet_entry : lanelets)
+    {
+        lanelet_entry.second.draw(ctx, scale);
+    }
+}

@@ -41,6 +41,60 @@ include_directories(../../../../../usr/include/libxml++-2.6/)
 include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
 link_directories(../../../../../usr/lib/x86_64-linux-gnu/)
 
+set(COMMONROAD
+    src/commonroad_classes/CommonRoadScenario.hpp
+    src/commonroad_classes/CommonRoadScenario.cpp
+    src/commonroad_classes/Crossing.hpp
+    src/commonroad_classes/Crossing.cpp
+    src/commonroad_classes/DynamicObstacle.hpp
+    src/commonroad_classes/DynamicObstacle.cpp
+    src/commonroad_classes/Intersection.hpp
+    src/commonroad_classes/Intersection.cpp
+    src/commonroad_classes/Lanelet.hpp
+    src/commonroad_classes/Lanelet.cpp
+    src/commonroad_classes/PlanningProblem.hpp
+    src/commonroad_classes/PlanningProblem.cpp
+    src/commonroad_classes/StaticObstacle.hpp
+    src/commonroad_classes/StaticObstacle.cpp
+    src/commonroad_classes/TrafficLight.hpp
+    src/commonroad_classes/TrafficLight.cpp
+    src/commonroad_classes/TrafficSign.hpp
+    src/commonroad_classes/TrafficSign.cpp
+
+    src/commonroad_classes/InterfaceTransform.hpp
+    src/commonroad_classes/InterfaceDraw.hpp
+
+    src/commonroad_classes/XMLTranslation.hpp
+    src/commonroad_classes/XMLTranslation.cpp
+
+    src/commonroad_classes/datatypes/Interval.hpp
+    src/commonroad_classes/datatypes/IntervalOrExact.hpp
+
+    src/commonroad_classes/geometry/Circle.hpp
+    src/commonroad_classes/geometry/Circle.cpp
+    src/commonroad_classes/geometry/Point.hpp
+    src/commonroad_classes/geometry/Point.cpp
+    src/commonroad_classes/geometry/Polygon.hpp
+    src/commonroad_classes/geometry/Polygon.cpp
+    src/commonroad_classes/geometry/Position.hpp
+    src/commonroad_classes/geometry/Position.cpp
+    src/commonroad_classes/geometry/Rectangle.hpp
+    src/commonroad_classes/geometry/Rectangle.cpp
+    src/commonroad_classes/geometry/Shape.hpp
+    src/commonroad_classes/geometry/Shape.cpp
+
+    src/commonroad_classes/states/GoalState.hpp
+    src/commonroad_classes/states/GoalState.cpp
+    src/commonroad_classes/states/Occupancy.hpp
+    src/commonroad_classes/states/Occupancy.cpp
+    src/commonroad_classes/states/SignalState.hpp
+    src/commonroad_classes/states/SignalState.cpp
+    src/commonroad_classes/states/State.hpp
+    src/commonroad_classes/states/State.cpp
+    src/commonroad_classes/states/StateExact.hpp
+    src/commonroad_classes/states/StateExact.cpp
+)
+
 # labcam
 if(NOT SIMULATION)
     include_directories(labcam/include)
@@ -111,6 +165,8 @@ add_executable(LabControlCenter
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
     src/main.cpp
+
+    ${COMMONROAD}
 )
 
 
@@ -144,57 +200,7 @@ target_link_libraries(VisualizationTest cpm)
 add_executable(CommonRoadTest
     test/CommonRoadTest.cpp
 
-    src/commonroad_classes/CommonRoadScenario.hpp
-    src/commonroad_classes/CommonRoadScenario.cpp
-    src/commonroad_classes/Crossing.hpp
-    src/commonroad_classes/Crossing.cpp
-    src/commonroad_classes/DynamicObstacle.hpp
-    src/commonroad_classes/DynamicObstacle.cpp
-    src/commonroad_classes/Intersection.hpp
-    src/commonroad_classes/Intersection.cpp
-    src/commonroad_classes/Lanelet.hpp
-    src/commonroad_classes/Lanelet.cpp
-    src/commonroad_classes/PlanningProblem.hpp
-    src/commonroad_classes/PlanningProblem.cpp
-    src/commonroad_classes/StaticObstacle.hpp
-    src/commonroad_classes/StaticObstacle.cpp
-    src/commonroad_classes/TrafficLight.hpp
-    src/commonroad_classes/TrafficLight.cpp
-    src/commonroad_classes/TrafficSign.hpp
-    src/commonroad_classes/TrafficSign.cpp
-
-    src/commonroad_classes/InterfaceTransform.hpp
-    src/commonroad_classes/InterfaceDraw.hpp
-
-    src/commonroad_classes/XMLTranslation.hpp
-    src/commonroad_classes/XMLTranslation.cpp
-
-    src/commonroad_classes/datatypes/Interval.hpp
-    src/commonroad_classes/datatypes/IntervalOrExact.hpp
-
-    src/commonroad_classes/geometry/Circle.hpp
-    src/commonroad_classes/geometry/Circle.cpp
-    src/commonroad_classes/geometry/Point.hpp
-    src/commonroad_classes/geometry/Point.cpp
-    src/commonroad_classes/geometry/Polygon.hpp
-    src/commonroad_classes/geometry/Polygon.cpp
-    src/commonroad_classes/geometry/Position.hpp
-    src/commonroad_classes/geometry/Position.cpp
-    src/commonroad_classes/geometry/Rectangle.hpp
-    src/commonroad_classes/geometry/Rectangle.cpp
-    src/commonroad_classes/geometry/Shape.hpp
-    src/commonroad_classes/geometry/Shape.cpp
-
-    src/commonroad_classes/states/GoalState.hpp
-    src/commonroad_classes/states/GoalState.cpp
-    src/commonroad_classes/states/Occupancy.hpp
-    src/commonroad_classes/states/Occupancy.cpp
-    src/commonroad_classes/states/SignalState.hpp
-    src/commonroad_classes/states/SignalState.cpp
-    src/commonroad_classes/states/State.hpp
-    src/commonroad_classes/states/State.cpp
-    src/commonroad_classes/states/StateExact.hpp
-    src/commonroad_classes/states/StateExact.cpp
+    ${COMMONROAD}
 )
 
 target_link_libraries(CommonRoadTest cpm xml++-2.6 ${GTKMM_LIBRARIES})

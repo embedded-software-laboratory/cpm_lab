@@ -10,6 +10,8 @@
 #include "Visualization.hpp"
 #include "Pose2D.hpp"
 
+#include "commonroad_classes/CommonRoadScenario.hpp"
+
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
@@ -18,6 +20,7 @@ using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
 class MapViewUi
 {
     shared_ptr<TrajectoryCommand> trajectoryCommand;
+    shared_ptr<CommonRoadScenario> commonroad_scenario;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
@@ -86,6 +89,7 @@ class MapViewUi
 public:
     MapViewUi(
         shared_ptr<TrajectoryCommand> _trajectoryCommand,
+        shared_ptr<CommonRoadScenario> _commonroad_scenario,
         std::function<VehicleData()> get_vehicle_data_callback,
         std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback

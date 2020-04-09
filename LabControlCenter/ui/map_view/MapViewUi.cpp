@@ -9,11 +9,13 @@
 
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
+    shared_ptr<CommonRoadScenario> _commonroad_scenario,
     std::function<VehicleData()> get_vehicle_data_callback,
     std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
     std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
+,commonroad_scenario(_commonroad_scenario)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
@@ -224,7 +226,9 @@ void MapViewUi::draw(const DrawingContext& ctx)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
 
-        draw_grid(ctx);
+        //draw_grid(ctx);
+        //Draw map
+        commonroad_scenario->draw(ctx, 0.1);
 
         // Draw vehicle focus disk
         if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
