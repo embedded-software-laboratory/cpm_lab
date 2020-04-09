@@ -22,7 +22,7 @@ private:
     double radius; //TODO: In constructor: Check if >= 0, must be unsigned
 
 public:
-    Circle(const xmlpp::Node* node) {}
+    Circle(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

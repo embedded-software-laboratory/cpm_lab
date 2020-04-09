@@ -22,6 +22,12 @@ public:
     Point(const xmlpp::Node* node);
 
     /**
+     * \brief Second constructor, value is irrelevant - value given s.t. no default constructor exists
+     * Call this if you need to use the specified default value from the specs because the value was not set explicitly
+     */
+    Point(int irrelevant_int);
+
+    /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system

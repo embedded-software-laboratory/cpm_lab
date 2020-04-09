@@ -22,7 +22,7 @@ private:
     std::vector<Rectangle> rectangles;
 
 public:
-    Shape(const xmlpp::Node* node) {}
+    Shape(const xmlpp::Node* node);
 
     //TODO: Draw function, maybe given a cairo context
     void draw() {}

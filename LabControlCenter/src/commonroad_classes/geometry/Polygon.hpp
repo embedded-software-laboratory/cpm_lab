@@ -17,7 +17,7 @@ private:
     std::vector<Point> points; //min. 3
 
 public:
-    Polygon(const xmlpp::Node* node) {}
+    Polygon(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

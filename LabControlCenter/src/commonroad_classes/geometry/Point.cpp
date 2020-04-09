@@ -10,8 +10,13 @@ Point::Point(const xmlpp::Node* node)
 
     //2020
     z = xml_translation::get_child_child_double(node, "z", false);
-    //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value
+    //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value -> use std::optional
 
     //Test output
     std::cout << "New point created: " << "(" << x << ", " << y << ", " << z << ")" << std::endl;
+}
+
+Point::Point(int irrelevant_int)
+{
+    //TODO: Find out default value
 }

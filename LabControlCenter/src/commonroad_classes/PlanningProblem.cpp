@@ -75,7 +75,10 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     //Require at least one goal state for each planning problem element (according to specs)
     for (const auto planning_problem : planning_problems)
     {
-        assert(planning_problem.goal_states.size() > 0);
+        if(planning_problem.goal_states.size() == 0)
+        {
+            std::cerr << "TODO: Better warning // Goal states missing in translated planning problem: " << node->get_name() << "; line: " << node->get_line() << std::endl;
+        }
     }
 
     //Test output

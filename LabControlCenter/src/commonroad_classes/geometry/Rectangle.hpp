@@ -18,13 +18,13 @@
 class Rectangle : public InterfaceTransform
 {
 private:
-    std::optional<Point> center; //must not be set (then in ??)
     double length; //TODO: In constructor: Check if >= 0, must be unsigned
-    double orientation; //must not be set (then ??)
     double width;  //TODO: In constructor: Check if >= 0, must be unsigned
+    std::optional<Point> center; //must not be set (probably has default value then)
+    std::optional<double> orientation; //must not be set (probably has default value then)
 
 public:
-    Rectangle(const xmlpp::Node* node) {}
+    Rectangle(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
