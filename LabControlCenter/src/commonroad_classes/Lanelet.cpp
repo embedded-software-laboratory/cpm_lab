@@ -117,7 +117,7 @@ Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
         {
             adjacent.direction = DrivingDirection::Same;
         }
-        else if(direction_string.compare("same") == 0)
+        else if(direction_string.compare("opposite") == 0)
         {
             adjacent.direction = DrivingDirection::Opposite;
         }

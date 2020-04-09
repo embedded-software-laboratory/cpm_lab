@@ -147,7 +147,7 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param warn Warn if the child does not exist (if true, else stay silent) - optional TODO: throw error
-     * \return Value of the first child of the first child with name child_name of node, or -1.0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node of type exact, or -1.0 in case of an error
      */
     double get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool warn = false);
 

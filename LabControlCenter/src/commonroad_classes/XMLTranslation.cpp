@@ -64,7 +64,7 @@ const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node,
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
-        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << "; line: " << node->get_line() << std::endl;
         return nullptr;
     }
 
@@ -73,7 +73,7 @@ const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node,
     if (!child)
     {
         if (warn)
-           std::cerr << "TODO: Better warning // Child missing in node: " << node->get_name() << ", " << child_name << std::endl; 
+           std::cerr << "TODO: Better warning // Child missing in node: " << node->get_name() << ": " << child_name << "; line: " << node->get_line() << std::endl; 
         return nullptr;
     }
 
