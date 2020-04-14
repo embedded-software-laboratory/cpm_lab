@@ -45,3 +45,24 @@ StateExact::StateExact(const xmlpp::Node* node)
     std::cout << "\tSlip angle: " << slip_angle << std::endl;
     std::cout << "\tTime: " << time << std::endl;
 }
+
+void StateExact::draw(const DrawingContext& ctx, double scale)
+{
+    //Simple function that only draws the position (and orientation), but not the object itself
+    ctx->save();
+    
+    //Rotate, if necessary - TODO: use optional type here
+    //ctx->rotate(orientation);
+    position->draw(ctx, scale);
+
+    ctx->restore();
+}
+
+void StateExact::transform_context(const DrawingContext& ctx, double scale)
+{
+    //Draw at the stored position (if possible), else somehow within the possible position
+    position->transform_context(ctx, scale);
+    
+    //Rotate, if necessary
+    ctx->rotate(orientation);
+}

@@ -84,3 +84,18 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     //Test output
     std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
+
+void PlanningProblem::draw(const DrawingContext& ctx, double scale) 
+{
+    for (auto problem : planning_problems)
+    {
+        ctx->set_source_rgb(0.0,0.5,0.05);
+        problem.initial_state->draw(ctx, scale);
+
+        ctx->set_source_rgb(1.0,0.5,0.8);
+        for (auto goal : problem.goal_states)
+        {
+            goal.draw(ctx, scale);
+        }
+    }
+}

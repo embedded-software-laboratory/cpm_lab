@@ -49,3 +49,20 @@ GoalState::GoalState(const xmlpp::Node* node)
     std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
+
+void GoalState::draw(const DrawingContext& ctx, double scale)
+{
+    //Simple function that only draws the position (and orientation), but not the object itself
+    ctx->save();
+    
+    //Rotate, if necessary
+    if(position.has_value())
+    {
+        position->draw(ctx, scale);
+    }
+
+    //TODO: Draw other values (orientation etc) - not implemented for all state classes right now
+    //Also TODO: Test output for other state classes
+
+    ctx->restore();
+}

@@ -40,6 +40,8 @@ void Polygon::draw(const DrawingContext& ctx, double scale)
         {
             ctx->line_to(point.get_x() * scale, point.get_y() * scale);
         }
+        ctx->line_to(points.at(0).get_x() * scale, points.at(0).get_y() * scale); //Finish polygon by drawing a line to the starting point
+        ctx->fill_preserve();
         ctx->stroke();
 
         ctx->restore();

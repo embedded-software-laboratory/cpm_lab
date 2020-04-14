@@ -72,6 +72,12 @@ void Position::draw(const DrawingContext& ctx, double scale)
     if(point.has_value())
     {
         point->draw(ctx, scale);
+
+        //Draw circle around point for better visibility
+        double radius = 0.75;
+        ctx->set_line_width(0.005);
+        ctx->arc(point->get_x() * scale, point->get_y() * scale, radius * scale, 0.0, 2 * M_PI);
+        ctx->stroke();
     }
     else
     {
@@ -81,29 +87,15 @@ void Position::draw(const DrawingContext& ctx, double scale)
     ctx->restore();
 }
 
-void Position::draw_shape(const DrawingContext& ctx, std::optional<Shape> shape, double scale)
+void Position::transform_context(const DrawingContext& ctx, double scale)
 {
-    ctx->save();
-
     //Rotate, if necessary
     if(point.has_value())
     {
-        ctx->translate(point->get_x() * scale, point->get_y() * scale);
-
-        if (shape.has_value())
-        {
-            shape->draw(ctx, scale);
-        }
-        else
-        {
-            std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-        }
-        
+        ctx->translate(point->get_x() * scale, point->get_y() * scale);        
     }
     else
     {
         std::cerr << "TODO: Better warning // Cannot draw shape at inexact position right now" << std::endl;
     }
-
-    ctx->restore();
 }

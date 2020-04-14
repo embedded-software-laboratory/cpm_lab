@@ -153,7 +153,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
-        //dynamic_obstacles[xml_translation::get_attribute_int(node, "id")] = DynamicObstacle(node);
+        dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
     }
     else if (node_name.compare("obstacle") == 0)
     {
@@ -164,7 +164,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
-            //dynamic_obstacles[xml_translation::get_attribute_int(node, "id")] = DynamicObstacle(node);
+            dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
         }
         
     }
@@ -353,6 +353,16 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
     for (auto static_obstacle : static_obstacles)
     {
         static_obstacle.second.draw(ctx, scale);
+    }
+
+    for (auto dynamic_obstacle : dynamic_obstacles)
+    {
+        dynamic_obstacle.second.draw(ctx, scale);
+    }
+
+    for (auto planning_problem : planning_problems)
+    {
+        planning_problem.second.draw(ctx, scale);
     }
 
     ctx->restore();

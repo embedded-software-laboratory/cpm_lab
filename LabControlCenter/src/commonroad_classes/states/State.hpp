@@ -86,12 +86,11 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0) override;
 
     /**
-     * \brief This function is used to draw a shape using the orientation information of this data structure (TODO / WIP, might change)
-     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \brief This function is used to transform (rotate, translate) a context, e.g. because position/orientation and shape information are given in different objects, but need to be combined for drawing
      * \param ctx A DrawingContext, used to draw on
      * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
      */
-    void draw_shape(const DrawingContext& ctx, std::optional<Shape> shape, double scale = 1.0);
+    void transform_context(const DrawingContext& ctx, double scale = 1.0);
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

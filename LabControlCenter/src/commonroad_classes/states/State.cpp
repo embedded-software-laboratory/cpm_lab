@@ -41,18 +41,14 @@ void State::draw(const DrawingContext& ctx, double scale)
     ctx->restore();
 }
 
-void State::draw_shape(const DrawingContext& ctx, std::optional<Shape> shape, double scale)
+void State::transform_context(const DrawingContext& ctx, double scale)
 {
-    ctx->save();
-
+    //Draw at the stored position (if possible), else somehow within the possible position
+    position->transform_context(ctx, scale);
+    
     //Rotate, if necessary
     if(orientation.has_value())
     {
         ctx->rotate(orientation->get_exact_value());
     }
-    
-    //Draw the shape at the stored position (if possible), else somehow within the possible position
-    position->draw_shape(ctx, shape, scale);
-
-    ctx->restore();
 }

@@ -12,14 +12,18 @@
 #include "commonroad_classes/datatypes/Interval.hpp"
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+
+#include "commonroad_classes/InterfaceDraw.hpp"
+#include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
+
 
 /**
  * \class GoalState
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a GoalState specified in an XML file
  */
-class GoalState : public InterfaceTransform
+class GoalState : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
@@ -42,7 +46,14 @@ public:
      */
     void transform_coordinate_system(double scale) override {}
 
-    void draw() {} //Give Cairo context?
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0) override;
+
     void to_dds_msg() {} 
 
     //TODO: Getter

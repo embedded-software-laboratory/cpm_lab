@@ -49,10 +49,11 @@ void Rectangle::draw(const DrawingContext& ctx, double scale)
     }
 
     //Draw lines
-    ctx->line_to((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
     ctx->line_to((center->get_x() - (length/2)) * scale, (center->get_y() + (width/2)) * scale);
     ctx->line_to((center->get_x() + (length/2)) * scale, (center->get_y() + (width/2)) * scale);
     ctx->line_to((center->get_x() + (length/2)) * scale, (center->get_y() - (width/2)) * scale);
+    ctx->line_to((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
+    ctx->fill_preserve();
     ctx->stroke();
 
     ctx->restore();

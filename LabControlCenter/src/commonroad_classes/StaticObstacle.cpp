@@ -31,6 +31,7 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
     {
         //Behavior for dynamic types, which should not be used here
         std::cerr << "TODO: Better warning // Node element not conformant to specs - usage of dynamic type for static object (obstacleType)" << std::endl;
+        type = ObstacleTypeStatic::WrongDynamicType;
     }
     else
     {
@@ -69,7 +70,7 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale)
             ctx->set_source_rgb(0.1,0.1,0.1);
             break;
         case ObstacleTypeStatic::ParkedVehicle:
-            ctx->set_source_rgb(0,0,1.0);
+            ctx->set_source_rgb(0,0.1,0.5);
             break;
         case ObstacleTypeStatic::ConstructionZone:
             ctx->set_source_rgb(0.8,0,0.2);
@@ -81,7 +82,20 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale)
 
     if (initial_state.has_value())
     {
-        initial_state->draw_shape(ctx, shape, scale);
+        ctx->save();
+
+        initial_state->transform_context(ctx, scale);
+
+        if (shape.has_value())
+        {
+            shape->draw(ctx, scale);
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+        }
+
+        ctx->restore();
     }
     else
     {
