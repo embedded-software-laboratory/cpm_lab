@@ -60,4 +60,50 @@ Position::Position(const xmlpp::Node* node)
 Position::Position(int irrelevant_int)
 {
     //TODO: Find out default value
+    std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
+}
+
+void Position::draw(const DrawingContext& ctx, double scale)
+{
+    //Simple function that only draws the position (and orientation), but not the object itself
+    ctx->save();
+    
+    //Rotate, if necessary
+    if(point.has_value())
+    {
+        point->draw(ctx, scale);
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Cannot draw inexact position right now" << std::endl;
+    }
+
+    ctx->restore();
+}
+
+void Position::draw_shape(const DrawingContext& ctx, std::optional<Shape> shape, double scale)
+{
+    ctx->save();
+
+    //Rotate, if necessary
+    if(point.has_value())
+    {
+        ctx->translate(point->get_x() * scale, point->get_y() * scale);
+
+        if (shape.has_value())
+        {
+            shape->draw(ctx, scale);
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+        }
+        
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Cannot draw shape at inexact position right now" << std::endl;
+    }
+
+    ctx->restore();
 }

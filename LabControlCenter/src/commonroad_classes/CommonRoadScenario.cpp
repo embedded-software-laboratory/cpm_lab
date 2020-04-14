@@ -149,7 +149,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("staticObstacle") == 0)
     {
-        //static_obstacles[xml_translation::get_attribute_int(node, "id")] = StaticObstacle(node);
+        static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
@@ -160,7 +160,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
         ObstacleRole obstacle_role = get_obstacle_role(node);
         if (obstacle_role == ObstacleRole::Static)
         {
-            //static_obstacles[xml_translation::get_attribute_int(node, "id")] = StaticObstacle(node);
+            static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
@@ -343,10 +343,17 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
 {
     //Draw lanelets
     ctx->save();
+
     ctx->set_source_rgb(0,0,1.0);
     for (auto lanelet_entry : lanelets)
     {
         lanelet_entry.second.draw(ctx, scale);
     }
+
+    for (auto static_obstacle : static_obstacles)
+    {
+        static_obstacle.second.draw(ctx, scale);
+    }
+
     ctx->restore();
 }

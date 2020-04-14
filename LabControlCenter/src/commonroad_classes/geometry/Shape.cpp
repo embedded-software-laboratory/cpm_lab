@@ -39,3 +39,27 @@ Shape::Shape(const xmlpp::Node* node)
     std::cout << "\tPolygon size: " << polygons.size() << std::endl;
     std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
+
+void Shape::draw(const DrawingContext& ctx, double scale) 
+{
+    ctx->save();
+
+    ctx->set_line_width(0.005);
+
+    for (auto circle : circles)
+    {
+        circle.draw(ctx, scale);
+    }
+
+    for (auto polygon : polygons)
+    {
+        polygon.draw(ctx, scale);
+    }
+
+    for (auto rectangle : rectangles)
+    {
+        rectangle.draw(ctx, scale);
+    }
+
+    ctx->restore();
+}

@@ -9,16 +9,19 @@
 //3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
 
 #include "commonroad_classes/geometry/Position.hpp"
+#include "commonroad_classes/geometry/Shape.hpp"
 #include "commonroad_classes/datatypes/IntervalOrExact.hpp"
 
+#include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/XMLTranslation.hpp"
 
 /**
  * \class State
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a state specified in an XML file
  */
-class State : public InterfaceTransform
+class State : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
@@ -29,6 +32,8 @@ private:
     std::optional<IntervalOrExact> acceleration;
     std::optional<IntervalOrExact> yaw_rate;
     std::optional<IntervalOrExact> slip_angle;
+
+    //2020 specs only
     std::optional<IntervalOrExact> steering_angle;
     std::optional<IntervalOrExact> roll_angle;
     std::optional<IntervalOrExact> roll_rate;
@@ -62,7 +67,7 @@ public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
      */
-    State(const xmlpp::Node* node){}
+    State(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -71,6 +76,22 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale) override {}
+
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0) override;
+
+    /**
+     * \brief This function is used to draw a shape using the orientation information of this data structure (TODO / WIP, might change)
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw_shape(const DrawingContext& ctx, std::optional<Shape> shape, double scale = 1.0);
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

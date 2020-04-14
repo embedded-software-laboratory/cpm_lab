@@ -21,3 +21,18 @@ Circle::Circle(const xmlpp::Node* node)
     std::cout << "\tRadius: " << radius << std::endl;
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
+
+void Circle::draw(const DrawingContext& ctx, double scale)
+{
+    ctx->save();
+    ctx->set_line_width(0.005);
+
+    //Move to center
+    ctx->move_to(center->get_x() * scale, center->get_y() * scale);
+
+    //Draw circle
+    ctx->arc(center->get_x() * scale, center->get_y() * scale, radius * scale, 0.0, 2 * M_PI);
+    ctx->stroke();
+
+    ctx->restore();
+}

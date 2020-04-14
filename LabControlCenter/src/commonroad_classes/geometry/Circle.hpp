@@ -9,13 +9,16 @@
 //3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
 
 #include "commonroad_classes/geometry/Point.hpp"
+
+#include "commonroad_classes/InterfaceDraw.hpp"
+#include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 /**
  * \class Circle
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
  */
-class Circle : public InterfaceTransform
+class Circle : public InterfaceTransform, public InterfaceDraw
 {
 private:
     std::optional<Point> center; //must not be set (then in ??)
@@ -31,6 +34,16 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale) override {}
+
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * Important note for geometry functions: If you want to draw these with another orientation, transform the context beforehand and revert that transformation afterwards
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0) override;
+    
     void to_dds_msg() {}
 
     //TODO: Getter

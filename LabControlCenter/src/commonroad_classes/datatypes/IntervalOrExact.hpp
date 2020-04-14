@@ -27,6 +27,18 @@ public:
         //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
         //TODO: Sadly, sequences are allowed here as well, so we can have more than one interval
+        //TODO: Translate more than just the exact value
+        const auto exact_node = xml_translation::get_child_if_exists(node, "exact", false);
+        if (exact_node)
+        {
+            exact = true;
+            exact_value = xml_translation::get_child_child_double(node, "exact", true);
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // Cannot yet translate intervals" << std::endl;
+        }
+        
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
@@ -37,6 +49,11 @@ public:
 
     double get_exact_value()
     {
+        if (!exact)
+        {
+            std::cerr << "TODO: Better warning // You tried to get an exact value, which does not exist!" << std::endl;
+        }
+
         return exact_value;
     }
     

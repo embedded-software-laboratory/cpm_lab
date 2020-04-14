@@ -91,7 +91,8 @@ int main(int argc, char *argv[])
     //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
     std::string filepath_2018 = "/home/cpm-lab/dev/software/LabControlCenter/test/C-USA_US101-30_1_T-1.xml";
     std::string filepath_2020 = "/home/cpm-lab/dev/software/LabControlCenter/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
-    auto commonroad_scenario = std::make_shared<CommonRoadScenario>(filepath_2018);
+    std::string filepath_parked_vehicles = "/home/cpm-lab/dev/software/LabControlCenter/test/RUS_Bicycle-4_1_T-1.xml";
+    auto commonroad_scenario = std::make_shared<CommonRoadScenario>(filepath_parked_vehicles);
 
     auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);
