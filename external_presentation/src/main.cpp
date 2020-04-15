@@ -43,40 +43,15 @@ int main(int argc, char *argv[])
     );
 
     
-    // Figure eight trajectory data
-    vector<double> trajectory_px        = vector<double>{          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5};
-    vector<double> trajectory_py        = vector<double>{           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5};
-    vector<double> trajectory_vx        = vector<double>{           0,            1,          0.3,            1,            0,           -1,         -0.3,           -1};
-    vector<double> trajectory_vy        = vector<double>{           1,            0,         -0.7,            0,            1,            0,         -0.7,            0};
-    vector<uint64_t> segment_duration = vector<uint64_t>{785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull};
     
 
-    assert(segment_duration.size() == trajectory_px.size());
-    assert(segment_duration.size() == trajectory_py.size());
-    assert(segment_duration.size() == trajectory_vx.size());
-    assert(segment_duration.size() == trajectory_vy.size());
-
-    const double map_center_x = 2.25;
-    const double map_center_y = 2.0;
-    for (double &px : trajectory_px)
-    {
-        px += map_center_x;
-    }
-    for (double &py : trajectory_py)
-    {
-        py += map_center_y;
-    }
-
     // test.....
-    Eight eight(segment_duration.size());
-    std::pair<TrajectoryPoint, uint64_t> tp = eight.next_waypoint();
-    /*
-    std::cout << wp.index << " " << wp.direction << std::endl;
-    wp = eight.next_waypoint();
-    std::cout << wp.index << " " << wp.direction << std::endl;
+    Eight eight;
+    //std::pair<TrajectoryPoint, uint64_t> tp = eight.next_waypoint();
+    std::cout << (-1%3 +3)%3 << "MOD" << std::endl;
 
 
-/*
+
     // These variabels track the reference state,
     // they are incremented as time passes.
     int reference_trajectory_index = 0;
@@ -104,12 +79,9 @@ int main(int argc, char *argv[])
         //}
 
         // Send the current trajectory point to the vehicle
-        TrajectoryPoint trajectory_point;
+        std::pair<TrajectoryPoint, uint64_t> p = eight.next_waypoint();
+        TrajectoryPoint trajectory_point = p.first;
         trajectory_point.t().nanoseconds(reference_trajectory_time);
-        trajectory_point.px(trajectory_px[reference_trajectory_index]);
-        trajectory_point.py(trajectory_py[reference_trajectory_index]);
-        trajectory_point.vx(trajectory_vx[reference_trajectory_index]);
-        trajectory_point.vy(trajectory_vy[reference_trajectory_index]);
         VehicleCommandTrajectory vehicle_command_trajectory;
         vehicle_command_trajectory.vehicle_id(vehicle_id);
         vehicle_command_trajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
@@ -121,9 +93,9 @@ int main(int argc, char *argv[])
         // the message and anticipate the next turn.
         while(reference_trajectory_time < t_now + 2000000000ull)
         {
-            reference_trajectory_time += segment_duration[reference_trajectory_index];
-            reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
+            reference_trajectory_time += p.second;
+            //reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         }
 
-    });*/
+    });
 }

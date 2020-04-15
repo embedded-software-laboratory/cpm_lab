@@ -22,8 +22,8 @@ bool Waypoint::operator<(const Waypoint other) const{
 
 
 
-Eight::Eight(int size)
-: next {}, size {size}, current{0,1},
+Eight::Eight()
+: next {}, current{0,1},
     segment_duration_oval{1000000000ull},
     // initialize "normal" eight:
     trajectory_px   {          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5},
@@ -35,6 +35,12 @@ Eight::Eight(int size)
     // set "special" successors to allow driving an oval:
     next.insert( pWW( Waypoint(1, 1), Waypoint(5, -1) ));
     next.insert( pWW( Waypoint(1, 1), Waypoint(2,  1) ));
+    next.insert( pWW( Waypoint(5, 1), Waypoint(1, -1) ));
+    next.insert( pWW( Waypoint(5, 1), Waypoint(6,  1) ));
+    next.insert( pWW( Waypoint(3,-1), Waypoint(2, -1) ));
+    next.insert( pWW( Waypoint(3,-1), Waypoint(7,  1) ));
+    next.insert( pWW( Waypoint(7,-1), Waypoint(6, -1) ));
+    next.insert( pWW( Waypoint(7,-1), Waypoint(3,  1) ));
 
 
 
@@ -60,10 +66,14 @@ Eight::Eight(int size)
 
 
 std::pair<TrajectoryPoint, uint64_t> Eight::next_waypoint(){
+    std::cout << "Current: " << current.index << " " << current.direction << std::endl;
+    //std::cout << next <<std::endl;
+
     TrajectoryPoint trajectory_point_res;
     uint64_t segment_duration_res;
     Waypoint succ(-1, -1); // only initial value; will be overriden later on
 
+    int size = (int) segment_duration.size();
 
     //std::multimap<Waypoint, Waypoint>::iterator it = next.find(Waypoint(1,1));
     std::pair<std::multimap<Waypoint, Waypoint>::iterator,
@@ -80,8 +90,8 @@ std::pair<TrajectoryPoint, uint64_t> Eight::next_waypoint(){
         std::advance(iterators.first, choose);
         succ = iterators.first->second;
 
-        if (succ.index == (current.index+current.direction)
-                            % segment_duration.size()){
+        if (succ.index == (( (current.index+current.direction) % size) 
+                                        + size) % size ){
             // use normal segment duration
             segment_duration_res = segment_duration[current.index];
         }
@@ -93,7 +103,7 @@ std::pair<TrajectoryPoint, uint64_t> Eight::next_waypoint(){
     else {
         // follow the "normal" trajectory by going one index ahead
         // corresponding to the current direction
-        succ = Waypoint((current.index + current.direction) % size,
+        succ = Waypoint(((current.index + current.direction) % size + size) % size,
                          current.direction);
         segment_duration_res = segment_duration[current.index];
     }

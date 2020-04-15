@@ -20,7 +20,6 @@ class Eight
 {
     public:
     std::multimap<Waypoint, Waypoint> next;
-    int size; // number of the trajectory points
     Waypoint current;
 
     vector<double> trajectory_px;
@@ -33,7 +32,7 @@ class Eight
 
 
 //public:
-    Eight(int size);
+    Eight();
     std::pair<TrajectoryPoint, uint64_t> next_waypoint();
 };
 
