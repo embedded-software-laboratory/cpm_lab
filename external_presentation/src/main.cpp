@@ -4,9 +4,13 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "Eight.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
+#include <stdlib.h>
+
+
 
 using std::vector;
 
@@ -38,25 +42,8 @@ int main(int argc, char *argv[])
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
 
-    /*
-    // Circle trajectory data
-    vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             1,             0,            -1};
-    vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
-    vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1550000000ull, 1550000000ull, 1550000000ull, 1550000000ull};
-    */
-
     
     // Figure eight trajectory data
-    /*
-    vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
-    vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
-    vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
-    */
-
     vector<double> trajectory_px        = vector<double>{          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5};
     vector<double> trajectory_py        = vector<double>{           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5};
     vector<double> trajectory_vx        = vector<double>{           0,            1,          0.3,            1,            0,           -1,         -0.3,           -1};
@@ -80,12 +67,22 @@ int main(int argc, char *argv[])
         py += map_center_y;
     }
 
+    // test.....
+    Eight eight;
+    std::cout << eight.get_next_waypoint().index << std::endl;
+
+
 
     // These variabels track the reference state,
     // they are incremented as time passes.
     int reference_trajectory_index = 0;
     uint64_t reference_trajectory_time = 0;
 
+    // The "normal" eight trajectory is extended by one path connecting the two topmost points
+    // and by one connecting the two lowermost points. If one of these paths is used the
+    // direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
+    // must change the sign which is done by this variable:
+    int trajectory_direction = 1;
 
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
@@ -97,6 +94,10 @@ int main(int argc, char *argv[])
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now;
 
+
+        //if (reference_trajectory_index == 1 && trajectory_direction == 1){
+        //    vector<int>
+        //}
 
         // Send the current trajectory point to the vehicle
         TrajectoryPoint trajectory_point;
