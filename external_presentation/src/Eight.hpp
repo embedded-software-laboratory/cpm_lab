@@ -1,5 +1,10 @@
 #include <map>
 #include <iostream>
+#include <vector>
+#include "VehicleCommandTrajectory.hpp"
+
+using std::vector;
+
 
 struct Waypoint
 {
@@ -17,6 +22,12 @@ class Eight
     std::multimap<Waypoint, Waypoint> next;
     int size; // number of the trajectory points
     Waypoint current;
+
+    vector<double> trajectory_px;
+    vector<double> trajectory_py;
+    vector<double> trajectory_vx;
+    vector<double> trajectory_vy;
+    vector<uint64_t> segment_duration;
 
 
 //public:

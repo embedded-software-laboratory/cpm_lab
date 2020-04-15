@@ -68,11 +68,13 @@ int main(int argc, char *argv[])
     }
 
     // test.....
-    Waypoint wp(1,1);
     Eight eight(segment_duration.size());
-    std::cout << eight.next_waypoint().index << std::endl;
+    Waypoint wp = eight.next_waypoint();
+    std::cout << wp.index << " " << wp.direction << std::endl;
+    wp = eight.next_waypoint();
+    std::cout << wp.index << " " << wp.direction << std::endl;
 
-/*
+
 
     // These variabels track the reference state,
     // they are incremented as time passes.
