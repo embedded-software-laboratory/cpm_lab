@@ -24,6 +24,7 @@ bool Waypoint::operator<(const Waypoint other) const{
 
 Eight::Eight(int size)
 : next {}, size {size}, current{0,1},
+    segment_duration_oval{1000000000ull},
     // initialize "normal" eight:
     trajectory_px   {          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5},
     trajectory_py   {           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5},
@@ -41,15 +42,27 @@ Eight::Eight(int size)
     assert(segment_duration.size() == trajectory_py.size());
     assert(segment_duration.size() == trajectory_vx.size());
     assert(segment_duration.size() == trajectory_vy.size());
+
+    const double map_center_x = 2.25;
+    const double map_center_y = 2.0;
+    for (double &px : trajectory_px)
+    {
+        px += map_center_x;
+    }
+    for (double &py : trajectory_py)
+    {
+        py += map_center_y;
+    }
 }
 
 
 
 
 
-Waypoint Eight::next_waypoint(){
+std::pair<TrajectoryPoint, uint64_t> Eight::next_waypoint(){
     TrajectoryPoint trajectory_point_res;
     uint64_t segment_duration_res;
+    Waypoint succ(-1, -1); // only initial value; will be overriden later on
 
 
     //std::multimap<Waypoint, Waypoint>::iterator it = next.find(Waypoint(1,1));
@@ -65,18 +78,31 @@ Waypoint Eight::next_waypoint(){
 
         int choose = rand() % no_successors; // index of element between iterators which is to be chosen
         std::advance(iterators.first, choose);
+        succ = iterators.first->second;
 
-        Waypoint succ = iterators.first->second;
+        if (succ.index == (current.index+current.direction)
+                            % segment_duration.size()){
+            // use normal segment duration
+            segment_duration_res = segment_duration[current.index];
+        }
+        else {
+            segment_duration_res = segment_duration_oval;
+        }
+
     }
     else {
         // follow the "normal" trajectory by going one index ahead
         // corresponding to the current direction
-        Waypoint succ = Waypoint((current.index + current.direction) % size,
-                                  current.direction);
+        succ = Waypoint((current.index + current.direction) % size,
+                         current.direction);
+        segment_duration_res = segment_duration[current.index];
     }
 
-
+    trajectory_point_res.px(trajectory_px[current.index]);
+    trajectory_point_res.py(trajectory_py[current.index]);
+    trajectory_point_res.vx(trajectory_vx[current.index*current.direction]);
+    trajectory_point_res.vy(trajectory_vy[current.index*current.direction]);
 
     current = succ;
-    return ;
+    return std::pair<TrajectoryPoint, uint64_t>(trajectory_point_res, segment_duration_res);
 }

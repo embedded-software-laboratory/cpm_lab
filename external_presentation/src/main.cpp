@@ -69,13 +69,14 @@ int main(int argc, char *argv[])
 
     // test.....
     Eight eight(segment_duration.size());
-    Waypoint wp = eight.next_waypoint();
+    std::pair<TrajectoryPoint, uint64_t> tp = eight.next_waypoint();
+    /*
     std::cout << wp.index << " " << wp.direction << std::endl;
     wp = eight.next_waypoint();
     std::cout << wp.index << " " << wp.direction << std::endl;
 
 
-
+/*
     // These variabels track the reference state,
     // they are incremented as time passes.
     int reference_trajectory_index = 0;

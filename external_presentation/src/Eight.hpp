@@ -29,9 +29,11 @@ class Eight
     vector<double> trajectory_vy;
     vector<uint64_t> segment_duration;
 
+    uint64_t segment_duration_oval; // time which the special oval segments need
+
 
 //public:
     Eight(int size);
-    Waypoint next_waypoint();
+    std::pair<TrajectoryPoint, uint64_t> next_waypoint();
 };
 
