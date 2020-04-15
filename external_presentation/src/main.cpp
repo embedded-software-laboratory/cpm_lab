@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 
     // test.....
     Waypoint wp(1,1);
-    Eight eight;
-    std::cout << eight.get_next_waypoint().index << std::endl;
+    Eight eight(segment_duration.size());
+    std::cout << eight.next_waypoint().index << std::endl;
 
 /*
 
