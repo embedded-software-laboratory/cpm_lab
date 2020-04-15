@@ -49,11 +49,19 @@ int main(int argc, char *argv[])
 
     
     // Figure eight trajectory data
+    /*
     vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
     vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
     vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
     vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
     vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
+    */
+
+    vector<double> trajectory_px        = vector<double>{          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5};
+    vector<double> trajectory_py        = vector<double>{           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5};
+    vector<double> trajectory_vx        = vector<double>{           0,            1,          0.3,            1,            0,           -1,         -0.3,           -1};
+    vector<double> trajectory_vy        = vector<double>{           1,            0,         -0.7,            0,            1,            0,         -0.7,            0};
+    vector<uint64_t> segment_duration = vector<uint64_t>{785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull};
     
 
     assert(segment_duration.size() == trajectory_px.size());
