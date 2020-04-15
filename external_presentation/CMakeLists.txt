@@ -24,5 +24,7 @@ link_libraries(dl nsl m pthread rt)
 
 add_executable(basic_circle_example
     src/main.cpp
+    src/Eight.cpp
+    src/Eight.hpp
 )
 target_link_libraries(basic_circle_example cpm)
