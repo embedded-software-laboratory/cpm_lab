@@ -2,6 +2,14 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
+#include <optional>
+//Optional is used for 3 reasons:
+//1. Some values are optional according to the specification
+//2. Some values might be missing if the file is not spec-conform, which is easy to handle when we do not require that they exist (though we still check for their existance)
+//3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
+
+#include "commonroad_classes/datatypes/Interval.hpp"
+
 #include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
@@ -13,10 +21,8 @@
 class IntervalOrExact : public InterfaceTransform
 {
 private:
-    double interval_start;
-    double interval_end;
-    double exact_value;
-    bool exact; //is_exact
+    std::optional<Interval> interval;
+    std::optional<double> exact;
 public:
     /**
      * \brief Constructor
@@ -26,17 +32,21 @@ public:
         //TODO: Make sure that this is an interval node type
         //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
-        //TODO: Sadly, sequences are allowed here as well, so we can have more than one interval
-        //TODO: Translate more than just the exact value
+        //We must either have an exact or an interval node
         const auto exact_node = xml_translation::get_child_if_exists(node, "exact", false);
         if (exact_node)
         {
-            exact = true;
-            exact_value = xml_translation::get_child_child_double(node, "exact", true);
+            exact = std::optional<double>(xml_translation::get_child_child_double(node, "exact", true));
         }
         else
         {
-            std::cerr << "TODO: Better warning // Cannot yet translate intervals" << std::endl;
+            //Show warning if no interval exists as well
+            const auto interval_start_node = xml_translation::get_child_if_exists(node, "intervalStart", true);
+
+            if(interval_start_node)
+            {
+                interval = std::optional<Interval>(std::in_place, node);
+            }
         }
         
     }
@@ -44,27 +54,22 @@ public:
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
     bool is_exact()
     {
+        return exact.has_value();
+    }
+
+    const std::optional<double> get_exact_value()
+    {
         return exact;
     }
 
-    double get_exact_value()
+    bool is_interval()
     {
-        if (!exact)
-        {
-            std::cerr << "TODO: Better warning // You tried to get an exact value, which does not exist!" << std::endl;
-        }
-
-        return exact_value;
+        return interval.has_value();
     }
     
-    double get_interval_start()
+    const std::optional<Interval> get_interval()
     {
-        return interval_start;
-    }
-
-    double get_interval_end()
-    {
-        return interval_end;
+        return interval;
     }
 
     /**
@@ -75,8 +80,15 @@ public:
      */
     void transform_coordinate_system(double scale) override
     {
-        interval_start *= scale;
-        interval_end *= scale;
-        exact_value *= scale;
+        if (exact.has_value())
+        {
+            double transformed_exact = exact.value() * scale;
+            exact = std::optional<double>(transformed_exact);
+        }
+
+        if (interval.has_value())
+        {
+            interval->transform_coordinate_system(scale);
+        }
     }
 };

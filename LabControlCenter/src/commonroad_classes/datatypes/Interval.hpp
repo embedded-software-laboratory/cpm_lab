@@ -2,6 +2,9 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
+#include <utility>
+#include <vector>
+
 #include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
@@ -13,8 +16,8 @@
 class Interval : public InterfaceTransform
 {
 private:
-    double interval_start;
-    double interval_end;
+    std::vector<std::pair<double, double>> intervals;
+
 public:
     /**
      * \brief Simple constructor to directly set the interval values
@@ -24,18 +27,74 @@ public:
         //TODO: Make sure that this is an interval node type
         //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
-        //TODO: Sadly, sequences are allowed here as well, so we can have more than one interval
+        //Sadly, sequences are allowed here as well, so we can have more than one interval
+        std::vector<double> interval_start;
+        xml_translation::iterate_children(
+            node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                interval_start.push_back(xml_translation::get_first_child_double(child));
+            }, 
+            "intervalStart"
+        );
+        
+        std::vector<double> interval_end;
+        xml_translation::iterate_children(
+            node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                interval_end.push_back(xml_translation::get_first_child_double(child));
+            }, 
+            "intervalEnd"
+        );
+
+        if (interval_start.size() != interval_end.size())
+        {
+            std::cerr << "TODO: Better warning // Different amount of start and end nodes in Interval, line " << node->get_line() << std::endl;
+        }
+
+        if (interval_start.size() == 0)
+        {
+            std::cerr << "TODO: Better warning // Unexpected empty interval, line " << node->get_line() << std::endl;
+        }
+
+        for(size_t i = 0; i < interval_start.size(); ++i)
+        {
+            intervals.push_back(std::make_pair(interval_start.at(i), interval_end.at(i)));
+        }
+
+        //Test output
+        std::cout << "Interval(s): " << std::endl;
+        for (const auto interval : intervals)
+        {
+            std::cout << "\t" << interval.first << " - " << interval.second << std::endl;
+        }
     }
 
     //Getter (no setter, as we only want to set Interval at translation or change it using transform_...)
-    double get_interval_start()
+
+    /**
+     * \brief Determine how many intervals are stored in this data structure
+     */
+    size_t get_intervals_size()
     {
-        return interval_start;
+        return intervals.size();
     }
 
-    double get_interval_end()
+    /**
+     * \brief For constant for loop - interval type: std::pair<double, double>
+     */
+    std::vector<std::pair<double, double>>::const_iterator cbegin() const
     {
-        return interval_end;
+        return intervals.cbegin();
+    }
+
+    /**
+     * \brief For constant for loop - interval type: std::pair<double, double>
+     */
+    std::vector<std::pair<double, double>>::const_iterator cend() const
+    {
+        return intervals.cend();
     }
 
     /**
@@ -46,7 +105,10 @@ public:
      */
     void transform_coordinate_system(double scale) override
     {
-        interval_start *= scale;
-        interval_end *= scale;
+        for (auto &interval : intervals)
+        {
+            interval.first *= scale;
+            interval.second *= scale;
+        }
     }
 };

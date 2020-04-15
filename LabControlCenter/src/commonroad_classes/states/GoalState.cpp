@@ -56,12 +56,38 @@ void GoalState::draw(const DrawingContext& ctx, double scale)
     ctx->save();
     
     //Rotate, if necessary
-    if(position.has_value())
+    if(orientation.has_value())
     {
-        position->draw(ctx, scale);
+        //Rotation is an interval - draw position for every possible orientation start and end value
+        for (auto rot_it = orientation->cbegin(); rot_it != orientation->cend(); ++rot_it)
+        {
+            ctx->save();
+            //ctx->rotate(rot_it->first);
+            if(position.has_value())
+            {
+                position->draw(ctx, scale);
+            }
+            ctx->restore();
+
+            ctx->save();
+            //ctx->rotate(rot_it->second); -> TODO: Find out what orientation exactly means, probably only the vehicle orientation within the area -> only draw an arrow, don't rotate the shape
+            if(position.has_value())
+            {
+                position->draw(ctx, scale);
+            }
+            ctx->restore();
+        }
+    }
+    else
+    {
+        //Draw without rotating
+        if(position.has_value())
+        {
+            position->draw(ctx, scale);
+        }
     }
 
-    //TODO: Draw other values (orientation etc) - not implemented for all state classes right now
+    //TODO: Draw velocity/time?
     //Also TODO: Test output for other state classes
 
     ctx->restore();

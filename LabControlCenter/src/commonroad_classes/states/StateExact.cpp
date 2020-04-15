@@ -51,8 +51,8 @@ void StateExact::draw(const DrawingContext& ctx, double scale)
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
     
-    //Rotate, if necessary - TODO: use optional type here
-    //ctx->rotate(orientation);
+    //Rotate, if necessary
+    ctx->rotate(orientation);
     position->draw(ctx, scale);
 
     ctx->restore();

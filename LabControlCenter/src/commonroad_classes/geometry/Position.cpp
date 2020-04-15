@@ -81,7 +81,23 @@ void Position::draw(const DrawingContext& ctx, double scale)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw inexact position right now" << std::endl;
+        for (auto circle : circles)
+        {
+            circle.draw(ctx, scale);
+        }
+        for (auto polygon : polygons)
+        {
+            polygon.draw(ctx, scale);
+        }
+        for (auto rectangle : rectangles)
+        {
+            rectangle.draw(ctx, scale);
+        }
+
+        if (lanelet_refs.size() > 0)
+        {
+            std::cerr << "TODO: Better warning // Cannot draw using lanelet references right now" << std::endl;
+        }
     }
 
     ctx->restore();

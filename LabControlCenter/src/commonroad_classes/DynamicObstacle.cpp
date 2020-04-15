@@ -79,7 +79,24 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     }
 
     //TODO: Translate trajectory, occupancy, initial signal state
-}
+    if (trajectory_node)
+    {
+        xml_translation::iterate_children(
+            trajectory_node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                trajectory.push_back(State(child));
+            }, 
+            "state"
+        );
+    }
+
+    //TODO: Full test output
+    std::cout << "Dynamic obstacle:" << std::endl;
+    std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
+
+    step = 0;
+} 
 
 /******************************Interface functions***********************************/
 
@@ -88,11 +105,36 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
     //TODO: Different color / sticker / ... based on type
     ctx->set_source_rgb(1.0,0.5,0.0);
 
-    if (initial_state.has_value())
+    if (step == 0)
+    {
+        if (initial_state.has_value())
+        {
+            ctx->save();
+
+            initial_state->transform_context(ctx, scale);
+
+            if (shape.has_value())
+            {
+                shape->draw(ctx, scale);
+            }
+            else
+            {
+                std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+            }
+
+            ctx->restore();
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
+        }
+    }
+    else if (step <= trajectory.size())
     {
         ctx->save();
 
-        initial_state->transform_context(ctx, scale);
+        std::cout << "Drawing trajectory" << std::endl;
+        trajectory.at(step - 1).transform_context(ctx, scale);
 
         if (shape.has_value())
         {
@@ -105,8 +147,13 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
 
         ctx->restore();
     }
-    else
+
+    std::cout << "Step: " << step << std::endl;
+
+    //Step - 1 is current trajectory index (0 for initial state)
+    step = step + 1;
+    if (step > trajectory.size()) 
     {
-        std::cerr << "TODO: Better warning // Cannot draw StaticObstacle, initial state value is missing" << std::endl;
+        step = 0;
     }
 }

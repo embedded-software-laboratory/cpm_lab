@@ -92,7 +92,7 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale)
         ctx->set_source_rgb(0.0,0.5,0.05);
         problem.initial_state->draw(ctx, scale);
 
-        ctx->set_source_rgb(1.0,0.5,0.8);
+        ctx->set_source_rgba(1.0,0.5,0.8, 0.3);
         for (auto goal : problem.goal_states)
         {
             goal.draw(ctx, scale);

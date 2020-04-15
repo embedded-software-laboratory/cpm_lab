@@ -31,12 +31,34 @@ void State::draw(const DrawingContext& ctx, double scale)
     ctx->save();
     
     //Rotate, if necessary
+    //TODO: Find out what orientation exactly means, here it seems to apply to shapes as well (see scenario server (commonroad))
     if(orientation.has_value())
     {
-        ctx->rotate(orientation->get_exact_value());
+        if(orientation->is_exact())
+        {
+            ctx->rotate(orientation->get_exact_value().value());
+            position->draw(ctx, scale);
+        }
+        else
+        {
+            //Try to draw the position for every possible value of the orientation
+            //TODO: Find out how to properly draw interval values
+            for (auto rot_it = orientation->get_interval()->cbegin(); rot_it != orientation->get_interval()->cend(); ++rot_it)
+            {
+                ctx->save();
+                ctx->rotate(rot_it->first);
+                position->draw(ctx, scale);
+                ctx->restore();
+
+                ctx->save();
+                ctx->rotate(rot_it->second);
+                position->draw(ctx, scale);
+                ctx->restore();
+            }
+        }
     }
 
-    position->draw(ctx, scale);
+    //TODO: Draw velocity etc?
 
     ctx->restore();
 }
@@ -49,6 +71,14 @@ void State::transform_context(const DrawingContext& ctx, double scale)
     //Rotate, if necessary
     if(orientation.has_value())
     {
-        ctx->rotate(orientation->get_exact_value());
+        if(orientation->is_exact())
+        {
+            ctx->rotate(orientation->get_exact_value().value());
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // State orientation is an interval - ignoring orientation" << std::endl;
+        }
+        
     }
 }

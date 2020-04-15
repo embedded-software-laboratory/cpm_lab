@@ -345,22 +345,22 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
     ctx->save();
 
     ctx->set_source_rgb(0,0,1.0);
-    for (auto lanelet_entry : lanelets)
+    for (auto &lanelet_entry : lanelets)
     {
         lanelet_entry.second.draw(ctx, scale);
     }
 
-    for (auto static_obstacle : static_obstacles)
+    for (auto &static_obstacle : static_obstacles)
     {
         static_obstacle.second.draw(ctx, scale);
     }
 
-    for (auto dynamic_obstacle : dynamic_obstacles)
+    for (auto &dynamic_obstacle : dynamic_obstacles)
     {
         dynamic_obstacle.second.draw(ctx, scale);
     }
 
-    for (auto planning_problem : planning_problems)
+    for (auto &planning_problem : planning_problems)
     {
         planning_problem.second.draw(ctx, scale);
     }

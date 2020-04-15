@@ -50,6 +50,10 @@ private:
 
     std::vector<SignalState> signal_series;
 
+    //TODO: Transform to real vehicle representation, this is just to show that movement could be translated properly
+    //Used for drawing
+    size_t step; //Use this to iterate through trajectory (including initial state as well, which is not part of it)
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
