@@ -42,23 +42,13 @@ int main(int argc, char *argv[])
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
 
-    
-    
 
+    // Initialize 8-Trajectory
     Eight eight;
 
-
-
-    // These variabels track the reference state,
-    // they are incremented as time passes.
-    // int reference_trajectory_index = 0;
+    // This variabel tracks the reference state of the time,
+    // it is incremented as time passes.
     uint64_t reference_trajectory_time = 0;
-
-    // The "normal" eight trajectory is extended by one path connecting the two topmost points
-    // and by one connecting the two lowermost points. If one of these paths is used the
-    // direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
-    // must change the sign which is done by this variable:
-    // int trajectory_direction = 1;
 
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
@@ -71,7 +61,7 @@ int main(int argc, char *argv[])
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now;
 
         // Send the current trajectory point to the vehicle
-        std::pair<TrajectoryPoint, uint64_t> p = eight.get_waypoint();
+        std::pair<TrajectoryPoint, uint64_t> p = eight.get_trajectoryPoint();
         TrajectoryPoint trajectory_point = p.first;
         trajectory_point.t().nanoseconds(reference_trajectory_time);
 
@@ -86,11 +76,9 @@ int main(int argc, char *argv[])
         // the message and anticipate the next turn.
         while(reference_trajectory_time < t_now + 2000000000ull)
         {
-            std::cout << p.second <<std::endl;
             reference_trajectory_time += p.second;
             eight.move_forward();
-            p = eight.get_waypoint();
-            //reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
+            p = eight.get_trajectoryPoint();
         }
 
     });

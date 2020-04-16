@@ -9,6 +9,11 @@ using std::vector;
 struct Waypoint
 {
     int index;
+
+    // The "normal" eight trajectory is extended by one path connecting the two topmost points
+    // and by one connecting the two lowermost points. If one of these paths is used the
+    // direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
+    // must change the sign which is done by this variable:
     int direction;
 
     Waypoint(int index, int direction);
@@ -18,7 +23,6 @@ struct Waypoint
 
 class Eight
 {
-    public:
     std::multimap<Waypoint, Waypoint> next;
     Waypoint current;
     Waypoint current2; // it is necessary to plan two points in advice since segment_duration corresponds to the time
@@ -34,9 +38,9 @@ class Eight
     vector<uint64_t> segment_duration;
 
 
-//public:
+public:
     Eight();
-    std::pair<TrajectoryPoint, uint64_t> get_waypoint();
+    std::pair<TrajectoryPoint, uint64_t> get_trajectoryPoint();
     void move_forward();
 };
 
