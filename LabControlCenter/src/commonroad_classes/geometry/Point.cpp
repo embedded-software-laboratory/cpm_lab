@@ -24,6 +24,13 @@ Point::Point(int irrelevant_int)
     z = 0.0;
 }
 
+Point::Point(double _x, double _y, double _z)
+{
+    x = _x;
+    y = _y;
+    z = _z;
+}
+
 void Point::draw(const DrawingContext& ctx, double scale)
 {
     //Current state: Leave out z-value

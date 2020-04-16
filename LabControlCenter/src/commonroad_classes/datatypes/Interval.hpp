@@ -98,6 +98,20 @@ public:
     }
 
     /**
+     * \brief Use these functions to get the list of values in the middle of each interval
+     */
+    std::vector<double> get_interval_avg() const
+    {
+        std::vector<double> avgs;
+        for (const auto interval : intervals)
+        {
+            avgs.push_back((interval.first + interval.second) / 2.0);
+        }
+
+        return avgs;
+    }
+
+    /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system

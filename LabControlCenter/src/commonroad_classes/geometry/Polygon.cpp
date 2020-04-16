@@ -47,3 +47,18 @@ void Polygon::draw(const DrawingContext& ctx, double scale)
         ctx->restore();
     }
 }
+
+const Point Polygon::get_center()
+{
+    //This is just the centroid, might not work for all shapes - TODO: Use a more complex algorithm? Might not really be worth the effort, also because it might take too long regarding the refresh time
+    double sum_x = 0;
+    double sum_y = 0;
+
+    for (auto point : points)
+    {
+        sum_x += point.get_x();
+        sum_y += point.get_y();
+    }
+
+    return Point(sum_x / static_cast<double>(points.size()), sum_y / static_cast<double>(points.size()), 0);
+}

@@ -50,11 +50,24 @@ void StateExact::draw(const DrawingContext& ctx, double scale)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
-    
     //Rotate, if necessary
     ctx->rotate(orientation);
     position->draw(ctx, scale);
+    ctx->restore();
 
+    //Draw arrow - TODO: Maybe make this a utility function
+    ctx->save();
+    ctx->rotate(orientation);
+    position->transform_context(ctx, scale);
+    double arrow_scale = 0.3; //To quickly change the scale to your liking
+    ctx->set_line_width(0.015 * arrow_scale);
+    ctx->move_to(0.0, 0.0);
+    ctx->line_to(1.0 * arrow_scale, 0.0);
+    ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+    ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+    ctx->line_to(1.0 * arrow_scale, 0.0);
+    ctx->fill_preserve();
+    ctx->stroke();
     ctx->restore();
 }
 

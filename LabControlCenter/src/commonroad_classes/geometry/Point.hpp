@@ -29,6 +29,11 @@ public:
     Point(int irrelevant_int);
 
     /**
+     * \brief Third constructor, used whenever a point needs to be calculated somewhere (e.g. the centroid of a polygon) and then needs to be stored as a point
+     */
+    Point(double _x, double _y, double _z);
+
+    /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system

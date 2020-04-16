@@ -54,40 +54,45 @@ void GoalState::draw(const DrawingContext& ctx, double scale)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
+
+    //Draw goal position
+    if(position.has_value())
+    {
+        position->draw(ctx, scale);
+    }
     
-    //Rotate, if necessary
+    //Draw desired orientation(s) as arrow
     if(orientation.has_value())
     {
-        //Rotation is an interval - draw position for every possible orientation start and end value
-        for (auto rot_it = orientation->cbegin(); rot_it != orientation->cend(); ++rot_it)
+        //Rotation is an interval - draw position for every possible orientation middle value
+        for (auto& middle : orientation->get_interval_avg())
         {
             ctx->save();
-            //ctx->rotate(rot_it->first);
-            if(position.has_value())
-            {
-                position->draw(ctx, scale);
-            }
-            ctx->restore();
+            ctx->set_source_rgb(1.0, 0.0, 0.0);
 
-            ctx->save();
-            //ctx->rotate(rot_it->second); -> TODO: Find out what orientation exactly means, probably only the vehicle orientation within the area -> only draw an arrow, don't rotate the shape
             if(position.has_value())
             {
-                position->draw(ctx, scale);
+                //Try to draw in the middle of the shape of the goal
+                position->transform_context(ctx, scale);
             }
+            ctx->rotate(middle);
+
+            //Draw arrow - TODO: Maybe make this a utility function
+            double arrow_scale = 0.3; //To quickly change the scale to your liking
+            ctx->set_line_width(0.015 * arrow_scale);
+            ctx->move_to(0.0, 0.0);
+            ctx->line_to(1.0 * arrow_scale, 0.0);
+            ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+            ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+            ctx->line_to(1.0 * arrow_scale, 0.0);
+            ctx->fill_preserve();
+            ctx->stroke();
+            
             ctx->restore();
         }
     }
-    else
-    {
-        //Draw without rotating
-        if(position.has_value())
-        {
-            position->draw(ctx, scale);
-        }
-    }
 
-    //TODO: Draw velocity/time?
+    //TODO: Draw time, velocity?
     //Also TODO: Test output for other state classes
 
     ctx->restore();

@@ -58,3 +58,8 @@ void Rectangle::draw(const DrawingContext& ctx, double scale)
 
     ctx->restore();
 }
+
+const std::optional<Point>& Rectangle::get_center() const
+{
+    return center;
+}

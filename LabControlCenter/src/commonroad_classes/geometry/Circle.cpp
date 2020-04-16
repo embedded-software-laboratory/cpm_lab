@@ -36,3 +36,8 @@ void Circle::draw(const DrawingContext& ctx, double scale)
 
     ctx->restore();
 }
+
+const std::optional<Point>& Circle::get_center() const
+{
+    return center;
+}

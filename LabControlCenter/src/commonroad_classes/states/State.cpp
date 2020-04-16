@@ -41,20 +41,39 @@ void State::draw(const DrawingContext& ctx, double scale)
         }
         else
         {
-            //Try to draw the position for every possible value of the orientation
+            //Try to draw the position for every possible middle value of the orientation
             //TODO: Find out how to properly draw interval values
-            for (auto rot_it = orientation->get_interval()->cbegin(); rot_it != orientation->get_interval()->cend(); ++rot_it)
+            if (orientation->get_interval().has_value())
             {
-                ctx->save();
-                ctx->rotate(rot_it->first);
-                position->draw(ctx, scale);
-                ctx->restore();
+                for (auto &middle : orientation->get_interval()->get_interval_avg())
+                {
+                    //Draw position
+                    ctx->save();
+                    ctx->rotate(middle);
+                    position->draw(ctx, scale);
+                    ctx->restore();
 
-                ctx->save();
-                ctx->rotate(rot_it->second);
-                position->draw(ctx, scale);
-                ctx->restore();
+                    //Draw arrow - TODO: Maybe make this a utility function
+                    ctx->save();
+                    ctx->rotate(middle);
+                    position->transform_context(ctx, scale);
+                    double arrow_scale = 0.3; //To quickly change the scale to your liking
+                    ctx->set_line_width(0.015 * arrow_scale);
+                    ctx->move_to(0.0, 0.0);
+                    ctx->line_to(1.0 * arrow_scale, 0.0);
+                    ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+                    ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+                    ctx->line_to(1.0 * arrow_scale, 0.0);
+                    ctx->fill_preserve();
+                    ctx->stroke();
+                    ctx->restore();
+                }
             }
+            else
+            {
+                std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing" << std::endl;
+            }
+            
         }
     }
 

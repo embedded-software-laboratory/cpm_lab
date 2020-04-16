@@ -42,4 +42,5 @@ public:
     void to_dds_msg() {}
 
     //TODO: Getter
+    const Point get_center();
 };

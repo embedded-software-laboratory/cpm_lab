@@ -133,7 +133,6 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
     {
         ctx->save();
 
-        std::cout << "Drawing trajectory" << std::endl;
         trajectory.at(step - 1).transform_context(ctx, scale);
 
         if (shape.has_value())
@@ -147,8 +146,6 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
 
         ctx->restore();
     }
-
-    std::cout << "Step: " << step << std::endl;
 
     //Step - 1 is current trajectory index (0 for initial state)
     step = step + 1;
