@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now;
 
         // Send the current trajectory point to the vehicle
-        std::pair<TrajectoryPoint, uint64_t> p = eight.next_waypoint();
+        std::pair<TrajectoryPoint, uint64_t> p = eight.get_waypoint();
         TrajectoryPoint trajectory_point = p.first;
         trajectory_point.t().nanoseconds(reference_trajectory_time);
 
@@ -84,12 +84,12 @@ int main(int argc, char *argv[])
         // The reference state must be in the future,
         // to allow some time for the vehicle to receive
         // the message and anticipate the next turn.
-        reference_trajectory_time += p.second;
         while(reference_trajectory_time < t_now + 2000000000ull)
         {
-            p = eight.next_waypoint();
             std::cout << p.second <<std::endl;
             reference_trajectory_time += p.second;
+            eight.move_forward();
+            p = eight.get_waypoint();
             //reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         }
 
