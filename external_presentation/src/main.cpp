@@ -45,23 +45,20 @@ int main(int argc, char *argv[])
     
     
 
-    // test.....
     Eight eight;
-    //std::pair<TrajectoryPoint, uint64_t> tp = eight.next_waypoint();
-    std::cout << (-1%3 +3)%3 << "MOD" << std::endl;
 
 
 
     // These variabels track the reference state,
     // they are incremented as time passes.
-    int reference_trajectory_index = 0;
+    // int reference_trajectory_index = 0;
     uint64_t reference_trajectory_time = 0;
 
     // The "normal" eight trajectory is extended by one path connecting the two topmost points
     // and by one connecting the two lowermost points. If one of these paths is used the
     // direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
     // must change the sign which is done by this variable:
-    int trajectory_direction = 1;
+    // int trajectory_direction = 1;
 
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
@@ -73,15 +70,11 @@ int main(int argc, char *argv[])
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now;
 
-
-        //if (reference_trajectory_index == 1 && trajectory_direction == 1){
-        //    vector<int>
-        //}
-
         // Send the current trajectory point to the vehicle
         std::pair<TrajectoryPoint, uint64_t> p = eight.next_waypoint();
         TrajectoryPoint trajectory_point = p.first;
         trajectory_point.t().nanoseconds(reference_trajectory_time);
+
         VehicleCommandTrajectory vehicle_command_trajectory;
         vehicle_command_trajectory.vehicle_id(vehicle_id);
         vehicle_command_trajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
@@ -91,8 +84,11 @@ int main(int argc, char *argv[])
         // The reference state must be in the future,
         // to allow some time for the vehicle to receive
         // the message and anticipate the next turn.
+        reference_trajectory_time += p.second;
         while(reference_trajectory_time < t_now + 2000000000ull)
         {
+            p = eight.next_waypoint();
+            std::cout << p.second <<std::endl;
             reference_trajectory_time += p.second;
             //reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         }

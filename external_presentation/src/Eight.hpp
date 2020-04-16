@@ -22,17 +22,19 @@ class Eight
     std::multimap<Waypoint, Waypoint> next;
     Waypoint current;
 
+    uint64_t current_segment_duration; // needed for get_waypoint because it depends on the chosen way in move_forward
+    uint64_t segment_duration_oval; // time which the special oval segments need
+
     vector<double> trajectory_px;
     vector<double> trajectory_py;
     vector<double> trajectory_vx;
     vector<double> trajectory_vy;
     vector<uint64_t> segment_duration;
 
-    uint64_t segment_duration_oval; // time which the special oval segments need
-
 
 //public:
     Eight();
-    std::pair<TrajectoryPoint, uint64_t> next_waypoint();
+    std::pair<TrajectoryPoint, uint64_t> get_waypoint();
+    void move_forward();
 };
 
