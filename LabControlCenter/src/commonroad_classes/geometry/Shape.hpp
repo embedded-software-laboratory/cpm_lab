@@ -43,6 +43,13 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0) override;
 
+    /**
+     * \brief This function is used to transform (rotate, translate) a context, e.g. because position/orientation and shape information are given in different objects, but need to be combined for drawing
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     */
+    void transform_context(const DrawingContext& ctx, double scale = 1.0);
+
     void to_dds_msg() {}
 
     //TODO: Getter

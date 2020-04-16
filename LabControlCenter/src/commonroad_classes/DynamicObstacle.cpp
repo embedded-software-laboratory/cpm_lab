@@ -78,7 +78,7 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         std::cerr << "TODO: Better warning // Trajectory / occupancy both defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line() << std::endl;
     }
 
-    //TODO: Translate trajectory, occupancy, initial signal state
+    //Translate trajectory, occupancy, TODO: initial signal state
     if (trajectory_node)
     {
         xml_translation::iterate_children(
@@ -88,6 +88,17 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
                 trajectory.push_back(State(child));
             }, 
             "state"
+        );
+    }
+    if (occupancy_node)
+    {
+        xml_translation::iterate_children(
+            occupancy_node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                occupancy_set.push_back(Occupancy(child));
+            }, 
+            "occupancy"
         );
     }
 
@@ -129,7 +140,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
             std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
         }
     }
-    else if (step <= trajectory.size())
+    else if (step <= trajectory.size() && trajectory.size() > 0)
     {
         ctx->save();
 
@@ -146,10 +157,34 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale)
 
         ctx->restore();
     }
+    else if (step <= occupancy_set.size() && occupancy_set.size() > 0)
+    {
+        //Draw occupancy shape
+        ctx->save();
+        occupancy_set.at(step - 1).draw(ctx, scale);
+        ctx->restore();
+
+        //Draw obstacle shape at centroid of occupancy shape
+        // ctx->save();
+        // occupancy_set.at(step - 1).transform_context(ctx, scale);
+        // if (shape.has_value())
+        // {
+        //     shape->draw(ctx, scale);
+        // }
+        // else
+        // {
+        //     std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+        // }
+        // ctx->restore();
+    }
 
     //Step - 1 is current trajectory index (0 for initial state)
     step = step + 1;
-    if (step > trajectory.size()) 
+    if (step > trajectory.size() && trajectory.size() > 0) 
+    {
+        step = 0;
+    }
+    else if (step > occupancy_set.size() && occupancy_set.size() > 0)
     {
         step = 0;
     }
