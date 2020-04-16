@@ -36,7 +36,7 @@ bool Waypoint::operator<(const Waypoint other) const{
 
 
 Eight::Eight()
-: next {}, current{0,1},
+: next {}, current{0,1}, current2{0,1},
     current_segment_duration{0},
     segment_duration_oval{1000000000ull},
     // initialize "normal" eight:
@@ -101,6 +101,7 @@ void Eight::move_forward(){
     for (; it != next.end(); it++){
         std::cout << "    " << it->second.index << " " << it->second.direction << std::endl;
     }*/
+    current = current2; // Move one point forward
 
     Waypoint succ(-1, -1); // only initial value; will be overriden later on
 
@@ -148,5 +149,5 @@ void Eight::move_forward(){
         current_segment_duration = segment_duration[current.index];
     }
 
-    current = succ;
+    current2 = succ;
 }
