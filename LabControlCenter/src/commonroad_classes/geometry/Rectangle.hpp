@@ -43,8 +43,11 @@ public:
      * Important note for geometry functions: If you want to draw these with another orientation, transform the context beforehand and revert that transformation afterwards
      * \param ctx A DrawingContext, used to draw on
      * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     * \param orientation - optional: Rotation that needs to be applied before drawing
+     * \param translate_x - optional: Translation in x-direction that needs to be applied before drawing
+     * \param translate_y - optional: Translation in y-direction that needs to be applied before drawing
      */
-    void draw(const DrawingContext& ctx, double scale = 1.0) override;
+    void draw(const DrawingContext& ctx, double scale = 1.0, double orientation = 0.0, double translate_x = 0.0, double translate_y = 0.0) override;
 
     
     void to_dds_msg() {}

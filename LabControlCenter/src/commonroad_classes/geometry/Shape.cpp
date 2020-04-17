@@ -40,7 +40,7 @@ Shape::Shape(const xmlpp::Node* node)
     std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
-void Shape::draw(const DrawingContext& ctx, double scale) 
+void Shape::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
 {
     ctx->save();
 

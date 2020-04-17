@@ -85,7 +85,7 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::draw(const DrawingContext& ctx, double scale) 
+void PlanningProblem::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
 {
     for (auto problem : planning_problems)
     {

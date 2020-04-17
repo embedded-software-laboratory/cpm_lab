@@ -61,7 +61,7 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void StaticObstacle::draw(const DrawingContext& ctx, double scale) 
+void StaticObstacle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
 {
     //TODO: Different color / sticker / ... based on type
     switch(type)

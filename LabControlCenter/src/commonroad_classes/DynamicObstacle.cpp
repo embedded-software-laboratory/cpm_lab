@@ -111,7 +111,7 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void DynamicObstacle::draw(const DrawingContext& ctx, double scale) 
+void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
 {
     //TODO: Different color / sticker / ... based on type
     ctx->set_source_rgb(1.0,0.5,0.0);

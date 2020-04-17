@@ -22,7 +22,7 @@ Circle::Circle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Circle::draw(const DrawingContext& ctx, double scale)
+void Circle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     ctx->save();
     ctx->set_line_width(0.005);

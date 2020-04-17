@@ -34,13 +34,17 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Rectangle::draw(const DrawingContext& ctx, double scale)
+void Rectangle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     ctx->save();
     ctx->set_line_width(0.005);
 
+    //Perform required translation + rotation
+    ctx->translate(translate_x, translate_y);
+    ctx->rotate(orientation);
+
     //Move to corner from center
-    ctx->move_to((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
+    ctx->translate((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
 
     //Rotate, if necessary
     if(orientation.has_value())
@@ -49,10 +53,10 @@ void Rectangle::draw(const DrawingContext& ctx, double scale)
     }
 
     //Draw lines
-    ctx->line_to((center->get_x() - (length/2)) * scale, (center->get_y() + (width/2)) * scale);
-    ctx->line_to((center->get_x() + (length/2)) * scale, (center->get_y() + (width/2)) * scale);
-    ctx->line_to((center->get_x() + (length/2)) * scale, (center->get_y() - (width/2)) * scale);
-    ctx->line_to((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
+    ctx->line_to((- (length/2)) * scale, (  (width/2)) * scale);
+    ctx->line_to((  (length/2)) * scale, (  (width/2)) * scale);
+    ctx->line_to((  (length/2)) * scale, (- (width/2)) * scale);
+    ctx->line_to((- (length/2)) * scale, (- (width/2)) * scale);
     ctx->fill_preserve();
     ctx->stroke();
 

@@ -31,7 +31,7 @@ Point::Point(double _x, double _y, double _z)
     z = _z;
 }
 
-void Point::draw(const DrawingContext& ctx, double scale)
+void Point::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Current state: Leave out z-value
     //Idea for z-value: Add shade, or change saturation based on current cairo value, or put small number for height into point

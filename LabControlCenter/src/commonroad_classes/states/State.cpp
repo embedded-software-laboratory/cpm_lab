@@ -25,7 +25,7 @@ State::State(const xmlpp::Node* node)
     }
 }
 
-void State::draw(const DrawingContext& ctx, double scale)
+void State::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
@@ -36,8 +36,7 @@ void State::draw(const DrawingContext& ctx, double scale)
     {
         if(orientation->is_exact())
         {
-            ctx->rotate(orientation->get_exact_value().value());
-            position->draw(ctx, scale);
+            position->draw(ctx, scale, orientation->get_exact_value().value());
         }
         else
         {
@@ -49,12 +48,17 @@ void State::draw(const DrawingContext& ctx, double scale)
                 {
                     //Draw position
                     ctx->save();
-                    ctx->rotate(middle);
-                    position->draw(ctx, scale);
+                    position->draw(ctx, scale, middle);
                     ctx->restore();
 
                     //Draw arrow - TODO: Maybe make this a utility function
                     ctx->save();
+
+                    //Perform required translation + rotation
+                    ctx->translate(translate_x, translate_y);
+                    ctx->rotate(orientation);
+
+                    //Draw arrow
                     ctx->rotate(middle);
                     position->transform_context(ctx, scale);
                     double arrow_scale = 0.3; //To quickly change the scale to your liking
@@ -66,6 +70,7 @@ void State::draw(const DrawingContext& ctx, double scale)
                     ctx->line_to(1.0 * arrow_scale, 0.0);
                     ctx->fill_preserve();
                     ctx->stroke();
+
                     ctx->restore();
                 }
             }

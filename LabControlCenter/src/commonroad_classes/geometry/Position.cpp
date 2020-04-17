@@ -63,7 +63,7 @@ Position::Position(int irrelevant_int)
     std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
 }
 
-void Position::draw(const DrawingContext& ctx, double scale)
+void Position::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
@@ -72,6 +72,10 @@ void Position::draw(const DrawingContext& ctx, double scale)
     if(point.has_value())
     {
         point->draw(ctx, scale);
+
+        //Perform required translation + rotation
+        ctx->translate(translate_x, translate_y);
+        ctx->rotate(orientation);
 
         //Draw circle around point for better visibility
         double radius = 0.75;

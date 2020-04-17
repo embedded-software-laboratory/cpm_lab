@@ -46,12 +46,16 @@ StateExact::StateExact(const xmlpp::Node* node)
     std::cout << "\tTime: " << time << std::endl;
 }
 
-void StateExact::draw(const DrawingContext& ctx, double scale)
+void StateExact::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
     position->draw(ctx, scale);
     ctx->restore();
+
+    //Perform required translation + rotation
+    ctx->translate(translate_x, translate_y);
+    ctx->rotate(orientation);
 
     //Draw arrow - TODO: Maybe make this a utility function
     ctx->save();

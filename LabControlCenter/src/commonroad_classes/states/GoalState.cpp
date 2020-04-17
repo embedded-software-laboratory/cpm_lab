@@ -50,7 +50,7 @@ GoalState::GoalState(const xmlpp::Node* node)
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::draw(const DrawingContext& ctx, double scale)
+void GoalState::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
@@ -64,6 +64,10 @@ void GoalState::draw(const DrawingContext& ctx, double scale)
     //Draw desired orientation(s) as arrow
     if(orientation.has_value())
     {
+        //Perform required translation + rotation
+        ctx->translate(translate_x, translate_y);
+        ctx->rotate(orientation);
+
         //Rotation is an interval - draw position for every possible orientation middle value
         for (auto& middle : orientation->get_interval_avg())
         {

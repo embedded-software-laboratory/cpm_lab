@@ -21,7 +21,7 @@ Polygon::Polygon(const xmlpp::Node* node)
     std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
-void Polygon::draw(const DrawingContext& ctx, double scale)
+void Polygon::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     if (points.size() < 3)
     {

@@ -332,7 +332,7 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 
 /******************************Interface functions***********************************/
 
-void Lanelet::draw(const DrawingContext& ctx, double scale)
+void Lanelet::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Current state: Only draw boundaries
     ctx->save();
@@ -350,6 +350,9 @@ void Lanelet::draw(const DrawingContext& ctx, double scale)
     }
 
     //Draw lines between points
+    //Perform required translation + rotation
+    ctx->translate(translate_x, translate_y);
+    ctx->rotate(orientation);
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
         ctx->begin_new_path();

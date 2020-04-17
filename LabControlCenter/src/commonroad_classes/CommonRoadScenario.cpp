@@ -339,10 +339,14 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void CommonRoadScenario::draw(const DrawingContext& ctx, double scale)
+void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //Draw lanelets
     ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(translate_x, translate_y);
+    ctx->rotate(orientation);
 
     ctx->set_source_rgb(0,0,1.0);
     for (auto &lanelet_entry : lanelets)

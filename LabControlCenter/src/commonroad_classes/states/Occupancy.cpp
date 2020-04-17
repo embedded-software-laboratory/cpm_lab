@@ -15,7 +15,7 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     }
 }
 
-void Occupancy::draw(const DrawingContext& ctx, double scale)
+void Occupancy::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
 {
     //TODO: Include time value
     //Draw shape
