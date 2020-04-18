@@ -31,13 +31,27 @@ bool Waypoint::operator<(const Waypoint other) const{
 Eight::Eight()
 : next {}, current{0,1}, current2{0,1},
     current_segment_duration{0},
-    segment_duration_oval{1000000000ull},
+    segment_duration_oval{800000000ull},
     // initialize "normal" eight:
+    /* // 1x2
     trajectory_px   {          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5},
     trajectory_py   {           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5},
     trajectory_vx   {           0,            1,          0.3,            1,            0,           -1,         -0.3,           -1},
     trajectory_vy   {           1,            0,         -0.7,            0,            1,            0,         -0.7,            0},
     segment_duration{785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull}
+    */
+   /* too small:
+    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4},
+    trajectory_py   {           0,          0.3,            0,         -0.3,            0,          0.3,            0,         -0.3},
+    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1},
+    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0},
+    segment_duration{549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull}
+*/
+    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4},
+    trajectory_py   {           0,          0.4,            0,         -0.4,            0,          0.4,            0,         -0.4},
+    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1},
+    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0},
+    segment_duration{628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull}
 {
     // Set "special" successors to allow driving an oval.
     // If no successor is given in this map the "normal" one
