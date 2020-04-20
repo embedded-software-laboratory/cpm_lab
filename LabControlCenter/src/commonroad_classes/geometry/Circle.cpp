@@ -2,6 +2,8 @@
 
 Circle::Circle(const xmlpp::Node* node)
 {
+    //TODO: Check if node is of type circle
+
     radius = xml_translation::get_child_child_double(node, "radius", true); //mandatory
 
     //Get point value, which must not be specified

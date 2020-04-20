@@ -2,6 +2,8 @@
 
 Occupancy::Occupancy(const xmlpp::Node* node)
 {
+    //TODO: Check if node is of type occupancy
+
     const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true);
     if (shape_node)
     {

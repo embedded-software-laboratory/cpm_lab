@@ -2,6 +2,8 @@
 
 TrafficSign::TrafficSign(const xmlpp::Node* node)
 {
+    //TODO: Check if node is of type trafficSign
+
     //We can have multiple sign elements for one sign, consisting of multiple posts
     //Each element has its own position and can either be virtual or not virtual
     xml_translation::iterate_children(

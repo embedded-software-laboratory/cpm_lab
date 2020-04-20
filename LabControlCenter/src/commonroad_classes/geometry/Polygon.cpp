@@ -2,6 +2,8 @@
 
 Polygon::Polygon(const xmlpp::Node* node)
 {
+    //TODO: Check if node is of type polygon
+
     xml_translation::iterate_children(
         node,
         [&] (const xmlpp::Node* child)

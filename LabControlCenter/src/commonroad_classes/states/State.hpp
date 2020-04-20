@@ -70,6 +70,14 @@ public:
     State(const xmlpp::Node* node);
 
     /**
+     * \brief Reduce code redundancy by putting the few lines necessary for each translation into one function
+     * \param node Current node (parent of child)
+     * \param child_name Name of the child node
+     * \param warn Warn if the child does not exist
+     */
+    std::optional<IntervalOrExact> get_interval(const xmlpp::Node* node, std::string child_name, bool warn);
+
+    /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system

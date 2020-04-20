@@ -2,7 +2,8 @@
 
 DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 {
-    //TODO: Warn in case node is not static obstacle / does not have static obstacle role
+    //TODO: Warn in case node is not dynamic obstacle / does not have dynamic obstacle role
+    
     std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
     if (obstacle_type_text.compare("unknown") == 0)
     {

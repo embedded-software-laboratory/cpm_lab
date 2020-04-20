@@ -2,7 +2,7 @@
 
 Shape::Shape(const xmlpp::Node* node)
 {
-    //TODO: Assert node name to be position
+    //TODO: Assert node name to be shape
 
     //2018 and 2020    
     //Optional parts (all unbounded -> lists)

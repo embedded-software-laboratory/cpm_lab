@@ -4,7 +4,7 @@ State::State(const xmlpp::Node* node)
 {
     //TODO: Warn if node is not of type state/initialState etc
 
-    //TODO: Full translation of this type (currently: Only parts necessary for simple drawing)
+    //2018 and 2020
     //Only these three values are mandatory (TODO: Might have default values though)
     const auto position_node = xml_translation::get_child_if_exists(node, "position", true);
     if (position_node)
@@ -12,17 +12,55 @@ State::State(const xmlpp::Node* node)
         position = std::optional<Position>{std::in_place, position_node};
     }
 
-    const auto orientation_node = xml_translation::get_child_if_exists(node, "orientation", true);
-    if (orientation_node)
+    orientation = get_interval(node, "orientation", true);
+    time = get_interval(node, "time", true);
+
+    //Not mandatory
+    velocity = get_interval(node, "velocity", false);
+    acceleration = get_interval(node, "acceleration", false);
+    yaw_rate = get_interval(node, "yawRate", false);
+    slip_angle = get_interval(node, "slipAngle", false);
+
+    //2020 only and not mandatory
+    steering_angle = get_interval(node, "steeringAngle", false);
+    roll_angle = get_interval(node, "rollAngle", false);
+    roll_rate = get_interval(node, "rollRate", false);
+    pitch_angle = get_interval(node, "pitchAngle", false);
+    pitch_rate = get_interval(node, "pitchRate", false);
+    velocity_y = get_interval(node, "velocityY", false);
+    position_z = get_interval(node, "positionZ", false);
+    velocity_z = get_interval(node, "velocityZ", false);
+    roll_angle_front = get_interval(node, "rollAngleFront", false);
+    roll_rate_front = get_interval(node, "rollRateFront", false);
+    velocity_y_front = get_interval(node, "velocityYFront", false);
+    position_z_front = get_interval(node, "positionZFront", false);
+    velocity_z_front = get_interval(node, "velocityZFront", false);
+    roll_angle_rear = get_interval(node, "rollAngleRear", false);
+    roll_rate_rear = get_interval(node, "rollRateRear", false);
+    velocity_y_rear = get_interval(node, "velocityYRear", false);
+    position_z_rear = get_interval(node, "positionZRear", false);
+    velocity_z_rear = get_interval(node, "velocityZRear", false);
+    left_front_wheel_angular_speed = get_interval(node, "leftFrontWheelAngularSpeed", false);
+    right_front_wheel_angular_speed = get_interval(node, "rightFrontWheelAngularSpeed", false);
+    left_rear_wheel_angular_speed = get_interval(node, "leftRearWheelAngularSpeed", false);
+    right_rear_wheel_angular_speed = get_interval(node, "rightRearWheelAngularSpeed", false);
+    delta_y_front = get_interval(node, "deltaYFront", false);
+    delta_y_rear = get_interval(node, "deltaYRear", false);
+    curvature = get_interval(node, "curvature", false);
+    curvature_change = get_interval(node, "curvatureChange", false);
+    jerk = get_interval(node, "jerk", false);
+    jounce = get_interval(node, "jounce", false);
+}
+
+std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std::string child_name, bool warn)
+{
+    const auto child_node = xml_translation::get_child_if_exists(node, child_name, warn);
+    if (child_node)
     {
-        orientation = std::optional<IntervalOrExact>{std::in_place, orientation_node};
+        return std::optional<IntervalOrExact>{std::in_place, child_node};
     }
 
-    const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
-    if (time_node)
-    {
-        time = std::optional<IntervalOrExact>{std::in_place, time_node};
-    }
+    return std::optional<IntervalOrExact>();
 }
 
 void State::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)

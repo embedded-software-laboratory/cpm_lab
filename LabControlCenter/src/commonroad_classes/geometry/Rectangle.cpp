@@ -2,6 +2,8 @@
 
 Rectangle::Rectangle(const xmlpp::Node* node)
 {
+    //TODO: Check if node is of type rectangle
+
     length = xml_translation::get_child_child_double(node, "length", true); //mandatory
     width = xml_translation::get_child_child_double(node, "width", true); //mandatory
 
