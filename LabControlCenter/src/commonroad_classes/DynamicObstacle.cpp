@@ -3,7 +3,7 @@
 DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 {
     //TODO: Warn in case node is not dynamic obstacle / does not have dynamic obstacle role
-    
+
     std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
     if (obstacle_type_text.compare("unknown") == 0)
     {
@@ -70,16 +70,17 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     //Only one of the two must exist
     const auto trajectory_node = xml_translation::get_child_if_exists(node, "trajectory", false);
     const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false);
-    if (! (trajectory_node || occupancy_node))
+    const auto signal_node = xml_translation::get_child_if_exists(node, "signalSeries", false);
+    if (! (trajectory_node || occupancy_node || signal_node))
     {
-        std::cerr << "TODO: Better warning // Trajectory / occupancy not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line() << std::endl;
+        std::cerr << "TODO: Better warning // Trajectory / occupancy / signal series not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line() << std::endl;
     }
-    if (trajectory_node && occupancy_node)
+    if ((trajectory_node && occupancy_node) || (trajectory_node && signal_node) || (occupancy_node && signal_node))
     {
-        std::cerr << "TODO: Better warning // Trajectory / occupancy both defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line() << std::endl;
+        std::cerr << "TODO: Better warning // Trajectory / occupancy / signal series both / all three defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line() << std::endl;
     }
 
-    //Translate trajectory, occupancy, TODO: initial signal state
+    //Translate trajectory, occupancy, signal series
     if (trajectory_node)
     {
         xml_translation::iterate_children(
@@ -102,10 +103,27 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
             "occupancy"
         );
     }
+    //2020 only
+    if (signal_node)
+    {
+        xml_translation::iterate_children(
+            signal_node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                signal_series.push_back(SignalState(child));
+            }, 
+            "signalState"
+        );
+    }
 
-    //TODO: Full test output
+    //Test output
     std::cout << "Dynamic obstacle:" << std::endl;
     std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
+    std::cout << "\tOccupancy size: " << occupancy_set.size() << std::endl;
+    std::cout << "\tSignal series size: " << signal_series.size() << std::endl;
+    std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
+    std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
+    std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
 
     step = 0;
 } 
