@@ -62,38 +62,35 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double orientation
     }
     
     //Draw desired orientation(s) as arrow
-    if(orientation.has_value())
+    //Perform required translation + rotation
+    ctx->translate(translate_x, translate_y);
+    ctx->rotate(orientation);
+
+    //Rotation is an interval - draw position for every possible orientation middle value
+    for (auto& middle : orientation.get_interval_avg())
     {
-        //Perform required translation + rotation
-        ctx->translate(translate_x, translate_y);
-        ctx->rotate(orientation);
+        ctx->save();
+        ctx->set_source_rgb(1.0, 0.0, 0.0);
 
-        //Rotation is an interval - draw position for every possible orientation middle value
-        for (auto& middle : orientation->get_interval_avg())
+        if(position.has_value())
         {
-            ctx->save();
-            ctx->set_source_rgb(1.0, 0.0, 0.0);
-
-            if(position.has_value())
-            {
-                //Try to draw in the middle of the shape of the goal
-                position->transform_context(ctx, scale);
-            }
-            ctx->rotate(middle);
-
-            //Draw arrow - TODO: Maybe make this a utility function
-            double arrow_scale = 0.3; //To quickly change the scale to your liking
-            ctx->set_line_width(0.015 * arrow_scale);
-            ctx->move_to(0.0, 0.0);
-            ctx->line_to(1.0 * arrow_scale, 0.0);
-            ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
-            ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
-            ctx->line_to(1.0 * arrow_scale, 0.0);
-            ctx->fill_preserve();
-            ctx->stroke();
-            
-            ctx->restore();
+            //Try to draw in the middle of the shape of the goal
+            position->transform_context(ctx, scale);
         }
+        ctx->rotate(middle);
+
+        //Draw arrow - TODO: Maybe make this a utility function
+        double arrow_scale = 0.3; //To quickly change the scale to your liking
+        ctx->set_line_width(0.015 * arrow_scale);
+        ctx->move_to(0.0, 0.0);
+        ctx->line_to(1.0 * arrow_scale, 0.0);
+        ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+        ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+        ctx->line_to(1.0 * arrow_scale, 0.0);
+        ctx->fill_preserve();
+        ctx->stroke();
+        
+        ctx->restore();
     }
 
     //TODO: Draw time, velocity?

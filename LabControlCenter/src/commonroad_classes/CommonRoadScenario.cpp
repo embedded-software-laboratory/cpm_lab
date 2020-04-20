@@ -145,7 +145,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("intersection") == 0)
     {
-        //intersections[xml_translation::get_attribute_int(node, "id")] = Intersection(node);
+        intersections.insert({xml_translation::get_attribute_int(node, "id"), Intersection(node)});
     }
     else if (node_name.compare("staticObstacle") == 0)
     {

@@ -48,11 +48,8 @@ void Rectangle::draw(const DrawingContext& ctx, double scale, double orientation
     //Move to corner from center
     ctx->translate((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
 
-    //Rotate, if necessary
-    if(orientation.has_value())
-    {
-        ctx->rotate(orientation.value());
-    }
+    //Rotate, if necessary - TODO: Optional?
+    ctx->rotate(orientation);
 
     //Draw lines
     ctx->line_to((- (length/2)) * scale, (  (width/2)) * scale);

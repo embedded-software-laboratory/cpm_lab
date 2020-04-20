@@ -70,53 +70,49 @@ void State::draw(const DrawingContext& ctx, double scale, double orientation, do
     
     //Rotate, if necessary
     //TODO: Find out what orientation exactly means, here it seems to apply to shapes as well (see scenario server (commonroad))
-    if(orientation.has_value())
+    if(orientation->is_exact())
     {
-        if(orientation->is_exact())
+        position->draw(ctx, scale, orientation->get_exact_value().value());
+    }
+    else
+    {
+        //Try to draw the position for every possible middle value of the orientation
+        //TODO: Find out how to properly draw interval values
+        if (orientation->get_interval().has_value())
         {
-            position->draw(ctx, scale, orientation->get_exact_value().value());
+            for (auto &middle : orientation->get_interval()->get_interval_avg())
+            {
+                //Draw position
+                ctx->save();
+                position->draw(ctx, scale, middle);
+                ctx->restore();
+
+                //Draw arrow - TODO: Maybe make this a utility function
+                ctx->save();
+
+                //Perform required translation + rotation
+                ctx->translate(translate_x, translate_y);
+                ctx->rotate(orientation);
+
+                //Draw arrow
+                ctx->rotate(middle);
+                position->transform_context(ctx, scale);
+                double arrow_scale = 0.3; //To quickly change the scale to your liking
+                ctx->set_line_width(0.015 * arrow_scale);
+                ctx->move_to(0.0, 0.0);
+                ctx->line_to(1.0 * arrow_scale, 0.0);
+                ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+                ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+                ctx->line_to(1.0 * arrow_scale, 0.0);
+                ctx->fill_preserve();
+                ctx->stroke();
+
+                ctx->restore();
+            }
         }
         else
         {
-            //Try to draw the position for every possible middle value of the orientation
-            //TODO: Find out how to properly draw interval values
-            if (orientation->get_interval().has_value())
-            {
-                for (auto &middle : orientation->get_interval()->get_interval_avg())
-                {
-                    //Draw position
-                    ctx->save();
-                    position->draw(ctx, scale, middle);
-                    ctx->restore();
-
-                    //Draw arrow - TODO: Maybe make this a utility function
-                    ctx->save();
-
-                    //Perform required translation + rotation
-                    ctx->translate(translate_x, translate_y);
-                    ctx->rotate(orientation);
-
-                    //Draw arrow
-                    ctx->rotate(middle);
-                    position->transform_context(ctx, scale);
-                    double arrow_scale = 0.3; //To quickly change the scale to your liking
-                    ctx->set_line_width(0.015 * arrow_scale);
-                    ctx->move_to(0.0, 0.0);
-                    ctx->line_to(1.0 * arrow_scale, 0.0);
-                    ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
-                    ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
-                    ctx->line_to(1.0 * arrow_scale, 0.0);
-                    ctx->fill_preserve();
-                    ctx->stroke();
-
-                    ctx->restore();
-                }
-            }
-            else
-            {
-                std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing" << std::endl;
-            }
-            
+            std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing" << std::endl;
         }
     }
 

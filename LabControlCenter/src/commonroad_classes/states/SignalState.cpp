@@ -16,15 +16,15 @@ SignalState::SignalState(const xmlpp::Node* node)
         std::cerr << "TODO: Better warning // No time node in SignalState - Line: " << node->get_line() << std::endl;
     }
 
-    horn = get_child_bool("horn");
-    indicator_left = get_child_bool("indicatorLeft");
-    indicator_right = get_child_bool("indicatorRight");
-    braking_lights = get_child_bool("brakingLights");
-    hazard_warning_lights = get_child_bool("hazardWarningLights");
-    flashing_blue_lights = get_child_bool("flashingBlueLights");
+    horn = get_child_bool(node, "horn");
+    indicator_left = get_child_bool(node, "indicatorLeft");
+    indicator_right = get_child_bool(node, "indicatorRight");
+    braking_lights = get_child_bool(node, "brakingLights");
+    hazard_warning_lights = get_child_bool(node, "hazardWarningLights");
+    flashing_blue_lights = get_child_bool(node, "flashingBlueLights");
 }
 
-bool SignalState::get_child_bool(std::string child_name)
+bool SignalState::get_child_bool(const xmlpp::Node* node, std::string child_name)
 {
     const auto child_node = xml_translation::get_child_if_exists(node, child_name, false);
 
@@ -42,7 +42,7 @@ bool SignalState::get_child_bool(std::string child_name)
         } 
         else 
         {
-            std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << active_node->get_line() << std::endl;
+            std::cerr << "TODO: Better warning // Value of node element " << child_name << " not conformant to specs (commonroad) - at: " << node->get_line() << std::endl;
             return false;
         }
     }

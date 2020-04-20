@@ -41,9 +41,10 @@ public:
     /**
      * \brief Takes a boolean string node and translates its value to a boolean
      * TODO: XML translation class instead - then also give a default return value
+     * \param node The parent node
      * \param child_name Name of the child node which contains the boolean value
      */
-    bool get_child_bool(std::string child_name);
+    bool get_child_bool(const xmlpp::Node* node, std::string child_name);
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
