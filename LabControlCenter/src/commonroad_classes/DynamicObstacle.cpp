@@ -130,8 +130,14 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
+void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     //TODO: Different color / sticker / ... based on type
     ctx->set_source_rgb(1.0,0.5,0.0);
 
@@ -145,7 +151,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orien
 
             if (shape.has_value())
             {
-                shape->draw(ctx, scale);
+                shape->draw(ctx, scale, 0, 0, 0, local_orientation);
             }
             else
             {
@@ -167,7 +173,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orien
 
         if (shape.has_value())
         {
-            shape->draw(ctx, scale);
+            shape->draw(ctx, scale, 0, 0, 0, local_orientation);
         }
         else
         {
@@ -180,7 +186,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orien
     {
         //Draw occupancy shape
         ctx->save();
-        occupancy_set.at(step - 1).draw(ctx, scale);
+        occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
         ctx->restore();
 
         //Draw obstacle shape at centroid of occupancy shape
@@ -207,4 +213,6 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double orien
     {
         step = 0;
     }
+
+    ctx->restore();
 }

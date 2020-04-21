@@ -50,47 +50,49 @@ GoalState::GoalState(const xmlpp::Node* node)
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
 
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     //Draw goal position
     if(position.has_value())
     {
-        position->draw(ctx, scale);
+        position->draw(ctx, scale, 0, 0, 0, local_orientation);
     }
-    
-    //Draw desired orientation(s) as arrow
-    //Perform required translation + rotation
-    ctx->translate(translate_x, translate_y);
-    ctx->rotate(orientation);
 
     //Rotation is an interval - draw position for every possible orientation middle value
-    for (auto& middle : orientation.get_interval_avg())
+    if(orientation.has_value())
     {
-        ctx->save();
-        ctx->set_source_rgb(1.0, 0.0, 0.0);
-
-        if(position.has_value())
+        for (auto& middle : orientation->get_interval_avg())
         {
-            //Try to draw in the middle of the shape of the goal
-            position->transform_context(ctx, scale);
-        }
-        ctx->rotate(middle);
+            ctx->save();
+            ctx->set_source_rgb(1.0, 0.0, 0.0);
 
-        //Draw arrow - TODO: Maybe make this a utility function
-        double arrow_scale = 0.3; //To quickly change the scale to your liking
-        ctx->set_line_width(0.015 * arrow_scale);
-        ctx->move_to(0.0, 0.0);
-        ctx->line_to(1.0 * arrow_scale, 0.0);
-        ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
-        ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
-        ctx->line_to(1.0 * arrow_scale, 0.0);
-        ctx->fill_preserve();
-        ctx->stroke();
-        
-        ctx->restore();
+            if(position.has_value())
+            {
+                //Try to draw in the middle of the shape of the goal
+                position->transform_context(ctx, scale);
+            }
+            ctx->rotate(middle + local_orientation);
+
+            //Draw arrow - TODO: Maybe make this a utility function
+            double arrow_scale = 0.3; //To quickly change the scale to your liking
+            ctx->set_line_width(0.015 * arrow_scale);
+            ctx->move_to(0.0, 0.0);
+            ctx->line_to(1.0 * arrow_scale, 0.0);
+            ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
+            ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
+            ctx->line_to(1.0 * arrow_scale, 0.0);
+            ctx->fill_preserve();
+            ctx->stroke();
+            
+            ctx->restore();
+        }
     }
 
     //TODO: Draw time, velocity?

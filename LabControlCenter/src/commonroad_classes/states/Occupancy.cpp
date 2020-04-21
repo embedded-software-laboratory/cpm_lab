@@ -17,18 +17,26 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     }
 }
 
-void Occupancy::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     //TODO: Include time value
     //Draw shape
     if (shape.has_value())
     {
-        shape->draw(ctx, scale);
+        shape->draw(ctx, scale, 0, 0, 0, local_orientation);
     }
     else
     {
         std::cerr << "TODO: Better warning // Cannot draw occupancy, shape is missing" << std::endl;
     }
+
+    ctx->restore();
 }
 
 void Occupancy::transform_context(const DrawingContext& ctx, double scale)

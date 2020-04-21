@@ -40,25 +40,30 @@ Shape::Shape(const xmlpp::Node* node)
     std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
-void Shape::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
+void Shape::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();
 
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     ctx->set_line_width(0.005);
 
+    //TODO: Rotation of combined forms is more complex than just rotation of the parts
     for (auto circle : circles)
     {
-        circle.draw(ctx, scale);
+        circle.draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
     for (auto polygon : polygons)
     {
-        polygon.draw(ctx, scale);
+        polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
     for (auto rectangle : rectangles)
     {
-        rectangle.draw(ctx, scale);
+        rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
     ctx->restore();

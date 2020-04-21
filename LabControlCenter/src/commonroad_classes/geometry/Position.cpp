@@ -63,19 +63,19 @@ Position::Position(int irrelevant_int)
     std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
 }
 
-void Position::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Position::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
     
     //Rotate, if necessary
     if(point.has_value())
     {
         point->draw(ctx, scale);
-
-        //Perform required translation + rotation
-        ctx->translate(translate_x, translate_y);
-        ctx->rotate(orientation);
 
         //Draw circle around point for better visibility
         double radius = 0.75;
@@ -85,17 +85,18 @@ void Position::draw(const DrawingContext& ctx, double scale, double orientation,
     }
     else
     {
+        //TODO: Rotation of combined forms is more complex than just rotation of the parts
         for (auto circle : circles)
         {
-            circle.draw(ctx, scale);
+            circle.draw(ctx, scale, 0, 0, 0, local_orientation);
         }
         for (auto polygon : polygons)
         {
-            polygon.draw(ctx, scale);
+            polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
         }
         for (auto rectangle : rectangles)
         {
-            rectangle.draw(ctx, scale);
+            rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
         }
 
         if (lanelet_refs.size() > 0)

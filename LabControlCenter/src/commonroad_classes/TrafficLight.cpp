@@ -12,7 +12,7 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
 
     //We use the XMLTranslation iteration functions here, as it is easier to operate on the vectors if we can use indices and .at()
     xml_translation::iterate_children(
-        child,
+        node,
         [&] (xmlpp::Node* child)
         {
             positions.push_back(translate_position(child));
@@ -21,7 +21,7 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
         "position"
     );
     xml_translation::iterate_children(
-        child,
+        node,
         [&] (xmlpp::Node* child)
         {
             directions.push_back(translate_direction(child));
@@ -30,7 +30,7 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
         "direction"
     );
     xml_translation::iterate_children(
-        child,
+        node,
         [&] (xmlpp::Node* child)
         {
             actives.push_back(translate_active(child));
@@ -39,7 +39,7 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
         "active"
     );
     xml_translation::iterate_children(
-        child,
+        node,
         [&] (xmlpp::Node* child)
         {
             cycles.push_back(translate_cycle(child));
@@ -62,13 +62,13 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     std::cout << "\tCycle size: " << cycles.size() << std::endl;
 }
 
-Position translate_position(const xmlpp::Node* position_node)
+Position TrafficLight::translate_position(const xmlpp::Node* position_node)
 {
     //Get position value, which must not be specified
     return Position(position_node);
 }
 
-Direction translate_direction(const xmlpp::Node* direction_node)
+Direction TrafficLight::translate_direction(const xmlpp::Node* direction_node)
 {
     //Get direction value, which must not exist
     std::string direction_string = xml_translation::get_first_child_text(direction_node);
@@ -107,7 +107,7 @@ Direction translate_direction(const xmlpp::Node* direction_node)
     }    
 }
 
-bool translate_active(const xmlpp::Node* active_node)
+bool TrafficLight::translate_active(const xmlpp::Node* active_node)
 {
     std::string active_string = xml_translation::get_first_child_text(active_node);
     if (active_string.compare("true") == 0)
@@ -125,7 +125,7 @@ bool translate_active(const xmlpp::Node* active_node)
     }
 }
 
-TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node)
+TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
 {
     //Get cycle node and translate traffic light cycle
     TrafficLightCycle cycle;
@@ -168,7 +168,7 @@ TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node)
                     }
                     else
                     {
-                        std::cerr << "TODO: Better warning // Value of node element 'color' not conformant to specs (commonroad) - at: " << child->get_line() << std::endl;
+                        std::cerr << "TODO: Better warning // Value of node element 'color' not conformant to specs (commonroad) - at: " << color_node->get_line() << std::endl;
                         element.colors.push_back(TrafficLightColor::NotInSpec);
                     }
                     

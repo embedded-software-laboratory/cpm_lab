@@ -36,20 +36,26 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Rectangle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();
-    ctx->set_line_width(0.005);
 
     //Perform required translation + rotation
-    ctx->translate(translate_x, translate_y);
-    ctx->rotate(orientation);
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
+    ctx->set_line_width(0.005);
 
     //Move to corner from center
     ctx->translate((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
 
-    //Rotate, if necessary - TODO: Optional?
-    ctx->rotate(orientation);
+    //Rotate, if necessary
+    if (orientation.has_value())
+    {
+        ctx->rotate(orientation.value());
+    }
+    //Also perform desired local orientation change
+    ctx->rotate(local_orientation);
 
     //Draw lines
     ctx->line_to((- (length/2)) * scale, (  (width/2)) * scale);

@@ -332,10 +332,17 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 
 /******************************Interface functions***********************************/
 
-void Lanelet::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Current state: Only draw boundaries
+    //Local orientation does not really make sense here, so it is ignored
     ctx->save();
+
+    //Perform required translation + rotation
+    //Local orientation is irrelevant here
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     ctx->set_line_width(0.005);
 
     //Draw points - I do not know why save() and restore() exist, but we cannot pause drawing a line and do something else between even though they are used in Point
@@ -350,9 +357,6 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double orientation, 
     }
 
     //Draw lines between points
-    //Perform required translation + rotation
-    ctx->translate(translate_x, translate_y);
-    ctx->rotate(orientation);
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
         ctx->begin_new_path();

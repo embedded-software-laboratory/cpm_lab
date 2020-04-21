@@ -63,16 +63,26 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
     return std::optional<IntervalOrExact>();
 }
 
-void State::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    if(!orientation.has_value())
+    {
+        std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing state, but should have been set - not drawing this state" << std::endl;
+        return;
+    }
+
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
     
     //Rotate, if necessary
     //TODO: Find out what orientation exactly means, here it seems to apply to shapes as well (see scenario server (commonroad))
     if(orientation->is_exact())
     {
-        position->draw(ctx, scale, orientation->get_exact_value().value());
+        position->draw(ctx, scale, 0, 0, 0, orientation->get_exact_value().value() + local_orientation);
     }
     else
     {
@@ -84,19 +94,15 @@ void State::draw(const DrawingContext& ctx, double scale, double orientation, do
             {
                 //Draw position
                 ctx->save();
-                position->draw(ctx, scale, middle);
+                position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
                 ctx->restore();
 
                 //Draw arrow - TODO: Maybe make this a utility function
                 ctx->save();
 
-                //Perform required translation + rotation
-                ctx->translate(translate_x, translate_y);
-                ctx->rotate(orientation);
-
                 //Draw arrow
-                ctx->rotate(middle);
                 position->transform_context(ctx, scale);
+                ctx->rotate(middle + local_orientation);
                 double arrow_scale = 0.3; //To quickly change the scale to your liking
                 ctx->set_line_width(0.015 * arrow_scale);
                 ctx->move_to(0.0, 0.0);

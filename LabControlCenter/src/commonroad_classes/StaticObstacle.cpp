@@ -62,8 +62,14 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void StaticObstacle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
+void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    ctx->save();
+
+    //Perform required translation + rotation
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     //TODO: Different color / sticker / ... based on type
     switch(type)
     {
@@ -83,23 +89,21 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double orient
 
     if (initial_state.has_value())
     {
-        ctx->save();
-
         initial_state->transform_context(ctx, scale);
 
         if (shape.has_value())
         {
-            shape->draw(ctx, scale);
+            shape->draw(ctx, scale, 0, 0, 0, local_orientation);
         }
         else
         {
             std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
         }
-
-        ctx->restore();
     }
     else
     {
         std::cerr << "TODO: Better warning // Cannot draw StaticObstacle, initial state value is missing" << std::endl;
     }
+
+    ctx->restore();
 }

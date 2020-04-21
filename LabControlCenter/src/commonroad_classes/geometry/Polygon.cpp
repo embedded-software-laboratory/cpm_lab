@@ -23,7 +23,7 @@ Polygon::Polygon(const xmlpp::Node* node)
     std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
-void Polygon::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Polygon::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if (points.size() < 3)
     {
@@ -32,6 +32,12 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double orientation, 
     else
     {
         ctx->save();
+
+        //Perform required translation + rotation
+        //TODO: Local transformation (Translate to center (use get_center()), rotate, draw from there using center-relative coordinates)
+        ctx->translate(global_translate_x, global_translate_y);
+        ctx->rotate(global_orientation);
+        
         ctx->set_line_width(0.005);
 
         //Move to first point

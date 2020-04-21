@@ -85,17 +85,26 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y) 
+void PlanningProblem::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    ctx->save();
+
+    //Perform required translation + rotation
+    //Local orientation is irrelevant here
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     for (auto problem : planning_problems)
     {
         ctx->set_source_rgb(0.0,0.5,0.05);
-        problem.initial_state->draw(ctx, scale);
+        problem.initial_state->draw(ctx, scale, 0, 0, 0, local_orientation);
 
         ctx->set_source_rgba(1.0,0.5,0.8, 0.3);
         for (auto goal : problem.goal_states)
         {
-            goal.draw(ctx, scale);
+            goal.draw(ctx, scale, 0, 0, 0, local_orientation);
         }
     }
+
+    ctx->restore();
 }

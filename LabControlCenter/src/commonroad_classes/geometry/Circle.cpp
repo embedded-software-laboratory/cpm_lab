@@ -24,9 +24,15 @@ Circle::Circle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Circle::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Circle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();
+
+    //Perform required translation + rotation
+    //Local rotation does not really make sense here and is thus ignored (rotating a circle in its own coordinate system is pointless)
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     ctx->set_line_width(0.005);
 
     //Move to center

@@ -31,11 +31,17 @@ Point::Point(double _x, double _y, double _z)
     z = _z;
 }
 
-void Point::draw(const DrawingContext& ctx, double scale, double orientation, double translate_x, double translate_y)
+void Point::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Current state: Leave out z-value
     //Idea for z-value: Add shade, or change saturation based on current cairo value, or put small number for height into point
     ctx->save();
+
+    //Perform required translation + rotation
+    //Local rotation does not really make sense here and is thus ignored (rotating a point in its own coordinate system is pointless)
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
     ctx->set_line_width(0.03);
     ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
     ctx->move_to(x * scale, y * scale);
