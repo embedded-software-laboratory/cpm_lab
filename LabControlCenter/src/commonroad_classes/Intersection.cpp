@@ -48,6 +48,5 @@ std::optional<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node
         return std::optional<int>(xml_translation::get_attribute_int(child_node, "ref", true));
     }
 
-    //TODO: Better work with std::optional for Incoming instead
     return std::optional<int>();
 }

@@ -34,8 +34,8 @@ enum class Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRi
  */
 struct TrafficCycleElement
 {
-    TrafficLightColor color;
-    unsigned int duration;
+    std::vector<TrafficLightColor> colors;
+    std::vector<unsigned int> durations;
 };
 
 /**
@@ -69,10 +69,26 @@ struct TrafficLightElement
 class TrafficLight : public InterfaceTransform
 {
 private:
-    std::vector<TrafficLightElement> traffic_light_elements;
+    //std::vector<TrafficLightElement> traffic_light_elements;
+
+    //TODO: Current structure (as, in my opinion, the specification does not allow for unique definitions)
+    std::vector<Position> positions;
+    std::vector<int> position_lines;
+    std::vector<Direction> directions;
+    std::vector<int> direction_lines;
+    std::vector<bool> actives;
+    std::vector<int> active_lines;
+    std::vector<TrafficLightCycle> cycles;
+    std::vector<int> cycle_lines;
 
 public:
     TrafficLight(const xmlpp::Node* node);
+
+    //Helper functions for better readability
+    Position translate_position(const xmlpp::Node* position_node);
+    Direction translate_direction(const xmlpp::Node* direction_node);
+    bool translate_active(const xmlpp::Node* active_node);
+    TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node);
 
     //TODO: Getter
 
