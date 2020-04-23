@@ -330,6 +330,30 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
     }
 }
 
+double Lanelet::get_min_width()
+{
+    if (left_bound.points.size() != right_bound.points.size())
+    {
+        std::cerr << "TODO: Better warning // Lanelet bounds (left, right) not of equal size" << std::endl;
+    }
+
+    size_t min_vec_size = std::max(left_bound.points.size(), right_bound.points.size());
+
+    double min_width = -1.0;
+    for (size_t i = 0; i < min_vec_size; ++i)
+    {
+        //Width = sqrt(diff_x^2 + diff_y^2) -> Ignore third dimension for this (as we do not need it)
+        double new_width = std::sqrt(std::pow((left_bound.points.at(i).get_x() - right_bound.points.at(i).get_x()), 2) + std::pow((left_bound.points.at(i).get_y() - right_bound.points.at(i).get_y()), 2));
+
+        if (min_width < 0 || new_width < min_width)
+        {
+            min_width = new_width;
+        }
+    }
+
+    return min_width;
+}
+
 /******************************Interface functions***********************************/
 
 void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

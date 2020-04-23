@@ -2,6 +2,7 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -105,14 +106,6 @@ private:
     std::vector<int> traffic_light_refs; //trafficlightref
     double speed_limit = -1.0; //From 2018 specs, must not be set (-1 if empty?)
 
-public:
-    /**
-     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
-     * \param node A lanelet node
-     */
-    Lanelet(const xmlpp::Node* node);
-
     /**
      * \brief This function translates a bound node to Bound
      * \param node A bound node
@@ -160,6 +153,21 @@ public:
      * \param line_node A line marking node
      */
     LineMarking translate_line_marking(const xmlpp::Node* line_node);
+
+public:
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * \param node A lanelet node
+     */
+    Lanelet(const xmlpp::Node* node);
+
+    /**
+     * \brief Iterate through the bounds, which should form pairs for each point (left and right)
+     * Calculate distances
+     * \return Min distance of opposing lane points
+     */
+    double get_min_width();
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

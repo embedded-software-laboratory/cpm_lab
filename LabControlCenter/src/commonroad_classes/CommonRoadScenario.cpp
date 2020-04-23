@@ -345,6 +345,62 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
+void CommonRoadScenario::transform_coordinate_system(double lane_width) 
+{
+    //Get current min. lane width of lanelets (calculated from point distances)
+    double min_width = -1.0;
+    for (auto lanelet : lanelets)
+    {
+        double new_min_width = lanelet.second.get_min_width();
+        if (min_width < 0.0 || new_min_width < min_width)
+        {
+            min_width = new_min_width;
+        }
+    }
+
+    //TODO: Scale using relation of min_width to lane_width
+    double scale = lane_width / min_width;
+    if (scale > 0)
+    {
+        for (auto &lanelet_entry : lanelets)
+        {
+            lanelet_entry.second.transform_coordinate_system(scale);
+        }
+
+        for (auto &static_obstacle : static_obstacles)
+        {
+            static_obstacle.second.transform_coordinate_system(scale);
+        }
+
+        for (auto &dynamic_obstacle : dynamic_obstacles)
+        {
+            dynamic_obstacle.second.transform_coordinate_system(scale);
+        }
+
+        for (auto &planning_problem : planning_problems)
+        {
+            planning_problem.second.transform_coordinate_system(scale);
+        }
+
+        for (auto &traffic_sign : traffic_signs)
+        {
+            traffic_sign.second.transform_coordinate_system(scale);
+        } 
+
+        for (auto &traffic_light : traffic_lights)
+        {
+            traffic_light.second.transform_coordinate_system(scale);
+        } 
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
+    }
+    
+
+    //TODO: We probably need to center the problem as well, so get farthest left / right / ... points for this
+}
+
 void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Draw lanelets
