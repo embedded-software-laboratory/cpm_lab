@@ -23,6 +23,14 @@ Polygon::Polygon(const xmlpp::Node* node)
     std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
+void Polygon::transform_coordinate_system(double scale)
+{
+    for (auto& point : points)
+    {
+        point.transform_coordinate_system(scale);
+    }
+}
+
 void Polygon::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if (points.size() < 3)

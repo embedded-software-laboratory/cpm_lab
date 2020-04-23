@@ -24,6 +24,12 @@ Circle::Circle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
+void Circle::transform_coordinate_system(double scale)
+{
+    radius *= scale;
+    center->transform_coordinate_system(scale);
+}
+
 void Circle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();

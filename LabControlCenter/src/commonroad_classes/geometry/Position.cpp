@@ -68,6 +68,29 @@ void Position::set_lanelet_ref_draw_function(std::function<void (int, const Draw
     draw_lanelet_refs = _draw_lanelet_refs;
 }
 
+void Position::transform_coordinate_system(double scale)
+{
+    if (point.has_value())
+    {
+        point->transform_coordinate_system(scale);
+    }
+
+    for (auto& circle : circles)
+    {
+        circle.transform_coordinate_system(scale);
+    }
+
+    for (auto& polygon : polygons)
+    {
+        polygon.transform_coordinate_system(scale);
+    }
+
+    for (auto& rectangle : rectangles)
+    {
+        rectangle.transform_coordinate_system(scale);
+    }
+}
+
 void Position::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself

@@ -356,6 +356,24 @@ double Lanelet::get_min_width()
 
 /******************************Interface functions***********************************/
 
+void Lanelet::transform_coordinate_system(double scale)
+{
+    for (auto& point : stop_line.points)
+    {
+        point.transform_coordinate_system(scale);
+    }
+
+    for (auto& point : right_bound.points)
+    {
+        point.transform_coordinate_system(scale);
+    }
+
+    for (auto& point : left_bound.points)
+    {
+        point.transform_coordinate_system(scale);
+    }
+}
+
 void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Current state: Only draw boundaries
