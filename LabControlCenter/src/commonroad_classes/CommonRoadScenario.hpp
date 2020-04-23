@@ -169,6 +169,8 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
+    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0);
+
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
      * Due to the different return types for each class, no interface was defined for this function.

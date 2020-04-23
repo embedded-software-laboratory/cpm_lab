@@ -380,3 +380,42 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
     ctx->restore();
 }
+
+void Lanelet::draw_ref(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
+{
+    //Local orientation does not really make sense here, so it is ignored
+    ctx->save();
+
+    //Perform required translation + rotation
+    //Local orientation is irrelevant here
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
+
+    ctx->set_line_width(0.005);
+
+    //Draw lines between points
+    if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
+    {
+        ctx->begin_new_path();
+        ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
+
+        //Draw lines on left side, then switch to right side & draw in backwards order (-> draw rectangle)
+        for (auto point : left_bound.points)
+        {
+            ctx->line_to(point.get_x() * scale, point.get_y() * scale);
+        }
+
+        for(auto reverse_it_point = right_bound.points.rbegin(); reverse_it_point != right_bound.points.rend(); ++reverse_it_point)
+        {
+            ctx->line_to(reverse_it_point->get_x() * scale, reverse_it_point->get_y() * scale);
+        }
+
+        //Close rectangle
+        ctx->line_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
+
+        ctx->fill_preserve();
+        ctx->stroke();
+    }
+
+    ctx->restore();
+}

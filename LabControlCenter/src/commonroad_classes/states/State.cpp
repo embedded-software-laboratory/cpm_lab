@@ -127,6 +127,14 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->restore();
 }
 
+void State::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+{
+    if(position.has_value())
+    {
+        position->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+    }
+}
+
 void State::transform_context(const DrawingContext& ctx, double scale)
 {
     //Draw at the stored position (if possible), else somehow within the possible position

@@ -108,6 +108,7 @@ void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
     }
 }
 
+using namespace std::placeholders;
 void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 {
     //Find out which object we are dealing with, pass on translation to these objects (if possible)
@@ -150,10 +151,12 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     else if (node_name.compare("staticObstacle") == 0)
     {
         static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
+        static_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
         dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
+        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("obstacle") == 0)
     {
@@ -161,16 +164,19 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
         if (obstacle_role == ObstacleRole::Static)
         {
             static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
+            static_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
             dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
+            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
         }
         
     }
     else if (node_name.compare("planningProblem") == 0)
     {
         planning_problems.insert({xml_translation::get_attribute_int(node, "id"), PlanningProblem(node)});
+        planning_problems.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("comment") == 0)
     {
@@ -371,4 +377,21 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
     }
 
     ctx->restore();
+}
+
+void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
+{
+    auto lanelet_it = lanelets.find(lanelet_ref);
+    if (lanelet_it != lanelets.end())
+    {
+        ctx->save();
+        //ctx->set_source_rgba(0, 0.7, 0.7, 0.7); -> Better set the color yourself before calling draw_...
+        lanelet_it->second.draw_ref(ctx, scale, global_orientation, global_translate_x, global_translate_y, local_orientation);
+        ctx->restore();
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Lanelet ref not found (while drawing lanelet ref)" << std::endl;
+    }
+    
 }

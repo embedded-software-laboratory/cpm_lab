@@ -183,6 +183,19 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    /**
+     * \brief This functions is supposed to be used to draw a lanelet which was given as a reference e.g. for position
+     * This just draws a filled rectangle at the lanelet's position
+     * Color, alpha value etc must be set beforehand
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     * \param global_orientation - optional: Rotation that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param global_translate_x - optional: Translation in x-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param global_translate_y - optional: Translation in y-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
+     */
+    void draw_ref(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0);
     
     void to_dds_msg() {}
 

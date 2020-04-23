@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     std::string filepath_2020 = "/home/cpm-lab/dev/software/LabControlCenter/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
     std::string filepath_parked_vehicles = "/home/cpm-lab/dev/software/LabControlCenter/test/RUS_Bicycle-4_1_T-1.xml";
     std::string filepath_occupancy = "/home/cpm-lab/dev/software/LabControlCenter/test/DEU_Ffb-1_2_S-1.xml";
-    auto commonroad_scenario = std::make_shared<CommonRoadScenario>(filepath_2020);
+    auto commonroad_scenario = std::make_shared<CommonRoadScenario>(filepath_occupancy);
 
     auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);

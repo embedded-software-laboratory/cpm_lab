@@ -2,6 +2,7 @@
 
 #include <libxml++-2.6/libxml++/libxml++.h>
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -41,6 +42,9 @@ private:
     std::vector<Polygon> polygons;
     std::vector<Rectangle> rectangles;
 
+    //Function to draw lanelet_refs
+    std::function<void (int, const DrawingContext&, double, double, double, double, double)> draw_lanelet_refs;
+
 public:
     /**
      * \brief Constructor, set up a position object
@@ -52,6 +56,12 @@ public:
      * Call this if you need to use the specified default value from the specs because the value was not set explicitly
      */
     Position(int irrelevant_int);
+
+    /**
+     * \brief Setter for drawing lanelet references (Position can also be constructed without this)
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     */
+    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

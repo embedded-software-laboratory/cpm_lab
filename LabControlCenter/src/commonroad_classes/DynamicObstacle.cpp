@@ -216,3 +216,16 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
 
     ctx->restore();
 }
+
+void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+{
+    if(initial_state.has_value())
+    {
+        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+    }
+
+    for (auto& state : trajectory)
+    {
+        state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
+    }
+}

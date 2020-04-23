@@ -63,6 +63,11 @@ Position::Position(int irrelevant_int)
     std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
 }
 
+void Position::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+{
+    draw_lanelet_refs = _draw_lanelet_refs;
+}
+
 void Position::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
@@ -101,7 +106,17 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
 
         if (lanelet_refs.size() > 0)
         {
-            std::cerr << "TODO: Better warning // Cannot draw using lanelet references right now" << std::endl;
+            if (draw_lanelet_refs)
+            {
+                for (auto lanelet_ref : lanelet_refs)
+                {
+                    draw_lanelet_refs(lanelet_ref, ctx, scale, 0, 0, 0, local_orientation);
+                }
+            }
+            else
+            {
+                std::cerr << "TODO: Better warning // Cannot draw using lanelet references - no lanelet ref draw function was set" << std::endl;
+            }
         }
 
         if (circles.size() + polygons.size() + rectangles.size() > 1)
