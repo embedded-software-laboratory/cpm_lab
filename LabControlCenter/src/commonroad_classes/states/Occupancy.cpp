@@ -17,6 +17,14 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     }
 }
 
+void Occupancy::transform_coordinate_system(double scale)
+{
+    if (shape.has_value())
+    {
+        shape->transform_coordinate_system(scale);
+    }
+}
+
 void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();

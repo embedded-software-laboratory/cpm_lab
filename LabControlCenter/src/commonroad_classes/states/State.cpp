@@ -63,6 +63,41 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
     return std::optional<IntervalOrExact>();
 }
 
+void State::transform_coordinate_system(double scale)
+{
+    //TODO: Check if that's all
+    
+    if (position.has_value())
+    {
+        position->transform_coordinate_system(scale);
+    }
+
+    if (position_z.has_value())
+    {
+        position_z->transform_coordinate_system(scale);
+    }
+
+    if (position_z_front.has_value())
+    {
+        position_z_front->transform_coordinate_system(scale);
+    }
+
+    if (position_z_rear.has_value())
+    {
+        position_z_rear->transform_coordinate_system(scale);
+    }
+
+    if (delta_y_front.has_value())
+    {
+        delta_y_front->transform_coordinate_system(scale);
+    }
+
+    if (delta_y_rear.has_value())
+    {
+        delta_y_rear->transform_coordinate_system(scale);
+    }
+}
+
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if(!orientation.has_value())

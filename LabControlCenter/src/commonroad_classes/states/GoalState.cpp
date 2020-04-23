@@ -50,6 +50,14 @@ GoalState::GoalState(const xmlpp::Node* node)
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
+void GoalState::transform_coordinate_system(double scale)
+{
+    if (position.has_value())
+    {
+        position->transform_coordinate_system(scale);
+    }
+}
+
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself

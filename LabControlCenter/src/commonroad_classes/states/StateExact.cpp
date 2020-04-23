@@ -46,6 +46,16 @@ StateExact::StateExact(const xmlpp::Node* node)
     std::cout << "\tTime: " << time << std::endl;
 }
 
+void StateExact::transform_coordinate_system(double scale)
+{
+    //TODO: Check if that's all
+    
+    if (position.has_value())
+    {
+        position->transform_coordinate_system(scale);
+    }
+}
+
 void StateExact::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
