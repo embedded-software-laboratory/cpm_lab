@@ -46,8 +46,8 @@ void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orie
 
     ctx->set_line_width(0.005);
 
-    //Move to corner from center
-    ctx->translate((center->get_x() - (length/2)) * scale, (center->get_y() - (width/2)) * scale);
+    //Translate to center of object
+    ctx->translate(center->get_x() * scale, center->get_y() * scale);
 
     //Rotate, if necessary
     if (orientation.has_value())
@@ -56,6 +56,9 @@ void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orie
     }
     //Also perform desired local orientation change
     ctx->rotate(local_orientation);
+
+    //Move to first corner from center
+    ctx->move_to((- (length/2)) * scale, (- (width/2)) * scale);
 
     //Draw lines
     ctx->line_to((- (length/2)) * scale, (  (width/2)) * scale);

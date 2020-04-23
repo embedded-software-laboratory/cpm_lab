@@ -37,18 +37,23 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double global_orient
         //TODO: Local transformation (Translate to center (use get_center()), rotate, draw from there using center-relative coordinates)
         ctx->translate(global_translate_x, global_translate_y);
         ctx->rotate(global_orientation);
+
+        //To allow for rotation in the local coordinate system, move to the center, then rotate, then use relative positions (to the center)
+        auto center = get_center();
+        ctx->translate(center.get_x() * scale, center.get_y() * scale);
+        ctx->rotate(local_orientation);
         
         ctx->set_line_width(0.005);
 
         //Move to first point
-        ctx->move_to(points.at(0).get_x() * scale, points.at(0).get_y() * scale);
+        ctx->move_to((points.at(0).get_x() - center.get_x()) * scale, (points.at(0).get_y() - center.get_y()) * scale);
 
         //Draw lines to remaining points
         for (auto point : points)
         {
-            ctx->line_to(point.get_x() * scale, point.get_y() * scale);
+            ctx->line_to((point.get_x() - center.get_x()) * scale, (point.get_y() - center.get_y()) * scale);
         }
-        ctx->line_to(points.at(0).get_x() * scale, points.at(0).get_y() * scale); //Finish polygon by drawing a line to the starting point
+        ctx->line_to((points.at(0).get_x() - center.get_x()) * scale, (points.at(0).get_y() - center.get_y()) * scale); //Finish polygon by drawing a line to the starting point
         ctx->fill_preserve();
         ctx->stroke();
 

@@ -66,6 +66,12 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
         rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
+    if (circles.size() + polygons.size() + rectangles.size() > 1)
+    {
+        std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
+        //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+    }
+
     ctx->restore();
 }
 

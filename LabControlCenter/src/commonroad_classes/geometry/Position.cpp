@@ -103,6 +103,12 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
         {
             std::cerr << "TODO: Better warning // Cannot draw using lanelet references right now" << std::endl;
         }
+
+        if (circles.size() + polygons.size() + rectangles.size() > 1)
+        {
+            std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
+            //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+        }
     }
 
     ctx->restore();

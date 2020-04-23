@@ -228,7 +228,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         //draw_grid(ctx);
         //Draw map
-        commonroad_scenario->draw(ctx, 0.1, 0, -12, 5, 0);
+        commonroad_scenario->draw(ctx, 0.1, 0, 0, 0, 0);
 
         // Draw vehicle focus disk
         if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
