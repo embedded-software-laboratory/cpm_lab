@@ -99,7 +99,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale) override {}
+    void transform_coordinate_system(double scale) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface

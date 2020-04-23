@@ -130,6 +130,31 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
+void DynamicObstacle::transform_coordinate_system(double scale)
+{
+    //TODO: Check if that's all
+    
+    if (shape.has_value())
+    {
+        shape->transform_coordinate_system(scale);
+    }
+
+    if (initial_state.has_value())
+    {
+        initial_state->transform_coordinate_system(scale);
+    }
+
+    for (auto& state : trajectory)
+    {
+        state.transform_coordinate_system(scale);
+    }
+
+    for (auto& occupancy : occupancy_set)
+    {
+        occupancy.transform_coordinate_system(scale);
+    }
+}
+
 void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();

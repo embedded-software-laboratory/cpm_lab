@@ -191,6 +191,16 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
     return cycle;
 }
 
+void TrafficLight::transform_coordinate_system(double scale)
+{
+    //TODO: Check if that's all
+    
+    for (auto& position : positions)
+    {
+        position.transform_coordinate_system(scale);
+    }
+}
+
 void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
     std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
