@@ -13,6 +13,7 @@
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a crossing specified in an XML file
  * Is this specific class ever used outside the XML specs?
+ * -> TODO: Class is unused, because it is specified, but not part of the commonRoad object
  * 2020 only
  */
 class Crossing : public InterfaceDraw

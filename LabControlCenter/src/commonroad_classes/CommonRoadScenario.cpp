@@ -376,6 +376,16 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         planning_problem.second.draw(ctx, scale);
     }
 
+    for (auto &traffic_sign : traffic_signs)
+    {
+        traffic_sign.second.draw(ctx, scale);
+    } 
+
+    for (auto &traffic_light : traffic_lights)
+    {
+        traffic_light.second.draw(ctx, scale);
+    } 
+
     ctx->restore();
 }
 

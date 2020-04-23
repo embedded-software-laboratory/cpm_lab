@@ -190,3 +190,17 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
 
     return cycle;
 }
+
+void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
+{
+    std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
+
+    for (auto position : positions)
+    {
+        position.transform_context(ctx, scale);
+
+        //Draw lights next to each other
+        //TODO: Consider additional values
+        //ctx->show_text("Light"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
+    }
+}

@@ -15,6 +15,7 @@
 
 #include "commonroad_classes/geometry/Position.hpp"
 
+#include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
@@ -48,7 +49,7 @@ struct TrafficSignElement
  * It is used to store / represent a traffic sign specified in an XML file
  * 2020 only! (Not specified in 2018 specs)
  */
-class TrafficSign : public InterfaceTransform
+class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
     std::vector<TrafficSignElement> traffic_sign_elements;
@@ -70,4 +71,19 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale) override {}
+
+    /**
+     * \brief This function is used to draw the data structure that imports this interface
+     * If you want to set a color for drawing, perform this action on the context before using the draw function
+     * To change local translation, just transform the coordinate system beforehand
+     * As this does not always work with local orientation (where sometimes the translation in the object must be called before the rotation if performed, to rotate within the object's coordinate system),
+     * local_orientation was added as a parameter
+     * \param ctx A DrawingContext, used to draw on
+     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
+     * \param global_orientation - optional: Rotation that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param global_translate_x - optional: Translation in x-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param global_translate_y - optional: Translation in y-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
+     * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
+     */
+    void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 };

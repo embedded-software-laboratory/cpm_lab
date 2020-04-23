@@ -146,3 +146,24 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
 
     //TODO: Warn if number of elements is zero?
 }
+
+
+void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
+{
+    std::cerr << "TODO: Better warning // Drawing TrafficSigns is currently unsupported" << std::endl;
+    
+    for (auto element : traffic_sign_elements)
+    {
+        if (element.position.has_value())
+        {
+            element.position->transform_context(ctx, scale);
+        }
+
+        for(auto post : element.traffic_sign_posts)
+        {
+            //Draw posts next to each other
+            //TODO: Consider additional values
+            //ctx->show_text("Post"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
+        }
+    }
+}
