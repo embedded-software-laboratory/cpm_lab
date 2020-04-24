@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     timer->start([&](uint64_t t_now)
     {
         // Initial time used for trajectory generation
-        if (reference_trajectory_time == 0) reference_trajectory_time = t_now;
+        if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 2000000000ull;
 
         // Send the current trajectory point to the vehicle
         std::pair<TrajectoryPoint, uint64_t> p = eight.get_trajectoryPoint();
