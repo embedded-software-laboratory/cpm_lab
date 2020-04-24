@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -105,6 +106,10 @@ private:
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
 
+    //Not commonroad
+    //Mutex to lock the object while it is being translated from an XML file
+    std::mutex xml_translation_mutex;
+
     //TODO: Both of these following functions as part of another interface?
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
@@ -145,6 +150,13 @@ public:
      * \param xml_filepath The path of the XML file that specificies the commonroad scenario
      */
     CommonRoadScenario(std::string xml_filepath);
+
+    /**
+     * \brief A load function to load another file
+     * While the file is being loaded, other public functions are "skipped" (using try_lock mutex) when called
+     * \param xml_filepath The path of the XML file that specificies the commonroad scenario
+     */
+    void load_file(std::string xml_filepath);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

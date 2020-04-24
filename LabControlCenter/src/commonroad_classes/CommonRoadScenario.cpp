@@ -2,6 +2,38 @@
 
 CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
 {
+    load_file(xml_filepath);
+
+    //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
+
+    //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
+
+    //TODO: Translate time step size to uint64_t - nanoseconds representation?
+}
+
+void CommonRoadScenario::load_file(std::string xml_filepath)
+{
+    //Delete all old data
+    author.clear();
+    affiliation.clear();
+    benchmark_id.clear();
+    common_road_version.clear();
+    date.clear();
+    source.clear();
+    time_step_size = -1.0;
+    tags.clear();
+    scenario_tags.clear();
+    location = Location();
+    lanelets.clear();
+    traffic_signs.clear();
+    traffic_lights.clear();
+    intersections.clear();
+    static_obstacles.clear();
+    dynamic_obstacles.clear();
+    planning_problems.clear();
+
+
+    //Translate new data
     xmlpp::DomParser parser;
 
     try
@@ -77,12 +109,6 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
     std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
     std::cout << "\tName: " << location.name << std::endl;
     std::cout << "\tZipcode: " << location.zipcode << std::endl;
-
-    //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
-
-    //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
-
-    //TODO: Translate time step size to uint64_t - nanoseconds representation?
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -347,54 +373,59 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 
 void CommonRoadScenario::transform_coordinate_system(double lane_width) 
 {
-    //Get current min. lane width of lanelets (calculated from point distances)
-    double min_width = -1.0;
-    for (auto lanelet : lanelets)
+    if (xml_translation_mutex.try_lock())
     {
-        double new_min_width = lanelet.second.get_min_width();
-        if (min_width < 0.0 || new_min_width < min_width)
+        //Get current min. lane width of lanelets (calculated from point distances)
+        double min_width = -1.0;
+        for (auto lanelet : lanelets)
         {
-            min_width = new_min_width;
-        }
-    }
-
-    //TODO: Scale using relation of min_width to lane_width
-    double scale = lane_width / min_width;
-    if (scale > 0)
-    {
-        for (auto &lanelet_entry : lanelets)
-        {
-            lanelet_entry.second.transform_coordinate_system(scale);
+            double new_min_width = lanelet.second.get_min_width();
+            if (min_width < 0.0 || new_min_width < min_width)
+            {
+                min_width = new_min_width;
+            }
         }
 
-        for (auto &static_obstacle : static_obstacles)
+        //TODO: Scale using relation of min_width to lane_width
+        double scale = lane_width / min_width;
+        if (scale > 0)
         {
-            static_obstacle.second.transform_coordinate_system(scale);
+            for (auto &lanelet_entry : lanelets)
+            {
+                lanelet_entry.second.transform_coordinate_system(scale);
+            }
+
+            for (auto &static_obstacle : static_obstacles)
+            {
+                static_obstacle.second.transform_coordinate_system(scale);
+            }
+
+            for (auto &dynamic_obstacle : dynamic_obstacles)
+            {
+                dynamic_obstacle.second.transform_coordinate_system(scale);
+            }
+
+            for (auto &planning_problem : planning_problems)
+            {
+                planning_problem.second.transform_coordinate_system(scale);
+            }
+
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.transform_coordinate_system(scale);
+            } 
+
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.transform_coordinate_system(scale);
+            } 
+        }
+        else
+        {
+            std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
         }
 
-        for (auto &dynamic_obstacle : dynamic_obstacles)
-        {
-            dynamic_obstacle.second.transform_coordinate_system(scale);
-        }
-
-        for (auto &planning_problem : planning_problems)
-        {
-            planning_problem.second.transform_coordinate_system(scale);
-        }
-
-        for (auto &traffic_sign : traffic_signs)
-        {
-            traffic_sign.second.transform_coordinate_system(scale);
-        } 
-
-        for (auto &traffic_light : traffic_lights)
-        {
-            traffic_light.second.transform_coordinate_system(scale);
-        } 
-    }
-    else
-    {
-        std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
+        xml_translation_mutex.unlock();
     }
     
 
@@ -403,50 +434,57 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width)
 
 void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
-    //Draw lanelets
-    ctx->save();
-
-    //Perform required translation + rotation
-    //Local orientation is irrelevant here
-    ctx->translate(global_translate_x, global_translate_y);
-    ctx->rotate(global_orientation);
-
-    ctx->set_source_rgb(0,0,1.0);
-    for (auto &lanelet_entry : lanelets)
+    if (xml_translation_mutex.try_lock())
     {
-        lanelet_entry.second.draw(ctx, scale);
+        //Draw lanelets
+        ctx->save();
+
+        //Perform required translation + rotation
+        //Local orientation is irrelevant here
+        ctx->translate(global_translate_x, global_translate_y);
+        ctx->rotate(global_orientation);
+
+        ctx->set_source_rgb(0,0,1.0);
+        for (auto &lanelet_entry : lanelets)
+        {
+            lanelet_entry.second.draw(ctx, scale);
+        }
+
+        for (auto &static_obstacle : static_obstacles)
+        {
+            static_obstacle.second.draw(ctx, scale);
+        }
+
+        for (auto &dynamic_obstacle : dynamic_obstacles)
+        {
+            dynamic_obstacle.second.draw(ctx, scale);
+        }
+
+        for (auto &planning_problem : planning_problems)
+        {
+            planning_problem.second.draw(ctx, scale);
+        }
+
+        for (auto &traffic_sign : traffic_signs)
+        {
+            traffic_sign.second.draw(ctx, scale);
+        } 
+
+        for (auto &traffic_light : traffic_lights)
+        {
+            traffic_light.second.draw(ctx, scale);
+        } 
+
+        ctx->restore();
+
+        xml_translation_mutex.unlock();
     }
-
-    for (auto &static_obstacle : static_obstacles)
-    {
-        static_obstacle.second.draw(ctx, scale);
-    }
-
-    for (auto &dynamic_obstacle : dynamic_obstacles)
-    {
-        dynamic_obstacle.second.draw(ctx, scale);
-    }
-
-    for (auto &planning_problem : planning_problems)
-    {
-        planning_problem.second.draw(ctx, scale);
-    }
-
-    for (auto &traffic_sign : traffic_signs)
-    {
-        traffic_sign.second.draw(ctx, scale);
-    } 
-
-    for (auto &traffic_light : traffic_lights)
-    {
-        traffic_light.second.draw(ctx, scale);
-    } 
-
-    ctx->restore();
 }
 
 void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    //Mutex locking not necessary / possible here (called within draw from other objects)
+
     auto lanelet_it = lanelets.find(lanelet_ref);
     if (lanelet_it != lanelets.end())
     {
@@ -459,5 +497,4 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     {
         std::cerr << "TODO: Better warning // Lanelet ref not found (while drawing lanelet ref)" << std::endl;
     }
-    
 }

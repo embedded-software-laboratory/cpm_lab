@@ -118,10 +118,15 @@ add_executable(LabControlCenter
     src/VisualizationCommandsAggregator.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
+
     ui/manual_control/VehicleManualControlUi.cpp
     ui/manual_control/VehicleManualControlUi.hpp
+
     src/VehicleAutomatedControl.cpp
     src/VehicleAutomatedControl.hpp
+
+    ui/commonroad/CommonroadViewUI.hpp
+    ui/commonroad/CommonroadViewUI.cpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
@@ -154,6 +159,7 @@ add_executable(LabControlCenter
     ui/setup/UploadWindow.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
+
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp

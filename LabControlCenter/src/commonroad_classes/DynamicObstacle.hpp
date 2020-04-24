@@ -50,6 +50,7 @@ private:
 
     std::vector<SignalState> signal_series;
 
+    //Non-commonroad data
     //TODO: Transform to real vehicle representation, this is just to show that movement could be translated properly
     //Used for drawing
     size_t step; //Use this to iterate through trajectory (including initial state as well, which is not part of it)
