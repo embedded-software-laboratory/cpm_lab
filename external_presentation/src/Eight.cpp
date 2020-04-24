@@ -47,11 +47,11 @@ Eight::Eight()
     trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0},
     segment_duration{549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull}
 */                                                                                                                                  // From here on, the start is described (not the usual eight)
-    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4,         -0.8,         -0.4},
-    trajectory_py   {           0,          0.4,            0,         -0.4,            0,          0.4,            0,         -0.4,         -0.4,         -0.4},
-    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1,            0,     0.333333},
-    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0,            0,            0},
-    segment_duration{628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 979800000ull, 717300000ull}
+    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4,         -0.8,         -0.6,         -0.4,         -0.2,            0,          0.2},
+    trajectory_py   {           0,          0.4,            0,         -0.4,            0,          0.4,            0,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4},
+    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1,            0,     0.166667,     0.333333,          0.5,     0.666667,     0.833333},
+    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0,            0,            0,            0,            0,            0,            0},
+    segment_duration{628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 692800000ull, 287000000ull, 220200000ull, 185600000ull, 163600000ull, 147900000ull}
 {
     // Set "special" successors to allow driving an oval.
     // If no successor is given in this map the "normal" one
@@ -66,8 +66,12 @@ Eight::Eight()
     next.insert( pWW( Waypoint(7,-1), Waypoint(3,  1) ));
 
     // Describe the transitions from the start to the eight
-    next.insert( pWW( Waypoint(8, 1), Waypoint(9,  1) ));
-    next.insert( pWW( Waypoint(9, 1), Waypoint(3,  1) ));
+    next.insert( pWW( Waypoint( 8, 1), Waypoint( 9,  1) ));
+    next.insert( pWW( Waypoint( 9, 1), Waypoint(10,  1) ));
+    next.insert( pWW( Waypoint(10, 1), Waypoint(11,  1) ));
+    next.insert( pWW( Waypoint(11, 1), Waypoint(12,  1) ));
+    next.insert( pWW( Waypoint(12, 1), Waypoint(13,  1) ));
+    next.insert( pWW( Waypoint(13, 1), Waypoint( 3,  1) ));
 
 
     assert(segment_duration.size() == trajectory_px.size());
