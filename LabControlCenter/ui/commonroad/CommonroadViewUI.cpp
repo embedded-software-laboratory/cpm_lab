@@ -72,8 +72,21 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
 void CommonroadViewUI::load_chosen_file()
 {
     std::string filepath = std::string(commonroad_path->get_text().c_str());
-    commonroad_scenario->load_file(filepath); //TODO: Behaviour on fail
-    commonroad_scenario->transform_coordinate_system(1.0); //TODO: Use data from entries instead
+
+    //Get desired lane width
+    std::string lane_width_text = std::string(entry_lane_width->get_text().c_str());
+    double lane_width = 1.0;
+    try
+    {
+        lane_width = std::stod(lane_width_text);
+    }
+    catch(...)
+    {
+        std::cerr << "Could not apply desired lane width - not a double" << std::endl;
+    }
+
+    commonroad_scenario->load_file(filepath); //TODO: Behaviour on fail; also, maybe set transform already here, or we might accidentally draw in between these two functions with other scale (would cause flickering)
+    commonroad_scenario->transform_coordinate_system(lane_width); //TODO: Use data from entries instead; Also TODO: Change on enter in entry after load
 }
 
 void CommonroadViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
