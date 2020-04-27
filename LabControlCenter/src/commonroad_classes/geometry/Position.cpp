@@ -89,6 +89,8 @@ void Position::transform_coordinate_system(double scale)
     {
         rectangle.transform_coordinate_system(scale);
     }
+
+    transform_scale *= scale;
 }
 
 void Position::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
@@ -106,7 +108,7 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
         point->draw(ctx, scale);
 
         //Draw circle around point for better visibility
-        double radius = 0.75;
+        double radius = 0.75 * scale * transform_scale;
         ctx->set_line_width(0.005);
         ctx->arc(point->get_x() * scale, point->get_y() * scale, radius * scale, 0.0, 2 * M_PI);
         ctx->stroke();

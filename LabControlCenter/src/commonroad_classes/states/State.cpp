@@ -96,6 +96,8 @@ void State::transform_coordinate_system(double scale)
     {
         delta_y_rear->transform_coordinate_system(scale);
     }
+
+    transform_scale *= scale;
 }
 
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
@@ -138,7 +140,7 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
                 //Draw arrow
                 position->transform_context(ctx, scale);
                 ctx->rotate(middle + local_orientation);
-                double arrow_scale = 0.3; //To quickly change the scale to your liking
+                double arrow_scale = 0.6 * scale * transform_scale; //To quickly change the scale to your liking
                 ctx->set_line_width(0.015 * arrow_scale);
                 ctx->move_to(0.0, 0.0);
                 ctx->line_to(1.0 * arrow_scale, 0.0);

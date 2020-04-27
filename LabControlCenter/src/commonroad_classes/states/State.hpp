@@ -63,6 +63,9 @@ private:
     std::optional<IntervalOrExact> jerk;
     std::optional<IntervalOrExact> jounce;
 
+    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    double transform_scale = 1.0;
+
 public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created

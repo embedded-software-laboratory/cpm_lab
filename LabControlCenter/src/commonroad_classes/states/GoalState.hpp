@@ -32,6 +32,9 @@ private:
     std::optional<Interval> orientation; //Must not be defined
     std::optional<Interval> velocity; //Must not be defined
 
+    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    double transform_scale = 1.0;
+
 public:
     /**
      * \brief Constructor, set up a goalstate object

@@ -32,6 +32,9 @@ private:
 
     //According to the specification, a position might not be given exactly (as a point)
     bool is_exact;
+
+    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    double transform_scale = 1.0;
     
     //Exact position (positionExact)
     std::optional<Point> point;
