@@ -36,11 +36,15 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Rectangle::transform_coordinate_system(double scale)
+void Rectangle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    center->transform_coordinate_system(scale);
-    length *= scale;
-    width *= scale;
+    center->transform_coordinate_system(scale, translate_x, translate_y);
+
+    if (scale > 0)
+    {
+        length *= scale;
+        width *= scale;
+    }
 }
 
 void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

@@ -40,21 +40,21 @@ Shape::Shape(const xmlpp::Node* node)
     std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
-void Shape::transform_coordinate_system(double scale)
+void Shape::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     for (auto& circle : circles)
     {
-        circle.transform_coordinate_system(scale);
+        circle.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& polygon : polygons)
     {
-        polygon.transform_coordinate_system(scale);
+        polygon.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& rectangle : rectangles)
     {
-        rectangle.transform_coordinate_system(scale);
+        rectangle.transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

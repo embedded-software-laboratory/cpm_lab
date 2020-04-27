@@ -147,7 +147,7 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
     //TODO: Warn if number of elements is zero?
 }
 
-void TrafficSign::transform_coordinate_system(double scale)
+void TrafficSign::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
@@ -155,7 +155,7 @@ void TrafficSign::transform_coordinate_system(double scale)
     {
         if (element.position)
         {
-            element.position->transform_coordinate_system(scale);
+            element.position->transform_coordinate_system(scale, translate_x, translate_y);
         }
     }
 }

@@ -68,29 +68,32 @@ void Position::set_lanelet_ref_draw_function(std::function<void (int, const Draw
     draw_lanelet_refs = _draw_lanelet_refs;
 }
 
-void Position::transform_coordinate_system(double scale)
+void Position::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     if (point.has_value())
     {
-        point->transform_coordinate_system(scale);
+        point->transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& circle : circles)
     {
-        circle.transform_coordinate_system(scale);
+        circle.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& polygon : polygons)
     {
-        polygon.transform_coordinate_system(scale);
+        polygon.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& rectangle : rectangles)
     {
-        rectangle.transform_coordinate_system(scale);
+        rectangle.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
-    transform_scale *= scale;
+    if (scale > 0)
+    {
+        transform_scale *= scale;
+    }
 }
 
 void Position::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

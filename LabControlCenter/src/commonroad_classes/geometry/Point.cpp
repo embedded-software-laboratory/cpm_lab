@@ -31,11 +31,17 @@ Point::Point(double _x, double _y, double _z)
     z = _z;
 }
 
-void Point::transform_coordinate_system(double scale)
+void Point::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    x *= scale;
-    y *= scale;
-    z *= scale;
+    if (scale > 0)
+    {
+        x *= scale;
+        y *= scale;
+        z *= scale;
+    }
+
+    x += translate_x;
+    y += translate_y;
 }
 
 void Point::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

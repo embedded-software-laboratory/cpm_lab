@@ -17,11 +17,11 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     }
 }
 
-void Occupancy::transform_coordinate_system(double scale)
+void Occupancy::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale);
+        shape->transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

@@ -191,13 +191,13 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
     return cycle;
 }
 
-void TrafficLight::transform_coordinate_system(double scale)
+void TrafficLight::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     for (auto& position : positions)
     {
-        position.transform_coordinate_system(scale);
+        position.transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

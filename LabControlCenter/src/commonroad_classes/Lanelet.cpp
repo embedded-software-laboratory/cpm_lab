@@ -356,21 +356,21 @@ double Lanelet::get_min_width()
 
 /******************************Interface functions***********************************/
 
-void Lanelet::transform_coordinate_system(double scale)
+void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     for (auto& point : stop_line.points)
     {
-        point.transform_coordinate_system(scale);
+        point.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& point : right_bound.points)
     {
-        point.transform_coordinate_system(scale);
+        point.transform_coordinate_system(scale, translate_x, translate_y);
     }
 
     for (auto& point : left_bound.points)
     {
-        point.transform_coordinate_system(scale);
+        point.transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

@@ -85,7 +85,7 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::transform_coordinate_system(double scale)
+void PlanningProblem::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
 
@@ -93,12 +93,12 @@ void PlanningProblem::transform_coordinate_system(double scale)
     {
         if (planning_problem.initial_state.has_value())
         {
-            planning_problem.initial_state->transform_coordinate_system(scale);
+            planning_problem.initial_state->transform_coordinate_system(scale, translate_x, translate_y);
         }
 
         for (auto& goal_state : planning_problem.goal_states)
         {
-            goal_state.transform_coordinate_system(scale);
+            goal_state.transform_coordinate_system(scale, translate_x, translate_y);
         }
     }
 }

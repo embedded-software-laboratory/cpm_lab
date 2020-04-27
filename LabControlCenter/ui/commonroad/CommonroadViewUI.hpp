@@ -41,6 +41,9 @@ private:
     Gtk::Button* button_choose_commonroad = nullptr;
     Gtk::Button* button_load_commonroad = nullptr;
 
+    //Button to apply a transformation set in the UI to the currently loaded scenario permanently
+    Gtk::Button* button_apply_transformation = nullptr;
+
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
 
@@ -54,6 +57,17 @@ private:
 
     //Function to load the chosen commonroad file / throw an error
     void load_chosen_file();
+
+    //Transform text to double, if possible
+    double string_to_double(std::string value, double default_value);
+
+    //Function to apply the set transformation to the loaded scenario permanently
+    void apply_transformation();
+
+    //Functions to apply one of the corresponding transformations after pressing enter within the entry
+    bool apply_entry_scale(GdkEventKey* event);
+    bool apply_entry_translate_x(GdkEventKey* event);
+    bool apply_entry_translate_y(GdkEventKey* event);
 
 public:
     /**

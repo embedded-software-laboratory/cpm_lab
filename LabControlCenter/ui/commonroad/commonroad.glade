@@ -133,7 +133,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="placeholder_text" translatable="yes">1.0</property>
+                            <property name="text" translatable="yes">0.0</property>
+                            <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>
                           <packing>
@@ -181,7 +182,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="placeholder_text" translatable="yes">1.0</property>
+                            <property name="text" translatable="yes">0.0</property>
+                            <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>
                           <packing>
@@ -229,7 +231,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="placeholder_text" translatable="yes">1.0</property>
+                            <property name="text" translatable="yes">0.0</property>
+                            <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>
                           <packing>
@@ -247,6 +250,20 @@
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_apply_transformation">
+                <property name="label" translatable="yes">Apply transformation</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="valign">center</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">6</property>
               </packing>
             </child>
           </object>

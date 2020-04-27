@@ -23,11 +23,11 @@ Polygon::Polygon(const xmlpp::Node* node)
     std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
-void Polygon::transform_coordinate_system(double scale)
+void Polygon::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     for (auto& point : points)
     {
-        point.transform_coordinate_system(scale);
+        point.transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

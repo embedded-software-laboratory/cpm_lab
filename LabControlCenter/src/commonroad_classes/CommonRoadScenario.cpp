@@ -371,7 +371,7 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void CommonRoadScenario::transform_coordinate_system(double lane_width) 
+void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
 {
     if (xml_translation_mutex.try_lock())
     {
@@ -386,41 +386,41 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width)
             }
         }
 
-        //TODO: Scale using relation of min_width to lane_width
+        //Scale can be smaller than 0 - in this case, it is simply not applied (functions are still called for translate_x and translate_y)
         double scale = lane_width / min_width;
-        if (scale > 0)
+        if (scale > 0 || translate_x != 0.0 || translate_y != 0.0)
         {
             for (auto &lanelet_entry : lanelets)
             {
-                lanelet_entry.second.transform_coordinate_system(scale);
+                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
             }
 
             for (auto &static_obstacle : static_obstacles)
             {
-                static_obstacle.second.transform_coordinate_system(scale);
+                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
             }
 
             for (auto &dynamic_obstacle : dynamic_obstacles)
             {
-                dynamic_obstacle.second.transform_coordinate_system(scale);
+                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
             }
 
             for (auto &planning_problem : planning_problems)
             {
-                planning_problem.second.transform_coordinate_system(scale);
+                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
             }
 
             for (auto &traffic_sign : traffic_signs)
             {
-                traffic_sign.second.transform_coordinate_system(scale);
+                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
             } 
 
             for (auto &traffic_light : traffic_lights)
             {
-                traffic_light.second.transform_coordinate_system(scale);
+                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
             } 
         }
-        else
+        else if (min_width < 0)
         {
             std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
         }

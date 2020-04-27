@@ -50,14 +50,17 @@ GoalState::GoalState(const xmlpp::Node* node)
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::transform_coordinate_system(double scale)
+void GoalState::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale);
+        position->transform_coordinate_system(scale, translate_x, translate_y);
     }
 
-    transform_scale *= scale;
+    if (scale > 0)
+    {
+        transform_scale *= scale;
+    }
 }
 
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

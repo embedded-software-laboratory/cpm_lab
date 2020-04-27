@@ -62,18 +62,18 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 
 /******************************Interface functions***********************************/
 
-void StaticObstacle::transform_coordinate_system(double scale)
+void StaticObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale);
+        shape->transform_coordinate_system(scale, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
     {
-        initial_state->transform_coordinate_system(scale);
+        initial_state->transform_coordinate_system(scale, translate_x, translate_y);
     }
 }
 

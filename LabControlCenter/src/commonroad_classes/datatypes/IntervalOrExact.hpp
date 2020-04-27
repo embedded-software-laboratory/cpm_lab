@@ -77,18 +77,23 @@ public:
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
+     * \param translate_x Currently ignored, must be changed if this is used for position values
+     * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale) override
+    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
     {
         if (exact.has_value())
         {
-            double transformed_exact = exact.value() * scale;
-            exact = std::optional<double>(transformed_exact);
+            if (scale > 0)
+            {
+                double transformed_exact = exact.value() * scale;
+                exact = std::optional<double>(transformed_exact);
+            }
         }
 
         if (interval.has_value())
         {
-            interval->transform_coordinate_system(scale);
+            interval->transform_coordinate_system(scale, translate_x, translate_y);
         }
     }
 };

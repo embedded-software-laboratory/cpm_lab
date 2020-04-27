@@ -19,6 +19,7 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("entry_translate_y", entry_translate_y);
     builder->get_widget("button_choose_commonroad", button_choose_commonroad);
     builder->get_widget("button_load_commonroad", button_load_commonroad);
+    builder->get_widget("button_apply_transformation", button_apply_transformation);
 
     assert(parent);
     assert(commonroad_box);
@@ -28,10 +29,23 @@ CommonroadViewUI::CommonroadViewUI
     assert(entry_translate_y);
     assert(button_choose_commonroad);
     assert(button_load_commonroad);
+    assert(button_apply_transformation);
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
     button_load_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_chosen_file));
+    button_apply_transformation->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_transformation));
+
+    //Also, single transformation values can be applied on a single key press within the entry
+    entry_lane_width->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_scale));
+    entry_translate_x->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_x));
+    entry_translate_y->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_y));
+
+    //Information on transformation on hover
+    entry_lane_width->set_tooltip_text("Set min. lane width. <= 0 means no change desired. Also applies w. Return.");
+    entry_translate_x->set_tooltip_text("Set x translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
+    entry_translate_y->set_tooltip_text("Set y translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
+    button_apply_transformation->set_tooltip_text("Permanently apply set transformation to coordinate system. Future transformations are applied relative to new coordinate system.");
 }
 
 using namespace std::placeholders;
@@ -69,24 +83,107 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
     }
 }
 
+double CommonroadViewUI::string_to_double(std::string value, double default_value)
+{
+    //Disregard empty fields / use default then
+    if (value.size() > 0)
+    {
+        try
+        {
+            return std::stod(value);
+        }
+        catch(...)
+        {
+            std::cerr << "Could not translate string to double (transformation string entry : scale or translate_x/_y)" << std::endl;
+            return default_value;
+        }
+    }
+
+    return default_value;
+}
+
+void CommonroadViewUI::apply_transformation()
+{
+    //Get desired lane width and translation
+    double lane_width = string_to_double(std::string(entry_lane_width->get_text().c_str()), 0.0);
+    double translate_x = string_to_double(std::string(entry_translate_x->get_text().c_str()), 0.0);
+    double translate_y = string_to_double(std::string(entry_translate_y->get_text().c_str()), 0.0);
+
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->transform_coordinate_system(lane_width, translate_x, translate_y);
+    }
+
+    entry_lane_width->set_text("0.0");
+    entry_translate_x->set_text("0.0");
+    entry_translate_y->set_text("0.0");
+}
+
+bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
+{
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        //Get desired lane width and translation
+        double lane_width = string_to_double(std::string(entry_lane_width->get_text().c_str()), 0.0);
+
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->transform_coordinate_system(lane_width, 0.0, 0.0);
+        }
+
+        entry_lane_width->set_text("0.0");
+
+        return true;
+    }
+    return false;
+}
+
+bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
+{
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        //Get desired lane width and translation
+        double translate_x = string_to_double(std::string(entry_translate_x->get_text().c_str()), 0.0);
+
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->transform_coordinate_system(0.0, translate_x, 0.0);
+        }
+
+        entry_translate_x->set_text("0.0");
+
+        return true;
+    }
+    return false;
+}
+
+bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
+{
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        //Get desired lane width and translation
+        double translate_y = string_to_double(std::string(entry_translate_y->get_text().c_str()), 0.0);
+
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->transform_coordinate_system(0.0, 0.0, translate_y);
+        }
+
+        entry_translate_y->set_text("0.0");
+
+        return true;
+    }
+    return false;
+}
+
+
 void CommonroadViewUI::load_chosen_file()
 {
     std::string filepath = std::string(commonroad_path->get_text().c_str());
 
-    //Get desired lane width
-    std::string lane_width_text = std::string(entry_lane_width->get_text().c_str());
-    double lane_width = 1.0;
-    try
-    {
-        lane_width = std::stod(lane_width_text);
-    }
-    catch(...)
-    {
-        std::cerr << "Could not apply desired lane width - not a double" << std::endl;
-    }
-
     commonroad_scenario->load_file(filepath); //TODO: Behaviour on fail; also, maybe set transform already here, or we might accidentally draw in between these two functions with other scale (would cause flickering)
-    commonroad_scenario->transform_coordinate_system(lane_width); //TODO: Use data from entries instead; Also TODO: Change on enter in entry after load
+    
+    apply_transformation(); //Apply currently set transformation
 }
 
 void CommonroadViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
