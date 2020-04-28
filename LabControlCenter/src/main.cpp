@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     std::string filepath_occupancy = "/home/cpm-lab/dev/software/LabControlCenter/test/DEU_Ffb-1_2_S-1.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
     commonroad_scenario->load_file(filepath_parked_vehicles);
-    commonroad_scenario->transform_coordinate_system(1.0, 0.0, 0.0);
+    commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
 
     auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);

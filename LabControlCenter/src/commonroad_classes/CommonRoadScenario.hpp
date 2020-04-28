@@ -205,4 +205,14 @@ public:
     void to_dds_msg() {}
 
     //TODO: Getter, by type and by ID, and constructor
+    const std::string& get_author();
+    const std::string& get_affiliation();
+    const std::string& get_benchmark_id();
+    const std::string& get_common_road_version();
+    const std::string& get_date();
+    const std::string& get_source();
+    const double get_time_step_size();
+    // const std::vector<const std::string>& get_scenario_tags_2018();
+    // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
+    const Location& get_location();
 };

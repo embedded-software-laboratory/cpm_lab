@@ -93,11 +93,11 @@ bool CommonRoadScenario::load_file(std::string xml_filepath)
         //Throw an error if the parent node does not meet the expectation (-> is not conform to commonroad specs)
         if(nodename.empty() || !(nodeElement))
         {
-            //TODO: Throw error
+            parsing_failed = true;
         }
         if (nodename.compare("commonRoad") != 0)
         {
-            //TODO: Throw error
+            parsing_failed = true;
         }
 
         //Store scenario attributes
@@ -528,4 +528,56 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     {
         std::cerr << "TODO: Better warning // Lanelet ref not found (while drawing lanelet ref)" << std::endl;
     }
+}
+
+/******************************Getter***********************************/
+
+const std::string& CommonRoadScenario::get_author()
+{
+    return author;
+}
+
+const std::string& CommonRoadScenario::get_affiliation()
+{
+    return affiliation;
+}
+
+const std::string& CommonRoadScenario::get_benchmark_id()
+{
+    return benchmark_id;
+}
+
+const std::string& CommonRoadScenario::get_common_road_version()
+{
+    return common_road_version;
+}
+
+const std::string& CommonRoadScenario::get_date()
+{
+    return date;
+}
+
+const std::string& CommonRoadScenario::get_source()
+{
+    return source;
+}
+
+const double CommonRoadScenario::get_time_step_size()
+{
+    return time_step_size;
+}
+
+// const std::vector<const std::string>& CommonRoadScenario::get_scenario_tags_2018()
+// {
+//     return tags;
+// }
+
+// const std::vector<const ScenarioTag>& CommonRoadScenario::get_scenario_tags_2020()
+// {
+//     return scenario_tags;
+// }
+
+const Location& CommonRoadScenario::get_location()
+{
+    return location;
 }
