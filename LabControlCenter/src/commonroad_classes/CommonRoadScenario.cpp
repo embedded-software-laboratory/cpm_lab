@@ -1,9 +1,7 @@
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
-CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
+CommonRoadScenario::CommonRoadScenario()
 {
-    load_file(xml_filepath);
-
     //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
 
     //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
@@ -11,9 +9,41 @@ CommonRoadScenario::CommonRoadScenario(std::string xml_filepath)
     //TODO: Translate time step size to uint64_t - nanoseconds representation?
 }
 
-void CommonRoadScenario::load_file(std::string xml_filepath)
+void CommonRoadScenario::test_output()
 {
-    //Delete all old data
+    //Test-print translation (unfinished, also print not yet finished parts later for a test if everything worked as expected)
+    std::cout << "***************************************************************" << std::endl;
+    std::cout << "TEST PRINT: Saved translation is: " << std::endl;
+    std::cout << "***************************************************************" << std::endl;
+
+    //Meta information (only relevant maybe for UI except for time_step_size)
+    std::cout << "Author: " << author << std::endl;
+    std::cout << "Affiliation: " << affiliation << std::endl;
+    std::cout << "Benchmark ID: " << benchmark_id << std::endl;
+    std::cout << "Version: " << common_road_version << std::endl;
+    std::cout << "Date: " << date << std::endl;
+    std::cout << "Source: " << source << std::endl;
+    std::cout << "Time step size: " << time_step_size << std::endl;
+    std::cout << "Tag (2018 specs): ";
+    for (const auto tag : tags)
+    {
+        std::cout << "| " << tag;
+    }
+    std::cout << std::endl;
+
+    //Commonroad data
+    std::cout << "Tag size (2020 specs): " << scenario_tags.size() << std::endl;
+    std::cout << "Location data: " << std::endl;
+    std::cout << "\tCountry: " << location.country << std::endl;
+    std::cout << "\tFederal state :" << location.federal_state << std::endl;
+    std::cout << "\tLatitude: " << location.gps_latitude << std::endl;
+    std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
+    std::cout << "\tName: " << location.name << std::endl;
+    std::cout << "\tZipcode: " << location.zipcode << std::endl;
+}
+
+void CommonRoadScenario::clear_data()
+{
     author.clear();
     affiliation.clear();
     benchmark_id.clear();
@@ -31,11 +61,19 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     static_obstacles.clear();
     dynamic_obstacles.clear();
     planning_problems.clear();
+}
+
+bool CommonRoadScenario::load_file(std::string xml_filepath)
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    //Delete all old data
+    clear_data();
 
 
     //Translate new data
     xmlpp::DomParser parser;
-
+    bool parsing_failed = false;
     try
     {
         //Parse XML file (DOM parser)
@@ -77,38 +115,29 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     }
     catch(const std::exception& ex)
     {
+        parsing_failed = true;
         std::cerr << "Exception caught: " << ex.what() << std::endl;
     }
 
-    //Test-print translation (unfinished, also print not yet finished parts later for a test if everything worked as expected)
-    std::cout << "***************************************************************" << std::endl;
-    std::cout << "TEST PRINT: Saved translation is: " << std::endl;
-    std::cout << "***************************************************************" << std::endl;
+    //test_output();
 
-    //Meta information (only relevant maybe for UI except for time_step_size)
-    std::cout << "Author: " << author << std::endl;
-    std::cout << "Affiliation: " << affiliation << std::endl;
-    std::cout << "Benchmark ID: " << benchmark_id << std::endl;
-    std::cout << "Version: " << common_road_version << std::endl;
-    std::cout << "Date: " << date << std::endl;
-    std::cout << "Source: " << source << std::endl;
-    std::cout << "Time step size: " << time_step_size << std::endl;
-    std::cout << "Tag (2018 specs): ";
-    for (const auto tag : tags)
+    //TODO: After implementation of proper error handling, we know about translation problems up to this object and can use this information in the following parts as well
+
+    //Now check if the file is spec-conformant (very basic version, just require existance of a field that is required by specs and part of the "commonRoad" element, which should thus exist as well)
+    if (parsing_failed || (common_road_version.compare("empty") == 0 && author.compare("empty") == 0 && affiliation.compare("empty") == 0))
     {
-        std::cout << "| " << tag;
+        //-> One of the fields version, author, affiliation should be set (they are all required)
+        std::cerr << "Translation failed / Invalid XML file chosen. None of commonRoadVersion / author / affiliation information could be found in your XML file. Translation will not be used." << std::endl;
+        clear_data();
+        return false;
     }
-    std::cout << std::endl;
+    else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && planning_problems.size() == 0)
+    {
+        //Check if all relevant fields are empty - reset the object in that case as well
+        std::cerr << "All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+    }
 
-    //Commonroad data
-    std::cout << "Tag size (2020 specs): " << scenario_tags.size() << std::endl;
-    std::cout << "Location data: " << std::endl;
-    std::cout << "\tCountry: " << location.country << std::endl;
-    std::cout << "\tFederal state :" << location.federal_state << std::endl;
-    std::cout << "\tLatitude: " << location.gps_latitude << std::endl;
-    std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
-    std::cout << "\tName: " << location.name << std::endl;
-    std::cout << "\tZipcode: " << location.zipcode << std::endl;
+    return true;
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -474,6 +503,8 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         {
             traffic_light.second.draw(ctx, scale);
         } 
+
+        //TODO: Intersections
 
         ctx->restore();
 

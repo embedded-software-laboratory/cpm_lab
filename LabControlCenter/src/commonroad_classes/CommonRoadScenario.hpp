@@ -142,21 +142,32 @@ private:
      */
     ObstacleRole get_obstacle_role(const xmlpp::Node* node);
 
+    /**
+     * \brief Give an output (cout, string) of the translated scenario
+     */
+    void test_output();
+
+    /**
+     * \brief Clear all stored data
+     */
+    void clear_data();
+
 public:
     /**
-     * \brief The constructor gets an XML file and parses it once, translating it to the C++ data structure
-     * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
-     * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
-     * \param xml_filepath The path of the XML file that specificies the commonroad scenario
+     * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
      */
-    CommonRoadScenario(std::string xml_filepath);
+    CommonRoadScenario();
 
     /**
      * \brief A load function to load another file
      * While the file is being loaded, other public functions are "skipped" (using try_lock mutex) when called
+     * It gets an XML file and parses it once, translating it to the C++ data structure
+     * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
+     * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
      * \param xml_filepath The path of the XML file that specificies the commonroad scenario
+     * \return True if the file could be loaded and meets the expectation, false otherwise (also meaning that the object is empty then)
      */
-    void load_file(std::string xml_filepath);
+    bool load_file(std::string xml_filepath);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

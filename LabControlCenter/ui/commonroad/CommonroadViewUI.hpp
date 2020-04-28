@@ -55,7 +55,10 @@ private:
     void file_explorer_callback(std::string file_string, bool has_file);
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
-    //Function to load the chosen commonroad file / throw an error
+    /**
+     * \brief Function to load the chosen commonroad file
+     * Displays an error message if this fails
+     */
     void load_chosen_file();
 
     //Transform text to double, if possible
