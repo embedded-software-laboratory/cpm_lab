@@ -1,13 +1,15 @@
-function overviewPlot(vehicle_in)
+function overviewPlot(vehicle_id, dds_domain, recording_file)
 %% Check for plotable data else call function preprocessing for provision. 
 
-if exist('dds_record.mat', 'file')
-    load('dds_record','DataByVehicle')
-else 
-    [DataByVehicle] = preprocessing();
-end
+% if exist('dds_record.mat', 'file')
+%     load('dds_record','DataByVehicle')
+% else 
+%     [DataByVehicle] = preprocessing(dds_domain, recording_file);
+% end
 
-vehicle_fieldname = ['vehicle_' int2str(vehicle_in)];
+[DataByVehicle] = preprocessing(dds_domain, recording_file);
+
+vehicle_fieldname = ['vehicle_' int2str(vehicle_id)];
 
 %if all(strcmp(vehicle_fieldname, fieldnames(DataByVehicle)) == 0) 
 %   disp('The vehicle you have chosen is not available. Please enter id [int] of one of the following vehicles:')
@@ -59,10 +61,10 @@ title('Acceleration','Interpreter','LaTex')
 
 
 %% set suptitle
-
+addpath('suplabel');
 fig = gcf; % current figure handle
 %fig.Color = [0 0.5 0.5];
-[~, h1] = suplabel(['Overview Vehicle '  int2str(vehicle_in)],'t');  
+[~, h1] = suplabel(['Overview Vehicle '  int2str(vehicle_id)],'t');  
 set(h1,'Fontsize', 16, 'Interpreter','Latex')
 
 %% todo: export_fig

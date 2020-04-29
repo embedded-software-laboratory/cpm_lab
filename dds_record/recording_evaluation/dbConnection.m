@@ -2,14 +2,19 @@
 % queries {JSON} formatted sample of vehicle state and vehicle pose.
 
 % todo filtern nach valid stamp beim auslesen der db (WHERE)
-function [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection()
+function [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = ...
+    dbConnection(dds_domain, recording_file)
 
-dbFile = '/Users/valeriepfannschmidt/Desktop/CPM/dds_record/recording_evaluation/rti_recorder_default_json.dat';
-conn = sqlite(dbFile);
+assert(isfile(recording_file));
+conn = sqlite(recording_file);
 
 % Specify data to be selected from database by SQLite queries.
-getVehicleStateJsonSample = 'SELECT rti_json_sample FROM "vehicleState@77"';
-getVehiclePoseJsonSample = 'SELECT rti_json_sample FROM "vehicleObservation@77"';
+getVehicleStateJsonSample = ['SELECT rti_json_sample FROM "vehicleState@', ...
+                             num2str(dds_domain), ...
+                             '"'];
+getVehiclePoseJsonSample = ['SELECT rti_json_sample FROM "vehicleObservation@', ...
+                            num2str(dds_domain), ...
+                            '"'];
 
 % Apply SQLite queries to database and fetch corresponding data.
 ddsVehicleStateJsonSample = fetch(conn,getVehicleStateJsonSample);
