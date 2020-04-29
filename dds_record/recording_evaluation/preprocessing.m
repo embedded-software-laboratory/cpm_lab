@@ -7,8 +7,8 @@
 % from and third level fields referring to the data measured. Labels from
 % original recording are kept as fieldnames.
 
-function [DataByVehicle] = preprocessing()
-    % todo Timestmaps normieren über vehicles
+function [DataByVehicle] = preprocessing(dds_domain, recording_file)
+    % todo Timestmaps normieren ueber vehicles
     function [secondStamps] = timestampConversion(unixStamps)
         % Read delta t from unix timestamp and convert into seconds
         secondStamps = unixStamps;
@@ -16,11 +16,12 @@ function [DataByVehicle] = preprocessing()
         secondStamps(1) = 0;
     end
 %% Load dds sample if it exists, else call function dbConnection to fetch it.
-if exist('dds_json_sample.mat', 'file') 
-   load('dds_json_sample', 'ddsVehicleStateJsonSample', 'ddsVehiclePoseJsonSample')
-else 
-   [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection();
-end
+% if exist('dds_json_sample.mat', 'file') 
+%    load('dds_json_sample', 'ddsVehicleStateJsonSample', 'ddsVehiclePoseJsonSample')
+% else 
+%    [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
+% end
+[ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
 %% Parse {JSON} formatted sample into structs for further processing.
 VehicleStateRaw = cellfun(@jsondecode, ddsVehicleStateJsonSample);
 VehicleObservationRaw = cellfun(@jsondecode, ddsVehiclePoseJsonSample);
