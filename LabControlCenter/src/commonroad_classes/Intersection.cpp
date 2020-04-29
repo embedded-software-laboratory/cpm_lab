@@ -28,7 +28,9 @@ Intersection::Intersection(const xmlpp::Node* node)
 
     if (incoming_map.size() == 0)
     {
-        std::cerr << "TODO: Better warning // Intersection should contain at least one incoming reference - line " << node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Intersection should contain at least one incoming reference - line " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     std::cout << "Lanelet: " << std::endl;

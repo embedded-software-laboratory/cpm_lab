@@ -77,7 +77,9 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
     {
         if(planning_problem.goal_states.size() == 0)
         {
-            std::cerr << "TODO: Better warning // Goal states missing in translated planning problem: " << node->get_name() << "; line: " << node->get_line() << std::endl;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Goal states missing in translated planning problem: " << node->get_name() << "; line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
     }
 

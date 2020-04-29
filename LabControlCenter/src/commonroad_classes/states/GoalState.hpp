@@ -17,6 +17,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include <sstream>
+#include "commonroad_classes/SpecificationError.hpp"
 
 /**
  * \class GoalState

@@ -16,7 +16,9 @@ Crossing::Crossing(const xmlpp::Node* node)
 
     if (crossing_lanelets.size() == 0)
     {
-        std::cerr << "TODO: Better warning // Crossing should contain at least one lanelet reference - line " << node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Crossing should contain at least one lanelet reference - line " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     //Test output

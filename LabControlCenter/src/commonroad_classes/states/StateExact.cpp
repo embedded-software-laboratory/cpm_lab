@@ -12,10 +12,12 @@ StateExact::StateExact(const xmlpp::Node* node)
     }
     else
     {
-        std::cerr << "TODO: Better warning // No position node in StateExact - is this an error or do you want to use the default value? Line: " << node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "No position node in StateExact - is this an error or do you want to use the default value? - Line " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
 
         //Use default-value constructor (parameter is irrelevant)
-        position = std::optional<Position>{std::in_place, 0};
+        //position = std::optional<Position>{std::in_place, 0};
     }
 
     velocity = xml_translation::get_child_child_double_exact(node, "velocity", true);

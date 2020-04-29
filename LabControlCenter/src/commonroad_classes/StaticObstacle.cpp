@@ -31,13 +31,15 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
         obstacle_type_text.compare("train") == 0)
     {
         //Behavior for dynamic types, which should not be used here
-        std::cerr << "TODO: Better warning // Node element not conformant to specs - usage of dynamic type for static object (obstacleType)" << std::endl;
-        type = ObstacleTypeStatic::WrongDynamicType;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node element not conformant to specs - usage of dynamic type for static object (obstacleType), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     else
     {
-        std::cerr << "TODO: Better warning // Node element not conformant to specs (obstacleType) in" << std::endl;
-        type = ObstacleTypeStatic::NotInSpec;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node element not conformant to specs (static obstacle, obstacleType), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     
     const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
@@ -56,7 +58,9 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
     const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false); //Must not exist
     if (trajectory_node || occupancy_node)
     {
-        std::cerr << "TODO: Better warning // Trajectory / occupancy defined for static object (not allowed)" << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Trajectory / occupancy defined for static object (not allowed), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 

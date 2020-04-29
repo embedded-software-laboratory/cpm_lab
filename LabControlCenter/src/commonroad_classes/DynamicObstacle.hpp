@@ -20,6 +20,9 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include <sstream>
+#include "commonroad_classes/SpecificationError.hpp"
+
 /**
  * \enum class ObstacleTypeDynamic
  * \brief Specifies dynamic obstacle types, as in commonroad, NotInSpec for types that should not exist

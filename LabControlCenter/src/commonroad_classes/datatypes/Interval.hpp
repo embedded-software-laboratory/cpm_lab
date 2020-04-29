@@ -8,6 +8,9 @@
 #include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
+#include <sstream>
+#include "commonroad_classes/SpecificationError.hpp"
+
 /**
  * \class Interval
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
@@ -50,12 +53,16 @@ public:
 
         if (interval_start.size() != interval_end.size())
         {
-            std::cerr << "TODO: Better warning // Different amount of start and end nodes in Interval, line " << node->get_line() << std::endl;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Different amount of start and end nodes in Interval, line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
 
         if (interval_start.size() == 0)
         {
-            std::cerr << "TODO: Better warning // Unexpected empty interval, line " << node->get_line() << std::endl;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Unexpected empty Interval, line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
 
         for(size_t i = 0; i < interval_start.size(); ++i)

@@ -15,7 +15,9 @@ Polygon::Polygon(const xmlpp::Node* node)
 
     if (points.size() < 3)
     {
-        std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required): " << node->get_name() << "; line: " << node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Points missing in translated polygon (at least 3 required), line " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     //Test output

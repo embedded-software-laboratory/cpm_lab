@@ -46,13 +46,13 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         obstacle_type_text.compare("roadBoundary") == 0)
     {
         //Behavior for dynamic types, which should not be used here
-        std::cerr << "TODO: Better warning // Node element not conformant to specs - usage of dynamic type for static object (obstacleType)" << std::endl;
-        type = ObstacleTypeDynamic::WrongStaticType;
+        throw SpecificationError("Node element not conformant to specs - usage of dynamic type for static object (obstacleType)");
     }
     else
     {
-        std::cerr << "TODO: Better warning // Node element not conformant to specs (obstacleType) in" << std::endl;
-        type = ObstacleTypeDynamic::NotInSpec;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node element not conformant to specs (obstacleType) in " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     
     const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
@@ -73,11 +73,15 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     const auto signal_node = xml_translation::get_child_if_exists(node, "signalSeries", false);
     if (! (trajectory_node || occupancy_node || signal_node))
     {
-        std::cerr << "TODO: Better warning // Trajectory / occupancy / signal series not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Trajectory / occupancy / signal series not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     if ((trajectory_node && occupancy_node) || (trajectory_node && signal_node) || (occupancy_node && signal_node))
     {
-        std::cerr << "TODO: Better warning // Trajectory / occupancy / signal series both / all three defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Trajectory / occupancy / signal series both / all three defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     //Translate trajectory, occupancy, signal series

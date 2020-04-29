@@ -110,8 +110,9 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
                     } 
                     else 
                     {
-                        std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << virtual_child->get_line() << std::endl;
-                        element.is_virtual.push_back(false);
+                        std::stringstream error_msg_stream;
+                        error_msg_stream << "Value of node element 'virtual' not conformant to specs, line: " << virtual_child->get_line();
+                        throw SpecificationError(error_msg_stream.str());
                     }
                 },
                 "virtual"

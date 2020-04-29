@@ -8,8 +8,9 @@ std::string xml_translation::get_node_text(const xmlpp::Node* node)
     if(!(text_node))
     {
         //TODO: Throw error
-        std::cerr << "TODO: Better warning // Node not of expected type TextNode " << node->get_name() << std::endl;
-        return "empty";
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type TextNode, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     
     //If it exists, return the content of the text node
@@ -25,8 +26,10 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
-        return -1;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to int, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -39,8 +42,10 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to unsigned long long: " << node->get_name() << std::endl;
-        return 0;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to unsigned long long, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -53,8 +58,10 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_name() << std::endl;
-        return 0;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to double, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -64,8 +71,9 @@ const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node,
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
-        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << "; line: " << node->get_line() << std::endl;
-        return nullptr;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     //Check if the required child exists
@@ -73,7 +81,12 @@ const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node,
     if (!child)
     {
         if (warn)
-           std::cerr << "TODO: Better warning // Child missing in node: " << node->get_name() << ": " << child_name << "; line: " << node->get_line() << std::endl; 
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " does not have the required child '" << child_name << "', line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return nullptr;
     }
 
@@ -87,13 +100,15 @@ std::string xml_translation::get_first_child_text(const xmlpp::Node* node)
 
     if(!(node_element))
     {
-        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
-        return "empty";
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     if (!(node_element->get_first_child()))
     {
-        std::cerr << "TODO: Better warning // Node should have a child, but has none: " << node->get_name() << std::endl;
-        return "empty";
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " should have a child, but has none (XML 'structure' reason, not directly bc. of commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     return get_node_text(node_element->get_first_child());
@@ -108,8 +123,10 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
-        return -1;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to int, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -122,8 +139,10 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to unsigned long long: " << node->get_name() << std::endl;
-        return 0;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to unsigned long long, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -136,8 +155,10 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_name() << std::endl;
-        return -1;
+        //TODO: Catch error of get_node_text and check if former return values were used in other functions
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " could not be translated to double, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -161,7 +182,12 @@ int xml_translation::get_child_child_int(const xmlpp::Node* node, std::string ch
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to int: " << node->get_name() << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to int, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return -1;
     }
 }
@@ -176,7 +202,12 @@ unsigned long long xml_translation::get_child_child_uint(const xmlpp::Node* node
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to unsigned long long: " << node->get_name() << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to unsigned long long, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return 0;
     }
 }
@@ -191,7 +222,12 @@ double xml_translation::get_child_child_double(const xmlpp::Node* node, std::str
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_name() << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to double, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return -1.0;
     }
 }
@@ -210,7 +246,12 @@ double xml_translation::get_child_child_double_exact(const xmlpp::Node* node, st
         {
             //TODO: Use optional here as well, return optional? 
             if (warn)
-                std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_line() << ", " << node->get_name() << std::endl;
+            {
+                //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+                std::stringstream error_msg_stream;
+                error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double (child missing), line: " << node->get_line();
+                throw SpecificationError(error_msg_stream.str());
+            }
             return -1;
         }
         
@@ -218,7 +259,12 @@ double xml_translation::get_child_child_double_exact(const xmlpp::Node* node, st
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node content to double: " << node->get_line() << ", " << node->get_name() << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return -1;
     }
 }
@@ -229,18 +275,22 @@ std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::st
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
-        //TODO: Throw error
-        std::cerr << "TODO: Better warning // Node not of expected type Element " << node->get_name() << std::endl;
-        return "empty";
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     
     //Get the attribute and check if it exists
     const auto attribute = node_element->get_attribute(attribute_name);
     if (!attribute)
     {
-        //TODO: Throw error
         if (warn)
-            std::cerr << "TODO: Better warning // Attribute does not exist: " << node->get_name() << ", " << attribute_name << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " attribute does not exist ('" << attribute_name << "'), line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return "empty";
     }
 
@@ -257,7 +307,12 @@ int xml_translation::get_attribute_int(const xmlpp::Node* node, std::string attr
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node attribute to int: " << node->get_name() << ", " << attribute_name << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to int, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return -1;
     }
 }
@@ -272,7 +327,12 @@ unsigned long long xml_translation::get_attribute_uint(const xmlpp::Node* node, 
     catch(...)
     {
         if (warn)
-            std::cerr << "TODO: Better warning // Could not translate node attribute to unsigned long long: " << node->get_name() << ", " << attribute_name << std::endl;
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to uint, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return 0;
     }
 }
@@ -286,8 +346,13 @@ double xml_translation::get_attribute_double(const xmlpp::Node* node, std::strin
     }
     catch(...)
     {
-        if(warn)
-            std::cerr << "TODO: Better warning // Could not translate node attribute to double: " << node->get_name() << ", " << attribute_name << std::endl;
+        if (warn)
+        {
+            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to double, line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
         return -1.0;
     }
 }
@@ -337,7 +402,9 @@ void xml_translation::iterate_children(const xmlpp::Node* node, std::function<vo
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
-        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     xmlpp::Node::NodeList children;
@@ -365,7 +432,9 @@ void xml_translation::iterate_elements_with_attribute(const xmlpp::Node* node, s
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
-        std::cerr << "TODO: Better warning // Node not of expected type element: " << node->get_name() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
     xmlpp::Node::NodeList children;

@@ -93,6 +93,9 @@ set(COMMONROAD
     src/commonroad_classes/states/State.cpp
     src/commonroad_classes/states/StateExact.hpp
     src/commonroad_classes/states/StateExact.cpp
+
+     src/commonroad_classes/SpecificationError.hpp
+    src/commonroad_classes/SpecificationError.cpp
 )
 
 # labcam

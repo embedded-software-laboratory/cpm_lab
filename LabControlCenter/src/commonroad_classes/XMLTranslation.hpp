@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#include <sstream>
+#include "commonroad_classes/SpecificationError.hpp"
+
 /**
  * This is a utility namespace
  * It includes functions that are used for XML Translation throughout the commonroad_classes folder

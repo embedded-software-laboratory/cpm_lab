@@ -5,6 +5,15 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     //2018 and 2020
     left_bound = translate_bound(node, "leftBound");
     right_bound = translate_bound(node, "rightBound");
+
+    //Make sure that left and right bound are of equal size (points should be opposing pairs)
+    if (left_bound.points.size() != right_bound.points.size())
+    {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Left and right bounds of lanelet not of equal size (# of points), in " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
+
     predecessors = translate_refs(node, "predecessor");
     successors = translate_refs(node, "successor");
     adjacent_left = translate_adjacent(node, "adjacentLeft");
@@ -67,7 +76,7 @@ Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
     //Warning if bound does not meet specification
     if (bound.points.size() < 2)
     {
-        std::cerr << "TODO: Better warning // Bound does not contain min amount of children" << std::endl;
+        throw SpecificationError("Bound does not contain min amount of children");
     }
 
     const auto line_node = xml_translation::get_child_if_exists(bound_node, "lineMarking", false);
@@ -122,8 +131,9 @@ Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
             adjacent.direction = DrivingDirection::Opposite;
         }
         else {
-            std::cerr << "TODO: Better warning // Specified driving direction not part of specs, saved as NotInSpec, in line " << adjacent_node->get_line() << std::endl;
-            adjacent.direction = DrivingDirection::NotInSpec;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Specified driving direction not part of specs, in line " << adjacent_node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }   
     }
 
@@ -152,7 +162,9 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
 
         if (stop_line.points.size() != 2)
         {
-            std::cerr << "TODO: Better warning // Specified stop line has too many points, not part of specs, in line " << line_node->get_line() << std::endl;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Specified stop line has too many points, not part of specs, in line " << line_node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
 
         //Translate line marking
@@ -229,8 +241,9 @@ LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string
         }
         else 
         {
-            std::cerr << "TODO: Better warning // Specified lanelet type not part of specs, saved as NotInSpec, in line " << lanelet_type_node->get_line() << std::endl;
-            return LaneletType::NotInSpec;
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Specified lanelet type not part of specs, in line " << lanelet_type_node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
     }
 
@@ -288,8 +301,9 @@ std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::
             }
             else 
             {
-                std::cerr << "TODO: Better warning // Specified vehicle type not part of specs, saved as NotInSpec, in line " << child->get_line() << std::endl;
-                type_out = VehicleType::NotInSpec;
+                std::stringstream error_msg_stream;
+                error_msg_stream << "Specified vehicle type not part of specs, in line " << child->get_line();
+                throw SpecificationError(error_msg_stream.str());
             }
 
             vehicle_vector.push_back(type_out);
@@ -325,8 +339,9 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Specified line marking not part of specs, saved as NotInSpec in " << line_node->get_line() << std::endl;
-        return LineMarking::NotInSpec;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Specified line marking not part of specs, in " << line_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -334,6 +349,7 @@ double Lanelet::get_min_width()
 {
     if (left_bound.points.size() != right_bound.points.size())
     {
+        //TODO: Replace by assertion, should have failed by exception before
         std::cerr << "TODO: Better warning // Lanelet bounds (left, right) not of equal size" << std::endl;
     }
 

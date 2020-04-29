@@ -102,8 +102,9 @@ Direction TrafficLight::translate_direction(const xmlpp::Node* direction_node)
     }
     else 
     {
-        std::cerr << "TODO: Better warning // Node element not conformant to specs (direction) in: " << direction_node->get_line() << std::endl;
-        return Direction::NotInSpec;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node element not conformant to specs (direction), line: " << direction_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }    
 }
 
@@ -120,8 +121,9 @@ bool TrafficLight::translate_active(const xmlpp::Node* active_node)
     } 
     else 
     {
-        std::cerr << "TODO: Better warning // Value of node element 'virtual' not conformant to specs (commonroad) - at: " << active_node->get_line() << std::endl;
-        return false;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Value of node element 'virtual' not conformant to specs, line: " << active_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
@@ -168,8 +170,9 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
                     }
                     else
                     {
-                        std::cerr << "TODO: Better warning // Value of node element 'color' not conformant to specs (commonroad) - at: " << color_node->get_line() << std::endl;
-                        element.colors.push_back(TrafficLightColor::NotInSpec);
+                        std::stringstream error_msg_stream;
+                        error_msg_stream << "Value of node element 'color' not conformant to specs, line: " << color_node->get_line();
+                        throw SpecificationError(error_msg_stream.str());
                     }
                     
                 },
@@ -205,12 +208,12 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
 {
     std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
 
-    for (auto position : positions)
-    {
-        position.transform_context(ctx, scale);
+    // for (auto position : positions)
+    // {
+    //     position.transform_context(ctx, scale);
 
-        //Draw lights next to each other
-        //TODO: Consider additional values
-        //ctx->show_text("Light"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
-    }
+    //     //Draw lights next to each other
+    //     //TODO: Consider additional values
+    //     ctx->show_text("Light"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
+    // }
 }

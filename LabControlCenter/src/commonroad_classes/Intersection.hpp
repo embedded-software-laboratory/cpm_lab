@@ -14,6 +14,9 @@
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include <sstream>
+#include "commonroad_classes/SpecificationError.hpp"
+
 /**
  * \struct Incoming
  * \brief Specifies a part of the intersection, as in commonroad

@@ -38,7 +38,9 @@ GoalState::GoalState(const xmlpp::Node* node)
     else
     {
         //Time is the only actually required value
-        std::cerr << "TODO: Better warning // No time node in GoalState - Line: " << node->get_line() << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "No time node in GoalState (required by specification) - line " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
     
 
