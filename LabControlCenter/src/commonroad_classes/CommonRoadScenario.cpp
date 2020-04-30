@@ -63,7 +63,7 @@ void CommonRoadScenario::clear_data()
     planning_problems.clear();
 }
 
-bool CommonRoadScenario::load_file(std::string xml_filepath)
+void CommonRoadScenario::load_file(std::string xml_filepath)
 {
     std::lock_guard<std::mutex> lock(xml_translation_mutex);
 
@@ -115,29 +115,28 @@ bool CommonRoadScenario::load_file(std::string xml_filepath)
     }
     catch(const std::exception& ex)
     {
-        parsing_failed = true;
-        std::cerr << "Exception caught: " << ex.what() << std::endl;
+        //Just propagate the exceptions; users of this object should handle them themselves and also have access to the error message
+        //TODO: Maybe add further information to SpecificationError
+        throw;
     }
+    
 
     //test_output();
 
     //TODO: After implementation of proper error handling, we know about translation problems up to this object and can use this information in the following parts as well
 
     //Now check if the file is spec-conformant (very basic version, just require existance of a field that is required by specs and part of the "commonRoad" element, which should thus exist as well)
-    if (parsing_failed || (common_road_version.compare("empty") == 0 && author.compare("empty") == 0 && affiliation.compare("empty") == 0))
+    if (common_road_version.compare("empty") == 0 && author.compare("empty") == 0 && affiliation.compare("empty") == 0)
     {
         //-> One of the fields version, author, affiliation should be set (they are all required)
-        std::cerr << "Translation failed / Invalid XML file chosen. None of commonRoadVersion / author / affiliation information could be found in your XML file. Translation will not be used." << std::endl;
         clear_data();
-        return false;
+        throw SpecificationError("Translation failed / Invalid XML file chosen. None of commonRoadVersion / author / affiliation information could be found in your XML file. Translation will not be used.");
     }
     else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && planning_problems.size() == 0)
     {
         //Check if all relevant fields are empty - reset the object in that case as well
-        std::cerr << "All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+        std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
     }
-
-    return true;
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)

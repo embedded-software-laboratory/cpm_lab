@@ -181,19 +181,22 @@ void CommonroadViewUI::load_chosen_file()
 {
     std::string filepath = std::string(commonroad_path->get_text().c_str());
 
-    bool load_successful = commonroad_scenario->load_file(filepath); //TODO: Behaviour on fail; also, maybe set transform already here, or we might accidentally draw in between these two functions with other scale (would cause flickering)
-    
-    if (load_successful)
+    try
     {
-        apply_transformation(); //Apply currently set transformation
+        commonroad_scenario->load_file(filepath);
+
+        apply_transformation(); //Apply currently set transformation - TODO: might cause flickering if we do this after loading the file
     }
-    else
+    catch(const std::exception& e)
     {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "The chosen scenario file could not be loaded / is not spec-conform. Error message is:\n";
+        error_msg_stream << e.what();
         if (get_main_window)
         {
             Gtk::MessageDialog load_failed_dialog = Gtk::MessageDialog(
                 get_main_window(),
-                "The chosen scenario file could not be loaded / is not spec-conform. Please make sure that either author / affiliation / commonRoadVersion is set.",
+                error_msg_stream.str(),
                 false,
                 Gtk::MessageType::MESSAGE_INFO,
                 Gtk::ButtonsType::BUTTONS_OK,
@@ -205,7 +208,6 @@ void CommonroadViewUI::load_chosen_file()
         {
             std::cerr << "Could not load error dialog (UI) - main window callback not set for CommonroadViewUI!" << std::endl;
         }
-        
     }
 }
 

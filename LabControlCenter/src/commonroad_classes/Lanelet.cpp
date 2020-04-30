@@ -14,7 +14,7 @@ Lanelet::Lanelet(const xmlpp::Node* node)
         if (left_bound.points.size() != right_bound.points.size())
         {
             std::stringstream error_msg_stream;
-            error_msg_stream << "Left and right bounds of lanelet not of equal size (# of points), in " << node->get_line();
+            error_msg_stream << "Left and right bounds of lanelet not of equal size (# of points), line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
 

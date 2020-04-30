@@ -163,11 +163,10 @@ public:
      * While the file is being loaded, other public functions are "skipped" (using try_lock mutex) when called
      * It gets an XML file and parses it once, translating it to the C++ data structure
      * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
-     * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs
      * \param xml_filepath The path of the XML file that specificies the commonroad scenario
-     * \return True if the file could be loaded and meets the expectation, false otherwise (also meaning that the object is empty then)
      */
-    bool load_file(std::string xml_filepath);
+    void load_file(std::string xml_filepath);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
