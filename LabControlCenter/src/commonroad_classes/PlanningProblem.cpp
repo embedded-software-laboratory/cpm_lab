@@ -2,7 +2,8 @@
 
 PlanningProblem::PlanningProblem(const xmlpp::Node* node)
 {
-    //TODO: Assert node "type"
+    //Check if node is of type planningProblem
+    assert(node->get_name() == "planningProblem");
 
     try
     {

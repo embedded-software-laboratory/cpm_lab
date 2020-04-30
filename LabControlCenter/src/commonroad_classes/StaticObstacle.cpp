@@ -2,7 +2,9 @@
 
 StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 {
-    //TODO: Warn in case node is not static obstacle / does not have static obstacle role
+    //TODO: Warn in case node does not have static obstacle role
+    //Check if node is of type staticObstacle
+    assert(node->get_name() == "staticObstacle" || node->get_name() == "obstacle");
     
     try
     {

@@ -2,7 +2,8 @@
 
 Shape::Shape(const xmlpp::Node* node)
 {
-    //TODO: Assert node name to be shape
+    //Check if node is of type shape
+    assert(node->get_name() == "shape");
 
     try
     {

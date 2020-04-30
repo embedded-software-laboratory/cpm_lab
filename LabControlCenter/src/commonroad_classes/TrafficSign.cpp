@@ -2,7 +2,8 @@
 
 TrafficSign::TrafficSign(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type trafficSign
+    //Check if node is of type trafficSign
+    assert(node->get_name() == "trafficSign");
 
     try
     {

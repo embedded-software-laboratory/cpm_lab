@@ -17,6 +17,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
+
 /**
  * \struct Incoming
  * \brief Specifies a part of the intersection, as in commonroad

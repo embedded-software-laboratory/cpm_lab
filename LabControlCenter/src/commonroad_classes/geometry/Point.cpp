@@ -2,7 +2,8 @@
 
 Point::Point(const xmlpp::Node* node) 
 {
-    //TODO: Assert node name to be point
+    //Check if node is of type point
+    assert(node->get_name() == "point" || node->get_name() == "center");
 
     try
     {

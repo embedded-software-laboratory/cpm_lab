@@ -2,7 +2,8 @@
 
 Intersection::Intersection(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type intersection
+    //Check if node is of type intersection
+    assert(node->get_name() == "intersection");
     //2020 only
 
     try

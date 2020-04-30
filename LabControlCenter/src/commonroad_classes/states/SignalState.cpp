@@ -2,7 +2,8 @@
 
 SignalState::SignalState(const xmlpp::Node* node)
 {
-    //TODO: Make sure that node is of type signalState
+    //Check if node is of type signalState
+    assert(node->get_name() == "signalState");
 
     try
     {

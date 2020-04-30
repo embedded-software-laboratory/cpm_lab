@@ -3,7 +3,8 @@
 GoalState::GoalState(const xmlpp::Node* node)
 {
     //2018 and 2020 specs are the same
-    //TODO: Assert node "type"
+    //Check if node is of type goal state
+    assert(node->get_name() == "goalState");
 
     try
     {

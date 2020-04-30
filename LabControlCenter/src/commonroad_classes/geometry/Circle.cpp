@@ -2,7 +2,8 @@
 
 Circle::Circle(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type circle
+    //Check if node is of type circle
+    assert(node->get_name() == "circle");
 
     try
     {

@@ -27,7 +27,6 @@ public:
      */
     Interval(const xmlpp::Node* node)
     {
-        //TODO: Make sure that this is an interval node type
         //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
         //Sadly, sequences are allowed here as well, so we can have more than one interval

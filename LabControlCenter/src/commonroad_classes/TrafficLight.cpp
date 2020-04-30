@@ -2,7 +2,8 @@
 
 TrafficLight::TrafficLight(const xmlpp::Node* node)
 {
-    //TODO: Assert node type
+    //Check if node is of type trafficLight
+    assert(node->get_name() == "trafficLight");
 
     /********************************************/
     //TrafficLightElement is not part of the specification

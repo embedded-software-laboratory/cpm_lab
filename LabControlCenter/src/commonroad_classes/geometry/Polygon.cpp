@@ -2,7 +2,8 @@
 
 Polygon::Polygon(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type polygon
+    //Check if node is of type polygon
+    assert(node->get_name() == "polygon");
 
     try
     {

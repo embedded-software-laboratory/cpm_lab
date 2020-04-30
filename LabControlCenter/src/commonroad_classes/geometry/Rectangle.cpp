@@ -2,7 +2,8 @@
 
 Rectangle::Rectangle(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type rectangle
+    //Check if node is of type rectangle
+    assert(node->get_name() == "rectangle");
 
     try
     {

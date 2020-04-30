@@ -2,7 +2,8 @@
 
 Occupancy::Occupancy(const xmlpp::Node* node)
 {
-    //TODO: Check if node is of type occupancy
+    //Check if node is of type occupancy
+    assert(node->get_name() == "occupancy");
 
     try
     {

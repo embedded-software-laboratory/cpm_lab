@@ -3,7 +3,8 @@
 StateExact::StateExact(const xmlpp::Node* node)
 {
     //2018 and 2020 specs are the same
-    //TODO: Assert node "type"
+    //Check if node is of type stateExact
+    assert(node->get_name() == "initialState");
 
     try
     {

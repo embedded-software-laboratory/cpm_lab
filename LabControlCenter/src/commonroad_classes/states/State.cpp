@@ -2,7 +2,8 @@
 
 State::State(const xmlpp::Node* node)
 {
-    //TODO: Warn if node is not of type state/initialState etc
+    //Check if node is of type state
+    assert(node->get_name() == "state" || node->get_name() == "initialState");
 
     try
     {

@@ -2,7 +2,8 @@
 
 Lanelet::Lanelet(const xmlpp::Node* node)
 {
-    //TODO: Check node type
+    //Check if node is of type lanelet
+    assert(node->get_name() == "lanelet");
 
     try
     {

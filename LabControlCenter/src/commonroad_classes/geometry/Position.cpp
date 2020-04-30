@@ -2,7 +2,8 @@
 
 Position::Position(const xmlpp::Node* node)
 {
-    //TODO: Assert node name to be position
+    //Check if node is of type position
+    assert(node->get_name() == "position");
 
     try
     {
