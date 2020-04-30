@@ -4,34 +4,44 @@ Shape::Shape(const xmlpp::Node* node)
 {
     //TODO: Assert node name to be shape
 
-    //2018 and 2020    
-    //Optional parts (all unbounded -> lists)
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            circles.push_back(Circle(child));
-        },
-        "circle"
-    );
+    try
+    {
+        //2018 and 2020    
+        //Optional parts (all unbounded -> lists)
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                circles.push_back(Circle(child));
+            },
+            "circle"
+        );
 
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            polygons.push_back(Polygon(child));
-        },
-        "polygon"
-    );
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                polygons.push_back(Polygon(child));
+            },
+            "polygon"
+        );
 
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            rectangles.push_back(Rectangle(child));
-        },
-        "rectangle"
-    );
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                rectangles.push_back(Rectangle(child));
+            },
+            "rectangle"
+        );
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
+    
 
     //Test output
     std::cout << "Shape:" << std::endl;

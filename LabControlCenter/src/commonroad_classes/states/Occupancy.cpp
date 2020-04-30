@@ -4,17 +4,27 @@ Occupancy::Occupancy(const xmlpp::Node* node)
 {
     //TODO: Check if node is of type occupancy
 
-    const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true);
-    if (shape_node)
+    try
     {
-        shape = std::optional<Shape>(std::in_place, shape_node);
+        const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true);
+        if (shape_node)
+        {
+            shape = std::optional<Shape>(std::in_place, shape_node);
+        }
+        
+        const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
+        if (time_node)
+        {
+            time = std::optional<IntervalOrExact>(std::in_place, time_node);
+        }
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     
-    const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
-    if (time_node)
-    {
-        time = std::optional<IntervalOrExact>(std::in_place, time_node);
-    }
 }
 
 void Occupancy::transform_coordinate_system(double scale, double translate_x, double translate_y)

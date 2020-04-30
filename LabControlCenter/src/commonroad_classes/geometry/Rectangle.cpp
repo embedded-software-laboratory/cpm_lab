@@ -4,28 +4,37 @@ Rectangle::Rectangle(const xmlpp::Node* node)
 {
     //TODO: Check if node is of type rectangle
 
-    length = xml_translation::get_child_child_double(node, "length", true); //mandatory
-    width = xml_translation::get_child_child_double(node, "width", true); //mandatory
+    try
+    {
+        length = xml_translation::get_child_child_double(node, "length", true); //mandatory
+        width = xml_translation::get_child_child_double(node, "width", true); //mandatory
 
-    //Get point value, which must not be specified
-    const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
-    if (point_node)
-    {
-        center = std::optional<Point>{std::in_place, point_node};
-    }
-    else
-    {
-        //Use default-value constructor (parameter is irrelevant)
-        center = std::optional<Point>{std::in_place, 0};
-    }
+        //Get point value, which must not be specified
+        const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
+        if (point_node)
+        {
+            center = std::optional<Point>{std::in_place, point_node};
+        }
+        else
+        {
+            //Use default-value constructor (parameter is irrelevant)
+            center = std::optional<Point>{std::in_place, 0};
+        }
 
-    if (xml_translation::get_child_if_exists(node, "orientation", false))
-    {
-        orientation = xml_translation::get_child_child_double(node, "orientation", true);
+        if (xml_translation::get_child_if_exists(node, "orientation", false))
+        {
+            orientation = xml_translation::get_child_child_double(node, "orientation", true);
+        }
+        else
+        {
+            //TODO: Find out default value
+        }
     }
-    else
+    catch(const std::exception& e)
     {
-        //TODO: Find out default value
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     
 

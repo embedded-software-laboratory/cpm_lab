@@ -5,26 +5,36 @@ Intersection::Intersection(const xmlpp::Node* node)
     //TODO: Check if node is of type intersection
     //2020 only
 
-    xml_translation::iterate_children(
-        node, 
-        [&] (const xmlpp::Node* child) 
-        {
-            //Translate incoming node
-            Incoming incoming;
+    try
+    {
+        xml_translation::iterate_children(
+            node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                //Translate incoming node
+                Incoming incoming;
 
-            //Mandatory argument
-            incoming.incoming_lanelet = get_child_attribute_ref(child, "incomingLanelet", true);
+                //Mandatory argument
+                incoming.incoming_lanelet = get_child_attribute_ref(child, "incomingLanelet", true);
 
-            //Non-mandatory arguments
-            incoming.successors_right = get_child_attribute_ref(child, "successorsRight", false);
-            incoming.successors_straight = get_child_attribute_ref(child, "successorsStraight", false);
-            incoming.successors_left = get_child_attribute_ref(child, "successorsLeft", false);
-            incoming.is_left_of = get_child_attribute_ref(child, "isLeftOf", false);
+                //Non-mandatory arguments
+                incoming.successors_right = get_child_attribute_ref(child, "successorsRight", false);
+                incoming.successors_straight = get_child_attribute_ref(child, "successorsStraight", false);
+                incoming.successors_left = get_child_attribute_ref(child, "successorsLeft", false);
+                incoming.is_left_of = get_child_attribute_ref(child, "isLeftOf", false);
 
-            incoming_map.insert({xml_translation::get_attribute_int(child, "id"), incoming});
-        }, 
-        "incoming"
-    );
+                incoming_map.insert({xml_translation::get_attribute_int(child, "id"), incoming});
+            }, 
+            "incoming"
+        );
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
+    
 
     if (incoming_map.size() == 0)
     {

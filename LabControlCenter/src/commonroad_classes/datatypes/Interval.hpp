@@ -32,24 +32,35 @@ public:
 
         //Sadly, sequences are allowed here as well, so we can have more than one interval
         std::vector<double> interval_start;
-        xml_translation::iterate_children(
-            node, 
-            [&] (const xmlpp::Node* child) 
-            {
-                interval_start.push_back(xml_translation::get_first_child_double(child));
-            }, 
-            "intervalStart"
-        );
-        
         std::vector<double> interval_end;
-        xml_translation::iterate_children(
-            node, 
-            [&] (const xmlpp::Node* child) 
-            {
-                interval_end.push_back(xml_translation::get_first_child_double(child));
-            }, 
-            "intervalEnd"
-        );
+
+        try
+        {
+            xml_translation::iterate_children(
+                node, 
+                [&] (const xmlpp::Node* child) 
+                {
+                    interval_start.push_back(xml_translation::get_first_child_double(child));
+                }, 
+                "intervalStart"
+            );
+            
+            xml_translation::iterate_children(
+                node, 
+                [&] (const xmlpp::Node* child) 
+                {
+                    interval_end.push_back(xml_translation::get_first_child_double(child));
+                }, 
+                "intervalEnd"
+            );
+        }
+        catch(const std::exception& e)
+        {
+            //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+            //TODO: If desired, add "addInfo" function to error class to provide additional information
+            throw;
+        }
+        
 
         if (interval_start.size() != interval_end.size())
         {

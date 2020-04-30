@@ -4,64 +4,74 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 {
     //TODO: Warn in case node is not static obstacle / does not have static obstacle role
     
-    std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
-    if (obstacle_type_text.compare("unknown") == 0)
+    try
     {
-        type = ObstacleTypeStatic::Unknown;
+        std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
+        if (obstacle_type_text.compare("unknown") == 0)
+        {
+            type = ObstacleTypeStatic::Unknown;
+        }
+        else if (obstacle_type_text.compare("parkedVehicle") == 0)
+        {
+            type = ObstacleTypeStatic::ParkedVehicle;
+        }
+        else if (obstacle_type_text.compare("constructionZone") == 0)
+        {
+            type = ObstacleTypeStatic::ConstructionZone;
+        }
+        else if (obstacle_type_text.compare("roadBoundary") == 0)
+        {
+            type = ObstacleTypeStatic::RoadBoundary;
+        }
+        else if (obstacle_type_text.compare("car") == 0 || 
+            obstacle_type_text.compare("truck") == 0 || 
+            obstacle_type_text.compare("bus") == 0 || 
+            obstacle_type_text.compare("motorcycle") == 0 || 
+            obstacle_type_text.compare("bicycle") == 0 || 
+            obstacle_type_text.compare("pedestrian") == 0 || 
+            obstacle_type_text.compare("priorityVehicle") == 0 || 
+            obstacle_type_text.compare("train") == 0)
+        {
+            //Behavior for dynamic types, which should not be used here
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node element not conformant to specs - usage of dynamic type for static object (obstacleType), line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+        else
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node element not conformant to specs (static obstacle, obstacleType), line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+        
+        const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
+        if (shape_node)
+        {
+            shape = std::optional<Shape>{std::in_place, shape_node};
+        }
+
+        const auto state_node = xml_translation::get_child_if_exists(node, "initialState", true); //Must exist
+        if (state_node)
+        {
+            initial_state = std::optional<State>{std::in_place, state_node};
+        }
+
+        const auto trajectory_node = xml_translation::get_child_if_exists(node, "trajectory", false); //Must not exist
+        const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false); //Must not exist
+        if (trajectory_node || occupancy_node)
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Trajectory / occupancy defined for static object (not allowed), line: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
     }
-    else if (obstacle_type_text.compare("parkedVehicle") == 0)
+    catch(const std::exception& e)
     {
-        type = ObstacleTypeStatic::ParkedVehicle;
-    }
-    else if (obstacle_type_text.compare("constructionZone") == 0)
-    {
-        type = ObstacleTypeStatic::ConstructionZone;
-    }
-    else if (obstacle_type_text.compare("roadBoundary") == 0)
-    {
-        type = ObstacleTypeStatic::RoadBoundary;
-    }
-    else if (obstacle_type_text.compare("car") == 0 || 
-        obstacle_type_text.compare("truck") == 0 || 
-        obstacle_type_text.compare("bus") == 0 || 
-        obstacle_type_text.compare("motorcycle") == 0 || 
-        obstacle_type_text.compare("bicycle") == 0 || 
-        obstacle_type_text.compare("pedestrian") == 0 || 
-        obstacle_type_text.compare("priorityVehicle") == 0 || 
-        obstacle_type_text.compare("train") == 0)
-    {
-        //Behavior for dynamic types, which should not be used here
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Node element not conformant to specs - usage of dynamic type for static object (obstacleType), line: " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
-    }
-    else
-    {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Node element not conformant to specs (static obstacle, obstacleType), line: " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     
-    const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
-    if (shape_node)
-    {
-        shape = std::optional<Shape>{std::in_place, shape_node};
-    }
-
-    const auto state_node = xml_translation::get_child_if_exists(node, "initialState", true); //Must exist
-    if (state_node)
-    {
-        initial_state = std::optional<State>{std::in_place, state_node};
-    }
-
-    const auto trajectory_node = xml_translation::get_child_if_exists(node, "trajectory", false); //Must not exist
-    const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false); //Must not exist
-    if (trajectory_node || occupancy_node)
-    {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Trajectory / occupancy defined for static object (not allowed), line: " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
-    }
 }
 
 /******************************Interface functions***********************************/

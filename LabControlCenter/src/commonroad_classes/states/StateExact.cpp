@@ -5,37 +5,47 @@ StateExact::StateExact(const xmlpp::Node* node)
     //2018 and 2020 specs are the same
     //TODO: Assert node "type"
 
-    const auto position_node = xml_translation::get_child_if_exists(node, "position", true);
-    if (position_node)
+    try
     {
-        position = std::optional<Position>{std::in_place, position_node};
+        const auto position_node = xml_translation::get_child_if_exists(node, "position", true);
+        if (position_node)
+        {
+            position = std::optional<Position>{std::in_place, position_node};
+        }
+        else
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "No position node in StateExact - is this an error or do you want to use the default value? - Line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+
+            //Use default-value constructor (parameter is irrelevant)
+            //position = std::optional<Position>{std::in_place, 0};
+        }
+
+        velocity = xml_translation::get_child_child_double_exact(node, "velocity", true);
+        orientation = xml_translation::get_child_child_double_exact(node, "orientation", true);
+        yaw_rate = xml_translation::get_child_child_double_exact(node, "yawRate", true);
+        slip_angle = xml_translation::get_child_child_double_exact(node, "slipAngle", true);
+
+        //Acceleration must not exist
+        const auto acc_node = xml_translation::get_child_if_exists(node, "acceleration", false);
+        if (acc_node)
+        {
+            acceleration = std::optional<double>(xml_translation::get_child_child_double_exact(node, "acceleration", true));
+        }
+
+        //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
+        //TODO: Is that okay?
+        const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
+        time = 0;
     }
-    else
+    catch(const std::exception& e)
     {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "No position node in StateExact - is this an error or do you want to use the default value? - Line " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
-
-        //Use default-value constructor (parameter is irrelevant)
-        //position = std::optional<Position>{std::in_place, 0};
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
-
-    velocity = xml_translation::get_child_child_double_exact(node, "velocity", true);
-    orientation = xml_translation::get_child_child_double_exact(node, "orientation", true);
-    yaw_rate = xml_translation::get_child_child_double_exact(node, "yawRate", true);
-    slip_angle = xml_translation::get_child_child_double_exact(node, "slipAngle", true);
-
-    //Acceleration must not exist
-    const auto acc_node = xml_translation::get_child_if_exists(node, "acceleration", false);
-    if (acc_node)
-    {
-        acceleration = std::optional<double>(xml_translation::get_child_child_double_exact(node, "acceleration", true));
-    }
-
-    //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
-    //TODO: Is that okay?
-    const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
-    time = 0;
+    
 
     //Test output
     std::cout << "StateExact: " << std::endl;

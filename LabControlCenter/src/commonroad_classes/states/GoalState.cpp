@@ -5,43 +5,53 @@ GoalState::GoalState(const xmlpp::Node* node)
     //2018 and 2020 specs are the same
     //TODO: Assert node "type"
 
-    const auto position_node = xml_translation::get_child_if_exists(node, "position", false);
-    if (position_node)
+    try
     {
-        position = std::optional<Position>{std::in_place, position_node};
-    }
-    else
-    {
-        //TODO: Check if default position value is spec-conform if no value is specified here
-        //Use default-value constructor (parameter is irrelevant)
-        position = std::optional<Position>{std::in_place, 0};
-    }
+        const auto position_node = xml_translation::get_child_if_exists(node, "position", false);
+        if (position_node)
+        {
+            position = std::optional<Position>{std::in_place, position_node};
+        }
+        else
+        {
+            //TODO: Check if default position value is spec-conform if no value is specified here
+            //Use default-value constructor (parameter is irrelevant)
+            position = std::optional<Position>{std::in_place, 0};
+        }
 
-    const auto velocity_node = xml_translation::get_child_if_exists(node, "velocity", false);
-    if (velocity_node)
-    {
-        velocity = std::optional<Interval>(std::in_place, velocity_node);
-    }
+        const auto velocity_node = xml_translation::get_child_if_exists(node, "velocity", false);
+        if (velocity_node)
+        {
+            velocity = std::optional<Interval>(std::in_place, velocity_node);
+        }
 
-    const auto orientation_node = xml_translation::get_child_if_exists(node, "orientation", false);
-    if (orientation_node)
-    {
-        orientation = std::optional<Interval>(std::in_place, orientation_node);
-    }
+        const auto orientation_node = xml_translation::get_child_if_exists(node, "orientation", false);
+        if (orientation_node)
+        {
+            orientation = std::optional<Interval>(std::in_place, orientation_node);
+        }
 
-    //Time is defined using intervals
-    const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
-    if (time_node)
-    {
-        time = std::optional<IntervalOrExact>(std::in_place, time_node);
+        //Time is defined using intervals
+        const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
+        if (time_node)
+        {
+            time = std::optional<IntervalOrExact>(std::in_place, time_node);
+        }
+        else
+        {
+            //Time is the only actually required value
+            std::stringstream error_msg_stream;
+            error_msg_stream << "No time node in GoalState (required by specification) - line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
     }
-    else
+    catch(const std::exception& e)
     {
-        //Time is the only actually required value
-        std::stringstream error_msg_stream;
-        error_msg_stream << "No time node in GoalState (required by specification) - line " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
+    
     
 
     //Test output

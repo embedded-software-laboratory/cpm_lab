@@ -4,18 +4,27 @@ Circle::Circle(const xmlpp::Node* node)
 {
     //TODO: Check if node is of type circle
 
-    radius = xml_translation::get_child_child_double(node, "radius", true); //mandatory
+    try
+    {
+        radius = xml_translation::get_child_child_double(node, "radius", true); //mandatory
 
-    //Get point value, which must not be specified
-    const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
-    if (point_node)
-    {
-        center = std::optional<Point>{std::in_place, point_node};
+        //Get point value, which must not be specified
+        const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
+        if (point_node)
+        {
+            center = std::optional<Point>{std::in_place, point_node};
+        }
+        else
+        {
+            //Use default-value constructor (parameter is irrelevant)
+            center = std::optional<Point>{std::in_place, 0};
+        }
     }
-    else
+    catch(const std::exception& e)
     {
-        //Use default-value constructor (parameter is irrelevant)
-        center = std::optional<Point>{std::in_place, 0};
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
 
     //Test output

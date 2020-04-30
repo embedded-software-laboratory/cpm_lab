@@ -7,7 +7,6 @@ std::string xml_translation::get_node_text(const xmlpp::Node* node)
     const xmlpp::TextNode* text_node = dynamic_cast<const xmlpp::TextNode*>(node);
     if(!(text_node))
     {
-        //TODO: Throw error
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " not of expected type TextNode, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -23,6 +22,12 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     try
     {
         return std::stoi(xml_translation::get_node_text(node));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     catch(...)
     {
@@ -40,6 +45,12 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     {
         return std::stoull(xml_translation::get_node_text(node));
     }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
     catch(...)
     {
         //TODO: Catch error of get_node_text and check if former return values were used in other functions
@@ -56,6 +67,12 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     {
         return std::stod(xml_translation::get_node_text(node));
     }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
     catch(...)
     {
         //TODO: Catch error of get_node_text and check if former return values were used in other functions
@@ -65,7 +82,7 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     }
 }
 
-const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node, std::string child_name, bool warn)
+const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
     //Check if it is an element node
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
@@ -80,9 +97,8 @@ const xmlpp::Node* xml_translation::get_child_if_exists(const xmlpp::Node* node,
     const xmlpp::Node* child = node_element->get_first_child(child_name);
     if (!child)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " does not have the required child '" << child_name << "', line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -121,6 +137,12 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     {
         return std::stoi(xml_translation::get_first_child_text(node));
     }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
     catch(...)
     {
         //TODO: Catch error of get_node_text and check if former return values were used in other functions
@@ -136,6 +158,12 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     try
     {
         return std::stoull(xml_translation::get_first_child_text(node));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     catch(...)
     {
@@ -153,6 +181,12 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     {
         return std::stod(xml_translation::get_first_child_text(node));
     }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
     catch(...)
     {
         //TODO: Catch error of get_node_text and check if former return values were used in other functions
@@ -162,28 +196,55 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     }
 }
 
-std::string xml_translation::get_child_child_text(const xmlpp::Node* node, std::string child_name, bool warn)
+std::string xml_translation::get_child_child_text(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
-    const auto child = xml_translation::get_child_if_exists(node, child_name, warn);
+    try
+    {
+        const auto child = xml_translation::get_child_if_exists(node, child_name, throw_error);
 
-    if (!child)
-        return "empty";
+        if (!child)
+            return "empty";
     
-    return xml_translation::get_first_child_text(child);
+        return xml_translation::get_first_child_text(child);
+    }
+    catch(const std::exception& e)
+    {
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return "empty";
+        }
+        
+    }
 }
 
-int xml_translation::get_child_child_int(const xmlpp::Node* node, std::string child_name, bool warn)
+int xml_translation::get_child_child_int(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to an integer
     try
     {
-        return std::stoi(xml_translation::get_child_child_text(node, child_name, warn));
+        return std::stoi(xml_translation::get_child_child_text(node, child_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return -1;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -192,18 +253,31 @@ int xml_translation::get_child_child_int(const xmlpp::Node* node, std::string ch
     }
 }
 
-unsigned long long xml_translation::get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool warn)
+unsigned long long xml_translation::get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to an integer
     try
     {
-        return std::stoull(xml_translation::get_child_child_text(node, child_name, warn));
+        return std::stoull(xml_translation::get_child_child_text(node, child_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return 0;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to unsigned long long, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -212,18 +286,31 @@ unsigned long long xml_translation::get_child_child_uint(const xmlpp::Node* node
     }
 }
 
-double xml_translation::get_child_child_double(const xmlpp::Node* node, std::string child_name, bool warn)
+double xml_translation::get_child_child_double(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to an integer
     try
     {
-        return std::stod(xml_translation::get_child_child_text(node, child_name, warn));
+        return std::stod(xml_translation::get_child_child_text(node, child_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return -1.0;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -232,49 +319,63 @@ double xml_translation::get_child_child_double(const xmlpp::Node* node, std::str
     }
 }
 
-double xml_translation::get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool warn)
+double xml_translation::get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to an integer
     try
     {
-        const auto child_node = xml_translation::get_child_if_exists(node, child_name, warn);
+        const auto child_node = xml_translation::get_child_if_exists(node, child_name, throw_error);
         if (child_node)
         {
-            return std::stod(xml_translation::get_child_child_text(child_node, "exact", warn));
+            return std::stod(xml_translation::get_child_child_text(child_node, "exact", throw_error));
         }
         else
         {
             //TODO: Use optional here as well, return optional? 
-            if (warn)
+            if (throw_error)
             {
-                //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+                
                 std::stringstream error_msg_stream;
                 error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double (child missing), line: " << node->get_line();
                 throw SpecificationError(error_msg_stream.str());
             }
-            return -1;
+            return -1.0;
         }
         
     }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return -1.0;
+        }
+    }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return -1;
+        return -1.0;
     }
 }
 
-std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool warn)
+std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool throw_error)
 {
     //Convert to text node and check if it really exists
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);
     if(!(node_element))
     {
+        //This error is thrown on purpose, as it shows a design flaw in the XML document and does not have anything to do with the existence of the node
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -284,9 +385,9 @@ std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::st
     const auto attribute = node_element->get_attribute(attribute_name);
     if (!attribute)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " attribute does not exist ('" << attribute_name << "'), line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -297,18 +398,31 @@ std::string xml_translation::get_attribute_text(const xmlpp::Node* node, std::st
     return attribute->get_value();
 }
 
-int xml_translation::get_attribute_int(const xmlpp::Node* node, std::string attribute_name, bool warn)
+int xml_translation::get_attribute_int(const xmlpp::Node* node, std::string attribute_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to an integer
     try
     {
-        return std::stoi(xml_translation::get_attribute_text(node, attribute_name, warn));
+        return std::stoi(xml_translation::get_attribute_text(node, attribute_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return -1;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -317,18 +431,31 @@ int xml_translation::get_attribute_int(const xmlpp::Node* node, std::string attr
     }
 }
 
-unsigned long long xml_translation::get_attribute_uint(const xmlpp::Node* node, std::string attribute_name, bool warn)
+unsigned long long xml_translation::get_attribute_uint(const xmlpp::Node* node, std::string attribute_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to a ull
     try
     {
-        return std::stoull(xml_translation::get_attribute_text(node, attribute_name, warn));
+        return std::stoull(xml_translation::get_attribute_text(node, attribute_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return 0;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to uint, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
@@ -337,18 +464,31 @@ unsigned long long xml_translation::get_attribute_uint(const xmlpp::Node* node, 
     }
 }
 
-double xml_translation::get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool warn)
+double xml_translation::get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool throw_error)
 {
     //Get the content of the node as string, then convert it to a double
     try
     {
-        return std::stod(xml_translation::get_attribute_text(node, attribute_name, warn));
+        return std::stod(xml_translation::get_attribute_text(node, attribute_name, throw_error));
+    }
+    catch(const SpecificationError& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        if (throw_error)
+        {
+            throw;
+        }
+        else
+        {
+            return -1.0;
+        }
     }
     catch(...)
     {
-        if (warn)
+        if (throw_error)
         {
-            //TODO: Does this make sense? Also: rename warn to throw_error or something similar; also, catch previous errors properly / propagate them
+            
             std::stringstream error_msg_stream;
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());

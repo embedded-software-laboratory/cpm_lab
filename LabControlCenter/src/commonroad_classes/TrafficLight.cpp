@@ -10,43 +10,53 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     //This must probably be handled by using line numbers or, alternatively, by iterating all children with the according names
     //Then, several elements can be constructed from that
 
-    //We use the XMLTranslation iteration functions here, as it is easier to operate on the vectors if we can use indices and .at()
-    xml_translation::iterate_children(
-        node,
-        [&] (xmlpp::Node* child)
-        {
-            positions.push_back(translate_position(child));
-            position_lines.push_back(child->get_line());
-        },
-        "position"
-    );
-    xml_translation::iterate_children(
-        node,
-        [&] (xmlpp::Node* child)
-        {
-            directions.push_back(translate_direction(child));
-            direction_lines.push_back(child->get_line());
-        },
-        "direction"
-    );
-    xml_translation::iterate_children(
-        node,
-        [&] (xmlpp::Node* child)
-        {
-            actives.push_back(translate_active(child));
-            active_lines.push_back(child->get_line());
-        },
-        "active"
-    );
-    xml_translation::iterate_children(
-        node,
-        [&] (xmlpp::Node* child)
-        {
-            cycles.push_back(translate_cycle(child));
-            cycle_lines.push_back(child->get_line());
-        },
-        "cycle"
-    );
+    try
+    {
+        //We use the XMLTranslation iteration functions here, as it is easier to operate on the vectors if we can use indices and .at()
+        xml_translation::iterate_children(
+            node,
+            [&] (xmlpp::Node* child)
+            {
+                positions.push_back(translate_position(child));
+                position_lines.push_back(child->get_line());
+            },
+            "position"
+        );
+        xml_translation::iterate_children(
+            node,
+            [&] (xmlpp::Node* child)
+            {
+                directions.push_back(translate_direction(child));
+                direction_lines.push_back(child->get_line());
+            },
+            "direction"
+        );
+        xml_translation::iterate_children(
+            node,
+            [&] (xmlpp::Node* child)
+            {
+                actives.push_back(translate_active(child));
+                active_lines.push_back(child->get_line());
+            },
+            "active"
+        );
+        xml_translation::iterate_children(
+            node,
+            [&] (xmlpp::Node* child)
+            {
+                cycles.push_back(translate_cycle(child));
+                cycle_lines.push_back(child->get_line());
+            },
+            "cycle"
+        );
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
+    
 
     //TODO: I have absolutely no idea how to put these together
     //Line numbers are not enough without a reference

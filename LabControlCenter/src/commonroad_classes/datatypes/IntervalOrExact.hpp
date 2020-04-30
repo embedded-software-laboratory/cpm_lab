@@ -32,21 +32,30 @@ public:
         //TODO: Make sure that this is an interval node type
         //Need to look for several interval types, as we here just use one interval type to cover all possible ones
 
-        //We must either have an exact or an interval node
-        const auto exact_node = xml_translation::get_child_if_exists(node, "exact", false);
-        if (exact_node)
+        try
         {
-            exact = std::optional<double>(xml_translation::get_child_child_double(node, "exact", true));
-        }
-        else
-        {
-            //Show warning if no interval exists as well
-            const auto interval_start_node = xml_translation::get_child_if_exists(node, "intervalStart", true);
-
-            if(interval_start_node)
+            //We must either have an exact or an interval node
+            const auto exact_node = xml_translation::get_child_if_exists(node, "exact", false);
+            if (exact_node)
             {
-                interval = std::optional<Interval>(std::in_place, node);
+                exact = std::optional<double>(xml_translation::get_child_child_double(node, "exact", true));
             }
+            else
+            {
+                //Show warning if no interval exists as well
+                const auto interval_start_node = xml_translation::get_child_if_exists(node, "intervalStart", true);
+
+                if(interval_start_node)
+                {
+                    interval = std::optional<Interval>(std::in_place, node);
+                }
+            }
+        }
+        catch(const std::exception& e)
+        {
+            //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+            //TODO: If desired, add "addInfo" function to error class to provide additional information
+            throw;
         }
         
     }

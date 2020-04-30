@@ -4,121 +4,133 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 {
     //TODO: Warn in case node is not dynamic obstacle / does not have dynamic obstacle role
 
-    std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
-    if (obstacle_type_text.compare("unknown") == 0)
+    std::string obstacle_type_text;
+
+    try
     {
-        type = ObstacleTypeDynamic::Unknown;
+        obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
+        if (obstacle_type_text.compare("unknown") == 0)
+        {
+            type = ObstacleTypeDynamic::Unknown;
+        }
+        else if (obstacle_type_text.compare("car") == 0)
+        {
+            type = ObstacleTypeDynamic::Car;
+        }
+        else if (obstacle_type_text.compare("truck") == 0)
+        {
+            type = ObstacleTypeDynamic::Truck;
+        }
+        else if (obstacle_type_text.compare("bus") == 0)
+        {
+            type = ObstacleTypeDynamic::Bus;
+        }
+        else if (obstacle_type_text.compare("motorcycle") == 0)
+        {
+            type = ObstacleTypeDynamic::Motorcycle;
+        }
+        else if (obstacle_type_text.compare("bicycle") == 0)
+        {
+            type = ObstacleTypeDynamic::Bicycle;
+        }
+        else if (obstacle_type_text.compare("pedestrian") == 0)
+        {
+            type = ObstacleTypeDynamic::Pedestrian;
+        }
+        else if (obstacle_type_text.compare("priorityVehicle") == 0)
+        {
+            type = ObstacleTypeDynamic::PriorityVehicle;
+        }
+        else if (obstacle_type_text.compare("train") == 0)
+        {
+            type = ObstacleTypeDynamic::Train;
+        }
+        else if (obstacle_type_text.compare("parkedVehicle") == 0 || 
+            obstacle_type_text.compare("constructionZone") == 0 || 
+            obstacle_type_text.compare("roadBoundary") == 0)
+        {
+            //Behavior for dynamic types, which should not be used here
+            throw SpecificationError("Node element not conformant to specs - usage of dynamic type for static object (obstacleType)");
+        }
+        else
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Node element not conformant to specs (obstacleType) in " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+        
+        const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
+        if (shape_node)
+        {
+            shape = std::optional<Shape>{std::in_place, shape_node};
+        }
+
+        const auto state_node = xml_translation::get_child_if_exists(node, "initialState", true); //Must exist
+        if (state_node)
+        {
+            initial_state = std::optional<State>{std::in_place, state_node};
+        }
+
+        //Only one of the two must exist
+        const auto trajectory_node = xml_translation::get_child_if_exists(node, "trajectory", false);
+        const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false);
+        const auto signal_node = xml_translation::get_child_if_exists(node, "signalSeries", false);
+        if (! (trajectory_node || occupancy_node || signal_node))
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Trajectory / occupancy / signal series not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+        if ((trajectory_node && occupancy_node) || (trajectory_node && signal_node) || (occupancy_node && signal_node))
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Trajectory / occupancy / signal series both / all three defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+
+        //Translate trajectory, occupancy, signal series
+        if (trajectory_node)
+        {
+            xml_translation::iterate_children(
+                trajectory_node, 
+                [&] (const xmlpp::Node* child) 
+                {
+                    trajectory.push_back(State(child));
+                }, 
+                "state"
+            );
+        }
+        if (occupancy_node)
+        {
+            xml_translation::iterate_children(
+                occupancy_node, 
+                [&] (const xmlpp::Node* child) 
+                {
+                    occupancy_set.push_back(Occupancy(child));
+                }, 
+                "occupancy"
+            );
+        }
+        //2020 only
+        if (signal_node)
+        {
+            xml_translation::iterate_children(
+                signal_node, 
+                [&] (const xmlpp::Node* child) 
+                {
+                    signal_series.push_back(SignalState(child));
+                }, 
+                "signalState"
+            );
+        }
     }
-    else if (obstacle_type_text.compare("car") == 0)
+    catch(const std::exception& e)
     {
-        type = ObstacleTypeDynamic::Car;
-    }
-    else if (obstacle_type_text.compare("truck") == 0)
-    {
-        type = ObstacleTypeDynamic::Truck;
-    }
-    else if (obstacle_type_text.compare("bus") == 0)
-    {
-        type = ObstacleTypeDynamic::Bus;
-    }
-    else if (obstacle_type_text.compare("motorcycle") == 0)
-    {
-        type = ObstacleTypeDynamic::Motorcycle;
-    }
-    else if (obstacle_type_text.compare("bicycle") == 0)
-    {
-        type = ObstacleTypeDynamic::Bicycle;
-    }
-    else if (obstacle_type_text.compare("pedestrian") == 0)
-    {
-        type = ObstacleTypeDynamic::Pedestrian;
-    }
-    else if (obstacle_type_text.compare("priorityVehicle") == 0)
-    {
-        type = ObstacleTypeDynamic::PriorityVehicle;
-    }
-    else if (obstacle_type_text.compare("train") == 0)
-    {
-        type = ObstacleTypeDynamic::Train;
-    }
-    else if (obstacle_type_text.compare("parkedVehicle") == 0 || 
-        obstacle_type_text.compare("constructionZone") == 0 || 
-        obstacle_type_text.compare("roadBoundary") == 0)
-    {
-        //Behavior for dynamic types, which should not be used here
-        throw SpecificationError("Node element not conformant to specs - usage of dynamic type for static object (obstacleType)");
-    }
-    else
-    {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Node element not conformant to specs (obstacleType) in " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
     }
     
-    const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true); //Must exist
-    if (shape_node)
-    {
-        shape = std::optional<Shape>{std::in_place, shape_node};
-    }
-
-    const auto state_node = xml_translation::get_child_if_exists(node, "initialState", true); //Must exist
-    if (state_node)
-    {
-        initial_state = std::optional<State>{std::in_place, state_node};
-    }
-
-    //Only one of the two must exist
-    const auto trajectory_node = xml_translation::get_child_if_exists(node, "trajectory", false);
-    const auto occupancy_node = xml_translation::get_child_if_exists(node, "occupancySet", false);
-    const auto signal_node = xml_translation::get_child_if_exists(node, "signalSeries", false);
-    if (! (trajectory_node || occupancy_node || signal_node))
-    {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Trajectory / occupancy / signal series not defined for dynamic object (one must be defined) - line " << trajectory_node->get_line();
-        throw SpecificationError(error_msg_stream.str());
-    }
-    if ((trajectory_node && occupancy_node) || (trajectory_node && signal_node) || (occupancy_node && signal_node))
-    {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Trajectory / occupancy / signal series both / all three defined for dynamic object (only one must be defined) - line " << trajectory_node->get_line();
-        throw SpecificationError(error_msg_stream.str());
-    }
-
-    //Translate trajectory, occupancy, signal series
-    if (trajectory_node)
-    {
-        xml_translation::iterate_children(
-            trajectory_node, 
-            [&] (const xmlpp::Node* child) 
-            {
-                trajectory.push_back(State(child));
-            }, 
-            "state"
-        );
-    }
-    if (occupancy_node)
-    {
-        xml_translation::iterate_children(
-            occupancy_node, 
-            [&] (const xmlpp::Node* child) 
-            {
-                occupancy_set.push_back(Occupancy(child));
-            }, 
-            "occupancy"
-        );
-    }
-    //2020 only
-    if (signal_node)
-    {
-        xml_translation::iterate_children(
-            signal_node, 
-            [&] (const xmlpp::Node* child) 
-            {
-                signal_series.push_back(SignalState(child));
-            }, 
-            "signalState"
-        );
-    }
 
     //Test output
     std::cout << "Dynamic obstacle:" << std::endl;

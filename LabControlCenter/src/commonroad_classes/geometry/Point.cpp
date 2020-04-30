@@ -4,13 +4,22 @@ Point::Point(const xmlpp::Node* node)
 {
     //TODO: Assert node name to be point
 
-    //2018 and 2020
-    x = xml_translation::get_child_child_double(node, "x", true);
-    y = xml_translation::get_child_child_double(node, "y", true);
+    try
+    {
+        //2018 and 2020
+        x = xml_translation::get_child_child_double(node, "x", true);
+        y = xml_translation::get_child_child_double(node, "y", true);
 
-    //2020
-    z = xml_translation::get_child_child_double(node, "z", false);
-    //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value -> use std::optional
+        //2020
+        z = xml_translation::get_child_child_double(node, "z", false);
+        //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value -> use std::optional
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
 
     //Test output
     std::cout << "New point created: " << "(" << x << ", " << y << ", " << z << ")" << std::endl;

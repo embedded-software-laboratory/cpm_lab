@@ -4,49 +4,58 @@ Position::Position(const xmlpp::Node* node)
 {
     //TODO: Assert node name to be position
 
-    //2018 and 2020
-    const auto point_node = xml_translation::get_child_if_exists(node, "point", false); //not mandatory
-    if (point_node)
+    try
     {
-        point = std::optional<Point>(std::in_place, point_node);
+        //2018 and 2020
+        const auto point_node = xml_translation::get_child_if_exists(node, "point", false); //not mandatory
+        if (point_node)
+        {
+            point = std::optional<Point>(std::in_place, point_node);
+        }
+        
+        //Optional parts (all unbounded -> lists)
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                circles.push_back(Circle(child));
+            },
+            "circle"
+        );
+
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                lanelet_refs.push_back(xml_translation::get_attribute_int(child, "ref", true));
+            },
+            "lanelet"
+        );
+
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                polygons.push_back(Polygon(child));
+            },
+            "polygon"
+        );
+
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                rectangles.push_back(Rectangle(child));
+            },
+            "rectangle"
+        );
     }
-    
-    //Optional parts (all unbounded -> lists)
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            circles.push_back(Circle(child));
-        },
-        "circle"
-    );
-
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            lanelet_refs.push_back(xml_translation::get_attribute_int(child, "ref", true));
-        },
-        "lanelet"
-    );
-
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            polygons.push_back(Polygon(child));
-        },
-        "polygon"
-    );
-
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            rectangles.push_back(Rectangle(child));
-        },
-        "rectangle"
-    );
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
 
     //Test output
     std::cout << "Position:" << std::endl;

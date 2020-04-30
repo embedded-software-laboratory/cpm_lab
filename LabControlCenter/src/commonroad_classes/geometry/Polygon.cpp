@@ -4,14 +4,23 @@ Polygon::Polygon(const xmlpp::Node* node)
 {
     //TODO: Check if node is of type polygon
 
-    xml_translation::iterate_children(
-        node,
-        [&] (const xmlpp::Node* child)
-        {
-            points.push_back(Point(child));
-        },
-        "point"
-    );
+    try
+    {
+        xml_translation::iterate_children(
+            node,
+            [&] (const xmlpp::Node* child)
+            {
+                points.push_back(Point(child));
+            },
+            "point"
+        );
+    }
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
 
     if (points.size() < 3)
     {

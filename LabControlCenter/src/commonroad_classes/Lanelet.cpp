@@ -2,33 +2,45 @@
 
 Lanelet::Lanelet(const xmlpp::Node* node)
 {
-    //2018 and 2020
-    left_bound = translate_bound(node, "leftBound");
-    right_bound = translate_bound(node, "rightBound");
+    //TODO: Check node type
 
-    //Make sure that left and right bound are of equal size (points should be opposing pairs)
-    if (left_bound.points.size() != right_bound.points.size())
+    try
     {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "Left and right bounds of lanelet not of equal size (# of points), in " << node->get_line();
-        throw SpecificationError(error_msg_stream.str());
+        //2018 and 2020
+        left_bound = translate_bound(node, "leftBound");
+        right_bound = translate_bound(node, "rightBound");
+
+        //Make sure that left and right bound are of equal size (points should be opposing pairs)
+        if (left_bound.points.size() != right_bound.points.size())
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Left and right bounds of lanelet not of equal size (# of points), in " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
+
+        predecessors = translate_refs(node, "predecessor");
+        successors = translate_refs(node, "successor");
+        adjacent_left = translate_adjacent(node, "adjacentLeft");
+        adjacent_right = translate_adjacent(node, "adjacentRight");
+
+        //2018
+        speed_limit = xml_translation::get_child_child_double(node, "speedLimit", false); //false bc. only in 2018 specs and only optional there
+
+        //2020
+        stop_line = translate_stopline(node, "stopLine");
+        lanelet_type = translate_lanelet_type(node, "laneletType");
+        user_one_way = translate_users(node, "userOneWay");
+        user_bidirectional = translate_users(node, "userBidirectional");
+        traffic_sign_refs = translate_refs(node, "trafficSignRef");
+        traffic_light_refs = translate_refs(node, "trafficLightRef");
     }
-
-    predecessors = translate_refs(node, "predecessor");
-    successors = translate_refs(node, "successor");
-    adjacent_left = translate_adjacent(node, "adjacentLeft");
-    adjacent_right = translate_adjacent(node, "adjacentRight");
-
-    //2018
-    speed_limit = xml_translation::get_child_child_double(node, "speedLimit", false); //false bc. only in 2018 specs and only optional there
-
-    //2020
-    stop_line = translate_stopline(node, "stopLine");
-    lanelet_type = translate_lanelet_type(node, "laneletType");
-    user_one_way = translate_users(node, "userOneWay");
-    user_bidirectional = translate_users(node, "userBidirectional");
-    traffic_sign_refs = translate_refs(node, "trafficSignRef");
-    traffic_light_refs = translate_refs(node, "trafficLightRef");
+    catch(const std::exception& e)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        throw;
+    }
+    
 
     //Test output
     std::cout << "Lanelet ------------------------------" << std::endl;
