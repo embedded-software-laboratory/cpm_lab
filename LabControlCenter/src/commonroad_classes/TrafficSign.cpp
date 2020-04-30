@@ -125,10 +125,13 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             "trafficSignElement"
         );
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate TrafficSign:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

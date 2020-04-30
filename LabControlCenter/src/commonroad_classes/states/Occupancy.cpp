@@ -18,10 +18,13 @@ Occupancy::Occupancy(const xmlpp::Node* node)
             time = std::optional<IntervalOrExact>(std::in_place, time_node);
         }
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate Occupancy:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

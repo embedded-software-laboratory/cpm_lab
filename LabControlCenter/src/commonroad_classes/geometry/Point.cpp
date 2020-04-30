@@ -14,10 +14,13 @@ Point::Point(const xmlpp::Node* node)
         z = xml_translation::get_child_child_double(node, "z", false);
         //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value -> use std::optional
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate Point:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
 

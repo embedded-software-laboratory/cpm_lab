@@ -13,6 +13,8 @@
 #include "commonroad_classes/XMLTranslation.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 
+#include "commonroad_classes/SpecificationError.hpp"
+
 /**
  * \class IntervalOrExact
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
@@ -51,10 +53,13 @@ public:
                 }
             }
         }
-        catch(const std::exception& e)
+        catch(const SpecificationError& e)
+        {
+            throw SpecificationError(std::string("Could not translate IntervalOrExact:\n") + e.what());
+        }
+        catch(...)
         {
             //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-            //TODO: If desired, add "addInfo" function to error class to provide additional information
             throw;
         }
         

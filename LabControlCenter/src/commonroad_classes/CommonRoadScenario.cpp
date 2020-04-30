@@ -113,10 +113,13 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         }
 
     }
-    catch(const std::exception& ex)
+    catch(const SpecificationError& e)
     {
-        //Just propagate the exceptions; users of this object should handle them themselves and also have access to the error message
-        //TODO: Maybe add further information to SpecificationError
+        throw SpecificationError(std::string("Could not translate CommonRoadScenario, file incompatible to specifications:\n") + e.what());
+    }
+    catch(...)
+    {
+        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
     }
     

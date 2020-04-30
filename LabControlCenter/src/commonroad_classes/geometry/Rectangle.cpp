@@ -30,10 +30,13 @@ Rectangle::Rectangle(const xmlpp::Node* node)
             //TODO: Find out default value
         }
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate Rectangle:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

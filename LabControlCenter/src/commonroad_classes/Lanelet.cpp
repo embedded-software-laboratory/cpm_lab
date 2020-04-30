@@ -34,10 +34,13 @@ Lanelet::Lanelet(const xmlpp::Node* node)
         traffic_sign_refs = translate_refs(node, "trafficSignRef");
         traffic_light_refs = translate_refs(node, "trafficLightRef");
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate Lanelet:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

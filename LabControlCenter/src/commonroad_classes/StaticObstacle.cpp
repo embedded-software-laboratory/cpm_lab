@@ -65,10 +65,13 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
             throw SpecificationError(error_msg_stream.str());
         }
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate StaticObstacle:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

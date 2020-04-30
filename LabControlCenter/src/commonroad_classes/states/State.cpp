@@ -53,10 +53,13 @@ State::State(const xmlpp::Node* node)
         jerk = get_interval(node, "jerk", false);
         jounce = get_interval(node, "jounce", false);
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate State:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     

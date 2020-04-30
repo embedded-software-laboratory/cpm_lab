@@ -39,10 +39,13 @@ StateExact::StateExact(const xmlpp::Node* node)
         const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
         time = 0;
     }
-    catch(const std::exception& e)
+    catch(const SpecificationError& e)
+    {
+        throw SpecificationError(std::string("Could not translate StateExact:\n") + e.what());
+    }
+    catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
         throw;
     }
     
