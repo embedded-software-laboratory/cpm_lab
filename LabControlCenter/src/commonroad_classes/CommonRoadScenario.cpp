@@ -383,9 +383,7 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
 ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 {
     //Role is itself an element node, with its content in another child node
-    //Possible TODO: Catch error? role_node might not have any child
-    const xmlpp::Node* role_node = node->get_first_child("role");
-    std::string role_text = xml_translation::get_first_child_text(role_node);
+    std::string role_text = xml_translation::get_child_child_text(node, "role", true).value(); //Must exist, else error is thrown
     
     if (role_text.compare("static") == 0)
     {
@@ -397,8 +395,9 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Node element not conformant to specs (obstacle)" << std::endl;
-        return ObstacleRole::NotInSpec;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Could not translate obstacle role, incompatible to specifications (static, dynamic), in obstacle, line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 

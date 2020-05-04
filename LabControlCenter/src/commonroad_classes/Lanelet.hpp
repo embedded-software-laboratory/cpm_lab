@@ -19,34 +19,34 @@
 
 /**
  * \enum class LaneletType
- * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
+ * \brief Stores lanelet type, as in spec
  */
 enum class LaneletType {
-    Unspecified, Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, NotInSpec
+    Unspecified, Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop
 };
 
 /**
  * \enum class VehicleType
- * \brief Stores lanelet type, as in spec; NotInSpec for types that should not exist
+ * \brief Stores lanelet type, as in spec
  */
 enum class VehicleType {
-    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, NotInSpec
+    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train
 };
 
 /**
  * \enum class DrivingDirection
- * \brief Stores driving direction, used by Adjacent; NotInSpec for types that should not exist
+ * \brief Stores driving direction, used by Adjacent
  */
 enum class DrivingDirection {
-    Same, Opposite, NotInSpec
+    Same, Opposite
 };
 
 /**
  * \enum class LineMarking
- * \brief Holds all line marking types defined by the specification, used by Bound; NotInSpec for types that should not exist
+ * \brief Holds all line marking types defined by the specification, used by Bound
  */
 enum class LineMarking {
-    Unspecified, Dashed, Solid, BroadDashed, BroadSolid, NotInSpec
+    Unspecified, Dashed, Solid, BroadDashed, BroadSolid
 };
 
 /**

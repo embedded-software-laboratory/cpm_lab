@@ -29,11 +29,10 @@
  * \enum class ObstacleTypeDynamic
  * \brief Specifies dynamic obstacle types, as in commonroad, NotInSpec for types that should not exist
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic
- * Nonetheless, we should only use the dynamic types here, also according to 2018 specs - thus, if in a 2018 translation a type of static obstacles is used
- * although the role is dynamic, we set the type to WrongStaticType
+ * Nonetheless, we should only use the dynamic types here, also according to 2018 specs (We throw an error if a wrong (static) type is used)
  * We do not need to store "role", as we already have two different classes for that
  */
-enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, NotInSpec, WrongStaticType};
+enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
 /**
  * \class DynamicObstacle

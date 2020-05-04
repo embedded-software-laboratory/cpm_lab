@@ -35,31 +35,31 @@
  * \enum ObstacleType
  * \brief Obstacle types according to spec, for 2018 specs Obstacle
  */
-enum class ObstacleRole {Static, Dynamic, NotInSpec};
+enum class ObstacleRole {Static, Dynamic};
 
 /**
  * \enum class ScenarioTag
- * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type, NotInSpec for types that should not exist
+ * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type
  * From 2020 specs
  */
 enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
-    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, NotInSpec
+    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane
 };
 
 /**
  * \enum Attributes
  * \brief Expected attributes of this class according to specs; WARNING: Due to conformance to 2018-specs (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2018b.xsd) some things are redundant
  */
-enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags, NotInSpec};
+enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags};
 
 /**
  * \enum Elements
  * \brief Expected elements of this class according to specs
  * Obstacle: From 2018 specs
  */
-enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem, NotInSpec};
+enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem};
 
 /**
  * \struct Location
