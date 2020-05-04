@@ -13,3 +13,4 @@ for i_edge = 1:n_edges
         lane_graph.edges(i_edge).path(:,2), ...
         'r');
 end
+axis equal

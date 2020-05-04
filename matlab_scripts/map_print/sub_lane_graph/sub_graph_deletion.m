@@ -1,10 +1,8 @@
+function lane_graph = sub_graph_deletion(original_lane_graph, del_nodes, del_edges)
 % Input del_nodes: Array of nodes to be deleted
 %       del_egdges: Array of node tuples [start,end] to be deleted
 % Output changed_graph.mat with lane_graph according to deletions
-function lane_graph = sub_graph_deletion(del_nodes, del_edges)
-
-    org = load('lane_graph.mat');
-    lane_graph = org.lane_graph;
+    lane_graph = original_lane_graph;
     n_nodes = size(lane_graph.nodes, 1);
     n_edges = size(lane_graph.edges, 2);
         
@@ -59,7 +57,4 @@ function lane_graph = sub_graph_deletion(del_nodes, del_edges)
     for i = 1:n_edges_after
         plot(lane_graph.edges(i).path(:,1), lane_graph.edges(i).path(:,2))
     end
-
-    save changed_graph lane_graph
-    
 end
