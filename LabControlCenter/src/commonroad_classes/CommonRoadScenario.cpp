@@ -34,12 +34,19 @@ void CommonRoadScenario::test_output()
     //Commonroad data
     std::cout << "Tag size (2020 specs): " << scenario_tags.size() << std::endl;
     std::cout << "Location data: " << std::endl;
-    std::cout << "\tCountry: " << location.country << std::endl;
-    std::cout << "\tFederal state :" << location.federal_state << std::endl;
-    std::cout << "\tLatitude: " << location.gps_latitude << std::endl;
-    std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
-    std::cout << "\tName: " << location.name.value_or("empty") << std::endl;
-    std::cout << "\tZipcode: " << location.zipcode.value_or("empty") << std::endl;
+    if (location.has_value())
+    {
+        std::cout << "\tCountry: " << location.value().country << std::endl;
+        std::cout << "\tFederal state :" << location.value().federal_state << std::endl;
+        std::cout << "\tLatitude: " << location.value().gps_latitude << std::endl;
+        std::cout << "\tLongitude: " << location.value().gps_longitude << std::endl;
+        std::cout << "\tName: " << location.value().name.value_or("empty") << std::endl;
+        std::cout << "\tZipcode: " << location.value().zipcode.value_or("empty") << std::endl;
+    }
+    else
+    {
+        std::cout << "\tNo location set" << std::endl;
+    }
 }
 
 void CommonRoadScenario::clear_data()
@@ -53,7 +60,7 @@ void CommonRoadScenario::clear_data()
     time_step_size = -1.0;
     tags.clear();
     scenario_tags.clear();
-    location = Location();
+    location = std::optional<Location>();
     lanelets.clear();
     traffic_signs.clear();
     traffic_lights.clear();
@@ -126,8 +133,6 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
 
     //test_output();
 
-    //TODO: After implementation of proper error handling, we know about translation problems up to this object and can use this information in the following parts as well
-
     //Now check if the file is spec-conformant (very basic version, just require existance of a field that is required by specs and part of the "commonRoad" element, which should thus exist as well)
     if (common_road_version.size() == 0 && author.size() == 0 && affiliation.size() == 0)
     {
@@ -174,7 +179,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
     if(node_name.empty())
     {
-        //TODO: Throw error
+        //TODO: Throw error or keep it this way?
         std::cerr << "TODO: Better warning // Node element empty in scenario parse" << std::endl;
         return;
     }
@@ -184,7 +189,6 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     //get_attribute_int(node, "id", true).value() -> Throws error (set to true) if no ID exists, thus .value() can be used safely if no error was thrown
     if (node_name.compare("location") == 0)
     {
-        location.exists = true;
         translate_location(node);
     }
     else if (node_name.compare("scenarioTags") == 0)
@@ -243,18 +247,23 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Node element not conformant to specs (commonroad) - name is: " << node_name << std::endl;
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node element not conformant to specs (commonroad), node should not exist - name is: " << node_name << ", line is: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 }
 
 void CommonRoadScenario::translate_location(const xmlpp::Node* node) 
 {
-    location.country = xml_translation::get_child_child_text(node, "country", true).value(); //If no value: Error is thrown anyway (set to true)
-    location.federal_state = xml_translation::get_child_child_text(node, "federalState", true).value(); //If no value: Error is thrown anyway (set to true)
-    location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
-    location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
-    location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
-    location.name = xml_translation::get_child_child_text(node, "name", false);
+    Location translated_location;
+    translated_location.country = xml_translation::get_child_child_text(node, "country", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
+    translated_location.name = xml_translation::get_child_child_text(node, "name", false);
+
+    location = std::optional<Location>(translated_location);
 
     //TODO: Warning in case of unexpected nodes? (Except for geotransformation)
 }
@@ -507,7 +516,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             traffic_light.second.draw(ctx, scale);
         } 
 
-        //TODO: Intersections
+        //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
 
         ctx->restore();
 
@@ -580,7 +589,7 @@ const double CommonRoadScenario::get_time_step_size()
 //     return scenario_tags;
 // }
 
-const Location& CommonRoadScenario::get_location()
+const std::optional<Location> CommonRoadScenario::get_location()
 {
     return location;
 }

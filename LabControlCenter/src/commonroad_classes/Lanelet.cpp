@@ -98,11 +98,7 @@ Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
     const auto line_node = xml_translation::get_child_if_exists(bound_node, "lineMarking", false);
     if (line_node)
     {
-        bound.line_marking = translate_line_marking(line_node);        
-    }
-    else
-    {
-        bound.line_marking = LineMarking::Unspecified;
+        bound.line_marking = std::optional<LineMarking>(translate_line_marking(line_node));        
     }
     
     return bound;

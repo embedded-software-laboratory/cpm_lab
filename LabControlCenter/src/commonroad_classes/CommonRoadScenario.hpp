@@ -77,9 +77,6 @@ struct Location
     std::optional<std::string> name;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
     //For 2018 versions, this means that country / location information are missing too
-
-    //In case it does not exist, not part of specs
-    bool exists = false;
 };
 
 /**
@@ -102,7 +99,7 @@ private:
 
     //Commonroad data
     std::vector<ScenarioTag> scenario_tags; //From 2020 specs
-    Location location; //TODO: Optional?
+    std::optional<Location> location;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;
@@ -219,5 +216,5 @@ public:
     const double get_time_step_size();
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
-    const Location& get_location();
+    const std::optional<Location> get_location();
 };

@@ -2,9 +2,13 @@
 
 DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 {
-    //TODO: Warn in case node does not have dynamic obstacle role (2018 specs)
     //Check if node is of type dynamicObstacle
     assert(node->get_name() == "dynamicObstacle" || node->get_name() == "obstacle");
+    if (node->get_name() == "obstacle") //2018 specs
+    {
+        std::string role_text = xml_translation::get_child_child_text(node, "role", true).value(); //Must exist (2018 specs), else error is thrown
+        assert(role_text.compare("dynamic") == 0);
+    }
 
     std::string obstacle_type_text;
 

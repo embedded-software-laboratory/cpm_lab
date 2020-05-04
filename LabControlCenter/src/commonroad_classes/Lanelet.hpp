@@ -46,7 +46,7 @@ enum class DrivingDirection {
  * \brief Holds all line marking types defined by the specification, used by Bound
  */
 enum class LineMarking {
-    Unspecified, Dashed, Solid, BroadDashed, BroadSolid
+    Dashed, Solid, BroadDashed, BroadSolid
 };
 
 /**
@@ -70,7 +70,7 @@ struct Adjacent
 struct Bound
 {
     std::vector<Point> points; //min. 2
-    LineMarking line_marking;
+    std::optional<LineMarking> line_marking;
 };
 
 /**
