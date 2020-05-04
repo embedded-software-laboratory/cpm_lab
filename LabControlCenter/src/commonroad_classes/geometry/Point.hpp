@@ -17,7 +17,7 @@ class Point : public InterfaceTransform, public InterfaceDraw
 private:
     double x;
     double y;
-    double z; //must not be set (then ??)
+    std::optional<double> z; //must not be set
 public:
     /**
      * \brief Constructor, set up a point object

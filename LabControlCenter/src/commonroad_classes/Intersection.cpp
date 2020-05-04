@@ -24,7 +24,7 @@ Intersection::Intersection(const xmlpp::Node* node)
                 incoming.successors_left = get_child_attribute_ref(child, "successorsLeft", false);
                 incoming.is_left_of = get_child_attribute_ref(child, "isLeftOf", false);
 
-                incoming_map.insert({xml_translation::get_attribute_int(child, "id"), incoming});
+                incoming_map.insert({xml_translation::get_attribute_int(child, "id", true).value(), incoming}); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
             }, 
             "incoming"
         );

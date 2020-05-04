@@ -28,7 +28,7 @@ Position::Position(const xmlpp::Node* node)
             node,
             [&] (const xmlpp::Node* child)
             {
-                lanelet_refs.push_back(xml_translation::get_attribute_int(child, "ref", true));
+                lanelet_refs.push_back(xml_translation::get_attribute_int(child, "ref", true).value()); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
             },
             "lanelet"
         );

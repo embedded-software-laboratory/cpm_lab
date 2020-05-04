@@ -10,7 +10,17 @@ Crossing::Crossing(const xmlpp::Node* node)
         xml_translation::iterate_elements_with_attribute(
             node,
             [&] (std::string text) {
-                crossing_lanelets.push_back(xml_translation::string_to_int(text));
+                auto optional_integer = xml_translation::string_to_int(text);
+                if (optional_integer.has_value())
+                {
+                    crossing_lanelets.push_back(optional_integer.value());
+                }
+                else
+                {
+                    std::stringstream error_msg_stream;
+                    error_msg_stream << "At least one crossing lanelet reference is not an integer - line " << node->get_line();
+                    throw SpecificationError(error_msg_stream.str());
+                }
             },
             "crossingLanelet",
             "ref"

@@ -7,7 +7,7 @@ Circle::Circle(const xmlpp::Node* node)
 
     try
     {
-        radius = xml_translation::get_child_child_double(node, "radius", true); //mandatory
+        radius = xml_translation::get_child_child_double(node, "radius", true).value(); //mandatory, error thrown if nonexistant, so we can use .value() here
 
         //Get point value, which must not be specified
         const auto point_node = xml_translation::get_child_if_exists(node, "center", false);

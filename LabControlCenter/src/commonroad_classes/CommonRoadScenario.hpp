@@ -9,6 +9,12 @@
 #include <sstream>
 #include <vector>
 
+#include <optional>
+//Optional is used for 3 reasons:
+//1. Some values are optional according to the specification
+//2. Some values might be missing if the file is not spec-conform, which is easy to handle when we do not require that they exist (though we still check for their existance)
+//3. It is easier to set up an object piece by piece in the constructor, but that is not possible if the member object we want to set up does not have a default constructor (we would have to use the initializer list then)
+
 #include "commonroad_classes/Lanelet.hpp"
 #include "commonroad_classes/TrafficSign.hpp"
 #include "commonroad_classes/TrafficLight.hpp"
@@ -67,8 +73,8 @@ struct Location
     std::string federal_state;
     int gps_latitude = -1;
     int gps_longitude = -1;
-    std::string zipcode;
-    std::string name;
+    std::optional<std::string> zipcode;
+    std::optional<std::string> name;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
     //For 2018 versions, this means that country / location information are missing too
 

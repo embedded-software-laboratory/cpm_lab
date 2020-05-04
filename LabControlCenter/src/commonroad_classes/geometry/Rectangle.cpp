@@ -7,8 +7,8 @@ Rectangle::Rectangle(const xmlpp::Node* node)
 
     try
     {
-        length = xml_translation::get_child_child_double(node, "length", true); //mandatory
-        width = xml_translation::get_child_child_double(node, "width", true); //mandatory
+        length = xml_translation::get_child_child_double(node, "length", true).value(); //mandatory, so we can use .value() bc an error is thrown before anyway if it does not exist
+        width = xml_translation::get_child_child_double(node, "width", true).value(); //mandatory, see above
 
         //Get point value, which must not be specified
         const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
@@ -22,14 +22,8 @@ Rectangle::Rectangle(const xmlpp::Node* node)
             center = std::optional<Point>{std::in_place, 0};
         }
 
-        if (xml_translation::get_child_if_exists(node, "orientation", false))
-        {
-            orientation = xml_translation::get_child_child_double(node, "orientation", true);
-        }
-        else
-        {
-            //TODO: Find out default value
-        }
+        orientation = xml_translation::get_child_child_double(node, "orientation", false);
+        //TODO: Find out default value
     }
     catch(const SpecificationError& e)
     {

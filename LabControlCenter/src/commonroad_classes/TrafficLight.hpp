@@ -51,7 +51,7 @@ struct TrafficCycleElement
 struct TrafficLightCycle
 {
     std::vector<TrafficCycleElement> cycle_elements;
-    unsigned int time_offset;
+    std::optional<unsigned int> time_offset;
 };
 
 /**

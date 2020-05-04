@@ -8,7 +8,7 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
     
     try
     {
-        std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
+        std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
         if (obstacle_type_text.compare("unknown") == 0)
         {
             type = ObstacleTypeStatic::Unknown;

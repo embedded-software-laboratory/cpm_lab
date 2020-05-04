@@ -109,7 +109,7 @@ private:
     std::vector<VehicleType> user_bidirectional; //enum class possible
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_refs; //trafficlightref
-    double speed_limit = -1.0; //From 2018 specs, must not be set (-1 if empty?)
+    std::optional<double> speed_limit; //From 2018 specs, must not be set
 
     /**
      * \brief This function translates a bound node to Bound

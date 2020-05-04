@@ -68,7 +68,7 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     std::cout << "Adjacent left: " << adjacent_left.exists << "(exists), " << adjacent_left.ref_id << " (ID), (TODO: print direction)" << std::endl;
     std::cout << "Adjacent right: " << adjacent_right.exists << "(exists), " << adjacent_right.ref_id << " (ID), (TODO: print direction)" << std::endl;
 
-    std::cout << "Speed limit (2018): " << speed_limit << std::endl;
+    std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
 
     std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
 }
@@ -117,7 +117,17 @@ std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string na
     xml_translation::iterate_elements_with_attribute(
         node,
         [&] (std::string text) {
-            refs.push_back(xml_translation::string_to_int(text));
+            auto optional_integer = xml_translation::string_to_int(text);
+            if (optional_integer.has_value())
+            {
+                refs.push_back(optional_integer.value());
+            }
+            else
+            {
+                std::stringstream error_msg_stream;
+                error_msg_stream << "At least one lanelet reference is not an integer - line " << node->get_line();
+                throw SpecificationError(error_msg_stream.str());
+            }
         },
         name,
         "ref"
@@ -135,9 +145,9 @@ Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
     if (adjacent_node)
     {
         adjacent.exists = true;
-        adjacent.ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true);
+        adjacent.ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true).value(); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
     
-        std::string direction_string = xml_translation::get_attribute_text(adjacent_node, "drivingDir", true);
+        std::string direction_string = xml_translation::get_attribute_text(adjacent_node, "drivingDir", true).value(); //See comment above
         if(direction_string.compare("same") == 0)
         {
             adjacent.direction = DrivingDirection::Same;

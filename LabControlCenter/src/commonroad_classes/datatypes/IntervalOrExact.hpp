@@ -40,7 +40,7 @@ public:
             const auto exact_node = xml_translation::get_child_if_exists(node, "exact", false);
             if (exact_node)
             {
-                exact = std::optional<double>(xml_translation::get_child_child_double(node, "exact", true));
+                exact = xml_translation::get_child_child_double(node, "exact", true);
             }
             else
             {

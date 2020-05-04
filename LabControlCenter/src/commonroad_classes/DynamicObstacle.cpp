@@ -10,7 +10,7 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 
     try
     {
-        obstacle_type_text = xml_translation::get_child_child_text(node, "type", true); //Must exist
+        obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, so an error is thrown anyway -> just use .value()
         if (obstacle_type_text.compare("unknown") == 0)
         {
             type = ObstacleTypeDynamic::Unknown;

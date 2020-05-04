@@ -156,7 +156,7 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
                 element_node,
                 [&] (xmlpp::Node* duration_node)
                 {
-                    element.durations.push_back(xml_translation::get_child_child_uint(duration_node, "duration", true));
+                    element.durations.push_back(xml_translation::get_child_child_uint(duration_node, "duration", true).value()); //Error thrown if it doesn't exist, so we can use .value()
                 },
                 "duration"
             );
@@ -165,7 +165,7 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
                 element_node,
                 [&] (xmlpp::Node* color_node)
                 {
-                    std::string color = xml_translation::get_child_child_text(color_node, "color", true);
+                    std::string color = xml_translation::get_child_child_text(color_node, "color", true).value(); //Error thrown if it doesn't exist, so we can use .value()
                     if (color.compare("red") == 0)
                     {
                         element.colors.push_back(TrafficLightColor::Red);
@@ -198,12 +198,7 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
         "trafficCycleElement"
     );
     
-    //Must be a positive value, -1 if nonexistant in xml_translation -> check for that
-    int offset = xml_translation::get_child_child_int(cycle_node, "timeOffset", false);
-    if (offset >= 0)
-    {
-        cycle.time_offset = static_cast<unsigned int>(offset);
-    }
+    cycle.time_offset = xml_translation::get_child_child_uint(cycle_node, "timeOffset", false);
 
     return cycle;
 }

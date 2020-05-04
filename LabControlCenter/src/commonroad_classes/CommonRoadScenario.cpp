@@ -38,8 +38,8 @@ void CommonRoadScenario::test_output()
     std::cout << "\tFederal state :" << location.federal_state << std::endl;
     std::cout << "\tLatitude: " << location.gps_latitude << std::endl;
     std::cout << "\tLongitude: " << location.gps_longitude << std::endl;
-    std::cout << "\tName: " << location.name << std::endl;
-    std::cout << "\tZipcode: " << location.zipcode << std::endl;
+    std::cout << "\tName: " << location.name.value_or("empty") << std::endl;
+    std::cout << "\tZipcode: " << location.zipcode.value_or("empty") << std::endl;
 }
 
 void CommonRoadScenario::clear_data()
@@ -129,7 +129,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     //TODO: After implementation of proper error handling, we know about translation problems up to this object and can use this information in the following parts as well
 
     //Now check if the file is spec-conformant (very basic version, just require existance of a field that is required by specs and part of the "commonRoad" element, which should thus exist as well)
-    if (common_road_version.compare("empty") == 0 && author.compare("empty") == 0 && affiliation.compare("empty") == 0)
+    if (common_road_version.size() == 0 && author.size() == 0 && affiliation.size() == 0)
     {
         //-> One of the fields version, author, affiliation should be set (they are all required)
         clear_data();
@@ -144,19 +144,20 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
 {
-    common_road_version = xml_translation::get_attribute_text(root_node, "commonRoadVersion", true);
-    benchmark_id = xml_translation::get_attribute_text(root_node, "benchmarkID", true);
-    date = xml_translation::get_attribute_text(root_node, "date", true);
-    author = xml_translation::get_attribute_text(root_node, "author", true);
-    affiliation = xml_translation::get_attribute_text(root_node, "affiliation", true);
-    source = xml_translation::get_attribute_text(root_node, "source", true);
-    time_step_size = static_cast<uint64_t>(xml_translation::get_attribute_double(root_node, "timeStepSize", true));
+    //If no value: Error is thrown anyway (set to true) - so in this case, we can directly use .value()
+    common_road_version = xml_translation::get_attribute_text(root_node, "commonRoadVersion", true).value(); 
+    benchmark_id = xml_translation::get_attribute_text(root_node, "benchmarkID", true).value();
+    date = xml_translation::get_attribute_text(root_node, "date", true).value();
+    author = xml_translation::get_attribute_text(root_node, "author", true).value();
+    affiliation = xml_translation::get_attribute_text(root_node, "affiliation", true).value();
+    source = xml_translation::get_attribute_text(root_node, "source", true).value();
+    time_step_size = xml_translation::get_attribute_double(root_node, "timeStepSize", true).value();
     
-    std::string tags_list = xml_translation::get_attribute_text(root_node, "tags", false);
-    if (tags_list != "empty")
+    auto tags_list = xml_translation::get_attribute_text(root_node, "tags", false);
+    if (tags_list.has_value())
     {
         //Only create tag list if it exists
-        std::stringstream tag_stream(tags_list);
+        std::stringstream tag_stream(tags_list.value());
         std::string tag;
         while (std::getline(tag_stream, tag, ' '))
         {
@@ -180,6 +181,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
     //nodename is the name of the node, e.g. "lanelet"
     //-> Switch based on node name!
+    //get_attribute_int(node, "id", true).value() -> Throws error (set to true) if no ID exists, thus .value() can be used safely if no error was thrown
     if (node_name.compare("location") == 0)
     {
         location.exists = true;
@@ -191,49 +193,49 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets.insert({xml_translation::get_attribute_int(node, "id"), Lanelet(node)});
+        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
-        traffic_signs.insert({xml_translation::get_attribute_int(node, "id"), TrafficSign(node)});
+        traffic_signs.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficSign(node)});
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        traffic_lights.insert({xml_translation::get_attribute_int(node, "id"), TrafficLight(node)});
+        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node)});
     }
     else if (node_name.compare("intersection") == 0)
     {
-        intersections.insert({xml_translation::get_attribute_int(node, "id"), Intersection(node)});
+        intersections.insert({xml_translation::get_attribute_int(node, "id", true).value(), Intersection(node)});
     }
     else if (node_name.compare("staticObstacle") == 0)
     {
-        static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
-        static_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
+        static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
-        dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
-        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
+        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("obstacle") == 0)
     {
         ObstacleRole obstacle_role = get_obstacle_role(node);
         if (obstacle_role == ObstacleRole::Static)
         {
-            static_obstacles.insert({xml_translation::get_attribute_int(node, "id"), StaticObstacle(node)});
-            static_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+            static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
+            static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
-            dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id"), DynamicObstacle(node)});
-            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+            dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
+            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
         }
         
     }
     else if (node_name.compare("planningProblem") == 0)
     {
-        planning_problems.insert({xml_translation::get_attribute_int(node, "id"), PlanningProblem(node)});
-        planning_problems.at(xml_translation::get_attribute_int(node, "id")).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        planning_problems.insert({xml_translation::get_attribute_int(node, "id", true).value(), PlanningProblem(node)});
+        planning_problems.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
     }
     else if (node_name.compare("comment") == 0)
     {
@@ -247,10 +249,10 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
 void CommonRoadScenario::translate_location(const xmlpp::Node* node) 
 {
-    location.country = xml_translation::get_child_child_text(node, "country", true);
-    location.federal_state = xml_translation::get_child_child_text(node, "federalState", true);
-    location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true);
-    location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true);
+    location.country = xml_translation::get_child_child_text(node, "country", true).value(); //If no value: Error is thrown anyway (set to true)
+    location.federal_state = xml_translation::get_child_child_text(node, "federalState", true).value(); //If no value: Error is thrown anyway (set to true)
+    location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
+    location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
     location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
     location.name = xml_translation::get_child_child_text(node, "name", false);
 

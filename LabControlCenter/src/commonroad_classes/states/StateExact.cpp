@@ -23,17 +23,13 @@ StateExact::StateExact(const xmlpp::Node* node)
             //position = std::optional<Position>{std::in_place, 0};
         }
 
-        velocity = xml_translation::get_child_child_double_exact(node, "velocity", true);
-        orientation = xml_translation::get_child_child_double_exact(node, "orientation", true);
-        yaw_rate = xml_translation::get_child_child_double_exact(node, "yawRate", true);
-        slip_angle = xml_translation::get_child_child_double_exact(node, "slipAngle", true);
+        velocity = xml_translation::get_child_child_double_exact(node, "velocity", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
+        orientation = xml_translation::get_child_child_double_exact(node, "orientation", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
+        yaw_rate = xml_translation::get_child_child_double_exact(node, "yawRate", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
+        slip_angle = xml_translation::get_child_child_double_exact(node, "slipAngle", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
 
         //Acceleration must not exist
-        const auto acc_node = xml_translation::get_child_if_exists(node, "acceleration", false);
-        if (acc_node)
-        {
-            acceleration = std::optional<double>(xml_translation::get_child_child_double_exact(node, "acceleration", true));
-        }
+        acceleration = xml_translation::get_child_child_double_exact(node, "acceleration", false);
 
         //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
         //TODO: Is that okay?

@@ -8,12 +8,11 @@ Point::Point(const xmlpp::Node* node)
     try
     {
         //2018 and 2020
-        x = xml_translation::get_child_child_double(node, "x", true);
-        y = xml_translation::get_child_child_double(node, "y", true);
+        x = xml_translation::get_child_child_double(node, "x", true).value(); //Must exist, error thrown if not, so we can use .value() without checking for its existence
+        y = xml_translation::get_child_child_double(node, "y", true).value();
 
         //2020
         z = xml_translation::get_child_child_double(node, "z", false);
-        //TODO: Remember somehow if z was set at all? Is optional and 2020 only, but -1.0 is a valid value -> use std::optional
     }
     catch(const SpecificationError& e)
     {
@@ -26,7 +25,7 @@ Point::Point(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "New point created: " << "(" << x << ", " << y << ", " << z << ")" << std::endl;
+    std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
 }
 
 Point::Point(int irrelevant_int)
@@ -34,14 +33,13 @@ Point::Point(int irrelevant_int)
     //TODO: Find out default value
     x = 0.0;
     y = 0.0;
-    z = 0.0;
 }
 
 Point::Point(double _x, double _y, double _z)
 {
     x = _x;
     y = _y;
-    z = _z;
+    z = std::optional<double>(_z);
 }
 
 void Point::transform_coordinate_system(double scale, double translate_x, double translate_y)
@@ -50,7 +48,12 @@ void Point::transform_coordinate_system(double scale, double translate_x, double
     {
         x *= scale;
         y *= scale;
-        z *= scale;
+        
+        if (z.has_value())
+        {
+            double new_z_value = z.value() * scale;
+            z = std::optional<double>(new_z_value);
+        }
     }
 
     x += translate_x;
@@ -88,5 +91,5 @@ double Point::get_y()
 
 double Point::get_z()
 {
-    return z;
+    return z.value_or(0.0); //TODO: Maybe return as std::optional instead
 }

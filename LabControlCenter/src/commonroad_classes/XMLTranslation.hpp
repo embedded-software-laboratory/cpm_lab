@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type TextNode (which is tested within the function, thus xmlpp::Node, not xmlpp::TextNode was chosen)
      * Then, it gets its content in form of a string
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
-     * \return A string containing the content of the TextNode, or 'empty' if there is none
+     * \return A string containing the content of the TextNode, if no error is thrown
      */
     std::string get_node_text(const xmlpp::Node* node);
 
@@ -33,7 +34,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type TextNode (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::TextNode was chosen)
      * Then, it gets its content in form of an int, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
-     * \return An int containing the content of the TextNode, or -1 in case of an error
+     * \return An int containing the content of the TextNode, if no error is thrown
      */
     int get_node_int(const xmlpp::Node* node);
 
@@ -41,7 +42,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type TextNode (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::TextNode was chosen)
      * Then, it gets its content in form of an int, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
-     * \return An unsigned long long value containing the content of the TextNode, or 0 in case of an error
+     * \return An unsigned long long value containing the content of the TextNode, if no error is thrown
      */
     unsigned long long get_node_uint(const xmlpp::Node* node);
 
@@ -49,7 +50,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type TextNode (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::TextNode was chosen)
      * Then, it gets its content in form of an double, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
-     * \return A double value containing the content of the TextNode, or -1.0 in case of an error
+     * \return A double value containing the content of the TextNode, if no error is thrown
      */
     double get_node_double(const xmlpp::Node* node);
 
@@ -69,7 +70,7 @@ namespace xml_translation
      * it checks whether this node exists, and, if so, gets its content in form of a string
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
-     * \return A string containing the content, or 'empty' if there is none
+     * \return A string containing the content, if no error is thrown
      */
     std::string get_first_child_text(const xmlpp::Node* node);
 
@@ -79,7 +80,7 @@ namespace xml_translation
      * it checks whether this node exists, and, if so, gets its content in form of an int
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
-     * \return An int containing the content, or -1 in case of an error
+     * \return An int containing the content, if no error is thrown
      */
     int get_first_child_int(const xmlpp::Node* node);
 
@@ -89,7 +90,7 @@ namespace xml_translation
      * it checks whether this node exists, and, if so, gets its content in form of an unsigned long long
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
-     * \return A uint containing the content, or 0 in case of an error
+     * \return A uint containing the content, if no error is thrown
      */
     unsigned long long get_first_child_uint(const xmlpp::Node* node);
 
@@ -99,7 +100,7 @@ namespace xml_translation
      * it checks whether this node exists, and, if so, gets its content in form of a double
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
-     * \return A double containing the content, or -1.0 in case of an error
+     * \return A double containing the content, if no error is thrown
      */
     double get_first_child_double(const xmlpp::Node* node);
 
@@ -109,9 +110,9 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Value of the first child of the first child with name child_name of node, or 'empty' in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
      */
-    std::string get_child_child_text(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
+    std::optional<std::string> get_child_child_text(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -119,9 +120,9 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Value of the first child of the first child with name child_name of node, or -1 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
      */
-    int get_child_child_int(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
+    std::optional<int> get_child_child_int(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -129,9 +130,9 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Value of the first child of the first child with name child_name of node, or 0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
      */
-    unsigned long long get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
+    std::optional<unsigned long long> get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -139,9 +140,9 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Value of the first child of the first child with name child_name of node, or -1.0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
      */
-    double get_child_child_double(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
+    std::optional<double> get_child_child_double(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -150,9 +151,9 @@ namespace xml_translation
      * \param element_node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Value of the first child of the first child with name child_name of node of type exact, or -1.0 in case of an error
+     * \return Value of the first child of the first child with name child_name of node of type exact, or an empty optional value, if no error is thrown
      */
-    double get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
+    std::optional<double> get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
     //**********************************************************************
     //Attributes
@@ -165,9 +166,9 @@ namespace xml_translation
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
-     * \return A string containing the content of the Element, or 'empty' if there is none
+     * \return A string containing the content of the Element, or an empty optional value, if no error is thrown
      */
-    std::string get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
+    std::optional<std::string> get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -176,9 +177,9 @@ namespace xml_translation
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
-     * \return An int containing the content of the Element, or -1 in case of an error
+     * \return An int containing the content of the Element, or an empty optional value, if no error is thrown
      */
-    int get_attribute_int(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
+    std::optional<int> get_attribute_int(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -187,9 +188,9 @@ namespace xml_translation
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
-     * \return An unsigned long long value containing the content of the Element, or 0 in case of an error
+     * \return An unsigned long long value containing the content of the Element, or an empty optional value, if no error is thrown
      */
-    unsigned long long get_attribute_uint(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
+    std::optional<unsigned long long> get_attribute_uint(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
@@ -198,9 +199,9 @@ namespace xml_translation
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
-     * \return An double value containing the content of the Element, or -1.0 in case of an error
+     * \return An double value containing the content of the Element, or an empty optional value, if no error is thrown
      */
-    double get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
+    std::optional<double> get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
     //**********************************************************************
     //Helper functions
@@ -210,25 +211,25 @@ namespace xml_translation
      * \brief Gets a string (if desired)
      * Transforms the string to an int, (if desired) if no transformation is possible
      * \param text A string that represents an int value
-     * \return The int value of the string, else -1
+     * \return The int value of the string, or an empty optional value
      */
-    int string_to_int(std::string text);
+    std::optional<int> string_to_int(std::string text);
 
     /**
      * \brief Gets a string (if desired)
      * Transforms the string to an unsigned long long, (if desired) if no transformation is possible
      * \param text A string that represents an unsigned long long value
-     * \return The unsigned long long value of the string, else 0
+     * \return The unsigned long long value of the string, or an empty optional value
      */
-    unsigned long long string_to_uint(std::string text);
+    std::optional<unsigned long long> string_to_uint(std::string text);
 
     /**
      * \brief Gets a string (if desired)
      * Transforms the string to an double, (if desired) if no transformation is possible
      * \param text A string that represents an double value
-     * \return The double value of the string, else -1.0
+     * \return The double value of the string, or an empty optional value
      */
-    double string_to_double(std::string text);
+    std::optional<double> string_to_double(std::string text);
 
     //**********************************************************************
     //Iteration functions
