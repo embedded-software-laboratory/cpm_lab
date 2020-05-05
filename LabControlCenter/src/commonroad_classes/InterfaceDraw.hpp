@@ -29,4 +29,42 @@ public:
 
     //Good practice
     virtual ~InterfaceDraw() {};
+
+    //Utility functions that can be used by each class
+    /**
+     * \brief This function can be used to draw an arrow from (x_1, y_1) to (x_2, y_2) - within the currently set coordinate system - with a given scale
+     * \param x_1
+     * \param y_1
+     * \param x_2
+     * \param y_2
+     * \param scale Scale applies to the arrow thickness and the arrowhead size only
+     */
+    void draw_arrow(const DrawingContext& ctx, double x_1, double y_1, double x_2, double y_2, double scale)
+    {
+        ctx->save();
+
+        //Calculate arrowhead orientation (part that is orthogonal to the line)
+        double x_orth_vec = (y_2 - y_1);
+        double y_orth_vec = (x_1 - x_2);
+        double orth_vec_len = std::sqrt(std::pow(x_orth_vec, 2) + std::pow(y_orth_vec, 2));
+        x_orth_vec /= orth_vec_len;
+        y_orth_vec /= orth_vec_len;
+
+        double x_back_vec = x_2 - x_1;
+        double y_back_vec = y_2 - y_1;
+        double back_vec_len = std::sqrt(std::pow(x_back_vec, 2) + std::pow(y_back_vec, 2));
+        x_back_vec /= back_vec_len;
+        y_back_vec /= back_vec_len;
+
+        ctx->set_line_width(0.03 * scale);
+        ctx->move_to(x_1, y_1);
+        ctx->line_to(x_2, y_2);
+        ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
+        ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 - 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
+        ctx->line_to(x_2, y_2);
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+    }
 };

@@ -151,21 +151,13 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
                 position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
                 ctx->restore();
 
-                //Draw arrow - TODO: Maybe make this a utility function
+                //Draw arrow with correct position / orientation
                 ctx->save();
-
-                //Draw arrow
                 position->transform_context(ctx, scale);
                 ctx->rotate(middle + local_orientation);
-                double arrow_scale = 0.6 * scale * transform_scale; //To quickly change the scale to your liking
-                ctx->set_line_width(0.015 * arrow_scale);
-                ctx->move_to(0.0, 0.0);
-                ctx->line_to(1.0 * arrow_scale, 0.0);
-                ctx->line_to(0.9 * arrow_scale, 0.1 * arrow_scale);
-                ctx->line_to(0.9 * arrow_scale, -0.1 * arrow_scale);
-                ctx->line_to(1.0 * arrow_scale, 0.0);
-                ctx->fill_preserve();
-                ctx->stroke();
+
+                double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
+                draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
 
                 ctx->restore();
             }
