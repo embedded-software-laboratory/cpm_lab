@@ -4,7 +4,13 @@
 #include <stdlib.h>
 #include <cassert>
 
+#define NUMBER_EIGHT_POINTS 8
+// The number of trajectory points in the trajectory-vectors describing the eight only.
+
+
+
 typedef std::pair<Waypoint, Waypoint> pWW ;
+
 
 
 
@@ -32,7 +38,6 @@ Eight::Eight()
 : next {}, current{8,1}, current2{8,1},
     current_segment_duration{0},
     segment_duration_oval{800000000ull},
-    // initialize "normal" eight:
     /* // 1x2
     trajectory_px   {          -1,         -0.5,            0,          0.5,            1,         0.5,             0,         -0.5},
     trajectory_py   {           0,          0.5,            0,         -0.5,            0,          0.5,            0,         -0.5},
@@ -40,38 +45,35 @@ Eight::Eight()
     trajectory_vy   {           1,            0,         -0.7,            0,            1,            0,         -0.7,            0},
     segment_duration{785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull, 785000000ull}
     */
-   /* too small:
-    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4},
-    trajectory_py   {           0,          0.3,            0,         -0.3,            0,          0.3,            0,         -0.3},
-    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1},
-    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0},
-    segment_duration{549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull, 549800000ull}
-*/                                                                                                                                  // From here on, the start is described (not the usual eight)
-    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4,         -0.8,         -0.6,         -0.4,         -0.2,            0,          0.2},
-    trajectory_py   {           0,          0.4,            0,         -0.4,            0,          0.4,            0,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4,         -0.4},
-    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1,            0,     0.166667,     0.333333,          0.5,     0.666667,     0.833333},
-    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0,            0,            0,            0,            0,            0,            0},
-    segment_duration{628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 692800000ull, 287000000ull, 220200000ull, 185600000ull, 163600000ull, 147900000ull}
+                                                                                                                                    // From here on, the start is described (not the usual eight)
+    trajectory_px   {        -0.8,         -0.4,            0,          0.4,          0.8,          0.4,            0,         -0.4,         -0.8,         -0.6},
+    trajectory_py   {           0,          0.4,            0,         -0.4,            0,          0.4,            0,         -0.4,         -0.4,         -0.4},
+    trajectory_vx   {           0,            1,       0.3939,            1,            0,           -1,      -0.3939,           -1,            0,      0.89442},
+    trajectory_vy   {           1,            0,      -0.9191,            0,            1,            0,      -0.9191,            0,            0,            0},
+    segment_duration{628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 628300000ull, 447210000ull, 185250000ull}
+    // IMPORTANT: If the eight trajectory is changed in terms of the number of points, this number
+    //            has to be changed in the define at the top as well.
 {
+
+    // Insert all "standard" transitions of the forward and the
+    // backward eight. Note: The eight-Trajectory is described by the first
+    // eight points in the vectors above. Everything else describes the start
+    // into the eight.
+    for (int i=0; i<NUMBER_EIGHT_POINTS; i++){
+        next.insert( pWW( Waypoint(i, 1), Waypoint((i+1)%NUMBER_EIGHT_POINTS, 1) ));
+        next.insert( pWW( Waypoint(i,-1), Waypoint((i-1+NUMBER_EIGHT_POINTS) % NUMBER_EIGHT_POINTS, -1) ));
+    }
+
     // Set "special" successors to allow driving an oval.
-    // If no successor is given in this map the "normal" one
-    // (resulting from in-/decrementing the usual indix) is chosen.
     next.insert( pWW( Waypoint(1, 1), Waypoint(5, -1) ));
-    next.insert( pWW( Waypoint(1, 1), Waypoint(2,  1) ));
     next.insert( pWW( Waypoint(5, 1), Waypoint(1, -1) ));
-    next.insert( pWW( Waypoint(5, 1), Waypoint(6,  1) ));
-    next.insert( pWW( Waypoint(3,-1), Waypoint(2, -1) ));
     next.insert( pWW( Waypoint(3,-1), Waypoint(7,  1) ));
-    next.insert( pWW( Waypoint(7,-1), Waypoint(6, -1) ));
     next.insert( pWW( Waypoint(7,-1), Waypoint(3,  1) ));
 
     // Describe the transitions from the start to the eight
     next.insert( pWW( Waypoint( 8, 1), Waypoint( 9,  1) ));
-    next.insert( pWW( Waypoint( 9, 1), Waypoint(10,  1) ));
-    next.insert( pWW( Waypoint(10, 1), Waypoint(11,  1) ));
-    next.insert( pWW( Waypoint(11, 1), Waypoint(12,  1) ));
-    next.insert( pWW( Waypoint(12, 1), Waypoint(13,  1) ));
-    next.insert( pWW( Waypoint(13, 1), Waypoint( 3,  1) ));
+    next.insert( pWW( Waypoint( 9, 1), Waypoint( 7, -1) ));
+
 
 
     assert(segment_duration.size() == trajectory_px.size());
@@ -108,7 +110,6 @@ std::pair<TrajectoryPoint, uint64_t> Eight::get_trajectoryPoint(){
     trajectory_point_res.vx(trajectory_vx[current.index]*current.direction);
     trajectory_point_res.vy(trajectory_vy[current.index]*current.direction);
 
-    std::cout << current.index << std::endl;
     return std::pair<TrajectoryPoint, uint64_t>(trajectory_point_res, current_segment_duration);
 }
 
@@ -117,42 +118,27 @@ std::pair<TrajectoryPoint, uint64_t> Eight::get_trajectoryPoint(){
  * Planns the next Waypoint.
  */
 void Eight::move_forward(){
-    std::cout << "Move" << std::endl;
     current = current2; // Move one point forward
-
     Waypoint succ(-1, -1); // only initial value; will be overriden later on
-    int size = 8; // The size of the arrays in which the eight is described (except the starting points)
 
     std::pair<std::multimap<Waypoint, Waypoint>::iterator,
               std::multimap<Waypoint, Waypoint>::iterator> iterators = next.equal_range(current);
     int no_successors = std::distance(iterators.first, iterators.second);
 
 
-    if (no_successors > 0) {
-        // there is at least one element in the map with the given key
-        // choose one of the elements with this key randomly
+    // choose one of the elements with this key (describing the subsequent trajectory points) randomly
+    int choose = rand() % no_successors; // index of element between iterators which is to be chosen
+    std::advance(iterators.first, choose);
+    succ = iterators.first->second;
 
-        int choose = rand() % no_successors; // index of element between iterators which is to be chosen
-        std::advance(iterators.first, choose);
-        succ = iterators.first->second;
-
-        if (((succ.index == (( (current.index+current.direction) % size) 
-                                        + size) % size ))
-            || (current.index == 9)){ // Transition from start into eight
-            // use normal segment duration
-            current_segment_duration = segment_duration[current.index];
-        }
-        else {
-            current_segment_duration = segment_duration_oval;
-        }
-
+    if (((succ.index == (( (current.index+current.direction) % NUMBER_EIGHT_POINTS) 
+                                    + NUMBER_EIGHT_POINTS) % NUMBER_EIGHT_POINTS ))
+        || (current.index >= NUMBER_EIGHT_POINTS)){ // Transitions from start into eight
+        // use normal segment duration
+        current_segment_duration = segment_duration[current.index];
     }
     else {
-        // follow the "normal" trajectory by going one index ahead
-        // corresponding to the current direction
-        succ = Waypoint(((current.index + current.direction) % size + size) % size,
-                         current.direction);
-        current_segment_duration = segment_duration[current.index];
+        current_segment_duration = segment_duration_oval;
     }
 
     current2 = succ;

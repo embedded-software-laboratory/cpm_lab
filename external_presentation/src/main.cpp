@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
-    const uint64_t dt_nanos = 400000000ull; // 400 milliseconds == 400000000 nanoseconds
+    const uint64_t dt_nanos = 150000000ull; // 400 milliseconds == 400000000 nanoseconds
     auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now)
     {
         // Initial time used for trajectory generation
-        if (reference_trajectory_time == 0) reference_trajectory_time = t_now;// + 2000000000ull;
+        if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 2000000000ull;
 
         // Send the current trajectory point to the vehicle
         std::pair<TrajectoryPoint, uint64_t> p = eight.get_trajectoryPoint();
