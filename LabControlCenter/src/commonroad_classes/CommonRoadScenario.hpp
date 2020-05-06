@@ -196,7 +196,7 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0);
+    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
@@ -213,7 +213,7 @@ public:
     const std::string& get_common_road_version();
     const std::string& get_date();
     const std::string& get_source();
-    const double get_time_step_size();
+    double get_time_step_size();
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
     const std::optional<Location> get_location();

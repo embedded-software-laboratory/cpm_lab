@@ -131,6 +131,11 @@ public:
         return avgs;
     }
 
+
+    //Suppress warning for unused parameter (s)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
@@ -150,4 +155,6 @@ public:
             }
         }
     }
+
+    #pragma GCC diagnostic pop
 };

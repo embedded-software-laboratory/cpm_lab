@@ -33,7 +33,7 @@ StateExact::StateExact(const xmlpp::Node* node)
 
         //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
         //TODO: Is that okay?
-        const auto time_node = xml_translation::get_child_if_exists(node, "time", true);
+        xml_translation::get_child_if_exists(node, "time", true);
         time = 0;
     }
     catch(const SpecificationError& e)
@@ -94,7 +94,7 @@ void StateExact::draw(const DrawingContext& ctx, double scale, double global_ori
     ctx->restore();
 }
 
-void StateExact::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void StateExact::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     if(position.has_value())
     {

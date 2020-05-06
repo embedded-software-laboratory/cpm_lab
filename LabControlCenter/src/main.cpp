@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
         [=](){return loggerViewUi->reset();}, 
         argc, 
         argv);
-    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario, argc, argv);
+    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

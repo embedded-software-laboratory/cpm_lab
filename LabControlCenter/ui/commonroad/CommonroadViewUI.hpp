@@ -77,13 +77,9 @@ public:
     /**
      * \brief Constructor
      * \param _commonroad_scenario The commonroad scenario to be managed by this view
-     * \param argc Command line argument (from main())
-     * \param argv Command line argument (from main())
      */
     CommonroadViewUI(
-        std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-        unsigned int argc, 
-        char *argv[]
+        std::shared_ptr<CommonRoadScenario> _commonroad_scenario
     );
 
     /**

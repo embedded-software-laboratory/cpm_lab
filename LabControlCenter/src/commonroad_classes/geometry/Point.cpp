@@ -28,12 +28,17 @@ Point::Point(const xmlpp::Node* node)
     std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 Point::Point(int irrelevant_int)
 {
     //TODO: Find out default value
+    //We use this constructor because we do not want a default constructor to exist, but the parameter is actually pointless
     x = 0.0;
     y = 0.0;
 }
+#pragma GCC diagnostic pop
 
 Point::Point(double _x, double _y, double _z)
 {
@@ -60,6 +65,9 @@ void Point::transform_coordinate_system(double scale, double translate_x, double
     y += translate_y;
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void Point::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Current state: Leave out z-value
@@ -78,6 +86,7 @@ void Point::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->stroke();
     ctx->restore();
 }
+#pragma GCC diagnostic pop
 
 double Point::get_x()
 {

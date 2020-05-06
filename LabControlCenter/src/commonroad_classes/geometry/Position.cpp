@@ -70,13 +70,18 @@ Position::Position(const xmlpp::Node* node)
     std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 Position::Position(int irrelevant_int)
 {
     //TODO: Find out default value
+    //We use this constructor because we do not want a default constructor to exist, but the parameter is actually pointless
     std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
 }
+#pragma GCC diagnostic pop
 
-void Position::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void Position::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     draw_lanelet_refs = _draw_lanelet_refs;
 }
@@ -151,7 +156,7 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
             {
                 for (auto lanelet_ref : lanelet_refs)
                 {
-                    draw_lanelet_refs(lanelet_ref, ctx, scale, 0, 0, 0, local_orientation);
+                    draw_lanelet_refs(lanelet_ref, ctx, scale, 0, 0, 0);
                 }
             }
             else

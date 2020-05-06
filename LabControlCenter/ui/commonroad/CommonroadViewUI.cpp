@@ -2,9 +2,7 @@
 
 CommonroadViewUI::CommonroadViewUI
     (
-    std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-    unsigned int argc, 
-    char *argv[]
+    std::shared_ptr<CommonRoadScenario> _commonroad_scenario
     ) 
     :
     commonroad_scenario(_commonroad_scenario)

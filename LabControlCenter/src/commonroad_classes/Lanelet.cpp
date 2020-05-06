@@ -412,6 +412,9 @@ void Lanelet::transform_coordinate_system(double scale, double translate_x, doub
     }
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Current state: Only draw boundaries
@@ -419,7 +422,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     ctx->save();
 
     //Perform required translation + rotation
-    //Local orientation is irrelevant here
+    //Local orientation is irrelevant here (we do not want to rotate the lanelet around its center)
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
@@ -482,8 +485,9 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
     ctx->restore();
 }
+#pragma GCC diagnostic pop
 
-void Lanelet::draw_ref(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
+void Lanelet::draw_ref(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y)
 {
     //Local orientation does not really make sense here, so it is ignored
     ctx->save();

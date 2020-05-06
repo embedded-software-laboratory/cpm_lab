@@ -80,7 +80,6 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
 
     //Translate new data
     xmlpp::DomParser parser;
-    bool parsing_failed = false;
     try
     {
         //Parse XML file (DOM parser)
@@ -94,18 +93,16 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
 
         //Get desired parent node parts
-        const auto nodename = pNode->get_name();
-        const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(pNode);
-
+        // const auto nodename = pNode->get_name();
+        // const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(pNode);
         //Throw an error if the parent node does not meet the expectation (-> is not conform to commonroad specs)
-        if(nodename.empty() || !(nodeElement))
-        {
-            parsing_failed = true;
-        }
-        if (nodename.compare("commonRoad") != 0)
-        {
-            parsing_failed = true;
-        }
+        // if(nodename.empty() || !(nodeElement))
+        // {
+        //      TODO: Add custom error if desired, should lead to a translation error elsewhere though anyway
+        // }
+        // if (nodename.compare("commonRoad") != 0)
+        // {
+        // }
 
         //Store scenario attributes
         translate_attributes(pNode);
@@ -214,12 +211,12 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     else if (node_name.compare("staticObstacle") == 0)
     {
         static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
-        static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
         dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
-        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
     }
     else if (node_name.compare("obstacle") == 0)
     {
@@ -227,19 +224,19 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
         if (obstacle_role == ObstacleRole::Static)
         {
             static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
-            static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+            static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
             dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
-            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
         }
         
     }
     else if (node_name.compare("planningProblem") == 0)
     {
         planning_problems.insert({xml_translation::get_attribute_int(node, "id", true).value(), PlanningProblem(node)});
-        planning_problems.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6, _7));
+        planning_problems.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
     }
     else if (node_name.compare("comment") == 0)
     {
@@ -473,6 +470,9 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
     //TODO: We probably need to center the problem as well, so get farthest left / right / ... points for this
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if (xml_translation_mutex.try_lock())
@@ -481,7 +481,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         ctx->save();
 
         //Perform required translation + rotation
-        //Local orientation is irrelevant here
+        //Local orientation is irrelevant here (Use global orientation if you want to change the orientation of the whole scenario. Local orientation is only used for e.g. shapes, where this actually makes sense.)
         ctx->translate(global_translate_x, global_translate_y);
         ctx->rotate(global_orientation);
 
@@ -523,8 +523,9 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         xml_translation_mutex.unlock();
     }
 }
+#pragma GCC diagnostic pop
 
-void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
+void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y)
 {
     //Mutex locking not necessary / possible here (called within draw from other objects)
 
@@ -533,7 +534,7 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     {
         ctx->save();
         //ctx->set_source_rgba(0, 0.7, 0.7, 0.7); -> Better set the color yourself before calling draw_...
-        lanelet_it->second.draw_ref(ctx, scale, global_orientation, global_translate_x, global_translate_y, local_orientation);
+        lanelet_it->second.draw_ref(ctx, scale, global_orientation, global_translate_x, global_translate_y);
         ctx->restore();
     }
     else
@@ -574,7 +575,7 @@ const std::string& CommonRoadScenario::get_source()
     return source;
 }
 
-const double CommonRoadScenario::get_time_step_size()
+double CommonRoadScenario::get_time_step_size()
 {
     return time_step_size;
 }

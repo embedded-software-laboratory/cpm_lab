@@ -51,6 +51,10 @@ public:
      */
     bool get_child_bool(const xmlpp::Node* node, std::string child_name);
 
+    //Suppress warning for unused parameter (s)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     /**
      * \brief This function is used to draw the data structure that imports this interface
      * If you want to set a color for drawing, perform this action on the context before using the draw function
@@ -65,6 +69,8 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override {} //TODO
+
+    #pragma GCC diagnostic pop
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC

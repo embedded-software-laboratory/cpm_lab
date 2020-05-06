@@ -206,9 +206,8 @@ public:
      * \param global_orientation - optional: Rotation that needs to be applied before drawing - set as global transformation to the whole coordinate system
      * \param global_translate_x - optional: Translation in x-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
      * \param global_translate_y - optional: Translation in y-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
-    void draw_ref(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0);
+    void draw_ref(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
     
     void to_dds_msg() {}
 

@@ -142,7 +142,7 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
     ctx->restore();
 }
 
-void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     if(initial_state.has_value())
     {

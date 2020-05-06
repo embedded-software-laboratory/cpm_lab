@@ -175,6 +175,9 @@ void TrafficSign::transform_coordinate_system(double scale, double translate_x, 
     }
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
     std::cerr << "TODO: Better warning // Drawing TrafficSigns is currently unsupported" << std::endl;
@@ -194,3 +197,4 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
         }
     }
 }
+#pragma GCC diagnostic pop

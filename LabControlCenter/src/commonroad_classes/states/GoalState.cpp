@@ -123,7 +123,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->restore();
 }
 
-void GoalState::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void GoalState::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     if(position.has_value())
     {

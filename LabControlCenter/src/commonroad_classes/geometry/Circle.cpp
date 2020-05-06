@@ -46,6 +46,9 @@ void Circle::transform_coordinate_system(double scale, double translate_x, doubl
     center->transform_coordinate_system(scale, translate_x, translate_y);
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void Circle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();
@@ -66,6 +69,7 @@ void Circle::draw(const DrawingContext& ctx, double scale, double global_orienta
 
     ctx->restore();
 }
+#pragma GCC diagnostic pop
 
 const std::optional<Point>& Circle::get_center() const
 {

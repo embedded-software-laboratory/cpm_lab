@@ -213,6 +213,9 @@ void TrafficLight::transform_coordinate_system(double scale, double translate_x,
     }
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
     std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
@@ -226,3 +229,4 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
     //     ctx->show_text("Light"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
     // }
 }
+#pragma GCC diagnostic pop

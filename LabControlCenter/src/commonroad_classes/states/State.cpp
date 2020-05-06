@@ -173,7 +173,7 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->restore();
 }
 
-void State::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void State::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     if(position.has_value())
     {

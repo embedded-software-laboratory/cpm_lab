@@ -143,7 +143,7 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
     ctx->restore();
 }
 
-void PlanningProblem::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double, double)> _draw_lanelet_refs)
+void PlanningProblem::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
     for (auto& planning_prob : planning_problems)
     {

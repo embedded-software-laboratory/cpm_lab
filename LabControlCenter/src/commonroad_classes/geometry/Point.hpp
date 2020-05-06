@@ -25,7 +25,7 @@ public:
     Point(const xmlpp::Node* node);
 
     /**
-     * \brief Second constructor, value is irrelevant - value given s.t. no default constructor exists
+     * \brief Second constructor, value is irrelevant - value given s.t. !!no default constructor exists!!
      * Call this if you need to use the specified default value from the specs because the value was not set explicitly
      */
     Point(int irrelevant_int);
