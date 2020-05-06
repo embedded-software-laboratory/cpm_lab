@@ -19,7 +19,7 @@ mkdir -p $DIR/build
 
 cd $DIR/build
 cmake ..
-make -C $DIR/build -j8 && $DIR/build/unittest
+make -C $DIR/build -j$(nproc) && $DIR/build/unittest
 cd $DIR
 
 # Publish cpm_library package via http/apache for the HLCs to download
