@@ -71,6 +71,20 @@ void Circle::draw(const DrawingContext& ctx, double scale, double global_orienta
 }
 #pragma GCC diagnostic pop
 
+std::pair<double, double> Circle::get_center()
+{
+    if (center.has_value())
+    {
+        return std::pair<double, double>(center->get_x(), center->get_y());
+    }
+    else
+    {
+        //Return "default value", though this should never be reached if the constructor worked
+        auto default_center = Point(-1);
+        return std::pair<double, double>(default_center.get_x(), default_center.get_y());
+    }
+}
+
 const std::optional<Point>& Circle::get_center() const
 {
     return center;

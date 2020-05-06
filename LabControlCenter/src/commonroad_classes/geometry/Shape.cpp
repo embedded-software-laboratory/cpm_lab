@@ -107,6 +107,34 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->restore();
 }
 
+std::pair<double, double> Shape::get_center()
+{
+    double x, y = 0.0;
+
+    for (auto circle : circles)
+    {
+        auto center = circle.get_center();
+        x += center.first;
+        y += center.second;
+    }
+
+    for (auto polygon : polygons)
+    {
+        auto center = polygon.get_center();
+        x += center.first;
+        y += center.second;
+    }
+
+    for (auto rectangle : rectangles)
+    {
+        auto center = rectangle.get_center();
+        x += center.first;
+        y += center.second;
+    }
+
+    return std::pair<double, double>(x, y);
+}
+
 void Shape::transform_context(const DrawingContext& ctx, double scale)
 {
     //Just move the coordinate system's center to one of the shape's centroids
@@ -114,23 +142,17 @@ void Shape::transform_context(const DrawingContext& ctx, double scale)
     if (circles.size() > 0)
     {
         auto center = circles.at(0).get_center();
-        if(center.has_value())
-        {
-            ctx->translate(center->get_x() * scale, center->get_y() * scale);
-        }
+        ctx->translate(center.first * scale, center.second * scale);
     }
     else if (polygons.size() > 0)
     {
         auto center = polygons.at(0).get_center();
         //Center is computed from vertices, type is not std::optional and not const
-        ctx->translate(center.get_x() * scale, center.get_y() * scale);
+        ctx->translate(center.first * scale, center.second * scale);
     }
     else if (rectangles.size() > 0)
     {
         auto center = rectangles.at(0).get_center();
-        if(center.has_value())
-        {
-            ctx->translate(center->get_x() * scale, center->get_y() * scale);
-        }
+        ctx->translate(center.first * scale, center.second * scale);
     }
 }

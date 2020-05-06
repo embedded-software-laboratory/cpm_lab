@@ -188,24 +188,17 @@ void Position::transform_context(const DrawingContext& ctx, double scale)
         if (circles.size() > 0)
         {
             auto center = circles.at(0).get_center();
-            if(center.has_value())
-            {
-                ctx->translate(center->get_x() * scale, center->get_y() * scale);
-            }
+            ctx->translate(center.first * scale, center.second * scale);
         }
         else if (polygons.size() > 0)
         {
             auto center = polygons.at(0).get_center();
-            //Center is computed from vertices, type is not std::optional and not const
-            ctx->translate(center.get_x() * scale, center.get_y() * scale);
+            ctx->translate(center.first * scale, center.second * scale);
         }
         else if (rectangles.size() > 0)
         {
             auto center = rectangles.at(0).get_center();
-            if(center.has_value())
-            {
-                ctx->translate(center->get_x() * scale, center->get_y() * scale);
-            }
+            ctx->translate(center.first * scale, center.second * scale);
         }
         else
         {

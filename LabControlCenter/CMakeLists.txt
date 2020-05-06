@@ -63,6 +63,7 @@ set(COMMONROAD
 
     src/commonroad_classes/InterfaceTransform.hpp
     src/commonroad_classes/InterfaceDraw.hpp
+    src/commonroad_classes/InterfaceGeometry.hpp
 
     src/commonroad_classes/XMLTranslation.hpp
     src/commonroad_classes/XMLTranslation.cpp
@@ -94,7 +95,7 @@ set(COMMONROAD
     src/commonroad_classes/states/StateExact.hpp
     src/commonroad_classes/states/StateExact.cpp
 
-     src/commonroad_classes/SpecificationError.hpp
+    src/commonroad_classes/SpecificationError.hpp
     src/commonroad_classes/SpecificationError.cpp
 )
 

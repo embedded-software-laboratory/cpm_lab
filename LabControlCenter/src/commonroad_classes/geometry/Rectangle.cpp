@@ -89,7 +89,16 @@ void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->restore();
 }
 
-const std::optional<Point>& Rectangle::get_center() const
+std::pair<double, double> Rectangle::get_center()
 {
-    return center;
+    if (center.has_value())
+    {
+        return std::pair<double, double>(center->get_x(), center->get_y());
+    }
+    else
+    {
+        //Return "default value", though this should never be reached if the constructor worked
+        auto default_center = Point(-1);
+        return std::pair<double, double>(default_center.get_x(), default_center.get_y());
+    }
 }

@@ -128,6 +128,19 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
         if (shape.has_value())
         {
             shape->draw(ctx, scale, 0, 0, 0, local_orientation);
+
+            //Draw text on shape position
+            auto shape_center = shape->get_center();
+            ctx->translate(shape_center.first, shape_center.second);
+            ctx->rotate(local_orientation);
+            ctx->select_font_face("sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
+            ctx->set_font_size(0.1 * scale);
+            ctx->text_path("TODO: Description");
+            ctx->set_source_rgb(1.0, 1.0, 1.0);
+            ctx->fill_preserve();
+            ctx->set_source_rgb(0.0, 0.0, 0.0);
+            ctx->set_line_width(0.01 * scale);
+            ctx->stroke();
         }
         else
         {

@@ -12,6 +12,7 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
@@ -20,7 +21,7 @@
  * \class Rectangle
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
  */
-class Rectangle : public InterfaceTransform, public InterfaceDraw
+class Rectangle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
     double length; //TODO: In constructor: Check if >= 0, must be unsigned
@@ -54,9 +55,11 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
+    /**
+     * \brief Get center (positional value) of the circle
+     * \return Center of the circle
+     */
+    std::pair<double, double> get_center() override;
     
     void to_dds_msg() {}
-
-    //TODO: Getter
-    const std::optional<Point>& get_center() const;
 };

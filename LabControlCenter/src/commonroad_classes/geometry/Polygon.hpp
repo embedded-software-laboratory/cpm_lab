@@ -8,6 +8,7 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <sstream>
@@ -19,7 +20,7 @@
  * \class Polygon
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
  */
-class Polygon : public InterfaceTransform, public InterfaceDraw
+class Polygon : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
     std::vector<Point> points; //min. 3
@@ -49,9 +50,12 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    /**
+     * \brief Get center (positional value) of the circle
+     * \return Center of the circle
+     */
+    std::pair<double, double> get_center() override;
     
     void to_dds_msg() {}
-
-    //TODO: Getter
-    const Point get_center();
 };
