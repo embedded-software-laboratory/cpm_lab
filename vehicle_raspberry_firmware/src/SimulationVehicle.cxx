@@ -7,7 +7,7 @@ extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
 }
 
-SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id)
+SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id, vector<double> starting_position)
 :topic_vehiclePoseSimulated(cpm::get_topic<VehicleObservation>("vehiclePoseSimulated"))
 ,writer_vehiclePoseSimulated(
     dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
@@ -21,11 +21,17 @@ SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehi
     const std::vector<double> nodes_cos = std::vector<double>{1.0000e+00,9.9875e-01,1.0000e+00,9.9874e-01,8.7677e-01,8.7680e-01,1.5918e-01,1.5927e-01,0.0000e+00,0.0000e+00,-8.7962e-01,1.5925e-01,-8.7962e-01,-1.0000e+00,-1.0000e+00,4.0366e-05,6.1691e-01,-4.0327e-05,6.1691e-01,9.9874e-01,-1.0000e+00,0.0000e+00,4.0366e-05,1.0000e+00,-4.0327e-05,1.0000e+00,0.0000e+00,-1.0000e+00,9.9875e-01,9.9874e-01,8.7677e-01,8.7680e-01,1.5918e-01,1.5927e-01,0.0000e+00,0.0000e+00,-8.7962e-01,-8.7962e-01,1.5925e-01,-1.0000e+00,-1.0000e+00,6.1691e-01,6.1691e-01,9.9874e-01,0.0000e+00,1.0000e+00,1.0000e+00,0.0000e+00,-9.9875e-01,-1.0000e+00,-9.9874e-01,-1.0000e+00,-8.7677e-01,-8.7680e-01,-1.5918e-01,-1.5927e-01,8.7962e-01,8.7962e-01,-1.5925e-01,-6.1691e-01,-4.0366e-05,-6.1691e-01,4.0327e-05,-9.9874e-01,1.0000e+00,-4.0366e-05,4.0327e-05,1.0000e+00,-9.9875e-01,-9.9874e-01,-8.7677e-01,-8.7680e-01,-1.5918e-01,-1.5927e-01,8.7962e-01,-1.5925e-01,8.7962e-01,-6.1691e-01,-6.1691e-01,-9.9874e-01,};
     const std::vector<double> nodes_sin = std::vector<double>{0.0000e+00,-5.0058e-02,0.0000e+00,-5.0154e-02,-4.8090e-01,-4.8086e-01,-9.8725e-01,-9.8724e-01,-1.0000e+00,-1.0000e+00,-4.7568e-01,-9.8724e-01,-4.7568e-01,-3.4318e-05,3.4305e-05,1.0000e+00,7.8703e-01,1.0000e+00,7.8703e-01,-5.0169e-02,0.0000e+00,1.0000e+00,-1.0000e+00,-3.4318e-05,-1.0000e+00,3.4305e-05,1.0000e+00,0.0000e+00,5.0058e-02,5.0154e-02,4.8090e-01,4.8086e-01,9.8725e-01,9.8724e-01,1.0000e+00,1.0000e+00,4.7568e-01,4.7568e-01,9.8724e-01,3.4318e-05,-3.4305e-05,-7.8703e-01,-7.8703e-01,5.0169e-02,-1.0000e+00,3.4318e-05,-3.4305e-05,-1.0000e+00,-5.0058e-02,0.0000e+00,-5.0154e-02,0.0000e+00,-4.8090e-01,-4.8086e-01,-9.8725e-01,-9.8724e-01,-4.7568e-01,-4.7568e-01,-9.8724e-01,7.8703e-01,1.0000e+00,7.8703e-01,1.0000e+00,-5.0169e-02,0.0000e+00,-1.0000e+00,-1.0000e+00,0.0000e+00,5.0058e-02,5.0154e-02,4.8090e-01,4.8086e-01,9.8725e-01,9.8724e-01,4.7568e-01,9.8724e-01,4.7568e-01,-7.8703e-01,-7.8703e-01,5.0169e-02,};
     const std::vector<double> index_map {2,3,5,7,9,55,53,50,51,69,71,73,35,33,31,29,14,25,62,66,46,40,24,17};  
-    
-    px = nodes_x.at(index_map.at(vehicle_id));
-    py = nodes_y.at(index_map.at(vehicle_id));
-    yaw = atan2(nodes_sin.at(index_map.at(vehicle_id)), nodes_cos.at(index_map.at(vehicle_id)));
-    yaw_measured = yaw;
+    if(starting_position.size() != 3){
+        px = nodes_x.at(index_map.at(vehicle_id));
+        py = nodes_y.at(index_map.at(vehicle_id));
+        yaw = atan2(nodes_sin.at(index_map.at(vehicle_id)), nodes_cos.at(index_map.at(vehicle_id)));
+        yaw_measured = yaw;
+    } else {
+        px = starting_position[0];
+        py = starting_position[1];
+        yaw = starting_position[2];
+        yaw_measured = starting_position[2]; 
+    }
 }
 
 VehicleState SimulationVehicle::update(

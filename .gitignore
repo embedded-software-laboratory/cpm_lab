@@ -47,3 +47,4 @@ hlc/hlc.txt
 hlc/hlc_*.txt
 hlc/matlab/dds_idl_matlab
 command_line_arguments_test.bash
+lcc_interface/
