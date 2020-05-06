@@ -37,7 +37,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id] = map<string, shared_ptr<TimeSeries>>();
 
     timeseries_vehicles[vehicle_id]["reference_deviation"] = make_shared<TimeSeries>(
-        "Reference Deviation", "%6.2f", "h/l");
+        "Reference Deviation", "%6.2f", "m");
 
     timeseries_vehicles[vehicle_id]["pose_x"] = make_shared<TimeSeries>(
         "Position X", "%6.2f", "m");
@@ -49,7 +49,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
         "Yaw", "%6.3f", "rad");
 
     timeseries_vehicles[vehicle_id]["ips"] = make_shared<TimeSeries>(
-        "IPS", "%s", "y/n");
+        "IPS", "%s", "-");
 
     timeseries_vehicles[vehicle_id]["speed"] = make_shared<TimeSeries>(
         "Speed", "%5.2f", "m/s");
@@ -59,6 +59,31 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     timeseries_vehicles[vehicle_id]["clock_delta"] = make_shared<TimeSeries>(
         "Clock Delta", "%5.1f", "ms");
+
+    timeseries_vehicles[vehicle_id]["ips_x"] = make_shared<TimeSeries>(
+        "IPS Position X", "%6.2f", "m");
+
+    timeseries_vehicles[vehicle_id]["ips_y"] = make_shared<TimeSeries>(
+        "IPS Position Y", "%6.2f", "m");
+
+    timeseries_vehicles[vehicle_id]["ips_yaw"] = make_shared<TimeSeries>(
+        "IPS Yaw", "%6.3f", "rad");
+
+    timeseries_vehicles[vehicle_id]["odometer_distance"] = make_shared<TimeSeries>(
+        "Odometer Distance", "%7.2f", "m");
+
+    timeseries_vehicles[vehicle_id]["imu_acceleration_forward"] = make_shared<TimeSeries>(
+        "Acceleration Forward", "%4.1f", "m/s^2");
+
+    timeseries_vehicles[vehicle_id]["imu_acceleration_left"] = make_shared<TimeSeries>(
+        "Acceleration Left", "%4.1f", "m/s^2");
+
+    timeseries_vehicles[vehicle_id]["battery_voltage"] = make_shared<TimeSeries>(
+        "Battery Voltage", "%5.2f", "V");
+
+    timeseries_vehicles[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
+        "Motor Current", "%5.2f", "A");
+
 }
 
 
@@ -94,13 +119,19 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             {
                 create_vehicle_timeseries(state.vehicle_id());
             }
-            timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
             timeseries_vehicles[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
             timeseries_vehicles[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());
             timeseries_vehicles[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
             timeseries_vehicles[state.vehicle_id()]["battery_level"]            ->push_sample(now, voltage_to_percent(state.battery_voltage()));
             timeseries_vehicles[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(int64_t(now)- int64_t(state.header().create_stamp().nanoseconds()))/1e6 );
+            timeseries_vehicles[state.vehicle_id()]["odometer_distance"]        ->push_sample(now, state.odometer_distance());
+            timeseries_vehicles[state.vehicle_id()]["imu_acceleration_forward"] ->push_sample(now, state.imu_acceleration_forward());
+            timeseries_vehicles[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
+            timeseries_vehicles[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
+            timeseries_vehicles[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
+            // initialize reference deviation, since no reference is available at start 
+            timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
         }
     }
 }
@@ -121,9 +152,11 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             {
                 create_vehicle_timeseries(state.vehicle_id());
             }
-
+            timeseries_vehicles[state.vehicle_id()]["ips_x"]  ->push_sample(now, state.pose().x());
+            timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
+            timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
+            // timeseries to check if any IPS data are available, push any data 
             timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, state.pose().x());
-
         }
     }
 }

@@ -36,13 +36,13 @@ public:
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
 
-    std::string reboot_script = "bash reboot_raspberry.bash 192.168.1.1";
+    std::string reboot_script = "bash ./bash/reboot_raspberry.bash 192.168.1.1";
 
     std::vector<std::thread> reboot_threads; //threads that are responsible for rebooting vehicles    
-    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
-    void notify_reboot_finished(); //notify function that gets called by the upload threads when they have finished their work
+    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all threads that need to be created have finished their work
+    void notify_reboot_finished(); //notify function that gets called by the threads when they have finished their work
     std::mutex notify_callback_in_use; //the notify_reboot_finished function should only be accessible by one thread at once, thus use this mutex
-    size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
+    size_t notify_count; //counter for notify_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
     void kill_all_threads(); //function to join all threads
     
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
@@ -68,10 +68,10 @@ public:
 
 public:
     explicit MonitoringUi(
-        std::shared_ptr<Deploy> _deploy_functions,  
+        std::shared_ptr<Deploy> deploy_functions_callback,  
         std::function<VehicleData()> get_vehicle_data_callback, 
         std::function<std::vector<std::string>()> get_hlc_data_callback,
-        std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback, 
+        std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
         std::function<void()> reset_data_callback
     );
     ~MonitoringUi();
