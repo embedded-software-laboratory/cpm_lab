@@ -285,7 +285,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
     }
 
     //Step - 1 is current trajectory index (0 for initial state)
-    //step = step + 1;
+    step = step + 1;
     if (step > trajectory.size() && trajectory.size() > 0) 
     {
         step = 0;
