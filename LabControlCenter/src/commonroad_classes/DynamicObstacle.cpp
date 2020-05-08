@@ -10,8 +10,6 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         assert(role_text.compare("dynamic") == 0);
     }
 
-    std::string obstacle_type_text;
-
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, so an error is thrown anyway -> just use .value()
@@ -158,6 +156,11 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
 void DynamicObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
+
+    if (scale > 0)
+    {
+        transform_scale *= scale;
+    }
     
     if (shape.has_value())
     {
@@ -180,6 +183,46 @@ void DynamicObstacle::transform_coordinate_system(double scale, double translate
     }
 }
 
+void DynamicObstacle::draw_shape_with_text(const DrawingContext& ctx, double scale, double local_orientation)
+{
+    if (shape.has_value())
+    {
+        shape->draw(ctx, scale, 0, 0, 0, local_orientation);
+
+        //Draw text on shape position
+        //Set text position
+        draw_text(ctx, scale, local_orientation, shape->get_center());
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+    }
+}
+
+void DynamicObstacle::draw_text(const DrawingContext& ctx, double scale, double local_orientation, std::pair<double, double> center)
+{
+    ctx->translate(center.first, center.second);
+    ctx->rotate(local_orientation);
+
+    //Set font, flip bc of chosen coordinate system
+    ctx->select_font_face("sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
+    Cairo::Matrix font_matrix(0.4 * scale * transform_scale, 0.0, 0.0, -0.4 * scale * transform_scale, 0.0, 0.0);
+    ctx->set_font_matrix(font_matrix);
+
+    //Calculate text width to center the text on the obstacle's center
+    Cairo::TextExtents text_extents;
+    ctx->get_text_extents(obstacle_type_text, text_extents);
+    ctx->translate(-text_extents.width / 2.0, - text_extents.height / 2.0);
+
+    //Draw text
+    ctx->text_path(obstacle_type_text);
+    ctx->set_source_rgb(1.0, 1.0, 1.0);
+    ctx->fill_preserve();
+    ctx->set_source_rgb(0.0, 0.0, 0.0);
+    ctx->set_line_width(0.002 * scale);
+    ctx->stroke();
+}
+
 void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     ctx->save();
@@ -199,14 +242,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
 
             initial_state->transform_context(ctx, scale);
 
-            if (shape.has_value())
-            {
-                shape->draw(ctx, scale, 0, 0, 0, local_orientation);
-            }
-            else
-            {
-                std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-            }
+            draw_shape_with_text(ctx, scale, local_orientation);
 
             ctx->restore();
         }
@@ -221,14 +257,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
 
         trajectory.at(step - 1).transform_context(ctx, scale);
 
-        if (shape.has_value())
-        {
-            shape->draw(ctx, scale, 0, 0, 0, local_orientation);
-        }
-        else
-        {
-            std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-        }
+        draw_shape_with_text(ctx, scale, local_orientation);
 
         ctx->restore();
     }
@@ -237,6 +266,8 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
         //Draw occupancy shape
         ctx->save();
         occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
+        occupancy_set.at(step - 1).transform_context(ctx, scale);
+        draw_text(ctx, scale, local_orientation, occupancy_set.at(step - 1).get_center());
         ctx->restore();
 
         //Draw obstacle shape at centroid of occupancy shape
@@ -254,7 +285,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
     }
 
     //Step - 1 is current trajectory index (0 for initial state)
-    step = step + 1;
+    //step = step + 1;
     if (step > trajectory.size() && trajectory.size() > 0) 
     {
         step = 0;

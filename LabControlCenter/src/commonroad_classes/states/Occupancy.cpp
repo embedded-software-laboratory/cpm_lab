@@ -61,6 +61,20 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->restore();
 }
 
+std::pair<double, double> Occupancy::get_center()
+{
+    //Get shape center
+    if (shape.has_value())
+    {
+        return shape->get_center();
+    }
+    else
+    {
+        std::cerr << "TODO: Better warning // Cannot transform context with occupancy, shape is missing" << std::endl;
+        return std::pair<double, double>(0.0, 0.0);
+    }
+}
+
 void Occupancy::transform_context(const DrawingContext& ctx, double scale)
 {
     //Transform to position of shape center, where the object can be drawn if desired

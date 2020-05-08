@@ -5,10 +5,15 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
     //TODO: Warn in case node does not have static obstacle role
     //Check if node is of type staticObstacle
     assert(node->get_name() == "staticObstacle" || node->get_name() == "obstacle");
+    if (node->get_name() == "obstacle") //2018 specs
+    {
+        std::string role_text = xml_translation::get_child_child_text(node, "role", true).value(); //Must exist (2018 specs), else error is thrown
+        assert(role_text.compare("static") == 0);
+    }
     
     try
     {
-        std::string obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
+        obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
         if (obstacle_type_text.compare("unknown") == 0)
         {
             type = ObstacleTypeStatic::Unknown;
@@ -84,6 +89,11 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 void StaticObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
+
+    if (scale > 0)
+    {
+        transform_scale *= scale;
+    }
     
     if (shape.has_value())
     {
@@ -130,16 +140,27 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
             shape->draw(ctx, scale, 0, 0, 0, local_orientation);
 
             //Draw text on shape position
+            //Set text position
             auto shape_center = shape->get_center();
             ctx->translate(shape_center.first, shape_center.second);
             ctx->rotate(local_orientation);
+
+            //Set font, flip bc of chosen coordinate system
             ctx->select_font_face("sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
-            ctx->set_font_size(0.1 * scale);
-            ctx->text_path("TODO: Description");
+            Cairo::Matrix font_matrix(0.4 * scale * transform_scale, 0.0, 0.0, -0.4 * scale * transform_scale, 0.0, 0.0);
+            ctx->set_font_matrix(font_matrix);
+
+            //Calculate text width to center the text on the obstacle's center
+            Cairo::TextExtents text_extents;
+            ctx->get_text_extents(obstacle_type_text, text_extents);
+            ctx->translate(-text_extents.width / 2.0, - text_extents.height / 2.0);
+
+            //Draw text
+            ctx->text_path(obstacle_type_text);
             ctx->set_source_rgb(1.0, 1.0, 1.0);
             ctx->fill_preserve();
             ctx->set_source_rgb(0.0, 0.0, 0.0);
-            ctx->set_line_width(0.01 * scale);
+            ctx->set_line_width(0.002 * scale);
             ctx->stroke();
         }
         else

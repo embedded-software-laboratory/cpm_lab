@@ -15,6 +15,7 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
@@ -24,7 +25,7 @@
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent an Occupancy specified in an XML file
  */
-class Occupancy : public InterfaceTransform, public InterfaceDraw
+class Occupancy : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
     //Commonroad data
@@ -59,6 +60,12 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    /**
+     * \brief Get center (positional value) of the circle
+     * \return Center of the circle
+     */
+    std::pair<double, double> get_center() override;
 
     /**
      * \brief This function is used to transform (rotate, translate) a context, e.g. because position/orientation and shape information are given in different objects, but need to be combined for drawing

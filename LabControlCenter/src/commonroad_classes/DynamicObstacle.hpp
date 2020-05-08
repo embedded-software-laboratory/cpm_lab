@@ -44,6 +44,7 @@ class DynamicObstacle : public InterfaceTransform, public InterfaceDraw
 private:
     //Commonroad type
     std::optional<ObstacleTypeDynamic> type;
+    std::string obstacle_type_text;
     std::optional<Shape> shape;
     std::optional<State> initial_state;
     std::optional<SignalState> initial_signal_state;
@@ -58,6 +59,9 @@ private:
     //TODO: Transform to real vehicle representation, this is just to show that movement could be translated properly
     //Used for drawing
     size_t step; //Use this to iterate through trajectory (including initial state as well, which is not part of it)
+
+    //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
+    double transform_scale = 1.0;
 
 public:
     /**
@@ -91,6 +95,10 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    //Helper function for draw, because this is done multiple times
+    void draw_shape_with_text(const DrawingContext& ctx, double scale = 1.0, double local_orientation = 0.0);
+    void draw_text(const DrawingContext& ctx, double scale, double local_orientation, std::pair<double, double> center);
 
     /**
      * \brief Setter for drawing lanelet references (Can also be constructed without this)

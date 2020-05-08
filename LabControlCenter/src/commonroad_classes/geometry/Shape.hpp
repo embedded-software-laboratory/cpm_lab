@@ -53,8 +53,8 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
     /**
-     * \brief Get center (positional value) of the circle
-     * \return Center of the circle
+     * \brief Get center (positional value) of the shape
+     * \return Center of the shape
      */
     std::pair<double, double> get_center() override;
 

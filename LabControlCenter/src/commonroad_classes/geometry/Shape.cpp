@@ -110,12 +110,14 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 std::pair<double, double> Shape::get_center()
 {
     double x, y = 0.0;
+    double center_count = 0.0;
 
     for (auto circle : circles)
     {
         auto center = circle.get_center();
         x += center.first;
         y += center.second;
+        ++center_count;
     }
 
     for (auto polygon : polygons)
@@ -123,6 +125,7 @@ std::pair<double, double> Shape::get_center()
         auto center = polygon.get_center();
         x += center.first;
         y += center.second;
+        ++center_count;
     }
 
     for (auto rectangle : rectangles)
@@ -130,6 +133,13 @@ std::pair<double, double> Shape::get_center()
         auto center = rectangle.get_center();
         x += center.first;
         y += center.second;
+        ++center_count;
+    }
+
+    if (center_count > 0)
+    {
+        x /= center_count;
+        y /= center_count;
     }
 
     return std::pair<double, double>(x, y);
