@@ -83,4 +83,5 @@ public:
     void to_dds_msg(); 
 
     //TODO: Getter
+    IntervalOrExact get_time(); //Must exist, throw error if it does not
 };

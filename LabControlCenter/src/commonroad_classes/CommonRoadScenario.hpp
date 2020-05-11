@@ -217,4 +217,7 @@ public:
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
     const std::optional<Location> get_location();
+
+    std::vector<int> get_dynamic_obstacle_ids();
+    const std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
 };

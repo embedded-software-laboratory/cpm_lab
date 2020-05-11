@@ -87,3 +87,25 @@ void Occupancy::transform_context(const DrawingContext& ctx, double scale)
         std::cerr << "TODO: Better warning // Cannot transform context with occupancy, shape is missing" << std::endl;
     }
 }
+
+//********************************************************************************************************************************************
+//Getter
+//********************************************************************************************************************************************
+
+Position Occupancy::get_center()
+{
+    if (!shape.has_value())
+    {
+        throw SpecificationError("Occupancy should have shape value, but does not");
+    }
+    return shape->get_center();
+}
+
+IntervalOrExact Occupancy::get_time()
+{
+    if (!time.has_value())
+    {
+        throw SpecificationError("Occupancy should have time value, but does not");
+    }
+    return time.value();
+}

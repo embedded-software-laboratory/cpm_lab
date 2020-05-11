@@ -594,3 +594,24 @@ const std::optional<Location> CommonRoadScenario::get_location()
 {
     return location;
 }
+
+std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
+{
+    std::vector<int> ids;
+    for (const auto& entry : dynamic_obstacles)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
+
+const std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
+{
+    //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
+    if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
+    {
+        return std::optional<DynamicObstacle>(dynamic_obstacles.at(id));
+    }
+    return std::optional<DynamicObstacle>();
+}

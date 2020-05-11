@@ -127,4 +127,7 @@ public:
     void to_dds_msg() {} 
 
     //TODO: Getter
+    Position get_position(); //Must exist, throw error if it does not
+    IntervalOrExact get_time(); //Must exist, throw error if it does not
+    std::optional<IntervalOrExact> get_velocity();
 };

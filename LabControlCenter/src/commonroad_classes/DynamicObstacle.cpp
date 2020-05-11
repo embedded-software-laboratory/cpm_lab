@@ -310,3 +310,40 @@ void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, con
         state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
     }
 }
+
+std::vector<TrajectoryPoint> DynamicObstacle::get_trajectory()
+{
+    std::vector<TrajectoryPoint> ret_trajectory;
+
+    if (trajectory.size() > 0)
+    {
+        for (const auto& point : trajectory)
+        {
+            TrajectoryPoint trajectory_point;
+
+            //Required data must exist, these function may throw an error otherwise
+            trajectory_point.position = point.get_position().get_center();
+            trajectory_point.time = point.get_time();
+            //Optional data
+            trajectory_point.velocity = point.get_velocity();
+
+            ret_trajectory.push_back(trajectory_point);
+        }
+    }
+    else if (occupancy_set.size() > 0)
+    {
+        for (const auto& point : occupancy_set)
+        {
+            TrajectoryPoint trajectory_point;
+
+            //Required data must exist, these function may throw an error otherwise
+            trajectory_point.position = point.get_center();
+            trajectory_point.time = point.get_time();
+            //Velocity data does not exist in this case
+
+            ret_trajectory.push_back(trajectory_point);
+        }
+    }
+    
+    return ret_trajectory;
+}

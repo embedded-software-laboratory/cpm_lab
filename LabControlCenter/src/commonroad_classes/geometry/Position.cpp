@@ -207,3 +207,47 @@ void Position::transform_context(const DrawingContext& ctx, double scale)
         
     }
 }
+
+std::pair<double, double> Position::get_center()
+{
+    //Return either exact point value or center value of inexact position
+    if (point.has_value())
+    {
+        return std::pair<double, double>(point->get_x(), point->get_y());
+    }
+
+    double x, y = 0.0;
+    double center_count = 0.0;
+
+    for (auto circle : circles)
+    {
+        auto center = circle.get_center();
+        x += center.first;
+        y += center.second;
+        ++center_count;
+    }
+
+    for (auto polygon : polygons)
+    {
+        auto center = polygon.get_center();
+        x += center.first;
+        y += center.second;
+        ++center_count;
+    }
+
+    for (auto rectangle : rectangles)
+    {
+        auto center = rectangle.get_center();
+        x += center.first;
+        y += center.second;
+        ++center_count;
+    }
+
+    if (center_count > 0)
+    {
+        x /= center_count;
+        y /= center_count;
+    }
+
+    return std::pair<double, double>(x, y);
+}

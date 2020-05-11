@@ -35,6 +35,18 @@
 enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
 /**
+ * \struct TrajectoryPoint
+ * \brief This class is used as a return type for the trajectory getter
+ * It allows to conveniently store all relevant information of each TrajectoryPoint
+ */
+struct TrajectoryPoint
+{
+    std::pair<double, double> position; //x, y
+    IntervalOrExact time;
+    std::optional<IntervalOrExact> velocity;
+}
+
+/**
  * \class DynamicObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a DynamicObstacle specified in an XML file
@@ -71,8 +83,6 @@ public:
      */
     DynamicObstacle(const xmlpp::Node* node);
 
-    //TODO: Getter
-
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
@@ -105,4 +115,11 @@ public:
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+
+    //TODO: Getter
+    /**
+     * \brief Returns a trajectory constructed from occupancy or trajectory data
+     * Throws errors if expected types are missing
+     */
+    std::vector<TrajectoryPoint> get_trajectory();
 };

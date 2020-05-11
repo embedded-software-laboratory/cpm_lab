@@ -200,3 +200,30 @@ void State::transform_context(const DrawingContext& ctx, double scale)
         
     }
 }
+
+//********************************************************************************************************************************************
+//Getter
+//********************************************************************************************************************************************
+
+Position State::get_position()
+{
+    if (!position.has_value())
+    {
+        throw SpecificationError("State should have position value, but does not");
+    }
+    return position.value();
+}
+
+IntervalOrExact State::get_time()
+{
+    if (!time.has_value())
+    {
+        throw SpecificationError("State should have time value, but does not");
+    }
+    return time.value();
+}
+
+std::optional<IntervalOrExact> State::get_velocity()
+{
+    return velocity;
+}
