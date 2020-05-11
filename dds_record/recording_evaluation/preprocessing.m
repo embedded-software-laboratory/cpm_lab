@@ -8,14 +8,7 @@
 % original recording are kept as fieldnames.
 
 function [DataByVehicle] = preprocessing(dds_domain, recording_file)
-    % todo Timestmaps normieren ueber vehicles
-    function [secondStamps] = timestampConversion(unixStamps)
-        % Read delta t from unix timestamp and convert into seconds
-        secondStamps = unixStamps;
-        secondStamps(2:end) = cumsum(unixStamps(2:end)-unixStamps(1:end-1))/1000000000;
-        secondStamps(1) = 0;
-    end
-%% Load dds sample if it exists, else call function dbConnection to fetch it.
+    %% Load dds sample if it exists, else call function dbConnection to fetch it.
 % if exist('dds_json_sample.mat', 'file') 
 %    load('dds_json_sample', 'ddsVehicleStateJsonSample', 'ddsVehiclePoseJsonSample')
 % else 
@@ -34,6 +27,11 @@ VehicleObservationTable = struct2table(VehicleObservationRaw);
 HeaderObservation = struct2table([VehicleObservationRaw.header]);
 HeaderState = struct2table([VehicleStateRaw.header]);
 
+%% Find timepoint zero, i.e. smallest timestamp in recording
+t_start_state_nanos = min([HeaderState.create_stamp.nanoseconds]);
+t_start_observation_nanos = min([HeaderObservation.create_stamp.nanoseconds]);
+t_start_nanos = min(t_start_state_nanos, t_start_observation_nanos);
+
 %% Sort data by vehicle ids, resolve nested structures and store into struct DataByVehicle.
 
 DataByVehicle = struct;
@@ -49,17 +47,20 @@ for iVehicles = 1:max([VehicleStateRaw.vehicle_id]) % Loop over vehicle ids.
     % Read out and store nested data of vehicle observation filtered by
     % current vehicle id via logical table operation.
 
-    DataByVehicle.(currentVehicle).observation.create_stamp = timestampConversion([HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]');
-    DataByVehicle.(currentVehicle).observation.valid_after_stamp = timestampConversion([HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]');
+    DataByVehicle.(currentVehicle).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).observation.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).observation.create_stamp_nanos;
+    DataByVehicle.(currentVehicle).observation.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos;
     DataByVehicle.(currentVehicle).observation.x = [VehicleObservationTable.pose(currentRowsObservation).x]';
     DataByVehicle.(currentVehicle).observation.y = [VehicleObservationTable.pose(currentRowsObservation).y]';
     DataByVehicle.(currentVehicle).observation.yaw = [VehicleObservationTable.pose(currentRowsObservation).yaw]';
 
     % Read out and store nested data of vehicle state filtered by
     % current vehicle id via logical table operation.
-    
-    DataByVehicle.(currentVehicle).state.create_stamp = timestampConversion([HeaderState.create_stamp(currentRowsState).nanoseconds]');
-    DataByVehicle.(currentVehicle).state.valid_after_stamp = timestampConversion([HeaderState.valid_after_stamp(currentRowsState).nanoseconds]');
+    DataByVehicle.(currentVehicle).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).state.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).state.create_stamp_nanos;
+    DataByVehicle.(currentVehicle).state.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos;
     DataByVehicle.(currentVehicle).state.x = [VehicleStateTable.pose(currentRowsState).x]';
     DataByVehicle.(currentVehicle).state.y = [VehicleStateTable.pose(currentRowsState).y]';
     DataByVehicle.(currentVehicle).state.yaw = [VehicleStateTable.pose(currentRowsState).yaw]';
@@ -76,3 +77,4 @@ end
 save ('dds_record', 'DataByVehicle')
 
 end
+
