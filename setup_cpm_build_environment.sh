@@ -52,7 +52,7 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install git tmux cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk -y"
+    BUILD_TOOLS="install git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
@@ -75,6 +75,25 @@ else
     sudo -u $real_user ln -s $PWD $RU_HOME/dev
 fi
 
+### 0.4 Set Simulation Switch
+SIMULATION=0
+#Get command line arguments
+for arg in "$@"
+do
+    case $arg in
+        -s|--simulation)
+        SIMULATION=1
+	echo "Building in simulation mode: no IPS, no ARM, no Joystick and no Lab camera are installed."
+        shift # Remove --simulation from processing
+        ;;
+        *)
+        shift # Remove generic argument from processing
+        ;;
+    esac
+done
+
+
+
 
 ### 1. Ubuntu & Packages #######################################################
 
@@ -83,20 +102,25 @@ eval "${PM}" "${BUILD_ESSENTIALS}"
 eval "${PM}" "${BUILD_TOOLS}"
 
 
-### 2. Joystick / Gamepad ######################################################
 
-if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
-    eval "${PM}" install libsigc++-devel gtkmm24-devel -y
-    sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
-    cd ./jstest-gtk/
-# checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
-# TODO consider updating jstest-gtk because more recent versions don't require 
-# gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
-    sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
-    sudo -u $real_user mkdir ./build
-    cd ./build
-    sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
-    sudo -u $real_user make
+### 2. Joystick / Gamepad ######################################################
+# only for real lab application neccessary. With a Joystick or a Gamepad you can drive
+#vehicles manually in the Lab Control Center (LCC)
+if [ $SIMULATION == 0 ]
+then
+    if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
+        eval "${PM}" install libsigc++-devel gtkmm24-devel -y
+        sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
+        cd ./jstest-gtk/
+    # checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
+    # TODO consider updating jstest-gtk because more recent versions don't require 
+    # gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
+        sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
+        sudo -u $real_user mkdir ./build
+        cd ./build
+        sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
+        sudo -u $real_user make
+    fi
 fi
 
 
@@ -104,7 +128,7 @@ fi
 # RTI DDS is used for real-time communication between programs and devices. It
 # implements a publish-subscribe pattern and serialization/deserialization for
 # the messages.
-
+# https://cpm.embedded.rwth-aachen.de/doc/display/CLD/RTI+DDS
 
 ## 3.1 Downloads
 cd $RU_HOME/dev
@@ -117,10 +141,12 @@ sudo -u $real_user tar xvzf ./raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
 sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
 
 ## 3.2 Installation
+
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
 ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
 read -p 'Ask your supervisor for a copy of the RTI license and enter its absolute path (e.g. /home/max/rti_license.dat) here: ' LICENSE
+
 mv $LICENSE /opt/rti_connext_dds-6.0.0/rti_license.dat
 
 ## 3.3 Environment Setup
@@ -141,45 +167,50 @@ echo "export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat" >> /et
 # Reboot or source to apply the changes made to the environment variables.
 source /etc/profile.d/rti_connext_dds.sh
 
+if [ $SIMULATION == 0 ]
+then
 ## 3.4 Install RTI ARM libraries
+# only needed in real lab mode
 yes | /opt/rti_connext_dds-6.0.0/bin/rtipkginstall rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
-
+fi
 
 ### 4. Indoor Positioning System (Setup) #######################################
 # The Indoor Positioning System depends on the camera software Basler Pylon and
 # on OpenCV 4.0.0.
+# https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Indoor+Positioning+System
 
+if [ $SIMULATION == 0 ]
+then
+    ## 4.1 OpenCV 4.0.0
+    eval "${PM}" "${OPENJDK}"
+    cd /tmp
+    sudo -u $real_user git clone https://github.com/opencv/opencv.git
+    cd ./opencv
+    sudo -u $real_user git checkout 4.0.0
+    sudo -u $real_user mkdir ./build
+    cd ./build
+    sudo -u $real_user cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/opt/opencv400 ..
+    N=$(nproc)
+    sudo -u $real_user make -j$N
+    make install
+    cd $RU_HOME/dev
+    if [ ! -d "/opt/opencv400/lib" ]; then
+        ln -s /opt/opencv400/lib64 /opt/opencv400/lib
+    fi
+    rm -rf /tmp/opencv
 
-## 4.1 OpenCV 4.0.0
-eval "${PM}" "${OPENJDK}"
-cd /tmp
-sudo -u $real_user git clone https://github.com/opencv/opencv.git
-cd ./opencv
-sudo -u $real_user git checkout 4.0.0
-sudo -u $real_user mkdir ./build
-cd ./build
-sudo -u $real_user cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/opt/opencv400 ..
-N=$(nproc)
-sudo -u $real_user make -j$N
-make install
-cd $RU_HOME/dev
-if [ ! -d "/opt/opencv400/lib" ]; then
-    ln -s /opt/opencv400/lib64 /opt/opencv400/lib
+    ## 4.2 Basler Pylon 5
+    cd $RU_HOME/dev/downloads
+    sudo -u $real_user wget "${PYLON_URL}"
+    if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
+        sudo -u $real_user tar xvzf ./pylon*.tar.gz
+        cd ./pylon*x86_64
+        tar -C /opt -xzf pylonSDK*.tar.gz
+        yes | ./setup-usb.sh
+    elif [[ ! -z $APT ]]; then
+        dpkg -i pylon*.deb
+    fi
 fi
-rm -rf /tmp/opencv
-
-## 4.2 Basler Pylon 5
-cd $RU_HOME/dev/downloads
-sudo -u $real_user wget "${PYLON_URL}"
-if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
-    sudo -u $real_user tar xvzf ./pylon*.tar.gz
-    cd ./pylon*x86_64
-    tar -C /opt -xzf pylonSDK*.tar.gz
-    yes | ./setup-usb.sh
-elif [[ ! -z $APT ]]; then
-    dpkg -i pylon*.deb
-fi
-
 
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to compile the cpm software suit."
