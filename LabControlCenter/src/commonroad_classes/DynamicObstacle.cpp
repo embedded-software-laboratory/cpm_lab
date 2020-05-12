@@ -311,19 +311,20 @@ void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, con
     }
 }
 
-std::vector<TrajectoryPoint> DynamicObstacle::get_trajectory()
+std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
 {
-    std::vector<TrajectoryPoint> ret_trajectory;
+    std::vector<CommonTrajectoryPoint> ret_trajectory;
 
     if (trajectory.size() > 0)
     {
-        for (const auto& point : trajectory)
+        for (auto& point : trajectory)
         {
-            TrajectoryPoint trajectory_point;
+            CommonTrajectoryPoint trajectory_point;
 
             //Required data must exist, these function may throw an error otherwise
             trajectory_point.position = point.get_position().get_center();
-            trajectory_point.time = point.get_time();
+            trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
+            trajectory_point.orientation = point.get_orientation_mean();
             //Optional data
             trajectory_point.velocity = point.get_velocity();
 
@@ -332,13 +333,14 @@ std::vector<TrajectoryPoint> DynamicObstacle::get_trajectory()
     }
     else if (occupancy_set.size() > 0)
     {
-        for (const auto& point : occupancy_set)
+        for (auto& point : occupancy_set)
         {
-            TrajectoryPoint trajectory_point;
+            CommonTrajectoryPoint trajectory_point;
 
             //Required data must exist, these function may throw an error otherwise
             trajectory_point.position = point.get_center();
-            trajectory_point.time = point.get_time();
+            trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
+            trajectory_point.orientation = point.get_orientation();
             //Velocity data does not exist in this case
 
             ret_trajectory.push_back(trajectory_point);

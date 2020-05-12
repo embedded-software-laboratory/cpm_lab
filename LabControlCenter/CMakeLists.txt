@@ -106,8 +106,10 @@ if(NOT SIMULATION)
 endif()
 
 add_executable(LabControlCenter
-    src/CommonroadObstacleSim.hpp
-    src/CommonroadObstacleSim.cpp
+    src/ObstacleSimulation.hpp
+    src/ObstacleSimulation.cpp
+    src/ObstacleSimulationManager.hpp
+    src/ObstacleSimulationManager.cpp
     src/LogLevelSetter.hpp
     src/LogLevelSetter.cpp
     src/LogStorage.hpp

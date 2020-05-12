@@ -84,4 +84,5 @@ public:
 
     //TODO: Getter
     IntervalOrExact get_time(); //Must exist, throw error if it does not
+    std::optional<double> get_orientation();
 };

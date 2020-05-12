@@ -129,5 +129,6 @@ public:
     //TODO: Getter
     Position get_position(); //Must exist, throw error if it does not
     IntervalOrExact get_time(); //Must exist, throw error if it does not
+    std::optional<double> get_orientation_mean();
     std::optional<IntervalOrExact> get_velocity();
 };

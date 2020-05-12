@@ -166,3 +166,27 @@ void Shape::transform_context(const DrawingContext& ctx, double scale)
         ctx->translate(center.first * scale, center.second * scale);
     }
 }
+
+//********************************************************************************************************************************************
+//Getter
+//********************************************************************************************************************************************
+
+std::optional<double> Shape::get_orientation()
+{
+    //Get mean orientation from shapes, if they exist
+    double orientation = 0.0;
+    double orientation_count = 0.0;
+
+    for (auto rectangle : rectangles)
+    {
+        orientation += rectangle.get_orientation().value_or(0.0);
+        ++orientation_count;
+    }
+
+    if (orientation_count > 0)
+    {
+        orientation /= orientation_count;
+    }
+
+    return std::optional<double>(orientation);
+}

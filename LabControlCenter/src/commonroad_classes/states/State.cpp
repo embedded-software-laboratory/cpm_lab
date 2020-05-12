@@ -223,6 +223,18 @@ IntervalOrExact State::get_time()
     return time.value();
 }
 
+std::optional<double> State::get_orientation_mean()
+{
+    if(orientation.has_value())
+    {
+        return orientation.value().get_mean();
+    }
+    else
+    {
+        return std::optional<double>();
+    }
+}
+
 std::optional<IntervalOrExact> State::get_velocity()
 {
     return velocity;

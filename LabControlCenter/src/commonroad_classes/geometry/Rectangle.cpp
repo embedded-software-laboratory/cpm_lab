@@ -89,6 +89,10 @@ void Rectangle::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->restore();
 }
 
+//********************************************************************************************************************************************
+//Getter
+//********************************************************************************************************************************************
+
 std::pair<double, double> Rectangle::get_center()
 {
     if (center.has_value())
@@ -101,4 +105,9 @@ std::pair<double, double> Rectangle::get_center()
         auto default_center = Point(-1);
         return std::pair<double, double>(default_center.get_x(), default_center.get_y());
     }
+}
+
+std::optional<double> Rectangle::get_orientation()
+{
+    return orientation;
 }

@@ -61,20 +61,6 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->restore();
 }
 
-std::pair<double, double> Occupancy::get_center()
-{
-    //Get shape center
-    if (shape.has_value())
-    {
-        return shape->get_center();
-    }
-    else
-    {
-        std::cerr << "TODO: Better warning // Cannot transform context with occupancy, shape is missing" << std::endl;
-        return std::pair<double, double>(0.0, 0.0);
-    }
-}
-
 void Occupancy::transform_context(const DrawingContext& ctx, double scale)
 {
     //Transform to position of shape center, where the object can be drawn if desired
@@ -92,7 +78,7 @@ void Occupancy::transform_context(const DrawingContext& ctx, double scale)
 //Getter
 //********************************************************************************************************************************************
 
-Position Occupancy::get_center()
+std::pair<double, double> Occupancy::get_center()
 {
     if (!shape.has_value())
     {
@@ -108,4 +94,13 @@ IntervalOrExact Occupancy::get_time()
         throw SpecificationError("Occupancy should have time value, but does not");
     }
     return time.value();
+}
+
+std::optional<double> Occupancy::get_orientation()
+{
+    if (!shape.has_value())
+    {
+        throw SpecificationError("Occupancy should have shape value, but does not");
+    }
+    return shape->get_orientation();
 }

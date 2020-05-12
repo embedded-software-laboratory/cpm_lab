@@ -86,6 +86,33 @@ public:
         return interval;
     }
 
+    double get_mean()
+    {
+        if (exact.has_value())
+        {
+            return exact.value();
+        }
+        else
+        {
+            double sum;
+            double amnt;
+            for (auto value : interval.value().get_interval_avg())
+            {
+                sum += value;
+                amnt += 1;
+            }
+
+            if (amnt > 0)
+            {
+                return sum / amnt;
+            }
+            else
+            {
+                return 0.0;
+            }
+        }
+    }
+
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits

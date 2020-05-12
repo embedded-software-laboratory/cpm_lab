@@ -35,16 +35,19 @@
 enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
 /**
- * \struct TrajectoryPoint
+ * \struct CommonTrajectoryPoint
  * \brief This class is used as a return type for the trajectory getter
- * It allows to conveniently store all relevant information of each TrajectoryPoint
+ * It allows to conveniently store all relevant information of each CommonTrajectoryPoint
  */
-struct TrajectoryPoint
+struct CommonTrajectoryPoint
 {
     std::pair<double, double> position; //x, y
-    IntervalOrExact time;
+    std::optional<double> orientation; //yaw
+    std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
     std::optional<IntervalOrExact> velocity;
-}
+
+    bool is_exact; //TODO
+};
 
 /**
  * \class DynamicObstacle
@@ -121,5 +124,5 @@ public:
      * \brief Returns a trajectory constructed from occupancy or trajectory data
      * Throws errors if expected types are missing
      */
-    std::vector<TrajectoryPoint> get_trajectory();
+    std::vector<CommonTrajectoryPoint> get_trajectory();
 };

@@ -62,4 +62,7 @@ public:
     std::pair<double, double> get_center() override;
     
     void to_dds_msg() {}
+
+    //TODO: Getter
+    std::optional<double> get_orientation();
 };

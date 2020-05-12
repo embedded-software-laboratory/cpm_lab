@@ -68,4 +68,5 @@ public:
     void to_dds_msg() {}
 
     //TODO: Getter
+    std::optional<double> get_orientation();
 };

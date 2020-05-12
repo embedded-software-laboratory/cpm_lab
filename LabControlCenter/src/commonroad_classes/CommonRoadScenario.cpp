@@ -119,11 +119,13 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     }
     catch(const SpecificationError& e)
     {
+        clear_data();
         throw SpecificationError(std::string("Could not translate CommonRoadScenario, file incompatible to specifications:\n") + e.what());
     }
     catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
+        clear_data();
         throw;
     }
     
@@ -136,6 +138,11 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         //-> One of the fields version, author, affiliation should be set (they are all required)
         clear_data();
         throw SpecificationError("Translation failed / Invalid XML file chosen. None of commonRoadVersion / author / affiliation information could be found in your XML file. Translation will not be used.");
+    }
+    else if (time_step_size == -1.0)
+    {
+        clear_data();
+        throw SpecificationError("Translation failed / Invalid XML file chosen. Time step size must be set. Translation will not be used.");
     }
     else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && planning_problems.size() == 0)
     {
