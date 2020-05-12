@@ -10,13 +10,13 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
-#include "VehicleState.hpp"
+#include "VehicleCommandTrajectory.hpp"
 #include <dds/pub/ddspub.hpp>
 
 /**
- * \brief This class simulates a traffic participant / obstacle based on the obstacle type(s) defined in a commonroad scenario
- * It acts similarly to vehicles in the network, with its own state which is regularly updated
- * State updates are based on trajectories/... defined in the scenario (which may define position, time, velocity...)
+ * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
+ * It sends trajectories/... defined in the scenario (which may define position, time, velocity...)
+ * These are received by either a real vehicle or a special simulated participant, that also gets a starting position etc
  */
 class CommonroadObstacleSim
 {
@@ -25,7 +25,7 @@ private:
 
     //cpm and DDS data / objects
     bool enable_simulated_time;
-    dds::pub::DataWriter<VehicleState> writer_vehicleCommandTrajectory;
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory;
     std::mutex writer_mutex;
 
     /**
