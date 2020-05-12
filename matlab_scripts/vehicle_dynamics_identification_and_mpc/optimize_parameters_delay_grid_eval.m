@@ -30,7 +30,7 @@ function optimize_parameters_delay_grid_eval
     n_delay_steps_IPS_opt = n_delay_steps_IPS(I);
     n_delay_steps_local_opt = n_delay_steps_local(I);
     n_delay_steps_steering_opt = n_delay_steps_steering(I);
-    n_delay_steps_motor_opt = n_delay_steps_steering(I);
+    n_delay_steps_motor_opt = n_delay_steps_motor(I);
     
     objective_soln = reshape(objective_soln, dim_delay_steps_motor, dim_delay_steps_steering, dim_delay_steps_local, dim_delay_steps_IPS);
     
@@ -65,9 +65,9 @@ function optimize_parameters_delay_grid_eval
     
     %% Results
     % IPS delay: 1 sample
-    % local delay: 0 samples
-    % steering delay: 5 samples
-    % motor delay: 5 samples
+    % local delay: 1 sample
+    % steering delay: 8 samples
+    % motor delay: 1 sample
     
 end
 

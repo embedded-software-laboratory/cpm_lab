@@ -6,6 +6,32 @@
     <!-- Available types -->
     <types />
 
+    <converter name="test_loop">
+        <!--  Input storage settings -->
+        <input_storage>
+                <legacy>
+                <file_path>recording_vehicles_2_3_test_loop.dat_0_0</file_path>
+                <domain_mapping>
+                    <domain_map
+                                legacy_domain_name="domain0"
+                                domain_id="0" />
+                </domain_mapping>
+                </legacy>
+        </input_storage>
+        <!--  Output storage settings -->
+        <output_storage>
+            <sqlite>
+                <storage_format>JSON_SQLITE</storage_format>
+                <fileset>
+                    <workspace_dir>output</workspace_dir>
+                    <filename_expression>recording_vehicles_2_3_test_loop.dat</filename_expression>
+                </fileset>
+            </sqlite>
+        </output_storage>
+        <domain_participant name="Domain0">
+                    <domain_id>0</domain_id>
+        </domain_participant>
+    </converter>
 
     <converter name="test_loop_b">
         <!--  Input storage settings -->
@@ -24,84 +50,13 @@
             <sqlite>
                 <storage_format>JSON_SQLITE</storage_format>
                 <fileset>
-                    <workspace_dir>recording_vehicles_2_3_test_loop_b</workspace_dir>
-                    <filename_expression>converted.dat</filename_expression>
+                    <workspace_dir>output</workspace_dir>
+                    <filename_expression>recording_vehicles_2_3_test_loop_b.dat</filename_expression>
                 </fileset>
             </sqlite>
         </output_storage>
         <domain_participant name="Domain0">
                     <domain_id>0</domain_id>
         </domain_participant>
-    </converter>
-
-    <converter name="test_loop">
-        <!--  Input storage settings -->
-        <input_storage>
-                <legacy>
-                <file_path>recording_vehicles_2_3_test_loop.dat_0_0</file_path>
-                <domain_mapping>
-                    <domain_map
-                                legacy_domain_name="domain0"
-                                domain_id="0" />
-                </domain_mapping>
-                </legacy>
-        </input_storage>
-        <!--  Output storage settings -->
-        <output_storage>
-            <sqlite>
-                <storage_format>JSON_SQLITE</storage_format>
-                <fileset>
-                    <workspace_dir>recording_vehicles_2_3_test_loop</workspace_dir>
-                    <filename_expression>converted.dat</filename_expression>
-                </fileset>
-            </sqlite>
-        </output_storage>
-        <domain_participant name="Domain0">
-                    <domain_id>0</domain_id>
-        </domain_participant>
-    </converter>
-
-
-
-
-    <!--  A definition of a Converter instance to run -->
-    <converter name="userToJson">
-        <!--  Input storage settings -->
-        <input_storage>
-            <sqlite>
-                <storage_format>XCDR_AUTO</storage_format>
-                <database_dir>.</database_dir>
-            </sqlite>
-        </input_storage>
-
-
-        <!--  Output storage settings -->
-        <output_storage>
-            <sqlite>
-                <storage_format>JSON_SQLITE</storage_format>
-                <fileset>
-                    <workspace_dir>converted</workspace_dir>
-                    <filename_expression>rti_recorder_default.converted.dat</filename_expression>
-                </fileset>
-            </sqlite>
-        </output_storage>
-
-        <!--  Domain selection: assume 0 by default.
-              Converter is not a DDS application, so this won't create a
-              DDS Domain Participant, but allows you to select which domains
-              to convert -->
-        <domain_participant name="Domain0">
-            <domain_id>0</domain_id>
-        </domain_participant>
-
-        <session name="userSession"
-                 default_participant_ref="Domain0">
-            <!-- Topics to convert in this session -->
-            <topic_group name="DefaultTopicGroup">
-                <!-- Rules describing the topics to convert -->
-                <allow_topic_name_filter>*</allow_topic_name_filter>
-                <deny_topic_name_filter>rti/*</deny_topic_name_filter>
-            </topic_group>
-        </session>
     </converter>
 </dds>

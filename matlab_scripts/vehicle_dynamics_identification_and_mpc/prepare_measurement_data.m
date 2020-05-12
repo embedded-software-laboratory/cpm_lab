@@ -91,7 +91,7 @@ function prepare_measurement_data
             result_sequences(n).speed = state.speed(filter_state);
             result_sequences(n).steering_command = state.steering_servo(filter_state);
             result_sequences(n).motor_command = state.motor_throttle(filter_state);
-            result_sequences(n).battery_voltage = state.battery_voltage(filter_state);
+            % result_sequences(n).battery_voltage = state.battery_voltage(filter_state);
         end
         
 

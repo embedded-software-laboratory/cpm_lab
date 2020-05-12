@@ -11,11 +11,8 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
     sequences = sequences(randperm(length(sequences)));
     %sequences = sequences(1:20);
     
-    
-    % optimal delays (0,0,4,4)
-    init_parameters = [ 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 ]';
-    
-
+    % optimal delay (1,1,8,0), chosen delay (1,1,8,1)
+    init_parameters = [1.00200223280075;-0.120981375817052;0.210836071655533;3.55505337083871;-1.4236956738529;6.90424987304674;1.33501029339947;0.0319884021481027;-6.29318567089044];
     
     %% Emulate delays by shifting data
     n_delay_max = 10;
@@ -33,7 +30,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
         sequences(i).speed            = circshift(sequences(i).speed,             n_delay_steps_local,   1);
         sequences(i).steering_command = circshift(sequences(i).steering_command,  n_delay_steps_steering,1);
         sequences(i).motor_command    = circshift(sequences(i).motor_command,     n_delay_steps_motor,   1);
-        sequences(i).battery_voltage  = circshift(sequences(i).battery_voltage,   n_delay_steps_local,   1);
+        % sequences(i).battery_voltage  = circshift(sequences(i).battery_voltage,   n_delay_steps_local,   1);
     end
     
     % Trim start data, that wrapped around in circshift()
@@ -78,7 +75,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
         u = [ ...
             sequences(i_sequence).motor_command ...
             sequences(i_sequence).steering_command ...
-            sequences(i_sequence).battery_voltage ...
+            % sequences(i_sequence).battery_voltage ...
         ];
     
         x = X{i_sequence};
@@ -124,7 +121,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
         U_sim = [ ...
             sequences(i_sequence).motor_command ...
             sequences(i_sequence).steering_command ...
-            sequences(i_sequence).battery_voltage ...
+            % sequences(i_sequence).battery_voltage ...
         ];
     
         for k = 2:size(X_sim,1)
