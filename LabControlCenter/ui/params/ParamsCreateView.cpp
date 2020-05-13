@@ -143,12 +143,18 @@ void ParamsCreateView::init_members(Gtk::Window& main_window) {
     window->signal_key_release_event().connect(sigc::mem_fun(this, &ParamsCreateView::handle_button_released));
 }
 
+//Suppress warning for unused parameter (any_event)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool ParamsCreateView::on_delete(GdkEventAny* any_event) {
     if (!called_callback) {
         on_close_callback(param, false); //false -> do not save changes
     }
     return false;
 }
+
+#pragma GCC diagnostic pop
 
 bool ParamsCreateView::handle_button_released(GdkEventKey* event) {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Escape)

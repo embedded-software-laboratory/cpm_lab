@@ -124,8 +124,8 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
 
 
         // find path index based on distance
-        int path_index = 0;
-        for (int i = 1; i < path.size(); ++i)
+        size_t path_index = 0;
+        for (size_t i = 1; i < path.size(); ++i)
         {
             if(fabs(arc_length.at(i) - node_distance) < fabs(arc_length.at(path_index) - node_distance))
             {

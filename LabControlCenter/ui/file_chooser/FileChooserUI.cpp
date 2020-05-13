@@ -83,6 +83,10 @@ bool FileChooserUI::handle_button_released(GdkEventKey* event) {
     return false;
 }
 
+//Suppress warning for unused parameter (any_event)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 bool FileChooserUI::handle_double_click(GdkEventButton* event)
 {
     if (event->type == GDK_2BUTTON_PRESS)
@@ -128,6 +132,8 @@ bool FileChooserUI::on_delete(GdkEventAny* any_event) {
     }
     return false;
 }
+
+#pragma GCC diagnostic pop
 
 void FileChooserUI::on_abort() {
     window->close();

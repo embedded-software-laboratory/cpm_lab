@@ -4,6 +4,7 @@
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkFileChooserDialog" id="file_saver_dialog">
     <property name="can_focus">False</property>
+    <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>
     <property name="action">save</property>
     <child internal-child="vbox">
