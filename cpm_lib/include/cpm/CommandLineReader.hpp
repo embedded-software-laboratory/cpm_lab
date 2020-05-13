@@ -3,7 +3,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <algorithm>
 
 /**
  * \brief Used to read a single command line argument from argv
