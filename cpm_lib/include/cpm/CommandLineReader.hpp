@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 /**
  * \brief Used to read a single command line argument from argv
@@ -33,4 +34,9 @@ namespace cpm {
      * \brief Read an integer command line argument from argv (form: --name=value), use a default value if it does not exist
      */
     std::vector<int> cmd_parameter_ints(std::string name, std::vector<int> default_value, int argc, char *argv[]);
+
+    /**
+     * \brief Read a double command line argument from argv (form: --name=value), use a default value if it does not exist
+     */
+    std::vector<double> cmd_parameter_doubles(std::string name, std::vector<double> default_value, int argc, char *argv[]);
 }

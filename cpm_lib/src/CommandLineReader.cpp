@@ -116,4 +116,44 @@ namespace cpm {
         return default_value;
     }
 
+    /**
+     * \brief Read an double command line argument from argv (form: --name=value), use a default value if it does not exist
+     */
+    std::vector<double> cmd_parameter_doubles(std::string name, std::vector<double> default_value, int argc, char *argv[]) {
+        std::string key = "--" + name + "=";
+
+        for (int i = 1; i < argc; ++i) {
+            std::string param = std::string(argv[i]);
+            if (param.find(key) == 0) {
+                std::stringstream ss;     
+                std::string str = std::string(argv[i]);
+                replace( str.begin(), str.end(), ',', ' ');
+                replace( str.begin(), str.end(), '=', ' ');
+
+                /* Storing the whole string into string stream */
+                ss << str; 
+
+                std::string temp; 
+                double found; 
+                std::vector<double> values;
+                /* Running loop till the end of the stream */
+                while (!ss.eof()) { 
+                
+                    /* extracting word by word from stream */
+                    ss >> temp; 
+
+                    /* Checking the given word is double or not */
+                    if (std::stringstream(temp) >> found) 
+                        values.push_back(found); 
+
+                    /* To save from space at the end of string */
+                    temp = ""; 
+                } 
+                return values;
+            }
+        }
+
+        return default_value;
+    }
+    
 }
