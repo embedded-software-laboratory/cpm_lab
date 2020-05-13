@@ -2,6 +2,9 @@
 #include <numeric>
 #include <cassert>
 
+#include "TrajectoryInterpolation.hpp"
+
+
 MonitoringUi::MonitoringUi(
     std::shared_ptr<Deploy> deploy_functions_callback, 
     std::function<VehicleData()> get_vehicle_data_callback, 
@@ -260,32 +263,46 @@ void MonitoringUi::init_ui_thread()
                         if(trajectory_segment.size() > 1)
                         {
                             
-                            TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
-                            uint64_t delta_t = ULONG_MAX; 
-                            uint64_t tmp = ULONG_MAX;
+                            //TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                            uint64_t dt = ULONG_MAX; 
+                            double current_px = 0;
+                            double current_py = 0;
 
-                            // trajectory points
-                            for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                            for(size_t i = 2; i < trajectory_segment.size(); ++i)
                             {
-                                tmp = delta_t;
-                                delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
-                                if(delta_t < tmp) 
-                                { 
-                                    current_trajectory_segment = trajectory_segment[i];                                   
-                                    tmp = delta_t;
+                                const int n_interp = 20;
+                                for (int interp_step = 1; interp_step < n_interp; ++interp_step)
+                                {
+                                    const uint64_t delta_t = 
+                                        trajectory_segment[i].t().nanoseconds() 
+                                        - trajectory_segment[i-1].t().nanoseconds();
+
+                                    TrajectoryInterpolation interp(
+                                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
+                                        trajectory_segment[i-1],  
+                                        trajectory_segment[i]
+                                    );
+                                    
+                                    if((delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
+                                    {
+                                        std::cout << dt << std::endl;
+                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
+                                        current_px = interp.position_x;
+                                        current_py = interp.position_y;
+                                    }
                                 }
                             }
                             // euclidian distance to reference 
-                            double error = sqrt(pow(pose_x-current_trajectory_segment.px(),2)+pow(pose_y-current_trajectory_segment.py(),2));
+                            double error = sqrt(pow(pose_x-current_px,2)+pow(pose_y-current_py,2));
 
                             label->set_text(std::to_string(error).substr(0,4));
-                            if(fabs(error) > 15) 
+                            if(fabs(error) > 0.5) 
                             {
-                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
+                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f and %l. Shutting down ...", vehicle_id, error, dt);
                                 deploy_functions->kill_vehicles({},vehicle_ids);
                                 label->get_style_context()->add_class("alert");
                             }
-                            else if (fabs(error) > 1)
+                            else if (fabs(error) > 0.1)
                             {
                                 label->get_style_context()->add_class("warn");
                             }

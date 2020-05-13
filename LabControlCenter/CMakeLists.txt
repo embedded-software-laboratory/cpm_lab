@@ -96,6 +96,8 @@ add_executable(LabControlCenter
     src/ParameterStorage.hpp
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
+    src/TrajectoryInterpolation.cpp
+    src/TrajectoryInterpolation.hpp
     src/main.cpp
 )
 

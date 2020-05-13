@@ -15,7 +15,6 @@
 #include "cpm/Logging.hpp"
 #include "ui/setup/Deploy.hpp"
 
-
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
 

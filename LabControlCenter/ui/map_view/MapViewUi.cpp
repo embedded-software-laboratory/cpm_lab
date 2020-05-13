@@ -2,8 +2,7 @@
 #include <cassert>
 #include <glibmm/main.h>
 
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
+#include "TrajectoryInterpolation.hpp"
 
 
 MapViewUi::MapViewUi(
