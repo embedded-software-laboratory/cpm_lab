@@ -169,7 +169,7 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("alert");
                                 cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
-                                thread_count.store(1);
+                                
                                 std::string reboot;
                                 if(vehicle_id<10)
                                 {
@@ -179,6 +179,7 @@ void MonitoringUi::init_ui_thread()
                                 {
                                     reboot = reboot_script + std::to_string(vehicle_id);
                                 }
+                                thread_count.fetch_add(1);
                                 reboot_threads.push_back(std::thread([this, reboot] () {
                                         std::system(reboot.c_str());
                                         this->notify_reboot_finished();
