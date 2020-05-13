@@ -182,6 +182,7 @@ void MonitoringUi::init_ui_thread()
                                 thread_count.fetch_add(1);
                                 reboot_threads.push_back(std::thread([this, reboot] () {
                                         std::system(reboot.c_str());
+                                        usleep(2000);
                                         this->notify_reboot_finished();
                                     }
                                 ));
@@ -355,6 +356,7 @@ void MonitoringUi::notify_reboot_finished()
     ++notify_count;
 
     std::cout << thread_count.load() << std::endl;
+    std::lock_guard<std::mutex> unlock(notify_callback_in_use);
     if (thread_count.load() == 0)
     {
         notify_count = 0;
