@@ -18,11 +18,6 @@ done
 
 #make simulation variable available in all bash scripts called
 export SIMULATION=$simulation
-pushd LabControlCenter
-bash build.bash
-popd
-
-exit;
 
 # Get cpm lib
 pushd ..
