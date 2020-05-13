@@ -45,7 +45,7 @@ if [[ ! -z $YUM ]]; then
     UPDATE="--refresh update -y"
     BUILD_ESSENTIALS="install gcc g++ glibc-devel libnsl2-devel make -y"
     # BUILD_ESSENTIALS="groupinstall \"Development Tools\" \"Development Libraries\" -y && dnf install libnsl2-devel g++ -y"
-    BUILD_TOOLS="install git tmux cmake gtkmm30-devel sshpass ntp -y"
+    BUILD_TOOLS="install git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
     OPENJDK="install java-11-openjdk-devel -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
 elif [[ ! -z $APT ]]; then
@@ -104,9 +104,7 @@ eval "${PM}" "${BUILD_TOOLS}"
 
 
 ### 2. Joystick / Gamepad ######################################################
-# only for real lab application neccessary. With a Joystick or a Gamepad you can drive
-#vehicles manually in the Lab Control Center (LCC)
-if [ $SIMULATION == 0 ]
+#With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
 then
     if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
         eval "${PM}" install libsigc++-devel gtkmm24-devel -y
@@ -121,7 +119,6 @@ then
         sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
         sudo -u $real_user make
     fi
-fi
 
 
 ### 3. RTI DDS #################################################################
