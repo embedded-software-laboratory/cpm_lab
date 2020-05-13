@@ -11,9 +11,11 @@ TEST_CASE( "CommandLineReader" ) {
     char str5[] = "--list1=1,2,3,...,8";
     char str6[] = "--list2=1,2,3,4,8";
     char str7[] = "--uint1=9999999999999999999";
+    char str8[] = "--double1=0.123";
+    char str9[] = "--double2=-45.6";
 
-    char *args[] = { program_name, str1, str2, str3, str4, str5, str6, str7 };
-    int argcount = 8;
+    char *args[] = { program_name, str1, str2, str3, str4, str5, str6, str7, str8, str9 };
+    int argcount = 10;
 
     std::string expected_string = "thisisastring!";
     int expected_int_1 = 7;
@@ -22,6 +24,8 @@ TEST_CASE( "CommandLineReader" ) {
     std::vector<int> expected_list_1{};
     std::vector<int> expected_list_2{ 1, 2, 3, 4, 8 };
     uint64_t expected_uint_1 = 9999999999999999999ull;
+    double expected_double_1 = 0.123;
+    double expected_double_2 = -45.6;
 
     std::string cmd_string = cpm::cmd_parameter_string("string", "", argcount, args);
     int cmd_int_1 = cpm::cmd_parameter_int("int1", 0, argcount, args);
@@ -30,6 +34,8 @@ TEST_CASE( "CommandLineReader" ) {
     std::vector<int> cmd_list_1 = cpm::cmd_parameter_ints("list1", expected_list_1, argcount, args);
     std::vector<int> cmd_list_2 = cpm::cmd_parameter_ints("list2", expected_list_1, argcount, args);
     uint64_t cmd_uint_1 = cpm::cmd_parameter_uint64_t("uint1", 0, argcount, args);
+    double cmd_double_1 = cpm::cmd_parameter_double("double1", 0, argcount, args);
+    double cmd_double_2 = cpm::cmd_parameter_double("double2", 0, argcount, args);
 
     CHECK( expected_string == cmd_string );
     CHECK( expected_int_1 == cmd_int_1 );
@@ -38,4 +44,6 @@ TEST_CASE( "CommandLineReader" ) {
     CHECK( expected_list_1 == cmd_list_1 );
     CHECK( expected_list_2 == cmd_list_2 );
     CHECK( expected_uint_1 == cmd_uint_1 );
+    CHECK( expected_double_1 == cmd_double_1 );
+    CHECK( expected_double_2 == cmd_double_2 );
 }
