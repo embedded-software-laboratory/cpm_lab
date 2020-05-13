@@ -72,7 +72,7 @@ SetupViewUI::SetupViewUI
     assert(vehicle_flowbox);
 
     //Create vehicle toggles
-    for (unsigned int id = 1; id <= 10; ++id)
+    for (unsigned int id = 1; id <= 20; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }

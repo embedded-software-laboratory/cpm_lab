@@ -10,7 +10,7 @@ sed -e "s/TEMPLATE_IP/${IP_SELF}/g" \
 
 cd build
 cmake .. 
-make -j8
+make -j$(nproc)
 
 # Publish middleware package via http/apache for the HLCs to download
 if [ ! -d "/var/www/html/nuc" ]; then

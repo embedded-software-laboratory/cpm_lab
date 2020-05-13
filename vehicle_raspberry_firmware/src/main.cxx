@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         {
             //Log control cycle period
             //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+            cpm::Logging::Instance().write(3, "Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
 
             //log_fn(__LINE__);
             try 

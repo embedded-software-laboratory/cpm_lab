@@ -9,7 +9,7 @@ if [ ! -d "yaml-cpp" ]; then
     mkdir build
     cd build
     cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j8
+    make -j$(nproc)
 fi
 popd
 
