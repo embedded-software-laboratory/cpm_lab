@@ -7,8 +7,9 @@ using namespace std::placeholders;
 SetupViewUI::SetupViewUI
     (
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
+    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
-    std::function<void(bool)> _reset_timer,
+    std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
     std::function<void()> _reset_trajectories,
     std::function<void()> _reset_vehicle_view,
@@ -19,6 +20,7 @@ SetupViewUI::SetupViewUI
     ) 
     :
     vehicle_control(_vehicle_control),
+    obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
@@ -131,7 +133,7 @@ SetupViewUI::~SetupViewUI() {
 
 void SetupViewUI::switch_timer_set()
 {
-    reset_timer(switch_simulated_time->get_active());
+    reset_timer(switch_simulated_time->get_active(), true);
 }
 
 void SetupViewUI::switch_ips_set()
@@ -299,8 +301,7 @@ void SetupViewUI::deploy_applications() {
     //Reset old UI elements (difference to kill: Also reset the Logs)
     //Kill timer in UI as well, as it should not show invalid information
     //Reset all relevant UI parts
-    reset_timer(switch_simulated_time->get_active());
-    usleep(100000); //Make sure that the stop signal does not arrive at newly created participants (IS THIS SAFE ENOUGH?)
+    reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)
     reset_time_series_aggregator();
     reset_trajectories();
     reset_vehicle_view();
@@ -319,6 +320,9 @@ void SetupViewUI::deploy_applications() {
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
 #endif
+
+    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+    obstacle_simulation_manager->start();
     
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
@@ -419,6 +423,9 @@ void SetupViewUI::kill_deployed_applications() {
     labcam->stopRecording();
 #endif
 
+    //Stop obstacle simulation
+    obstacle_simulation_manager->stop();
+
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
@@ -484,7 +491,7 @@ void SetupViewUI::perform_post_kill_cleanup()
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts
-    reset_timer(switch_simulated_time->get_active());
+    reset_timer(switch_simulated_time->get_active(), true);
     reset_time_series_aggregator();
     reset_trajectories();
     reset_vehicle_view();

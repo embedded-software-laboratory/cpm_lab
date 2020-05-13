@@ -45,6 +45,5 @@ public:
     ~ObstacleSimulation();
 
     void start();
-    void stop();
     void reset();
 };

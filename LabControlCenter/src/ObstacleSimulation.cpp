@@ -2,9 +2,9 @@
 
 ObstacleSimulation::ObstacleSimulation(std::vector<CommonTrajectoryPoint> _trajectory, double _time_step_size, int _id, bool _simulated_time)
 :
+writer_vehicleState(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleState>("vehicleState")),
 trajectory(_trajectory),
-simulated_time(_simulated_time),
-writer_vehicleState(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleState>("vehicleState"))
+simulated_time(_simulated_time)
 {
     //Set up cpm values (cpm init has already been done before)
     node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
@@ -12,10 +12,8 @@ writer_vehicleState(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
     //Translate time distance to nanoseconds
     //We expect given step size to be defined in seconds
     time_step_size = _time_step_size * 1e9;
-    
     obstacle_id = static_cast<uint8_t>(_id % 255);
     dt_nanos = time_step_size;
-    timer = cpm::Timer::create(node_id, dt_nanos, 0, true, true, simulated_time);
 
     //We do not accept empty trajectories
     assert(trajectory.size() > 0);
@@ -23,12 +21,18 @@ writer_vehicleState(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
 
 ObstacleSimulation::~ObstacleSimulation()
 {
-    timer->stop();
+    if (timer)
+    {
+        timer->stop();
+    }
     timer.reset();
 }
 
 void ObstacleSimulation::start()
 {
+    //Create timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
+    timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, simulated_time);
+
     //Remember start time, so that we can check how much time has passed / which state to choose when
     start_time = timer->get_time();
 
@@ -74,13 +78,14 @@ void ObstacleSimulation::start()
     });
 }
 
-void ObstacleSimulation::stop()
-{
-    timer->stop();
-}
-
 void ObstacleSimulation::reset()
 {
+    if (timer)
+    {
+        timer->stop();
+    }
+    timer.reset();
+
     current_trajectory = 0;
-    timer = cpm::Timer::create(node_id, dt_nanos, 0, true, true, simulated_time);
+    start_time = 0;
 }

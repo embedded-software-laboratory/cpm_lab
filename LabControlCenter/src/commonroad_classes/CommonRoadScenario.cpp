@@ -68,6 +68,17 @@ void CommonRoadScenario::clear_data()
     static_obstacles.clear();
     dynamic_obstacles.clear();
     planning_problems.clear();
+
+    if (reset_obstacle_sim_manager)
+    {
+        reset_obstacle_sim_manager();
+    }
+}
+
+void CommonRoadScenario::register_obstacle_sim(std::function<void()> _setup, std::function<void()> _reset)
+{
+    setup_obstacle_sim_manager = _setup;
+    reset_obstacle_sim_manager = _reset;
 }
 
 void CommonRoadScenario::load_file(std::string xml_filepath)
@@ -148,6 +159,12 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     {
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+    }
+
+    //Load new obstacle simulations
+    if (setup_obstacle_sim_manager)
+    {
+        setup_obstacle_sim_manager();
     }
 }
 
@@ -470,6 +487,16 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
         }
 
+        //Need to reset the simulation as well (as the coordinate system was changed)
+        if (reset_obstacle_sim_manager)
+        {
+            reset_obstacle_sim_manager();
+        }
+        if (setup_obstacle_sim_manager)
+        {
+            setup_obstacle_sim_manager();
+        }
+
         xml_translation_mutex.unlock();
     }
     
@@ -613,7 +640,7 @@ std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
     return ids;
 }
 
-const std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
+std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 {
     //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())

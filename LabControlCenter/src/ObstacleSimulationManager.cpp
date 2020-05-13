@@ -1,21 +1,47 @@
 #include "ObstacleSimulationManager.hpp"
 
-ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario) 
+ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool _use_simulated_time) 
 :
-scenario(_scenario)
+scenario(_scenario),
+use_simulated_time(_use_simulated_time)
 {
-     //Must be defined within the scenario according to specs - gives value (in seconds) of one time step unit
+    //Warning: Do not set up the simulation manager when multiple threads are already running, or you risk that during construction the scenario gets changed!
+    //The scenario callbacks are always called with locked mutexes within the scenario, so there is no need to worry about them
+    setup();
+
+    //Register at scenario to get reset when a new scenario is loaded
+    scenario->register_obstacle_sim(
+        [=] ()
+        {
+            setup();
+        },
+        [=] ()
+        {
+            reset();
+        }
+    );
+}
+
+void ObstacleSimulationManager::setup()
+{
+    //Must be defined within the scenario according to specs - gives value (in seconds) of one time step unit
     double time_step_size = scenario->get_time_step_size();
 
+    //Set up simulated obstacles
+    for (auto obstacle_id : scenario->get_dynamic_obstacle_ids())
+    {
+        simulated_obstacles.push_back(
+            ObstacleSimulation(scenario->get_dynamic_obstacle(obstacle_id).value().get_trajectory(), time_step_size, obstacle_id, use_simulated_time)
+        );
+    }
+
     //TODO: Part for real participant: Send trajectory
-    //TOOD: Set up simulated obstacles
     //TODO: Put more information in trajectory: Need to know if they are based on exact or inexact values (IntervalOrExact) for visualization
 }
 
-
 void ObstacleSimulationManager::set_time_scale(double scale)
 {
-
+    //TODO: If desired, adjust time scale
 }
 
 void ObstacleSimulationManager::start()
@@ -30,7 +56,7 @@ void ObstacleSimulationManager::stop()
 {
     for (auto& entry : simulated_obstacles)
     {
-        entry.stop();
+        entry.reset();
     }
 }
 
@@ -40,4 +66,6 @@ void ObstacleSimulationManager::reset()
     {
         entry.reset();
     }
+
+    simulated_obstacles.clear();
 }

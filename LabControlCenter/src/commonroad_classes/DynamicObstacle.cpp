@@ -225,77 +225,77 @@ void DynamicObstacle::draw_text(const DrawingContext& ctx, double scale, double 
 
 void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
-    ctx->save();
+    // ctx->save();
 
-    //Perform required translation + rotation
-    ctx->translate(global_translate_x, global_translate_y);
-    ctx->rotate(global_orientation);
+    // //Perform required translation + rotation
+    // ctx->translate(global_translate_x, global_translate_y);
+    // ctx->rotate(global_orientation);
 
-    //TODO: Different color / sticker / ... based on type
-    ctx->set_source_rgb(1.0,0.5,0.0);
+    // //TODO: Different color / sticker / ... based on type
+    // ctx->set_source_rgb(1.0,0.5,0.0);
 
-    if (step == 0)
-    {
-        if (initial_state.has_value())
-        {
-            ctx->save();
+    // if (step == 0)
+    // {
+    //     if (initial_state.has_value())
+    //     {
+    //         ctx->save();
 
-            initial_state->transform_context(ctx, scale);
+    //         initial_state->transform_context(ctx, scale);
 
-            draw_shape_with_text(ctx, scale, local_orientation);
+    //         draw_shape_with_text(ctx, scale, local_orientation);
 
-            ctx->restore();
-        }
-        else
-        {
-            std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
-        }
-    }
-    else if (step <= trajectory.size() && trajectory.size() > 0)
-    {
-        ctx->save();
+    //         ctx->restore();
+    //     }
+    //     else
+    //     {
+    //         std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
+    //     }
+    // }
+    // else if (step <= trajectory.size() && trajectory.size() > 0)
+    // {
+    //     ctx->save();
 
-        trajectory.at(step - 1).transform_context(ctx, scale);
+    //     trajectory.at(step - 1).transform_context(ctx, scale);
 
-        draw_shape_with_text(ctx, scale, local_orientation);
+    //     draw_shape_with_text(ctx, scale, local_orientation);
 
-        ctx->restore();
-    }
-    else if (step <= occupancy_set.size() && occupancy_set.size() > 0)
-    {
-        //Draw occupancy shape
-        ctx->save();
-        occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
-        occupancy_set.at(step - 1).transform_context(ctx, scale);
-        draw_text(ctx, scale, local_orientation, occupancy_set.at(step - 1).get_center());
-        ctx->restore();
+    //     ctx->restore();
+    // }
+    // else if (step <= occupancy_set.size() && occupancy_set.size() > 0)
+    // {
+    //     //Draw occupancy shape
+    //     ctx->save();
+    //     occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
+    //     occupancy_set.at(step - 1).transform_context(ctx, scale);
+    //     draw_text(ctx, scale, local_orientation, occupancy_set.at(step - 1).get_center());
+    //     ctx->restore();
 
-        //Draw obstacle shape at centroid of occupancy shape
-        // ctx->save();
-        // occupancy_set.at(step - 1).transform_context(ctx, scale);
-        // if (shape.has_value())
-        // {
-        //     shape->draw(ctx, scale);
-        // }
-        // else
-        // {
-        //     std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-        // }
-        // ctx->restore();
-    }
+    //     //Draw obstacle shape at centroid of occupancy shape
+    //     // ctx->save();
+    //     // occupancy_set.at(step - 1).transform_context(ctx, scale);
+    //     // if (shape.has_value())
+    //     // {
+    //     //     shape->draw(ctx, scale);
+    //     // }
+    //     // else
+    //     // {
+    //     //     std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+    //     // }
+    //     // ctx->restore();
+    // }
 
-    //Step - 1 is current trajectory index (0 for initial state)
-    step = step + 1;
-    if (step > trajectory.size() && trajectory.size() > 0) 
-    {
-        step = 0;
-    }
-    else if (step > occupancy_set.size() && occupancy_set.size() > 0)
-    {
-        step = 0;
-    }
+    // //Step - 1 is current trajectory index (0 for initial state)
+    // step = step + 1;
+    // if (step > trajectory.size() && trajectory.size() > 0) 
+    // {
+    //     step = 0;
+    // }
+    // else if (step > occupancy_set.size() && occupancy_set.size() > 0)
+    // {
+    //     step = 0;
+    // }
 
-    ctx->restore();
+    // ctx->restore();
 }
 
 void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
@@ -315,13 +315,27 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
 {
     std::vector<CommonTrajectoryPoint> ret_trajectory;
 
+    //Add initial point
+    CommonTrajectoryPoint initial_point;
+
+    assert(initial_state.has_value()); //Must exist anyway at this point 
+    //Required data must exist, this function may throw an error otherwise
+    initial_point.position = initial_state->get_position().get_center();
+    initial_point.time = std::optional<IntervalOrExact>(initial_state->get_time());
+    initial_point.orientation = initial_state->get_orientation_mean();
+    //Optional data
+    initial_point.velocity = initial_state->get_velocity();
+
+    ret_trajectory.push_back(initial_point);
+
+
     if (trajectory.size() > 0)
     {
         for (auto& point : trajectory)
         {
             CommonTrajectoryPoint trajectory_point;
 
-            //Required data must exist, these function may throw an error otherwise
+            //Required data must exist, this function may throw an error otherwise
             trajectory_point.position = point.get_position().get_center();
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
             trajectory_point.orientation = point.get_orientation_mean();
@@ -337,7 +351,7 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
         {
             CommonTrajectoryPoint trajectory_point;
 
-            //Required data must exist, these function may throw an error otherwise
+            //Required data must exist, this function may throw an error otherwise
             trajectory_point.position = point.get_center();
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
             trajectory_point.orientation = point.get_orientation();

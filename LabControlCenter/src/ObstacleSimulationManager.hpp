@@ -17,12 +17,25 @@ private:
 
     std::vector<ObstacleSimulation> simulated_obstacles;
 
+    double time_step_size;
+    bool use_simulated_time;
+
+    /**
+     * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)
+     */
+    void setup();
+
+    /**
+     * \brief Reset the simulation (callback for scenario)
+     */
+    void reset();
+
 public:
     /**
      * \brief Constructor to set up the simulation object
      * \param _scenario Data object to get the obstacle's data
      */
-    ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario);
+    ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool use_simulated_time);
 
     /**
      * \brief Scales the time used in this scenario by scale to a value in nanoseconds
@@ -39,9 +52,4 @@ public:
      * \brief Stop the simulation (callback for UI)
      */
     void stop();
-
-    /**
-     * \brief Reset the simulation (callback for UI)
-     */
-    void reset();
 };

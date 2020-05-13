@@ -113,6 +113,10 @@ private:
     //Mutex to lock the object while it is being translated from an XML file
     std::mutex xml_translation_mutex;
 
+    //Obstacle simulation callback functions (when new scenario is loaded)
+    std::function<void()> setup_obstacle_sim_manager; 
+    std::function<void()> reset_obstacle_sim_manager;
+
     //TODO: Both of these following functions as part of another interface?
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
@@ -151,7 +155,7 @@ private:
     void test_output();
 
     /**
-     * \brief Clear all stored data
+     * \brief Clear all stored data -> May only be called when xml_translation_mutex is locked!
      */
     void clear_data();
 
@@ -160,6 +164,13 @@ public:
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
      */
     CommonRoadScenario();
+
+    /**
+     * \brief The scenario and the obstacle simulation are tightly connected: If a new scenario gets loaded, the obstacle simulation must be reset and set up again as well
+     * \param _setup Set up the obstacle simulation manager with the newly translated scenario
+     * \param _reset Reset the obstacle simulation manager (data structures, running threads etc.)
+     */
+    void register_obstacle_sim(std::function<void()> _setup, std::function<void()> _reset);
 
     /**
      * \brief A load function to load another file
@@ -219,5 +230,5 @@ public:
     const std::optional<Location> get_location();
 
     std::vector<int> get_dynamic_obstacle_ids();
-    const std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
+    std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
 };

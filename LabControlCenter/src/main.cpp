@@ -5,6 +5,7 @@
 #include <dds/sub/ddssub.hpp>
 #include "TimeSeriesAggregator.hpp"
 #include "HLCReadyAggregator.hpp"
+#include "ObstacleSimulationManager.hpp"
 #include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
@@ -115,6 +116,9 @@ int main(int argc, char *argv[])
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
     bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+
+    auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
+
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
     auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto logStorage = make_shared<LogStorage>();
@@ -141,8 +145,9 @@ int main(int argc, char *argv[])
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto setupViewUi = make_shared<SetupViewUI>(
         vehicleAutomatedControl, 
+        obstacle_simulation_manager,
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
-        [=](bool simulated_time){return timerViewUi->reset(simulated_time);}, 
+        [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return timeSeriesAggregator->reset_all_data();}, 
         [=](){return trajectoryCommand->stop_all();}, 
         [=](){return monitoringUi->reset_vehicle_view();}, 
