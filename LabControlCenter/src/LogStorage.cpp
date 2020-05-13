@@ -125,15 +125,11 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
     }
     catch (std::regex_error& e) {
         std::cout << "Regex error (due to filter string): " << e.what() << std::endl;
-        search_result.push_back(Log("", "Wrong regex expression!", TimeStamp(0)));
-        search_result.push_back(Log("", "Regex search example: (vehicle)(.*)", TimeStamp(0)));
-        search_result.push_back(Log("", "Reference: https://en.cppreference.com/w/cpp/regex/ecmascript", TimeStamp(0)));
+        search_result.push_back(Log("", "No results - Wrong regex expression!", TimeStamp(0)));
     }
 
     if (search_result.size() == 0 && log_storage_copy.size() > 0) {
-        search_result.push_back(Log("", "No matching string was found", TimeStamp(0)));
-        search_result.push_back(Log("", "Regex search example: (vehicle)(.*)", TimeStamp(0)));
-        search_result.push_back(Log("", "Reference: https://en.cppreference.com/w/cpp/regex/ecmascript", TimeStamp(0)));
+        search_result.push_back(Log("", "No results", TimeStamp(0)));
     }
 
     keep_last_elements(search_result, 100);
