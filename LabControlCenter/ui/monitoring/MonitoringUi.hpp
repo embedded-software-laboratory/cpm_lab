@@ -42,7 +42,6 @@ public:
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all threads that need to be created have finished their work
     void notify_reboot_finished(); //notify function that gets called by the threads when they have finished their work
     std::mutex notify_callback_in_use; //the notify_reboot_finished function should only be accessible by one thread at once, thus use this mutex
-    size_t notify_count; //counter for notify_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
     void kill_all_threads(); //function to join all threads
     
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction

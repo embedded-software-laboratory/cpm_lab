@@ -41,7 +41,6 @@ MonitoringUi::MonitoringUi(
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
 
     // for threads 
-    notify_count = 0;
     thread_count.store(0);
 }
 
@@ -135,166 +134,7 @@ void MonitoringUi::init_ui_thread()
             for (size_t i = 0; i < rows_restricted.size(); ++i)
             {
                 //Ignore rows that serve as separator -> only set empty strings there
-                if (rows_restricted[i] != "")
-                {
-                    if(!vehicle_sensor_timeseries.count(rows_restricted[i])) continue;
-                    
-                    Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
-
-                    if(!label)
-                    {
-                        label = Gtk::manage(new Gtk::Label()); 
-                        label->set_width_chars(10);
-                        label->set_xalign(1);
-                        label->show_all();
-                        grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
-                    }
-
-                    auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
-
-                    if(sensor_timeseries->has_new_data(0.5))
-                    {
-                        const auto value = sensor_timeseries->get_latest_value();
-                        label->set_text(sensor_timeseries->format_value(value));
-
-                        label->get_style_context()->remove_class("ok");
-                        label->get_style_context()->remove_class("warn");
-                        label->get_style_context()->remove_class("alert");
-
-                        if(rows_restricted[i] == "clock_delta") 
-                        {
-                            if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
-                            else if(fabs(value) < 200) label->get_style_context()->add_class("warn");
-                            else 
-                            {
-                                label->get_style_context()->add_class("alert");
-                                cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
-                                
-                                std::string reboot;
-                                if(vehicle_id<10)
-                                {
-                                    reboot = reboot_script + "0" + std::to_string(vehicle_id);
-                                }
-                                else
-                                {
-                                    reboot = reboot_script + std::to_string(vehicle_id);
-                                }
-                                thread_count.fetch_add(1);
-                                reboot_threads.push_back(std::thread([this, reboot] () {
-                                        std::system(reboot.c_str());
-                                        usleep(2000);
-                                        this->notify_reboot_finished();
-                                    }
-                                ));
-                                deploy_functions->kill_vehicles({},vehicle_ids);
-                            }
-                        }
-                        else if(rows_restricted[i] == "battery_level") 
-                        {
-                            int n = 100;
-                            std::vector<double> values = sensor_timeseries->get_last_n_values(n);
-                            auto max = std::max_element(values.begin(), values.end());
-
-                            if     (fabs(*max) > 30)  label->get_style_context()->add_class("ok");
-                            else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
-                            else
-                            {  
-                                label->get_style_context()->add_class("alert");
-                                cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
-                                deploy_functions->kill_vehicles({},vehicle_ids);
-                            }
-                        }
-                        else if(rows_restricted[i] == "speed") 
-                        {
-                            if     (fabs(value) < 3)  label->get_style_context()->add_class("ok");
-                            else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
-                            else 
-                            {
-                                label->get_style_context()->add_class("alert");
-                                cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Shutting down ...", vehicle_id);
-                                deploy_functions->kill_vehicles({},vehicle_ids);
-                            }
-                        }
-                        else if(rows_restricted[i] == "ips") 
-                        {
-                            label->get_style_context()->add_class("ok");
-                            label->set_text("available");
-                        }
-                        else if(rows_restricted[i] == "reference_deviation") 
-                        {
-                            // is vehicle on its reference trajectory? else stop 
-
-                            auto pose_x = vehicle_sensor_timeseries.at("pose_x")->get_latest_value();
-                            auto pose_y = vehicle_sensor_timeseries.at("pose_y")->get_latest_value();
-
-                            VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
-                            VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
-
-                            // continue if no trajectory available, no reference deviation possible  
-                            if(trajectory == vehicleTrajectories.end()) 
-                            {
-                                label->get_style_context()->add_class("ok");
-                                continue;
-                            }
-
-                            const auto& trajectory_points = trajectory->second;
-                            std::vector<TrajectoryPoint> trajectory_segment;
-                            for (const auto& trajectory_point : trajectory_points)
-                            {
-                                trajectory_segment.push_back(trajectory_point.second);
-                            }        
-
-                            if(trajectory_segment.size() > 1)
-                            {
-                                
-                                TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
-                                uint64_t delta_t = ULONG_MAX; 
-                                uint64_t tmp = ULONG_MAX;
-
-                                // trajectory points
-                                for(size_t i = 1; i < trajectory_segment.size(); ++i)
-                                {
-                                    tmp = delta_t;
-                                    delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
-                                    if(delta_t < tmp) 
-                                    { 
-                                        current_trajectory_segment = trajectory_segment[i];                                   
-                                        tmp = delta_t;
-                                    }
-                                }
-                                // euclidian distance to reference 
-                                double error = sqrt(pow(pose_x-current_trajectory_segment.px(),2)+pow(pose_y-current_trajectory_segment.py(),2));
-
-                                label->set_text(std::to_string(error).substr(0,4));
-                                if(fabs(error) > 15) 
-                                {
-                                    cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
-                                    deploy_functions->kill_vehicles({},vehicle_ids);
-                                    label->get_style_context()->add_class("alert");
-                                }
-                                else if (fabs(error) > 1)
-                                {
-                                    label->get_style_context()->add_class("warn");
-                                }
-                                else 
-                                {
-                                    label->get_style_context()->add_class("ok");
-                                }
-                            }
-                            
-                        }
-
-                    }
-                    else 
-                    {
-                        label->set_text("---");
-
-                        label->get_style_context()->remove_class("ok");
-                        label->get_style_context()->remove_class("warn");
-                        label->get_style_context()->add_class("alert");
-                    }
-                }
-                else 
+                if (rows_restricted[i] == "")
                 {
                     //Add empty row, which only serves as a separator for better readability
                     Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
@@ -308,7 +148,166 @@ void MonitoringUi::init_ui_thread()
                         label->show_all();
                         grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                     }
+                    continue;
                 }
+                if(!vehicle_sensor_timeseries.count(rows_restricted[i])) continue;
+                
+                Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
+
+                if(!label)
+                {
+                    label = Gtk::manage(new Gtk::Label()); 
+                    label->set_width_chars(10);
+                    label->set_xalign(1);
+                    label->show_all();
+                    grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
+                }
+
+                auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
+
+                if(sensor_timeseries->has_new_data(0.5))
+                {
+                    const auto value = sensor_timeseries->get_latest_value();
+                    label->set_text(sensor_timeseries->format_value(value));
+
+                    label->get_style_context()->remove_class("ok");
+                    label->get_style_context()->remove_class("warn");
+                    label->get_style_context()->remove_class("alert");
+
+                    if(rows_restricted[i] == "clock_delta") 
+                    {
+                        if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
+                        else if(fabs(value) < 200) label->get_style_context()->add_class("warn");
+                        else 
+                        {
+                            label->get_style_context()->add_class("alert");
+                            cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
+                            
+                            std::string reboot;
+                            if(vehicle_id<10)
+                            {
+                                reboot = reboot_script + "0" + std::to_string(vehicle_id);
+                            }
+                            else
+                            {
+                                reboot = reboot_script + std::to_string(vehicle_id);
+                            }
+                            thread_count.fetch_add(1);
+                            reboot_threads.push_back(std::thread([this, reboot] () {
+                                    std::system(reboot.c_str());
+                                    usleep(2000);
+                                    this->notify_reboot_finished();
+                                }
+                            ));
+                            deploy_functions->kill_vehicles({},vehicle_ids);
+                        }
+                    }
+                    else if(rows_restricted[i] == "battery_level") 
+                    {
+                        int n = 100;
+                        std::vector<double> values = sensor_timeseries->get_last_n_values(n);
+                        auto max = std::max_element(values.begin(), values.end());
+
+                        if     (fabs(*max) > 30)  label->get_style_context()->add_class("ok");
+                        else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
+                        else
+                        {  
+                            label->get_style_context()->add_class("alert");
+                            cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
+                            deploy_functions->kill_vehicles({},vehicle_ids);
+                        }
+                    }
+                    else if(rows_restricted[i] == "speed") 
+                    {
+                        if     (fabs(value) < 3)  label->get_style_context()->add_class("ok");
+                        else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
+                        else 
+                        {
+                            label->get_style_context()->add_class("alert");
+                            cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Shutting down ...", vehicle_id);
+                            deploy_functions->kill_vehicles({},vehicle_ids);
+                        }
+                    }
+                    else if(rows_restricted[i] == "ips") 
+                    {
+                        label->get_style_context()->add_class("ok");
+                        label->set_text("available");
+                    }
+                    else if(rows_restricted[i] == "reference_deviation") 
+                    {
+                        // is vehicle on its reference trajectory? else stop 
+
+                        auto pose_x = vehicle_sensor_timeseries.at("pose_x")->get_latest_value();
+                        auto pose_y = vehicle_sensor_timeseries.at("pose_y")->get_latest_value();
+
+                        VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory();
+                        VehicleTrajectories::iterator trajectory = vehicleTrajectories.find(vehicle_id);
+
+                        // continue if no trajectory available, no reference deviation possible  
+                        if(trajectory == vehicleTrajectories.end()) 
+                        {
+                            label->get_style_context()->add_class("ok");
+                            continue;
+                        }
+
+                        const auto& trajectory_points = trajectory->second;
+                        std::vector<TrajectoryPoint> trajectory_segment;
+                        for (const auto& trajectory_point : trajectory_points)
+                        {
+                            trajectory_segment.push_back(trajectory_point.second);
+                        }        
+
+                        if(trajectory_segment.size() > 1)
+                        {
+                            
+                            TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
+                            uint64_t delta_t = ULONG_MAX; 
+                            uint64_t tmp = ULONG_MAX;
+
+                            // trajectory points
+                            for(size_t i = 1; i < trajectory_segment.size(); ++i)
+                            {
+                                tmp = delta_t;
+                                delta_t = trajectory_segment[i].t().nanoseconds() - clock_gettime_nanoseconds();
+                                if(delta_t < tmp) 
+                                { 
+                                    current_trajectory_segment = trajectory_segment[i];                                   
+                                    tmp = delta_t;
+                                }
+                            }
+                            // euclidian distance to reference 
+                            double error = sqrt(pow(pose_x-current_trajectory_segment.px(),2)+pow(pose_y-current_trajectory_segment.py(),2));
+
+                            label->set_text(std::to_string(error).substr(0,4));
+                            if(fabs(error) > 15) 
+                            {
+                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
+                                deploy_functions->kill_vehicles({},vehicle_ids);
+                                label->get_style_context()->add_class("alert");
+                            }
+                            else if (fabs(error) > 1)
+                            {
+                                label->get_style_context()->add_class("warn");
+                            }
+                            else 
+                            {
+                                label->get_style_context()->add_class("ok");
+                            }
+                        }
+                        
+                    }
+
+                }
+                else 
+                {
+                    label->set_text("---");
+
+                    label->get_style_context()->remove_class("ok");
+                    label->get_style_context()->remove_class("warn");
+                    label->get_style_context()->add_class("alert");
+                }
+                
+                
             }
         }
 
@@ -353,21 +352,11 @@ void MonitoringUi::notify_reboot_finished()
 
     //Also count notify amount s.t one can check if the thread count has been set properly
     thread_count.fetch_sub(1);
-    ++notify_count;
 
     std::cout << thread_count.load() << std::endl;
     std::lock_guard<std::mutex> unlock(notify_callback_in_use);
     if (thread_count.load() == 0)
     {
-        notify_count = 0;
-
-        kill_all_threads();
-    }
-    else if (notify_count == reboot_threads.size())
-    {
-        std::cerr << "WARNING: Reboot thread count has not been initialized correctly!" << std::endl;
-
-        notify_count = 0;
 
         kill_all_threads();
     }
