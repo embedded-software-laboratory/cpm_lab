@@ -62,6 +62,8 @@ using namespace Pylon;
 using namespace GenApi;
 using namespace std;
 
+#define UNUSED(x) (void)(x)
+
 // Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
 CInstantCameraAppSrc::CInstantCameraAppSrc(string serialnumber)
 {
@@ -790,6 +792,7 @@ GstElement* CInstantCameraAppSrc::GetSource()
 // the callback that's fired when the appsrc element sends the 'need-data' signal.
 void CInstantCameraAppSrc::cb_need_data(GstElement *appsrc, guint unused_size, gpointer user_data)
 {
+	UNUSED(unused_size);
 	try
 	{
 		// remember, the "user data" the signal passes to the callback is really the address of the Instant Camera
