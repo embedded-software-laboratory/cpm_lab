@@ -90,7 +90,9 @@ int main(int argc, char *argv[])
 #else
     // Get vehicle starting position from argv
     vector<double> starting_position = cpm::cmd_parameter_doubles("pose", {0.0}, argc, argv);
-    std::cout << starting_position[0] << std::endl;
+    if(starting_position.size() != 1 && starting_position.size() != 3) {
+        starting_position = {0.0};
+    }
     SimulationIPS simulationIPS(topic_vehicleObservation);
     SimulationVehicle simulationVehicle(simulationIPS, vehicle_id, starting_position);
     const bool allow_simulated_time = true;
