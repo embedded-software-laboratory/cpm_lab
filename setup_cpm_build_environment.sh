@@ -105,7 +105,6 @@ eval "${PM}" "${BUILD_TOOLS}"
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-then
     if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
         eval "${PM}" install libsigc++-devel gtkmm24-devel -y
         sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
