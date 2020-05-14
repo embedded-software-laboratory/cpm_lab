@@ -28,7 +28,7 @@ private:
     //Trajectory info
     uint8_t obstacle_id;
     std::vector<CommonTrajectoryPoint> trajectory;
-    double time_step_size;
+    uint64_t time_step_size;
     size_t current_trajectory = 0;
 
     //Timing
@@ -37,6 +37,12 @@ private:
     uint64_t dt_nanos;
     uint64_t start_time;
     std::shared_ptr<cpm::Timer> timer;
+
+    /**
+     * \brief Interpolation function that delivers state values in between set trajectory points
+     * \return x,y,yaw values using references as input
+     */
+    void interpolate_between(CommonTrajectoryPoint p1, CommonTrajectoryPoint p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
 
 public:
     ObstacleSimulation(std::vector<CommonTrajectoryPoint> _trajectory, double _time_step_size, int _id, bool _simulated_time);
