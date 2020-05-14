@@ -141,9 +141,14 @@ sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
 ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
-read -p 'Ask your supervisor for a copy of the RTI license and enter its absolute path (e.g. /home/max/rti_license.dat) here: ' LICENSE
-
-mv $LICENSE /opt/rti_connext_dds-6.0.0/rti_license.dat
+read -p 'Ask your supervisor for a copy of the RTI license or get into contact with RTI and enter its absolute path (e.g. /home/max/rti_license.dat) here: ' LICENSE
+#check, if a license path was entered
+while [ -z "$LICENSE" ]; do
+      echo "No license path was entered, please try again"
+      read LICENSE
+done
+      mv $LICENSE /opt/rti_connext_dds-6.0.0/rti_license.dat
+      echo "success"
 
 ## 3.3 Environment Setup
 echo "/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0" > /etc/ld.so.conf.d/rti_connext_dds.conf
@@ -209,12 +214,9 @@ then
 fi
 
 ### 5. Inform user about success and next steps ################################
-echo "Success! Ready to compile the cpm software suit."
+echo "Success! Ready to build the cpm software suit."
 echo "The next steps are:"
 echo "  1.) Reboot OR open up a NEW Terminal and type \'cd ~/dev; source /etc/profile.d/rti_connext_dds.sh\'."
-echo "  2.) git clone https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git   # AND enter your username and password."
-echo "  3.) git clone https://git.rwth-aachen.de/CPM/Project/Lab/software.git   # AND enter your username and password."
-echo "  4.) cd software"
-echo "  5.) ./build_all.bash"
+echo "  2.) ./build_all.bash or ./build_all.bash --simulation"
 
 exit 0
