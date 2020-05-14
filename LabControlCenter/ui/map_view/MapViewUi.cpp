@@ -273,7 +273,7 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
     for(const auto& entry : vehicleTrajectories) 
     {
-        const auto vehicle_id = entry.first;
+        //const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
         rti::core::vector<TrajectoryPoint> trajectory_segment = trajectory.trajectory_points();
