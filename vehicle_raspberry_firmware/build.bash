@@ -52,17 +52,17 @@ then
     
     
     # # Publish package via http/apache for the vehicles to download
-    # rm -f /var/www/html/raspberry/package.tar.gz
-    # #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
-    # cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case
-    # rm -f /var/www/html/raspberry/DDS_DOMAIN
-    # echo $DDS_DOMAIN >/var/www/html/raspberry/DDS_DOMAIN
+    rm -f /var/www/html/raspberry/package.tar.gz
+    #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
+    cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case
+    rm -f /var/www/html/raspberry/DDS_DOMAIN
+    echo $DDS_DOMAIN >/var/www/html/raspberry/DDS_DOMAIN
     
     
     
-    # export IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-    # export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
+    export IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+    export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
     
-    # rm -f /var/www/html/raspberry/DDS_INITIAL_PEER
-    # echo $DDS_INITIAL_PEER >/var/www/html/raspberry/DDS_INITIAL_PEER
+    rm -f /var/www/html/raspberry/DDS_INITIAL_PEER
+    echo $DDS_INITIAL_PEER >/var/www/html/raspberry/DDS_INITIAL_PEER
 fi
