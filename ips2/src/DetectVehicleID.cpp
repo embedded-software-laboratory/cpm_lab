@@ -104,7 +104,7 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
 
         // Find signal edges
         std::vector<SignalEdge> signal_edges;
-        for (int i = 0; i < vehicle.size()-1; ++i)
+        for (size_t i = 0; i < vehicle.size()-1; ++i)
         {
             if(!(vehicle.at(i).center_present) && (vehicle.at(i+1).center_present))
             {

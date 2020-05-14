@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <glib.h>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/Timer.hpp"
@@ -49,13 +51,39 @@ private:
     //Clear elements so that count last elements are kept
     void keep_last_elements(std::vector<Log>& vector, size_t count);
 
+    /**
+     * \brief Gtk will complain about non-valid UTF-8 strings when added to the UI
+     * Thus, this function appends a warning that the message is invalid to invalid log messages
+     * The user thus finds out that some of his log messages of his program (-> node_id) are invalid
+     * This function checks all parts of the message, but only changes the log message
+     * Gtk will still show warnings for invalid messages (Pango), but the user, when looking at the logs,
+     * should notice that his log messages are invalid, and where to find them (to be able to correct them)
+     * 
+     */
+    void assert_utf8_validity(Log& log);
+
 public:
     LogStorage();
     ~LogStorage();
 
+    /**
+     * \brief Get all Log messages that have been received since the last time this function was called (up to 100 recent logs are remembered)
+     * \return Vector of log messages
+     */
     std::vector<Log> get_new_logs();
     
+    /**
+     * \brief Get all Log messages that have been received (remembers up to 10000 Log messages before old Log messages are deleted)
+     * \return Vector of log messages
+     */
     std::vector<Log> get_all_logs();
+
+    /**
+     * \brief Get the log_amount most recent Log messages of all that have been received
+     * \param log_amount How many logs should be returned (max value)
+     * \return Vector of log messages
+     */
+    std::vector<Log> get_recent_logs(const long log_amount);
 
     /**
      * \brief Performs a search that is supposed to be run asynchronously in a new thread - using a future is recommended to obtain the result. The search can be aborted by setting continue_search to false (should thus be false at start) - this is useful in case the user starts a new search before the old one is completed
@@ -66,7 +94,7 @@ public:
     std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search);
 
     /**
-    * \brief Reset all data structures / delete all log data
+    * \brief Reset all data structures / delete all log data. Is called from the UI element only -> if you want to reset the storage, just call reset on the UI!
     */
     void reset();
 };

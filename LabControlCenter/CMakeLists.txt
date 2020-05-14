@@ -34,6 +34,8 @@ include_directories(labcam/include)
 add_subdirectory(labcam)
 
 add_executable(LabControlCenter
+    src/LogLevelSetter.hpp
+    src/LogLevelSetter.cpp
     src/LogStorage.hpp
     src/LogStorage.cpp
     src/TimerTrigger.hpp

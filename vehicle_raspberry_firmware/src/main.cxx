@@ -112,18 +112,18 @@ int main(int argc, char *argv[])
 
     
     // Timing / profiling helper
-    uint64_t t_prev = update_loop->get_time();
-    auto log_fn = [&](int line){
-        uint64_t now = update_loop->get_time();
-        cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
-        t_prev = now;
-    };
+    // uint64_t t_prev = update_loop->get_time();
+    // auto log_fn = [&](int line){
+    //     uint64_t now = update_loop->get_time();
+    //     cpm::Logging::Instance().write("PERF LOG L %i T %llu DT %f", line, now, (double(now-t_prev)*1e-6));
+    //     t_prev = now;
+    // };
     
     //----------------------------------------------------------------------------------------------------------------------
 
     //Variabel for the control loop: If a stop signal was received, reset the controller, stop the vehicle, wait, then restart after a while
     //After a while: Wait to make sure that old messages are ignored
-    uint32_t STOP_STEPS = 50; //50Hz -> pause for one second
+    unsigned int STOP_STEPS = 50; //50Hz -> pause for one second
     std::atomic_uint_least32_t stop_counter; //Reset control_stop to false again after some iterations, so that the controller is not reset immediately (ignore old messages) - sleep would lead to problems regarding the VehicleObservation
     stop_counter.store(0); //0 means normal run
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         {
             //Log control cycle period
             //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+            cpm::Logging::Instance().write(3, "Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
                 }
                 else 
                 {
-                    controller.get_stop_signals(stop_counter.load(), STOP_STEPS, motor_throttle, steering_servo);
+                    controller.get_stop_signals(motor_throttle, steering_servo);
                 }
 
                 int n_transmission_attempts = 1;
@@ -272,7 +272,9 @@ int main(int argc, char *argv[])
             //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
             //Define x empty runs before the reset
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
-            cpm::Logging::Instance().write("Received stop signal");
+
+            //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+            cpm::Logging::Instance().write("Received stop %s", "signal");
         }
     );
     

@@ -178,12 +178,6 @@ MapViewUi::MapViewUi(
             pan_x += mouse_dist_x;
             pan_y += mouse_dist_y;
 
-            std::cout << std::endl;
-            std::cout << "Mouse distance x:" << mouse_dist_x << std::endl;
-            std::cout << "Mouse distance y:" << mouse_dist_y << std::endl;
-            std::cout << "Pan x:" << pan_x << std::endl;
-            std::cout << "Pan y:" << pan_y << std::endl;
-
             old_event_x = event->x;
             old_event_y = event->y;
         }
@@ -246,7 +240,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
         draw_received_trajectory_commands(ctx);
 
         for(const auto& entry : vehicle_data) {
-            const auto vehicle_id = entry.first;
+            //const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
 
             if(vehicle_timeseries.at("pose_x")->has_new_data(1.0))
@@ -398,7 +392,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
             for (size_t i = 1; i < message_points.size(); ++i)
             {
-                const auto& current_point = message_points.at(i);
+                //const auto& current_point = message_points.at(i);
 
                 ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
             }  
@@ -500,7 +494,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
 
         const double LF = 0.115;
         const double LR = 0.102;
-        const double WH = 0.054;
+        //const double WH = 0.054;
 
         // Draw car image
         ctx->save();

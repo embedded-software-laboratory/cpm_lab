@@ -91,12 +91,18 @@ int main (int argc, char *argv[]) {
     ReadyStatus ready_message;
     ready_message.source_id(hlc_id);
 
+    //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     timer->start([&](uint64_t t_now) {
         writer_readyMessage.write(ready_message);
     },
     [](){
         //Ignore stop signals
     });
+
+    #pragma GCC diagnostic pop
 
     return 0;
 }
