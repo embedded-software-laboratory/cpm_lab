@@ -15,6 +15,7 @@ SetupViewUI::SetupViewUI
     std::function<void()> _reset_vehicle_view,
     std::function<void()> _reset_visualization_commands,
     std::function<void()> _reset_logs,
+    std::function<void(bool)> _set_commonroad_tab_sensitive,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -27,7 +28,8 @@ SetupViewUI::SetupViewUI
     reset_trajectories(_reset_trajectories),
     reset_vehicle_view(_reset_vehicle_view),
     reset_visualization_commands(_reset_visualization_commands),
-    reset_logs(_reset_logs)
+    reset_logs(_reset_logs),
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -561,6 +563,9 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     {
         vehicle_toggle->set_sensitive(is_sensitive);
     }
+
+    assert(set_commonroad_tab_sensitive);
+    set_commonroad_tab_sensitive(is_sensitive);
 }
 
 void SetupViewUI::select_all_vehicles_real()

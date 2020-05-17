@@ -96,6 +96,7 @@ private:
     std::function<void()> reset_vehicle_view;
     std::function<void()> reset_visualization_commands;
     std::function<void()> reset_logs;
+    std::function<void(bool)> set_commonroad_tab_sensitive;
 
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
@@ -171,6 +172,7 @@ public:
      * \param _reset_vehicle_view Reset list of connected vehicles
      * \param _reset_visualization_commands Reset all visualization commands that were sent before
      * \param _reset_logs Reset all logs that were sent before
+     * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
@@ -184,6 +186,7 @@ public:
         std::function<void()> _reset_vehicle_view,
         std::function<void()> _reset_visualization_commands,
         std::function<void()> _reset_logs,
+        std::function<void(bool)> _set_commonroad_tab_sensitive,
         unsigned int argc, 
         char *argv[]
         );

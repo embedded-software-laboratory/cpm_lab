@@ -1,4 +1,4 @@
-<commonRoad timeStepSize="1.0" commonRoadVersion="2018b" author="Octavio Delgadillo" affiliation="Technical University of Munich, Germany" source="Technische Hochschule Ingolstadt" tags="urban multi_lane oncoming_traffic parallel_lanes critical" benchmarkID="RUS_Bicycle-4_1_T-1" date="2019-11-05">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2018b" author="Octavio Delgadillo" affiliation="Technical University of Munich, Germany" source="Technische Hochschule Ingolstadt" tags="urban multi_lane oncoming_traffic parallel_lanes critical" benchmarkID="RUS_Bicycle-4_1_T-1" date="2019-11-05">
   <lanelet id="8">
     <leftBound>
       <point>

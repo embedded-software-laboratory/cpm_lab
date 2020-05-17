@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
+    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
     auto setupViewUi = make_shared<SetupViewUI>(
         vehicleAutomatedControl, 
         obstacle_simulation_manager,
@@ -153,9 +154,9 @@ int main(int argc, char *argv[])
         [=](){return monitoringUi->reset_vehicle_view();}, 
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
         [=](){return loggerViewUi->reset();}, 
+        [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
         argv);
-    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 

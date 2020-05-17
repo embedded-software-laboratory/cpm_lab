@@ -88,6 +88,13 @@ public:
      */
     void set_main_window_callback(std::function<Gtk::Window&()> _get_main_window);
 
+
+    /**
+     * \brief Set responsiveness of this part of the UI - should be unresponsive whenever the simulation is running, thus this function is given as callback to the setup UI part
+     * \param is_sensitive True if this sub-window should be responsive to user input, else false
+     */
+    void set_sensitive(bool is_sensitive);
+
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 };

@@ -214,6 +214,19 @@ void CommonroadViewUI::set_main_window_callback(std::function<Gtk::Window&()> _g
     get_main_window = _get_main_window;
 }
 
+void CommonroadViewUI::set_sensitive(bool is_sensitive)
+{
+    parent->set_sensitive(is_sensitive);
+    commonroad_box->set_sensitive(is_sensitive);
+    commonroad_path->set_sensitive(is_sensitive);
+    entry_lane_width->set_sensitive(is_sensitive);
+    entry_translate_x->set_sensitive(is_sensitive);
+    entry_translate_y->set_sensitive(is_sensitive);
+    button_choose_commonroad->set_sensitive(is_sensitive);
+    button_load_commonroad->set_sensitive(is_sensitive);
+    button_apply_transformation->set_sensitive(is_sensitive);
+}
+
 Gtk::Widget* CommonroadViewUI::get_parent()
 {
     return parent;
