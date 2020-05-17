@@ -79,8 +79,8 @@ void ObstacleSimulation::start()
         else
         {
             //Stay at final point
-            x = trajectory.at(current_trajectory).position.first;
-            y = trajectory.at(current_trajectory).position.second;
+            x = trajectory.at(current_trajectory).position.value().first;
+            y = trajectory.at(current_trajectory).position.value().second;
             yaw = trajectory.at(current_trajectory).orientation.value_or(0.0);
         }
 
@@ -156,8 +156,8 @@ void ObstacleSimulation::interpolate_between(CommonTrajectoryPoint p1, CommonTra
     // {
         //Fallback: Linear interpolation (if no velocity is set)
         double intermediate_frac = (current_time - (p1.time.value().get_mean() * time_step_size)) / ((p2.time.value().get_mean() - p1.time.value().get_mean()) * time_step_size);
-        x_interp = (p2.position.first - p1.position.first) * intermediate_frac + p1.position.first;
-        y_interp = (p2.position.second - p1.position.second) * intermediate_frac + p1.position.second;
+        x_interp = (p2.position.value().first - p1.position.value().first) * intermediate_frac + p1.position.value().first;
+        y_interp = (p2.position.value().second - p1.position.value().second) * intermediate_frac + p1.position.value().second;
         yaw_interp = (p2.orientation.value_or(0.0) - p1.orientation.value_or(0.0)) * intermediate_frac + p1.orientation.value_or(0.0);
     //}
 }

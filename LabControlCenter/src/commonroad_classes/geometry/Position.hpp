@@ -33,9 +33,6 @@ class Position : public InterfaceTransform, public InterfaceDraw, public Interfa
 private:
     //TODO: Solve below w. inheritance? Or keep it this way? -> Probably easier to keep it this way
 
-    //According to the specification, a position might not be given exactly (as a point)
-    bool is_exact;
-
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
     
@@ -93,10 +90,14 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
     /**
-     * \brief Get center (positional value) of the shape
+     * \brief Get center (positional value) of the shape, if one exists
      * \return Center of the shape
      */
     std::pair<double, double> get_center() override;
+
+    //Further getters
+    std::optional<int> get_lanelet_ref();
+    bool is_exact();
 
     /**
      * \brief This function is used to transform (rotate, translate) a context, e.g. because position/orientation and shape information are given in different objects, but need to be combined for drawing

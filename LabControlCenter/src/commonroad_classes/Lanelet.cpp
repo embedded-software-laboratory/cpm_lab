@@ -525,3 +525,17 @@ void Lanelet::draw_ref(const DrawingContext& ctx, double scale, double global_or
 
     ctx->restore();
 }
+
+std::pair<double, double> Lanelet::get_center()
+{
+    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    assert(left_bound.points.size() == right_bound.points.size());
+
+    size_t vec_size = left_bound.points.size();
+    size_t middle_index = static_cast<size_t>(static_cast<double>(vec_size) / 2.0);
+
+    double x = (left_bound.points.at(middle_index).get_x() - right_bound.points.at(middle_index).get_x()) / 2.0;
+    double y = (left_bound.points.at(middle_index).get_y() - right_bound.points.at(middle_index).get_y()) / 2.0;
+
+    return std::pair<double, double>(x, y);
+}

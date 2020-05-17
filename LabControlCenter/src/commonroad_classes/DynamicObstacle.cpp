@@ -336,7 +336,16 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             CommonTrajectoryPoint trajectory_point;
 
             //Required data must exist, this function may throw an error otherwise
-            trajectory_point.position = point.get_position().get_center();
+            if (point.get_position().is_exact())
+            {
+                trajectory_point.position = std::optional<std::pair<double, double>>(point.get_position().get_center());
+            }
+            else
+            {
+                trajectory_point.lanelet_ref = point.get_position().get_lanelet_ref();
+            }
+            
+            trajectory_point.is_exact = point.get_position().is_exact();
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
             trajectory_point.orientation = point.get_orientation_mean();
             //Optional data
@@ -351,11 +360,13 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
         {
             CommonTrajectoryPoint trajectory_point;
 
-            //Required data must exist, this function may throw an error otherwise
-            trajectory_point.position = point.get_center();
+            //Required data must exist, this function may throw an error otherwise - there is no lanelet ref in occupancy
+            trajectory_point.position = std::optional<std::pair<double, double>>(point.get_center());
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
             trajectory_point.orientation = point.get_orientation();
             //Velocity data does not exist in this case
+
+            trajectory_point.is_exact = false; //Occupancy values are never exact, because they define an occupied area
 
             ret_trajectory.push_back(trajectory_point);
         }

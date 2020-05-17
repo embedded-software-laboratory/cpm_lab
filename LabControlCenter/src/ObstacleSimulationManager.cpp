@@ -30,8 +30,19 @@ void ObstacleSimulationManager::setup()
     //Set up simulated obstacles
     for (auto obstacle_id : scenario->get_dynamic_obstacle_ids())
     {
+        auto trajectory = scenario->get_dynamic_obstacle(obstacle_id).value().get_trajectory();
+        //We need to modify the trajectory first: Lanelet refs need to be translated to a trajectory
+        for (auto& point : trajectory)
+        {
+            if (point.lanelet_ref.has_value())
+            {
+                //Translate lanelet ref to positional value
+                point.position = scenario->get_lanelet(point.lanelet_ref.value()).value().get_center();
+            }
+        }
+
         simulated_obstacles.push_back(
-            ObstacleSimulation(scenario->get_dynamic_obstacle(obstacle_id).value().get_trajectory(), time_step_size, obstacle_id, use_simulated_time)
+            ObstacleSimulation(trajectory, time_step_size, obstacle_id, use_simulated_time)
         );
     }
 

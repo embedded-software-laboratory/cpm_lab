@@ -41,7 +41,8 @@ enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, P
  */
 struct CommonTrajectoryPoint
 {
-    std::pair<double, double> position; //x, y
+    std::optional<std::pair<double, double>> position; //x, y
+    std::optional<int> lanelet_ref; //Must be set if position is not set
     std::optional<double> orientation; //yaw
     std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
     std::optional<IntervalOrExact> velocity;

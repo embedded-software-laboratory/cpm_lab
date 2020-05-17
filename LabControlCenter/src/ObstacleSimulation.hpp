@@ -27,7 +27,7 @@ private:
 
     //Trajectory info
     uint8_t obstacle_id;
-    std::vector<CommonTrajectoryPoint> trajectory;
+    std::vector<CommonTrajectoryPoint> trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
     uint64_t time_step_size;
     size_t current_trajectory = 0;
 
@@ -45,6 +45,10 @@ private:
     void interpolate_between(CommonTrajectoryPoint p1, CommonTrajectoryPoint p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
 
 public:
+    /**
+     * \brief constructor
+     * \param _trajectory The trajectory to follow: Important: Translate lanelet ref to position beforehand, so that it must not be done here anymore (a value is expected for every single trajectory point)
+     */
     ObstacleSimulation(std::vector<CommonTrajectoryPoint> _trajectory, double _time_step_size, int _id, bool _simulated_time);
 
     //Destructor for timer

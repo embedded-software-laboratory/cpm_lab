@@ -649,3 +649,13 @@ std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
     }
     return std::optional<DynamicObstacle>();
 }
+
+std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
+{
+    //TODO: Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
+    if (lanelets.find(id) != lanelets.end())
+    {
+        return std::optional<Lanelet>(lanelets.at(id));
+    }
+    return std::optional<Lanelet>();
+}

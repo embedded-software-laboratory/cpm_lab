@@ -251,3 +251,28 @@ std::pair<double, double> Position::get_center()
 
     return std::pair<double, double>(x, y);
 }
+
+std::optional<int> Position::get_lanelet_ref()
+{
+    if (lanelet_refs.size() > 1)
+    {
+        std::cerr << "TODO: Better warning // Cannot yet handle positions that are so inexact that they cover more than one lanelet" << std::endl;
+        return std::optional<int>(lanelet_refs.at(0));
+    }
+    else if (lanelet_refs.size() == 1)
+    {
+        return std::optional<int>(lanelet_refs.at(0));
+    }
+    else 
+    {
+        return std::optional<int>();
+    }
+}
+
+bool Position::is_exact()
+{
+    if (point.has_value())
+        return true;
+
+    return false;
+}

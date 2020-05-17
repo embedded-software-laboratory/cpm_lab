@@ -9,6 +9,7 @@
 #include "commonroad_classes/geometry/Point.hpp"
 
 #include "commonroad_classes/InterfaceDraw.hpp"
+#include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
@@ -94,7 +95,7 @@ struct StopLine
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store Lanelets specified in the XML file (segments of a lane, with references to following and adjacent lanes)
  */
-class Lanelet : public InterfaceTransform, public InterfaceDraw
+class Lanelet : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
     Bound left_bound;
@@ -212,4 +213,10 @@ public:
     void to_dds_msg() {}
 
     //TODO: Getter (no setter, bc we do not want to manipulate data except for transformation)
+
+    /**
+     * \brief Get center (positional value) of the shape, if one exists
+     * \return Center of the shape
+     */
+    std::pair<double, double> get_center() override;
 };
