@@ -53,5 +53,6 @@ std::vector<CommonroadObstacle> ObstacleAggregator::get_obstacle_data()
 void ObstacleAggregator::reset_all_data()
 {
     std::lock_guard<std::mutex> lock(commonroad_obstacle_mutex);
+    std::cout << "Reset called - TODO: Pause a bit before clearing, or some messages with delay might get through afterwards and are still drawn" << std::endl;
     commonroad_obstacle_data.clear();
 }
