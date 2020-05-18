@@ -1,0 +1,47 @@
+#include "Header.idl"
+#include "Pose2D.idl"
+
+/*
+ * Provides simulated commonroad obstacle state data
+ */
+
+#ifndef COMMONROAD_OBSTACLE_IDL
+#define COMMONROAD_OBSTACLE_IDL
+
+enum ObstacleType 
+{
+    Unknown=0,
+    Car, 
+    Truck, 
+    Bus, 
+    Motorcycle, 
+    Bicycle, 
+    Pedestrian, 
+    PriorityVehicle, 
+    Train,
+    ParkedVehicle, 
+    ConstructionZone, 
+    RoadBoundary
+};
+
+struct CommonroadObstacle {
+    octet vehicle_id; //@key //Also used here, because an ID can be set for each obstacle
+    Header header; //There is no need to distinguish between create and valid after stamp in this case
+
+    boolean is_moving; //Maybe different color based on whether the obstacle is moving or not (moving /= dynamic or static obstacle, some obstacles are defined as dynamic but do not move)
+
+    /*
+     * Pose contains vehicle orientation and position, but these values must not be exact
+     */
+    Pose2D pose;
+    boolean pose_is_exact;
+
+    ObstacleType type;
+
+    //Optional value which defines a shape, especially useful if the occupancy type was used
+    //But: also useful for visualizing lanelet references or inexact positional values
+    //Shape shape; -> TODO: Can be based on other Commonroad IDL types (e.g. Shape, based on Rectangle, Circle and Polygon etc.)
+
+    double speed; // m/s
+};
+#endif
