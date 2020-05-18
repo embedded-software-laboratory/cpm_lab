@@ -110,6 +110,8 @@ add_executable(LabControlCenter
     src/ObstacleSimulation.cpp
     src/ObstacleSimulationManager.hpp
     src/ObstacleSimulationManager.cpp
+    src/ObstacleAggregator.cpp
+    src/ObstacleAggregator.hpp
     src/LogLevelSetter.hpp
     src/LogLevelSetter.cpp
     src/LogStorage.hpp

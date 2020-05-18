@@ -4,11 +4,15 @@
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
 #include <thread>
+#include <mutex>
+#include <sstream>
 #include <vector>
 #include "TrajectoryCommand.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Visualization.hpp"
 #include "Pose2D.hpp"
+
+#include "CommonroadObstacle.hpp"
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
@@ -31,6 +35,8 @@ class MapViewUi
     Cairo::RefPtr<Cairo::ImageSurface> image_map;
     VehicleData vehicle_data;
 
+    //For visualization of commonroad data get from data storage object via callback
+    std::function<std::vector<CommonroadObstacle>()> get_obstacle_data;
 
     // hold the path and related values temporarily, while the user draws with the mouse
     std::vector<Pose2D> path_painting_in_progress;
@@ -78,6 +84,8 @@ class MapViewUi
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
 
+    void draw_commonroad_obstacles(const DrawingContext& ctx);
+
     /**
      * /brief draw function that uses the viz callback to get all received viz commands and draws them on the screen
      */
@@ -92,6 +100,7 @@ public:
         shared_ptr<CommonRoadScenario> _commonroad_scenario,
         std::function<VehicleData()> get_vehicle_data_callback,
         std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+        std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
     Gtk::DrawingArea* get_parent();

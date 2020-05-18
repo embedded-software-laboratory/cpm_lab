@@ -10,7 +10,7 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
-#include "VehicleState.hpp"
+#include "CommonroadObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -23,7 +23,7 @@ class ObstacleSimulation
 {
 private: 
     //DDS
-    dds::pub::DataWriter<VehicleState> writer_vehicleState;
+    dds::pub::DataWriter<CommonroadObstacle> writer_commonroad_obstacle;
 
     //Trajectory info
     uint8_t obstacle_id;

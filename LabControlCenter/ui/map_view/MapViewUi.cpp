@@ -6,12 +6,14 @@
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
 #include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
 
+using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
     shared_ptr<CommonRoadScenario> _commonroad_scenario,
     std::function<VehicleData()> get_vehicle_data_callback,
     std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
     std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
@@ -19,6 +21,7 @@ MapViewUi::MapViewUi(
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
+,get_obstacle_data(_get_obstacle_data)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
@@ -258,6 +261,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
         }
 
         draw_received_visualization_commands(ctx);
+
+        draw_commonroad_obstacles(ctx);
 
         draw_path_painting(ctx);
 
@@ -620,8 +625,62 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
+void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
+{
+    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
+    assert(get_obstacle_data);
+    for (auto entry : get_obstacle_data())
+    {
+        ctx->save();
 
+        const double x = entry.pose().x();
+        const double y = entry.pose().y();
+        const double yaw = entry.pose().yaw();
 
+        ctx->translate(x,y);
+        ctx->rotate(yaw);
+
+        const double LF = 0.115;
+        const double LR = 0.102;
+        //const double WH = 0.054;
+
+        // Draw car image (TODO: Change this later, e.g. to shape)
+        ctx->save();
+        {
+            const double scale = 0.224/image_car->get_width();
+            ctx->translate( (LF+LR)/2-LR ,0);
+            ctx->scale(scale, scale);
+            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
+            ctx->set_source(image_car,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
+
+        ctx->save();
+        {
+            std::stringstream description_stream;
+            description_stream << "CO: " << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
+            ctx->translate(-0.03, 0);
+            const double scale = 0.01;
+            ctx->rotate(-yaw);
+            ctx->scale(scale, -scale);
+            ctx->move_to(0,0);
+            Cairo::TextExtents extents;
+            ctx->get_text_extents(description_stream.str(), extents);
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
+            ctx->set_source_rgb(1,1,1);
+            ctx->show_text(description_stream.str());
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+            ctx->set_source_rgb(.1,1,.1);
+            ctx->show_text(description_stream.str());
+        }
+
+        ctx->restore();
+        ctx->restore();
+    }
+}
 
 Gtk::DrawingArea* MapViewUi::get_parent()
 {

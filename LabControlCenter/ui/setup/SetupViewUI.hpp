@@ -92,6 +92,7 @@ private:
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
     std::function<void()> reset_time_series_aggregator;
+    std::function<void()> reset_obstacle_aggregator;
     std::function<void()> reset_trajectories;
     std::function<void()> reset_vehicle_view;
     std::function<void()> reset_visualization_commands;
@@ -168,6 +169,7 @@ public:
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
      * \param _reset_timer Reset timer & set up a new one for the next simulation
      * \param _reset_time_series_aggregator Reset received vehicle data
+     * \param _reset_obstacle_aggregator Reset received obstacle data
      * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
      * \param _reset_vehicle_view Reset list of connected vehicles
      * \param _reset_visualization_commands Reset all visualization commands that were sent before
@@ -182,6 +184,7 @@ public:
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _reset_time_series_aggregator,
+        std::function<void()> _reset_obstacle_aggregator,
         std::function<void()> _reset_trajectories,
         std::function<void()> _reset_vehicle_view,
         std::function<void()> _reset_visualization_commands,

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
+#include "ObstacleAggregator.hpp"
 #include "TimeSeriesAggregator.hpp"
 #include "HLCReadyAggregator.hpp"
 #include "ObstacleSimulationManager.hpp"
@@ -127,6 +128,7 @@ int main(int argc, char *argv[])
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto obstacleAggregator = make_shared<ObstacleAggregator>();
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
@@ -134,6 +136,7 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto monitoringUi = make_shared<MonitoringUi>(
@@ -150,6 +153,7 @@ int main(int argc, char *argv[])
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return timeSeriesAggregator->reset_all_data();}, 
+        [=](){return obstacleAggregator->reset_all_data();}, 
         [=](){return trajectoryCommand->stop_all();}, 
         [=](){return monitoringUi->reset_vehicle_view();}, 
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 

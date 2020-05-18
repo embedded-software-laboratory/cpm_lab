@@ -2,7 +2,7 @@
 
 ObstacleSimulation::ObstacleSimulation(std::vector<CommonTrajectoryPoint> _trajectory, double _time_step_size, int _id, bool _simulated_time)
 :
-writer_vehicleState(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleState>("vehicleState")),
+writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacle>("commonroadObstacle")),
 trajectory(_trajectory),
 simulated_time(_simulated_time)
 {
@@ -38,7 +38,7 @@ void ObstacleSimulation::start()
     //Create timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
     timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, simulated_time);
 
-    //Remember start time, so that we can check how much time has passed / which state to choose when
+    //Remember start time, so that we can check how much time has passed / which obstacle to choose when
     start_time = timer->get_time();
 
     timer->start_async([=] (uint64_t t_now) {
@@ -55,16 +55,15 @@ void ObstacleSimulation::start()
             ++current_trajectory;
         }
 
-        //Create current state from current time, get current trajectory point - TODO: More than trivial point-hopping
-        VehicleState state;
-        state.vehicle_id(obstacle_id);
-        state.IPS_update_age_nanoseconds(0);
+        //Create current obstacle from current time, get current trajectory point - TODO: More than trivial point-hopping
+        CommonroadObstacle obstacle;
+        obstacle.vehicle_id(obstacle_id);
 
         //Set header
         Header header;
         header.create_stamp(TimeStamp(t_now));
         header.valid_after_stamp(TimeStamp(t_now));
-        state.header(header);
+        obstacle.header(header);
 
         //These values are set either by interpolation or using the last data point
         double x;
@@ -89,15 +88,15 @@ void ObstacleSimulation::start()
         pose.x(x);
         pose.y(y);
         pose.yaw(yaw);
-        state.pose(pose);
+        obstacle.pose(pose);
 
         //Set velocity, if it exists
         if(trajectory.at(current_trajectory).velocity.has_value())
         {
-            state.speed(trajectory.at(current_trajectory).velocity.value().get_mean());
+            obstacle.speed(trajectory.at(current_trajectory).velocity.value().get_mean());
         }
 
-        writer_vehicleState.write(state);
+        writer_commonroad_obstacle.write(obstacle);
     });
 }
 

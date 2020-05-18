@@ -11,6 +11,7 @@ SetupViewUI::SetupViewUI
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
+    std::function<void()> _reset_obstacle_aggregator,
     std::function<void()> _reset_trajectories,
     std::function<void()> _reset_vehicle_view,
     std::function<void()> _reset_visualization_commands,
@@ -25,6 +26,7 @@ SetupViewUI::SetupViewUI
     get_hlc_ids(_get_hlc_ids),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
+    reset_obstacle_aggregator(_reset_obstacle_aggregator),
     reset_trajectories(_reset_trajectories),
     reset_vehicle_view(_reset_vehicle_view),
     reset_visualization_commands(_reset_visualization_commands),
@@ -305,6 +307,7 @@ void SetupViewUI::deploy_applications() {
     //Reset all relevant UI parts
     reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)
     reset_time_series_aggregator();
+    reset_obstacle_aggregator();
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
