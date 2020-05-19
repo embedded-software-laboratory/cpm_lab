@@ -98,6 +98,7 @@ public:
     //Further getters
     std::optional<int> get_lanelet_ref();
     bool is_exact();
+    bool position_is_lanelet_ref();
 
     /**
      * \brief This function is used to transform (rotate, translate) a context, e.g. because position/orientation and shape information are given in different objects, but need to be combined for drawing

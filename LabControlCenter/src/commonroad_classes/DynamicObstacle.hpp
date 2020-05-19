@@ -47,7 +47,9 @@ struct CommonTrajectoryPoint
     std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
     std::optional<IntervalOrExact> velocity;
 
-    bool is_exact; //TODO
+    bool is_exact;
+    std::optional<ObstacleTypeDynamic> obstacle_type;
+    //is_moving is set in the simulation part, because it just depends on the overall trajectory size
 };
 
 /**

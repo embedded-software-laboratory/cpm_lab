@@ -96,6 +96,44 @@ void ObstacleSimulation::start()
             obstacle.speed(trajectory.at(current_trajectory).velocity.value().get_mean());
         }
 
+        //Set further obstacle information
+        obstacle.pose_is_exact(trajectory.at(current_trajectory).is_exact);        
+        obstacle.is_moving((trajectory.size() > 1));
+
+        if (trajectory.at(current_trajectory).obstacle_type.has_value())
+        {
+            switch(trajectory.at(current_trajectory).obstacle_type.value())
+            {
+                case ObstacleTypeDynamic::Unknown:
+                    obstacle.type(ObstacleType::Unknown);
+                    break;
+                case ObstacleTypeDynamic::Car: 
+                    obstacle.type(ObstacleType::Car);
+                    break;
+                case ObstacleTypeDynamic::Truck:
+                    obstacle.type(ObstacleType::Truck);
+                    break;
+                case ObstacleTypeDynamic::Bus:
+                    obstacle.type(ObstacleType::Bus);
+                    break;
+                case ObstacleTypeDynamic::Motorcycle:
+                    obstacle.type(ObstacleType::Motorcycle);
+                    break;
+                case ObstacleTypeDynamic::Bicycle:
+                    obstacle.type(ObstacleType::Bicycle);
+                    break;
+                case ObstacleTypeDynamic::Pedestrian:
+                    obstacle.type(ObstacleType::Pedestrian);
+                    break;
+                case ObstacleTypeDynamic::PriorityVehicle:
+                    obstacle.type(ObstacleType::PriorityVehicle);
+                    break;
+                case ObstacleTypeDynamic::Train:
+                    obstacle.type(ObstacleType::Train);
+                    break;
+            }
+        }
+
         writer_commonroad_obstacle.write(obstacle);
     });
 }

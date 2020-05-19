@@ -276,3 +276,8 @@ bool Position::is_exact()
 
     return false;
 }
+
+bool Position::position_is_lanelet_ref()
+{
+    return (lanelet_refs.size() > 0) && !(point.has_value()) && (circles.size() == 0) && (polygons.size() == 0) && (rectangles.size() == 0);
+}

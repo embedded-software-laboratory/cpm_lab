@@ -320,11 +320,22 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
 
     assert(initial_state.has_value()); //Must exist anyway at this point 
     //Required data must exist, this function may throw an error otherwise
-    initial_point.position = initial_state->get_position().get_center();
+    if (! initial_state->get_position().position_is_lanelet_ref())
+    {
+        initial_point.position = std::optional<std::pair<double, double>>(initial_state->get_position().get_center());
+    }
+    else
+    {
+        initial_point.lanelet_ref = initial_state->get_position().get_lanelet_ref();
+    }
+    
+    initial_point.is_exact = initial_state->get_position().is_exact();
     initial_point.time = std::optional<IntervalOrExact>(initial_state->get_time());
     initial_point.orientation = initial_state->get_orientation_mean();
     //Optional data
     initial_point.velocity = initial_state->get_velocity();
+
+    initial_point.obstacle_type = type;
 
     ret_trajectory.push_back(initial_point);
 
@@ -336,7 +347,7 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             CommonTrajectoryPoint trajectory_point;
 
             //Required data must exist, this function may throw an error otherwise
-            if (point.get_position().is_exact())
+            if (! point.get_position().position_is_lanelet_ref())
             {
                 trajectory_point.position = std::optional<std::pair<double, double>>(point.get_position().get_center());
             }
@@ -350,6 +361,8 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             trajectory_point.orientation = point.get_orientation_mean();
             //Optional data
             trajectory_point.velocity = point.get_velocity();
+
+            trajectory_point.obstacle_type = type;
 
             ret_trajectory.push_back(trajectory_point);
         }
@@ -367,6 +380,7 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             //Velocity data does not exist in this case
 
             trajectory_point.is_exact = false; //Occupancy values are never exact, because they define an occupied area
+            trajectory_point.obstacle_type = type;
 
             ret_trajectory.push_back(trajectory_point);
         }

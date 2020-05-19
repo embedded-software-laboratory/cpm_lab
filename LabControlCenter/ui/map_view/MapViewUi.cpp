@@ -28,6 +28,7 @@ MapViewUi::MapViewUi(
     drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
+    image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
@@ -647,19 +648,67 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         // Draw car image (TODO: Change this later, e.g. to shape)
         ctx->save();
         {
-            const double scale = 0.224/image_car->get_width();
+            const double scale = 0.224/image_object->get_width();
             ctx->translate( (LF+LR)/2-LR ,0);
             ctx->scale(scale, scale);
-            ctx->translate(-image_car->get_width()/2, -image_car->get_height()/2);
-            ctx->set_source(image_car,0,0);
+            ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
+            ctx->set_source(image_object,0,0);
             ctx->paint();
         }
         ctx->restore();
 
         ctx->save();
         {
+            //Craft description from object properties
             std::stringstream description_stream;
-            description_stream << "CO: " << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
+            if (entry.pose_is_exact())
+            {
+                description_stream << "E,";
+            }
+            else
+            {
+                description_stream << "I,";
+            }
+            if (entry.is_moving())
+            {
+                description_stream << "M,";
+            }
+            else
+            {
+                description_stream << "S,";
+            }
+            switch(entry.type().underlying())
+            {
+                case ObstacleType::Unknown:
+                    description_stream << "Unk: ";
+                    break;
+                case ObstacleType::Car: 
+                    description_stream << "Car: ";
+                    break;
+                case ObstacleType::Truck:
+                    description_stream << "Truck: ";
+                    break;
+                case ObstacleType::Bus:
+                    description_stream << "Bus: ";
+                    break;
+                case ObstacleType::Motorcycle:
+                    description_stream << "MCycle: ";
+                    break;
+                case ObstacleType::Bicycle:
+                    description_stream << "BCycle: ";
+                    break;
+                case ObstacleType::Pedestrian:
+                    description_stream << "Ped: ";
+                    break;
+                case ObstacleType::PriorityVehicle:
+                    description_stream << "Prio: ";
+                    break;
+                case ObstacleType::Train:
+                    description_stream << "Train: ";
+                    break;
+            }
+            description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
+
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
             ctx->rotate(-yaw);
@@ -669,11 +718,11 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
             ctx->get_text_extents(description_stream.str(), extents);
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
-            ctx->set_source_rgb(1,1,1);
+            ctx->set_source_rgb(.1,.1,.1);
             ctx->show_text(description_stream.str());
 
             ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-            ctx->set_source_rgb(.1,1,.1);
+            ctx->set_source_rgb(.1,.9,.1);
             ctx->show_text(description_stream.str());
         }
 

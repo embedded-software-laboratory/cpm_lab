@@ -11,6 +11,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "CommonroadObstacle.hpp"
+#include "commonroad_classes/DynamicObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
 
 

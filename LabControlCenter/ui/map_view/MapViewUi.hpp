@@ -32,6 +32,7 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
+    Cairo::RefPtr<Cairo::ImageSurface> image_object;
     Cairo::RefPtr<Cairo::ImageSurface> image_map;
     VehicleData vehicle_data;
 
