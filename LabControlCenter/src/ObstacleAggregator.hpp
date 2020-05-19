@@ -7,7 +7,7 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Timer.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "CommonroadObstacle.hpp"
 
 /**
@@ -23,6 +23,8 @@ class ObstacleAggregator
     void commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacle>& samples);
     std::map<uint8_t, CommonroadObstacle> commonroad_obstacle_data;
     std::mutex commonroad_obstacle_mutex;
+
+    uint64_t reset_time = 0; //After a reset, ignore all previous data (->Header) - remember when last reset was called
 
 public:
     ObstacleAggregator();

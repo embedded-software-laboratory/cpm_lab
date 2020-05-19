@@ -19,6 +19,14 @@ void ObstacleAggregator::commonroad_obstacle_receive_callback(dds::sub::LoanedSa
     for (auto sample : samples) {
         if (sample.info().valid()) {
             CommonroadObstacle obstacle = sample.data();
+
+            //Ignore if data is older than last reset -> continue to next data point then
+            //@Max: Ist das okay so?
+            if (obstacle.header().create_stamp().nanoseconds() < reset_time)
+            {
+                continue;
+            }
+
             if (commonroad_obstacle_data.find(obstacle.vehicle_id()) != commonroad_obstacle_data.end())
             {
                 //Older obstacle value already exists, keep the newer one - this simple form is sufficient here, create and valid after should be the same
@@ -53,6 +61,7 @@ std::vector<CommonroadObstacle> ObstacleAggregator::get_obstacle_data()
 void ObstacleAggregator::reset_all_data()
 {
     std::lock_guard<std::mutex> lock(commonroad_obstacle_mutex);
-    std::cout << "Reset called - TODO: Pause a bit before clearing, or some messages with delay might get through afterwards and are still drawn" << std::endl;
     commonroad_obstacle_data.clear();
+
+    reset_time = cpm::get_time_ns();
 }

@@ -498,6 +498,7 @@ void SetupViewUI::perform_post_kill_cleanup()
     //Reset all relevant UI parts
     reset_timer(switch_simulated_time->get_active(), true);
     reset_time_series_aggregator();
+    reset_obstacle_aggregator();
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
