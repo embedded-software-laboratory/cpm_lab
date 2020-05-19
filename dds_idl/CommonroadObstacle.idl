@@ -22,7 +22,7 @@ enum ObstacleType
     ParkedVehicle, 
     ConstructionZone, 
     RoadBoundary
-};
+}; //TODO: Think about whether static obstacles need to represented this way
 
 struct CommonroadObstacle {
     octet vehicle_id; //@key //Also used here, because an ID can be set for each obstacle
