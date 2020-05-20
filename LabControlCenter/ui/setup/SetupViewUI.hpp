@@ -11,7 +11,9 @@
 #include "ui/setup/VehicleToggle.hpp"
 #include "ui/setup/UploadWindow.hpp"
 
-#include "labcam/LabCamIface.hpp"
+#ifndef SIMULATION
+    #include "labcam/LabCamIface.hpp"
+#endif
 
 #include <atomic>
 #include <array>
@@ -81,7 +83,9 @@ private:
     unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
     // Interface to LabCam
+#ifndef SIMULATION
     LabCamIface* labcam;
+#endif
 
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;

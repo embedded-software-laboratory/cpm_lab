@@ -2,8 +2,6 @@
 #include <numeric>
 #include <cassert>
 
-#include "TrajectoryInterpolation.hpp"
-
 
 MonitoringUi::MonitoringUi(
     std::shared_ptr<Deploy> deploy_functions_callback, 
@@ -279,8 +277,8 @@ void MonitoringUi::init_ui_thread()
                                     const uint64_t delta_t = 
                                         trajectory_segment[i].t().nanoseconds() 
                                         - trajectory_segment[i-1].t().nanoseconds();
-
-                                    TrajectoryInterpolation interp(
+                                    
+                                    std::shared_ptr<TrajectoryInterpolation> interp = std::make_shared<TrajectoryInterpolation>(
                                         (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
                                         trajectory_segment[i-1],  
                                         trajectory_segment[i]
@@ -288,10 +286,9 @@ void MonitoringUi::init_ui_thread()
                                     
                                     if((delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
                                     {
-                                        std::cout << dt << std::endl;
                                         dt = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
-                                        current_px = interp.position_x;
-                                        current_py = interp.position_y;
+                                        current_px = interp->position_x;
+                                        current_py = interp->position_y;
                                     }
                                 }
                             }
@@ -299,14 +296,18 @@ void MonitoringUi::init_ui_thread()
                             double error = sqrt(pow(pose_x-current_px,2)+pow(pose_y-current_py,2));
 
                             label->set_text(std::to_string(error).substr(0,4));
-                            if(fabs(error) > 0.5) 
+                            if(error > 0.5) 
                             {
+<<<<<<< HEAD
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
                                 cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f and %l. Shutting down ...", vehicle_id, error, dt);
+=======
+                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f. Shutting down ...", vehicle_id, error);
+>>>>>>> 86bc92a44e8586657fc8d387b2048282554fc9c6
                                 deploy_functions->kill_vehicles({},vehicle_ids);
                             }
-                            else if (fabs(error) > 0.1)
+                            else if (error > 0.1)
                             {
                                 label->get_style_context()->add_class("warn");
                             }

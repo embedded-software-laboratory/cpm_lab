@@ -86,9 +86,10 @@ SetupViewUI::SetupViewUI
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
     }
-
+#ifndef SIMULATION
     // Create labcam
     labcam = new LabCamIface();
+#endif
 
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
@@ -310,6 +311,7 @@ void SetupViewUI::deploy_applications() {
     reset_logs();
 
     // LabCam
+#ifndef SIMULATION
     if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
         std::cerr << "RECORDING LABCAM" << std::endl;
         auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
@@ -317,6 +319,7 @@ void SetupViewUI::deploy_applications() {
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
+<<<<<<< HEAD
 
     // Diagnosis 
     if(switch_diagnosis->get_active()){
@@ -327,6 +330,10 @@ void SetupViewUI::deploy_applications() {
         deploy_functions->diagnosis_switch = false; 
     }
 
+=======
+#endif
+    
+>>>>>>> 86bc92a44e8586657fc8d387b2048282554fc9c6
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
@@ -422,7 +429,9 @@ void SetupViewUI::deploy_applications() {
 void SetupViewUI::kill_deployed_applications() {
 
     // Stop LabCam
+#ifndef SIMULATION
     labcam->stopRecording();
+#endif
 
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
