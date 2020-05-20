@@ -156,7 +156,7 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
             // timeseries to check if any IPS data are available, push any data 
-            timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, state.pose().x());
+            timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, true);
         }
     }
 }
