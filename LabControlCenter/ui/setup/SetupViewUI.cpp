@@ -319,7 +319,6 @@ void SetupViewUI::deploy_applications() {
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
-<<<<<<< HEAD
 
     // Diagnosis 
     if(switch_diagnosis->get_active()){
@@ -330,10 +329,8 @@ void SetupViewUI::deploy_applications() {
         deploy_functions->diagnosis_switch = false; 
     }
 
-=======
 #endif
     
->>>>>>> 86bc92a44e8586657fc8d387b2048282554fc9c6
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
