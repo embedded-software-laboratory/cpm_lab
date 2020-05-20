@@ -184,6 +184,7 @@ void MonitoringUi::init_ui_thread()
                         else 
                         {
                             label->get_style_context()->add_class("alert");
+                            if(!deploy_functions->diagnosis_switch) continue; 
                             cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
                             
                             std::string reboot;
@@ -216,6 +217,7 @@ void MonitoringUi::init_ui_thread()
                         else
                         {  
                             label->get_style_context()->add_class("alert");
+                            if(!deploy_functions->diagnosis_switch) continue; 
                             cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
                             deploy_functions->kill_vehicles({},vehicle_ids);
                         }
@@ -227,6 +229,7 @@ void MonitoringUi::init_ui_thread()
                         else 
                         {
                             label->get_style_context()->add_class("alert");
+                            if(!deploy_functions->diagnosis_switch) continue; 
                             cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Shutting down ...", vehicle_id);
                             deploy_functions->kill_vehicles({},vehicle_ids);
                         }
@@ -298,9 +301,10 @@ void MonitoringUi::init_ui_thread()
                             label->set_text(std::to_string(error).substr(0,4));
                             if(fabs(error) > 0.5) 
                             {
+                                label->get_style_context()->add_class("alert");
+                                if(!deploy_functions->diagnosis_switch) continue; 
                                 cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f and %l. Shutting down ...", vehicle_id, error, dt);
                                 deploy_functions->kill_vehicles({},vehicle_ids);
-                                label->get_style_context()->add_class("alert");
                             }
                             else if (fabs(error) > 0.1)
                             {

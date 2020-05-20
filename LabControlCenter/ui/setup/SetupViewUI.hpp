@@ -57,6 +57,9 @@ private:
     //(De)Activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
 
+    //(De)Activate diagnosis
+    Gtk::Switch* switch_diagnosis = nullptr;
+
     //(De)Activate remote deployment on HLCs (NUCs)
     Gtk::Switch* switch_deploy_remote = nullptr;
 

@@ -62,6 +62,8 @@ public:
     void deploy_ips();
     void kill_ips();
 
+    bool diagnosis_switch = true; 
+
     //Specific remote deploy functions
     /**
      * \brief Deploy the script + middleware specified in the UI with the given parameters on the HLC with the given ID. 

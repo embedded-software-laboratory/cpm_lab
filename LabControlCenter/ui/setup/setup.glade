@@ -57,6 +57,47 @@
               </packing>
             </child>
             <child>
+              <object class="GtkFlowBox" id="diagnosis_control_flowbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="min_children_per_line">1</property>
+                <property name="max_children_per_line">2</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_diagnosis_control">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Diagnosis</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkSwitch" id="switch_diagnosis">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">start</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="label_script_path">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -69,7 +110,7 @@ Script Path</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -81,7 +122,7 @@ Script Path</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">2</property>
+                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -97,7 +138,7 @@ Script Path</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">3</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -113,7 +154,7 @@ Script Command Line Parameters</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">4</property>
+                <property name="position">5</property>
               </packing>
             </child>
             <child>
@@ -125,7 +166,7 @@ Script Command Line Parameters</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">5</property>
+                <property name="position">6</property>
               </packing>
             </child>
             <child>
@@ -155,7 +196,7 @@ Script Command Line Parameters</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">6</property>
+                <property name="position">7</property>
               </packing>
             </child>
             <child>
@@ -172,7 +213,7 @@ Vehicles
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">7</property>
+                <property name="position">8</property>
               </packing>
             </child>
             <child>
@@ -230,7 +271,7 @@ Vehicles
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">8</property>
+                <property name="position">9</property>
               </packing>
             </child>
             <child>
@@ -271,7 +312,7 @@ Vehicles
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">9</property>
+                <property name="position">10</property>
               </packing>
             </child>
             <child>
@@ -312,7 +353,7 @@ Vehicles
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">10</property>
+                <property name="position">11</property>
               </packing>
             </child>
             <child>
@@ -329,7 +370,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">11</property>
+                <property name="position">12</property>
               </packing>
             </child>
             <child>
@@ -370,7 +411,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">12</property>
+                <property name="position">13</property>
               </packing>
             </child>
             <child>
@@ -410,7 +451,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">13</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -423,7 +464,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">14</property>
+                <property name="position">15</property>
               </packing>
             </child>
             <child>
@@ -436,7 +477,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">15</property>
+                <property name="position">16</property>
               </packing>
             </child>
           </object>

@@ -47,6 +47,7 @@ SetupViewUI::SetupViewUI
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     builder->get_widget("switch_record_labcam", switch_record_labcam);
+    builder->get_widget("switch_diagnosis", switch_diagnosis);
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
@@ -67,6 +68,7 @@ SetupViewUI::SetupViewUI
     assert(switch_deploy_remote);
     assert(switch_lab_mode);
     assert(switch_record_labcam);
+    assert(switch_diagnosis);
 
     assert(button_deploy);
     assert(button_kill);
@@ -105,7 +107,9 @@ SetupViewUI::SetupViewUI
 
     //The IPS can be startet and restarted manually independent of the other components
     builder->get_widget("switch_lab_mode", switch_lab_mode);
-    switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
+
+    //The Diagnosis can be startet and restarted manually independent of the other components
+    builder->get_widget("switch_diagnosis", switch_diagnosis);
 
     //Take care of GUI thread and worker thread separately
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
@@ -132,10 +136,12 @@ void SetupViewUI::switch_ips_set()
 {
     if(switch_lab_mode->get_active())
     {
+        std::cout << "STARTING IPS" << std::endl;
         deploy_functions->deploy_ips();
     }
     else
     {
+        std::cout << "STOPPING IPS" << std::endl;
         deploy_functions->kill_ips();
     }
 }
@@ -310,6 +316,15 @@ void SetupViewUI::deploy_applications() {
         labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
+    }
+
+    // Diagnosis 
+    if(switch_diagnosis->get_active()){
+        std::cout << "STARTING DIAGNOSIS" << std::endl;
+        deploy_functions->diagnosis_switch = true;
+    }else{
+        std::cout << "STOPPING DIAGNOSIS" << std::endl;
+        deploy_functions->diagnosis_switch = false; 
     }
 
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
