@@ -155,9 +155,9 @@ namespace cpm {
                 std::string values = param.substr(param.find("=") + 1);
 
                 std::vector<double> doubles;
-                std::stringstream id_stream(values);
+                std::stringstream double_stream(values);
                 std::string single_double;
-                while (std::getline(id_stream, single_double, ',')) {
+                while (std::getline(double_stream, single_double, ',')) {
                     try {
                         doubles.push_back(std::stod(single_double));
                     }
