@@ -27,4 +27,8 @@ function main
     laneGraph = sub_graph_selection(original_lane_graph, outer_circle_nodes);
     visualize_lane_graph(laneGraph);
     lane_graph_to_cpp(laneGraph);
+    
+    %% invert graph
+    inverted_laneGraph = graph_inversion(laneGraph);
+    lane_graph_to_cpp(inverted_laneGraph);
 end

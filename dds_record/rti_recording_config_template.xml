@@ -25,11 +25,21 @@
             <domain_id>TEMPLATE_DOMAIN_ID</domain_id>
             <participant_qos>
                 <discovery>
+                    <accept_unknown_peers>false</accept_unknown_peers>
                     <initial_peers>
                         <element>localhost</element>
                         <element>TEMPLATE_DISCOVERY_URL</element>
-                    </initial_peers>   
+                    </initial_peers>
+                    <multicast_receive_addresses/>
                 </discovery>
+                <property> 
+                    <value>
+                        <element>
+                        <name>dds.transport.UDPv4.builtin.multicast_enabled</name>
+                        <value>0</value>
+                        </element>
+                    </value>
+                </property>
             </participant_qos>
         </domain_participant>
         <!-- Recording Session -->
@@ -40,6 +50,12 @@
                 <allow_type_name_filter>*</allow_type_name_filter>
                 <!-- DDS input -->
                 <!-- <datareader_qos base_name="MyQosLib::ReliableQos" /> -->
+                <datareader_qos>
+                <history>
+                    <kind>KEEP_LAST_HISTORY_QOS</kind>
+                    <depth>1</depth>
+                </history>
+            </datareader_qos>
             </topic_group>
         </session>
     </recording_service>

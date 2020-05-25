@@ -49,9 +49,9 @@ private:
 
     //Callback function for log_level_combobox
     void on_log_level_changed();
-    //Labels for log_level_combobox
+    //Labels for log_level_combobox (the string vector is transformed to the ustring vector in the settings, where we also add the selection options to the UI)
+    std::vector<std::string> log_labels = {"0 - No logs", "1 - Critical errors only", "2 - Errors only", "3 - Verbose"};
     std::vector<Glib::ustring> log_level_labels; //Vector used so that we can infer the level number from the index (no need to transform the ustring to a number)
-    const unsigned short log_levels = 3; //Change this if you want to allow more log levels than 0-3
 
     //TreeView Layout, status storage for the UI
     LoggerModelRecord log_record;
@@ -63,6 +63,9 @@ private:
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
     std::thread ui_thread;
     std::atomic_bool run_thread;
+
+    //Callback function for autoscroll
+    void on_size_change_autoscroll(Gtk::Allocation& allocation);
 
     //Object that holds (new) log data
     std::shared_ptr<LogStorage> log_storage;
