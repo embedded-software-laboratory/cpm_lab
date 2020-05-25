@@ -1,5 +1,5 @@
 function mpc_test
-
+% TODO: NEEDS UPDATE; SWITCH TO RTI 6 AND REMOVED BATTERY VOLTAGE IN MODEL
     
     test_trajectory_tmp = read_rti_csv('test_trajectory.csv');
     for i=1:length(test_trajectory_tmp.px)
