@@ -333,17 +333,24 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         state = ControllerState::Stop;
     }
 
-    if(state == ControllerState::Stop) 
-    {
-        motor_throttle = 0;
-        steering_servo = 0;
-        return;
-    }
-
     switch(state) {
+
+        case ControllerState::Stop:
+        {
+            // Use function that calculates motor values for stopping immediately - which is also already used in main
+            get_stop_signals(motor_throttle, steering_servo);
+            if (stop_count > 0)
+            {
+                --stop_count;
+            }
+        }
+        break;
 
         case ControllerState::SpeedCurvature:
         {
+            //Reset stop count which is used in stop state
+            stop_count = STOP_STEPS;
+
             const double speed_target = m_vehicleCommandSpeedCurvature.speed();
             const double curvature    = m_vehicleCommandSpeedCurvature.curvature();
             const double speed_measured = m_vehicleState.speed();
@@ -355,6 +362,9 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         case ControllerState::Trajectory:
         {
+            //Reset stop count which is used in stop state
+            stop_count = STOP_STEPS;
+
             std::lock_guard<std::mutex> lock(command_receive_mutex);
             trajectory_tracking_statistics_update(t_now);
 
@@ -368,6 +378,9 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         default: // Direct
         {
+            //Reset stop count which is used in stop state
+            stop_count = STOP_STEPS;
+
             motor_throttle = m_vehicleCommandDirect.motor_throttle();
             steering_servo = m_vehicleCommandDirect.steering_servo();
         }
@@ -381,39 +394,25 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     out_steering_servo = steering_servo;
 }
 
-void Controller::get_stop_signals(unsigned int stop_count, uint32_t stop_steps, double &out_motor_throttle, double &out_steering_servo) 
+void Controller::get_stop_signals(double &out_motor_throttle, double &out_steering_servo) 
 {
-    double motor_throttle = 0;
+    //Init. values
     double steering_servo = 0;
-
-    //Get and store vehicle speed at start of stopping -> adjust breaking depending on this value
-    if (stop_count == static_cast<unsigned int>(stop_steps))
-    {
-        speed_at_stop = m_vehicleState.speed();
-    }
-    double speed_factor = static_cast<double>(speed_at_stop) * 
-        exp(2.0 * (static_cast<double>(stop_count) - static_cast<double>(stop_steps))); //stop_count goes down -> factor gets smaller
-    
-    double speed_target = -0.05 * speed_factor;
+    double speed_target = 0;
     const double curvature    = 0;
     const double speed_measured = m_vehicleState.speed();
 
-    if (speed_target < 0.0001)
-    {
-        speed_target = 0.0;
-    }
-
+    //Set steering servo as in other methods, we are only interested in throttle change
     steering_servo = steering_curvature_calibration(curvature);
-    motor_throttle = speed_controller(speed_measured, speed_target);
+    
+    // P controller to reach 0 speed (without "backshooting" like with the PI controller in speed controller)
+    double motor_throttle = ((speed_target>=0)?(1.0):(-1.0)) * pow(fabs(0.152744 * speed_target),(0.627910));
+    const double speed_error = speed_target - speed_measured;
+    const double proportional_gain = 0.5; //We tested, and this seems to be an acceptable value (at least for central routing)
+    motor_throttle += proportional_gain * speed_error;
 
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
-
-    // controls rate limiter. the signal rates must be 
-    // limited to avoid power spikes and system resets
-    // const double max_rate = 0.1;
-    // motor_throttle_state += fmax(-max_rate, fmin(max_rate, motor_throttle - motor_throttle_state));
-    // steering_servo_state += fmax(-max_rate, fmin(max_rate, steering_servo - steering_servo_state));
 
     out_motor_throttle = motor_throttle;
     out_steering_servo = steering_servo;
