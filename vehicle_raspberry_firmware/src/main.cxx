@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     //rti::config::Logger::instance().verbosity(rti::config::Verbosity::WARNING);
 
     if(argc < 2) {
-        std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT --pose=DOUBLE,DOUBLE,DOUBLE(optional;only simulation; x,y,yaw)" << std::endl;
+        std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT --dds_domain=INT(optional) --pose=DOUBLE,DOUBLE,DOUBLE(optional;only simulation; x,y,yaw)" << std::endl;
         return 1;
     }
 
