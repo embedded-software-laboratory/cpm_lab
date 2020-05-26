@@ -15,6 +15,7 @@
 #include "SimulationIPS.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
+#include <vector>
 
 extern "C" {
 #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
@@ -56,7 +57,7 @@ class SimulationVehicle
     
 
 public:
-    SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id);
+    SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id, vector<double> starting_position);
 
     VehicleState update(
         const double motor_throttle,
