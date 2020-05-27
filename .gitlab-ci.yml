@@ -17,7 +17,7 @@ build_nosim:
   script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt-get update
-    - apt-get install -y tzdata
+    - apt-get install -y tzdata sudo
     - adduser --disabled-password --gecos '' docker
     - adduser docker sudo
     - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
