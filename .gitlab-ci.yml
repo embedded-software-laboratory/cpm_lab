@@ -7,7 +7,8 @@ build:
     - apt-get install -y tzdata
     - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
     - dpkg-reconfigure --frontend noninteractive tzdata
-    - ls -alh
     - chmod +x setup_cpm_build_environment.sh
     - echo $RTI_LICENSE_KEY > license.dat 
+    - ls -alh
+    - cat license.dat
  #   - ./setup_cpm_build_environment.sh
