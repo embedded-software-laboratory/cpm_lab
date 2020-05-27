@@ -1,6 +1,11 @@
 image: ubuntu:18.04
 
-build:
+stages:
+  - environment
+  - build
+
+setup_env:
+  stage: environment
   script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt-get update
@@ -18,3 +23,9 @@ build:
     - sudo ls -alh
     - ls -alh /opt
     - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100
+
+
+build:
+   stage: build
+   script:
+     - ./build_all.sh
