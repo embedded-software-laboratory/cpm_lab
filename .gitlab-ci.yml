@@ -9,6 +9,8 @@ before_script:
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
+  - ssh-keyscan git.rwth-aachen.de >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
 
 build_nosim:
   stage: build_nosim
@@ -28,6 +30,6 @@ build_nosim:
     - cat /license.dat
     - sudo ls -alh
     - ls -alh /opt
-    - service ssh restart && git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
+    - git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
 #    - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100 --simulation
 #    - ./build_all.bash --simulation
