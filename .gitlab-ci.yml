@@ -12,7 +12,7 @@ before_script:
   - ssh-keyscan git.rwth-aachen.de >> ~/.ssh/known_hosts
   - chmod 644 ~/.ssh/known_hosts
 
-build_nosim:
+build_sim:
   stage: build_nosim
   script:
     - pwd
