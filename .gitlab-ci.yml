@@ -1,0 +1,13 @@
+image: ubuntu:18.04
+
+build:
+  script:
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt-get update
+    - apt-get install -y tzdata
+    - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+    - dpkg-reconfigure --frontend noninteractive tzdata
+    - ls -alh
+    - chmod +x setup_cpm_build_environment.sh
+    - echo $RTI_LICENSE_KEY > license.dat 
+ #   - ./setup_cpm_build_environment.sh
