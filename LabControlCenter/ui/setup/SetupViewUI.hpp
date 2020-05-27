@@ -11,7 +11,9 @@
 #include "ui/setup/VehicleToggle.hpp"
 #include "ui/setup/UploadWindow.hpp"
 
-#include "labcam/LabCamIface.hpp"
+#ifndef SIMULATION
+    #include "labcam/LabCamIface.hpp"
+#endif
 
 #include <atomic>
 #include <array>
@@ -73,7 +75,9 @@ private:
     void switch_timer_set();
 
     // Interface to LabCam
+#ifndef SIMULATION
     LabCamIface* labcam;
+#endif
 
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;

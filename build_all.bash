@@ -17,6 +17,9 @@ do
     esac
 done
 
+#make simulation variable available in all bash scripts called
+export SIMULATION=$simulation
+
 # Get cpm lib
 pushd ..
 if [ ! -d "cpm_base" ]; then
@@ -75,3 +78,4 @@ then
     bash build.bash
     popd
 fi
+
