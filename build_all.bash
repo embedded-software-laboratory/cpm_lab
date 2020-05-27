@@ -20,7 +20,7 @@ done
 # Get cpm lib
 pushd ..
 if [ ! -d "cpm_base" ]; then
-    git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
+     git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
 fi
 
 cd cpm_base
