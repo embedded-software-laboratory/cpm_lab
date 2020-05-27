@@ -11,4 +11,4 @@ build:
     - echo $RTI_LICENSE_KEY > license.dat 
     - ls -alh
     - cat license.dat
- #   - ./setup_cpm_build_environment.sh
+    - ./setup_cpm_build_environment.sh license.dat 100

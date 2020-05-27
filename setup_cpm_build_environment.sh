@@ -10,12 +10,12 @@
 # This script is compatible with Debian and RedHat based distirbutions but has
 # been tested specifically with Ubuntu 18.04.3 LTS and Fedora 31.
 #
-# NOTE: This script requires user input in step 
+# NOTE: This script requires user input in step
 # - '3.2 Installation'
 #  -- to click mannually through the RTI Connext DDS 6.0.0 GUI installer
 #  -- to provide an absolute path to an RTI license file
 # - '3.3 Environment Setup' to enter a unique DDS Domain
-
+# - Default Arguments may be passed via commandline ./setup_cpm_build_environment.sh path_to_rti_license domain_id
 
 ### 0. Preconditioning #########################################################
 
@@ -141,14 +141,19 @@ sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
 ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
-read -p 'Ask your supervisor for a copy of the RTI license or get into contact with RTI and enter its absolute path (e.g. /home/max/rti_license.dat) here: ' LICENSE
-#check, if a license path was entered
-while [ -z "$LICENSE" ]; do
-      echo "No license path was entered, please try again"
-      read LICENSE
-done
-      mv $LICENSE /opt/rti_connext_dds-6.0.0/rti_license.dat
-      echo "success"
+
+if [ "$1" == "" ]; then
+    read -p 'Ask your supervisor for a copy of the RTI license or get into contact with RTI and enter its absolute path (e.g. /home/max/rti_license.dat) here: ' LICENSE
+    #check, if a license path was entered
+    while [ -z "$LICENSE" ]; do
+          echo "No license path was entered, please try again"
+          read LICENSE
+    done
+          mv $LICENSE /opt/rti_connext_dds-6.0.0/rti_license.dat
+          echo "success"
+else
+    mv "$1" /opt/rti_connext_dds-6.0.0/rti_license.dat
+fi
 
 ## 3.3 Environment Setup
 echo "/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0" > /etc/ld.so.conf.d/rti_connext_dds.conf
@@ -158,7 +163,12 @@ ldconfig
 # network, you need to set a DDS domain ID that is different from everyone in
 # the network. The domain ID is assumed to be in the environment variable
 # DDS_DOMAIN.
-read -p 'Enter a unique DDS domain: ' DDS_DOMAIN
+if [ "$2" == ""]; then
+    read -p 'Enter a unique DDS domain: ' DDS_DOMAIN
+else
+    DDS_DOMAIN="$2"
+fi
+
 echo "export DDS_DOMAIN=""${DDS_DOMAIN}" > /etc/profile.d/rti_connext_dds.sh
 echo "export PATH=\$PATH:/opt/rti_connext_dds-6.0.0/bin" >> /etc/profile.d/rti_connext_dds.sh
 echo "export PATH=\$PATH:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin" >> /etc/profile.d/rti_connext_dds.sh
