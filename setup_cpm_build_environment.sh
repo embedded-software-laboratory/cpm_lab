@@ -1,7 +1,7 @@
 #!/bin/bash
 # This scripts automates the mandatory steps in order to compile the cpm
 # software suit (/software/build_all.bash). As it installs build tools it needs
-# super user privileges (e.g. sudo) 
+# super user privileges (e.g. sudo)
 #
 # This script will download various files and therefor creates its own
 # directory 'cpm' relative to this scripts ablsoute path. It will also link it
@@ -18,7 +18,12 @@
 # - Default Arguments may be passed via commandline ./setup_cpm_build_environment.sh path_to_rti_license domain_id
 
 # This causes the bash script to return non-zero exit code as soon a command fails
-set -e
+
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
 
 ### 0. Preconditioning #########################################################
 
