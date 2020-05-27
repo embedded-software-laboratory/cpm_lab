@@ -1,11 +1,11 @@
 image: ubuntu:18.04
 
 stages:
-  - environment
-  - build
+  - environment_nosim
+  - build_nosim
 
-setup_env:
-  stage: environment
+environment_nosim:
+  stage: environment_nosim
   script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt-get update
@@ -17,7 +17,7 @@ setup_env:
     - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
     - dpkg-reconfigure --frontend noninteractive tzdata
     - chmod +x setup_cpm_build_environment.sh
-    - echo $RTI_LICENSE_KEY > /license.dat 
+    - echo $RTI_LICENSE_KEY > /license.dat
     - ls -alh
     - cat /license.dat
     - sudo ls -alh
@@ -26,6 +26,8 @@ setup_env:
 
 
 build:
-   stage: build
+   stage: build_nosim
+   dependencies:
+     - environment_nosim
    script:
      - ./build_all.sh
