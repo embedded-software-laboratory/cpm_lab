@@ -53,7 +53,7 @@ if [[ ! -z $YUM ]]; then
     UPDATE="--refresh update -y"
     BUILD_ESSENTIALS="install gcc g++ glibc-devel libnsl2-devel make -y"
     # BUILD_ESSENTIALS="groupinstall \"Development Tools\" \"Development Libraries\" -y && dnf install libnsl2-devel g++ -y"
-    BUILD_TOOLS="install git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
+    BUILD_TOOLS="install ip git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
     OPENJDK="install java-11-openjdk-devel -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
 elif [[ ! -z $APT ]]; then
