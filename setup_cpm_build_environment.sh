@@ -17,6 +17,9 @@
 # - '3.3 Environment Setup' to enter a unique DDS Domain
 # - Default Arguments may be passed via commandline ./setup_cpm_build_environment.sh path_to_rti_license domain_id
 
+# This causes the bash script to return non-zero exit code as soon a command fails
+set -e
+
 ### 0. Preconditioning #########################################################
 
 ## 0.1 Check for Super User Privileges and Handle User Rights
@@ -173,7 +176,7 @@ sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.
 ## 3.2 Installation
 
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
-./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
+yes "y" | ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
 mv $LICENSE_PATH /opt/rti_connext_dds-6.0.0/rti_license.dat
 
