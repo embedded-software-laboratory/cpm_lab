@@ -84,7 +84,7 @@ else
 fi
 
 ### 0.4 Parse Command Line Arguments
-SIMULATION=1
+SIMULATION=0
 LICENSE_PATH=0
 DOMAIN_ID="NONE"
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]] ;
@@ -97,9 +97,9 @@ do
            LICENSE_PATH="${opt#*=}";;
         "--domain_id="* )
            DOMAIN_ID="${opt#*=}";;
-        "--no-simulation" )
-           SIMULATION="0";;     #set to some default value
-        *) echo >&2 "Invalid option: $@"; print_usage; exit 1;;
+        "--simulation" )
+           SIMULATION="1";;     #set to some default value
+        *) echo >&2 "Invalid option: $@"; exit 1;;
    esac
 done
 
