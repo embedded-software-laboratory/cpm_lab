@@ -30,4 +30,5 @@ build:
    dependencies:
      - environment_nosim
    script:
-     - ./build_all.sh
+     - ls -alh /opt
+     - ./build_all.bash
