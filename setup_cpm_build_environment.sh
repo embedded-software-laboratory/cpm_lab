@@ -181,9 +181,10 @@ sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.
 ## 3.2 Installation
 
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
+mkdir /opt/rti_connext_dds-6.0.0
 yes "y" | ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
-mv $LICENSE_PATH /opt/rti_connext_dds-6.0.0/rti_license.dat
+cp "$LICENSE_PATH" /opt/rti_connext_dds-6.0.0/rti_license.dat
 
 ## 3.3 Environment Setup
 echo "/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0" > /etc/ld.so.conf.d/rti_connext_dds.conf
