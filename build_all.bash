@@ -21,20 +21,15 @@ done
 export SIMULATION=$simulation
 
 # Get cpm lib
-pushd ..
 if [ ! -d "cpm_base" ]; then
-     git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
+     git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git ..
 fi
 
-cd cpm_base
-cd cpm_lib
 if [ $simulation == 0 ]
 then
-    bash build_arm.bash
+    ../cpm_base/cpm_lib/build_arm.bash
 fi
-./build.bash
-popd
-
+../cpm_base/cpm_lib/build.bash
 
 pushd LabControlCenter
 bash build.bash
