@@ -31,5 +31,5 @@ build_nosim:
     - sudo ls -alh
     - ls -alh /opt
     - git clone git@git.rwth-aachen.de:CPM/Project/Lab/cpm_base.git
-#    - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100 --simulation
-#    - ./build_all.bash --simulation
+    - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100 --simulation
+    - ./build_all.bash --simulation
