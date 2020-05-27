@@ -1,11 +1,10 @@
 image: ubuntu:18.04
 
 stages:
-  - environment_nosim
   - build_nosim
 
-environment_nosim:
-  stage: environment_nosim
+build_nosim:
+  stage: build_nosim
   script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt-get update
@@ -23,12 +22,4 @@ environment_nosim:
     - sudo ls -alh
     - ls -alh /opt
     - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100
-
-
-build:
-   stage: build_nosim
-   dependencies:
-     - environment_nosim
-   script:
-     - ls -alh /opt
-     - ./build_all.bash
+    - ./build_all.bash
