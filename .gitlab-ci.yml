@@ -16,4 +16,4 @@ build:
     - ls -alh
     - cat license.dat
     - sudo ls -alh
-    - ./setup_cpm_build_environment.sh --license_path=license.dat --domain_id=100
+    - sudo ./setup_cpm_build_environment.sh --license_path=license.dat --domain_id=100
