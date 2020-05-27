@@ -32,7 +32,7 @@ if [ $simulation == 0 ]
 then
     bash build_arm.bash
 fi
-bash build.bash
+./build.bash
 popd
 
 

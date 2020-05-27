@@ -1,7 +1,7 @@
 image: ubuntu:18.04
 
 stages:
-  - build_nosim
+  - build_sim
 
 before_script:
   - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
@@ -13,7 +13,7 @@ before_script:
   - chmod 644 ~/.ssh/known_hosts
 
 build_sim:
-  stage: build_nosim
+  stage: build_sim
   script:
     - pwd
     - export DEBIAN_FRONTEND=noninteractive
