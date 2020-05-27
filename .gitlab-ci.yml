@@ -15,6 +15,7 @@ before_script:
 build_nosim:
   stage: build_nosim
   script:
+    - pwd
     - export DEBIAN_FRONTEND=noninteractive
     - apt-get update
     - apt-get install -y tzdata sudo
