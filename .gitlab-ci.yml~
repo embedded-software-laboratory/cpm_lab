@@ -31,7 +31,4 @@ build_nosim:
     - ls -alh /opt
     - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100 --simulation
     - cat /etc/profile.d/rti_connext_dds.sh
-    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ${NDDSHOME}/include/ndds/hpp
-    - ls -alh /opt/
-    - ls -alh /opt/rti_connext_dds-6.0.0
     - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash --simulation
