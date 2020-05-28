@@ -48,11 +48,12 @@ namespace cpm {
         std::function<void()> m_stop_callback;
 
 
-        bool wait_until(const std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds>& timeout_time); //Returns true if it was not interrupted, else false (should stop in that case)
+        bool wait_for(const std::chrono::nanoseconds wait_time); //Returns true if it was not interrupted, else false (should stop in that case)
         uint64_t receiveStartTime(); //Bool: true if start signal was received, false if stop signal was received
         bool received_stop_signal ();
         
         const bool wait_for_start; //If false, do not use receiveStartTime()
+        const bool react_to_stop_signal; //If false, do not react to received stop signals
 
     public:
         /**
@@ -60,8 +61,9 @@ namespace cpm {
          * \param node_id ID of the timer in the network
          * \param period_milliseconds The timer is called periodically with a period of period_milliseconds
          * \param wait_for_start Set whether the timer is started only if a start signal is sent via DDS (true), or if it should should start immediately (false)
+         * \param react_to_stop_signal Set whether the timer should be stopped if a stop signal is sent within the network (optional, default is true)
          */
-        SimpleTimer(std::string _node_id, uint64_t period_milliseconds, bool wait_for_start);
+        SimpleTimer(std::string _node_id, uint64_t period_milliseconds, bool wait_for_start, bool react_to_stop_signal = true);
         ~SimpleTimer();
 
         /**

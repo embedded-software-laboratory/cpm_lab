@@ -12,7 +12,8 @@ namespace cpm {
     SimpleTimer::SimpleTimer(
         std::string _node_id, 
         uint64_t _period_milliseconds, 
-        bool _wait_for_start
+        bool _wait_for_start,
+        bool _react_to_stop_signal
     )
     :period_milliseconds(_period_milliseconds)
     ,ready_topic(cpm::get_topic<ReadyStatus>("readyStatus"))
@@ -20,16 +21,17 @@ namespace cpm {
     ,node_id(_node_id)
     ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
     ,readCondition(reader_system_trigger, dds::sub::status::DataState::any())
+    ,react_to_stop_signal(_react_to_stop_signal)
     ,wait_for_start(_wait_for_start)
     {
         //Add Waitset for reader_system_trigger
         waitset += readCondition;
     }
 
-    bool SimpleTimer::wait_until(const std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds>& timeout_time)
+    bool SimpleTimer::wait_for(const std::chrono::nanoseconds wait_time)
     {
         std::unique_lock<std::mutex> lock(condition_mutex);
-        return abort_condition.wait_until(lock, timeout_time, [&]{ return active; });
+        return abort_condition.wait_for(lock, wait_time, [&]{ return !active; });
     }
 
     uint64_t SimpleTimer::receiveStartTime() {
@@ -63,10 +65,9 @@ namespace cpm {
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
-        {
-            std::lock_guard<std::mutex> lock(condition_mutex);
-            this->active = true;
-        }
+        std::unique_lock<std::mutex> lock(condition_mutex);
+        this->active = true;
+        lock.unlock();
 
         m_update_callback = update_callback;
 
@@ -76,7 +77,7 @@ namespace cpm {
         if (wait_for_start) {
             start_point = receiveStartTime();
             
-            if (start_point == TRIGGER_STOP_SYMBOL) {
+            if (start_point == TRIGGER_STOP_SYMBOL && react_to_stop_signal) {
                 return;
             }
         }
@@ -84,39 +85,49 @@ namespace cpm {
             start_point = this->get_time();
         }
 
-        auto next_start = std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds>(
-            std::chrono::nanoseconds(start_point)
-        );
-
         while(this->active) {
-            if (!this->wait_until(next_start))
+            //Due to problems with wait_until, we use wait_for instead
+            uint64_t current_time = cpm::get_time_ns();
+            uint64_t wait_time = 0;
+            if (current_time < start_point)
+            {
+                wait_time = start_point - current_time;
+            }
+            
+            if (this->wait_for(std::chrono::nanoseconds(wait_time)))
             {
                 //We already stopped the timer in between waiting
-                break;
+                return;
             }
 
             //This check is only required for the time before the start_point, to make sure that the timer does not start too early
             if(this->get_time() >= start_point) {
                 if(m_update_callback) m_update_callback(this->get_time());
 
-                if (received_stop_signal()) {
-                    //Either stop the timer or call the stop callback function, if one exists
-                    if (m_stop_callback)
-                    {
-                        m_stop_callback();
-                    }
-                    else 
-                    {
-                        std::lock_guard<std::mutex> lock(condition_mutex);
-                        this->active = false;
+                if (react_to_stop_signal)
+                {
+                    if (received_stop_signal()) {
+                        //Either stop the timer or call the stop callback function, if one exists
+                        if (m_stop_callback)
+                        {
+                            m_stop_callback();
+                        }
+                        else 
+                        {
+                            std::unique_lock<std::mutex> lock(condition_mutex);
+                            this->active = false;
+                            lock.unlock();
+                        }
                     }
                 }
             }
 
             //Update next start time slot until it is greater than the current time
-            while(next_start < std::chrono::steady_clock::now() && active)
+            current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            while(start_point < current_time)
             {
-                next_start += std::chrono::milliseconds(period_milliseconds);
+                start_point += period_milliseconds * 1000000ull;
+                current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
             }
         }
     }
@@ -151,25 +162,31 @@ namespace cpm {
 
     void SimpleTimer::stop()
     {
-        std::lock_guard<std::mutex> lock(condition_mutex);
+        std::unique_lock<std::mutex> lock(condition_mutex);
         active = false;
+        lock.unlock();
         abort_condition.notify_all();
 
         if(runner_thread.joinable())
         {
+            std::cout << "Trying to join" << std::endl;
             runner_thread.join();
+            std::cout << "Joined" << std::endl;
         }
     }
 
     SimpleTimer::~SimpleTimer()
     {
-        std::lock_guard<std::mutex> lock(condition_mutex);
+        std::unique_lock<std::mutex> lock(condition_mutex);
         active = false;
+        lock.unlock();
         abort_condition.notify_all();
 
         if(runner_thread.joinable())
         {
+            std::cout << "Trying to join" << std::endl;
             runner_thread.join();
+            std::cout << "Joined" << std::endl;
         }
     }
 
