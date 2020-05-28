@@ -97,9 +97,9 @@ int main(int argc, char *argv[])
     std::string filepath_parked_vehicles = "/home/cpm-lab/dev/software/LabControlCenter/test/RUS_Bicycle-4_1_T-1.xml";
     std::string filepath_occupancy = "/home/cpm-lab/dev/software/LabControlCenter/test/DEU_Ffb-1_2_S-1.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
-    commonroad_scenario->load_file(filepath_parked_vehicles);
     try
     {
+        commonroad_scenario->load_file(filepath_parked_vehicles);
         commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
     }
     catch(const std::exception& e)
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
-    auto obstacleAggregator = make_shared<ObstacleAggregator>();
+    auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(

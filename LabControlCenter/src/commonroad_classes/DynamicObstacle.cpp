@@ -223,6 +223,9 @@ void DynamicObstacle::draw_text(const DrawingContext& ctx, double scale, double 
     ctx->stroke();
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     // ctx->save();
@@ -297,6 +300,7 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
 
     // ctx->restore();
 }
+#pragma GCC diagnostic pop
 
 void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {

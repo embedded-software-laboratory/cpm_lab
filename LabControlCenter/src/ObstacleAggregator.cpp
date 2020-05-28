@@ -2,14 +2,19 @@
 
 using namespace std::placeholders;
 
-ObstacleAggregator::ObstacleAggregator() :
+ObstacleAggregator::ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scenario) :
     commonroad_obstacle_reader(
         std::bind(&ObstacleAggregator::commonroad_obstacle_receive_callback, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
         cpm::get_topic<CommonroadObstacle>("commonroadObstacle")
     )
 {
-
+    scenario->register_obstacle_aggregator(
+        [=] ()
+        {
+            reset_all_data();
+        }
+    );
 }
 
 void ObstacleAggregator::commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacle>& samples)

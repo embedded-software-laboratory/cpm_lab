@@ -428,9 +428,6 @@ void SetupViewUI::kill_deployed_applications() {
     labcam->stopRecording();
 #endif
 
-    //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
-
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
@@ -493,6 +490,9 @@ void SetupViewUI::kill_deployed_applications() {
 
 void SetupViewUI::perform_post_kill_cleanup()
 {
+    //Stop obstacle simulation
+    obstacle_simulation_manager->stop();
+    
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts

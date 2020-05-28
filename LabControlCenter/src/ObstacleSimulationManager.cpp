@@ -46,6 +46,11 @@ void ObstacleSimulationManager::setup()
         );
     }
 
+    for (auto& simulated_obstacle : simulated_obstacles)
+    {
+        simulated_obstacle.send_init_state();
+    }
+
     //TODO: Part for real participant: Send trajectory
     //TODO: Put more information in trajectory: Need to know if they are based on exact or inexact values (IntervalOrExact) for visualization
 }

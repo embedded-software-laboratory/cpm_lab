@@ -26,25 +26,50 @@ simulated_time(_simulated_time)
 
 ObstacleSimulation::~ObstacleSimulation()
 {
-    if (timer)
+    stop_timers();
+}
+
+void ObstacleSimulation::stop_timers()
+{
+    if (simulation_timer)
     {
-        timer->stop();
+        simulation_timer->stop();
     }
-    timer.reset();
+    simulation_timer.reset();
+
+    if (standby_timer)
+    {
+        standby_timer->stop();
+    }
+    standby_timer.reset();
+}
+
+void ObstacleSimulation::send_init_state()
+{
+    //Send initial state with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
+    //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
+    //TODO: Timer must be changed fundamentally: The period should not determine how long it takes to stop the timer!
+    standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
+    standby_timer->start_async([=] (uint64_t t_now) {
+        //Send initial state
+        send_state(trajectory.at(0), t_now);
+    });
 }
 
 void ObstacleSimulation::start()
 {
-    //Create timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
-    timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, simulated_time);
+    stop_timers();
+
+    //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
+    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, simulated_time);
 
     //Remember start time, so that we can check how much time has passed / which obstacle to choose when
-    start_time = timer->get_time();
+    start_time = simulation_timer->get_time();
 
-    timer->start_async([=] (uint64_t t_now) {
+    simulation_timer->start_async([=] (uint64_t t_now) {
         // if (t_now - start_time > trajectory.at(trajectory.size() - 1).time.get_mean())
         // {
-        //     timer->stop();
+        //     simulation_timer->stop();
         // }
 
         //We must be able to use time.value(), as it is a required field
@@ -55,86 +80,8 @@ void ObstacleSimulation::start()
             ++current_trajectory;
         }
 
-        //Create current obstacle from current time, get current trajectory point - TODO: More than trivial point-hopping
-        CommonroadObstacle obstacle;
-        obstacle.vehicle_id(obstacle_id);
-
-        //Set header
-        Header header;
-        header.create_stamp(TimeStamp(t_now));
-        header.valid_after_stamp(TimeStamp(t_now));
-        obstacle.header(header);
-
-        //These values are set either by interpolation or using the last data point
-        double x;
-        double y;
-        double yaw;
-        //Interpolate or stay at start / end point
-        if (trajectory.at(current_trajectory).time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
-        {
-            //Interpolate
-            interpolate_between(trajectory.at(current_trajectory - 1), trajectory.at(current_trajectory), t_now - start_time, x, y, yaw);
-        }
-        else
-        {
-            //Stay at final point
-            x = trajectory.at(current_trajectory).position.value().first;
-            y = trajectory.at(current_trajectory).position.value().second;
-            yaw = trajectory.at(current_trajectory).orientation.value_or(0.0);
-        }
-
-        //Set pose
-        Pose2D pose;
-        pose.x(x);
-        pose.y(y);
-        pose.yaw(yaw);
-        obstacle.pose(pose);
-
-        //Set velocity, if it exists
-        if(trajectory.at(current_trajectory).velocity.has_value())
-        {
-            obstacle.speed(trajectory.at(current_trajectory).velocity.value().get_mean());
-        }
-
-        //Set further obstacle information
-        obstacle.pose_is_exact(trajectory.at(current_trajectory).is_exact);        
-        obstacle.is_moving((trajectory.size() > 1));
-
-        if (trajectory.at(current_trajectory).obstacle_type.has_value())
-        {
-            switch(trajectory.at(current_trajectory).obstacle_type.value())
-            {
-                case ObstacleTypeDynamic::Unknown:
-                    obstacle.type(ObstacleType::Unknown);
-                    break;
-                case ObstacleTypeDynamic::Car: 
-                    obstacle.type(ObstacleType::Car);
-                    break;
-                case ObstacleTypeDynamic::Truck:
-                    obstacle.type(ObstacleType::Truck);
-                    break;
-                case ObstacleTypeDynamic::Bus:
-                    obstacle.type(ObstacleType::Bus);
-                    break;
-                case ObstacleTypeDynamic::Motorcycle:
-                    obstacle.type(ObstacleType::Motorcycle);
-                    break;
-                case ObstacleTypeDynamic::Bicycle:
-                    obstacle.type(ObstacleType::Bicycle);
-                    break;
-                case ObstacleTypeDynamic::Pedestrian:
-                    obstacle.type(ObstacleType::Pedestrian);
-                    break;
-                case ObstacleTypeDynamic::PriorityVehicle:
-                    obstacle.type(ObstacleType::PriorityVehicle);
-                    break;
-                case ObstacleTypeDynamic::Train:
-                    obstacle.type(ObstacleType::Train);
-                    break;
-            }
-        }
-
-        writer_commonroad_obstacle.write(obstacle);
+        //Send current state
+        send_state(trajectory.at(current_trajectory), t_now);
     });
 }
 
@@ -199,14 +146,96 @@ void ObstacleSimulation::interpolate_between(CommonTrajectoryPoint p1, CommonTra
     //}
 }
 
+void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now)
+{
+    //Create current obstacle from current time, get current trajectory point - TODO: More than trivial point-hopping
+    CommonroadObstacle obstacle;
+    obstacle.vehicle_id(obstacle_id);
+
+    //Set header
+    Header header;
+    header.create_stamp(TimeStamp(t_now));
+    header.valid_after_stamp(TimeStamp(t_now));
+    obstacle.header(header);
+
+    //These values are set either by interpolation or using the last data point
+    double x;
+    double y;
+    double yaw;
+    //Interpolate or stay at start / end point
+    if (point.time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
+    {
+        //Interpolate
+        interpolate_between(trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
+    }
+    else
+    {
+        //Stay at final point
+        x = point.position.value().first;
+        y = point.position.value().second;
+        yaw = point.orientation.value_or(0.0);
+    }
+
+    //Set pose
+    Pose2D pose;
+    pose.x(x);
+    pose.y(y);
+    pose.yaw(yaw);
+    obstacle.pose(pose);
+
+    //Set velocity, if it exists
+    if(point.velocity.has_value())
+    {
+        obstacle.speed(point.velocity.value().get_mean());
+    }
+
+    //Set further obstacle information
+    obstacle.pose_is_exact(point.is_exact);        
+    obstacle.is_moving((trajectory.size() > 1));
+
+    if (point.obstacle_type.has_value())
+    {
+        switch(point.obstacle_type.value())
+        {
+            case ObstacleTypeDynamic::Unknown:
+                obstacle.type(ObstacleType::Unknown);
+                break;
+            case ObstacleTypeDynamic::Car: 
+                obstacle.type(ObstacleType::Car);
+                break;
+            case ObstacleTypeDynamic::Truck:
+                obstacle.type(ObstacleType::Truck);
+                break;
+            case ObstacleTypeDynamic::Bus:
+                obstacle.type(ObstacleType::Bus);
+                break;
+            case ObstacleTypeDynamic::Motorcycle:
+                obstacle.type(ObstacleType::Motorcycle);
+                break;
+            case ObstacleTypeDynamic::Bicycle:
+                obstacle.type(ObstacleType::Bicycle);
+                break;
+            case ObstacleTypeDynamic::Pedestrian:
+                obstacle.type(ObstacleType::Pedestrian);
+                break;
+            case ObstacleTypeDynamic::PriorityVehicle:
+                obstacle.type(ObstacleType::PriorityVehicle);
+                break;
+            case ObstacleTypeDynamic::Train:
+                obstacle.type(ObstacleType::Train);
+                break;
+        }
+    }
+
+    writer_commonroad_obstacle.write(obstacle);
+}
+
 void ObstacleSimulation::reset()
 {
-    if (timer)
-    {
-        timer->stop();
-    }
-    timer.reset();
+    stop_timers();
 
     current_trajectory = 0;
     start_time = 0;
+
+    send_init_state();
 }

@@ -9,6 +9,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_time_ns.hpp"
 #include "CommonroadObstacle.hpp"
+#include "commonroad_classes/CommonRoadScenario.hpp"
 
 /**
  * \class ObstacleAggregator
@@ -27,7 +28,12 @@ class ObstacleAggregator
     uint64_t reset_time = 0; //After a reset, ignore all previous data (->Header) - remember when last reset was called
 
 public:
-    ObstacleAggregator();
+    /**
+     * \brief The aggregator must be reset not only on start / stop, but also when the scenario changes
+     * Thus, a callback is registered at scenario
+     * \param scenario CommonRoadScenario - when changed, we need to reset the obstacle aggregator
+     */
+    ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scenario);
     std::vector<CommonroadObstacle> get_obstacle_data();
     void reset_all_data(); //Reset the data structures if desired by the user (e.g. bc the simulation was stopped)
 };

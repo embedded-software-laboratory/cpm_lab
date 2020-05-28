@@ -9,7 +9,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Timer.hpp"
+#include "cpm/SimpleTimer.hpp"
 #include "CommonroadObstacle.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
@@ -37,13 +37,19 @@ private:
     std::string node_id;
     uint64_t dt_nanos;
     uint64_t start_time;
-    std::shared_ptr<cpm::Timer> timer;
+    std::shared_ptr<cpm::Timer> simulation_timer;
+    std::shared_ptr<cpm::SimpleTimer> standby_timer;
 
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
      * \return x,y,yaw values using references as input
      */
     void interpolate_between(CommonTrajectoryPoint p1, CommonTrajectoryPoint p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
+    
+    //Send the current obstacle state based on the given trajectory point
+    void send_state(CommonTrajectoryPoint& point, uint64_t t_now);
+
+    void stop_timers();
 
 public:
     /**
@@ -54,6 +60,11 @@ public:
 
     //Destructor for timer
     ~ObstacleSimulation();
+
+    /**
+     * \brief Send the initial state of the obstacles periodically until the simulation is started
+     */
+    void send_init_state();
 
     void start();
     void reset();

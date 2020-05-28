@@ -73,12 +73,21 @@ void CommonRoadScenario::clear_data()
     {
         reset_obstacle_sim_manager();
     }
+    if (reset_obstacle_aggregator)
+    {
+        reset_obstacle_aggregator();
+    }
 }
 
 void CommonRoadScenario::register_obstacle_sim(std::function<void()> _setup, std::function<void()> _reset)
 {
     setup_obstacle_sim_manager = _setup;
     reset_obstacle_sim_manager = _reset;
+}
+
+void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _reset)
+{
+    reset_obstacle_aggregator = _reset;
 }
 
 void CommonRoadScenario::load_file(std::string xml_filepath)
@@ -487,7 +496,7 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
         }
 
-        //Need to reset the simulation as well (as the coordinate system was changed)
+        //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
         if (reset_obstacle_sim_manager)
         {
             reset_obstacle_sim_manager();

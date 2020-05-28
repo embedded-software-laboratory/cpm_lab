@@ -117,6 +117,9 @@ private:
     std::function<void()> setup_obstacle_sim_manager; 
     std::function<void()> reset_obstacle_sim_manager;
 
+    //Obstacle aggregator callback function (when new scenario is loaded)
+    std::function<void()> reset_obstacle_aggregator;
+
     //TODO: Both of these following functions as part of another interface?
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
@@ -171,6 +174,12 @@ public:
      * \param _reset Reset the obstacle simulation manager (data structures, running threads etc.)
      */
     void register_obstacle_sim(std::function<void()> _setup, std::function<void()> _reset);
+
+    /**
+     * \brief The scenario and the obstacle aggregator are tightly connected: If a new scenario gets loaded, the obstacle aggregator must be reset and set up again as well
+     * \param _reset Reset the obstacle aggregator's data structures
+     */
+    void register_obstacle_aggregator(std::function<void()> _reset);
 
     /**
      * \brief A load function to load another file
