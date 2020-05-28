@@ -50,7 +50,7 @@ build_nosim:
     - cat $RTI_LICENSE_KEY
     - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100
     - cat /etc/profile.d/rti_connext_dds.sh
-    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/i$
+    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds
     - ls -alh /opt/
     - ls -alh /opt/rti_connext_dds-6.0.0
     - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash
