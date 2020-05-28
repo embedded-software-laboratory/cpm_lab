@@ -31,6 +31,9 @@ if [ $simulation == 0 ]
 then
     bash build_arm.bash
 fi
+echo "!!!!"
+ls -alh
+pwd
 rm -rf dds
 bash build.bash
 popd
