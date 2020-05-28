@@ -706,6 +706,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::Train:
                     description_stream << "Train: ";
                     break;
+                default:
+                    description_stream << "TODO: ";
+                    break;
             }
             description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
 

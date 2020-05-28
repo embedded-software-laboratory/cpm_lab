@@ -55,10 +55,14 @@ void ObstacleSimulationManager::setup()
     //TODO: Put more information in trajectory: Need to know if they are based on exact or inexact values (IntervalOrExact) for visualization
 }
 
+//Suppress warning for unused parameter
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void ObstacleSimulationManager::set_time_scale(double scale)
 {
     //TODO: If desired, adjust time scale
 }
+#pragma GCC diagnostic pop
 
 void ObstacleSimulationManager::start()
 {
