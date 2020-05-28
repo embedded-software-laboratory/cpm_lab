@@ -2,6 +2,7 @@ image: ubuntu:18.04
 
 stages:
   - build_sim
+  - build_nosim
 
 before_script:
   - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
@@ -32,3 +33,24 @@ build_sim:
     - ls -alh /opt/
     - ls -alh /opt/rti_connext_dds-6.0.0
     - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash --simulation
+
+build_nosim:
+  stage: build_nosim
+  script:
+    - pwd
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt-get update
+    - apt-get install -y tzdata sudo
+    - adduser --disabled-password --gecos '' docker
+    - adduser docker sudo
+    - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+    - dpkg-reconfigure --frontend noninteractive tzdata
+    - echo $RTI_LICENSE_KEY
+    - cat $RTI_LICENSE_KEY
+    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100
+    - cat /etc/profile.d/rti_connext_dds.sh
+    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/i$
+    - ls -alh /opt/
+    - ls -alh /opt/rti_connext_dds-6.0.0
+    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash
