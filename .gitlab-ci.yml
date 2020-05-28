@@ -24,13 +24,9 @@ build_sim:
     - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
     - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
     - dpkg-reconfigure --frontend noninteractive tzdata
-    - chmod +x setup_cpm_build_environment.sh
-    - echo $RTI_LICENSE_KEY > /license.dat
-    - ls -alh
-    - cat /license.dat
-    - sudo ls -alh
-    - ls -alh /opt
-    - sudo ./setup_cpm_build_environment.sh --license_path=/license.dat --domain_id=100 --simulation
+    - echo $RTI_LICENSE_KEY
+    - cat $RTI_LICENSE_KEY
+    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation
     - cat /etc/profile.d/rti_connext_dds.sh
     - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/include/ndds/hpp
     - ls -alh /opt/
