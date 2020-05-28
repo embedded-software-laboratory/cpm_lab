@@ -61,7 +61,7 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install expect git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk -y"
+    BUILD_TOOLS="install iproute2 expect git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
