@@ -168,9 +168,7 @@ namespace cpm {
 
         if(runner_thread.joinable())
         {
-            std::cout << "Trying to join" << std::endl;
             runner_thread.join();
-            std::cout << "Joined" << std::endl;
         }
     }
 
@@ -183,9 +181,7 @@ namespace cpm {
 
         if(runner_thread.joinable())
         {
-            std::cout << "Trying to join" << std::endl;
             runner_thread.join();
-            std::cout << "Joined" << std::endl;
         }
     }
 
