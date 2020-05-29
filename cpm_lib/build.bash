@@ -19,7 +19,7 @@ mkdir -p $DIR/build
 
 cd $DIR/build
 cmake ..
-make -C $DIR/build -j8 && $DIR/build/unittest
+make -C $DIR/build -j$(nproc) && $DIR/build/unittest
 cd $DIR
 
 # Publish cpm_library package via http/apache for the HLCs to download
@@ -33,4 +33,5 @@ cp -R $DIR/../dds_idl/ $DIR/cpm_library_package
 cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
 cp $DIR/build/libcpm.so $DIR/cpm_library_package
 tar -czvf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
+rm -f /var/www/html/nuc/cpm_library_package.tar.gz
 mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc

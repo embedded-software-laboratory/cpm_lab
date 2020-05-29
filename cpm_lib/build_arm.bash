@@ -11,5 +11,5 @@ fi
 
 cd build_arm
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake -DBUILD_ARM=ON
-make -j8
+make -j$(nproc)
 cd ..

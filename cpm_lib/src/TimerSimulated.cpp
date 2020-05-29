@@ -83,7 +83,7 @@ namespace cpm {
     void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
     {
         if(this->active) {
-            Logging::Instance().write("TimerSimulated: The cpm::Timer can not be started twice.");
+            Logging::Instance().write("%s", "TimerSimulated: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
@@ -133,7 +133,7 @@ namespace cpm {
         }
         else
         {
-            Logging::Instance().write("TimerSimulated: The cpm::Timer can not be started twice.");
+            Logging::Instance().write("%s", "TimerSimulated: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
     }

@@ -29,7 +29,7 @@ namespace cpm {
     {
         //Offset must be smaller than period
         if (offset_nanoseconds >= period_nanoseconds) {
-            Logging::Instance().write("TimerFD: Offset set higher than period.");
+            Logging::Instance().write("%s", "TimerFD: Offset set higher than period.");
             fprintf(stderr, "Offset set higher than period.\n");
             fflush(stderr); 
             exit(EXIT_FAILURE);
@@ -43,7 +43,7 @@ namespace cpm {
         // Timer setup
         timer_fd = timerfd_create(CLOCK_REALTIME, 0);
         if (timer_fd == -1) {
-            Logging::Instance().write("TimerFD: Call to timerfd_create failed.");
+            Logging::Instance().write("%s", "TimerFD: Call to timerfd_create failed.");
             fprintf(stderr, "Call to timerfd_create failed.\n"); 
             perror("timerfd_create");
             fflush(stderr); 
@@ -109,7 +109,7 @@ namespace cpm {
     void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     {
         if(this->active) {
-            Logging::Instance().write("TimerFD: The cpm::Timer can not be started twice.");
+            Logging::Instance().write("%s", "TimerFD: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
@@ -192,7 +192,7 @@ namespace cpm {
         }
         else
         {
-            Logging::Instance().write("TimerFD: The cpm::Timer can not be started twice.");
+            Logging::Instance().write("%s", "TimerFD: The cpm::Timer can not be started twice.");
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
     }

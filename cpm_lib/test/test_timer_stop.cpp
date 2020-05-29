@@ -60,10 +60,16 @@ TEST_CASE( "TimerFD_stop_signal" ) {
         writer_SystemTrigger.write(trigger);
     });
 
+    //Ignore warning that t_start is unused
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+
     timer.start([&](uint64_t t_start){
         //The timer should never start because it is stopped before that can happen (No start signal is sent)
         CHECK(false);
     });
+
+    #pragma GCC diagnostic pop
 
     if (signal_thread.joinable()) {
         signal_thread.join();
