@@ -25,6 +25,8 @@ set(SOURCE_CPM
     src/Timer.cpp
     include/cpm/TimerFD.hpp
     src/TimerFD.cpp
+    include/cpm/SimpleTimer.hpp
+    src/SimpleTimer.cpp
     src/TimerSimulated.hpp
     src/TimerSimulated.cpp
     include/cpm/exceptions.hpp
@@ -72,6 +74,7 @@ if(NOT BUILD_ARM)
         test/catch.cpp
         test/test_logging.cpp
         test/test_parameter.cpp
+        test/test_simple_timer.cpp
         test/test_timer.cpp
         test/test_timer_stop.cpp
         test/test_timer_stop_running.cpp
