@@ -149,7 +149,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         end_point.t().nanoseconds(0);
 
         //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
-        for (int i = 1; i < m_vehicleCommandTrajectory.trajectory_points().size(); ++i)
+        for (size_t i = 1; i < m_vehicleCommandTrajectory.trajectory_points().size(); ++i)
         {
             if (m_vehicleCommandTrajectory.trajectory_points().at(i).t().nanoseconds() >= t_now)
             {
@@ -163,7 +163,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         if (end_point.t().nanoseconds() == 0)
         {
             cpm::Logging::Instance().write(
-                "%s"
+                "%s",
                 "No valid interpolation data could be found within the current trajectory segment - no end value could be found!"
             );
         }
@@ -172,7 +172,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         if (start_point.t().nanoseconds() >= t_now)
         {
             cpm::Logging::Instance().write(
-                "%s"
+                "%s",
                 "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
             );
         }
@@ -187,7 +187,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
     else 
     {
         cpm::Logging::Instance().write(
-            "%s"
+            "%s",
             "No valid trajectory data exists at this point in time!"
         );
     }
