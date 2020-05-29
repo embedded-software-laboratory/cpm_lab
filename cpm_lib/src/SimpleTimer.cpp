@@ -73,7 +73,6 @@ namespace cpm {
 
         //Send ready signal, wait for start signal
         uint64_t start_point;
-        uint64_t deadline;
         if (wait_for_start) {
             start_point = receiveStartTime();
             

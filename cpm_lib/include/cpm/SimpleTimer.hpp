@@ -52,8 +52,8 @@ namespace cpm {
         uint64_t receiveStartTime(); //Bool: true if start signal was received, false if stop signal was received
         bool received_stop_signal ();
         
-        const bool wait_for_start; //If false, do not use receiveStartTime()
         const bool react_to_stop_signal; //If false, do not react to received stop signals
+        const bool wait_for_start; //If false, do not use receiveStartTime()
 
     public:
         /**
