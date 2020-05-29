@@ -69,6 +69,33 @@ namespace cpm {
         return default_value;
     }
 
+
+    /**
+     * \brief Read a double command line argument from argv (form: --name=value), use a default value if it does not exist
+     */
+    double cmd_parameter_double(std::string name, double default_value, int argc, char *argv[]) {
+        std::string key = "--" + name + "=";
+
+        for (int i = 1; i < argc; ++i) {
+            std::string param = std::string(argv[i]);
+            if (param.find(key) == 0) {
+                std::string value = param.substr(param.find("=") + 1);
+
+                double double_value = 0;
+                try {
+                    double_value = std::stod(value);
+                }
+                catch (...) {
+                    return default_value;
+                }
+
+                return double_value;
+            }
+        }
+
+        return default_value;
+    }
+
     /**
      * \brief Read a std::string command line argument from argv (form: --name=value), use a default value if it does not exist
      */
@@ -116,4 +143,33 @@ namespace cpm {
         return default_value;
     }
 
+    /**
+     * \brief Read a double command line argument with multiple entries from argv (form: --name=value), use a default value if it does not exist
+     */
+    std::vector<double> cmd_parameter_doubles(std::string name, std::vector<double> default_value, int argc, char *argv[]) {
+        std::string key = "--" + name + "=";
+
+        for (int i = 1; i < argc; ++i) {
+            std::string param = std::string(argv[i]);
+            if (param.find(key) == 0) {
+                std::string values = param.substr(param.find("=") + 1);
+
+                std::vector<double> doubles;
+                std::stringstream double_stream(values);
+                std::string single_double;
+                while (std::getline(double_stream, single_double, ',')) {
+                    try {
+                        doubles.push_back(std::stod(single_double));
+                    }
+                    catch (...) {
+                        return default_value;
+                    }
+                }
+                return doubles;
+            }
+        }
+
+        return default_value;
+    }
+    
 }
