@@ -167,6 +167,35 @@ void Shape::transform_context(const DrawingContext& ctx, double scale)
     }
 }
 
+CommonroadDDSShape Shape::to_dds_msg()
+{
+    CommonroadDDSShape dds_shape;
+
+    std::vector<CommonroadDDSCircle> dds_circles;
+    for (auto circle : circles)
+    {
+        dds_circles.push_back(circle.to_dds_msg());
+    }
+
+    std::vector<CommonroadDDSPolygon> dds_polygons;
+    for (auto polygon : polygons)
+    {
+        dds_polygons.push_back(polygon.to_dds_msg());
+    }
+
+    std::vector<CommonroadDDSRectangle> dds_rectangles;
+    for (auto rectangle : rectangles)
+    {
+        dds_rectangles.push_back(rectangle.to_dds_msg());
+    }
+
+    dds_shape.circles(rti::core::vector<CommonroadDDSCircle>(dds_circles));
+    dds_shape.polygons(rti::core::vector<CommonroadDDSPolygon>(dds_polygons));
+    dds_shape.rectangles(rti::core::vector<CommonroadDDSRectangle>(dds_rectangles));
+
+    return dds_shape;
+}
+
 //********************************************************************************************************************************************
 //Getter
 //********************************************************************************************************************************************

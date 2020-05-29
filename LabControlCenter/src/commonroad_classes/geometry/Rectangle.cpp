@@ -107,6 +107,23 @@ std::pair<double, double> Rectangle::get_center()
     }
 }
 
+CommonroadDDSRectangle Rectangle::to_dds_msg()
+{
+    CommonroadDDSRectangle rectangle;
+
+    rectangle.length(length);
+    rectangle.width(width);
+
+    if(center.has_value())
+    {
+        rectangle.center(center->to_dds_msg());
+    }
+
+    rectangle.orientation(orientation.value_or(0)); //Orientation is 0 if not set
+
+    return rectangle;
+}
+
 std::optional<double> Rectangle::get_orientation()
 {
     return orientation;

@@ -23,6 +23,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -36,7 +38,7 @@ enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, P
 
 /**
  * \struct CommonTrajectoryPoint
- * \brief This class is used as a return type for the trajectory getter
+ * \brief This class is used as a part of the return type for the trajectory getter
  * It allows to conveniently store all relevant information of each CommonTrajectoryPoint
  */
 struct CommonTrajectoryPoint
@@ -48,8 +50,19 @@ struct CommonTrajectoryPoint
     std::optional<IntervalOrExact> velocity;
 
     bool is_exact;
-    std::optional<ObstacleTypeDynamic> obstacle_type;
     //is_moving is set in the simulation part, because it just depends on the overall trajectory size
+};
+
+/**
+ * \struct CommonroadTrajectory
+ * \brief This class is used as a return type for the trajectory getter
+ * It allows to conveniently store all relevant information of the dynamic obstacle
+ */
+struct CommonroadTrajectory
+{
+    std::vector<CommonTrajectoryPoint> trajectory;
+    std::optional<ObstacleTypeDynamic> obstacle_type;
+    CommonroadDDSShape shape;
 };
 
 /**
@@ -127,5 +140,5 @@ public:
      * \brief Returns a trajectory constructed from occupancy or trajectory data
      * Throws errors if expected types are missing
      */
-    std::vector<CommonTrajectoryPoint> get_trajectory();
+    CommonroadTrajectory get_trajectory();
 };

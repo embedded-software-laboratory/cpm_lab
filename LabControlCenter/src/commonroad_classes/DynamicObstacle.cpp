@@ -315,9 +315,9 @@ void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, con
     }
 }
 
-std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
+CommonroadTrajectory DynamicObstacle::get_trajectory()
 {
-    std::vector<CommonTrajectoryPoint> ret_trajectory;
+    CommonroadTrajectory commonroad_trajectory;
 
     //Add initial point
     CommonTrajectoryPoint initial_point;
@@ -339,9 +339,7 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
     //Optional data
     initial_point.velocity = initial_state->get_velocity();
 
-    initial_point.obstacle_type = type;
-
-    ret_trajectory.push_back(initial_point);
+    commonroad_trajectory.trajectory.push_back(initial_point);
 
 
     if (trajectory.size() > 0)
@@ -366,9 +364,7 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             //Optional data
             trajectory_point.velocity = point.get_velocity();
 
-            trajectory_point.obstacle_type = type;
-
-            ret_trajectory.push_back(trajectory_point);
+            commonroad_trajectory.trajectory.push_back(trajectory_point);
         }
     }
     else if (occupancy_set.size() > 0)
@@ -384,11 +380,17 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             //Velocity data does not exist in this case
 
             trajectory_point.is_exact = false; //Occupancy values are never exact, because they define an occupied area
-            trajectory_point.obstacle_type = type;
 
-            ret_trajectory.push_back(trajectory_point);
+            commonroad_trajectory.trajectory.push_back(trajectory_point);
         }
     }
+
+    commonroad_trajectory.obstacle_type = type;
     
-    return ret_trajectory;
+    if (shape.has_value())
+    {
+        commonroad_trajectory.shape = shape->to_dds_msg();
+    }
+    
+    return commonroad_trajectory;
 }

@@ -13,6 +13,8 @@
 #include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -65,7 +67,11 @@ public:
      */
     void transform_context(const DrawingContext& ctx, double scale = 1.0);
 
-    void to_dds_msg() {}
+    /**
+     * \brief Translates all relevant parts of the data structure to a DDS object, which is returned
+     * No interface was created for this function because the return type depends on the class
+     */
+    CommonroadDDSShape to_dds_msg();
 
     //TODO: Getter
     std::optional<double> get_orientation();

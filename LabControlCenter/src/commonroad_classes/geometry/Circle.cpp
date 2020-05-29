@@ -85,6 +85,20 @@ std::pair<double, double> Circle::get_center()
     }
 }
 
+CommonroadDDSCircle Circle::to_dds_msg()
+{
+    CommonroadDDSCircle circle;
+
+    if (center.has_value())
+    {
+        circle.center(center->to_dds_msg());
+    }
+
+    circle.radius(radius);
+
+    return circle;
+}
+
 const std::optional<Point>& Circle::get_center() const
 {
     return center;

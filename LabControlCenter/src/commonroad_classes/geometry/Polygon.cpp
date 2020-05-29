@@ -98,3 +98,18 @@ std::pair<double, double> Polygon::get_center()
 
     return std::pair<double, double>(sum_x / static_cast<double>(points.size()), sum_y / static_cast<double>(points.size()));
 }
+
+CommonroadDDSPolygon Polygon::to_dds_msg()
+{
+    CommonroadDDSPolygon polygon;
+
+    std::vector<CommonroadDDSPoint> dds_points;
+    for (auto point : points)
+    {
+        dds_points.push_back(point.to_dds_msg());
+    }
+
+    polygon.points(rti::core::vector<CommonroadDDSPoint>(dds_points));
+
+    return polygon;
+}

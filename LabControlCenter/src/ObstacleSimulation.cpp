@@ -1,6 +1,6 @@
 #include "ObstacleSimulation.hpp"
 
-ObstacleSimulation::ObstacleSimulation(std::vector<CommonTrajectoryPoint> _trajectory, double _time_step_size, int _id, bool _simulated_time)
+ObstacleSimulation::ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time)
 :
 writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacle>("commonroadObstacle")),
 trajectory(_trajectory),
@@ -21,7 +21,7 @@ simulated_time(_simulated_time)
     }
 
     //We do not accept empty trajectories
-    assert(trajectory.size() > 0);
+    assert(trajectory.trajectory.size() > 0);
 }
 
 ObstacleSimulation::~ObstacleSimulation()
@@ -52,7 +52,7 @@ void ObstacleSimulation::send_init_state()
     standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
     standby_timer->start_async([=] (uint64_t t_now) {
         //Send initial state
-        send_state(trajectory.at(0), t_now);
+        send_state(trajectory.trajectory.at(0), t_now);
     });
 }
 
@@ -73,15 +73,15 @@ void ObstacleSimulation::start()
         // }
 
         //We must be able to use time.value(), as it is a required field
-        assert(trajectory.at(current_trajectory).time.has_value());
+        assert(trajectory.trajectory.at(current_trajectory).time.has_value());
 
-        while (t_now - start_time >= trajectory.at(current_trajectory).time.value().get_mean() * time_step_size && current_trajectory < trajectory.size() - 1)
+        while (t_now - start_time >= trajectory.trajectory.at(current_trajectory).time.value().get_mean() * time_step_size && current_trajectory < trajectory.trajectory.size() - 1)
         {
             ++current_trajectory;
         }
 
         //Send current state
-        send_state(trajectory.at(current_trajectory), t_now);
+        send_state(trajectory.trajectory.at(current_trajectory), t_now);
     });
 }
 
@@ -166,7 +166,7 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
     if (point.time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
     {
         //Interpolate
-        interpolate_between(trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
+        interpolate_between(trajectory.trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
     }
     else
     {
@@ -191,11 +191,11 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
 
     //Set further obstacle information
     obstacle.pose_is_exact(point.is_exact);        
-    obstacle.is_moving((trajectory.size() > 1));
+    obstacle.is_moving((trajectory.trajectory.size() > 1));
 
-    if (point.obstacle_type.has_value())
+    if (trajectory.obstacle_type.has_value())
     {
-        switch(point.obstacle_type.value())
+        switch(trajectory.obstacle_type.value())
         {
             case ObstacleTypeDynamic::Unknown:
                 obstacle.type(ObstacleType::Unknown);
@@ -226,6 +226,8 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
                 break;
         }
     }
+
+    obstacle.shape(trajectory.shape);
 
     writer_commonroad_obstacle.write(obstacle);
 }

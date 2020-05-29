@@ -88,6 +88,16 @@ void Point::draw(const DrawingContext& ctx, double scale, double global_orientat
 }
 #pragma GCC diagnostic pop
 
+CommonroadDDSPoint Point::to_dds_msg()
+{
+    CommonroadDDSPoint point;
+
+    point.x(x);
+    point.y(y);
+
+    return point;
+}
+
 double Point::get_x()
 {
     return x;

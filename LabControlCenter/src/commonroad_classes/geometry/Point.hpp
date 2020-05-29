@@ -6,6 +6,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -58,7 +60,11 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void to_dds_msg() {}
+    /**
+     * \brief Translates all relevant parts of the data structure to a DDS object, which is returned
+     * No interface was created for this function because the return type depends on the class
+     */
+    CommonroadDDSPoint to_dds_msg();
 
     //Getter
     double get_x();
