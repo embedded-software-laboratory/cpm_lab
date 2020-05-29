@@ -1,5 +1,6 @@
 #include "Header.idl"
 #include "Pose2D.idl"
+#include "CommonroadDDSShape.idl"
 
 /*
  * Provides simulated commonroad obstacle state data
@@ -40,7 +41,7 @@ struct CommonroadObstacle {
 
     //Optional value which defines a shape, especially useful if the occupancy type was used
     //But: also useful for visualizing lanelet references or inexact positional values
-    //Shape shape; -> TODO: Can be based on other Commonroad IDL types (e.g. Shape, based on Rectangle, Circle and Polygon etc.)
+    CommonroadDDSShape shape; 
 
     double speed; // m/s
 };
