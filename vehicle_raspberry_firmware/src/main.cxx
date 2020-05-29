@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     const int vehicle_id = cpm::cmd_parameter_int("vehicle_id", 0, argc, argv);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
-    if(vehicle_id <= 0 || vehicle_id > 25) {
+    if(vehicle_id <= 0 || vehicle_id > 255) { //Upper bound due to use of uint8_t
         std::cerr << "Invalid vehicle ID." << std::endl;
         return 1;
     }
