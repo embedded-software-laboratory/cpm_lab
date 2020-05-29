@@ -9,11 +9,12 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "Visualization.hpp"
 #include "Pose2D.hpp"
+#include "cpm/get_time_ns.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
-using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
+using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 
 class MapViewUi
 {

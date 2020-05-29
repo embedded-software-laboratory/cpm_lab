@@ -202,6 +202,9 @@ void LoggerViewUI::dispatcher_callback() {
     // - Search is never refreshed automatically - refresh button?
 }
 
+//Suppress warning for unused parameter
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void LoggerViewUI::on_size_change_autoscroll(Gtk::Allocation& allocation)
 {
     if (autoscroll_check_button->get_active()) {
@@ -209,6 +212,7 @@ void LoggerViewUI::on_size_change_autoscroll(Gtk::Allocation& allocation)
         adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
     }
 }
+#pragma GCC diagnostic pop
 
 void LoggerViewUI::add_log_entry(const Log& entry) {
     //Note: We get a pango UTF-8 warning depending on which strings we are adding - we must make sure that they are UTF-8 encoded

@@ -51,7 +51,7 @@ then
     
     
     
-    # Publish package via http/apache for the vehicles to download
+    # # Publish package via http/apache for the vehicles to download
     rm -f /var/www/html/raspberry/package.tar.gz
     #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
     cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case
