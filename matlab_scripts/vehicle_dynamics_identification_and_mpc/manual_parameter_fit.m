@@ -1,5 +1,5 @@
 function manual_parameter_fit
-
+% TODO: NEEDS UPDATE; SWITCH TO RTI 6 AND REMOVED BATTERY VOLTAGE IN MODEL
     % Run 'recording_to_csv.bash' before this script!
     
     % This is a first experiment and sanity check for the parameter

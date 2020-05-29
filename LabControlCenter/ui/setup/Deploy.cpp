@@ -294,6 +294,79 @@ void Deploy::kill_ips() {
     kill_session("ips_basler");
 }
 
+
+
+void Deploy::deploy_recording() 
+{
+    //if old session already exists, kill it
+    kill_session(recording_session);
+
+    // Update recording config
+    std::string config_path_in = std::getenv("HOME");
+    config_path_in.append("/dev/software/dds_record/rti_recording_config_template.xml");
+    std::ifstream xml_config_template(config_path_in);
+    
+    std::string xml_config_str;
+    {
+        std::stringstream buffer;
+        if (xml_config_template.is_open()) {
+            buffer << xml_config_template.rdbuf();
+        }
+        xml_config_template.close();
+        xml_config_str = buffer.str();
+    }
+
+    xml_config_str = std::regex_replace(
+        xml_config_str,
+        std::regex("TEMPLATE_NDDSHOME"),
+        std::getenv("NDDSHOME")
+    );
+    auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
+    std::ostringstream timenow_ss;
+    timenow_ss << std::put_time(std::localtime(&timenow), "%Y_%m_%d_%H_%M_%S");
+    xml_config_str = std::regex_replace(
+        xml_config_str,
+        std::regex("TEMPLATE_RECORDING_FOLDER"),
+        timenow_ss.str()
+    );
+    xml_config_str = std::regex_replace(
+        xml_config_str,
+        std::regex("TEMPLATE_DOMAIN_ID"),
+        std::to_string(cmd_domain_id)
+    );
+    xml_config_str = std::regex_replace(
+        xml_config_str,
+        std::regex("TEMPLATE_DISCOVERY_URL"),
+        cmd_dds_initial_peer
+    );
+
+    std::string config_path_out = "/tmp/rti_recording_config.xml";
+    std::ofstream xml_config(config_path_out);
+    xml_config << xml_config_str;
+
+    xml_config.close();
+    
+    //Generate command
+    std::stringstream command;
+    command 
+        << "tmux new-session -d "
+        << "-s \"" << recording_session << "\" "
+        << "rtirecordingservice "
+        << "-cfgFile " << config_path_out << " "
+        << "-cfgName cpm_recorder";
+    
+    std::cout << command.str() << std::endl;
+    //Execute command
+    system(command.str().c_str());
+}
+
+void Deploy::kill_recording() 
+{
+    kill_session(recording_session);
+}
+
+
+
 bool Deploy::session_exists(std::string session_id)
 {
     std::string running_sessions = execute_command("tmux ls");
