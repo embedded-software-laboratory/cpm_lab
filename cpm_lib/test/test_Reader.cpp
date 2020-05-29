@@ -2,6 +2,7 @@
 #include "cpm/dds/VehicleState.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
+#include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
 
 #include <dds/sub/ddssub.hpp>
@@ -15,6 +16,7 @@
  */
 
 TEST_CASE( "Reader" ) {
+    cpm::Logging::Instance().set_id("test_reader");
 
     auto participant = cpm::ParticipantSingleton::Instance();
     dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "asldkjfhslakdj");
