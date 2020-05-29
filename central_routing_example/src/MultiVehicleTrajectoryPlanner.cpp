@@ -4,7 +4,7 @@
 
 MultiVehicleTrajectoryPlanner::MultiVehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
 
-std::vector<VehicleCommandTrajectory> MultiVehicleTrajectoryPlanner::get_trajectory_commands()
+std::vector<VehicleCommandTrajectory> MultiVehicleTrajectoryPlanner::get_trajectory_commands(uint64_t t_now)
 {
     std::lock_guard<std::mutex> lock(mutex);
     std::vector<VehicleCommandTrajectory> result;
@@ -13,6 +13,8 @@ std::vector<VehicleCommandTrajectory> MultiVehicleTrajectoryPlanner::get_traject
         VehicleCommandTrajectory vehicleCommandTrajectory;
         vehicleCommandTrajectory.vehicle_id(e.first);
         vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(e.second));
+        vehicleCommandTrajectory.header().create_stamp().nanoseconds(t_now); //You just need to set t_now here, as it was created at t_now
+        vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + 2000000000ull); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
         result.push_back(vehicleCommandTrajectory);
     }
     return result;
