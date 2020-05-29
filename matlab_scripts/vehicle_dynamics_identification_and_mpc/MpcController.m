@@ -1,7 +1,9 @@
 classdef MpcController
     %MPCCONTROLLER Summary of this class goes here
     %   Detailed explanation goes here
-    
+
+% TODO: NEEDS UPDATE; SWITCH TO RTI 6 AND REMOVED BATTERY VOLTAGE IN MODEL
+
     properties
         u_soln
         parameters

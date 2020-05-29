@@ -68,16 +68,14 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     logs_search_type->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_filter_type_changed));
 
     //Create and set labels for the log_level_combobox
-    for (unsigned short i = 0; i <= log_levels; ++i)
+    for (auto level_string : log_labels)
     {
-        std::stringstream level_stream;
-        level_stream << i;
-        Glib::ustring level_string = Glib::ustring(level_stream.str());
-        log_level_labels.push_back(level_string);
-        log_level_combobox->append(level_string);
+        Glib::ustring level_ustring = Glib::ustring(level_string.c_str());
+        log_level_labels.push_back(level_ustring);
+        log_level_combobox->append(level_ustring);
     }
     //Set default label for log_level_combobox
-    if (log_levels == 0)
+    if (log_labels.size() == 1)
     {
         log_level_combobox->set_active_text(log_level_labels.at(0));
     }
@@ -99,6 +97,9 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
 
     //Scroll event callback
     logs_treeview->signal_scroll_event().connect(sigc::mem_fun(*this, &LoggerViewUI::scroll_callback));
+
+    //Size adjustment callback (for autoscroll)
+    logs_treeview->signal_size_allocate().connect(sigc::mem_fun(*this, &LoggerViewUI::on_size_change_autoscroll));
 
     //Log reset triggered by another module
     reset_logs.store(false);
@@ -196,15 +197,22 @@ void LoggerViewUI::dispatcher_callback() {
             }
         }
     }
-
-    if (autoscroll_check_button->get_active()) {
-        auto adjustment = logs_scrolled_window->get_vadjustment();
-        adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
-    }
     //TODO: 
     // - More elegant solution for "searching...?"
     // - Search is never refreshed automatically - refresh button?
 }
+
+//Suppress warning for unused parameter
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void LoggerViewUI::on_size_change_autoscroll(Gtk::Allocation& allocation)
+{
+    if (autoscroll_check_button->get_active()) {
+        auto adjustment = logs_scrolled_window->get_vadjustment();
+        adjustment->set_value(adjustment->get_upper() - adjustment->get_page_size());
+    }
+}
+#pragma GCC diagnostic pop
 
 void LoggerViewUI::add_log_entry(const Log& entry) {
     //Note: We get a pango UTF-8 warning depending on which strings we are adding - we must make sure that they are UTF-8 encoded

@@ -20,10 +20,13 @@ using std::vector;
 
 int main(int argc, char *argv[])
 {
+    //Prepare for Logging
     const std::string node_id = "basic_circle_example";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+
+    //set vehicle ID: ID must be the same in code and the LCC!
     int vehicle_id_int = cpm::cmd_parameter_int("vehicle_id", 4, argc, argv);
     uint8_t vehicle_id;
     assert(vehicle_id_int > 0);
@@ -31,7 +34,8 @@ int main(int argc, char *argv[])
     vehicle_id = vehicle_id_int;
 
 
-    // Writer for sending trajectory commands
+    // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
+    //For more information see our documentation about RTI DDS
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
     (
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
@@ -39,16 +43,28 @@ int main(int argc, char *argv[])
     );
 
     // Circle trajectory data
+    //In this section the points on the x and y axis (independently from the map!) are set. 
+    //They are relative to the defined center point defined below as map_center_x and map_center_y
     vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};
     vector<double> trajectory_py        = vector<double>{            0,             1,             0,            -1};
+    //These vecotrs define the speed in x and y direction. Together the define the starting direction from the current trajectory point,
+    // for example: vx = 1 and vy = 1 will lead to a positive diagonal starting vector from the starting point. For more informations see
+    //our documentation website
     vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
     vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
+
+    //This vector defines the duration for one way segment. So, in a way it defines the acutal speed of the vehicle in one segment. 
+    //In this vector we see the time for v = 1 m/s (as every vx and vy is either 0 or 1) and a way length of pi/2 (a quater circle ;))
+    //Find more hints on our documentation website
     vector<uint64_t> segment_duration = vector<uint64_t>{1550000000ull, 1550000000ull, 1550000000ull, 1550000000ull};
 
     /*
     // Figure eight trajectory data
     vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
     vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
+    //In this figure eight the circles of the eight are not perfectly round but a little streched to show you the impact of the vector (Vx, vy)
+    //at the starting point. 
+    //Note that also the duration changes accordingly.
     vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
     vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
     vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
@@ -59,6 +75,7 @@ int main(int argc, char *argv[])
     assert(segment_duration.size() == trajectory_vx.size());
     assert(segment_duration.size() == trajectory_vy.size());
 
+    //Definition of the center point for the circle and the figure eight
     const double map_center_x = 2.25;
     const double map_center_y = 2.0;
     for (double &px : trajectory_px)

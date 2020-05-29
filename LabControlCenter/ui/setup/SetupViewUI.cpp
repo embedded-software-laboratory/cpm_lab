@@ -78,7 +78,7 @@ SetupViewUI::SetupViewUI
     assert(vehicle_flowbox);
 
     //Create vehicle toggles
-    for (unsigned int id = 1; id <= 10; ++id)
+    for (unsigned int id = 1; id <= 20; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }
@@ -329,6 +329,9 @@ void SetupViewUI::deploy_applications() {
     //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
     obstacle_simulation_manager->start();
     
+    // Recording
+    deploy_functions->deploy_recording();
+
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
@@ -482,6 +485,9 @@ void SetupViewUI::kill_deployed_applications() {
     }
 
     deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
+
+    // Recording
+    deploy_functions->kill_recording();
 
     //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
     //But only if threads are used, so only in case of remote deployment
