@@ -230,12 +230,26 @@ void MapViewUi::draw(const DrawingContext& ctx)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
 
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        // TODO: for now, until visualization is fixed 
+        // Draw map (roads) image
+        ctx->save();
+        {
+            const double scale = 4.0/image_map->get_height();
+            ctx->scale(scale, scale);
+            ctx->set_source(image_map,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
+        commonroad_scenario = NULL; 
+        //////////////////////////////////////////////////////////////////////////////////////////////
+
         //draw_grid(ctx);
         //Draw map
         if (commonroad_scenario)
         {
             commonroad_scenario->draw(ctx, 1.0, 0, 0, 0, 0);
-        }
+        } 
 
         // Draw vehicle focus disk
         if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
