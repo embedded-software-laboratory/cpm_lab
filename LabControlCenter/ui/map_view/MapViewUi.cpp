@@ -522,7 +522,7 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
     // Draw map (roads) image     
     
-    std::string filepath = "/home/cpm-lab/dev/software/LabControlCenter/ui/map_view/C-USA_US101-30_1_T-1.xml";
+    std::string filepath = "./ui/map_view/LabMapCommonRoad.xml";
 
     xmlpp::DomParser parser;
     vector<double> lanelet_x;

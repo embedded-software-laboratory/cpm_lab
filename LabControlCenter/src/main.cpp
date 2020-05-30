@@ -92,15 +92,15 @@ int main(int argc, char *argv[])
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
     //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
-    std::string filepath_2018 = "/home/cpm-lab/dev/software/LabControlCenter/test/C-USA_US101-30_1_T-1.xml";
-    std::string filepath_2020 = "/home/cpm-lab/dev/software/LabControlCenter/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
-    std::string filepath_parked_vehicles = "/home/cpm-lab/dev/software/LabControlCenter/test/RUS_Bicycle-4_1_T-1.xml";
-    std::string filepath_occupancy = "/home/cpm-lab/dev/software/LabControlCenter/test/DEU_Ffb-1_2_S-1.xml";
+    std::string filepath_2018 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_2020 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_parked_vehicles = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_occupancy = "./ui/map_view/LabMapCommonRoad.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
     try
     {
-        commonroad_scenario->load_file(filepath_parked_vehicles);
-        commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
+        commonroad_scenario->load_file(filepath_2018);
+        //commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
     }
     catch(const std::exception& e)
     {
