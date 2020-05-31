@@ -626,6 +626,86 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
+void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape)
+{
+    ctx->save();
+
+    ctx->set_line_width(0.005);
+
+    for (auto circle : shape.circles())
+    {
+        ctx->save();
+
+        //Move to center
+        ctx->move_to(circle.center().x(), circle.center().y());
+
+        //Draw circle
+        ctx->arc(circle.center().x(), circle.center().y(), circle.radius(), 0.0, 2 * M_PI);
+        ctx->stroke();
+
+        ctx->restore();
+    }
+
+    for (auto polygon : shape.polygons())
+    {
+        if (polygon.points().size() < 3)
+        {
+            std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+        }
+        else
+        {
+            ctx->save();
+
+            //Move to first point
+            ctx->move_to(polygon.points().at(0).x(), polygon.points().at(0).y());
+
+            //Draw lines to remaining points
+            for (auto& point : polygon.points())
+            {
+                ctx->line_to(point.x(), point.y());
+            }
+            //Finish polygon by drawing a line to the starting point
+            ctx->line_to(polygon.points().at(0).x(), polygon.points().at(0).y());
+            ctx->fill_preserve();
+            ctx->stroke();
+
+            ctx->restore();
+        }
+    }
+
+    for (auto rectangle : shape.rectangles())
+    {
+        ctx->save();
+
+        //Translate to center of object
+        ctx->translate(rectangle.center().x(), rectangle.center().y());
+
+        //Rotate, if necessary
+        ctx->rotate(rectangle.orientation());
+
+        auto length = rectangle.length();
+        auto width = rectangle.width();
+
+        //Move to first corner from center
+        ctx->move_to((- (length/2)), (- (width/2)));
+
+        //Draw lines
+        ctx->line_to((- (length/2)), (  (width/2)));
+        ctx->line_to((  (length/2)), (  (width/2)));
+        ctx->line_to((  (length/2)), (- (width/2)));
+        ctx->line_to((- (length/2)), (- (width/2)));
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+    }
+
+    //TODO: Improve shape drawing
+    //For example: Color coding instead of longer names (e.g. for (non-)moving objects)
+
+    ctx->restore();
+}
+
 void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 {
     //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
@@ -641,19 +721,20 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         ctx->translate(x,y);
         ctx->rotate(yaw);
 
-        const double LF = 0.115;
-        const double LR = 0.102;
+        // const double LF = 0.115;
+        // const double LR = 0.102;
         //const double WH = 0.054;
 
         // Draw car image (TODO: Change this later, e.g. to shape)
         ctx->save();
         {
-            const double scale = 0.224/image_object->get_width();
-            ctx->translate( (LF+LR)/2-LR ,0);
-            ctx->scale(scale, scale);
-            ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
-            ctx->set_source(image_object,0,0);
-            ctx->paint();
+            // const double scale = 0.224/image_object->get_width();
+            // ctx->translate( (LF+LR)/2-LR ,0);
+            // ctx->scale(scale, scale);
+            // ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
+            // ctx->set_source(image_object,0,0);
+            // ctx->paint();
+            draw_vehicle_shape(ctx, entry.shape());
         }
         ctx->restore();
 
