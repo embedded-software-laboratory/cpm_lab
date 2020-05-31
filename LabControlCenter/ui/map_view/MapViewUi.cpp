@@ -233,15 +233,15 @@ void MapViewUi::draw(const DrawingContext& ctx)
         //////////////////////////////////////////////////////////////////////////////////////////////
         // TODO: for now, until visualization is fixed 
         // Draw map (roads) image
-        ctx->save();
-        {
-            const double scale = 4.0/image_map->get_height();
-            ctx->scale(scale, scale);
-            ctx->set_source(image_map,0,0);
-            ctx->paint();
-        }
-        ctx->restore();
-        commonroad_scenario = NULL; 
+        // ctx->save();
+        // {
+        //     const double scale = 4.0/image_map->get_height();
+        //     ctx->scale(scale, scale);
+        //     ctx->set_source(image_map,0,0);
+        //     ctx->paint();
+        // }
+        //ctx->restore();
+        //commonroad_scenario = NULL; 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
         //draw_grid(ctx);

@@ -463,22 +463,22 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
     //Draw arrows for lanelet orientation
     //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
-    assert(left_bound.points.size() == right_bound.points.size());
-    size_t arrow_start_pos = 0;
-    size_t arrow_end_pos = 1;
-    ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
-    while (arrow_end_pos < left_bound.points.size())
-    {
-        double x_1 = (left_bound.points.at(arrow_start_pos).get_x() + right_bound.points.at(arrow_start_pos).get_x()) / 2.0;
-        double y_1 = (left_bound.points.at(arrow_start_pos).get_y() + right_bound.points.at(arrow_start_pos).get_y()) / 2.0;
-        double x_2 = (left_bound.points.at(arrow_end_pos).get_x() + right_bound.points.at(arrow_end_pos).get_x()) / 2.0;
-        double y_2 = (left_bound.points.at(arrow_end_pos).get_y() + right_bound.points.at(arrow_end_pos).get_y()) / 2.0;
+    // assert(left_bound.points.size() == right_bound.points.size());
+    // size_t arrow_start_pos = 0;
+    // size_t arrow_end_pos = 1;
+    // ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
+    // while (arrow_end_pos < left_bound.points.size())
+    // {
+    //     double x_1 = (left_bound.points.at(arrow_start_pos).get_x() + right_bound.points.at(arrow_start_pos).get_x()) / 2.0;
+    //     double y_1 = (left_bound.points.at(arrow_start_pos).get_y() + right_bound.points.at(arrow_start_pos).get_y()) / 2.0;
+    //     double x_2 = (left_bound.points.at(arrow_end_pos).get_x() + right_bound.points.at(arrow_end_pos).get_x()) / 2.0;
+    //     double y_2 = (left_bound.points.at(arrow_end_pos).get_y() + right_bound.points.at(arrow_end_pos).get_y()) / 2.0;
 
-        draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
+    //     draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
 
-        ++arrow_start_pos;
-        ++arrow_end_pos;
-    }
+    //     ++arrow_start_pos;
+    //     ++arrow_end_pos;
+    // }
 
 
     //TODO: Line markings, stop lines etc
