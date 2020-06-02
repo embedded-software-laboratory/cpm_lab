@@ -3,11 +3,14 @@
 #include <unistd.h>
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
+#include "ObstacleAggregator.hpp"
 #include "TimeSeriesAggregator.hpp"
 #include "HLCReadyAggregator.hpp"
+#include "ObstacleSimulationManager.hpp"
 #include "VisualizationCommandsAggregator.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
+#include "ui/commonroad/CommonroadViewUI.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
@@ -25,6 +28,8 @@
 #include "cpm/CommandLineReader.hpp"
 #include "TimerTrigger.hpp"
 #include "cpm/init.hpp"
+
+#include "commonroad_classes/CommonRoadScenario.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -86,6 +91,22 @@ int main(int argc, char *argv[])
 
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
+    //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
+    std::string filepath_2018 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_2020 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_parked_vehicles = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_occupancy = "./ui/map_view/LabMapCommonRoad.xml";
+    auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
+    try
+    {
+        commonroad_scenario->load_file(filepath_2018);
+        //commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
     auto storage = make_shared<ParameterStorage>(config_file, 32);
     ParameterServer server(storage);
     storage->register_on_param_changed_callback(std::bind(&ParameterServer::resend_param_callback, &server, _1));
@@ -96,6 +117,9 @@ int main(int argc, char *argv[])
     Gtk::StyleContext::create()->add_provider_for_screen (Gdk::Display::get_default()->get_default_screen(),cssProvider,500);
 
     bool use_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+
+    auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
+
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
     auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto logStorage = make_shared<LogStorage>();
@@ -104,12 +128,15 @@ int main(int argc, char *argv[])
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
     auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
+        commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto monitoringUi = make_shared<MonitoringUi>(
@@ -119,24 +146,29 @@ int main(int argc, char *argv[])
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
+    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
     auto setupViewUi = make_shared<SetupViewUI>(
         vehicleAutomatedControl, 
+        obstacle_simulation_manager,
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
-        [=](bool simulated_time){return timerViewUi->reset(simulated_time);}, 
+        [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return timeSeriesAggregator->reset_all_data();}, 
+        [=](){return obstacleAggregator->reset_all_data();}, 
         [=](){return trajectoryCommand->stop_all();}, 
         [=](){return monitoringUi->reset_vehicle_view();}, 
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
         [=](){return loggerViewUi->reset();}, 
+        [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
         argv);
-    auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi);
+    auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
     //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created
     //(Wherever we want to create windows)
     setupViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
     paramViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
+    commonroadViewUi->set_main_window_callback(std::bind(&MainWindow::get_window, mainWindow));
 
     vehicleManualControl->set_callback([&](){vehicleManualControlUi->update();});
 

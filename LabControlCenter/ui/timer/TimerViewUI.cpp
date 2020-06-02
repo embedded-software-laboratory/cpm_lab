@@ -71,14 +71,17 @@ void TimerViewUI::button_reset_callback() {
     start_ui_thread();
 }
 
-void TimerViewUI::reset(bool use_simulated_time) {
+void TimerViewUI::reset(bool use_simulated_time, bool send_stop_signal) {
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
 
     reset_ui();
 
     //Delete the old timer, replace it by a new one with new settings
-    timer_trigger->send_stop_signal();
+    if (send_stop_signal)
+    {
+        timer_trigger->send_stop_signal();
+    }
     
     std::atomic_store(&timer_trigger, std::make_shared<TimerTrigger>(use_simulated_time));
 
