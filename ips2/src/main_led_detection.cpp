@@ -1,5 +1,8 @@
 #include <pylon/PylonIncludes.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <pylon/usb/BaslerUsbInstantCamera.h>
+#pragma GCC diagnostic pop
 #include <thread>
 #include <mutex>
 #include <memory>
