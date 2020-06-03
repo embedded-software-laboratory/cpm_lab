@@ -3,6 +3,10 @@
 # Scripts are still supposed to be uploaded using the LCC's UI (or your own upload script)
 
 # Publish NUC package via http/apache for the HLCs to download
+
+# exit when any command fails
+set -e
+
 cd /tmp
 mkdir matlab_package
 cp ~/dev/software/hlc/matlab/init_script.m ./matlab_package
