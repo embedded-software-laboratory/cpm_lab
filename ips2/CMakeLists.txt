@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-add_definitions(-Wall -Wextra -Werror=return-type)
+add_definitions(-Wall -Wextra -Werror=return-type -Wno-unknown-pragmas)
 set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE STRING "Modules for CMake" FORCE)
