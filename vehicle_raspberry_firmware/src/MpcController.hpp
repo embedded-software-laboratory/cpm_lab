@@ -65,7 +65,7 @@ class MpcController
     // MPC prediction time interval, or is impossible to follow.
     bool interpolate_reference_trajectory(
         uint64_t t_now, 
-        const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+        const VehicleCommandTrajectory &commandTrajectory,
         std::vector<double> &out_mpc_reference_trajectory_x,
         std::vector<double> &out_mpc_reference_trajectory_y
     );
@@ -92,7 +92,7 @@ public:
     void update(
         uint64_t t_now, 
         const VehicleState &vehicleState,                  
-        const std::map<uint64_t, TrajectoryPoint> &trajectory_points,
+        const VehicleCommandTrajectory &commandTrajectory,
         double &out_motor_throttle, 
         double &out_steering_servo
     );

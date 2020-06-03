@@ -4,20 +4,28 @@
 #include "defaults.hpp"
 #include "TimeSeries.hpp"
 #include <thread>
+#include <mutex>
+#include <sstream>
 #include <vector>
 #include "TrajectoryCommand.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Visualization.hpp"
 #include "Pose2D.hpp"
+#include "cpm/get_time_ns.hpp"
+
+#include "CommonroadObstacle.hpp"
+
+#include "commonroad_classes/CommonRoadScenario.hpp"
 
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
-using VehicleTrajectories = map<uint8_t, map<uint64_t, TrajectoryPoint> >;
+using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 
 class MapViewUi
 {
     shared_ptr<TrajectoryCommand> trajectoryCommand;
+    shared_ptr<CommonRoadScenario> commonroad_scenario;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
@@ -25,9 +33,12 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
+    Cairo::RefPtr<Cairo::ImageSurface> image_object;
     Cairo::RefPtr<Cairo::ImageSurface> image_map;
     VehicleData vehicle_data;
 
+    //For visualization of commonroad data get from data storage object via callback
+    std::function<std::vector<CommonroadObstacle>()> get_obstacle_data;
 
     // hold the path and related values temporarily, while the user draws with the mouse
     std::vector<Pose2D> path_painting_in_progress;
@@ -75,6 +86,8 @@ class MapViewUi
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
 
+    void draw_commonroad_obstacles(const DrawingContext& ctx);
+
     /**
      * /brief draw function that uses the viz callback to get all received viz commands and draws them on the screen
      */
@@ -86,8 +99,10 @@ class MapViewUi
 public:
     MapViewUi(
         shared_ptr<TrajectoryCommand> _trajectoryCommand,
+        shared_ptr<CommonRoadScenario> _commonroad_scenario,
         std::function<VehicleData()> get_vehicle_data_callback,
         std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+        std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
     Gtk::DrawingArea* get_parent();
