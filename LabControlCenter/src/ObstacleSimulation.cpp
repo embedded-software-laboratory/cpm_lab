@@ -1,10 +1,11 @@
 #include "ObstacleSimulation.hpp"
 
-ObstacleSimulation::ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time)
+ObstacleSimulation::ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal)
 :
 writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacle>("commonroadObstacle")),
 trajectory(_trajectory),
-simulated_time(_simulated_time)
+simulated_time(_simulated_time),
+custom_stop_signal(_custom_stop_signal)
 {
     //Set up cpm values (cpm init has already been done before)
     node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
@@ -49,7 +50,7 @@ void ObstacleSimulation::send_init_state()
     //Send initial state with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
     //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
     //TODO: Timer must be changed fundamentally: The period should not determine how long it takes to stop the timer!
-    standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
+    standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, true, custom_stop_signal);
     standby_timer->start_async([=] (uint64_t t_now) {
         //Send initial state
         send_state(trajectory.trajectory.at(0), t_now);
@@ -232,9 +233,10 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
     writer_commonroad_obstacle.write(obstacle);
 }
 
-void ObstacleSimulation::reset()
+void ObstacleSimulation::reset(uint64_t new_custom_stop_signal)
 {
     stop_timers();
+    custom_stop_signal = new_custom_stop_signal;
 
     current_trajectory = 0;
     start_time = 0;

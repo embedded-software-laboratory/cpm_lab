@@ -5,6 +5,11 @@
 
 #include "ObstacleSimulation.hpp"
 
+#include "cpm/Timer.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
+#include "SystemTrigger.hpp"
+
 /**
  * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
  * It sends trajectories/... defined in the scenario (which may define position, time, velocity...)
@@ -19,6 +24,10 @@ private:
 
     double time_step_size;
     bool use_simulated_time;
+
+    //DDS, to send a custom stop signal to the simple timers of the simulated obstacles
+    dds::pub::DataWriter<SystemTrigger> writer_stop_signal;
+    uint64_t custom_stop_signal_diff = 1;
 
     /**
      * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)
@@ -52,4 +61,9 @@ public:
      * \brief Stop the simulation (callback for UI)
      */
     void stop();
+
+    /**
+     * \brief Send a stop signal to the simple timers of the simulated obstacles that run when no simulation is performed
+     */
+    void send_stop_signal();
 };

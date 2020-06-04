@@ -3,7 +3,8 @@
 ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool _use_simulated_time) 
 :
 scenario(_scenario),
-use_simulated_time(_use_simulated_time)
+use_simulated_time(_use_simulated_time),
+writer_stop_signal(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
 {
     //Warning: Do not set up the simulation manager when multiple threads are already running, or you risk that during construction the scenario gets changed!
     //The scenario callbacks are always called with locked mutexes within the scenario, so there is no need to worry about them
@@ -42,7 +43,7 @@ void ObstacleSimulationManager::setup()
         }
 
         simulated_obstacles.push_back(
-            ObstacleSimulation(trajectory, time_step_size, obstacle_id, use_simulated_time)
+            ObstacleSimulation(trajectory, time_step_size, obstacle_id, use_simulated_time, cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff)
         );
     }
 
@@ -74,18 +75,45 @@ void ObstacleSimulationManager::start()
 
 void ObstacleSimulationManager::stop()
 {
+    send_stop_signal();
+
+    ++custom_stop_signal_diff;
+    //Use three kinds of custom stop signals, rotate with every stop / reset
+    if (custom_stop_signal_diff > 3)
+    {
+        custom_stop_signal_diff = 1;
+    }
+    uint64_t new_stop_signal = cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff;
+
     for (auto& entry : simulated_obstacles)
     {
-        entry.reset();
+        entry.reset(new_stop_signal);
     }
 }
 
 void ObstacleSimulationManager::reset()
 {
+    send_stop_signal();
+
+    ++custom_stop_signal_diff;
+    //Use three kinds of custom stop signals, rotate with every stop / reset
+    if (custom_stop_signal_diff > 3)
+    {
+        custom_stop_signal_diff = 1;
+    }
+    uint64_t new_stop_signal = cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff;
+
     for (auto& entry : simulated_obstacles)
     {
-        entry.reset();
+        entry.reset(new_stop_signal);
     }
 
     simulated_obstacles.clear();
+}
+
+void ObstacleSimulationManager::send_stop_signal()
+{
+    SystemTrigger trigger;
+    trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff));
+    writer_stop_signal.write(trigger);
 }
