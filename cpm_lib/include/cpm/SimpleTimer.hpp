@@ -3,67 +3,48 @@
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Logging.hpp"
-#include "ReadyStatus.hpp"
-#include "SystemTrigger.hpp"
 
-#include <chrono>
-#include <condition_variable>
-#include <memory>
-#include <thread>
-#include <string>
+#include "cpm/TimerFD.hpp"
 
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/core/ddscore.hpp>
-
-#include "cpm/exceptions.hpp"
-#include "cpm/get_time_ns.hpp"
+#include <cmath>
 
 /**
  * \class SimpleTimer.hpp
  * This class calls a callback function periodically 
- * based the system clock. This timer is neither intended to work with simulated time,
- * nor is it real-time capable. Use this e.g. for timing in the GUI or other non-critical
+ * based on TimerFD. The given period (in milliseconds) is broken down in intervals of 50ms, to be able
+ * to stop the timer rather quickly when stop() is called. The given period in milliseconds might thus be rounded up accordingly. 
+ * This timer is neither intended to work with simulated time,
+ * nor is it exact enough to be real-time capable. Use this e.g. for timing in the GUI or other non-critical
  * timing tasks only!
+ * This timer listens to the stop signal if m_stop_callback is not set
  */
 
 namespace cpm {
 
     class SimpleTimer : public cpm::Timer
     {
-        uint64_t period_milliseconds; 
-        dds::topic::Topic<ReadyStatus> ready_topic;
-        dds::topic::Topic<SystemTrigger> trigger_topic;
-        std::string node_id;
-        dds::sub::DataReader<SystemTrigger> reader_system_trigger;
+        std::shared_ptr<cpm::TimerFD> internal_timer;
+        //The internal timer works with 50ms as interval, but a counter is used to call the actual callback function only every period_milliseconds (rounded up to 50ms)
+        uint64_t internal_timer_counter = 0;
+        uint64_t counter_max = 0;
+        uint64_t fifty_ms = 50000000ull;
 
-        dds::sub::cond::ReadCondition readCondition;
-        dds::core::cond::WaitSet waitset;
-        
-        std::mutex condition_mutex; //Needs to be used for wait_for
-        std::condition_variable abort_condition;
-        bool active = false;
-        std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
         std::function<void()> m_stop_callback;
 
-
-        bool wait_for(const std::chrono::nanoseconds wait_time); //Returns true if it was not interrupted, else false (should stop in that case)
-        uint64_t receiveStartTime(); //Bool: true if start signal was received, false if stop signal was received
-        bool received_stop_signal ();
-        
-        const bool react_to_stop_signal; //If false, do not react to received stop signals
-        const bool wait_for_start; //If false, do not use receiveStartTime()
+        void simple_timer_callback(uint64_t t_now);
 
     public:
         /**
          * \brief Create a simple timer (not real-time capable) that can be used for function callback
          * \param node_id ID of the timer in the network
-         * \param period_milliseconds The timer is called periodically with a period of period_milliseconds
+         * \param period_milliseconds The timer is called periodically with a period of period_milliseconds (rounded up to 50ms)
          * \param wait_for_start Set whether the timer is started only if a start signal is sent via DDS (true), or if it should should start immediately (false)
-         * \param react_to_stop_signal Set whether the timer should be stopped if a stop signal is sent within the network (optional, default is true)
+         * \param react_to_stop_signal Set whether the timer should be stopped if a stop signal is sent within the network (optional, default is true); 
+         * \param stop_signal Set your own custom stop signal - unrecommended, unless you know exactly what you are doing
+         * if set, stop_callback is set to be an empty lambda if start is called without stop_callback
          */
-        SimpleTimer(std::string _node_id, uint64_t period_milliseconds, bool wait_for_start, bool react_to_stop_signal = true);
+        SimpleTimer(std::string _node_id, uint64_t period_milliseconds, bool wait_for_start, bool react_to_stop_signal = true, uint64_t stop_signal = TRIGGER_STOP_SYMBOL);
         ~SimpleTimer();
 
         /**
