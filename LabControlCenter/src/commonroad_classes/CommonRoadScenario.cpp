@@ -92,11 +92,10 @@ void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _res
 
 void CommonRoadScenario::load_file(std::string xml_filepath)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
     //Delete all old data
     clear_data();
-
 
     //Translate new data
     xmlpp::DomParser parser;
@@ -169,6 +168,8 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
     }
+
+    lock.unlock();
 
     //Load new obstacle simulations
     if (setup_obstacle_sim_manager)
@@ -444,8 +445,10 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
 
 void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
 {
+    //Do not block the UI if locked, needs to be done again then
     if (xml_translation_mutex.try_lock())
     {
+
         //Get current min. lane width of lanelets (calculated from point distances)
         double min_width = -1.0;
         for (auto lanelet : lanelets)
@@ -496,6 +499,8 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
         }
 
+        xml_translation_mutex.unlock();
+
         //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
         if (reset_obstacle_sim_manager)
         {
@@ -505,10 +510,7 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
         {
             setup_obstacle_sim_manager();
         }
-
-        xml_translation_mutex.unlock();
     }
-    
 
     //TODO: We probably need to center the problem as well, so get farthest left / right / ... points for this
 }
@@ -590,36 +592,43 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
 
 const std::string& CommonRoadScenario::get_author()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return author;
 }
 
 const std::string& CommonRoadScenario::get_affiliation()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return affiliation;
 }
 
 const std::string& CommonRoadScenario::get_benchmark_id()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return benchmark_id;
 }
 
 const std::string& CommonRoadScenario::get_common_road_version()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return common_road_version;
 }
 
 const std::string& CommonRoadScenario::get_date()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return date;
 }
 
 const std::string& CommonRoadScenario::get_source()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return source;
 }
 
 double CommonRoadScenario::get_time_step_size()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return time_step_size;
 }
 
@@ -635,11 +644,13 @@ double CommonRoadScenario::get_time_step_size()
 
 const std::optional<Location> CommonRoadScenario::get_location()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return location;
 }
 
 std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     std::vector<int> ids;
     for (const auto& entry : dynamic_obstacles)
     {
@@ -651,6 +662,7 @@ std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 
 std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
     {
@@ -661,6 +673,7 @@ std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 
 std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     //TODO: Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
     if (lanelets.find(id) != lanelets.end())
     {

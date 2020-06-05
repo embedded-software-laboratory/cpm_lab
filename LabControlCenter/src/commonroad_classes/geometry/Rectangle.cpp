@@ -118,6 +118,11 @@ CommonroadDDSRectangle Rectangle::to_dds_msg()
     {
         rectangle.center(center->to_dds_msg());
     }
+    else
+    {
+        rectangle.center(Point(-1).to_dds_msg()); //Default position
+    }
+    
 
     rectangle.orientation(orientation.value_or(0)); //Orientation is 0 if not set
 

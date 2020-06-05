@@ -338,6 +338,10 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
     initial_point.orientation = initial_state->get_orientation_mean();
     //Optional data
     initial_point.velocity = initial_state->get_velocity();
+    if (shape.has_value())
+    {
+        initial_point.shape = shape->to_dds_msg();
+    }
 
     commonroad_trajectory.trajectory.push_back(initial_point);
 
@@ -364,6 +368,12 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
             //Optional data
             trajectory_point.velocity = point.get_velocity();
 
+            //Shape data (never changes for trajectory type)
+            if (shape.has_value())
+            {
+                trajectory_point.shape = shape->to_dds_msg();
+            }
+
             commonroad_trajectory.trajectory.push_back(trajectory_point);
         }
     }
@@ -373,10 +383,25 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
         {
             CommonTrajectoryPoint trajectory_point;
 
+            //Either use occupancy or shape, if that exists
+            auto shape = point.get_shape();
+            if (shape.has_value())
+            {
+                trajectory_point.shape = shape->to_dds_msg();   
+            }
+            else if (shape.has_value())
+            {
+                trajectory_point.shape = shape->to_dds_msg();
+            }
+
             //Required data must exist, this function may throw an error otherwise - there is no lanelet ref in occupancy
-            trajectory_point.position = std::optional<std::pair<double, double>>(point.get_center());
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
-            trajectory_point.orientation = point.get_orientation();
+
+            //Point values are given by the shape implicitly
+            //trajectory_point.position = std::optional<std::pair<double, double>>(point.get_center());
+            //trajectory_point.orientation = point.get_orientation(); Is already within shape
+            trajectory_point.position = std::optional<std::pair<double, double>>(std::in_place, 0.0, 0.0);
+            trajectory_point.orientation = std::optional<double>(0.0);
             //Velocity data does not exist in this case
 
             trajectory_point.is_exact = false; //Occupancy values are never exact, because they define an occupied area
@@ -386,11 +411,6 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
     }
 
     commonroad_trajectory.obstacle_type = type;
-    
-    if (shape.has_value())
-    {
-        commonroad_trajectory.shape = shape->to_dds_msg();
-    }
     
     return commonroad_trajectory;
 }

@@ -539,3 +539,20 @@ std::pair<double, double> Lanelet::get_center()
 
     return std::pair<double, double>(x, y);
 }
+
+std::vector<Point> Lanelet::get_shape()
+{
+    std::vector<Point> shape; 
+
+    for (auto point : left_bound.points)
+    {
+        shape.push_back(point);
+    }
+
+    for(auto reverse_it_point = right_bound.points.rbegin(); reverse_it_point != right_bound.points.rend(); ++reverse_it_point)
+    {
+        shape.push_back(*reverse_it_point);
+    }
+
+    return shape;
+}

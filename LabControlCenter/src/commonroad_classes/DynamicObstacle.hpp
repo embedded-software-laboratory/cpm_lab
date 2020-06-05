@@ -49,6 +49,8 @@ struct CommonTrajectoryPoint
     std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
     std::optional<IntervalOrExact> velocity;
 
+    CommonroadDDSShape shape; //Occupancy set or lanelet ref might encode current position in form of a shape
+
     bool is_exact;
     //is_moving is set in the simulation part, because it just depends on the overall trajectory size
 };
@@ -62,7 +64,6 @@ struct CommonroadTrajectory
 {
     std::vector<CommonTrajectoryPoint> trajectory;
     std::optional<ObstacleTypeDynamic> obstacle_type;
-    CommonroadDDSShape shape;
 };
 
 /**

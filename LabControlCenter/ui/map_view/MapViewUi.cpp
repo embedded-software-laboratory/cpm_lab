@@ -706,6 +706,54 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
     ctx->restore();
 }
 
+std::pair<double, double> MapViewUi::get_shape_center(CommonroadDDSShape& shape)
+{
+    double x, y = 0.0;
+    double center_count = 0.0;
+
+    for (auto circle : shape.circles())
+    {
+        auto center = circle.center();
+        x += center.x();
+        y += center.y();
+        ++center_count;
+    }
+
+    for (auto polygon : shape.polygons())
+    {
+        if (polygon.points().size() > 0)
+        {
+            double sum_x = 0;
+            double sum_y = 0;
+
+            for (auto point : polygon.points())
+            {
+                sum_x += point.x();
+                sum_y += point.y();
+            }
+            
+            x += sum_x / static_cast<double>(polygon.points().size());
+            y += sum_y / static_cast<double>(polygon.points().size());
+            ++center_count;
+        }
+    }
+
+    for (auto rectangle : shape.rectangles())
+    {
+        x += rectangle.center().x();
+        y += rectangle.center().y();
+        ++center_count;
+    }
+
+    if (center_count > 0)
+    {
+        x /= center_count;
+        y /= center_count;
+    }
+
+    return std::pair<double, double>(x, y);
+}
+
 void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 {
     //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
@@ -740,6 +788,10 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 
         ctx->save();
         {
+            //Translate to shape center, if position is mostly defined by the shape's positional values
+            auto shape_center = get_shape_center(entry.shape());
+            ctx->translate(shape_center.first, shape_center.second);
+
             //Craft description from object properties
             std::stringstream description_stream;
             if (entry.pose_is_exact())

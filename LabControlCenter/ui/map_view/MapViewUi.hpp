@@ -83,6 +83,7 @@ class MapViewUi
         uint8_t vehicle_id
     );
     void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
+    std::pair<double, double> get_shape_center(CommonroadDDSShape& shape);
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
 

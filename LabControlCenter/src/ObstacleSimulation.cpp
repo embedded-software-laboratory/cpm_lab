@@ -159,23 +159,36 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
     header.valid_after_stamp(TimeStamp(t_now));
     obstacle.header(header);
 
-    //These values are set either by interpolation or using the last data point
-    double x;
-    double y;
-    double yaw;
-    //Interpolate or stay at start / end point
-    if (point.time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
+    //Set shape (Can be overriden by trajectory shape if required)
+    obstacle.shape(point.shape);
+
+    //These values are set either by interpolation or using the last data point or do not exist
+    double x = 0;
+    double y = 0;
+    double yaw = 0;
+    if(point.position.has_value())
     {
-        //Interpolate
-        interpolate_between(trajectory.trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
+        //Interpolate or stay at start / end point
+        if (point.time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
+        {
+            //Interpolate
+            interpolate_between(trajectory.trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
+        }
+        else
+        {
+            //Stay at start / final point
+            x = point.position.value().first;
+            y = point.position.value().second;
+            yaw = point.orientation.value_or(0.0);
+        }
     }
     else
     {
-        //Stay at final point
-        x = point.position.value().first;
-        y = point.position.value().second;
         yaw = point.orientation.value_or(0.0);
+
+        //In this case, the position is given by either the shape's values or by a lanelet reference (which was transformed to a shape by the simulation manager before then)
     }
+    
 
     //Set pose
     Pose2D pose;
@@ -228,8 +241,6 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
         }
     }
 
-    obstacle.shape(trajectory.shape);
-
     writer_commonroad_obstacle.write(obstacle);
 }
 
@@ -242,4 +253,9 @@ void ObstacleSimulation::reset(uint64_t new_custom_stop_signal)
     start_time = 0;
 
     send_init_state();
+}
+
+void ObstacleSimulation::stop()
+{
+    stop_timers();
 }

@@ -219,4 +219,10 @@ public:
      * \return Center of the shape
      */
     std::pair<double, double> get_center() override;
+
+    /**
+     * \brief Get the lanelet shape as a polygon
+     * \return Polygon of lanelet shape
+     */
+    std::vector<Point> get_shape();
 };

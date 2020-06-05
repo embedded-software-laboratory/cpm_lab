@@ -104,3 +104,8 @@ std::optional<double> Occupancy::get_orientation()
     }
     return shape->get_orientation();
 }
+
+std::optional<Shape> Occupancy::get_shape()
+{
+    return shape;
+}

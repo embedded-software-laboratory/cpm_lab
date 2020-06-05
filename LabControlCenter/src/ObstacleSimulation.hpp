@@ -62,6 +62,7 @@ public:
      * \param _id The ID of the simulated obstacle
      * \param _simulated_time Whether simulated time should be used (TODO: Not properly supported /tested yet)
      * \param _custom_stop_signal Custom stop signal for the slow timer that is used when no simulation is performed; Can be used to stop all running obstacle simulations at once & thus to save time when switching to simulation mode
+     * \param _get_lanelet_shape Function that returns shape (+ position) of a lanelet (given its ID), used when only a lanelet reference determines an obstacle's position
      */
     ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal);
 
@@ -80,4 +81,9 @@ public:
      * \param new_custom_stop_signal Stop signal for the newly started static obstacle simulation (is changed so that outdated messages don't make the new timer stop)
      */
     void reset(uint64_t new_custom_stop_signal);
+
+    /**
+     * \brief Stop the obstacle simulation & all timers
+     */
+    void stop();
 };
