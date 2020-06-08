@@ -1,4 +1,6 @@
 #!/bin/bash
+# exit when any command fails
+set -e
 
 if [ ! -d "build_arm" ]; then
     mkdir build_arm
