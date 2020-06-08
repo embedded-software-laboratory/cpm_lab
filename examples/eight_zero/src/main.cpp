@@ -22,11 +22,16 @@ int main(int argc, char *argv[])
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    int vehicle_id_int = cpm::cmd_parameter_int("vehicle_id", 4, argc, argv);
-    uint8_t vehicle_id;
-    assert(vehicle_id_int > 0);
-    assert(vehicle_id_int < 255);
-    vehicle_id = vehicle_id_int;
+    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
+    std::vector<uint8_t> vehicle_ids;
+    for(auto i:vehicle_ids_int)
+    {
+        assert(i>0);
+        assert(i<255);
+        vehicle_ids.push_back(i);
+    }
+    uint8_t vehicle_id = vehicle_ids[0];
+
 
 
     // Writer for sending trajectory commands
