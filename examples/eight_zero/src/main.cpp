@@ -24,7 +24,7 @@ using std::vector;
 
 int main(int argc, char *argv[])
 {
-    const std::string node_id = "basic_circle_example";
+    const std::string node_id = "eight_zero";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
