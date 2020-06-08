@@ -384,10 +384,10 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
             CommonTrajectoryPoint trajectory_point;
 
             //Either use occupancy or shape, if that exists
-            auto shape = point.get_shape();
-            if (shape.has_value())
+            auto occupancy_shape = point.get_shape();
+            if (occupancy_shape.has_value())
             {
-                trajectory_point.shape = shape->to_dds_msg();   
+                trajectory_point.shape = occupancy_shape->to_dds_msg();   
             }
             else if (shape.has_value())
             {
