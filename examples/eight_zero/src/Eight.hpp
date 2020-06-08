@@ -40,7 +40,8 @@ class Eight
 
 public:
     Eight();
-    std::pair<TrajectoryPoint, uint64_t> get_trajectoryPoint();
+    TrajectoryPoint get_trajectoryPoint();
+    uint64_t get_segment_duration();
     void move_forward();
 };
 

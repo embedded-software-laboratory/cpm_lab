@@ -103,16 +103,20 @@ Eight::Eight()
  * Returns the current TrajectoryPoint and the segment_duration needed between this point
  * and the one afterwards.
  */
-std::pair<TrajectoryPoint, uint64_t> Eight::get_trajectoryPoint(){
+TrajectoryPoint Eight::get_trajectoryPoint(){
     TrajectoryPoint trajectory_point_res;
     trajectory_point_res.px(trajectory_px[current.index]);
     trajectory_point_res.py(trajectory_py[current.index]);
     trajectory_point_res.vx(trajectory_vx[current.index]*current.direction);
     trajectory_point_res.vy(trajectory_vy[current.index]*current.direction);
 
-    return std::pair<TrajectoryPoint, uint64_t>(trajectory_point_res, current_segment_duration);
+    return trajectory_point_res;
 }
 
+uint64_t Eight::get_segment_duration()
+{
+    return current_segment_duration;
+}
 
 /**
  * Planns the next Waypoint.

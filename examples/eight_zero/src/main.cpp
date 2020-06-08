@@ -14,12 +14,6 @@
 
 using std::vector;
 
-/*
- * Read this before you start:
- *     Vehicle Commands: http://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Commands
- *     Timer:            http://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?pageId=2293786
- */
-
 
 
 int main(int argc, char *argv[])
@@ -61,8 +55,7 @@ int main(int argc, char *argv[])
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 2000000000ull;
 
         // Send the current trajectory point to the vehicle
-        std::pair<TrajectoryPoint, uint64_t> p = eight.get_trajectoryPoint();
-        TrajectoryPoint trajectory_point = p.first;
+        TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
         trajectory_point.t().nanoseconds(reference_trajectory_time);
 
         VehicleCommandTrajectory vehicle_command_trajectory;
@@ -76,9 +69,8 @@ int main(int argc, char *argv[])
         // the message and anticipate the next turn.
         while(reference_trajectory_time < t_now + 2000000000ull)
         {
-            reference_trajectory_time += p.second;
+            reference_trajectory_time += eight.get_segment_duration();
             eight.move_forward();
-            p = eight.get_trajectoryPoint();
         }
 
     });
