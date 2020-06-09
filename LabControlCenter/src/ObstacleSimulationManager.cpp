@@ -33,7 +33,7 @@ void ObstacleSimulationManager::setup()
     auto obstacle_ids = scenario->get_dynamic_obstacle_ids();
     for (auto obstacle_id : obstacle_ids)
     {
-        auto trajectory = scenario->get_dynamic_obstacle(obstacle_id).value().get_trajectory();
+        auto trajectory = scenario->get_dynamic_obstacle(obstacle_id).value().get_obstacle_dynamics();
         //We need to modify the trajectory first: Lanelet refs need to be translated to a trajectory
         for (auto& point : trajectory.trajectory)
         {

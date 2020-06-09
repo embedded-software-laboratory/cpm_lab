@@ -47,7 +47,6 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    //TODO: Include time value
     //Draw shape
     if (shape.has_value())
     {
@@ -108,4 +107,9 @@ std::optional<double> Occupancy::get_orientation()
 std::optional<Shape> Occupancy::get_shape()
 {
     return shape;
+}
+
+const std::optional<IntervalOrExact> Occupancy::get_time() const
+{
+    return time;
 }

@@ -50,14 +50,11 @@ public:
 
     /**
      * \brief Get attribute value of child of node with name child_name
-     * TODO: Maybe integrate in XMLTranslation
      * \param node The parent node
      * \param child_name Name of the child
      * \param warn Warn if the child or attribute does not exist
      */
     std::optional<int> get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn);
-
-    //TODO: Getter
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push
@@ -79,4 +76,7 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override {} //TODO
 
     #pragma GCC diagnostic pop
+
+    //Getter
+    const std::map<int, Incoming> get_incoming_map() const;
 };

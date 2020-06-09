@@ -27,7 +27,7 @@ public:
      */
     Interval(const xmlpp::Node* node)
     {
-        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
+        //We do not assert the interval type here, as the name of the node in this case mostly refers to a specific datatype like 'time' or 'orientation', of which there are many throughout the documentation
 
         //Sadly, sequences are allowed here as well, so we can have more than one interval
         std::vector<double> interval_start;

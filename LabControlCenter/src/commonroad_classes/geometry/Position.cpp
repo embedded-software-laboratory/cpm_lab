@@ -75,9 +75,11 @@ Position::Position(const xmlpp::Node* node)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 Position::Position(int irrelevant_int)
 {
-    //TODO: Find out default value
+    //If a position value is not given for a datatype where a position is necessary for its interpretation, we interpret this as a sign to use a 'default position' instead
     //We use this constructor because we do not want a default constructor to exist, but the parameter is actually pointless
-    std::cerr << "TODO: Better warning // Default values of position not yet known in implementation - cannot translate properly without these right now" << std::endl;
+    
+    //As mentioned in the documentation, the default position is probably the origin
+    point = std::optional<Point>(std::in_place, -1);
 }
 #pragma GCC diagnostic pop
 
@@ -137,17 +139,59 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
     else
     {
         //TODO: Rotation of combined forms is more complex than just rotation of the parts
+        // for (auto circle : circles)
+        // {
+        //     circle.draw(ctx, scale, 0, 0, 0, local_orientation);
+        // }
+        // for (auto polygon : polygons)
+        // {
+        //     polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
+        // }
+        // for (auto rectangle : rectangles)
+        // {
+        //     rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
+        // }
+
+        // if (lanelet_refs.size() > 0)
+        // {
+        //     if (draw_lanelet_refs)
+        //     {
+        //         for (auto lanelet_ref : lanelet_refs)
+        //         {
+        //             draw_lanelet_refs(lanelet_ref, ctx, scale, 0, 0, 0);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         std::cerr << "TODO: Better warning // Cannot draw using lanelet references - no lanelet ref draw function was set" << std::endl;
+        //     }
+        // }
+
+        // if (circles.size() + polygons.size() + rectangles.size() > 1)
+        // {
+        //     std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
+        //     //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+        // }
+
+        //Alternative rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
+        ctx->save();
+
+        auto center = get_center();
+        ctx->translate(center.first * scale, center.second * scale);
+        ctx->rotate(local_orientation);
+        ctx->translate(-1.0 * center.first * scale, -1.0 * center.second * scale);
+
         for (auto circle : circles)
         {
-            circle.draw(ctx, scale, 0, 0, 0, local_orientation);
+            circle.draw(ctx, scale, 0, 0, 0, 0);
         }
         for (auto polygon : polygons)
         {
-            polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
+            polygon.draw(ctx, scale, 0, 0, 0, 0);
         }
         for (auto rectangle : rectangles)
         {
-            rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
+            rectangle.draw(ctx, scale, 0, 0, 0, 0);
         }
 
         if (lanelet_refs.size() > 0)
@@ -165,11 +209,7 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
             }
         }
 
-        if (circles.size() + polygons.size() + rectangles.size() > 1)
-        {
-            std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
-            //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
-        }
+        ctx->restore();
     }
 
     ctx->restore();
@@ -184,27 +224,14 @@ void Position::transform_context(const DrawingContext& ctx, double scale)
     }
     else
     {
-        //TODO: Find better point than just some random point within a part of the shape
-        if (circles.size() > 0)
-        {
-            auto center = circles.at(0).get_center();
-            ctx->translate(center.first * scale, center.second * scale);
-        }
-        else if (polygons.size() > 0)
-        {
-            auto center = polygons.at(0).get_center();
-            ctx->translate(center.first * scale, center.second * scale);
-        }
-        else if (rectangles.size() > 0)
-        {
-            auto center = rectangles.at(0).get_center();
-            ctx->translate(center.first * scale, center.second * scale);
-        }
-        else
+        //TODO: Is the center the best point to choose?
+        auto center = get_center();
+        ctx->translate(center.first * scale, center.second * scale);
+
+        if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
         {
             std::cerr << "TODO: Better warning // Cannot transform context with empty position / only lanelet references right now" << std::endl;
         }
-        
     }
 }
 
@@ -280,4 +307,29 @@ bool Position::is_exact()
 bool Position::position_is_lanelet_ref()
 {
     return (lanelet_refs.size() > 0) && !(point.has_value()) && (circles.size() == 0) && (polygons.size() == 0) && (rectangles.size() == 0);
+}
+
+const std::optional<Point>& Position::get_point() const
+{
+    return point;
+}
+
+const std::vector<Circle>& Position::get_circles() const
+{
+    return circles;
+}
+
+const std::vector<int>& Position::get_lanelet_refs() const
+{
+    return lanelet_refs;
+}
+
+const std::vector<Polygon>& Position::get_polygons() const
+{
+    return polygons;
+}
+
+const std::vector<Rectangle>& Position::get_rectangles() const
+{
+    return rectangles;
 }

@@ -69,5 +69,5 @@ public:
     //Getter
     double get_x();
     double get_y();
-    double get_z();
+    const std::optional<double>& get_z() const;
 };

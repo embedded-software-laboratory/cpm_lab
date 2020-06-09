@@ -87,18 +87,13 @@ private:
 
     std::vector<SignalState> signal_series;
 
-    //Non-commonroad data
-    //TODO: Transform to real vehicle representation, this is just to show that movement could be translated properly
-    //Used for drawing
-    size_t step; //Use this to iterate through trajectory (including initial state as well, which is not part of it)
-
     //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
 
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (dynamic) obstacle node
      */
     DynamicObstacle(const xmlpp::Node* node);
@@ -136,10 +131,19 @@ public:
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
 
-    //TODO: Getter
+    //Getter
     /**
-     * \brief Returns a trajectory constructed from occupancy or trajectory data
+     * \brief Returns a trajectory constructed from occupancy or trajectory data, and further dynamic obstacle information
      * Throws errors if expected types are missing
      */
-    CommonroadTrajectory get_trajectory();
+    CommonroadTrajectory get_obstacle_dynamics();
+
+    std::string get_obstacle_type_text();
+    const std::optional<ObstacleTypeDynamic> get_type() const;
+    const std::optional<Shape> get_shape() const;
+    const std::optional<State> get_initial_state() const;
+    const std::optional<SignalState> get_initial_signal_state() const;
+    const std::vector<State> get_trajectory() const;
+    const std::vector<Occupancy> get_occupancy_set() const;
+    const std::vector<SignalState> get_signal_series() const;
 };

@@ -59,9 +59,6 @@ struct Adjacent
 {
     int ref_id = -1;
     DrivingDirection direction;
-
-    //In case it does not exist, not part of specs
-    bool exists = false;
 };
 
 /**
@@ -102,8 +99,8 @@ private:
     Bound right_bound;
     std::vector<int> predecessors; //Multiple possible e.g. in case of a fork; laneletref
     std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
-    Adjacent adjacent_left;  //-1 if empty? TODO!
-    Adjacent adjacent_right; //-1 if empty? TODO!
+    std::optional<Adjacent> adjacent_left; 
+    std::optional<Adjacent> adjacent_right;
     StopLine stop_line;
     LaneletType lanelet_type; //enum class possible
     std::vector<VehicleType> user_one_way; //enum class possible
@@ -131,7 +128,7 @@ private:
      * \param node A laneletAdjacentRef node
      * \param name The name of the node
      */
-    Adjacent translate_adjacent(const xmlpp::Node* node, std::string name);
+    std::optional<Adjacent> translate_adjacent(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a stopLine node to StopLine (2020 only)
@@ -163,7 +160,7 @@ private:
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A lanelet node
      */
     Lanelet(const xmlpp::Node* node);

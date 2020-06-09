@@ -26,8 +26,8 @@
 class Rectangle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    double length; //TODO: In constructor: Check if >= 0, must be unsigned
-    double width;  //TODO: In constructor: Check if >= 0, must be unsigned
+    double length; //In constructor: Check if >= 0, must be unsigned
+    double width;  //In constructor: Check if >= 0, must be unsigned
     std::optional<Point> center; //must not be set (probably has default value then)
     std::optional<double> orientation; //must not be set (probably has default value then)
 
@@ -70,6 +70,9 @@ public:
      */
     CommonroadDDSRectangle to_dds_msg();
 
-    //TODO: Getter
+    //Getter
     std::optional<double> get_orientation();
+    const std::optional<Point>& get_center() const;
+    double get_length();
+    double get_width();
 };

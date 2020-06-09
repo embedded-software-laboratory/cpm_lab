@@ -147,16 +147,12 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
     std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
     std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
-
-    step = 0;
 } 
 
 /******************************Interface functions***********************************/
 
 void DynamicObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-
     if (scale > 0)
     {
         transform_scale *= scale;
@@ -315,7 +311,7 @@ void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, con
     }
 }
 
-CommonroadTrajectory DynamicObstacle::get_trajectory()
+CommonroadTrajectory DynamicObstacle::get_obstacle_dynamics()
 {
     CommonroadTrajectory commonroad_trajectory;
 
@@ -413,4 +409,44 @@ CommonroadTrajectory DynamicObstacle::get_trajectory()
     commonroad_trajectory.obstacle_type = type;
     
     return commonroad_trajectory;
+}
+
+std::string DynamicObstacle::get_obstacle_type_text()
+{
+    return obstacle_type_text;
+}
+
+const std::optional<ObstacleTypeDynamic> DynamicObstacle::get_type() const
+{
+    return type;
+}
+
+const std::optional<Shape> DynamicObstacle::get_shape() const
+{
+    return shape;
+}
+
+const std::optional<State> DynamicObstacle::get_initial_state() const
+{
+    return initial_state;
+}
+
+const std::optional<SignalState> DynamicObstacle::get_initial_signal_state() const
+{
+    return initial_signal_state;
+}
+
+const std::vector<State> DynamicObstacle::get_trajectory() const
+{
+    return trajectory;
+}
+
+const std::vector<Occupancy> DynamicObstacle::get_occupancy_set() const
+{
+    return occupancy_set;
+}
+
+const std::vector<SignalState> DynamicObstacle::get_signal_series() const
+{
+    return signal_series;
 }

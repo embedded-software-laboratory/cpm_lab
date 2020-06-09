@@ -31,8 +31,6 @@
 class Position : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    //TODO: Solve below w. inheritance? Or keep it this way? -> Probably easier to keep it this way
-
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
     
@@ -109,5 +107,10 @@ public:
     
     void to_dds_msg() {} 
 
-    //TODO: Getter
+    //Getters for basic types
+    const std::optional<Point>& get_point() const;
+    const std::vector<Circle>& get_circles() const;
+    const std::vector<int>& get_lanelet_refs() const;
+    const std::vector<Polygon>& get_polygons() const;
+    const std::vector<Rectangle>& get_rectangles() const;
 };

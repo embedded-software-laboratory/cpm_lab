@@ -91,5 +91,12 @@ public:
      */
     void to_dds_msg() {}
 
-    //TODO: Getter
+    //Getter
+    const std::optional<Position> get_position() const;
+    double get_orientation();
+    double get_time();
+    double get_velocity();
+    const std::optional<double> get_acceleration() const;
+    double get_yaw_rate();
+    double get_slip_angle();
 };

@@ -65,8 +65,8 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     }
     std::cout << std::endl;
 
-    std::cout << "Adjacent left: " << adjacent_left.exists << "(exists), " << adjacent_left.ref_id << " (ID), (TODO: print direction)" << std::endl;
-    std::cout << "Adjacent right: " << adjacent_right.exists << "(exists), " << adjacent_right.ref_id << " (ID), (TODO: print direction)" << std::endl;
+    std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
+    std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
 
     std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
 
@@ -132,34 +132,37 @@ std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string na
     return refs;
 }
 
-Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
+std::optional<Adjacent> Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
 {
     //Adjacents are optional, so this element might not exist
     const auto adjacent_node = xml_translation::get_child_if_exists(node, name, false);
-    Adjacent adjacent;
 
     if (adjacent_node)
     {
-        adjacent.exists = true;
-        adjacent.ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true).value(); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
+        Adjacent adjacent_obj;
+        auto adjacent = std::optional<Adjacent>(adjacent_obj);
+        
+        adjacent->ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true).value(); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
     
         std::string direction_string = xml_translation::get_attribute_text(adjacent_node, "drivingDir", true).value(); //See comment above
         if(direction_string.compare("same") == 0)
         {
-            adjacent.direction = DrivingDirection::Same;
+            adjacent->direction = DrivingDirection::Same;
         }
         else if(direction_string.compare("opposite") == 0)
         {
-            adjacent.direction = DrivingDirection::Opposite;
+            adjacent->direction = DrivingDirection::Opposite;
         }
         else {
             std::stringstream error_msg_stream;
             error_msg_stream << "Specified driving direction not part of specs, in line " << adjacent_node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }   
+
+        return adjacent;
     }
 
-    return adjacent;
+    return std::nullopt;
 }
 
 StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
@@ -206,7 +209,6 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
 
 LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
 {
-    //2020 specs only (TODO: Warn if missing in 2020 XML)
     //get_child_child_text is not used here to be able to show the line where the error occured if the value matches none of the enumeration values
     const auto lanelet_type_node = xml_translation::get_child_if_exists(node, name, false);
     if (lanelet_type_node)
@@ -369,11 +371,7 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 
 double Lanelet::get_min_width()
 {
-    if (left_bound.points.size() != right_bound.points.size())
-    {
-        //TODO: Replace by assertion, should have failed by exception before
-        std::cerr << "TODO: Better warning // Lanelet bounds (left, right) not of equal size" << std::endl;
-    }
+    assert(left_bound.points.size() == right_bound.points.size());
 
     size_t min_vec_size = std::max(left_bound.points.size(), right_bound.points.size());
 

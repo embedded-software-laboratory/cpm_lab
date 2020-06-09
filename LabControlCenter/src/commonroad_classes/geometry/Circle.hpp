@@ -26,8 +26,8 @@
 class Circle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    std::optional<Point> center; //must not be set (then in ??)
-    double radius; //TODO: In constructor: Check if >= 0, must be unsigned
+    std::optional<Point> center; //must not be set
+    double radius; //In constructor: Check if >= 0, must be unsigned
 
 public:
     Circle(const xmlpp::Node* node);
@@ -67,6 +67,7 @@ public:
      */
     CommonroadDDSCircle to_dds_msg();
 
-    //TODO: Getter
+    //Getter
     const std::optional<Point>& get_center() const;
+    double get_radius();
 };

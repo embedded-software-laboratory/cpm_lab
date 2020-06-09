@@ -8,13 +8,8 @@ State::State(const xmlpp::Node* node)
     try
     {
         //2018 and 2020
-        //Only these three values are mandatory (TODO: Might have default values though)
-        const auto position_node = xml_translation::get_child_if_exists(node, "position", true);
-        if (position_node)
-        {
-            position = std::optional<Position>{std::in_place, position_node};
-        }
-
+        //Only these three values are mandatory
+        position = std::optional<Position>{std::in_place, xml_translation::get_child_if_exists(node, "position", true)};
         orientation = get_interval(node, "orientation", true);
         time = get_interval(node, "time", true);
 
@@ -238,4 +233,164 @@ std::optional<double> State::get_orientation_mean()
 std::optional<IntervalOrExact> State::get_velocity()
 {
     return velocity;
+}
+
+const std::optional<IntervalOrExact> State::get_orientation() const
+{
+    return orientation;
+}
+
+const std::optional<IntervalOrExact> State::get_acceleration() const
+{
+    return acceleration;
+}
+
+const std::optional<IntervalOrExact> State::get_yaw_rate() const
+{
+    return yaw_rate;
+}
+
+const std::optional<IntervalOrExact> State::get_slip_angle() const
+{
+    return slip_angle;
+}
+
+const std::optional<IntervalOrExact> State::get_steering_angle() const
+{
+    return steering_angle;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_angle() const
+{
+    return roll_angle;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_rate() const
+{
+    return roll_rate;
+}
+
+const std::optional<IntervalOrExact> State::get_pitch_angle() const
+{
+    return pitch_angle;
+}
+
+const std::optional<IntervalOrExact> State::get_pitch_rate() const
+{
+    return pitch_rate;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_y() const
+{
+    return velocity_y;
+}
+
+const std::optional<IntervalOrExact> State::get_position_z() const
+{
+    return position_z;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_z() const
+{
+    return velocity_z;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_angle_front() const
+{
+    return roll_angle_front;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_rate_front() const
+{
+    return roll_rate_front;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_y_front() const
+{
+    return velocity_y_front;
+}
+
+const std::optional<IntervalOrExact> State::get_position_z_front() const
+{
+    return position_z_front;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_z_front() const
+{
+    return velocity_z_front;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_angle_rear() const
+{
+    return roll_angle_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_roll_rate_rear() const
+{
+    return roll_rate_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_y_rear() const
+{
+    return velocity_y_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_position_z_rear() const
+{
+    return position_z_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_velocity_z_rear() const
+{
+    return velocity_z_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_left_front_wheel_angular_speed() const
+{
+    return left_front_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact> State::get_right_front_wheel_angular_speed() const
+{
+    return right_front_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact> State::get_left_rear_wheel_angular_speed() const
+{
+    return left_rear_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact> State::get_right_rear_wheel_angular_speed() const
+{
+    return right_rear_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact> State::get_delta_y_front() const
+{
+    return delta_y_front;
+}
+
+const std::optional<IntervalOrExact> State::get_delta_y_rear() const
+{
+    return delta_y_rear;
+}
+
+const std::optional<IntervalOrExact> State::get_curvature() const
+{
+    return curvature;
+}
+
+const std::optional<IntervalOrExact> State::get_curvature_change() const
+{
+    return curvature_change;
+}
+
+const std::optional<IntervalOrExact> State::get_jerk() const
+{
+    return jerk;
+}
+
+const std::optional<IntervalOrExact> State::get_jounce() const
+{
+    return jounce;
 }

@@ -31,7 +31,7 @@ class GoalState : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double
     std::optional<Position> position; //Must not be defined 
     std::optional<Interval> orientation; //Must not be defined
     std::optional<Interval> velocity; //Must not be defined
@@ -76,5 +76,9 @@ public:
 
     void to_dds_msg() {} 
 
-    //TODO: Getter
+    //Getter
+    const std::optional<IntervalOrExact> get_time() const;
+    const std::optional<Position> get_position() const;
+    const std::optional<Interval> get_orientation() const;
+    const std::optional<Interval> get_velocity() const;
 };

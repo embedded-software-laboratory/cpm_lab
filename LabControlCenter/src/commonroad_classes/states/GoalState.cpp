@@ -13,12 +13,8 @@ GoalState::GoalState(const xmlpp::Node* node)
         {
             position = std::optional<Position>{std::in_place, position_node};
         }
-        else
-        {
-            //TODO: Check if default position value is spec-conform if no value is specified here
-            //Use default-value constructor (parameter is irrelevant)
-            position = std::optional<Position>{std::in_place, 0};
-        }
+        //No position must be given for a goal state, so default values are NOT assumed to be used here!
+        std::cerr << "WARNING: No position has been set for this goal state (line " << node->get_line() << "). This might be intended." << std::endl;
 
         const auto velocity_node = xml_translation::get_child_if_exists(node, "velocity", false);
         if (velocity_node)
@@ -117,8 +113,44 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         }
     }
 
-    //TODO: Draw time, velocity?
-    //Also TODO: Test output for other state classes
+    //Draw time, velocity
+    std::stringstream descr_stream;
+    descr_stream << "Goal info - " << std::endl;
+    if (time.has_value())
+    {
+        descr_stream << "t (mean): " << time.value().get_mean();
+    }
+    if (velocity.has_value())
+    {
+        auto velocity_values = velocity.value().get_interval_avg();
+        double sum = 0.0;
+        double cnt = 0.0;
+        for (auto value : velocity_values)
+        {
+            sum += value;
+            cnt += 1;
+        }
+        double avg = 0.0;
+        if (cnt > 0)
+        {
+            avg = sum /cnt;
+        }
+
+        if (time.has_value())
+        {
+            descr_stream << ", v (mean): " << avg;
+        }
+        else
+        {
+            descr_stream << "v (mean): " << avg;
+        }
+    }
+    if (position.has_value())
+    {
+        position->transform_context(ctx, scale);
+        draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+    }
+    //Goal information is only shown if a position has been set for the goal
 
     ctx->restore();
 }
@@ -129,4 +161,24 @@ void GoalState::set_lanelet_ref_draw_function(std::function<void (int, const Dra
     {
         position->set_lanelet_ref_draw_function(_draw_lanelet_refs);
     }
+}
+
+const std::optional<IntervalOrExact> GoalState::get_time() const
+{
+    return time;
+}
+
+const std::optional<Position> GoalState::get_position() const
+{
+    return position;
+}
+
+const std::optional<Interval> GoalState::get_orientation() const
+{
+    return orientation;
+}
+
+const std::optional<Interval> GoalState::get_velocity() const
+{
+    return velocity;
 }

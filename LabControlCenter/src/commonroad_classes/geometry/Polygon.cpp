@@ -57,7 +57,6 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->save();
 
         //Perform required translation + rotation
-        //TODO: Local transformation (Translate to center (use get_center()), rotate, draw from there using center-relative coordinates)
         ctx->translate(global_translate_x, global_translate_y);
         ctx->rotate(global_orientation);
 
@@ -97,6 +96,11 @@ std::pair<double, double> Polygon::get_center()
     }
 
     return std::pair<double, double>(sum_x / static_cast<double>(points.size()), sum_y / static_cast<double>(points.size()));
+}
+
+const std::vector<Point>& Polygon::get_points() const
+{
+    return points;
 }
 
 CommonroadDDSPolygon Polygon::to_dds_msg()

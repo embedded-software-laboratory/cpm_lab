@@ -58,6 +58,11 @@ public:
      * \return Center of the circle
      */
     std::pair<double, double> get_center() override;
+
+    /**
+     * \brief Const getter for polygon points
+     */
+    const std::vector<Point>& get_points() const;
     
     /**
      * \brief Translates all relevant parts of the data structure to a DDS object, which is returned

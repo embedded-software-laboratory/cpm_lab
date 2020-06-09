@@ -31,10 +31,14 @@ StateExact::StateExact(const xmlpp::Node* node)
         //Acceleration must not exist
         acceleration = xml_translation::get_child_child_double_exact(node, "acceleration", false);
 
-        //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
-        //TODO: Is that okay?
-        xml_translation::get_child_if_exists(node, "time", true);
-        time = 0;
+        //Warn if time is not specified; must always be zero according to specs
+        time = xml_translation::get_child_child_double_exact(node, "time", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
+        if (time != 0.0)
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Only a time value of exactly 0 is allowed here - line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
     }
     catch(const SpecificationError& e)
     {
@@ -60,8 +64,6 @@ StateExact::StateExact(const xmlpp::Node* node)
 
 void StateExact::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-    
     if (position.has_value())
     {
         position->transform_coordinate_system(scale, translate_x, translate_y);
@@ -109,4 +111,39 @@ void StateExact::transform_context(const DrawingContext& ctx, double scale)
     
     //Rotate, if necessary
     ctx->rotate(orientation);
+}
+
+const std::optional<Position> StateExact::get_position() const
+{
+    return position;
+}
+
+double StateExact::get_orientation()
+{
+    return orientation;
+}
+
+double StateExact::get_time()
+{
+    return time;
+}
+
+double StateExact::get_velocity()
+{
+    return velocity;
+}
+
+const std::optional<double> StateExact::get_acceleration() const
+{
+    return acceleration;
+}
+
+double StateExact::get_yaw_rate()
+{
+    return yaw_rate;
+}
+
+double StateExact::get_slip_angle()
+{
+    return slip_angle;
 }

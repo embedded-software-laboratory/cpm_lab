@@ -10,6 +10,11 @@ Rectangle::Rectangle(const xmlpp::Node* node)
         length = xml_translation::get_child_child_double(node, "length", true).value(); //mandatory, so we can use .value() bc an error is thrown before anyway if it does not exist
         width = xml_translation::get_child_child_double(node, "width", true).value(); //mandatory, see above
 
+        if (length < 0 || width < 0)
+        {
+            throw SpecificationError(std::string("Could not translate Rectangle - length or width is smaller than zero"));
+        }
+
         //Get point value, which must not be specified
         const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
         if (point_node)
@@ -23,7 +28,6 @@ Rectangle::Rectangle(const xmlpp::Node* node)
         }
 
         orientation = xml_translation::get_child_child_double(node, "orientation", false);
-        //TODO: Find out default value
     }
     catch(const SpecificationError& e)
     {
@@ -132,4 +136,19 @@ CommonroadDDSRectangle Rectangle::to_dds_msg()
 std::optional<double> Rectangle::get_orientation()
 {
     return orientation;
+}
+
+const std::optional<Point>& Rectangle::get_center() const
+{
+    return center;
+}
+
+double Rectangle::get_length()
+{
+    return length;
+}
+
+double Rectangle::get_width()
+{
+    return width;
 }
