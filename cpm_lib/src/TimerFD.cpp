@@ -16,7 +16,8 @@ namespace cpm {
         std::string _node_id, 
         uint64_t _period_nanoseconds, 
         uint64_t _offset_nanoseconds,
-        bool _wait_for_start
+        bool _wait_for_start,
+        uint64_t _stop_signal
     )
     :period_nanoseconds(_period_nanoseconds)
     ,offset_nanoseconds(_offset_nanoseconds)
@@ -26,6 +27,7 @@ namespace cpm {
     ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
     ,readCondition(reader_system_trigger, dds::sub::status::DataState::any())
     ,wait_for_start(_wait_for_start)
+    ,stop_signal(_stop_signal)
     {
         //Offset must be smaller than period
         if (offset_nanoseconds >= period_nanoseconds) {
@@ -126,7 +128,7 @@ namespace cpm {
         if (wait_for_start) {
             start_point = receiveStartTime();
             
-            if (start_point == TRIGGER_STOP_SYMBOL) {
+            if (start_point == stop_signal) {
                 return;
             }
         }
@@ -236,7 +238,7 @@ namespace cpm {
         {
             if(sample.info().valid())
             {
-                if (sample.data().next_start().nanoseconds() == TRIGGER_STOP_SYMBOL) 
+                if (sample.data().next_start().nanoseconds() == stop_signal) 
                 {
                     return true;
                 }

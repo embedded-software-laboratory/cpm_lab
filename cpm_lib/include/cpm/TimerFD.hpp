@@ -57,6 +57,9 @@ namespace cpm {
 
         void createTimer ();
 
+        //For custom stop signals, should be changed only if you know what you are doing (usually you do not want to define a stop signal for you own participant, but use the default one!)
+        uint64_t stop_signal = TRIGGER_STOP_SYMBOL;
+
     public:
         /**
          * \brief Create a "real-time" timer that can be used for function callback
@@ -64,8 +67,9 @@ namespace cpm {
          * \param period_nanoseconds The timer is called periodically with a period of period_nanoseconds
          * \param offset_nanoseconds Initial offset (from timestamp 0)
          * \param wait_for_start Set whether the timer is started only if a start signal is sent via DDS (true), or if it should should start immediately (false)
+         * \param _stop_signal Optional and not recommended unless you know what you are doing! Define your own stop signal (instead of the default one) for DDS communication
          */
-        TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool wait_for_start);
+        TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool wait_for_start, uint64_t _stop_signal = TRIGGER_STOP_SYMBOL);
         ~TimerFD();
 
         /**

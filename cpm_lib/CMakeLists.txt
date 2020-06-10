@@ -75,6 +75,7 @@ if(NOT BUILD_ARM)
         test/test_logging.cpp
         test/test_parameter.cpp
         test/test_simple_timer.cpp
+        test/test_simple_timer_stop.cpp
         test/test_timer.cpp
         test/test_timer_stop.cpp
         test/test_timer_stop_running.cpp
