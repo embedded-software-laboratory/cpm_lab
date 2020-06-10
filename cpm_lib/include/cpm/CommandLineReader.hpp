@@ -43,4 +43,9 @@ namespace cpm {
      * \brief Read a double command line argument from argv (form: --name=value), use a default value if it does not exist
      */
     std::vector<double> cmd_parameter_doubles(std::string name, std::vector<double> default_value, int argc, char *argv[]);
+    /**
+     * \brief Read an float array command line argument from argv (form: --name=value,value), use a default value if it does not exist
+     */
+    std::vector<float> cmd_parameter_floats(std::string name, std::vector<float> default_value, int argc, char *argv[]);
+
 }

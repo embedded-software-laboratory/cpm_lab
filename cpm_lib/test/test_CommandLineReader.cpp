@@ -15,9 +15,12 @@ TEST_CASE( "CommandLineReader" ) {
     char str9[] = "--double2=-45.6";
     char str10[] = "--doubles1=..!";
     char str11[] = "--doubles2=0.314,99.998,3.3";
+    char str12[] = "--float1=1.0,1.5";
+    char str13[] = "--float2=ThisIsNotAFloat";
 
-    char *args[] = { program_name, str1, str2, str3, str4, str5, str6, str7, str8, str9, str10, str11 };
-    int argcount = 12;
+    char *args[] = { program_name, str1, str2, str3, str4, str5, str6, str7, str8, str9, str10, str11, str12, str13};
+    int argcount = 14;
+
 
     std::string expected_string = "thisisastring!";
     int expected_int_1 = 7;
@@ -30,6 +33,8 @@ TEST_CASE( "CommandLineReader" ) {
     double expected_double_2 = -45.6;
     std::vector<double> expected_doubles_list_1{0.0};
     std::vector<double> expected_doubles_list_2{0.314, 99.998, 3.3};
+    std::vector<float> expected_float_1{1.0f,1.5f};
+    std::vector<float> expected_float_2{};
 
     std::string cmd_string = cpm::cmd_parameter_string("string", "", argcount, args);
     int cmd_int_1 = cpm::cmd_parameter_int("int1", 0, argcount, args);
@@ -42,6 +47,8 @@ TEST_CASE( "CommandLineReader" ) {
     double cmd_double_2 = cpm::cmd_parameter_double("double2", 0, argcount, args);
     std::vector<double> cmd_doubles_1 = cpm::cmd_parameter_doubles("doubles1", {0.0}, argcount, args);
     std::vector<double> cmd_doubles_2 = cpm::cmd_parameter_doubles("doubles2", {0.0}, argcount, args);
+    std::vector<float> cmd_float_1 = cpm::cmd_parameter_floats("float1", expected_float_2, argcount, args);
+    std::vector<float> cmd_float_2 = cpm::cmd_parameter_floats("float2", expected_float_2, argcount, args);
 
     CHECK( expected_string == cmd_string );
     CHECK( expected_int_1 == cmd_int_1 );
@@ -54,4 +61,6 @@ TEST_CASE( "CommandLineReader" ) {
     CHECK( expected_double_2 == cmd_double_2 );
     CHECK( expected_doubles_list_1 == cmd_doubles_1);
     CHECK( expected_doubles_list_2 == cmd_doubles_2);
+    CHECK( expected_float_2 == cmd_float_2 );
+    CHECK( expected_float_1 == cmd_float_1 );
 }
