@@ -5,6 +5,8 @@ Shape::Shape(const xmlpp::Node* node)
     //Check if node is of type shape
     assert(node->get_name() == "shape");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020    
@@ -191,7 +193,9 @@ void Shape::transform_context(const DrawingContext& ctx, double scale)
 
     if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
     {
-        std::cerr << "TODO: Better warning // Cannot transform context with empty position / only lanelet references right now" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot transform context when shape position is empty / only lanelet references are used right now, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 

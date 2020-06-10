@@ -47,8 +47,6 @@ private:
 public:
     PlanningProblem(const xmlpp::Node* node);
 
-    //TODO: Getter
-
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
@@ -77,4 +75,7 @@ public:
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+
+    //Getter
+    const std::vector<PlanningProblemElement>& get_planning_problems() const;
 };

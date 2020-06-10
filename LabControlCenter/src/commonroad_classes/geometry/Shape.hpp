@@ -15,6 +15,8 @@
 
 #include "CommonroadDDSShape.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -27,6 +29,9 @@ private:
     std::vector<Circle> circles;
     std::vector<Polygon> polygons;
     std::vector<Rectangle> rectangles;
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     Shape(const xmlpp::Node* node);

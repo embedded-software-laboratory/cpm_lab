@@ -5,6 +5,8 @@ Polygon::Polygon(const xmlpp::Node* node)
     //Check if node is of type polygon
     assert(node->get_name() == "polygon");
 
+    commonroad_line = node->get_line();
+
     try
     {
         xml_translation::iterate_children(
@@ -50,7 +52,9 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double global_orient
 {
     if (points.size() < 3)
     {
-        std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Points missing in translated polygon (at least 3 required) - will not be drawn, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
     else
     {

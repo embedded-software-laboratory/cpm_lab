@@ -27,6 +27,8 @@
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO: Put Enums etc inside class definition??
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -120,7 +122,6 @@ private:
     //Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
 
-    //TODO: Both of these following functions as part of another interface?
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
      * \param node root_node

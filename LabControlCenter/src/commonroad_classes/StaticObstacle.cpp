@@ -2,7 +2,7 @@
 
 StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 {
-    //TODO: Warn in case node does not have static obstacle role
+    //Warn in case node does not have static obstacle role
     //Check if node is of type staticObstacle
     assert(node->get_name() == "staticObstacle" || node->get_name() == "obstacle");
     if (node->get_name() == "obstacle") //2018 specs
@@ -11,6 +11,8 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
         assert(role_text.compare("static") == 0);
     }
     
+    commonroad_line = node->get_line();
+
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
@@ -88,8 +90,6 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
 
 void StaticObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-
     if (scale > 0)
     {
         transform_scale *= scale;
@@ -114,7 +114,7 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    //TODO: Different color / sticker / ... based on type
+    //Different color / sticker / ... based on type
     switch(type)
     {
         case ObstacleTypeStatic::Unknown:
@@ -165,12 +165,16 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
         }
         else
         {
-            std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Cannot draw empty shape in static obstacle from line " << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw StaticObstacle, initial state value is missing" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw static obstacle from line " << commonroad_line << ", initial state is missing";
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 
     ctx->restore();
@@ -182,4 +186,24 @@ void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, cons
     {
         initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
     }
+}
+
+ObstacleTypeStatic StaticObstacle::get_type()
+{
+    return type;
+}
+
+std::string StaticObstacle::get_obstacle_type_text()
+{
+    return obstacle_type_text;
+}
+
+const std::optional<Shape>& StaticObstacle::get_shape() const
+{
+    return shape;
+}
+
+const std::optional<State>& StaticObstacle::get_initial_state() const
+{
+    return initial_state;
 }

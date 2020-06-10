@@ -103,8 +103,6 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
 
 void PlanningProblem::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-
     for (auto& planning_problem : planning_problems)
     {
         if (planning_problem.initial_state.has_value())
@@ -153,4 +151,9 @@ void PlanningProblem::set_lanelet_ref_draw_function(std::function<void (int, con
             goal_state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
         }
     }
+}
+
+const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problems() const
+{
+    return planning_problems;
 }

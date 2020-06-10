@@ -112,6 +112,8 @@ add_executable(LabControlCenter
     src/ObstacleSimulationManager.cpp
     src/ObstacleAggregator.cpp
     src/ObstacleAggregator.hpp
+    src/LCCErrorLogger.hpp
+    src/LCCErrorLogger.cpp
     src/LogLevelSetter.hpp
     src/LogLevelSetter.cpp
     src/LogStorage.hpp
@@ -156,6 +158,9 @@ add_executable(LabControlCenter
     ui/timer/TimerViewUI.hpp
     ui/timer/TimerViewUI.cpp
     ui/timer/TimerModelRecord.hpp
+    ui/lcc_errors/LCCErrorViewUI.hpp
+    ui/lcc_errors/LCCErrorViewUI.cpp
+    ui/lcc_errors/LCCErrorModelRecord.hpp
     ui/logger/LoggerViewUI.hpp
     ui/logger/LoggerViewUI.cpp
     ui/logger/LoggerModelRecord.hpp
@@ -212,13 +217,3 @@ add_executable(VisualizationTest
 )
 
 target_link_libraries(VisualizationTest cpm)
-
-add_executable(CommonRoadTest
-    test/CommonRoadTest.cpp
-
-    ${COMMONROAD}
-)
-
-target_link_libraries(CommonRoadTest cpm xml++-2.6 ${GTKMM_LIBRARIES})
-target_include_directories(CommonRoadTest PUBLIC ${GTKMM_INCLUDE_DIRS})
-target_compile_options(CommonRoadTest PUBLIC ${GTKMM_CFLAGS_OTHER})

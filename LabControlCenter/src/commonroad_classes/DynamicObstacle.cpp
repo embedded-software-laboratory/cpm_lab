@@ -10,6 +10,8 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         assert(role_text.compare("dynamic") == 0);
     }
 
+    commonroad_line = node->get_line();
+
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, so an error is thrown anyway -> just use .value()
@@ -191,7 +193,9 @@ void DynamicObstacle::draw_shape_with_text(const DrawingContext& ctx, double sca
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw dynamic obstacle shape (empty), from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 

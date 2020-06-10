@@ -18,6 +18,8 @@
 #include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -32,6 +34,9 @@ private:
     std::optional<Shape> shape;
     std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
 
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created

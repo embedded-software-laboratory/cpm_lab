@@ -5,6 +5,8 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     //Check if node is of type occupancy
     assert(node->get_name() == "occupancy");
 
+    commonroad_line = node->get_line();
+
     try
     {
         const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true);
@@ -54,7 +56,9 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw occupancy, shape is missing" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw occupancy, shape is missing, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 
     ctx->restore();
@@ -69,7 +73,9 @@ void Occupancy::transform_context(const DrawingContext& ctx, double scale)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot transform context with occupancy, shape is missing" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot transform based on occupancy data, shape is missing, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 

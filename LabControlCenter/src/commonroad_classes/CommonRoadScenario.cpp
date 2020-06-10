@@ -211,7 +211,9 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     if(node_name.empty())
     {
         //TODO: Throw error or keep it this way?
-        std::cerr << "TODO: Better warning // Node element empty in scenario parse" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Node element empty in scenario parse, from line " << node->get_line();
+        LCCErrorLogger::Instance().log_error(error_stream.str());
         return;
     }
 
@@ -415,7 +417,9 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
         }
         else
         {
-            std::cerr << "TODO: Better warning // Unspecified scenario tag, ignored" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Unspecified scenario tag in scenario parse ignored, from line " << node->get_line();
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
 }
@@ -496,7 +500,9 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
         }
         else if (min_width < 0)
         {
-            std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Could not transform scenario coordinate system to min lane width - no lanelets defined";
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
 
         xml_translation_mutex.unlock();
@@ -584,7 +590,9 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     }
     else
     {
-        std::cerr << "TODO: Better warning // Lanelet ref not found (while drawing lanelet ref)" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 

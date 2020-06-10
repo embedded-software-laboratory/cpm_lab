@@ -22,6 +22,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -45,6 +47,9 @@ private:
 
     //Function to draw lanelet_refs
     std::function<void (int, const DrawingContext&, double, double, double, double)> draw_lanelet_refs;
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     /**

@@ -5,6 +5,8 @@ State::State(const xmlpp::Node* node)
     //Check if node is of type state
     assert(node->get_name() == "state" || node->get_name() == "initialState");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020
@@ -116,7 +118,9 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
 {
     if(!orientation.has_value())
     {
-        std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing state, but should have been set - not drawing this state" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw state bc no orientation was set, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
         return;
     }
 
@@ -159,7 +163,9 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
         }
         else
         {
-            std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "No orientation value within one part of the set orientation intervals found for state, from line " << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
 
@@ -190,7 +196,9 @@ void State::transform_context(const DrawingContext& ctx, double scale)
         }
         else
         {
-            std::cerr << "TODO: Better warning // State orientation is an interval - ignoring orientation" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Orientation from state for rotation of other objects ignored, as it is an interval value" << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
         
     }

@@ -20,6 +20,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -47,15 +49,16 @@ private:
     //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
 
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (static) obstacle node
      */
     StaticObstacle(const xmlpp::Node* node);
-    
-    //TODO: Getter
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -85,4 +88,10 @@ public:
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+
+    //Getter
+    ObstacleTypeStatic get_type();
+    std::string get_obstacle_type_text();
+    const std::optional<Shape>& get_shape() const;
+    const std::optional<State>& get_initial_state() const;
 };

@@ -26,7 +26,7 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -48,7 +48,7 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -70,7 +70,7 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -140,7 +140,7 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -162,7 +162,7 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -184,7 +184,7 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -231,7 +231,7 @@ std::optional<int> xml_translation::get_child_child_int(const xmlpp::Node* node,
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -263,7 +263,7 @@ std::optional<unsigned long long> xml_translation::get_child_child_uint(const xm
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -296,7 +296,7 @@ std::optional<double> xml_translation::get_child_child_double(const xmlpp::Node*
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -331,7 +331,6 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
         }
         else
         {
-            //TODO: Use optional here as well, return optional? 
             if (throw_error)
             {
                 
@@ -346,7 +345,7 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -408,7 +407,7 @@ std::optional<int> xml_translation::get_attribute_int(const xmlpp::Node* node, s
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -441,7 +440,7 @@ std::optional<unsigned long long> xml_translation::get_attribute_uint(const xmlp
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
@@ -474,7 +473,7 @@ std::optional<double> xml_translation::get_attribute_double(const xmlpp::Node* n
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;

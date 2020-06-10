@@ -16,6 +16,8 @@
 
 #include "CommonroadDDSShape.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -26,6 +28,9 @@ class Polygon : public InterfaceTransform, public InterfaceDraw, public Interfac
 {
 private:
     std::vector<Point> points; //min. 3
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     Polygon(const xmlpp::Node* node);

@@ -17,6 +17,7 @@
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/params/ParamViewUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/lcc_errors/LCCErrorViewUI.hpp"
 #include "ui/logger/LoggerViewUI.hpp"
 #include "ui/setup/SetupViewUI.hpp"
 #include "LogStorage.hpp"
@@ -161,7 +162,15 @@ int main(int argc, char *argv[])
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
         argv);
-    auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
+    auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
+    auto tabsViewUi = make_shared<TabsViewUI>(
+        setupViewUi, 
+        vehicleManualControlUi, 
+        paramViewUi, 
+        timerViewUi, 
+        lccErrorViewUi,
+        loggerViewUi, 
+        commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
     //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created

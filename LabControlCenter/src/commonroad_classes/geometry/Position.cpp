@@ -13,6 +13,8 @@ Position::Position(const xmlpp::Node* node)
         {
             point = std::optional<Point>(std::in_place, point_node);
         }
+
+        commonroad_line = node->get_line();
         
         //Optional parts (all unbounded -> lists)
         xml_translation::iterate_children(
@@ -205,7 +207,7 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
             }
             else
             {
-                std::cerr << "TODO: Better warning // Cannot draw using lanelet references - no lanelet ref draw function was set" << std::endl;
+                LCCErrorLogger::Instance().log_error("Cannot draw without lanelet ref function in Position, set function callback beforehand!");
             }
         }
 
@@ -230,7 +232,9 @@ void Position::transform_context(const DrawingContext& ctx, double scale)
 
         if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
         {
-            std::cerr << "TODO: Better warning // Cannot transform context with empty position / only lanelet references right now" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Cannot transform context in Position when position is empty / only lanelet references are used right now, from line " << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
 }
@@ -283,7 +287,10 @@ std::optional<int> Position::get_lanelet_ref()
 {
     if (lanelet_refs.size() > 1)
     {
-        std::cerr << "TODO: Better warning // Cannot yet handle positions that are so inexact that they cover more than one lanelet" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "In Position: Cannot handle more than one lanelet ref, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
+
         return std::optional<int>(lanelet_refs.at(0));
     }
     else if (lanelet_refs.size() == 1)
