@@ -28,7 +28,7 @@ void MultiVehicleTrajectoryPlanner::set_real_time(uint64_t t)
 
 
 void MultiVehicleTrajectoryPlanner::add_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle)
-{
+{   //fill vector with future trajectory points of other vehicles
     assert(!started);
     trajectoryPlans[vehicle->get_vehicle_id()] = vehicle;
 }

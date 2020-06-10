@@ -5,7 +5,7 @@
 const LaneGraphTools laneGraphTools;
 
 LaneGraphTools::LaneGraphTools()
-{
+{   /////////the arc length is computed by d_x =x_now -x_prev and d_y = y_now-y_prev and then length = sqrt(d_x^2+d_y^2) for all edges
     // Compute path arc lengths
     for (size_t i_edge = 0; i_edge < n_edges; ++i_edge)
     {
@@ -18,6 +18,7 @@ LaneGraphTools::LaneGraphTools()
             const double dy = edges_y[i_edge][i_path] - edges_y[i_edge][i_path-1];
             const double len = sqrt(dx*dx+dy*dy);
             //std::cout << len << ", ";
+            //the new calculated waylength is addad to the previous length
             edge_s.push_back(edge_s.back() + len);
         }
         assert(edge_s.size() == edges_x[i_edge].size());
@@ -25,7 +26,7 @@ LaneGraphTools::LaneGraphTools()
     }
 
 
-    // Precompute collision between all reference poses
+    //////////////// Precompute collision between all reference poses
     edge_path_collisions = std::vector< std::vector< std::vector< std::vector<bool> > > >
     (
         n_edges,
@@ -43,7 +44,8 @@ LaneGraphTools::LaneGraphTools()
             )
         )
     );
-
+    // In the vector <jobs> all distances from node A to every known node B is listed. 
+    // In vector <edge_path_collisions> every potential collision is written under criteria that the distance is under 0.01 m.
     std::vector<std::future<bool>> jobs;
     for (size_t i_edge_A = 0; i_edge_A < n_edges; ++i_edge_A)
     {
@@ -84,7 +86,8 @@ LaneGraphTools::LaneGraphTools()
         job.get();
     }
 }
-
+//////////////////Localization on the map////////////////////////////////////////
+//each edge is searched on the lane graph and if it matched, true is returned
 bool LaneGraphTools::map_match_pose(Pose2D pose, int &out_edge_index, int &out_edge_path_index) const
 {
     bool match_found = false;
@@ -117,11 +120,11 @@ bool LaneGraphTools::map_match_pose(Pose2D pose, int &out_edge_index, int &out_e
     }
     return match_found;
 }
-
+//find
 vector<size_t> LaneGraphTools::find_subsequent_edges(int edge_index) const
 {
     vector<size_t> result;
-
+    //if start index is the same as end index, remebr that
     size_t subsequent_node_index = edges_end_index.at(edge_index);
     for (size_t i_edge = 0; i_edge < n_edges; ++i_edge)
     {

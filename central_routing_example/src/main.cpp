@@ -1,30 +1,31 @@
 
-#include "lane_graph.hpp"
-#include "cpm/Logging.hpp"
-#include "cpm/CommandLineReader.hpp"
-#include "cpm/init.hpp"
-#include "cpm/MultiVehicleReader.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Timer.hpp"
-#include "VehicleObservation.hpp"
+#include "lane_graph.hpp" //sw-folder central routing->include
+#include "cpm/Logging.hpp" //cpm_base->cpm_lib->include->cpm
+#include "cpm/CommandLineReader.hpp" //cpm_base->cpm_lib->include->cpm
+#include "cpm/init.hpp" //cpm_base->cpm_lib->include->cpm
+#include "cpm/MultiVehicleReader.hpp" //cpm_base->cpm_lib->include->cpm
+#include "cpm/ParticipantSingleton.hpp" //cpm_base->cpm_lib->include->cpm
+#include "cpm/Timer.hpp" //cpm_base->cpm_lib->include->cpm
+#include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
-#include "VehicleTrajectoryPlanningState.hpp"
-#include "lane_graph_tools.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "VehicleTrajectoryPlanningState.hpp" //sw-folder central routing
+#include "lane_graph_tools.hpp" //sw-folder central routing
+#include <dds/pub/ddspub.hpp> //rti folder
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <mutex>
 #include <thread>
-#include "MultiVehicleTrajectoryPlanner.hpp"
+#include "MultiVehicleTrajectoryPlanner.hpp" //sw-folder central routing
 
 using std::vector;
 
 int main(int argc, char *argv[])
-{
+{   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing_example");
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
+    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
+    ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
     for(auto i:vehicle_ids_int)
@@ -33,6 +34,8 @@ int main(int argc, char *argv[])
         assert(i<255);
         vehicle_ids.push_back(i);
     }
+
+    ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
     std::stringstream vehicle_ids_stream;
     vehicle_ids_stream << "Vehicle IDs: ";
     for (uint8_t id : vehicle_ids)
@@ -43,31 +46,33 @@ int main(int argc, char *argv[])
 
     std::cout << vehicle_ids_string << std::endl;
 
-
+    //////////////Initialization for trajectory planning/////////////////////////////////
+    // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     const uint64_t dt_nanos = 400000000ull;
     MultiVehicleTrajectoryPlanner planner(dt_nanos);
 
 
-    // Writer for sending trajectory commands
+    ///////////// writer and reader for sending trajectory commands////////////////////////
+    //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
     (
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
-
+    //the reader will read the pose of a vehicle given by its vehicle ID
     cpm::MultiVehicleReader<VehicleObservation> ips_reader(
         cpm::get_topic<VehicleObservation>("vehicleObservation"),
         vehicle_ids
     );
 
 
-
-    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time);
+    //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
+    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
     {
         planner.set_real_time(t_now);
 
-        if(planner.is_started())
+        if(planner.is_started())//will be set to true after fist activation
         {
             auto computation_start_time = timer->get_time();
             auto commands = planner.get_trajectory_commands(t_now);
@@ -79,7 +84,7 @@ int main(int argc, char *argv[])
                 writer_vehicleCommandTrajectory.write(command);
             }
         }
-        else
+        else //start panner
         {
             std::map<uint8_t, VehicleObservation> ips_sample;
             std::map<uint8_t, uint64_t> ips_sample_age;
