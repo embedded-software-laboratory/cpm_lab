@@ -49,8 +49,9 @@ void MultiVehicleTrajectoryPlanner::start()
         while(1)
         {
             // Priority based collision avoidance: Every vehicle avoids 
-            // the 'previous' vehicles, i.e. those with a smaller ID.
+            // the 'previous' vehicles, in this example those with a smaller ID.
             vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
+            
             for(auto &e:trajectoryPlans)
             {
                 e.second->avoid_collisions(previous_vehicles);

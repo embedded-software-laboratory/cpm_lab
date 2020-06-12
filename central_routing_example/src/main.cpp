@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         vehicle_ids
     );
 
-
+    /////////////////////////////////Trajectory planner//////////////////////////////////////////
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
     auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
         if(planner.is_started())//will be set to true after fist activation
         {
             auto computation_start_time = timer->get_time();
+            //get trajectory commands from MultiVehicleTrajectoryPlanner with new points for each vehicle ID
             auto commands = planner.get_trajectory_commands(t_now);
             auto computation_end_time = timer->get_time();
 
@@ -84,12 +85,12 @@ int main(int argc, char *argv[])
                 writer_vehicleCommandTrajectory.write(command);
             }
         }
-        else //start panner
+        else //prepare to start planner
         {
             std::map<uint8_t, VehicleObservation> ips_sample;
             std::map<uint8_t, uint64_t> ips_sample_age;
             ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
-
+            //check for vehicles if online
             bool all_vehicles_online = true;
             for(auto e:ips_sample_age)
             {
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
             }
 
             bool all_vehicles_matched = true;
-
+            //match pose of vehicles with pose on map
             for(auto e:ips_sample)
             {
                 auto data = e.second;
@@ -112,13 +113,13 @@ int main(int argc, char *argv[])
                 int out_edge_index = -1;
                 int out_edge_path_index = -1;
                 bool matched = laneGraphTools.map_match_pose(new_pose, out_edge_index, out_edge_path_index);
-
+                //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
                 if(matched)
                 {
                     planner.add_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index));
                     std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
                 }
-                else
+                else //Errormessage, if not all vehicles could be matched to the map
                 {
                     all_vehicles_matched = false;
                     std::cout << "Vehicle " << int(new_id) << " not matched" << std::endl;
@@ -126,7 +127,9 @@ int main(int argc, char *argv[])
             }
 
             if(all_vehicles_matched)
-            {
+            {   
+                //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
+                //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
                 planner.start();
             }
         }
