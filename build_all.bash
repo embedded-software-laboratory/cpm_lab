@@ -19,19 +19,15 @@ done
 #make simulation variable available in all bash scripts called
 export SIMULATION=$simulation
 
-# Get cpm lib
-pushd ..
-if [ ! -d "cpm_base" ]; then
-    git clone https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
-fi
-
-cd cpm_base
-cd cpm_lib
+# cpm lib
+pushd cpm_base
+pushd cpm_lib
 if [ $simulation == 0 ]
 then
     bash build_arm.bash  
 fi
 bash build.bash
+popd
 popd
 
 
