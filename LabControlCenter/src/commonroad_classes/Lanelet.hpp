@@ -16,6 +16,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -82,9 +84,6 @@ struct StopLine
     LineMarking line_marking;
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_ref; //only one possible, but easier to handle if nonexistent, trafficlightref
-
-    //In case it does not exist, not part of specs
-    bool exists = false;
 };
 
 /**
@@ -101,13 +100,16 @@ private:
     std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
     std::optional<Adjacent> adjacent_left; 
     std::optional<Adjacent> adjacent_right;
-    StopLine stop_line;
+    std::optional<StopLine> stop_line;
     LaneletType lanelet_type; //enum class possible
     std::vector<VehicleType> user_one_way; //enum class possible
     std::vector<VehicleType> user_bidirectional; //enum class possible
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_refs; //trafficlightref
     std::optional<double> speed_limit; //From 2018 specs, must not be set
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
     /**
      * \brief This function translates a bound node to Bound
@@ -135,7 +137,7 @@ private:
      * \param node A stopLine node
      * \param name The name of the node
      */
-    StopLine translate_stopline(const xmlpp::Node* node, std::string name);
+    std::optional<StopLine> translate_stopline(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a laneletType node to LaneletType (2020 only)

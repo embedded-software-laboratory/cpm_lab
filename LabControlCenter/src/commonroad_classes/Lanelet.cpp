@@ -5,6 +5,8 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     //Check if node is of type lanelet
     assert(node->get_name() == "lanelet");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020
@@ -165,27 +167,27 @@ std::optional<Adjacent> Lanelet::translate_adjacent(const xmlpp::Node* node, std
     return std::nullopt;
 }
 
-StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
+std::optional<StopLine> Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
 {
     //Stop lines are optional, so this element might not exist
     const auto line_node = xml_translation::get_child_if_exists(node, name, false);
-    StopLine line;
 
     if (line_node)
     {
-        line.exists = true;
+        StopLine line_obj;
+        auto line = std::optional<StopLine>(line_obj);
 
         //Translate line points
         xml_translation::iterate_children(
             line_node, 
             [&] (const xmlpp::Node* child) 
             {
-                stop_line.points.push_back(Point(child));
+                line->points.push_back(Point(child));
             }, 
             "point"
         );
 
-        if (stop_line.points.size() != 2)
+        if (line->points.size() != 2)
         {
             std::stringstream error_msg_stream;
             error_msg_stream << "Specified stop line has too many points, not part of specs, in line " << line_node->get_line();
@@ -196,15 +198,17 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
         const auto line_marking = xml_translation::get_child_if_exists(line_node, "lineMarking", true);
         if (line_marking)
         {
-            line.line_marking = translate_line_marking(line_marking);
+            line->line_marking = translate_line_marking(line_marking);
         }
 
         //Translate refs to traffic signs and traffic lights
-        line.traffic_sign_refs = translate_refs(line_node, "trafficSignRef");
-        line.traffic_light_ref = translate_refs(line_node, "trafficLightRef");
+        line->traffic_sign_refs = translate_refs(line_node, "trafficSignRef");
+        line->traffic_light_ref = translate_refs(line_node, "trafficLightRef");
+
+        return line;
     }
 
-    return line;
+    return std::nullopt;
 }
 
 LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
@@ -394,7 +398,7 @@ double Lanelet::get_min_width()
 
 void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    for (auto& point : stop_line.points)
+    for (auto& point : stop_line->points)
     {
         point.transform_coordinate_system(scale, translate_x, translate_y);
     }
@@ -480,6 +484,12 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
 
     //TODO: Line markings, stop lines etc
+    if (stop_line.has_value() || speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    {
+        std::stringstream error_stream;
+        error_stream << "Line markings, speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
+    }
 
     ctx->restore();
 }
