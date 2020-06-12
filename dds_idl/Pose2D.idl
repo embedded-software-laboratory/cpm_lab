@@ -1,0 +1,8 @@
+#ifndef POSE2D_IDL
+#define POSE2D_IDL
+struct Pose2D {
+    double x;    // meter
+    double y;    // meter
+    double yaw;  // radian
+};
+#endif

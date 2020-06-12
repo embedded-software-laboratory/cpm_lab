@@ -1,0 +1,12 @@
+#include "Header.idl"
+#include "Pose2D.idl"
+
+#ifndef VEHICLE_OBSERVATION_IDL
+#define VEHICLE_OBSERVATION_IDL
+struct VehicleObservation 
+{
+    octet vehicle_id; //@key
+    Header header;
+    Pose2D pose;
+};
+#endif

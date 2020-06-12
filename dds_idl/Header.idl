@@ -1,0 +1,12 @@
+#include "TimeStamp.idl"
+
+#ifndef HEADER_IDL
+#define HEADER_IDL
+struct Header {
+    /* The time at which this sample was created. */
+    TimeStamp create_stamp;
+
+    /* This sample may be used at or after the valid_after_stamp time, not before. */
+    TimeStamp valid_after_stamp;
+};
+#endif
