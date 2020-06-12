@@ -8,26 +8,32 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
+    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
-    std::function<void(bool)> _reset_timer,
+    std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
+    std::function<void()> _reset_obstacle_aggregator,
     std::function<void()> _reset_trajectories,
     std::function<void()> _reset_vehicle_view,
     std::function<void()> _reset_visualization_commands,
     std::function<void()> _reset_logs,
+    std::function<void(bool)> _set_commonroad_tab_sensitive,
     unsigned int argc, 
     char *argv[]
     ) 
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
+    obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
+    reset_obstacle_aggregator(_reset_obstacle_aggregator),
     reset_trajectories(_reset_trajectories),
     reset_vehicle_view(_reset_vehicle_view),
     reset_visualization_commands(_reset_visualization_commands),
-    reset_logs(_reset_logs)
+    reset_logs(_reset_logs),
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -75,8 +81,11 @@ SetupViewUI::SetupViewUI
 
     assert(vehicle_flowbox);
 
+    //Get number of vehicles
+    unsigned int number_of_vehicles = cpm::cmd_parameter_int("number_of_vehicles", 20, argc, argv);
+
     //Create vehicle toggles
-    for (unsigned int id = 1; id <= 10; ++id)
+    for (unsigned int id = 1; id <= number_of_vehicles; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }
@@ -99,7 +108,7 @@ SetupViewUI::SetupViewUI
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
-    //Extract relevant parameters from command line
+    //Extract other relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
@@ -130,7 +139,7 @@ SetupViewUI::~SetupViewUI() {
 
 void SetupViewUI::switch_timer_set()
 {
-    reset_timer(switch_simulated_time->get_active());
+    reset_timer(switch_simulated_time->get_active(), true);
 }
 
 void SetupViewUI::switch_ips_set()
@@ -300,9 +309,9 @@ void SetupViewUI::deploy_applications() {
     //Reset old UI elements (difference to kill: Also reset the Logs)
     //Kill timer in UI as well, as it should not show invalid information
     //Reset all relevant UI parts
-    reset_timer(switch_simulated_time->get_active());
-    usleep(100000); //Make sure that the stop signal does not arrive at newly created participants (IS THIS SAFE ENOUGH?)
+    reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)
     reset_time_series_aggregator();
+    reset_obstacle_aggregator();
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
@@ -330,7 +339,13 @@ void SetupViewUI::deploy_applications() {
     }
 
 #endif
+
+    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+    obstacle_simulation_manager->start();
     
+    // Recording
+    deploy_functions->deploy_recording();
+
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(switch_deploy_remote->get_active())
     {
@@ -485,6 +500,9 @@ void SetupViewUI::kill_deployed_applications() {
 
     deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
 
+    // Recording
+    deploy_functions->kill_recording();
+
     //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
     //But only if threads are used, so only in case of remote deployment
     //For local deployment, perform_post_kill_cleanup is called directly
@@ -492,11 +510,15 @@ void SetupViewUI::kill_deployed_applications() {
 
 void SetupViewUI::perform_post_kill_cleanup()
 {
+    //Stop obstacle simulation
+    obstacle_simulation_manager->stop();
+    
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts
-    reset_timer(switch_simulated_time->get_active());
+    reset_timer(switch_simulated_time->get_active(), true);
     reset_time_series_aggregator();
+    reset_obstacle_aggregator();
     reset_trajectories();
     reset_vehicle_view();
     reset_visualization_commands();
@@ -565,6 +587,9 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     {
         vehicle_toggle->set_sensitive(is_sensitive);
     }
+
+    assert(set_commonroad_tab_sensitive);
+    set_commonroad_tab_sensitive(is_sensitive);
 }
 
 void SetupViewUI::select_all_vehicles_real()

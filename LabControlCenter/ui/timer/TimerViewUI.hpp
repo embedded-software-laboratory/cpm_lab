@@ -91,5 +91,5 @@ public:
      * because in that case the simulation can be restarted, old participants become irrelevant
      * etc. 
      */
-    void reset(bool use_simulated_time);
+    void reset(bool use_simulated_time, bool send_stop_signal);
 };

@@ -26,3 +26,8 @@ add_executable(basic_circle_example
     src/main.cpp
 )
 target_link_libraries(basic_circle_example cpm)
+
+add_executable(basic_line_example
+    src/main_line.cpp
+)
+target_link_libraries(basic_line_example cpm)

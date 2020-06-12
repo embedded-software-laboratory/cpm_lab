@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     //rti::config::Logger::instance().verbosity(rti::config::Verbosity::WARNING);
 
     if(argc < 2) {
-        std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT" << std::endl;
+        std::cerr << "Usage: vehicle_rpi_firmware --simulated_time=BOOL --vehicle_id=INT --dds_domain=INT(optional) --pose=DOUBLE,DOUBLE,DOUBLE(optional;only simulation; x,y,yaw)" << std::endl;
         return 1;
     }
 
@@ -56,14 +56,11 @@ int main(int argc, char *argv[])
     const int vehicle_id = cpm::cmd_parameter_int("vehicle_id", 0, argc, argv);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
-
-    if(vehicle_id <= 0 || vehicle_id > 25) {
+    if(vehicle_id <= 0 || vehicle_id > 255) { //Upper bound due to use of uint8_t
         std::cerr << "Invalid vehicle ID." << std::endl;
         return 1;
     }
     std::cout << "vehicle_id " << vehicle_id << std::endl;
-
-
     cpm::Logging::Instance().set_id("vehicle_raspberry_" + std::to_string(vehicle_id));
 
     // DDS setup
@@ -91,8 +88,13 @@ int main(int argc, char *argv[])
     spi_init();
     const bool allow_simulated_time = false;
 #else
+    // Get vehicle starting position from argv
+    vector<double> starting_position = cpm::cmd_parameter_doubles("pose", {0.0}, argc, argv);
+    if(starting_position.size() != 1 && starting_position.size() != 3) {
+        starting_position = {0.0};
+    }
     SimulationIPS simulationIPS(topic_vehicleObservation);
-    SimulationVehicle simulationVehicle(simulationIPS, vehicle_id);
+    SimulationVehicle simulationVehicle(simulationIPS, vehicle_id, starting_position);
     const bool allow_simulated_time = true;
 #endif
 
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
         {
             //Log control cycle period
             //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write("Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+            cpm::Logging::Instance().write(3, "Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
 
             //log_fn(__LINE__);
             try 

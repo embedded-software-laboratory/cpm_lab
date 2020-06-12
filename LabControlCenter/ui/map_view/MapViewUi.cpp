@@ -1,27 +1,34 @@
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
+#include <libxml++-2.6/libxml++/libxml++.h>
 
 #include "../../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
 #include "../../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
 
+using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(
     shared_ptr<TrajectoryCommand> _trajectoryCommand,
+    shared_ptr<CommonRoadScenario> _commonroad_scenario,
     std::function<VehicleData()> get_vehicle_data_callback,
     std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
     std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
 :trajectoryCommand(_trajectoryCommand)
+,commonroad_scenario(_commonroad_scenario)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
+,get_obstacle_data(_get_obstacle_data)
 {
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
     drawingArea->show();
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
+    image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
@@ -223,7 +230,12 @@ void MapViewUi::draw(const DrawingContext& ctx)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
 
-        draw_grid(ctx);
+        //draw_grid(ctx);
+        //Draw map
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->draw(ctx, 1.0, 0, 0, 0, 0);
+        } 
 
         // Draw vehicle focus disk
         if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
@@ -251,6 +263,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_received_visualization_commands(ctx);
 
+        draw_commonroad_obstacles(ctx);
+
         draw_path_painting(ctx);
 
         for(const auto& entry : vehicle_data) {
@@ -274,21 +288,44 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     for(const auto& entry : vehicleTrajectories) 
     {
         //const auto vehicle_id = entry.first;
-        const auto& trajectory_points = entry.second;
+        const auto& trajectory = entry.second;
 
-        std::vector<TrajectoryPoint> trajectory_segment;
-        for (const auto& trajectory_point : trajectory_points)
+        rti::core::vector<TrajectoryPoint> trajectory_segment = trajectory.trajectory_points();
+        size_t start_trajectory_index = 0; //Keep track of the most recent trajectory index, because we are not interested in (too) old data
+        for (size_t i = 0; i < trajectory_segment.size(); ++i)
         {
-            trajectory_segment.push_back(trajectory_point.second);
-        }        
+            if (trajectory_segment.at(i).t().nanoseconds() < cpm::get_time_ns())
+            {
+                start_trajectory_index = i;
+            }
+        }  
+
+        //We want to output a bit of the past values
+        //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
+        int past_length = 3;
+        while (start_trajectory_index > 0 && past_length > 0)
+        {
+            --start_trajectory_index;
+            --past_length;
+        }      
 
         if(trajectory_segment.size() > 1)
         {
-            // Draw trajectory interpolation
-            for (int i = 2; i < int(trajectory_segment.size()); ++i)
+            // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+            // Also, only draw recent data
+            for (int i = start_trajectory_index + 2; i < int(trajectory_segment.size()); ++i)
             {
                 const int n_interp = 20;
-                ctx->set_source_rgb(0,0,0.8);
+                //Color based on future / past interpolation
+                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                {
+                    ctx->set_source_rgb(0.4,1.0,0.4);
+                }
+                else
+                {
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+                
                 ctx->move_to(trajectory_segment[i-1].px(), trajectory_segment[i-1].py());
 
                 for (int interp_step = 1; interp_step < n_interp; ++interp_step)
@@ -312,9 +349,18 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             }
 
             // Draw trajectory points
-            for(size_t i = 1; i < trajectory_segment.size(); ++i)
+            for(size_t i = start_trajectory_index + 1; i < trajectory_segment.size(); ++i)
             {
-                ctx->set_source_rgb(0,0,0.8);
+                //Color based on future / past interpolation
+                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                {
+                    ctx->set_source_rgb(0.4,1.0,0.4);
+                }
+                else
+                {
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+
                 ctx->arc(
                     trajectory_segment[i].px(),
                     trajectory_segment[i].py(),
@@ -390,18 +436,122 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     }
 }
 
+void print_node(const xmlpp::Node* node, unsigned int indentation = 0)
+{
+  const Glib::ustring indent(indentation, ' ');
+  std::cout << std::endl; //Separate nodes by an empty line.
+
+  const auto nodeContent = dynamic_cast<const xmlpp::ContentNode*>(node);
+  const auto nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
+  const auto nodeComment = dynamic_cast<const xmlpp::CommentNode*>(node);
+
+  if(nodeText && nodeText->is_white_space()) //Let's ignore the indenting - you don't always want to do this.
+    return;
+
+  const auto nodename = node->get_name();
+
+  if(!nodeText && !nodeComment && !nodename.empty()) //Let's not say "name: text".
+  {
+    const auto namespace_prefix = node->get_namespace_prefix();
+
+    std::cout << indent << "Node name = " ;
+    if(!namespace_prefix.empty())
+      std::cout << namespace_prefix << ":";
+    std::cout << nodename << std::endl;
+  }
+  else if(nodeText) //Let's say when it's text. - e.g. let's say what that white space is.
+  {
+    std::cout << indent << "Text Node" << std::endl;
+  }
+
+  //Treat the various node types differently:
+  if(nodeText)
+  {
+    std::cout << indent << "text = \"" << (nodeText->get_content()) << "\"" << std::endl;
+  }
+  else if(nodeComment)
+  {
+    std::cout << indent << "comment = " << (nodeComment->get_content()) << std::endl;
+  }
+  else if(nodeContent)
+  {
+    std::cout << indent << "content = " << (nodeContent->get_content()) << std::endl;
+  }
+  else if(const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node))
+  {
+    //A normal Element node:
+
+    //line() works only for ElementNodes.
+    std::cout << indent << "     line = " << node->get_line() << std::endl;
+
+    //Print attributes:
+    for (const auto& attribute : nodeElement->get_attributes())
+    {
+      const auto namespace_prefix = attribute->get_namespace_prefix();
+
+      std::cout << indent << "  Attribute ";
+      if(!namespace_prefix.empty())
+        std::cout << (namespace_prefix) << ":";
+      std::cout << (attribute->get_name()) << " = "
+                << (attribute->get_value()) << std::endl;
+    }
+
+    const auto attribute = nodeElement->get_attribute("title");
+    if(attribute)
+    {
+      std::cout << indent;
+      if (dynamic_cast<const xmlpp::AttributeNode*>(attribute))
+        std::cout << "AttributeNode ";
+      else if (dynamic_cast<const xmlpp::AttributeDeclaration*>(attribute))
+        std::cout << "AttributeDeclaration ";
+      std::cout << "title = " << (attribute->get_value()) << std::endl;
+    }
+  }
+
+  if(!nodeContent)
+  {
+    //Recurse through child nodes:
+    for(const auto& child : node->get_children())
+    {
+      print_node(child, indentation + 2); //recursive
+    }
+  }
+}
 
 void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
-    // Draw map (roads) image
-    ctx->save();
+    // Draw map (roads) image     
+    
+    std::string filepath = "./ui/map_view/LabMapCommonRoad.xml";
+
+    xmlpp::DomParser parser;
+    vector<double> lanelet_x;
+    vector<double> lanelet_y;
+
+    try
     {
-        const double scale = 4.0/image_map->get_height();
-        ctx->scale(scale, scale);
-        ctx->set_source(image_map,0,0);
-        ctx->paint();
+        parser.parse_file(filepath);
+
+        if(!parser) cpm::Logging::Instance().write("%s", "ERROR: can not parse file");
+        const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
+        print_node(pNode);
+
     }
-    ctx->restore();
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Exception caught: " << ex.what() << std::endl;
+    }
+
+
+    /*for (size_t i = 1; i < lanelet_x.size(); ++i)
+    {
+        if(i == 1) ctx->move_to(lanelet_x[i], lanelet_y[i]);
+        else ctx->line_to(lanelet_x[i], lanelet_y[i]);
+    }
+    ctx->set_source_rgb(1,0,0);
+    ctx->set_line_width(0.01);
+    ctx->stroke();
+    ctx->restore();*/
 
     // Draw grid lines
     ctx->save();
@@ -508,8 +658,113 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
+void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
+{
+    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
+    assert(get_obstacle_data);
+    for (auto entry : get_obstacle_data())
+    {
+        ctx->save();
 
+        const double x = entry.pose().x();
+        const double y = entry.pose().y();
+        const double yaw = entry.pose().yaw();
 
+        ctx->translate(x,y);
+        ctx->rotate(yaw);
+
+        const double LF = 0.115;
+        const double LR = 0.102;
+        //const double WH = 0.054;
+
+        // Draw car image (TODO: Change this later, e.g. to shape)
+        ctx->save();
+        {
+            const double scale = 0.224/image_object->get_width();
+            ctx->translate( (LF+LR)/2-LR ,0);
+            ctx->scale(scale, scale);
+            ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
+            ctx->set_source(image_object,0,0);
+            ctx->paint();
+        }
+        ctx->restore();
+
+        ctx->save();
+        {
+            //Craft description from object properties
+            std::stringstream description_stream;
+            if (entry.pose_is_exact())
+            {
+                description_stream << "E,";
+            }
+            else
+            {
+                description_stream << "I,";
+            }
+            if (entry.is_moving())
+            {
+                description_stream << "M,";
+            }
+            else
+            {
+                description_stream << "S,";
+            }
+            switch(entry.type().underlying())
+            {
+                case ObstacleType::Unknown:
+                    description_stream << "Unk: ";
+                    break;
+                case ObstacleType::Car: 
+                    description_stream << "Car: ";
+                    break;
+                case ObstacleType::Truck:
+                    description_stream << "Truck: ";
+                    break;
+                case ObstacleType::Bus:
+                    description_stream << "Bus: ";
+                    break;
+                case ObstacleType::Motorcycle:
+                    description_stream << "MCycle: ";
+                    break;
+                case ObstacleType::Bicycle:
+                    description_stream << "BCycle: ";
+                    break;
+                case ObstacleType::Pedestrian:
+                    description_stream << "Ped: ";
+                    break;
+                case ObstacleType::PriorityVehicle:
+                    description_stream << "Prio: ";
+                    break;
+                case ObstacleType::Train:
+                    description_stream << "Train: ";
+                    break;
+                default:
+                    description_stream << "TODO: ";
+                    break;
+            }
+            description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
+
+            ctx->translate(-0.03, 0);
+            const double scale = 0.01;
+            ctx->rotate(-yaw);
+            ctx->scale(scale, -scale);
+            ctx->move_to(0,0);
+            Cairo::TextExtents extents;
+            ctx->get_text_extents(description_stream.str(), extents);
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
+            ctx->set_source_rgb(.1,.1,.1);
+            ctx->show_text(description_stream.str());
+
+            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+            ctx->set_source_rgb(.1,.9,.1);
+            ctx->show_text(description_stream.str());
+        }
+
+        ctx->restore();
+        ctx->restore();
+    }
+}
 
 Gtk::DrawingArea* MapViewUi::get_parent()
 {

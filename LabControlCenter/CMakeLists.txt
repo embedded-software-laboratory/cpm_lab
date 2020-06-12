@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_FLAGS_DEBUG  "-g")
 set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-Wall -Wextra -Werror=return-type)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 link_libraries(dl nsl m pthread rt)
 
 message("Simulation Switch = ${SIMULATION}")
@@ -36,6 +36,69 @@ link_directories(SYSTEM ../../cpm_base/cpm_lib/build/)
 include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
+# commonroad integration
+include_directories(../../../../../usr/include/libxml++-2.6/)
+include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
+link_directories(../../../../../usr/lib/x86_64-linux-gnu/)
+
+set(COMMONROAD
+    src/commonroad_classes/CommonRoadScenario.hpp
+    src/commonroad_classes/CommonRoadScenario.cpp
+    src/commonroad_classes/Crossing.hpp
+    src/commonroad_classes/Crossing.cpp
+    src/commonroad_classes/DynamicObstacle.hpp
+    src/commonroad_classes/DynamicObstacle.cpp
+    src/commonroad_classes/Intersection.hpp
+    src/commonroad_classes/Intersection.cpp
+    src/commonroad_classes/Lanelet.hpp
+    src/commonroad_classes/Lanelet.cpp
+    src/commonroad_classes/PlanningProblem.hpp
+    src/commonroad_classes/PlanningProblem.cpp
+    src/commonroad_classes/StaticObstacle.hpp
+    src/commonroad_classes/StaticObstacle.cpp
+    src/commonroad_classes/TrafficLight.hpp
+    src/commonroad_classes/TrafficLight.cpp
+    src/commonroad_classes/TrafficSign.hpp
+    src/commonroad_classes/TrafficSign.cpp
+
+    src/commonroad_classes/InterfaceTransform.hpp
+    src/commonroad_classes/InterfaceDraw.hpp
+    src/commonroad_classes/InterfaceGeometry.hpp
+
+    src/commonroad_classes/XMLTranslation.hpp
+    src/commonroad_classes/XMLTranslation.cpp
+
+    src/commonroad_classes/datatypes/Interval.hpp
+    src/commonroad_classes/datatypes/IntervalOrExact.hpp
+
+    src/commonroad_classes/geometry/Circle.hpp
+    src/commonroad_classes/geometry/Circle.cpp
+    src/commonroad_classes/geometry/Point.hpp
+    src/commonroad_classes/geometry/Point.cpp
+    src/commonroad_classes/geometry/Polygon.hpp
+    src/commonroad_classes/geometry/Polygon.cpp
+    src/commonroad_classes/geometry/Position.hpp
+    src/commonroad_classes/geometry/Position.cpp
+    src/commonroad_classes/geometry/Rectangle.hpp
+    src/commonroad_classes/geometry/Rectangle.cpp
+    src/commonroad_classes/geometry/Shape.hpp
+    src/commonroad_classes/geometry/Shape.cpp
+
+    src/commonroad_classes/states/GoalState.hpp
+    src/commonroad_classes/states/GoalState.cpp
+    src/commonroad_classes/states/Occupancy.hpp
+    src/commonroad_classes/states/Occupancy.cpp
+    src/commonroad_classes/states/SignalState.hpp
+    src/commonroad_classes/states/SignalState.cpp
+    src/commonroad_classes/states/State.hpp
+    src/commonroad_classes/states/State.cpp
+    src/commonroad_classes/states/StateExact.hpp
+    src/commonroad_classes/states/StateExact.cpp
+
+    src/commonroad_classes/SpecificationError.hpp
+    src/commonroad_classes/SpecificationError.cpp
+)
+
 # labcam
 if(NOT SIMULATION)
     include_directories(labcam/include)
@@ -43,6 +106,12 @@ if(NOT SIMULATION)
 endif()
 
 add_executable(LabControlCenter
+    src/ObstacleSimulation.hpp
+    src/ObstacleSimulation.cpp
+    src/ObstacleSimulationManager.hpp
+    src/ObstacleSimulationManager.cpp
+    src/ObstacleAggregator.cpp
+    src/ObstacleAggregator.hpp
     src/LogLevelSetter.hpp
     src/LogLevelSetter.cpp
     src/LogStorage.hpp
@@ -59,10 +128,15 @@ add_executable(LabControlCenter
     src/VisualizationCommandsAggregator.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
+
     ui/manual_control/VehicleManualControlUi.cpp
     ui/manual_control/VehicleManualControlUi.hpp
+
     src/VehicleAutomatedControl.cpp
     src/VehicleAutomatedControl.hpp
+
+    ui/commonroad/CommonroadViewUI.hpp
+    ui/commonroad/CommonroadViewUI.cpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
@@ -95,6 +169,7 @@ add_executable(LabControlCenter
     ui/setup/UploadWindow.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
+
     src/defaults.cpp
     src/defaults.hpp
     src/Joystick.cpp
@@ -106,13 +181,15 @@ add_executable(LabControlCenter
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
     src/main.cpp
+
+    ${COMMONROAD}
 )
 
 
 if(NOT SIMULATION)
-    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib ${GTKMM_LIBRARIES})
+    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib xml++-2.6 ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(LabControlCenter cpm yaml-cpp ${GTKMM_LIBRARIES})
+    target_link_libraries(LabControlCenter cpm yaml-cpp xml++-2.6 ${GTKMM_LIBRARIES})
 endif()
 
 target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
@@ -135,3 +212,13 @@ add_executable(VisualizationTest
 )
 
 target_link_libraries(VisualizationTest cpm)
+
+add_executable(CommonRoadTest
+    test/CommonRoadTest.cpp
+
+    ${COMMONROAD}
+)
+
+target_link_libraries(CommonRoadTest cpm xml++-2.6 ${GTKMM_LIBRARIES})
+target_include_directories(CommonRoadTest PUBLIC ${GTKMM_INCLUDE_DIRS})
+target_compile_options(CommonRoadTest PUBLIC ${GTKMM_CFLAGS_OTHER})

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FILE SERVES AS TEMPLATE, DO NOT CHANGE! -->
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="TEMPLATE_NDDSHOME/resource/schema/rti_recording_service.xsd">
+    <!--  A definition of a Recording Service instance to run -->
+    <recording_service name="cpm_recorder">
+        <!--  Storage settings -->
+        <storage>
+            <sqlite>
+                <!-- lower performance because data must be deserialized -->
+                <storage_format>JSON_SQLITE</storage_format>
+                <!-- highest performance for recording, but need conversion before viewing -->
+                <!-- <storage_format>XCDR_AUTO</storage_format> -->
+                <fileset>
+                    <workspace_dir>/tmp/rti_recordings</workspace_dir>
+                    <execution_dir_expression>
+                        TEMPLATE_RECORDING_FOLDER
+                    </execution_dir_expression>
+                    <filename_expression>recording.dat</filename_expression>
+                </fileset>
+            </sqlite>
+        </storage>
+        <!--  Top-level domain settings -->
+        <domain_participant name="Recorder_Participant">
+            <domain_id>TEMPLATE_DOMAIN_ID</domain_id>
+            <participant_qos>
+                <discovery>
+                    <accept_unknown_peers>false</accept_unknown_peers>
+                    <initial_peers>
+                        <element>localhost</element>
+                        <element>TEMPLATE_DISCOVERY_URL</element>
+                    </initial_peers>
+                    <multicast_receive_addresses/>
+                </discovery>
+                <property> 
+                    <value>
+                        <element>
+                        <name>dds.transport.UDPv4.builtin.multicast_enabled</name>
+                        <value>0</value>
+                        </element>
+                    </value>
+                </property>
+            </participant_qos>
+        </domain_participant>
+        <!-- Recording Session -->
+        <session name="Recorder_Session" >
+            <!-- Group of topics to record -->
+            <topic_group name="RecordAll" participant_ref="Recorder_Participant">
+                <allow_topic_name_filter>*</allow_topic_name_filter>
+                <allow_type_name_filter>*</allow_type_name_filter>
+                <!-- DDS input -->
+                <!-- <datareader_qos base_name="MyQosLib::ReliableQos" /> -->
+                <datareader_qos>
+                <history>
+                    <kind>KEEP_LAST_HISTORY_QOS</kind>
+                    <depth>1</depth>
+                </history>
+            </datareader_qos>
+            </topic_group>
+        </session>
+    </recording_service>
+</dds>

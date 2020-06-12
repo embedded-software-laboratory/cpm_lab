@@ -7,11 +7,14 @@
 
 #include <atomic>
 #include <array>
-#include <chrono> //For time measurements (timeout for remote deployment)
-#include <cstdio> //For popen
+#include <chrono>       //For time measurements (timeout for remote deployment)
+#include <cstdio>       //For popen
 #include <functional>
+#include <fstream>
+#include <iomanip>      // put_time
 #include <iostream>
 #include <memory>
+#include <regex>        // to replace file contents
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -63,6 +66,9 @@ public:
     void kill_ips();
 
     bool diagnosis_switch = true; 
+    //Deploy and kill the rtirecordingservice
+    void deploy_recording();
+    void kill_recording();
 
     //Specific remote deploy functions
     /**
@@ -163,4 +169,7 @@ private:
      * \param process_id The ID of the process
      */
     void kill_process(int process_id);
+
+    // Session name for recording service
+    std::string recording_session = "dds_record";
 };

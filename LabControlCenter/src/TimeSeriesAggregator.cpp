@@ -21,13 +21,14 @@ TimeSeriesAggregator::TimeSeriesAggregator()
         cpm::get_topic<VehicleObservation>("vehicleObservation")
     );
 
-
-    vehicle_commandTrajectory_reader = make_shared<cpm::AsyncReader<VehicleCommandTrajectory>>(
-        [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples){
-            handle_new_commandTrajectory_samples(samples);
-        },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
+    //Set vehicle IDs to listen to in the aggregator - 30 is chosen rather arbitrarily, 20 vehicles are planned atm - change if you need higher values as well
+    for (uint8_t i = 1; i < 30; ++i)
+    {
+        vehicle_ids.push_back(i);
+    }
+    vehicle_commandTrajectory_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandTrajectory>>(
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
+        vehicle_ids
     );
 }
 
@@ -161,61 +162,24 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
     }
 }
 
-
-void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
-    dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples
-)
-{
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        for(auto sample : samples)
-        {
-            if(sample.info().valid())
-            {
-                const uint8_t vehicle_id = sample.data().vehicle_id();
-                auto dds_trajectory_points = sample.data().trajectory_points();                                    
-                for(auto trajectory_point : dds_trajectory_points) 
-                {
-                    const uint64_t t = trajectory_point.t().nanoseconds();
-                    vehicle_reference_trajectories[vehicle_id][t] = trajectory_point;
-                }
-            }
-        }
-    }
-    erase_past_commandTrajectory_samples();    
-}
-
-void TimeSeriesAggregator::erase_past_commandTrajectory_samples()
-{
-    std::lock_guard<std::mutex> lock(_mutex);
-    // Erase trajectory points which are older than 3 second
-    const uint64_t past_threshold_time = clock_gettime_nanoseconds() - 3000000000ull;
-    for (auto vehicle_trajectory_it = vehicle_reference_trajectories.begin();
-         vehicle_trajectory_it != vehicle_reference_trajectories.end();
-         ++vehicle_trajectory_it)
-    {
-        auto last_valid_it = vehicle_trajectory_it->second.upper_bound(past_threshold_time);
-        vehicle_trajectory_it->second.erase(
-            vehicle_trajectory_it->second.begin(),
-            last_valid_it
-        );
-    }
-}
-
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
     return timeseries_vehicles; 
 }
 
 VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
-    erase_past_commandTrajectory_samples(); 
-    std::lock_guard<std::mutex> lock(_mutex);
-    return vehicle_reference_trajectories; 
+    VehicleTrajectories trajectory_sample;
+    std::map<uint8_t, uint64_t> trajectory_sample_age;
+    vehicle_commandTrajectory_reader->get_samples(cpm::get_time_ns(), trajectory_sample, trajectory_sample_age);
+    return trajectory_sample;
 }
 
 void TimeSeriesAggregator::reset_all_data()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     timeseries_vehicles.clear();
-    vehicle_reference_trajectories.clear();
+    vehicle_commandTrajectory_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandTrajectory>>(
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
+        vehicle_ids
+    );
 }
