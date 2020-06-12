@@ -6,7 +6,13 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
+
+//For getting time in H:M:S
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 #include <glib.h>
 
@@ -22,13 +28,19 @@ class LCCErrorLogger {
     LCCErrorLogger& operator=(LCCErrorLogger &&) = delete;
 
 private:
-    std::unordered_set<std::string> error_storage; //For already requested error messages
-    std::unordered_set<std::string> new_error_storage; //For new error messages that have not yet been requested
+    //Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
+    std::unordered_map<std::string, std::string> error_storage; //For already requested error messages
+    std::unordered_map<std::string, std::string> new_error_storage; //For new error messages that have not yet been requested
     std::mutex error_storage_mutex;
     std::mutex new_error_storage_mutex;
 
     //Made private s.t. singleton property is fulfilled
     LCCErrorLogger() {};
+
+    /**
+     * \brief A simple function relying on std::chrono to get the current time in Hours:Minutes:Seconds
+     */
+    std::string get_timestamp_string();
 
 public:
     /**
@@ -47,13 +59,13 @@ public:
      * \brief Get all LCC error messages that have been received
      * \return Vector of error messages
      */
-    std::unordered_set<std::string> get_all_errors();
+    std::unordered_map<std::string, std::string> get_all_errors();
 
     /**
      * \brief Get all LCC error messages that have been received since the last request of new errors
      * \return Vector of error messages
      */
-    std::unordered_set<std::string> get_new_errors();
+    std::unordered_map<std::string, std::string> get_new_errors();
 
     /**
     * \brief Reset all data structures / delete all error data

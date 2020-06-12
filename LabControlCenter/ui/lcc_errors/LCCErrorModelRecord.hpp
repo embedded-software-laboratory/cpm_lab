@@ -5,9 +5,11 @@
 
 class LCCErrorModelRecord : public Gtk::TreeModelColumnRecord {
 public:
-  LCCErrorModelRecord() { 
+  LCCErrorModelRecord() {
+      add(timestamps); 
       add(error_content);
     }
 
+  Gtk::TreeModelColumn<Glib::ustring> timestamps;
   Gtk::TreeModelColumn<Glib::ustring> error_content;
 };

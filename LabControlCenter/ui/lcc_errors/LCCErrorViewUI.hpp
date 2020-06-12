@@ -32,6 +32,7 @@ private:
     Gtk::Label* error_label_header;
     Gtk::ScrolledWindow* error_scrolled_window;
     Gtk::CheckButton* autoscroll_check_button;
+    Gtk::Button* error_button_reset;
 
     //TreeView Layout, status storage for the UI
     LCCErrorModelRecord error_record;
@@ -52,6 +53,9 @@ private:
 
     //Check for scroll event to turn off automatic scrolling
     bool scroll_callback(GdkEventScroll* scroll_event);
+
+    //Callback for tooltip (to show full message without scrolling)
+    bool tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
     //Variable for the reset action (is performed within the UI)
     std::atomic_bool reset_logs;
