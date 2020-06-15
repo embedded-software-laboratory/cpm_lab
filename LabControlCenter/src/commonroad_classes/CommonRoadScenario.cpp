@@ -169,6 +169,9 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
     }
 
+    //Calculate the center of the planning problem
+    calculate_center();
+
     lock.unlock();
 
     //Load new obstacle simulations
@@ -452,7 +455,6 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
     //Do not block the UI if locked, needs to be done again then
     if (xml_translation_mutex.try_lock())
     {
-
         //Get current min. lane width of lanelets (calculated from point distances)
         double min_width = -1.0;
         for (auto lanelet : lanelets)
@@ -497,6 +499,9 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             {
                 traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
             } 
+
+            //Update center
+            calculate_center();
         }
         else if (min_width < 0)
         {
@@ -596,7 +601,117 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     }
 }
 
+/******************************Class-specific draw function***********************************/
+
+void CommonRoadScenario::draw_centered(const DrawingContext& ctx)
+{
+    if (xml_translation_mutex.try_lock())
+    {
+        //Draw lanelets
+        ctx->save();
+
+        //Perform required translation + rotation
+        //Local orientation is irrelevant here (Use global orientation if you want to change the orientation of the whole scenario. Local orientation is only used for e.g. shapes, where this actually makes sense.)
+        ctx->translate(-1.0 * center.first, -1.0 * center.second);
+
+        ctx->set_source_rgb(0,0,1.0);
+        for (auto &lanelet_entry : lanelets)
+        {
+            lanelet_entry.second.draw(ctx);
+        }
+
+        for (auto &static_obstacle : static_obstacles)
+        {
+            static_obstacle.second.draw(ctx);
+        }
+
+        for (auto &dynamic_obstacle : dynamic_obstacles)
+        {
+            dynamic_obstacle.second.draw(ctx);
+        }
+
+        for (auto &planning_problem : planning_problems)
+        {
+            planning_problem.second.draw(ctx);
+        }
+
+        for (auto &traffic_sign : traffic_signs)
+        {
+            traffic_sign.second.draw(ctx);
+        } 
+
+        for (auto &traffic_light : traffic_lights)
+        {
+            traffic_light.second.draw(ctx);
+        } 
+
+        //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
+
+        ctx->restore();
+
+        xml_translation_mutex.unlock();
+    }
+}
+
 /******************************Getter***********************************/
+
+//This one is private
+void CommonRoadScenario::calculate_center()
+{
+    //As for most functions in this class, this function should also only be called after locking the translation mutex, as translation might be performed by another thread
+
+    //Init center
+    center = std::pair<double, double>(0.0, 0.0);
+
+    double x_sum = 0.0;
+    double y_sum = 0.0;
+    double count = 0.0;
+    for (auto lanelet : lanelets)
+    {
+        auto center = lanelet.second.get_center();
+        x_sum += center.first;
+        y_sum += center.second;
+        ++count;
+    }
+    for (auto static_obstacle : static_obstacles)
+    {
+        auto state = static_obstacle.second.get_initial_state();
+        if (state.has_value())
+        {
+            auto position = state->get_position();
+            if (! position.position_is_lanelet_ref())
+            {
+                auto center = position.get_center();
+                x_sum += center.first;
+                y_sum += center.second;
+                ++count;
+            }
+        }
+    }
+    for (auto dynamic_obstacle : dynamic_obstacles)
+    {
+        auto state = dynamic_obstacle.second.get_initial_state();
+        if (state.has_value())
+        {
+            auto position = state->get_position();
+            if (! position.position_is_lanelet_ref())
+            {
+                auto center = position.get_center();
+                x_sum += center.first;
+                y_sum += center.second;
+                ++count;
+            }
+        }
+    }
+
+    if (count > 0)
+    {
+        center.first = x_sum / count;
+        center.second = y_sum / count;
+    }
+
+    std::cout << "New center: " << center.first << ", " << center.second << std::endl;
+}
 
 const std::string& CommonRoadScenario::get_author()
 {

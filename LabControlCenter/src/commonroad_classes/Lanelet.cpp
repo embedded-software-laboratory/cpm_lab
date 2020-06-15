@@ -406,6 +406,12 @@ void Lanelet::transform_coordinate_system(double scale, double translate_x, doub
         }
     }
 
+    if (speed_limit.has_value())
+    {
+        auto new_speed_limit = speed_limit.value() * scale;
+        speed_limit = std::optional<double>(new_speed_limit);
+    }
+
     for (auto& point : right_bound.points)
     {
         point.transform_coordinate_system(scale, translate_x, translate_y);
@@ -545,8 +551,8 @@ std::pair<double, double> Lanelet::get_center()
     size_t vec_size = left_bound.points.size();
     size_t middle_index = static_cast<size_t>(static_cast<double>(vec_size) / 2.0);
 
-    double x = (left_bound.points.at(middle_index).get_x() - right_bound.points.at(middle_index).get_x()) / 2.0;
-    double y = (left_bound.points.at(middle_index).get_y() - right_bound.points.at(middle_index).get_y()) / 2.0;
+    double x = (left_bound.points.at(middle_index).get_x() + right_bound.points.at(middle_index).get_x()) / 2.0;
+    double y = (left_bound.points.at(middle_index).get_y() + right_bound.points.at(middle_index).get_y()) / 2.0;
 
     return std::pair<double, double>(x, y);
 }

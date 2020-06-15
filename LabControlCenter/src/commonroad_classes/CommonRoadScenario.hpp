@@ -163,6 +163,13 @@ private:
      */
     void clear_data();
 
+    /**
+     * Calculate the center (mean position) of the planning problem based on lanelets and obstacles
+     * Only gets re-calculated whenever the problem is transformed or another problem is loaded
+     */
+    void calculate_center();
+    std::pair<double, double> center;
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -216,6 +223,12 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    /**
+     * \brief This function is used to draw the whole scenario with its current scale etc. centered in MapView at current view position
+     * \param ctx A DrawingContext, used to draw on
+     */
+    void draw_centered(const DrawingContext& ctx);
 
     void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
 
