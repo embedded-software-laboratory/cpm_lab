@@ -7,7 +7,7 @@ function main(matlabDomainID, vehicle_id)
     setenv("NDDS_QOS_PROFILES", ['file://' pwd '/../QOS_READY_TRIGGER.xml;file://' middleware_local_qos_xml]);
             
     %% Import IDL files
-    dds_idl_matlab = '../../../../cpm_base/cpm_lib/dds_idl_matlab/';
+    dds_idl_matlab = '../../../cpm_lib/dds_idl_matlab/';
     assert(logical(exist(dds_idl_matlab, 'dir')));
     addpath(dds_idl_matlab);
     

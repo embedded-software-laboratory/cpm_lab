@@ -6,7 +6,7 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     previous_folder = cd(script_directoy); % Remember folder of calling function
 
     % IDL files from cpm library
-    dds_idl_matlab = fullfile('../../../../cpm_base/cpm_lib/dds_idl_matlab/');
+    dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
     if ~exist(dds_idl_matlab, 'dir')
         error(['Missing directory "' dds_idl_matlab '"']);
     end

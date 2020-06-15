@@ -20,14 +20,12 @@ done
 export SIMULATION=$simulation
 
 # cpm lib
-pushd cpm_base
 pushd cpm_lib
 if [ $simulation == 0 ]
 then
     bash build_arm.bash  
 fi
 bash build.bash
-popd
 popd
 
 

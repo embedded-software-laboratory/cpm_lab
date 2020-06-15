@@ -18,7 +18,7 @@ sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./hlc/middleware/build/QOS_LOCAL_COMMUNICAT
 /bin/cp -rf ./hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml ./hlc/$script_path/
 
 # Copy cpm lib file
-/bin/cp ./cpm_base/cpm_lib/build/libcpm.so ./hlc/middleware/build/
+/bin/cp ./cpm_lib/build/libcpm.so ./hlc/middleware/build/
 
 # Start Middleware and HLC script
 # Start screen for middleware; detach and start middleware

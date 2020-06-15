@@ -28,9 +28,9 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 # CPM lib
-include_directories(SYSTEM ../../cpm_base/cpm_lib/include/)
-include_directories(SYSTEM ../../cpm_base/cpm_lib/include/cpm/dds/)
-link_directories(SYSTEM ../../cpm_base/cpm_lib/build/)
+include_directories(SYSTEM ../cpm_lib/include/)
+include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
+link_directories(SYSTEM ../cpm_lib/build/)
 
 # yaml-cpp
 include_directories(../../yaml-cpp/include/)

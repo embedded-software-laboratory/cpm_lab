@@ -27,9 +27,9 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 
 # CPM lib
-include_directories(SYSTEM ../../cpm_base/cpm_lib/include/)
-include_directories(SYSTEM ../../cpm_base/cpm_lib/include/cpm/dds/)
-link_directories(../../cpm_base/cpm_lib/build/)
+include_directories(SYSTEM ../cpm_lib/include/)
+include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
+link_directories(../cpm_lib/build/)
 
 
 

@@ -16,8 +16,8 @@ include_directories(src)
 
 
 # CPM lib
-include_directories(../../cpm_base/cpm_lib/include/)
-include_directories(../../cpm_base/cpm_lib/include/cpm/dds/)
+include_directories(../cpm_lib/include/)
+include_directories(../cpm_lib/include/cpm/dds/)
 
 
 
@@ -70,10 +70,10 @@ endif()
 
 
 if(BUILD_ARM)
-    link_directories(../../cpm_base/cpm_lib/build_arm/)
+    link_directories(../cpm_lib/build_arm/)
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)
 else()
-    link_directories(../../cpm_base/cpm_lib/build/)
+    link_directories(../cpm_lib/build/)
     link_directories($ENV{NDDSHOME}/lib/x64Linux4gcc7.3.0)
 endif()
 

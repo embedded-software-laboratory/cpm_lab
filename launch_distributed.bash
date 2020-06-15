@@ -101,7 +101,7 @@ tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabContr
 #   2. create tar
 mkdir nuc_apache_package
 pushd nuc_apache_package
-tar -czvf nuc_package.tar.gz ../../software/hlc ../../cpm_base/cpm_lib/build/libcpm.so ../../cpm_base/dds_idl
+tar -czvf nuc_package.tar.gz ../../software/hlc ../../software/cpm_lib/build/libcpm.so ../../software/dds_idl
 popd
 #   3. publish package
 rm -f /var/www/html/nuc/nuc_package.tar.gz
