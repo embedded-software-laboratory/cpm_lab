@@ -69,6 +69,12 @@ void GoalState::transform_coordinate_system(double scale, double translate_x, do
         position->transform_coordinate_system(scale, translate_x, translate_y);
     }
 
+    //If all positional values are adjusted, the velocity must be adjusted as well
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(scale, 0, 0);
+    }
+
     if (scale > 0)
     {
         transform_scale *= scale;

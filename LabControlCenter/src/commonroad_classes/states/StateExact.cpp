@@ -69,6 +69,14 @@ void StateExact::transform_coordinate_system(double scale, double translate_x, d
         position->transform_coordinate_system(scale, translate_x, translate_y);
     }
 
+    //If all positional values are adjusted, the velocity must be adjusted as well
+    velocity *= scale;
+    if (acceleration.has_value())
+    {
+        auto new_acceleration = scale * acceleration.value();
+        acceleration = std::optional<double>(new_acceleration);
+    }
+
     if (scale > 0)
     {
         transform_scale *= scale;   

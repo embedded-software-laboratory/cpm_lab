@@ -398,9 +398,12 @@ double Lanelet::get_min_width()
 
 void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    for (auto& point : stop_line->points)
+    if (stop_line.has_value())
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        for (auto& point : stop_line->points)
+        {
+            point.transform_coordinate_system(scale, translate_x, translate_y);
+        }
     }
 
     for (auto& point : right_bound.points)

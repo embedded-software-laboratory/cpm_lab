@@ -108,6 +108,40 @@ void State::transform_coordinate_system(double scale, double translate_x, double
         delta_y_rear->transform_coordinate_system(scale, 0.0, 0.0);
     }
 
+    //If all positional values are adjusted, the velocity must be adjusted as well
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(scale, 0, 0);
+    }
+    if (acceleration.has_value())
+    {
+        acceleration->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_y.has_value())
+    {
+        velocity_y->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_y_front.has_value())
+    {
+        velocity_y_front->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_y_rear.has_value())
+    {
+        velocity_y_rear->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_z.has_value())
+    {
+        velocity_z->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_z_front.has_value())
+    {
+        velocity_z_front->transform_coordinate_system(scale, 0, 0);
+    }
+    if (velocity_z_rear.has_value())
+    {
+        velocity_z_rear->transform_coordinate_system(scale, 0, 0);
+    }
+
     if (scale > 0)
     {
         transform_scale *= scale;
