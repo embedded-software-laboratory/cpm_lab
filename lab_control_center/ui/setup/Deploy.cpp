@@ -303,7 +303,7 @@ void Deploy::deploy_recording()
 
     // Update recording config
     std::string config_path_in = std::getenv("HOME");
-    config_path_in.append("/dev/software/dds_record/rti_recording_config_template.xml");
+    config_path_in.append("/dev/software/lab_control_center/recording/rti_recording_config_template.xml");
     std::ifstream xml_config_template(config_path_in);
     
     std::string xml_config_str;
