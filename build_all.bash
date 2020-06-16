@@ -54,7 +54,7 @@ pushd middleware
     bash build.bash
 popd
 
-pushd vehicle_raspberry_firmware
+pushd mid_level_controller
     if [ $simulation == 0 ]
     then
         bash build.bash

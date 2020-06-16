@@ -124,7 +124,7 @@ do
     sshpass ssh -t guest@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${id} ${simulated_time}"
 
     # Start vehicle (here for test purposes, later: use real vehicles / position them correctly)
-    #tmux new-session -d -s "vehicle_${id}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${id} 21 ${simulated_time}"
+    #tmux new-session -d -s "vehicle_${id}" "cd ./mid_level_controller/;bash run_w_flexible_domain.bash ${id} 21 ${simulated_time}"
 done
 
 sleep infinity

@@ -85,8 +85,8 @@ classdef MpcController
             obj.u_prev = [0 0];
             
             
-            copyfile casadi_mpc_fn.c ../../vehicle_raspberry_firmware/src/
-            copyfile casadi_mpc_fn.h ../../vehicle_raspberry_firmware/src/
+            copyfile casadi_mpc_fn.c ../../mid_level_controller/src/
+            copyfile casadi_mpc_fn.h ../../mid_level_controller/src/
         end
         
         function [u, trajectory_pred_x, trajectory_pred_y] = update(obj, state, reference_trajectory_x, reference_trajectory_y)

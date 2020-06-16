@@ -129,7 +129,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     command 
         << "tmux new-session -d "
         << "-s \"" << session_name.str() << "\" "
-        << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
+        << "\"cd ~/dev/software/mid_level_controller/build_x64_sim;./vehicle_rpi_firmware "
         << "--simulated_time=" << sim_time_string
         << " --vehicle_id=" << id
         << " --dds_domain=" << cmd_domain_id;

@@ -34,7 +34,7 @@ core
 indoor_positioning_system/debug*.png
 output/
 package.tar.gz
-vehicle_raspberry_firmware/package/
+mid_level_controller/package/
 matlab_scripts/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
 core
 matlab_scripts/vehicle_dynamics_identification_and_mpc/documentation

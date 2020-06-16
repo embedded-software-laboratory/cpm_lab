@@ -3,8 +3,8 @@
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
 
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
+#include "../mid_level_controller/src/TrajectoryInterpolation.hpp"
+#include "../mid_level_controller/src/TrajectoryInterpolation.cxx"
 
 using namespace std::placeholders; //For std::bind
 
