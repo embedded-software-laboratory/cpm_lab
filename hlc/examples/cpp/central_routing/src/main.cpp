@@ -23,7 +23,7 @@ using std::vector;
 int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("central_routing_example");
+    cpm::Logging::Instance().set_id("central_routing");
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
     ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
     /////////////////////////////////Trajectory planner//////////////////////////////////////////
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
-    auto timer = cpm::Timer::create("central_routing_example", dt_nanos, 0, false, true, enable_simulated_time); 
+    auto timer = cpm::Timer::create("central_routing", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
     {
         planner.set_real_time(t_now);

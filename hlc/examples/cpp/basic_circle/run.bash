@@ -6,7 +6,7 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 if [ $# -eq 0 ]
   then
-    echo "Missing argument vehicle ID list (comma separated)"
+    echo "Missing argument vehicle ID"
 else
-	./build/central_routing_example --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_ids=$1
+	./build/basic_circle --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_id=$1
 fi

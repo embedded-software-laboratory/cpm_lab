@@ -13,16 +13,16 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 
 # CPM lib
-include_directories(SYSTEM ../cpm_lib/include/)
-include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
-link_directories(../cpm_lib/build/)
+include_directories(SYSTEM ../../../../cpm_lib/include/)
+include_directories(SYSTEM ../../../../cpm_lib/include/cpm/dds/)
+link_directories(../../../../cpm_lib/build/)
 
 
 # exe
 include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
-add_executable(central_routing_example
+add_executable(central_routing
     src/main.cpp
     include/lane_graph_full/lane_graph.hpp
     src/lane_graph_tools.hpp
@@ -32,11 +32,11 @@ add_executable(central_routing_example
     src/MultiVehicleTrajectoryPlanner.hpp
     src/MultiVehicleTrajectoryPlanner.cpp
 )
-target_include_directories(central_routing_example PUBLIC
+target_include_directories(central_routing PUBLIC
     include/lane_graph_full)
-target_link_libraries(central_routing_example cpm)
+target_link_libraries(central_routing cpm)
 
-add_executable(central_routing_example_reduced
+add_executable(central_routing_reduced
     src/main.cpp
     include/lane_graph_one_lane/lane_graph.hpp
     src/lane_graph_tools.hpp
@@ -46,9 +46,9 @@ add_executable(central_routing_example_reduced
     src/MultiVehicleTrajectoryPlanner.hpp
     src/MultiVehicleTrajectoryPlanner.cpp
 )
-target_include_directories(central_routing_example_reduced PUBLIC 
+target_include_directories(central_routing_reduced PUBLIC 
     include/lane_graph_one_lane)
-target_link_libraries(central_routing_example_reduced cpm)
+target_link_libraries(central_routing_reduced cpm)
 
 add_executable(tests
     src/tests.cpp

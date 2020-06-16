@@ -13,21 +13,18 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 
 
 # CPM lib
-include_directories(SYSTEM ../cpm_lib/include/)
-include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
-link_directories(../cpm_lib/build/)
+include_directories(SYSTEM ../../../../../cpm_lib/include/)
+include_directories(SYSTEM ../../../../../cpm_lib/include/cpm/dds/)
+link_directories(../../../../../cpm_lib/build/)
 
 
 
 include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
-add_executable(basic_circle_example
+add_executable(eight_zero
     src/main.cpp
+    src/Eight.cpp
+    src/Eight.hpp
 )
-target_link_libraries(basic_circle_example cpm)
-
-add_executable(basic_line_example
-    src/main_line.cpp
-)
-target_link_libraries(basic_line_example cpm)
+target_link_libraries(eight_zero cpm)

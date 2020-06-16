@@ -21,54 +21,57 @@ export SIMULATION=$simulation
 
 # cpm lib
 pushd cpm_lib
-if [ $simulation == 0 ]
-then
-    bash build_arm.bash  
-fi
-bash build.bash
+    if [ $simulation == 0 ]
+    then
+        bash build_arm.bash  
+    fi
+    bash build.bash
 popd
 
 
 pushd LabControlCenter
-bash build.bash
+    bash build.bash
 popd
 
 pushd hlc
-pushd middleware
-bash build.bash
-popd
-pushd autostart
-bash build.bash
-popd
-pushd matlab
-bash create_nuc_package.bash
-popd
+    pushd middleware
+        bash build.bash
+    popd
+    pushd autostart
+        bash build.bash
+    popd
+    pushd matlab
+        bash create_nuc_package.bash
+    popd
+    pushd examples
+        pushd cpp
+            pushd central_routing
+                bash build.bash
+            popd
+        popd
+    popd
 popd
 
 
 pushd vehicle_raspberry_firmware
-if [ $simulation == 0 ]
-then
-    bash build.bash
-else
-    bash build.bash --simulation
-fi
+    if [ $simulation == 0 ]
+    then
+        bash build.bash
+    else
+        bash build.bash --simulation
+    fi
 popd
 
 
 pushd controller_test_loop
-bash build.bash
+    bash build.bash
 popd
 
-
-pushd central_routing_example
-bash build.bash
-popd
 
 if [ $simulation == 0 ]
 then
     pushd ips2
-    bash build.bash
+        bash build.bash
     popd
 fi
 
