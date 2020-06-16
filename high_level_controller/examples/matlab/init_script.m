@@ -5,7 +5,7 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     previous_folder = cd(script_directoy); % Remember folder of calling function
 
-    % IDL files from cpm library
+    % Import IDL files from cpm library
     dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
     if ~exist(dds_idl_matlab, 'dir')
         error(['Missing directory "' dds_idl_matlab '"']);
@@ -13,13 +13,12 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     addpath(dds_idl_matlab)
 
     % XML files for quality of service settings
-    % TODO Patrick change middleware path
-    middleware_local_qos_xml = ['../../middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    middleware_local_qos_xml = '../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
     end
 
-    ready_trigger_qos_xml = ['./QOS_READY_TRIGGER.xml'];
+    ready_trigger_qos_xml = './QOS_READY_TRIGGER.xml';
     if ~exist(ready_trigger_qos_xml,'file')
         error(['Missing ready trigger QOS XML "' ready_trigger_qos_xml '"'])
     end
@@ -32,8 +31,6 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     systemTriggerTopicName = 'systemTrigger';
     readyStatusTopicName = 'readyStatus';
     trigger_stop = uint64(18446744073709551615);
-
-    phaseTime = 40;
 
     %% create participants
     matlabParticipant = DDS.DomainParticipant('MatlabLibrary::LocalCommunicationProfile', matlab_domain_id);
