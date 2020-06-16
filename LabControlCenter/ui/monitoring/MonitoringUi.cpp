@@ -256,9 +256,9 @@ void MonitoringUi::init_ui_thread()
 
                         const auto& trajectory_points = trajectory->second;
                         std::vector<TrajectoryPoint> trajectory_segment;
-                        for (const auto& trajectory_point : trajectory_points)
+                        for (const auto& trajectory_point : trajectory_points.trajectory_points())
                         {
-                            trajectory_segment.push_back(trajectory_point.second);
+                            trajectory_segment.push_back(trajectory_point);
                         }        
 
                         if(trajectory_segment.size() > 1)

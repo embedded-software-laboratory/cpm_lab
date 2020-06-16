@@ -137,6 +137,9 @@ private:
     //IPS switch callback (-> lab mode)
     void switch_ips_set();
 
+    //diagnosis switch callback 
+    void switch_diagnosis_set();
+
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
     void kill_deployed_applications();
