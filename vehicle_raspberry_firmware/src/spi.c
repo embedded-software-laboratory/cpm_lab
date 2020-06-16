@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "spi.h"
-#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
+#include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 
 static bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
     uint16_t mosi_CRC = spi_miso_data.CRC;

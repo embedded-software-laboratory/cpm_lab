@@ -39,8 +39,8 @@ set(SOURCE_BASE
     src/MpcController.cxx
     src/VehicleModel.hpp
     src/VehicleModel.cxx
-    ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h
-    ../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.c
+    ../low_level_controller/vehicle_atmega2560_firmware/crc.h
+    ../low_level_controller/vehicle_atmega2560_firmware/crc.c
 )
 
 

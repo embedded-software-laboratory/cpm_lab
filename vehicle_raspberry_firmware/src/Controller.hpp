@@ -18,7 +18,7 @@
 #include "TrajectoryInterpolation.hpp"
 
 extern "C" {
-    #include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
+    #include "../../low_level_controller/vehicle_atmega2560_firmware/spi_packets.h"
 }
 
 #define TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE 1500

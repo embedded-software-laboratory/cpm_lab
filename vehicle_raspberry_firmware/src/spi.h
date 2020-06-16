@@ -1,5 +1,5 @@
 #pragma once
-#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/spi_packets.h"
+#include "../../low_level_controller/vehicle_atmega2560_firmware/spi_packets.h"
 
 void spi_init();
 

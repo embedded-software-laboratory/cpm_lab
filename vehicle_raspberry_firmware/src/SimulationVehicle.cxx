@@ -4,7 +4,7 @@
 #include <iostream>
 
 extern "C" {
-#include "../../vehicle_atmega2560_firmware/vehicle_atmega2560_firmware/crc.h"
+#include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 }
 
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id, vector<double> starting_position)
