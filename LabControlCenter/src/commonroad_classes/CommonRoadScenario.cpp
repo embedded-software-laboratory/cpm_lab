@@ -90,7 +90,7 @@ void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _res
     reset_obstacle_aggregator = _reset;
 }
 
-void CommonRoadScenario::load_file(std::string xml_filepath)
+void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordinates)
 {
     std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
@@ -173,6 +173,12 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
     calculate_center();
 
     lock.unlock();
+
+    //Automatically center the planning problem
+    if (center_coordinates)
+    {
+        transform_coordinate_system(- center.first, - center.second);
+    }
 
     //Load new obstacle simulations
     if (setup_obstacle_sim_manager)
@@ -448,6 +454,52 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
     }
 }
 
+void CommonRoadScenario::transform_coordinate_system(double translate_x, double translate_y) 
+{
+    //Do not block the UI if locked, needs to be done again then
+    if (xml_translation_mutex.try_lock())
+    {
+        double scale = 1.0;
+        if (translate_x != 0.0 || translate_y != 0.0)
+        {
+            for (auto &lanelet_entry : lanelets)
+            {
+                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &static_obstacle : static_obstacles)
+            {
+                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &dynamic_obstacle : dynamic_obstacles)
+            {
+                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &planning_problem : planning_problems)
+            {
+                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
+            } 
+
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
+            } 
+
+            //Update center
+            calculate_center();
+        }
+
+        xml_translation_mutex.unlock();
+    }
+}
+
 /******************************Interface functions***********************************/
 
 void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
@@ -522,8 +574,6 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             setup_obstacle_sim_manager();
         }
     }
-
-    //TODO: We probably need to center the problem as well, so get farthest left / right / ... points for this
 }
 
 //Suppress warning for unused parameter (s)
@@ -601,57 +651,6 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     }
 }
 
-/******************************Class-specific draw function***********************************/
-
-void CommonRoadScenario::draw_centered(const DrawingContext& ctx)
-{
-    if (xml_translation_mutex.try_lock())
-    {
-        //Draw lanelets
-        ctx->save();
-
-        //Perform required translation + rotation
-        //Local orientation is irrelevant here (Use global orientation if you want to change the orientation of the whole scenario. Local orientation is only used for e.g. shapes, where this actually makes sense.)
-        ctx->translate(-1.0 * center.first, -1.0 * center.second);
-
-        ctx->set_source_rgb(0,0,1.0);
-        for (auto &lanelet_entry : lanelets)
-        {
-            lanelet_entry.second.draw(ctx);
-        }
-
-        for (auto &static_obstacle : static_obstacles)
-        {
-            static_obstacle.second.draw(ctx);
-        }
-
-        for (auto &dynamic_obstacle : dynamic_obstacles)
-        {
-            dynamic_obstacle.second.draw(ctx);
-        }
-
-        for (auto &planning_problem : planning_problems)
-        {
-            planning_problem.second.draw(ctx);
-        }
-
-        for (auto &traffic_sign : traffic_signs)
-        {
-            traffic_sign.second.draw(ctx);
-        } 
-
-        for (auto &traffic_light : traffic_lights)
-        {
-            traffic_light.second.draw(ctx);
-        } 
-
-        //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
-
-        ctx->restore();
-
-        xml_translation_mutex.unlock();
-    }
-}
 
 /******************************Getter***********************************/
 

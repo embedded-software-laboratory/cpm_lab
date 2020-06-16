@@ -234,7 +234,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
         //Draw map
         if (commonroad_scenario)
         {
-            commonroad_scenario->draw_centered(ctx);
+            commonroad_scenario->draw(ctx);
         }
 
         // Draw vehicle focus disk

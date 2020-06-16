@@ -196,18 +196,26 @@ public:
      * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
      * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs
      * \param xml_filepath The path of the XML file that specificies the commonroad scenario
+     * \param center_coordinates Center the coordinates of the scenario automatically
      */
-    void load_file(std::string xml_filepath);
+    void load_file(std::string xml_filepath, bool center_coordinates = true);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The min lane width
+     * \param lane_width The min lane width
      * \param translate_x Move the coordinate system's origin along the x axis by this value
      * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double lane_width, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
+     */
+    void transform_coordinate_system(double translate_x, double translate_y);
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -223,12 +231,6 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
-
-    /**
-     * \brief This function is used to draw the whole scenario with its current scale etc. centered in MapView at current view position
-     * \param ctx A DrawingContext, used to draw on
-     */
-    void draw_centered(const DrawingContext& ctx);
 
     void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
 
