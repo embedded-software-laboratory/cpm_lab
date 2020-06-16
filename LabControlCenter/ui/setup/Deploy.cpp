@@ -258,7 +258,7 @@ void Deploy::deploy_ips()
     command_ips 
         << "tmux new-session -d "
         << "-s \"ips_pipeline\" "
-        << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
+        << "\"cd ~/dev/software/indoor_positioning_system/;./build/ips_pipeline "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
         command_ips 
@@ -275,7 +275,7 @@ void Deploy::deploy_ips()
     command_basler 
         << "tmux new-session -d "
         << "-s \"ips_basler\" "
-        << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
+        << "\"cd ~/dev/software/indoor_positioning_system/;./build/BaslerLedDetection "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
         command_basler 

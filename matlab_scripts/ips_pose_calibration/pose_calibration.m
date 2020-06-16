@@ -1,7 +1,7 @@
 function pose_calibration
 
     %% Load measurement data
-    % This data is taken from "ips2/src/PoseCalculation.cpp"
+    % This data is taken from "indoor_positioning_system/src/PoseCalculation.cpp"
     % with std::cout << features[i] ...
     data = dlmread('pose_calibration.txt',',');
     data = data(:,1:5);

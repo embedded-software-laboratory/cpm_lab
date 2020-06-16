@@ -66,7 +66,7 @@ popd
 
 if [ $simulation == 0 ]
 then
-    pushd ips2
+    pushd indoor_positioning_system
         bash build.bash
     popd
 fi

@@ -31,7 +31,7 @@ tools/map_print2/*.mat
 ParamServer/yaml-cpp
 Log_*.csv
 core
-ips2/debug*.png
+indoor_positioning_system/debug*.png
 output/
 package.tar.gz
 vehicle_raspberry_firmware/package/
