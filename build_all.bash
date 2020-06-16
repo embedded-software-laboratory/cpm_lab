@@ -40,12 +40,8 @@ pushd high_level_controller
     pushd matlab
         bash create_nuc_package.bash
     popd
-    pushd examples
-        pushd cpp
-            pushd central_routing
-                bash build.bash
-            popd
-        popd
+    pushd examples/cpp/central_routing
+        bash build.bash
     popd
 popd
 
