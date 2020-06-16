@@ -7,7 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR
 
-if [ ! -d "dds" ]; then
+if [ ! -d "dds_idl_cpp" ]; then
     echo "Generating C++ IDL files..."
     ./rtigen.bash
 fi
