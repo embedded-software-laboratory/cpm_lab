@@ -36,8 +36,6 @@ popd
 pushd high_level_controller
     pushd autostart
         bash build.bash
-    popd
-    pushd matlab
         bash create_nuc_package.bash
     popd
     pushd examples/cpp/central_routing
