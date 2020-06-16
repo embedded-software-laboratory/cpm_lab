@@ -18,6 +18,8 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("button_choose_commonroad", button_choose_commonroad);
     builder->get_widget("button_load_commonroad", button_load_commonroad);
     builder->get_widget("button_apply_transformation", button_apply_transformation);
+    builder->get_widget("problem_treeview", problem_treeview);
+    builder->get_widget("problem_scrolled_window", problem_scrolled_window);
 
     assert(parent);
     assert(commonroad_box);
@@ -28,6 +30,8 @@ CommonroadViewUI::CommonroadViewUI
     assert(button_choose_commonroad);
     assert(button_load_commonroad);
     assert(button_apply_transformation);
+    assert(problem_treeview);
+    assert(problem_scrolled_window);
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
@@ -44,6 +48,177 @@ CommonroadViewUI::CommonroadViewUI
     entry_translate_x->set_tooltip_text("Set x translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     entry_translate_y->set_tooltip_text("Set y translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     button_apply_transformation->set_tooltip_text("Permanently apply set transformation to coordinate system. Future transformations are applied relative to new coordinate system.");
+
+    //Setup for planning problem treeview
+    //Create model for view
+    problem_list_store = Gtk::ListStore::create(problem_record);
+
+    //Use model_record, add it to the view
+    problem_treeview->append_column("Problem ID", problem_record.problem_id);
+    problem_treeview->append_column("Goal Speed", problem_record.problem_goal_speed);
+    problem_treeview->append_column("Goal Time (sec.)", problem_record.problem_goal_time);
+    problem_treeview->set_model(problem_list_store);
+
+    problem_treeview->get_column(0)->set_resizable(true);
+    problem_treeview->get_column(0)->set_expand(true);
+
+    //Create UI thread and register dispatcher callback
+    ui_dispatcher.connect(sigc::mem_fun(*this, &CommonroadViewUI::dispatcher_callback));
+    run_thread.store(true);
+    ui_thread = std::thread(&CommonroadViewUI::update_ui, this);
+
+    //Set tooltip
+    problem_treeview->set_has_tooltip(true);
+    problem_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &CommonroadViewUI::tooltip_callback));
+
+    //Try to load planning problems from current translation, if they exist
+    reload_problems.store(true);
+}
+
+void CommonroadViewUI::dispatcher_callback() {
+    if (reload_problems.load())
+    {
+        reload_problems.store(false);
+
+        //Get current number of elements
+        size_t count = 0;
+        for (auto iter = problem_list_store->children().begin(); iter != problem_list_store->children().end(); ++iter) {
+            ++count;
+        }
+
+        //Delete them all
+        for (size_t i = 0; i < count; ++i) { 
+            auto iter = problem_list_store->children().begin();
+            problem_list_store->erase(iter);
+        }
+
+        //Load current planning problems
+        for (auto planning_problem_id : commonroad_scenario->get_planning_problem_ids())
+        {
+            //We still check for the existence of the problem, as the file may have been reloaded in between
+            auto planning_problem = commonroad_scenario->get_planning_problem(planning_problem_id);
+            if (!planning_problem.has_value())
+            {
+                break;
+            }
+
+            std::stringstream id_stream; 
+            id_stream << planning_problem_id;
+            Glib::ustring id_ustring(id_stream.str());
+
+            for (auto planning_problem_element : planning_problem->get_planning_problems())
+            {
+                for (auto goal_state : planning_problem_element.goal_states)
+                {
+                    //Get goal speed(s)
+                    std::stringstream goal_stream; 
+
+                    auto goal_velocity = goal_state.get_velocity();
+                    if (goal_velocity.has_value())
+                    {
+                        for (auto it = goal_velocity.value().cbegin(); it != goal_velocity.value().cend(); ++it)
+                        {
+                            goal_stream << " [" << it->first << ", " << it->second << "] ";
+                        }
+                    }
+                    else
+                    {
+                        goal_stream << "Not specified";
+                    }
+
+                    Glib::ustring goal_speed_ustring(goal_stream.str());
+
+                    //Get goal time(s)
+                    goal_stream.str( std::string() );
+                    goal_stream.clear();
+                    auto time_step_size = commonroad_scenario->get_time_step_size();
+
+                    auto goal_time = goal_state.get_time();
+                    if (goal_time.has_value())
+                    {
+                        auto exact_value = goal_time->get_exact_value();
+                        if (exact_value.has_value())
+                        {
+                            goal_stream << exact_value.value() * time_step_size;
+                        }
+
+                        auto interval = goal_time->get_interval();
+                        if (interval.has_value())
+                        {
+                            for (auto it = interval->cbegin(); it != interval->cend(); ++it)
+                            {
+                                goal_stream << " [" << it->first * time_step_size << ", " << it->second * time_step_size << "] ";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        goal_stream << "Not specified";
+                    }
+
+                    Glib::ustring goal_time_ustring(goal_stream.str());
+
+                    Gtk::TreeModel::Row row;
+                    row = *(problem_list_store->append());
+                    
+                    row[problem_record.problem_id] = id_ustring;
+                    row[problem_record.problem_goal_speed] = goal_speed_ustring;
+                    row[problem_record.problem_goal_time] = goal_time_ustring;
+                }
+            }
+        }
+    }
+}
+
+void CommonroadViewUI::update_ui() {
+    while (run_thread.load()) {
+        ui_dispatcher.emit();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+}
+
+bool CommonroadViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+    int cell_x, cell_y = 0;
+    Gtk::TreeModel::Path path;
+    Gtk::TreeViewColumn* column;
+    bool path_exists;
+
+    //Get the current path and column at the selected point
+    if (keyboard_tooltip) {
+        problem_treeview->get_cursor(path, column);
+        path_exists = column != nullptr;
+    }
+    else {
+        int window_x, window_y;
+        problem_treeview->convert_widget_to_bin_window_coords(x, y, window_x, window_y);
+        path_exists = problem_treeview->get_path_at_pos(window_x, window_y, path, column, cell_x, cell_y);
+    }
+
+    if (path_exists) {
+        //Get selected row
+        Gtk::TreeModel::iterator iter = problem_list_store->get_iter(path);
+        Gtk::TreeModel::Row row = *iter;
+
+        //Get tooltip text depending on current column
+        Glib::ustring content_ustring;
+        if (column->get_title() == "Problem ID") {
+            content_ustring = Glib::ustring(row[problem_record.problem_id]);
+        } 
+        else if (column->get_title() == "Goal Speed") {
+            content_ustring = Glib::ustring(row[problem_record.problem_goal_speed]);
+        }
+        else if (column->get_title() == "Goal Time (sec.)") {
+            content_ustring = Glib::ustring(row[problem_record.problem_goal_time]);
+        }
+
+        //Get text at iter
+        tooltip->set_text(content_ustring);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 using namespace std::placeholders;
@@ -78,6 +253,9 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
 
         //Load chosen file - this function is also used for a button callback and thus does not take the file path as a parameter
         load_chosen_file();
+
+        //Reload/reset shown planning problems
+        reload_problems.store(true);
     }
 }
 

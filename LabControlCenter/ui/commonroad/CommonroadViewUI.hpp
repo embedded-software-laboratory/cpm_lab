@@ -19,6 +19,8 @@
 #include <thread>
 #include <vector>
 
+#include "ProblemModelRecord.hpp"
+
 /**
  * \brief This UI class is responsible for the Commonroad Tab in the LCC
  * It is used to load a commonroad file (and resize / transform it, if necessary)
@@ -44,6 +46,23 @@ private:
 
     //Button to apply a transformation set in the UI to the currently loaded scenario permanently
     Gtk::Button* button_apply_transformation = nullptr;
+
+    //Treeview that shows information about planning problems
+    Gtk::TreeView* problem_treeview;
+    Gtk::ScrolledWindow* problem_scrolled_window;
+    //TreeView Layout, status storage for the UI
+    ProblemModelRecord problem_record;
+    Glib::RefPtr<Gtk::ListStore> problem_list_store;
+    //UI update functions and objects
+    void update_ui();
+    void dispatcher_callback();
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    std::thread ui_thread;
+    std::atomic_bool run_thread;
+    //Callback for tooltip (to show full message without scrolling)
+    bool tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+    //Variable for the reset action (is performed within the UI)
+    std::atomic_bool reload_problems;
 
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;

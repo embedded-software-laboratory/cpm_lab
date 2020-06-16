@@ -139,6 +139,7 @@ add_executable(LabControlCenter
 
     ui/commonroad/CommonroadViewUI.hpp
     ui/commonroad/CommonroadViewUI.cpp
+    ui/commonroad/ProblemModelRecord.hpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp

@@ -256,5 +256,9 @@ public:
 
     std::vector<int> get_dynamic_obstacle_ids();
     std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
+
+    std::vector<int> get_planning_problem_ids();
+    std::optional<PlanningProblem> get_planning_problem(int id);
+
     std::optional<Lanelet> get_lanelet(int id);
 };
