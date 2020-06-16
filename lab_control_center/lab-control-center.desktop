@@ -1,6 +1,9 @@
 [Desktop Entry]
 
 # Put this into /usr/share/applications and the icon into the global folder given here
+# sudo cp ~/dev/software/lab_control_center/lab-control-center.desktop.desktop /usr/share/applications/
+# sudo mkdir -p /usr/share/icons/LCC
+# sudo cp ~/dev/software/lab_control_center/icon.png /usr/share/icons/LCC/icon.png
 # Also you might want to change the exec location (/bash script)
 
 # Application, Links (URL), or Directory (sub-group for applications)
@@ -8,10 +11,10 @@ Type=Application
 
 Encoding=UTF-8
 Icon=/usr/share/icons/LCC/icon.png
-Name=lab_control_center
+Name=Lab Control Center
 GenericName=LCC
 Comment=Starts the LCC
-Exec=/home/cpm/dev/software/lab_control_center/start_lcc.bash
+Exec=/home/cpm/dev/software/lab_control_center/run.bash
 # To pass arguments use %u or %U
 # Exec=/thing/to/execute %u
 
@@ -21,7 +24,7 @@ Terminal=true
 # Name of the window. Optional. See below.
 # Allows windows to stack
 # If this does not match, duplicate icons may show up in your dock
-StartupWMClass=lab_control_center
+StartupWMClass=Lab Control Center
 
 # Optional categories
 Categories=Development;
@@ -33,4 +36,4 @@ Actions=standard_launch
 
 [Desktop Action standard_launch]
 Name=Launch normally
-Exec=/home/cpm/dev/software/lab_control_center/start_lcc.bash
+Exec=~/dev/software/lab_control_center/run.bash
