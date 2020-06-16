@@ -35,10 +35,10 @@ indoor_positioning_system/debug*.png
 output/
 package.tar.gz
 mid_level_controller/package/
-matlab_scripts/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
+tools/vehicle_dynamics_identification_and_mpc/casadi_mpc_fn*
 core
-matlab_scripts/vehicle_dynamics_identification_and_mpc/documentation
-matlab_scripts/map_print/map_print2/lane_graph.cpp
+tools/vehicle_dynamics_identification_and_mpc/documentation
+tools/map_print/map_print2/lane_graph.cpp
 std*.txt
 nuc_apache_package
 middleware.txt

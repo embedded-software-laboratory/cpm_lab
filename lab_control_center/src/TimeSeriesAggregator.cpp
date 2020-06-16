@@ -84,7 +84,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 static inline double voltage_to_percent(const double& v)
 {
     // approximate discharge curve with three linear segments,
-    // see matlab_scripts/linear_discharge.m
+    // see tools/linear_discharge.m
     if (v >= 7.55)
     {
         return std::min({72.83 * (v-7.55) + 52.66, 100.0});
