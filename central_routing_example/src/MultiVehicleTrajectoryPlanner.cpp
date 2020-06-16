@@ -28,7 +28,7 @@ void MultiVehicleTrajectoryPlanner::set_real_time(uint64_t t)
 
 
 void MultiVehicleTrajectoryPlanner::add_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle)
-{
+{   //fill vector with future trajectory points of other vehicles
     assert(!started);
     trajectoryPlans[vehicle->get_vehicle_id()] = vehicle;
 }
@@ -49,8 +49,9 @@ void MultiVehicleTrajectoryPlanner::start()
         while(1)
         {
             // Priority based collision avoidance: Every vehicle avoids 
-            // the 'previous' vehicles, i.e. those with a smaller ID.
+            // the 'previous' vehicles, in this example those with a smaller ID.
             vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
+            
             for(auto &e:trajectoryPlans)
             {
                 e.second->avoid_collisions(previous_vehicles);

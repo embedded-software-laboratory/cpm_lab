@@ -1,6 +1,6 @@
-#include "VehicleTrajectoryPlanningState.hpp"
+#include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 
-#include "lane_graph_tools.hpp"
+#include "lane_graph_tools.hpp" //sw folder central routing
 
 
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
@@ -11,7 +11,8 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_index(_edge_index)
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
-{
+{   
+    //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
     speed_profile[0] = 0;
@@ -84,7 +85,7 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     invariant();
 
     while(current_route_edge_indices.size() < n)
-    {
+    {   //find next indizes for edges
         auto next_edges = laneGraphTools.find_subsequent_edges(current_route_edge_indices.back());
         assert(next_edges.size() > 0);
         current_route_edge_indices.push_back(next_edges.at(rand() % next_edges.size()));
