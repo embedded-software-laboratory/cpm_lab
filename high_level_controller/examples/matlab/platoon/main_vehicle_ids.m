@@ -6,15 +6,13 @@ function main_vehicle_ids(varargin)
     cd(script_directoy)
     
     % Initialize data readers/writers...
-    init_path = fullfile('./');
-    if ~exist("./init_script.m", 'file')
-        error(['Missing file "' init_path '"/init_script.m']);
-    end
-    addpath(init_path)
+    init_script_path = fullfile('../', '/init_script.m');
+    assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
+    addpath(fileparts(init_script_path));
     [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
     cd(script_directoy)
 
-    vehicle_ids = varargin
+    vehicle_ids = varargin;
 
     %% wait for data if read() is used
     stateReader.WaitSet = true;

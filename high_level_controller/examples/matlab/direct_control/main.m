@@ -2,22 +2,21 @@ function main(vehicle_id)
     matlabDomainID = 1;
     
     % Import IDL files from cpm library
-    dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
-    if ~exist(dds_idl_matlab, 'dir')
-        error(['Missing directory "' dds_idl_matlab '"']);
-    end
+    dds_idl_matlab = fullfile('../../../../cpm_lib/dds_idl_matlab/');
+    assert(isfolder(dds_idl_matlab),...
+        'Missing directory "%s".', dds_idl_matlab);
+    assert(~isempty(dir([dds_idl_matlab, '*.m'])),...
+        'No MATLAB IDL-files found in %s', dds_idl_matlab);
     addpath(dds_idl_matlab)
 
     % XML files for quality of service settings
-    middleware_local_qos_xml = '../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
-    if ~exist(middleware_local_qos_xml,'file')
-        error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
-    end
-
-    ready_trigger_qos_xml = './QOS_READY_TRIGGER.xml';
-    if ~exist(ready_trigger_qos_xml,'file')
-        error(['Missing ready trigger QOS XML "' ready_trigger_qos_xml '"'])
-    end
+    middleware_local_qos_xml = '../../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
+    assert(isfile(middleware_local_qos_xml),...
+        'Missing middleware local QOS XML "%s"', middleware_local_qos_xml);
+    
+    ready_trigger_qos_xml = '../QOS_READY_TRIGGER.xml';
+    assert(isfile(ready_trigger_qos_xml),...
+        'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
     
     setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
     

@@ -2,22 +2,21 @@ function main(vehicle_id)
     matlabDomainID = 1;
     
     % Import IDL files from cpm library
-    dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
-    if ~exist(dds_idl_matlab, 'dir')
-        error(['Missing directory "' dds_idl_matlab '"']);
-    end
+    dds_idl_matlab = fullfile('../../../../cpm_lib/dds_idl_matlab/');
+    assert(isfolder(dds_idl_matlab),...
+        'Missing directory "%s".', dds_idl_matlab);
+    assert(~isempty(dir([dds_idl_matlab, '*.m'])),...
+        'No MATLAB IDL-files found in %s', dds_idl_matlab);
     addpath(dds_idl_matlab)
 
     % XML files for quality of service settings
-    middleware_local_qos_xml = '../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
-    if ~exist(middleware_local_qos_xml,'file')
-        error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])
-    end
-
-    ready_trigger_qos_xml = './QOS_READY_TRIGGER.xml';
-    if ~exist(ready_trigger_qos_xml,'file')
-        error(['Missing ready trigger QOS XML "' ready_trigger_qos_xml '"'])
-    end
+    middleware_local_qos_xml = '../../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
+    assert(isfile(middleware_local_qos_xml),...
+        'Missing middleware local QOS XML "%s"', middleware_local_qos_xml);
+    
+    ready_trigger_qos_xml = '../QOS_READY_TRIGGER.xml';
+    assert(isfile(ready_trigger_qos_xml),...
+        'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
     
     setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
     
@@ -103,27 +102,48 @@ function main(vehicle_id)
             reference_trajectory_time = sample.t_now;
         end
         
+        % Create reference trajectory
+        t_ahead_nanos = 0;
+        i_traj_index = reference_trajectory_index;
+
+        trajectory_points = [];
+        plan_ahead_time_nanos = 7000000000;
+        while (t_ahead_nanos < plan_ahead_time_nanos)
+            the_trajectory_point = TrajectoryPoint;
+            the_trajectory_point.t.nanoseconds = uint64(reference_trajectory_time + t_ahead_nanos);
+            the_trajectory_point.px = trajectory_px(i_traj_index);
+            the_trajectory_point.py = trajectory_py(i_traj_index);
+            the_trajectory_point.vx = trajectory_vx(i_traj_index);
+            the_trajectory_point.vy = trajectory_vy(i_traj_index);
+            trajectory_points = [trajectory_points the_trajectory_point];
+            t_ahead_nanos = t_ahead_nanos + segment_duration(i_traj_index);
+            i_traj_index = mod(i_traj_index, length(segment_duration)) + 1;
+        end
+            
         % Send the current trajectory point to the vehicle
-        trajectory_point = TrajectoryPoint;
-        trajectory_point.t.nanoseconds = uint64(reference_trajectory_time);
-        trajectory_point.px = trajectory_px(reference_trajectory_index);
-        trajectory_point.py = trajectory_py(reference_trajectory_index);
-        trajectory_point.vx = trajectory_vx(reference_trajectory_index);
-        trajectory_point.vy = trajectory_vy(reference_trajectory_index);
+        max_delay_time_nanos = 200000000;
         vehicle_command_trajectory = VehicleCommandTrajectory;
         vehicle_command_trajectory.vehicle_id = uint8(vehicle_id);
-        vehicle_command_trajectory.trajectory_points = trajectory_point;
+        vehicle_command_trajectory.trajectory_points = trajectory_points;
+        vehicle_command_trajectory.header.create_stamp.nanoseconds = ...
+            uint64(sample.t_now);
+        vehicle_command_trajectory.header.valid_after_stamp.nanoseconds = ...
+            uint64(sample.t_now + max_delay_time_nanos);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-                
-        % Advance the reference state to T+2sec.
-        % The reference state must be in the future,
+
+        % The vehicle always needs a trajectory point at or before the current time,
+        % as well as enough trajectory points in the future,
         % to allow some time for the vehicle to receive
         % the message and anticipate the next turn.
-        while (reference_trajectory_time < sample.t_now + 2000000000)
+        next_reference_trajectory_time = ...
+            reference_trajectory_time + segment_duration(reference_trajectory_index);
+        while (next_reference_trajectory_time < sample.t_now)
             reference_trajectory_time = ...
                 reference_trajectory_time + segment_duration(reference_trajectory_index);
             reference_trajectory_index = ...
                 mod(reference_trajectory_index, length(segment_duration)) + 1;
+            next_reference_trajectory_time = ...
+                reference_trajectory_time + segment_duration(reference_trajectory_index);
         end
         
         % Check for stop signal
