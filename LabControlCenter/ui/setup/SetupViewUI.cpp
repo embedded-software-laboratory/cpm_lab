@@ -341,7 +341,7 @@ void SetupViewUI::deploy_applications() {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
 
-        //Get current online vehicle and hlc IDs
+        //Get current online vehicle and high_level_controller IDs
         std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
         if (get_hlc_ids)
@@ -394,7 +394,7 @@ void SetupViewUI::deploy_applications() {
         thread_count.store(min_hlc_vehicle);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
-            //Deploy on hlc with given vehicle id(s)
+            //Deploy on high_level_controller with given vehicle id(s)
             std::stringstream vehicle_id_stream;
             vehicle_id_stream << vehicle_ids.at(i);
 

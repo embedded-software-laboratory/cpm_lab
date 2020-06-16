@@ -64,12 +64,12 @@ tar -xzvf middleware_package.tar.gz
 
 # Put the middleware program & QoS in the correct folder
 cd /home/guest/dev
-mkdir -p software/hlc/middleware/build
-cp /tmp/software/middleware_package/middleware ./software/hlc/middleware/build
+mkdir -p software/middleware/build
+cp /tmp/software/middleware_package/middleware ./software/middleware/build
 # Set correct IP in local communication script
 my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
-sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml
+cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/middleware/build/QOS_LOCAL_COMMUNICATION.xml
+sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 
 # Get Matlab init scripts
 cd /tmp/software
@@ -83,7 +83,7 @@ tar -xzvf matlab_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
 # Put the init scripts for Matlab in the correct folder
-cd /home/guest/dev/software/hlc
+cd /home/guest/dev/software/high_level_controller
 mkdir matlab
 cd ./matlab
 cp /tmp/software/matlab_package/init_script.m ./

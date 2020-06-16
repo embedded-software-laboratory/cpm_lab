@@ -13,5 +13,5 @@ rm nuc_package.tar.gz
 wget http://192.168.1.249/nuc/nuc_package.tar.gz
 tar -xzvf nuc_package.tar.gz
 
-# bash "./hlc/start.bash ${script_path} ${script_name} ${vehicle_id} ${simulated_time}"
-tmux new-session -d -s "start_script" "cd /tmp/software/hlc/;bash start.bash ${script_path} ${script_name} ${vehicle_id} ${simulated_time}"
+# bash "./high_level_controller/start.bash ${script_path} ${script_name} ${vehicle_id} ${simulated_time}"
+tmux new-session -d -s "start_script" "cd /tmp/software/high_level_controller/;bash start.bash ${script_path} ${script_name} ${vehicle_id} ${simulated_time}"

@@ -77,7 +77,7 @@ exit_script() {
         ip=$(printf "192.168.1.2%02d" ${hlc_array[index]})
         id=${vehicle_array[index]}
         echo $ip
-        sshpass ssh -t guest@$ip 'bash /tmp/software/hlc/stop.bash'
+        sshpass ssh -t guest@$ip 'bash /tmp/software/high_level_controller/stop.bash'
 
         #tmux kill-session -t "vehicle_${id}"
     done
@@ -95,13 +95,13 @@ tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabContr
 
 # Publish package via http/apache for the NUCs to download -> in build_all? Was ist mit HLC scripts?
 #   1. make middleware
-# pushd hlc/middleware
+# pushd middleware
 # bash build.bash
 # popd
 #   2. create tar
 mkdir nuc_apache_package
 pushd nuc_apache_package
-tar -czvf nuc_package.tar.gz ../../software/hlc ../../software/cpm_lib/build/libcpm.so ../../software/dds_idl
+tar -czvf nuc_package.tar.gz ../../software/high_level_controller ../../software/cpm_lib/build/libcpm.so ../../software/dds_idl
 popd
 #   3. publish package
 rm -f /var/www/html/nuc/nuc_package.tar.gz
@@ -119,8 +119,8 @@ do
 
     echo $ip
     # Start download / start script on NUCs to start HLC and middleware
-    sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./hlc/apache_start.bash guest@$ip:/tmp/
-    # sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/hlc/ guest@$ip:/tmp/
+    sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' ./high_level_controller/apache_start.bash guest@$ip:/tmp/
+    # sshpass rsync -v -e 'ssh -o StrictHostKeyChecking=no -p 22' /tmp/high_level_controller/ guest@$ip:/tmp/
     sshpass ssh -t guest@$ip 'bash /tmp/apache_start.bash' "${script_path} ${script_name} ${id} ${simulated_time}"
 
     # Start vehicle (here for test purposes, later: use real vehicles / position them correctly)

@@ -13,6 +13,7 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     addpath(dds_idl_matlab)
 
     % XML files for quality of service settings
+    % TODO Patrick change middleware path
     middleware_local_qos_xml = ['../middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])

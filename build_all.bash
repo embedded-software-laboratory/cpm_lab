@@ -33,10 +33,7 @@ pushd LabControlCenter
     bash build.bash
 popd
 
-pushd hlc
-    pushd middleware
-        bash build.bash
-    popd
+pushd high_level_controller
     pushd autostart
         bash build.bash
     popd
@@ -53,6 +50,10 @@ pushd hlc
 popd
 
 
+pushd middleware
+    bash build.bash
+popd
+
 pushd vehicle_raspberry_firmware
     if [ $simulation == 0 ]
     then
@@ -60,11 +61,6 @@ pushd vehicle_raspberry_firmware
     else
         bash build.bash --simulation
     fi
-popd
-
-
-pushd controller_test_loop
-    bash build.bash
 popd
 
 

@@ -8,8 +8,8 @@ function main(vehicleIDs)
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
     git_directory = fileparts(fileparts(fileparts(script_directoy)));
     cpm_idl_directory = [git_directory '/dds_idl'];
-    hlc_idl_directory = [git_directory '/hlc/middleware/idl'];
-    middleware_local_qos_xml = [git_directory '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
+    hlc_idl_directory = [git_directory '/middleware/idl'];
+    middleware_local_qos_xml = [git_directory '/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
     
     if ~exist(middleware_local_qos_xml,'file')
         error(['Missing middleware local QOS XML "' middleware_local_qos_xml '"'])

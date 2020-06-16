@@ -101,22 +101,22 @@ int main (int argc, char *argv[]) {
             cpm::Logging::Instance().write("The cpm library is missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/software/hlc/middleware/build/middleware"))
+        if (!file_exists("/home/guest/dev/software/middleware/build/middleware"))
         {
             cpm::Logging::Instance().write("The middleware executable is missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/software/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml"))
+        if (!file_exists("/home/guest/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml"))
         {
             cpm::Logging::Instance().write("The middleware QoS file is missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/software/hlc/init_script.m"))
+        if (!file_exists("/home/guest/dev/software/high_level_controller/init_script.m"))
         {
             cpm::Logging::Instance().write("The matlab import file is missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/software/hlc/QOS_READY_TRIGGER.xml"))
+        if (!file_exists("/home/guest/dev/software/high_level_controller/QOS_READY_TRIGGER.xml"))
         {
             cpm::Logging::Instance().write("The matlab QoS file is missing on NUC %s", hlc_id.c_str());
         }

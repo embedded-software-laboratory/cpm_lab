@@ -13,7 +13,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
-    kill_session("hlc");
+    kill_session("high_level_controller");
 
     if (active_vehicle_ids.size() > 0)
     {
@@ -38,7 +38,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Matlab script
             command 
             << "tmux new-session -d "
-            << "-s \"hlc\" "
+            << "-s \"high_level_controller\" "
             << "'. ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
@@ -50,10 +50,10 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Any executable 
             command 
             << "tmux new-session -d "
-            << "-s \"hlc\" "
+            << "-s \"high_level_controller\" "
             << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
-            << " --node_id=hlc"
+            << " --node_id=high_level_controller"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
             << " --dds_domain=" << cmd_domain_id;
@@ -83,7 +83,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         middleware_command 
             << "tmux new-session -d "
             << "-s \"middleware\" "
-            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
+            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
@@ -102,7 +102,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
 void Deploy::kill_local_hlc() 
 {
-    kill_session("hlc");
+    kill_session("high_level_controller");
     kill_session("middleware");
 }
 

@@ -53,7 +53,7 @@ fi
 exit_script() {
     tmux kill-session -t "LabControlCenter"
     tmux kill-session -t "middleware"
-    tmux kill-session -t "hlc"
+    tmux kill-session -t "high_level_controller"
 
     # Stop HLCs and vehicles
     IFS=,
@@ -73,9 +73,9 @@ trap exit_script SIGINT SIGTERM
 
 tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 # Start middleware
-tmux new-session -d -s "middleware" "cd ./hlc/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
+tmux new-session -d -s "middleware" "cd ./high_level_controller/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
 # Start HLCs
-tmux new-session -d -s "hlc" "cd ./hlc/;bash hlc_start_local.bash ${script_path} ${script_name} ${vehicle_ids} &> hlc.txt"
+tmux new-session -d -s "high_level_controller" "cd ./high_level_controller/;bash hlc_start_local.bash ${script_path} ${script_name} ${vehicle_ids} &> high_level_controller.txt"
 
 IFS=,
 for val in $vehicle_ids;
