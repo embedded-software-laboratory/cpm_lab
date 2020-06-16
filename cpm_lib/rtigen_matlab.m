@@ -3,7 +3,7 @@ function rtigen_matlab
     dds_idl_matlab_dir = 'dds_idl_matlab';
 
     % IDL files from cpm library
-    dds_idl_dir = fullfile('../dds_idl');
+    dds_idl_dir = fullfile('dds_idl');
     if ~exist(dds_idl_dir, 'dir')
         error(['Missing directory "' dds_idl_dir '"']);
     end
