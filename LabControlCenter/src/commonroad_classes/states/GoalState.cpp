@@ -169,22 +169,22 @@ void GoalState::set_lanelet_ref_draw_function(std::function<void (int, const Dra
     }
 }
 
-const std::optional<IntervalOrExact> GoalState::get_time() const
+const std::optional<IntervalOrExact>& GoalState::get_time() const
 {
     return time;
 }
 
-const std::optional<Position> GoalState::get_position() const
+const std::optional<Position>& GoalState::get_position() const
 {
     return position;
 }
 
-const std::optional<Interval> GoalState::get_orientation() const
+const std::optional<Interval>& GoalState::get_orientation() const
 {
     return orientation;
 }
 
-const std::optional<Interval> GoalState::get_velocity() const
+const std::optional<Interval>& GoalState::get_velocity() const
 {
     return velocity;
 }

@@ -101,21 +101,12 @@ IntervalOrExact Occupancy::get_time()
     return time.value();
 }
 
-std::optional<double> Occupancy::get_orientation()
-{
-    if (!shape.has_value())
-    {
-        throw SpecificationError("Occupancy should have shape value, but does not");
-    }
-    return shape->get_orientation();
-}
-
-std::optional<Shape> Occupancy::get_shape()
+const std::optional<Shape>& Occupancy::get_shape() const
 {
     return shape;
 }
 
-const std::optional<IntervalOrExact> Occupancy::get_time() const
+const std::optional<IntervalOrExact>& Occupancy::get_time() const
 {
     return time;
 }

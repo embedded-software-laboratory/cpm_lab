@@ -78,5 +78,5 @@ public:
     #pragma GCC diagnostic pop
 
     //Getter
-    const std::map<int, Incoming> get_incoming_map() const;
+    const std::map<int, Incoming>& get_incoming_map() const;
 };

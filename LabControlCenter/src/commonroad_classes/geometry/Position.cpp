@@ -299,7 +299,7 @@ std::optional<int> Position::get_lanelet_ref()
     }
     else 
     {
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 

@@ -92,7 +92,7 @@ public:
     void to_dds_msg() {}
 
     //Getter
-    const std::optional<Position> get_position() const;
+    const std::optional<Position>& get_position() const;
     double get_orientation();
     double get_time();
     double get_velocity();

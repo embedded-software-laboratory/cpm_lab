@@ -420,37 +420,37 @@ std::string DynamicObstacle::get_obstacle_type_text()
     return obstacle_type_text;
 }
 
-const std::optional<ObstacleTypeDynamic> DynamicObstacle::get_type() const
+const std::optional<ObstacleTypeDynamic>& DynamicObstacle::get_type() const
 {
     return type;
 }
 
-const std::optional<Shape> DynamicObstacle::get_shape() const
+const std::optional<Shape>& DynamicObstacle::get_shape() const
 {
     return shape;
 }
 
-const std::optional<State> DynamicObstacle::get_initial_state() const
+const std::optional<State>& DynamicObstacle::get_initial_state() const
 {
     return initial_state;
 }
 
-const std::optional<SignalState> DynamicObstacle::get_initial_signal_state() const
+const std::optional<SignalState>& DynamicObstacle::get_initial_signal_state() const
 {
     return initial_signal_state;
 }
 
-const std::vector<State> DynamicObstacle::get_trajectory() const
+const std::vector<State>& DynamicObstacle::get_trajectory() const
 {
     return trajectory;
 }
 
-const std::vector<Occupancy> DynamicObstacle::get_occupancy_set() const
+const std::vector<Occupancy>& DynamicObstacle::get_occupancy_set() const
 {
     return occupancy_set;
 }
 
-const std::vector<SignalState> DynamicObstacle::get_signal_series() const
+const std::vector<SignalState>& DynamicObstacle::get_signal_series() const
 {
     return signal_series;
 }

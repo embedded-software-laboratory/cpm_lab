@@ -144,11 +144,11 @@ public:
     CommonroadTrajectory get_obstacle_dynamics();
 
     std::string get_obstacle_type_text();
-    const std::optional<ObstacleTypeDynamic> get_type() const;
-    const std::optional<Shape> get_shape() const;
-    const std::optional<State> get_initial_state() const;
-    const std::optional<SignalState> get_initial_signal_state() const;
-    const std::vector<State> get_trajectory() const;
-    const std::vector<Occupancy> get_occupancy_set() const;
-    const std::vector<SignalState> get_signal_series() const;
+    const std::optional<ObstacleTypeDynamic>& get_type() const;
+    const std::optional<Shape>& get_shape() const;
+    const std::optional<State>& get_initial_state() const;
+    const std::optional<SignalState>& get_initial_signal_state() const;
+    const std::vector<State>& get_trajectory() const;
+    const std::vector<Occupancy>& get_occupancy_set() const;
+    const std::vector<SignalState>& get_signal_series() const;
 };

@@ -67,37 +67,37 @@ std::optional<bool> SignalState::get_child_bool(const xmlpp::Node* node, std::st
     return std::optional<bool>();
 }
 
-const std::optional<IntervalOrExact> SignalState::get_time() const
+const std::optional<IntervalOrExact>& SignalState::get_time() const
 {
     return time;
 }
 
-const std::optional<bool> SignalState::get_horn() const
+const std::optional<bool>& SignalState::get_horn() const
 {
     return horn;
 }
 
-const std::optional<bool> SignalState::get_indicator_left() const
+const std::optional<bool>& SignalState::get_indicator_left() const
 {
     return indicator_left;
 }
 
-const std::optional<bool> SignalState::get_indicator_right() const
+const std::optional<bool>& SignalState::get_indicator_right() const
 {
     return indicator_right;
 }
 
-const std::optional<bool> SignalState::get_braking_lights() const
+const std::optional<bool>& SignalState::get_braking_lights() const
 {
     return braking_lights;
 }
 
-const std::optional<bool> SignalState::get_hazard_warning_lights() const
+const std::optional<bool>& SignalState::get_hazard_warning_lights() const
 {
     return hazard_warning_lights;
 }
 
-const std::optional<bool> SignalState::get_flashing_blue_lights() const
+const std::optional<bool>& SignalState::get_flashing_blue_lights() const
 {
     return flashing_blue_lights;
 }

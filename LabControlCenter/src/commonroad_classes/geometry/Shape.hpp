@@ -79,7 +79,6 @@ public:
     CommonroadDDSShape to_dds_msg();
 
     //Getter
-    std::optional<double> get_orientation();
     const std::vector<Circle>& get_circles() const;
     const std::vector<Polygon>& get_polygons() const;
     const std::vector<Rectangle>& get_rectangles() const;

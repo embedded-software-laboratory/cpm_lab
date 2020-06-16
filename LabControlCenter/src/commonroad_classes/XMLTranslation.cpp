@@ -203,7 +203,7 @@ std::optional<std::string> xml_translation::get_child_child_text(const xmlpp::No
         const auto child = xml_translation::get_child_if_exists(node, child_name, throw_error);
 
         if (!child)
-            return std::optional<std::string>();
+            return std::nullopt;
     
         return std::optional<std::string>(xml_translation::get_first_child_text(child));
     }
@@ -215,7 +215,7 @@ std::optional<std::string> xml_translation::get_child_child_text(const xmlpp::No
         }
         else
         {
-            return std::optional<std::string>();
+            return std::nullopt;
         }
         
     }
@@ -238,7 +238,7 @@ std::optional<int> xml_translation::get_child_child_int(const xmlpp::Node* node,
         }
         else
         {
-            return std::optional<int>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -249,7 +249,7 @@ std::optional<int> xml_translation::get_child_child_int(const xmlpp::Node* node,
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -270,7 +270,7 @@ std::optional<unsigned long long> xml_translation::get_child_child_uint(const xm
         }
         else
         {
-            return std::optional<unsigned long long>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -282,7 +282,7 @@ std::optional<unsigned long long> xml_translation::get_child_child_uint(const xm
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to unsigned long long, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -303,7 +303,7 @@ std::optional<double> xml_translation::get_child_child_double(const xmlpp::Node*
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -315,7 +315,7 @@ std::optional<double> xml_translation::get_child_child_double(const xmlpp::Node*
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -338,7 +338,7 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
                 error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double (child missing), line: " << node->get_line();
                 throw SpecificationError(error_msg_stream.str());
             }
-            return std::optional<double>();
+            return std::nullopt;
         }
         
     }
@@ -352,7 +352,7 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -364,7 +364,7 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -391,7 +391,7 @@ std::optional<std::string> xml_translation::get_attribute_text(const xmlpp::Node
             error_msg_stream << "Node " << node->get_name() << " attribute does not exist ('" << attribute_name << "'), line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<std::string>();
+        return std::nullopt;
     }
 
     return std::optional<std::string>(attribute->get_value());
@@ -414,7 +414,7 @@ std::optional<int> xml_translation::get_attribute_int(const xmlpp::Node* node, s
         }
         else
         {
-            return std::optional<int>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -426,7 +426,7 @@ std::optional<int> xml_translation::get_attribute_int(const xmlpp::Node* node, s
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -447,7 +447,7 @@ std::optional<unsigned long long> xml_translation::get_attribute_uint(const xmlp
         }
         else
         {
-            return std::optional<unsigned long long>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -459,7 +459,7 @@ std::optional<unsigned long long> xml_translation::get_attribute_uint(const xmlp
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to uint, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -480,7 +480,7 @@ std::optional<double> xml_translation::get_attribute_double(const xmlpp::Node* n
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -492,7 +492,7 @@ std::optional<double> xml_translation::get_attribute_double(const xmlpp::Node* n
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -505,7 +505,7 @@ std::optional<int> xml_translation::string_to_int(std::string text)
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to int" << std::endl;
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -518,7 +518,7 @@ std::optional<unsigned long long> xml_translation::string_to_uint(std::string te
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to unsigned long long" << std::endl;
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -531,7 +531,7 @@ std::optional<double> xml_translation::string_to_double(std::string text)
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to double" << std::endl;
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 

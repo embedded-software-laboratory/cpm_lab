@@ -77,8 +77,8 @@ public:
     void to_dds_msg() {} 
 
     //Getter
-    const std::optional<IntervalOrExact> get_time() const;
-    const std::optional<Position> get_position() const;
-    const std::optional<Interval> get_orientation() const;
-    const std::optional<Interval> get_velocity() const;
+    const std::optional<IntervalOrExact>& get_time() const;
+    const std::optional<Position>& get_position() const;
+    const std::optional<Interval>& get_orientation() const;
+    const std::optional<Interval>& get_velocity() const;
 };

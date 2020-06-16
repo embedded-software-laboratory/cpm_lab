@@ -268,171 +268,171 @@ std::optional<double> State::get_orientation_mean()
     }
     else
     {
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
-std::optional<IntervalOrExact> State::get_velocity()
+std::optional<IntervalOrExact>& State::get_velocity()
 {
     return velocity;
 }
 
-const std::optional<IntervalOrExact> State::get_orientation() const
+const std::optional<IntervalOrExact>& State::get_orientation() const
 {
     return orientation;
 }
 
-const std::optional<IntervalOrExact> State::get_acceleration() const
+const std::optional<IntervalOrExact>& State::get_acceleration() const
 {
     return acceleration;
 }
 
-const std::optional<IntervalOrExact> State::get_yaw_rate() const
+const std::optional<IntervalOrExact>& State::get_yaw_rate() const
 {
     return yaw_rate;
 }
 
-const std::optional<IntervalOrExact> State::get_slip_angle() const
+const std::optional<IntervalOrExact>& State::get_slip_angle() const
 {
     return slip_angle;
 }
 
-const std::optional<IntervalOrExact> State::get_steering_angle() const
+const std::optional<IntervalOrExact>& State::get_steering_angle() const
 {
     return steering_angle;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_angle() const
+const std::optional<IntervalOrExact>& State::get_roll_angle() const
 {
     return roll_angle;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_rate() const
+const std::optional<IntervalOrExact>& State::get_roll_rate() const
 {
     return roll_rate;
 }
 
-const std::optional<IntervalOrExact> State::get_pitch_angle() const
+const std::optional<IntervalOrExact>& State::get_pitch_angle() const
 {
     return pitch_angle;
 }
 
-const std::optional<IntervalOrExact> State::get_pitch_rate() const
+const std::optional<IntervalOrExact>& State::get_pitch_rate() const
 {
     return pitch_rate;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_y() const
+const std::optional<IntervalOrExact>& State::get_velocity_y() const
 {
     return velocity_y;
 }
 
-const std::optional<IntervalOrExact> State::get_position_z() const
+const std::optional<IntervalOrExact>& State::get_position_z() const
 {
     return position_z;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_z() const
+const std::optional<IntervalOrExact>& State::get_velocity_z() const
 {
     return velocity_z;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_angle_front() const
+const std::optional<IntervalOrExact>& State::get_roll_angle_front() const
 {
     return roll_angle_front;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_rate_front() const
+const std::optional<IntervalOrExact>& State::get_roll_rate_front() const
 {
     return roll_rate_front;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_y_front() const
+const std::optional<IntervalOrExact>& State::get_velocity_y_front() const
 {
     return velocity_y_front;
 }
 
-const std::optional<IntervalOrExact> State::get_position_z_front() const
+const std::optional<IntervalOrExact>& State::get_position_z_front() const
 {
     return position_z_front;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_z_front() const
+const std::optional<IntervalOrExact>& State::get_velocity_z_front() const
 {
     return velocity_z_front;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_angle_rear() const
+const std::optional<IntervalOrExact>& State::get_roll_angle_rear() const
 {
     return roll_angle_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_roll_rate_rear() const
+const std::optional<IntervalOrExact>& State::get_roll_rate_rear() const
 {
     return roll_rate_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_y_rear() const
+const std::optional<IntervalOrExact>& State::get_velocity_y_rear() const
 {
     return velocity_y_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_position_z_rear() const
+const std::optional<IntervalOrExact>& State::get_position_z_rear() const
 {
     return position_z_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_velocity_z_rear() const
+const std::optional<IntervalOrExact>& State::get_velocity_z_rear() const
 {
     return velocity_z_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_left_front_wheel_angular_speed() const
+const std::optional<IntervalOrExact>& State::get_left_front_wheel_angular_speed() const
 {
     return left_front_wheel_angular_speed;
 }
 
-const std::optional<IntervalOrExact> State::get_right_front_wheel_angular_speed() const
+const std::optional<IntervalOrExact>& State::get_right_front_wheel_angular_speed() const
 {
     return right_front_wheel_angular_speed;
 }
 
-const std::optional<IntervalOrExact> State::get_left_rear_wheel_angular_speed() const
+const std::optional<IntervalOrExact>& State::get_left_rear_wheel_angular_speed() const
 {
     return left_rear_wheel_angular_speed;
 }
 
-const std::optional<IntervalOrExact> State::get_right_rear_wheel_angular_speed() const
+const std::optional<IntervalOrExact>& State::get_right_rear_wheel_angular_speed() const
 {
     return right_rear_wheel_angular_speed;
 }
 
-const std::optional<IntervalOrExact> State::get_delta_y_front() const
+const std::optional<IntervalOrExact>& State::get_delta_y_front() const
 {
     return delta_y_front;
 }
 
-const std::optional<IntervalOrExact> State::get_delta_y_rear() const
+const std::optional<IntervalOrExact>& State::get_delta_y_rear() const
 {
     return delta_y_rear;
 }
 
-const std::optional<IntervalOrExact> State::get_curvature() const
+const std::optional<IntervalOrExact>& State::get_curvature() const
 {
     return curvature;
 }
 
-const std::optional<IntervalOrExact> State::get_curvature_change() const
+const std::optional<IntervalOrExact>& State::get_curvature_change() const
 {
     return curvature_change;
 }
 
-const std::optional<IntervalOrExact> State::get_jerk() const
+const std::optional<IntervalOrExact>& State::get_jerk() const
 {
     return jerk;
 }
 
-const std::optional<IntervalOrExact> State::get_jounce() const
+const std::optional<IntervalOrExact>& State::get_jounce() const
 {
     return jounce;
 }

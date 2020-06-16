@@ -79,11 +79,11 @@ public:
     void to_dds_msg(); 
 
     //Getter
-    const std::optional<IntervalOrExact> get_time() const;
-    const std::optional<bool> get_horn() const;
-    const std::optional<bool> get_indicator_left() const;
-    const std::optional<bool> get_indicator_right() const;
-    const std::optional<bool> get_braking_lights() const;
-    const std::optional<bool> get_hazard_warning_lights() const;
-    const std::optional<bool> get_flashing_blue_lights() const;
+    const std::optional<IntervalOrExact>& get_time() const;
+    const std::optional<bool>& get_horn() const;
+    const std::optional<bool>& get_indicator_left() const;
+    const std::optional<bool>& get_indicator_right() const;
+    const std::optional<bool>& get_braking_lights() const;
+    const std::optional<bool>& get_hazard_warning_lights() const;
+    const std::optional<bool>& get_flashing_blue_lights() const;
 };

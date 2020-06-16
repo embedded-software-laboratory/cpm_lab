@@ -121,7 +121,7 @@ void StateExact::transform_context(const DrawingContext& ctx, double scale)
     ctx->rotate(orientation);
 }
 
-const std::optional<Position> StateExact::get_position() const
+const std::optional<Position>& StateExact::get_position() const
 {
     return position;
 }

@@ -232,25 +232,6 @@ CommonroadDDSShape Shape::to_dds_msg()
 //Getter
 //********************************************************************************************************************************************
 
-std::optional<double> Shape::get_orientation()
-{
-    //Get mean orientation from shapes, if they exist
-    double orientation = 0.0;
-    double orientation_count = 0.0;
-
-    for (auto rectangle : rectangles)
-    {
-        orientation += rectangle.get_orientation().value_or(0.0);
-        ++orientation_count;
-    }
-
-    if (orientation_count > 0)
-    {
-        orientation /= orientation_count;
-    }
-
-    return std::optional<double>(orientation);
-}
 
 const std::vector<Circle>& Shape::get_circles() const
 {
