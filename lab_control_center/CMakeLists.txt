@@ -105,7 +105,7 @@ if(NOT SIMULATION)
     add_subdirectory(labcam)
 endif()
 
-add_executable(LabControlCenter
+add_executable(lab_control_center
     src/ObstacleSimulation.hpp
     src/ObstacleSimulation.cpp
     src/ObstacleSimulationManager.hpp
@@ -187,13 +187,13 @@ add_executable(LabControlCenter
 
 
 if(NOT SIMULATION)
-    target_link_libraries(LabControlCenter cpm yaml-cpp labcamlib xml++-2.6 ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp labcamlib xml++-2.6 ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(LabControlCenter cpm yaml-cpp xml++-2.6 ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp xml++-2.6 ${GTKMM_LIBRARIES})
 endif()
 
-target_include_directories(LabControlCenter PUBLIC ${GTKMM_INCLUDE_DIRS})
-target_compile_options(LabControlCenter PUBLIC ${GTKMM_CFLAGS_OTHER})
+target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})
+target_compile_options(lab_control_center PUBLIC ${GTKMM_CFLAGS_OTHER})
 
 add_executable(TimerTestSimulated
     test/TimerTestSimulated.cpp

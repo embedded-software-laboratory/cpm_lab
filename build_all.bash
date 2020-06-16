@@ -29,7 +29,7 @@ pushd cpm_lib
 popd
 
 
-pushd LabControlCenter
+pushd lab_control_center
     bash build.bash
 popd
 

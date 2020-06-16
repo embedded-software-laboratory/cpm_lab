@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("LabControlCenter");
+    cpm::Logging::Instance().set_id("lab_control_center");
 
     //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
     struct sigaction interruptHandler;

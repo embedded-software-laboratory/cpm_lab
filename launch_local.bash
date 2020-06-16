@@ -51,7 +51,7 @@ then
 fi
 
 exit_script() {
-    tmux kill-session -t "LabControlCenter"
+    tmux kill-session -t "lab_control_center"
     tmux kill-session -t "middleware"
     tmux kill-session -t "high_level_controller"
 
@@ -71,7 +71,7 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 trap exit_script SIGINT SIGTERM
 
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "lab_control_center" "(cd lab_control_center;./build/lab_control_center --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 # Start middleware
 tmux new-session -d -s "middleware" "cd ./high_level_controller/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
 # Start HLCs

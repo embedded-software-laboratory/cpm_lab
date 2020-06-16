@@ -30,7 +30,7 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
     vehicle_id = vehicleId;
     joystick = make_shared<Joystick>(joystick_device_file);
 
-    update_loop = std::make_shared<cpm::TimerFD>("LabControlCenter", 20000000ull, 0, false);
+    update_loop = std::make_shared<cpm::TimerFD>("lab_control_center", 20000000ull, 0, false);
 
     update_loop->start_async([&](uint64_t t_now){
 

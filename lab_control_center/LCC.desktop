@@ -8,10 +8,10 @@ Type=Application
 
 Encoding=UTF-8
 Icon=/usr/share/icons/LCC/icon.png
-Name=LabControlCenter
+Name=lab_control_center
 GenericName=LCC
 Comment=Starts the LCC
-Exec=/home/cpm/dev/software/LabControlCenter/start_lcc.bash
+Exec=/home/cpm/dev/software/lab_control_center/start_lcc.bash
 # To pass arguments use %u or %U
 # Exec=/thing/to/execute %u
 
@@ -21,7 +21,7 @@ Terminal=true
 # Name of the window. Optional. See below.
 # Allows windows to stack
 # If this does not match, duplicate icons may show up in your dock
-StartupWMClass=LabControlCenter
+StartupWMClass=lab_control_center
 
 # Optional categories
 Categories=Development;
@@ -33,4 +33,4 @@ Actions=standard_launch
 
 [Desktop Action standard_launch]
 Name=Launch normally
-Exec=/home/cpm/dev/software/LabControlCenter/start_lcc.bash
+Exec=/home/cpm/dev/software/lab_control_center/start_lcc.bash

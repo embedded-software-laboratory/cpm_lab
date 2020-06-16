@@ -69,7 +69,7 @@ IFS=',' read -r -a vehicle_array <<< "$vehicle_ids"
 IFS=',' read -r -a hlc_array <<< "$hlc_ids"
 
 exit_script() {
-    tmux kill-session -t "LabControlCenter"
+    tmux kill-session -t "lab_control_center"
 
     # Stop HLCs and vehicles
     for index in "${!hlc_array[@]}"
@@ -91,7 +91,7 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 trap exit_script SIGINT SIGTERM
 
 # Start local software (WARNING: domain hardcoded right now)
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "lab_control_center" "(cd lab_control_center;./build/lab_control_center --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 
 # Publish package via http/apache for the NUCs to download -> in build_all? Was ist mit HLC scripts?
 #   1. make middleware

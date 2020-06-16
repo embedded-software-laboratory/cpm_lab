@@ -7,7 +7,7 @@ trajectory(_trajectory),
 simulated_time(_simulated_time)
 {
     //Set up cpm values (cpm init has already been done before)
-    node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
+    node_id = "obstacle_simulation"; //Will probably not be used, as main already set lab_control_center
 
     //Translate time distance to nanoseconds
     //We expect given step size to be defined in seconds

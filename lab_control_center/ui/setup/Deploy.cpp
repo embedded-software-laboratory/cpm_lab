@@ -39,7 +39,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"high_level_controller\" "
-            << "'. ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
+            << "'. ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
             << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
@@ -51,7 +51,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             command 
             << "tmux new-session -d "
             << "-s \"high_level_controller\" "
-            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=high_level_controller"
             << " --simulated_time=" << sim_time_string
@@ -83,7 +83,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         middleware_command 
             << "tmux new-session -d "
             << "-s \"middleware\" "
-            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
@@ -220,7 +220,7 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     //Copy all relevant data over to the remote system
     std::stringstream copy_command;
     //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "~/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
+    copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
@@ -242,7 +242,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     //Spawn and manage new process
     return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);

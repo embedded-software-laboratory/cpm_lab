@@ -2,7 +2,7 @@
 
 /**
  * \class Logging.hpp
- * \brief This class can be used to log all relevant information or errors during runtime. These information are transmitted to the LabControlCenter.
+ * \brief This class can be used to log all relevant information or errors during runtime. These information are transmitted to the lab_control_center.
  */
 
 #include <string>
