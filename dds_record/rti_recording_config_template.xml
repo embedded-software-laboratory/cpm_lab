@@ -28,7 +28,7 @@
                     <accept_unknown_peers>false</accept_unknown_peers>
                     <initial_peers>
                         <element>localhost</element>
-                        <element>TEMPLATE_DISCOVERY_URL</element>
+                        <element>TEMPLATE_IP</element>
                     </initial_peers>
                     <multicast_receive_addresses/>
                 </discovery>
