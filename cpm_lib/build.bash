@@ -12,10 +12,13 @@ if [ ! -d "dds" ]; then
     ./rtigen.bash
 fi
 
-if [ ! -d "dds_idl_matlab" ]; then
-    echo "Generating Matlab IDL files..."
-    matlab -sd "./" -batch "rtigen_matlab"
-fi
+
+if [! -z "$matlab"]; then
+	if [ ! -d "dds_idl_matlab" ]; then
+	    echo "Generating Matlab IDL files..."
+	    matlab -sd "./" -batch "rtigen_matlab"
+	fi
+fi 
 
 mkdir -p $DIR/build
 
