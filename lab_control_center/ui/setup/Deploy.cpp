@@ -334,10 +334,17 @@ void Deploy::deploy_recording()
         std::regex("TEMPLATE_DOMAIN_ID"),
         std::to_string(cmd_domain_id)
     );
+    // extract ip from initial peer
+    std::smatch ip_matched;
+    std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    std::string ip_string;
+    bool is_ip_contained = std::regex_search (cmd_dds_initial_peer,ip_matched,ip_regex);
+    assert(is_ip_contained);
+    ip_string = ip_matched.str(0);
     xml_config_str = std::regex_replace(
         xml_config_str,
-        std::regex("TEMPLATE_DISCOVERY_URL"),
-        cmd_dds_initial_peer
+        std::regex("TEMPLATE_IP"),
+        ip_string
     );
 
     std::string config_path_out = "/tmp/rti_recording_config.xml";
