@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <array>
+#include <cassert>
 #include <chrono>       //For time measurements (timeout for remote deployment)
 #include <cstdio>       //For popen
 #include <functional>
