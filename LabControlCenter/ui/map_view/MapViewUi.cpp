@@ -839,6 +839,15 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::Train:
                     description_stream << "Train: ";
                     break;
+                case ObstacleType::ConstructionZone:
+                    description_stream << "Constr: ";
+                    break;
+                case ObstacleType::ParkedVehicle:
+                    description_stream << "Parked: ";
+                    break;
+                case ObstacleType::RoadBoundary:
+                    description_stream << "Boundary: ";
+                    break;
                 default:
                     description_stream << "TODO: ";
                     break;

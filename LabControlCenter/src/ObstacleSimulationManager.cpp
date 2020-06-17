@@ -30,43 +30,32 @@ void ObstacleSimulationManager::setup()
     double time_step_size = scenario->get_time_step_size();
 
     //Set up simulated obstacles
-    auto obstacle_ids = scenario->get_dynamic_obstacle_ids();
-    for (auto obstacle_id : obstacle_ids)
+    auto dynamic_obstacle_ids = scenario->get_dynamic_obstacle_ids();
+    for (auto obstacle_id : dynamic_obstacle_ids)
     {
-        auto trajectory = scenario->get_dynamic_obstacle(obstacle_id).value().get_obstacle_dynamics();
-        //We need to modify the trajectory first: Lanelet refs need to be translated to a trajectory
-        for (auto& point : trajectory.trajectory)
+        auto obstacle = scenario->get_dynamic_obstacle(obstacle_id);
+        if (!obstacle.has_value())
         {
-            if (point.lanelet_ref.has_value())
-            {
-                //Override shape with lanelet reference shape, as there is no positional value more exact than the whole lanelet anyway (represent that the object could be anywhere on it)
-                //TODO: Does the shape need to be within the lanelet, or can e.g. its center go up to its borders?
-                CommonroadDDSPolygon lanelet_polygon;
-
-                auto lanelet = scenario->get_lanelet(point.lanelet_ref.value());
-                if (lanelet.has_value())
-                {
-                    auto lanelet_points = lanelet->get_shape();
-                    std::vector<CommonroadDDSPoint> dds_lanelet_points;
-                    for (auto lanelet_point : lanelet_points)
-                    {
-                        dds_lanelet_points.push_back(lanelet_point.to_dds_msg());
-                    }
-                    lanelet_polygon.points(dds_lanelet_points);
-
-                    CommonroadDDSShape shape;
-                    std::vector<CommonroadDDSPolygon> polygons;
-                    polygons.push_back(lanelet_polygon);
-                    shape.polygons(polygons);
-
-                    point.shape = shape;
-                }
-            }
+            //We encountered an error that should not have happened unless the commonroad object was changed during setup - this should never happen though
+            throw std::runtime_error("Could not set up obstacle simulation manager due to wrong ID or change of scenario during setup (which should not be possible)!");
         }
 
-        simulated_obstacles.push_back(
-            ObstacleSimulation(trajectory, time_step_size, obstacle_id, use_simulated_time, cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff)
-        );
+        auto obstacle_data = obstacle.value().get_obstacle_simulation_data();
+        create_obstacle_simulation(obstacle_id, time_step_size, obstacle_data);
+    }
+
+    auto static_obstacle_ids = scenario->get_static_obstacle_ids();
+    for (auto obstacle_id : static_obstacle_ids)
+    {
+        auto obstacle = scenario->get_static_obstacle(obstacle_id);
+        if (!obstacle.has_value())
+        {
+            //We encountered an error that should not have happened unless the commonroad object was changed during setup - this should never happen though
+            throw std::runtime_error("Could not set up obstacle simulation manager due to wrong ID or change of scenario during setup (which should not be possible)!");
+        }
+
+        auto obstacle_data = obstacle.value().get_obstacle_simulation_data();
+        create_obstacle_simulation(obstacle_id, time_step_size, obstacle_data);
     }
 
     for (auto& simulated_obstacle : simulated_obstacles)
@@ -76,6 +65,43 @@ void ObstacleSimulationManager::setup()
 
     //TODO: Part for real participant: Send trajectory
     //TODO: Put more information in trajectory: Need to know if they are based on exact or inexact values (IntervalOrExact) for visualization
+}
+
+void ObstacleSimulationManager::create_obstacle_simulation(int id, double time_step_size, ObstacleSimulationData& data)
+{
+    //We need to modify the trajectory first: Lanelet refs need to be translated to a trajectory
+    for (auto& point : data.trajectory)
+    {
+        if (point.lanelet_ref.has_value())
+        {
+            //Override shape with lanelet reference shape, as there is no positional value more exact than the whole lanelet anyway (represent that the object could be anywhere on it)
+            //TODO: Does the shape need to be within the lanelet, or can e.g. its center go up to its borders?
+            CommonroadDDSPolygon lanelet_polygon;
+
+            auto lanelet = scenario->get_lanelet(point.lanelet_ref.value());
+            if (lanelet.has_value())
+            {
+                auto lanelet_points = lanelet->get_shape();
+                std::vector<CommonroadDDSPoint> dds_lanelet_points;
+                for (auto lanelet_point : lanelet_points)
+                {
+                    dds_lanelet_points.push_back(lanelet_point.to_dds_msg());
+                }
+                lanelet_polygon.points(dds_lanelet_points);
+
+                CommonroadDDSShape shape;
+                std::vector<CommonroadDDSPolygon> polygons;
+                polygons.push_back(lanelet_polygon);
+                shape.polygons(polygons);
+
+                point.shape = shape;
+            }
+        }
+    }
+
+    simulated_obstacles.push_back(
+        ObstacleSimulation(data, time_step_size, id, use_simulated_time, cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff)
+    );
 }
 
 //Suppress warning for unused parameter

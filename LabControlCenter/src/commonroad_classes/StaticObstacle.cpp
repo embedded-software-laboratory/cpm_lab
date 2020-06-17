@@ -106,79 +106,83 @@ void StaticObstacle::transform_coordinate_system(double scale, double translate_
     }
 }
 
+//Suppress warning for unused parameter (s)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
-    ctx->save();
+    // ctx->save();
 
-    //Perform required translation + rotation
-    ctx->translate(global_translate_x, global_translate_y);
-    ctx->rotate(global_orientation);
+    // //Perform required translation + rotation
+    // ctx->translate(global_translate_x, global_translate_y);
+    // ctx->rotate(global_orientation);
 
-    //Different color / sticker / ... based on type
-    switch(type)
-    {
-        case ObstacleTypeStatic::Unknown:
-            ctx->set_source_rgb(0.1,0.1,0.1);
-            break;
-        case ObstacleTypeStatic::ParkedVehicle:
-            ctx->set_source_rgb(0,0.1,0.5);
-            break;
-        case ObstacleTypeStatic::ConstructionZone:
-            ctx->set_source_rgb(0.8,0,0.2);
-            break;
-        case ObstacleTypeStatic::RoadBoundary:
-            ctx->set_source_rgb(0.5,0.5,0.5);
-            break;
-    }
+    // //Different color / sticker / ... based on type
+    // switch(type)
+    // {
+    //     case ObstacleTypeStatic::Unknown:
+    //         ctx->set_source_rgb(0.1,0.1,0.1);
+    //         break;
+    //     case ObstacleTypeStatic::ParkedVehicle:
+    //         ctx->set_source_rgb(0,0.1,0.5);
+    //         break;
+    //     case ObstacleTypeStatic::ConstructionZone:
+    //         ctx->set_source_rgb(0.8,0,0.2);
+    //         break;
+    //     case ObstacleTypeStatic::RoadBoundary:
+    //         ctx->set_source_rgb(0.5,0.5,0.5);
+    //         break;
+    // }
 
-    if (initial_state.has_value())
-    {
-        initial_state->transform_context(ctx, scale);
+    // if (initial_state.has_value())
+    // {
+    //     initial_state->transform_context(ctx, scale);
 
-        if (shape.has_value())
-        {
-            shape->draw(ctx, scale, 0, 0, 0, local_orientation);
+    //     if (shape.has_value())
+    //     {
+    //         shape->draw(ctx, scale, 0, 0, 0, local_orientation);
 
-            //Draw text on shape position
-            //Set text position
-            auto shape_center = shape->get_center();
-            ctx->translate(shape_center.first, shape_center.second);
-            ctx->rotate(local_orientation);
+    //         //Draw text on shape position
+    //         //Set text position
+    //         auto shape_center = shape->get_center();
+    //         ctx->translate(shape_center.first, shape_center.second);
+    //         ctx->rotate(local_orientation);
 
-            //Set font, flip bc of chosen coordinate system
-            ctx->select_font_face("sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
-            Cairo::Matrix font_matrix(0.4 * scale * transform_scale, 0.0, 0.0, -0.4 * scale * transform_scale, 0.0, 0.0);
-            ctx->set_font_matrix(font_matrix);
+    //         //Set font, flip bc of chosen coordinate system
+    //         ctx->select_font_face("sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_BOLD);
+    //         Cairo::Matrix font_matrix(0.4 * scale * transform_scale, 0.0, 0.0, -0.4 * scale * transform_scale, 0.0, 0.0);
+    //         ctx->set_font_matrix(font_matrix);
 
-            //Calculate text width to center the text on the obstacle's center
-            Cairo::TextExtents text_extents;
-            ctx->get_text_extents(obstacle_type_text, text_extents);
-            ctx->translate(-text_extents.width / 2.0, - text_extents.height / 2.0);
+    //         //Calculate text width to center the text on the obstacle's center
+    //         Cairo::TextExtents text_extents;
+    //         ctx->get_text_extents(obstacle_type_text, text_extents);
+    //         ctx->translate(-text_extents.width / 2.0, - text_extents.height / 2.0);
 
-            //Draw text
-            ctx->text_path(obstacle_type_text);
-            ctx->set_source_rgb(1.0, 1.0, 1.0);
-            ctx->fill_preserve();
-            ctx->set_source_rgb(0.0, 0.0, 0.0);
-            ctx->set_line_width(0.002 * scale);
-            ctx->stroke();
-        }
-        else
-        {
-            std::stringstream error_stream;
-            error_stream << "Cannot draw empty shape in static obstacle from line " << commonroad_line;
-            LCCErrorLogger::Instance().log_error(error_stream.str());
-        }
-    }
-    else
-    {
-        std::stringstream error_stream;
-        error_stream << "Cannot draw static obstacle from line " << commonroad_line << ", initial state is missing";
-        LCCErrorLogger::Instance().log_error(error_stream.str());
-    }
+    //         //Draw text
+    //         ctx->text_path(obstacle_type_text);
+    //         ctx->set_source_rgb(1.0, 1.0, 1.0);
+    //         ctx->fill_preserve();
+    //         ctx->set_source_rgb(0.0, 0.0, 0.0);
+    //         ctx->set_line_width(0.002 * scale);
+    //         ctx->stroke();
+    //     }
+    //     else
+    //     {
+    //         std::stringstream error_stream;
+    //         error_stream << "Cannot draw empty shape in static obstacle from line " << commonroad_line;
+    //         LCCErrorLogger::Instance().log_error(error_stream.str());
+    //     }
+    // }
+    // else
+    // {
+    //     std::stringstream error_stream;
+    //     error_stream << "Cannot draw static obstacle from line " << commonroad_line << ", initial state is missing";
+    //     LCCErrorLogger::Instance().log_error(error_stream.str());
+    // }
 
-    ctx->restore();
+    // ctx->restore();
 }
+#pragma GCC diagnostic pop
 
 void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
 {
@@ -186,6 +190,56 @@ void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, cons
     {
         initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
     }
+}
+
+ObstacleSimulationData StaticObstacle::get_obstacle_simulation_data()
+{
+    ObstacleSimulationData simulation_data;
+
+    //Add initial point
+    ObstacleSimulationSegment initial_point;
+
+    assert(initial_state.has_value()); //Must exist anyway at this point 
+    //Required data must exist, this function may throw an error otherwise
+    if (! initial_state->get_position().position_is_lanelet_ref())
+    {
+        initial_point.position = std::optional<std::pair<double, double>>(initial_state->get_position().get_center());
+    }
+    else
+    {
+        initial_point.lanelet_ref = initial_state->get_position().get_lanelet_ref();
+    }
+    
+    initial_point.is_exact = initial_state->get_position().is_exact();
+    initial_point.time = std::optional<IntervalOrExact>(initial_state->get_time());
+    initial_point.orientation = initial_state->get_orientation_mean();
+    //Optional data
+    initial_point.velocity = initial_state->get_velocity();
+    if (shape.has_value())
+    {
+        initial_point.shape = shape->to_dds_msg();
+    }
+
+    simulation_data.trajectory.push_back(initial_point);
+
+    //Translate type to DDS type
+    switch(type)
+    {
+        case ObstacleTypeStatic::ConstructionZone:
+            simulation_data.obstacle_type = ObstacleType::ConstructionZone;
+            break;
+        case ObstacleTypeStatic::ParkedVehicle:
+            simulation_data.obstacle_type = ObstacleType::ParkedVehicle;
+            break;
+        case ObstacleTypeStatic::RoadBoundary:
+            simulation_data.obstacle_type = ObstacleType::RoadBoundary;
+            break;
+        case ObstacleTypeStatic::Unknown:
+            simulation_data.obstacle_type = ObstacleType::Unknown;
+            break;
+    }
+    
+    return simulation_data;
 }
 
 ObstacleTypeStatic StaticObstacle::get_type()

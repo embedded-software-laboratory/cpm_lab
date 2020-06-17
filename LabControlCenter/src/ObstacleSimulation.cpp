@@ -1,6 +1,6 @@
 #include "ObstacleSimulation.hpp"
 
-ObstacleSimulation::ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal)
+ObstacleSimulation::ObstacleSimulation(ObstacleSimulationData _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal)
 :
 writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacle>("commonroadObstacle")),
 trajectory(_trajectory),
@@ -86,7 +86,7 @@ void ObstacleSimulation::start()
     });
 }
 
-void ObstacleSimulation::interpolate_between(CommonTrajectoryPoint p1, CommonTrajectoryPoint p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp)
+void ObstacleSimulation::interpolate_between(ObstacleSimulationSegment p1, ObstacleSimulationSegment p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp)
 {
     //TODO: Find better interpolation, this one does not work
     // if (p1.velocity.has_value() && p2.velocity.has_value())
@@ -147,7 +147,7 @@ void ObstacleSimulation::interpolate_between(CommonTrajectoryPoint p1, CommonTra
     //}
 }
 
-void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now)
+void ObstacleSimulation::send_state(ObstacleSimulationSegment& point, uint64_t t_now)
 {
     //Create current obstacle from current time, get current trajectory point - TODO: More than trivial point-hopping
     CommonroadObstacle obstacle;
@@ -206,40 +206,7 @@ void ObstacleSimulation::send_state(CommonTrajectoryPoint& point, uint64_t t_now
     //Set further obstacle information
     obstacle.pose_is_exact(point.is_exact);        
     obstacle.is_moving((trajectory.trajectory.size() > 1));
-
-    if (trajectory.obstacle_type.has_value())
-    {
-        switch(trajectory.obstacle_type.value())
-        {
-            case ObstacleTypeDynamic::Unknown:
-                obstacle.type(ObstacleType::Unknown);
-                break;
-            case ObstacleTypeDynamic::Car: 
-                obstacle.type(ObstacleType::Car);
-                break;
-            case ObstacleTypeDynamic::Truck:
-                obstacle.type(ObstacleType::Truck);
-                break;
-            case ObstacleTypeDynamic::Bus:
-                obstacle.type(ObstacleType::Bus);
-                break;
-            case ObstacleTypeDynamic::Motorcycle:
-                obstacle.type(ObstacleType::Motorcycle);
-                break;
-            case ObstacleTypeDynamic::Bicycle:
-                obstacle.type(ObstacleType::Bicycle);
-                break;
-            case ObstacleTypeDynamic::Pedestrian:
-                obstacle.type(ObstacleType::Pedestrian);
-                break;
-            case ObstacleTypeDynamic::PriorityVehicle:
-                obstacle.type(ObstacleType::PriorityVehicle);
-                break;
-            case ObstacleTypeDynamic::Train:
-                obstacle.type(ObstacleType::Train);
-                break;
-        }
-    }
+    obstacle.type(trajectory.obstacle_type);
 
     writer_commonroad_obstacle.write(obstacle);
 }

@@ -793,6 +793,29 @@ std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
     return std::nullopt;
 }
 
+std::vector<int> CommonRoadScenario::get_static_obstacle_ids()
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    std::vector<int> ids;
+    for (const auto& entry : static_obstacles)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
+
+std::optional<StaticObstacle> CommonRoadScenario::get_static_obstacle(int id)
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    if (static_obstacles.find(id) != static_obstacles.end())
+    {
+        return std::optional<StaticObstacle>(static_obstacles.at(id));
+    }
+    return std::nullopt;
+}
+
+
 std::vector<int> CommonRoadScenario::get_planning_problem_ids()
 {
     std::lock_guard<std::mutex> lock(xml_translation_mutex);
@@ -808,7 +831,6 @@ std::vector<int> CommonRoadScenario::get_planning_problem_ids()
 std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
 {
     std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (planning_problems.find(id) != planning_problems.end())
     {
         return std::optional<PlanningProblem>(planning_problems.at(id));

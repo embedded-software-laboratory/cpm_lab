@@ -315,12 +315,12 @@ void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, con
     }
 }
 
-CommonroadTrajectory DynamicObstacle::get_obstacle_dynamics()
+ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
 {
-    CommonroadTrajectory commonroad_trajectory;
+    ObstacleSimulationData commonroad_trajectory;
 
     //Add initial point
-    CommonTrajectoryPoint initial_point;
+    ObstacleSimulationSegment initial_point;
 
     assert(initial_state.has_value()); //Must exist anyway at this point 
     //Required data must exist, this function may throw an error otherwise
@@ -350,7 +350,7 @@ CommonroadTrajectory DynamicObstacle::get_obstacle_dynamics()
     {
         for (auto& point : trajectory)
         {
-            CommonTrajectoryPoint trajectory_point;
+            ObstacleSimulationSegment trajectory_point;
 
             //Required data must exist, this function may throw an error otherwise
             if (! point.get_position().position_is_lanelet_ref())
@@ -381,7 +381,7 @@ CommonroadTrajectory DynamicObstacle::get_obstacle_dynamics()
     {
         for (auto& point : occupancy_set)
         {
-            CommonTrajectoryPoint trajectory_point;
+            ObstacleSimulationSegment trajectory_point;
 
             //Either use occupancy or shape, if that exists
             auto occupancy_shape = point.get_shape();
@@ -410,7 +410,37 @@ CommonroadTrajectory DynamicObstacle::get_obstacle_dynamics()
         }
     }
 
-    commonroad_trajectory.obstacle_type = type;
+    //Translate type to DDS type
+    switch(type)
+    {
+        case ObstacleTypeDynamic::Bicycle:
+            commonroad_trajectory.obstacle_type = ObstacleType::Bicycle;
+            break;
+        case ObstacleTypeDynamic::Bus:
+            commonroad_trajectory.obstacle_type = ObstacleType::Bus;
+            break;
+        case ObstacleTypeDynamic::Car:
+            commonroad_trajectory.obstacle_type = ObstacleType::Car;
+            break;
+        case ObstacleTypeDynamic::Motorcycle:
+            commonroad_trajectory.obstacle_type = ObstacleType::Motorcycle;
+            break;
+        case ObstacleTypeDynamic::Pedestrian:
+            commonroad_trajectory.obstacle_type = ObstacleType::Pedestrian;
+            break;
+        case ObstacleTypeDynamic::PriorityVehicle:
+            commonroad_trajectory.obstacle_type = ObstacleType::PriorityVehicle;
+            break;
+        case ObstacleTypeDynamic::Train:
+            commonroad_trajectory.obstacle_type = ObstacleType::Train;
+            break;
+        case ObstacleTypeDynamic::Truck:
+            commonroad_trajectory.obstacle_type = ObstacleType::Truck;
+            break;
+        case ObstacleTypeDynamic::Unknown:
+            commonroad_trajectory.obstacle_type = ObstacleType::Unknown;
+            break;
+    }
     
     return commonroad_trajectory;
 }
@@ -420,7 +450,7 @@ std::string DynamicObstacle::get_obstacle_type_text()
     return obstacle_type_text;
 }
 
-const std::optional<ObstacleTypeDynamic>& DynamicObstacle::get_type() const
+ObstacleTypeDynamic DynamicObstacle::get_type()
 {
     return type;
 }

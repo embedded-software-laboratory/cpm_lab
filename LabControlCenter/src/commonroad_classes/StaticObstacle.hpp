@@ -22,6 +22,8 @@
 
 #include "LCCErrorLogger.hpp"
 
+#include "ObstacleSimulationData.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -90,6 +92,12 @@ public:
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
 
     //Getter
+    /**
+     * \brief Returns a single trajectory point constructed from initial state, and further static obstacle information
+     * Throws errors if expected types are missing
+     */
+    ObstacleSimulationData get_obstacle_simulation_data();
+
     ObstacleTypeStatic get_type();
     std::string get_obstacle_type_text();
     const std::optional<Shape>& get_shape() const;

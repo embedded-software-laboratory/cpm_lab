@@ -97,6 +97,8 @@ set(COMMONROAD
 
     src/commonroad_classes/SpecificationError.hpp
     src/commonroad_classes/SpecificationError.cpp
+
+    src/commonroad_classes/ObstacleSimulationData.hpp
 )
 
 # labcam

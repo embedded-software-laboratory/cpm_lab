@@ -23,7 +23,7 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
-#include "CommonroadDDSShape.hpp"
+#include "ObstacleSimulationData.hpp"
 
 #include "LCCErrorLogger.hpp"
 
@@ -39,36 +39,6 @@
 enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
 /**
- * \struct CommonTrajectoryPoint
- * \brief This class is used as a part of the return type for the trajectory getter
- * It allows to conveniently store all relevant information of each CommonTrajectoryPoint
- */
-struct CommonTrajectoryPoint
-{
-    std::optional<std::pair<double, double>> position; //x, y
-    std::optional<int> lanelet_ref; //Must be set if position is not set
-    std::optional<double> orientation; //yaw
-    std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
-    std::optional<IntervalOrExact> velocity;
-
-    CommonroadDDSShape shape; //Occupancy set or lanelet ref might encode current position in form of a shape
-
-    bool is_exact;
-    //is_moving is set in the simulation part, because it just depends on the overall trajectory size
-};
-
-/**
- * \struct CommonroadTrajectory
- * \brief This class is used as a return type for the trajectory getter
- * It allows to conveniently store all relevant information of the dynamic obstacle
- */
-struct CommonroadTrajectory
-{
-    std::vector<CommonTrajectoryPoint> trajectory;
-    std::optional<ObstacleTypeDynamic> obstacle_type;
-};
-
-/**
  * \class DynamicObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a DynamicObstacle specified in an XML file
@@ -77,7 +47,7 @@ class DynamicObstacle : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad type
-    std::optional<ObstacleTypeDynamic> type;
+    ObstacleTypeDynamic type;
     std::string obstacle_type_text;
     std::optional<Shape> shape;
     std::optional<State> initial_state;
@@ -141,10 +111,10 @@ public:
      * \brief Returns a trajectory constructed from occupancy or trajectory data, and further dynamic obstacle information
      * Throws errors if expected types are missing
      */
-    CommonroadTrajectory get_obstacle_dynamics();
+    ObstacleSimulationData get_obstacle_simulation_data();
 
     std::string get_obstacle_type_text();
-    const std::optional<ObstacleTypeDynamic>& get_type() const;
+    ObstacleTypeDynamic get_type();
     const std::optional<Shape>& get_shape() const;
     const std::optional<State>& get_initial_state() const;
     const std::optional<SignalState>& get_initial_signal_state() const;

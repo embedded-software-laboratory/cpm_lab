@@ -1,7 +1,7 @@
 #pragma once
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
-#include "commonroad_classes/DynamicObstacle.hpp"
+#include "commonroad_classes/ObstacleSimulationData.hpp"
 
 #include "ObstacleSimulation.hpp"
 
@@ -22,7 +22,6 @@ private:
 
     std::vector<ObstacleSimulation> simulated_obstacles;
 
-    double time_step_size;
     bool use_simulated_time;
 
     //DDS, to send a custom stop signal to the simple timers of the simulated obstacles
@@ -38,6 +37,14 @@ private:
      * \brief Reset the simulation (callback for scenario)
      */
     void reset();
+
+    /**
+     * \brief Create an obstacle simulation object given obstacle simulation data
+     * \param id ID (set in commonroad scenario) of the obstacle
+     * \param time_step_size Used in commonroad scenarios to translate given timesteps to seconds (after scenario start) - multiplicator
+     * \param data An obstacle simulation data object containing all information relevant for simulating the translated object
+     */
+    void create_obstacle_simulation(int id, double time_step_size, ObstacleSimulationData& data);
 
 public:
     /**

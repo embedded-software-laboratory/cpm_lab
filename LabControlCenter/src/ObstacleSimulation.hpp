@@ -1,7 +1,7 @@
 #pragma once
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
-#include "commonroad_classes/DynamicObstacle.hpp"
+#include "commonroad_classes/ObstacleSimulationData.hpp"
 
 #include <memory>
 
@@ -28,7 +28,7 @@ private:
 
     //Trajectory info
     uint8_t obstacle_id;
-    CommonroadTrajectory trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
+    ObstacleSimulationData trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
     uint64_t time_step_size;
     size_t current_trajectory = 0;
 
@@ -47,10 +47,10 @@ private:
      * \brief Interpolation function that delivers state values in between set trajectory points
      * \return x,y,yaw values using references as input
      */
-    void interpolate_between(CommonTrajectoryPoint p1, CommonTrajectoryPoint p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
+    void interpolate_between(ObstacleSimulationSegment p1, ObstacleSimulationSegment p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
     
     //Send the current obstacle state based on the given trajectory point
-    void send_state(CommonTrajectoryPoint& point, uint64_t t_now);
+    void send_state(ObstacleSimulationSegment& point, uint64_t t_now);
 
     void stop_timers();
 
@@ -64,7 +64,7 @@ public:
      * \param _custom_stop_signal Custom stop signal for the slow timer that is used when no simulation is performed; Can be used to stop all running obstacle simulations at once & thus to save time when switching to simulation mode
      * \param _get_lanelet_shape Function that returns shape (+ position) of a lanelet (given its ID), used when only a lanelet reference determines an obstacle's position
      */
-    ObstacleSimulation(CommonroadTrajectory _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal);
+    ObstacleSimulation(ObstacleSimulationData _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal);
 
     //Destructor for timer
     ~ObstacleSimulation();
