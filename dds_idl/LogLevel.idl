@@ -1,0 +1,12 @@
+#ifndef LOGLEVEL_IDL
+#define LOGLEVEL_IDL
+
+/*
+ * Log level from 0 (log nothing) to e.g. 3 (high verbosity)
+ */
+
+struct LogLevel {
+    unsigned short log_level;
+};
+
+#endif

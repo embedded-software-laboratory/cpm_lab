@@ -34,7 +34,7 @@ then
     make -j$(nproc)
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
-    cp ../../../cpm_base/cpm_lib/build_arm/libcpm.so package
+    cp ../../cpm_lib/build_arm/libcpm.so package
     tar -czvf package.tar.gz package
     popd
     
@@ -45,7 +45,7 @@ then
     make -j$(nproc)
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
-    cp ../../../cpm_base/cpm_lib/build_arm/libcpm.so package
+    cp ../../cpm_lib/build_arm/libcpm.so package
     tar -czvf package.tar.gz package
     popd
     

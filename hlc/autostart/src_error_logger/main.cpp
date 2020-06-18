@@ -91,12 +91,12 @@ int main (int argc, char *argv[]) {
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 
     timer->start([&](uint64_t t_now) {
-        if (!std::experimental::filesystem::is_directory("/home/guest/dev/cpm_base/cpm_lib/dds_idl_matlab"))
+        if (!std::experimental::filesystem::is_directory("/home/guest/dev/software/cpm_lib/dds_idl_matlab"))
         {
             cpm::Logging::Instance().write("The cpm IDL files for matlab are missing on NUC %s", hlc_id.c_str());
         }
 
-        if (!file_exists("/home/guest/dev/cpm_base/cpm_lib/build/libcpm.so"))
+        if (!file_exists("/home/guest/dev/software/cpm_lib/build/libcpm.so"))
         {
             cpm::Logging::Instance().write("The cpm library is missing on NUC %s", hlc_id.c_str());
         }

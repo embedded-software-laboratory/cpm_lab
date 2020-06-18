@@ -1,0 +1,10 @@
+#ifndef COLOR_IDL
+#define COLOR_IDL
+struct Color 
+{
+    octet a;
+    octet r;
+    octet g;
+    octet b;
+};
+#endif

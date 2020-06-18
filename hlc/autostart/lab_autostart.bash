@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/:~/dev/cpm_base/cpm_lib/build:/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/:~/dev/software/cpm_lib/build:/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0
 export PATH=$PATH:$HOME/bin:$HOME/.local/bin:/opt/rti_connext_dds-6.0.0:/opt/rti_connext_dds-6.0.0/bin:/opt/rti_connext_dds-6.0.0/lib/x64Linux4gcc7.3.0:/opt/rti_connext_dds-6.0.0/bin:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin
 export NDDSHOME=/opt/rti_connext_dds-6.0.0
 export RASPBIAN_TOOLCHAIN=/opt/raspbian-toolchain-gcc-4.7.2-linux64
@@ -34,8 +34,8 @@ tar -xzvf cpm_library_package.tar.gz
 # This might lead to errors if the cpm library gets updated, but the error_logger doesn't
 cd /home/guest/
 rm -rf ./dev
-mkdir -p dev/cpm_base/cpm_lib
-cd ./dev/cpm_base/cpm_lib
+mkdir -p dev/software/cpm_lib
+cd ./dev/software/cpm_lib
 mkdir build
 cp /tmp/software/cpm_library_package/libcpm.so ./build
 cp -R /tmp/software/cpm_library_package/dds_idl_matlab ./

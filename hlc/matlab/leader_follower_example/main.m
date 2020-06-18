@@ -7,8 +7,7 @@ function main(vehicleIDs)
     
     % Get all relevant files - IDL files for communication, XML files for communication settings etc
     git_directory = fileparts(fileparts(fileparts(script_directoy)));
-    base_directory = fileparts(git_directory);
-    cpm_idl_directory = [base_directory '/cpm_base/dds_idl'];
+    cpm_idl_directory = [git_directory '/dds_idl'];
     hlc_idl_directory = [git_directory '/hlc/middleware/idl'];
     middleware_local_qos_xml = [git_directory '/hlc/middleware/build/QOS_LOCAL_COMMUNICATION.xml'];
     
