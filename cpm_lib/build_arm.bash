@@ -6,7 +6,7 @@ if [ ! -d "build_arm" ]; then
     mkdir build_arm
 fi
 
-if [ ! -d "dds" ]; then
+if [ ! -d "dds_idl_cpp" ]; then
     ./rtigen.bash
 fi
 

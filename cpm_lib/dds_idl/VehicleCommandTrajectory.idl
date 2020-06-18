@@ -1,0 +1,72 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
+#include "Header.idl"
+
+/*
+ * The vehicle has feedback controllers for both longitudinal and 
+ * lateral motion which keep it on the given reference trajectory.
+ * The reference trajectory is a continuous function of time. It is
+ * defined as a Cubic Hermite spline, which is constructed by points and
+ * segments between consecutive points. The reference trajectory can be
+ * extended with new segments while the controller is using it, like this:
+ *         https://i.imgur.com/vp4PQ7C.gif
+ * Each point in the trajectory is described by a TrajectoryPoint struct.
+ * TrajectoryPoints may be sent in any order and may be repeated. A repeated
+ * TimeStamp in a TrajectoryPoint will overwrite the existing TrajectoryPoint 
+ * with the same TimeStamp.
+ *     The current segment is defined by the newest TrajectoryPoint in the past
+ * and the oldest TrajectoryPoint in the future. If the current segment is
+ * unavailable the vehicle will brake and stop. 
+ *     The selection of TrajectoryPoints and the interpolation is done based 
+ * on the local clock on the vehicle. Thus, the user must ensure that their 
+ * clock is synchronized, or account for clock offsets.
+ *     The user should ensure that the duration, distance and speed in a 
+ * trajectory segment are plausible in relation to each other. A poor choice of
+ * trajectory parameters may lead to physically impossible curvatures and
+ * accelerations. The trajectory interpolation formulas can be found in
+ *     rti_raspberry/src/TrajectoryInterpolation.cxx
+ */
+
+#ifndef VEHICLECOMMANDTRAJECTORY_IDL
+#define VEHICLECOMMANDTRAJECTORY_IDL
+
+struct TrajectoryPoint 
+{
+    TimeStamp t;
+    double px;  //  meter
+    double py;  //  meter
+    double vx;  //  m/s
+    double vy;  //  m/s
+};
+
+struct VehicleCommandTrajectory 
+{
+    octet vehicle_id; //@key
+    Header header;
+    sequence<TrajectoryPoint> trajectory_points;
+};
+#endif

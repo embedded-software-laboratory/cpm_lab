@@ -1,8 +1,0 @@
-#ifndef TIMESTAMP_IDL
-#define TIMESTAMP_IDL
-
-struct TimeStamp {
-    /* Unix timestamp in nanoseconds, i.e. nanoseconds since 1970, UTC. */
-    unsigned long long nanoseconds;
-};
-#endif

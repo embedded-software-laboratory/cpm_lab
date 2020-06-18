@@ -7,7 +7,7 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 include_directories(src)
 include_directories(include)
 
-file(GLOB SOURCE_DDS "dds/*")
+file(GLOB SOURCE_DDS "dds_idl_cpp/*")
 
 set(SOURCE_CPM
     include/cpm/CommandLineReader.hpp
@@ -51,7 +51,7 @@ include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds)
 include_directories(SYSTEM $ENV{NDDSHOME}/include/ndds/hpp)
 link_libraries(dl nsl m pthread rt)
 link_libraries(nddscpp2 nddsc nddscore)
-include_directories(dds)
+include_directories(dds_idl_cpp)
 
 if(BUILD_ARM)
     link_directories($ENV{NDDSHOME}/lib/armv6vfphLinux3.xgcc4.7.2)

@@ -7,17 +7,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR
 
-if [ ! -d "dds" ]; then
+if [ ! -d "dds_idl_cpp" ]; then
     echo "Generating C++ IDL files..."
     ./rtigen.bash
 fi
 
-
-if [! -z "$matlab"]; then
-	if [ ! -d "dds_idl_matlab" ]; then
-	    echo "Generating Matlab IDL files..."
-	    matlab -sd "./" -batch "rtigen_matlab"
-	fi
+if [[ $(which matlab) ]] && [[ ! -d "dds_idl_matlab" ]]; then
+	echo "Generating Matlab IDL files..."
+    matlab -sd "./" -batch "rtigen_matlab"
 fi 
 
 mkdir -p $DIR/build
@@ -34,7 +31,7 @@ if [ ! -d "/var/www/html/nuc" ]; then
 fi
 rm -rf $DIR/cpm_library_package
 mkdir $DIR/cpm_library_package
-cp -R $DIR/../dds_idl/ $DIR/cpm_library_package
+cp -R $DIR/dds_idl/ $DIR/cpm_library_package
 cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
 cp $DIR/build/libcpm.so $DIR/cpm_library_package
 tar -czvf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
