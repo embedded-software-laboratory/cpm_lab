@@ -11,6 +11,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/SimpleTimer.hpp"
 #include "CommonroadObstacle.hpp"
+#include "VehicleCommandTrajectory.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
 
@@ -23,36 +24,22 @@
 class ObstacleSimulation
 {
 private: 
-    //DDS
-    dds::pub::DataWriter<CommonroadObstacle> writer_commonroad_obstacle;
-
     //Trajectory info
     uint8_t obstacle_id;
     ObstacleSimulationData trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
-    uint64_t time_step_size;
     size_t current_trajectory = 0;
-
-    //Timing
-    bool simulated_time;
-    std::string node_id;
-    uint64_t dt_nanos;
-    uint64_t start_time;
-    std::shared_ptr<cpm::Timer> simulation_timer;
-    std::shared_ptr<cpm::SimpleTimer> standby_timer;
-
-    //Custom stop signal for timer when stopped
-    uint64_t custom_stop_signal;
 
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
      * \return x,y,yaw values using references as input
      */
-    void interpolate_between(ObstacleSimulationSegment p1, ObstacleSimulationSegment p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp);
-    
-    //Send the current obstacle state based on the given trajectory point
-    void send_state(ObstacleSimulationSegment& point, uint64_t t_now);
+    void interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &yaw_interp);
 
-    void stop_timers();
+    CommonroadObstacle construct_obstacle(ObstacleSimulationSegment& point, double x, double y, double yaw, uint64_t t_now);
+
+    VehicleCommandTrajectory construct_trajectory(std::vector<TrajectoryPoint>& trajectory_points, uint64_t t_now);
+
+    std::pair<double, double> get_position(ObstacleSimulationSegment& segment);
 
 public:
     /**
@@ -64,26 +51,40 @@ public:
      * \param _custom_stop_signal Custom stop signal for the slow timer that is used when no simulation is performed; Can be used to stop all running obstacle simulations at once & thus to save time when switching to simulation mode
      * \param _get_lanelet_shape Function that returns shape (+ position) of a lanelet (given its ID), used when only a lanelet reference determines an obstacle's position
      */
-    ObstacleSimulation(ObstacleSimulationData _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal);
-
-    //Destructor for timer
-    ~ObstacleSimulation();
+    ObstacleSimulation(ObstacleSimulationData _trajectory, int _id);
 
     /**
-     * \brief Send the initial state of the obstacles periodically until the simulation is started
+     * \brief Get the initial state of the obstacles periodically until the simulation is started
+     * \param t_now Current time, used for timestamp of msg
      */
-    void send_init_state();
-
-    void start();
-
-    /**
-     * \brief Reset the obstacle simulation (show a static obstacle again)
-     * \param new_custom_stop_signal Stop signal for the newly started static obstacle simulation (is changed so that outdated messages don't make the new timer stop)
-     */
-    void reset(uint64_t new_custom_stop_signal);
+    CommonroadObstacle get_init_state(uint64_t t_now);
 
     /**
-     * \brief Stop the obstacle simulation & all timers
+     * \brief Send the current obstacle state based on the current time, calculated relative to the start time of the simulation
+     * \param start_time Time when the simulation was started
+     * \param t_now Current time 
+     * \param time_step_size Must be known to find out which current point is active
      */
-    void stop();
+    CommonroadObstacle get_state(uint64_t start_time, uint64_t t_now, uint64_t time_step_size);
+
+    /**
+     * \brief Get the initial trajectory point of the vehicle
+     * \param t_now Current time, used for tiemstamp of msg
+     */
+    //Does not make sense, as with the current implementation the initial trajectory point would not get sent often enough
+    //TODO & @Max: We need a "Drive to point" for this, before the simulation starts
+    // VehicleCommandTrajectory get_init_trajectory(uint64_t t_now);
+
+    /**
+     * \brief Get the current trajectory point of the vehicle, which is interpolated
+     * \param start_time Time when the simulation was started
+     * \param t_now Current time, used for tiemstamp of msg
+     * \param time_step_size Must be known to find out which current point is active
+     */
+    VehicleCommandTrajectory get_trajectory(uint64_t start_time, uint64_t t_now, uint64_t time_step_size);
+
+    uint8_t get_id();
+
+    //Reset internal counter variable which was implemented to make the lookup a bit faster
+    void reset();
 };

@@ -4,10 +4,14 @@ ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadS
 :
 scenario(_scenario),
 use_simulated_time(_use_simulated_time),
-writer_stop_signal(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
+writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacleList>("commonroadObstacle")),
+writer_vehicle_trajectory(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
 {
+    //Set up cpm values (cpm init has already been done before)
+    node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
+
     //Warning: Do not set up the simulation manager when multiple threads are already running, or you risk that during construction the scenario gets changed!
-    //The scenario callbacks are always called with locked mutexes within the scenario, so there is no need to worry about them
+    //The scenario callbacks are always called with locked mutexes within the scenario, so there is no need to worry about them afterwards
     setup();
 
     //Register at scenario to get reset when a new scenario is loaded
@@ -24,10 +28,72 @@ writer_stop_signal(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), c
     );
 }
 
+ObstacleSimulationManager::~ObstacleSimulationManager()
+{
+    stop_timers();
+}
+
+
+void ObstacleSimulationManager::stop_timers()
+{
+    if (simulation_timer)
+    {
+        simulation_timer->stop();
+    }
+    simulation_timer.reset();
+
+    if (standby_timer)
+    {
+        standby_timer->stop();
+    }
+    standby_timer.reset();
+
+    start_time = 0;
+}
+
+void ObstacleSimulationManager::send_init_states()
+{
+    //Send initial states with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
+    //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
+    standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
+    standby_timer->start_async([&] (uint64_t t_now) {
+        //Get and send initial states
+        std::vector<CommonroadObstacle> initial_obstacle_states;
+        for (auto& simulated_obstacle : simulated_obstacles)
+        {
+            initial_obstacle_states.push_back(simulated_obstacle.get_init_state(t_now));
+        }
+
+        CommonroadObstacleList obstacle_list;
+        obstacle_list.commonroad_obstacle_list(initial_obstacle_states);
+        writer_commonroad_obstacle.write(obstacle_list);
+    });
+}
+
+std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_states(uint64_t t_now)
+{
+    //TODO: Thread pool?
+    std::vector<CommonroadObstacle> next_obstacle_states;
+
+    for (auto& obstacle : simulated_obstacles)
+    {
+        next_obstacle_states.push_back(obstacle.get_state(start_time, t_now, time_step_size));
+    }
+
+    return next_obstacle_states;
+}
+
 void ObstacleSimulationManager::setup()
 {
-    //Must be defined within the scenario according to specs - gives value (in seconds) of one time step unit
-    double time_step_size = scenario->get_time_step_size();
+    //Translate time distance to nanoseconds
+    //We expect given step size to be defined in seconds (gives value of one time step unit, must be defined according to specs)
+    time_step_size = static_cast<uint64_t>(scenario->get_time_step_size() * 1e9);
+    //Restrict period callback to at most 20ms
+    dt_nanos = 20000000ull;
+    if (time_step_size < 20000000ull)
+    {
+        dt_nanos = time_step_size;
+    }
 
     //Set up simulated obstacles
     auto dynamic_obstacle_ids = scenario->get_dynamic_obstacle_ids();
@@ -41,7 +107,7 @@ void ObstacleSimulationManager::setup()
         }
 
         auto obstacle_data = obstacle.value().get_obstacle_simulation_data();
-        create_obstacle_simulation(obstacle_id, time_step_size, obstacle_data);
+        create_obstacle_simulation(obstacle_id, obstacle_data);
     }
 
     auto static_obstacle_ids = scenario->get_static_obstacle_ids();
@@ -55,19 +121,16 @@ void ObstacleSimulationManager::setup()
         }
 
         auto obstacle_data = obstacle.value().get_obstacle_simulation_data();
-        create_obstacle_simulation(obstacle_id, time_step_size, obstacle_data);
+        create_obstacle_simulation(obstacle_id, obstacle_data);
     }
 
-    for (auto& simulated_obstacle : simulated_obstacles)
-    {
-        simulated_obstacle.send_init_state();
-    }
+    send_init_states();
 
     //TODO: Part for real participant: Send trajectory
     //TODO: Put more information in trajectory: Need to know if they are based on exact or inexact values (IntervalOrExact) for visualization
 }
 
-void ObstacleSimulationManager::create_obstacle_simulation(int id, double time_step_size, ObstacleSimulationData& data)
+void ObstacleSimulationManager::create_obstacle_simulation(int id, ObstacleSimulationData& data)
 {
     //We need to modify the trajectory first: Lanelet refs need to be translated to a trajectory
     for (auto& point : data.trajectory)
@@ -100,7 +163,7 @@ void ObstacleSimulationManager::create_obstacle_simulation(int id, double time_s
     }
 
     simulated_obstacles.push_back(
-        ObstacleSimulation(data, time_step_size, id, use_simulated_time, cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff)
+        ObstacleSimulation(data, id)
     );
 }
 
@@ -115,52 +178,47 @@ void ObstacleSimulationManager::set_time_scale(double scale)
 
 void ObstacleSimulationManager::start()
 {
-    for (auto& entry : simulated_obstacles)
-    {
-        entry.start();
-    }
+    stop_timers();
+
+    //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
+    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, use_simulated_time);
+
+    //Remember start time, so that we can check how much time has passed / which obstacle to choose when
+    start_time = simulation_timer->get_time();
+
+    simulation_timer->start_async([&] (uint64_t t_now) {
+        auto next_obstacle_states = compute_all_next_states(t_now);
+
+        CommonroadObstacleList obstacle_list;
+        obstacle_list.commonroad_obstacle_list(next_obstacle_states);
+        writer_commonroad_obstacle.write(obstacle_list);
+
+        //Send test trajectory messages - currently only for ID 1
+        for (auto& obstacle : simulated_obstacles)
+        {
+            if (obstacle.get_id() == 1)
+            {
+                writer_vehicle_trajectory.write(obstacle.get_trajectory(start_time, t_now, time_step_size));
+            }
+        }
+    });
 }
 
 void ObstacleSimulationManager::stop()
 {
-    send_stop_signal();
+    stop_timers();
 
-    ++custom_stop_signal_diff;
-    //Use three kinds of custom stop signals, rotate with every stop / reset
-    if (custom_stop_signal_diff > 3)
+    for (auto& simulated_obstacle : simulated_obstacles)
     {
-        custom_stop_signal_diff = 1;
+        simulated_obstacle.reset();
     }
-    uint64_t new_stop_signal = cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff;
 
-    for (auto& entry : simulated_obstacles)
-    {
-        entry.reset(new_stop_signal);
-    }
+    send_init_states();
 }
 
 void ObstacleSimulationManager::reset()
 {
-    send_stop_signal();
-
-    ++custom_stop_signal_diff;
-    //Use three kinds of custom stop signals, rotate with every stop / reset
-    if (custom_stop_signal_diff > 3)
-    {
-        custom_stop_signal_diff = 1;
-    }
-
-    for (auto& entry : simulated_obstacles)
-    {
-        entry.stop();
-    }
+    stop_timers();
 
     simulated_obstacles.clear();
-}
-
-void ObstacleSimulationManager::send_stop_signal()
-{
-    SystemTrigger trigger;
-    trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL - custom_stop_signal_diff));
-    writer_stop_signal.write(trigger);
 }

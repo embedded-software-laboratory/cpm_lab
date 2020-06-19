@@ -8,7 +8,8 @@
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
-#include "SystemTrigger.hpp"
+#include "CommonroadObstacleList.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
 /**
  * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
@@ -22,11 +23,18 @@ private:
 
     std::vector<ObstacleSimulation> simulated_obstacles;
 
+    //Timing
     bool use_simulated_time;
+    std::string node_id;
+    uint64_t dt_nanos;
+    uint64_t time_step_size; //Defined by Commonroad scenario, here translated from seconds to nanoseconds
+    uint64_t start_time;
+    std::shared_ptr<cpm::Timer> simulation_timer;
+    std::shared_ptr<cpm::SimpleTimer> standby_timer;
 
-    //DDS, to send a custom stop signal to the simple timers of the simulated obstacles
-    dds::pub::DataWriter<SystemTrigger> writer_stop_signal;
-    uint64_t custom_stop_signal_diff = 1;
+    //DDS
+    dds::pub::DataWriter<CommonroadObstacleList> writer_commonroad_obstacle;
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicle_trajectory;
 
     /**
      * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)
@@ -38,13 +46,21 @@ private:
      */
     void reset();
 
+    //Stop cpm timers, if they are running
+    void stop_timers();
+
     /**
      * \brief Create an obstacle simulation object given obstacle simulation data
      * \param id ID (set in commonroad scenario) of the obstacle
-     * \param time_step_size Used in commonroad scenarios to translate given timesteps to seconds (after scenario start) - multiplicator
      * \param data An obstacle simulation data object containing all information relevant for simulating the translated object
      */
-    void create_obstacle_simulation(int id, double time_step_size, ObstacleSimulationData& data);
+    void create_obstacle_simulation(int id, ObstacleSimulationData& data);
+
+    //Send initial state of all simulation objects (when sim. is not running, to show initial position in MapView)
+    void send_init_states();
+
+    //Compute next states of commonroad obstacles based on the current time and return them
+    std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now);
 
 public:
     /**
@@ -52,6 +68,9 @@ public:
      * \param _scenario Data object to get the obstacle's data
      */
     ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool use_simulated_time);
+
+    //Destructor for threads & timer
+    ~ObstacleSimulationManager();
 
     /**
      * \brief Scales the time used in this scenario by scale to a value in nanoseconds
@@ -68,9 +87,4 @@ public:
      * \brief Stop the simulation (callback for UI)
      */
     void stop();
-
-    /**
-     * \brief Send a stop signal to the simple timers of the simulated obstacles that run when no simulation is performed
-     */
-    void send_stop_signal();
 };

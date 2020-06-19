@@ -1,92 +1,145 @@
 #include "ObstacleSimulation.hpp"
 
-ObstacleSimulation::ObstacleSimulation(ObstacleSimulationData _trajectory, double _time_step_size, int _id, bool _simulated_time, uint64_t _custom_stop_signal)
+ObstacleSimulation::ObstacleSimulation(ObstacleSimulationData _trajectory, int _id)
 :
-writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacle>("commonroadObstacle")),
-trajectory(_trajectory),
-simulated_time(_simulated_time),
-custom_stop_signal(_custom_stop_signal)
+trajectory(_trajectory)
 {
-    //Set up cpm values (cpm init has already been done before)
-    node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
-
-    //Translate time distance to nanoseconds
-    //We expect given step size to be defined in seconds
-    time_step_size = static_cast<uint64_t>(_time_step_size * 1e9);
     obstacle_id = static_cast<uint8_t>(_id % 255);
-    
-    dt_nanos = 20000000ull;
-    if (time_step_size < 20000000ull)
-    {
-        dt_nanos = time_step_size;
-    }
 
     //We do not accept empty trajectories
     assert(trajectory.trajectory.size() > 0);
 }
 
-ObstacleSimulation::~ObstacleSimulation()
+CommonroadObstacle ObstacleSimulation::construct_obstacle(ObstacleSimulationSegment& point, double x, double y, double yaw, uint64_t t_now)
 {
-    stop_timers();
-}
+    //Create current obstacle from current time, get current trajectory point
+    CommonroadObstacle obstacle;
+    obstacle.vehicle_id(obstacle_id);
 
-void ObstacleSimulation::stop_timers()
-{
-    if (simulation_timer)
+    //Set header
+    Header header;
+    header.create_stamp(TimeStamp(t_now));
+    header.valid_after_stamp(TimeStamp(t_now));
+    obstacle.header(header);
+
+    //Set shape (Can be overriden by trajectory shape if required)
+    obstacle.shape(point.shape);    
+
+    //Set pose
+    Pose2D pose;
+    pose.x(x);
+    pose.y(y);
+    pose.yaw(yaw);
+    obstacle.pose(pose);
+
+    //Set velocity, if it exists
+    if(point.velocity.has_value())
     {
-        simulation_timer->stop();
+        obstacle.speed(point.velocity.value().get_mean());
     }
-    simulation_timer.reset();
 
-    if (standby_timer)
+    //Set further obstacle information
+    obstacle.pose_is_exact(point.is_exact);        
+    obstacle.is_moving((trajectory.trajectory.size() > 1));
+    obstacle.type(trajectory.obstacle_type);
+
+    return obstacle;
+}
+
+VehicleCommandTrajectory ObstacleSimulation::construct_trajectory(std::vector<TrajectoryPoint>& trajectory_points, uint64_t t_now)
+{
+    VehicleCommandTrajectory trajectory;
+    Header header;
+    header.create_stamp(TimeStamp(t_now));
+    header.valid_after_stamp(TimeStamp(t_now));
+    trajectory.header(header);
+    trajectory.trajectory_points(trajectory_points);
+
+    return trajectory;
+}
+
+std::pair<double, double> ObstacleSimulation::get_position(ObstacleSimulationSegment& segment)
+{
+    std::pair<double, double> position(0, 0);
+
+    //Get position value
+    if (segment.position.has_value())
     {
-        standby_timer->stop();
+        position = segment.position.value();
     }
-    standby_timer.reset();
-}
 
-void ObstacleSimulation::send_init_state()
-{
-    //Send initial state with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
-    //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
-    //TODO: Timer must be changed fundamentally: The period should not determine how long it takes to stop the timer!
-    standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, true, custom_stop_signal);
-    standby_timer->start_async([=] (uint64_t t_now) {
-        //Send initial state
-        send_state(trajectory.trajectory.at(0), t_now);
-    });
-}
+    //Add mean of shape position (lanelet ref is already translated to position in ObstacleSimulationManager)
+    double x, y = 0.0;
+    double center_count = 0.0;
 
-void ObstacleSimulation::start()
-{
-    stop_timers();
+    for (auto circle : segment.shape.circles())
+    {
+        auto center = circle.center();
+        x += center.x();
+        y += center.y();
+        ++center_count;
+    }
 
-    //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
-    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, simulated_time);
+    for (auto polygon : segment.shape.polygons())
+    {
+        double sum_x = 0;
+        double sum_y = 0;
 
-    //Remember start time, so that we can check how much time has passed / which obstacle to choose when
-    start_time = simulation_timer->get_time();
-
-    simulation_timer->start_async([=] (uint64_t t_now) {
-        // if (t_now - start_time > trajectory.at(trajectory.size() - 1).time.get_mean())
-        // {
-        //     simulation_timer->stop();
-        // }
-
-        //We must be able to use time.value(), as it is a required field
-        assert(trajectory.trajectory.at(current_trajectory).time.has_value());
-
-        while (t_now - start_time >= trajectory.trajectory.at(current_trajectory).time.value().get_mean() * time_step_size && current_trajectory < trajectory.trajectory.size() - 1)
+        for (auto point : polygon.points())
         {
-            ++current_trajectory;
+            sum_x += point.x();
+            sum_y += point.y();
         }
 
-        //Send current state
-        send_state(trajectory.trajectory.at(current_trajectory), t_now);
-    });
+        x += sum_x / polygon.points().size();
+        y += sum_y / polygon.points().size();
+        ++center_count;
+    }
+
+    for (auto rectangle : segment.shape.rectangles())
+    {
+        auto center = rectangle.center();
+        x += center.x();
+        y += center.y();
+        ++center_count;
+    }
+
+    if (center_count > 0)
+    {
+        x /= center_count;
+        y /= center_count;
+    }
+
+    position.first += x;
+    position.second += y;
+
+    return position;
 }
 
-void ObstacleSimulation::interpolate_between(ObstacleSimulationSegment p1, ObstacleSimulationSegment p2, double current_time, double &x_interp, double &y_interp, double &yaw_interp)
+CommonroadObstacle ObstacleSimulation::get_init_state(uint64_t t_now)
+{
+    auto& point = trajectory.trajectory.at(0);
+
+    //These values might not exist
+    double x = 0;
+    double y = 0;
+    double yaw = 0;
+    if(point.position.has_value())
+    {
+        x = point.position.value().first;
+        y = point.position.value().second;
+        yaw = point.orientation.value_or(0.0);
+    }
+    else
+    {
+        yaw = point.orientation.value_or(0.0);
+        //In this case, the position is given by either the shape's values or by a lanelet reference (which was transformed to a shape by the simulation manager before then)
+    }
+
+    return construct_obstacle(point, x, y, yaw, t_now);
+}
+
+void ObstacleSimulation::interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &yaw_interp)
 {
     //TODO: Find better interpolation, this one does not work
     // if (p1.velocity.has_value() && p2.velocity.has_value())
@@ -147,20 +200,17 @@ void ObstacleSimulation::interpolate_between(ObstacleSimulationSegment p1, Obsta
     //}
 }
 
-void ObstacleSimulation::send_state(ObstacleSimulationSegment& point, uint64_t t_now)
+CommonroadObstacle ObstacleSimulation::get_state(uint64_t start_time, uint64_t t_now, uint64_t time_step_size)
 {
-    //Create current obstacle from current time, get current trajectory point - TODO: More than trivial point-hopping
-    CommonroadObstacle obstacle;
-    obstacle.vehicle_id(obstacle_id);
+    //We must be able to use time.value(), as it is a required field
+    assert(trajectory.trajectory.at(current_trajectory).time.has_value());
 
-    //Set header
-    Header header;
-    header.create_stamp(TimeStamp(t_now));
-    header.valid_after_stamp(TimeStamp(t_now));
-    obstacle.header(header);
-
-    //Set shape (Can be overriden by trajectory shape if required)
-    obstacle.shape(point.shape);
+    //Get to currently active index / trajectory point
+    while (t_now - start_time >= trajectory.trajectory.at(current_trajectory).time.value().get_mean() * time_step_size && current_trajectory < trajectory.trajectory.size() - 1)
+    {
+        ++current_trajectory;
+    }
+    auto& point = trajectory.trajectory.at(current_trajectory);
 
     //These values are set either by interpolation or using the last data point or do not exist
     double x = 0;
@@ -172,7 +222,7 @@ void ObstacleSimulation::send_state(ObstacleSimulationSegment& point, uint64_t t
         if (point.time.value().get_mean() * time_step_size >= t_now - start_time && current_trajectory > 0)
         {
             //Interpolate
-            interpolate_between(trajectory.trajectory.at(current_trajectory - 1), point, t_now - start_time, x, y, yaw);
+            interpolate_between(trajectory.trajectory.at(current_trajectory - 1), point, t_now - start_time, time_step_size, x, y, yaw);
         }
         else
         {
@@ -189,40 +239,90 @@ void ObstacleSimulation::send_state(ObstacleSimulationSegment& point, uint64_t t
         //In this case, the position is given by either the shape's values or by a lanelet reference (which was transformed to a shape by the simulation manager before then)
     }
     
+    return construct_obstacle(point, x, y, yaw, t_now);
+}
 
-    //Set pose
-    Pose2D pose;
-    pose.x(x);
-    pose.y(y);
-    pose.yaw(yaw);
-    obstacle.pose(pose);
+VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time, uint64_t t_now, uint64_t time_step_size)
+{
+    std::vector<TrajectoryPoint> trajectory_points;
 
-    //Set velocity, if it exists
-    if(point.velocity.has_value())
+    //We must be able to use time.value(), as it is a required field
+    assert(trajectory.trajectory.at(current_trajectory).time.has_value());
+
+    //Get to currently active index / trajectory point
+    while (t_now - start_time >= trajectory.trajectory.at(current_trajectory).time.value().get_mean() * time_step_size && current_trajectory < trajectory.trajectory.size() - 1)
     {
-        obstacle.speed(point.velocity.value().get_mean());
+        ++current_trajectory;
     }
 
-    //Set further obstacle information
-    obstacle.pose_is_exact(point.is_exact);        
-    obstacle.is_moving((trajectory.trajectory.size() > 1));
-    obstacle.type(trajectory.obstacle_type);
+    //Behaviour for points before the final point
+    if (t_now - start_time < trajectory.trajectory.at(trajectory.trajectory.size() - 1).time.value().get_mean() * time_step_size)
+    {
+        //Send from previous over current point up to 2 time steps in the future
+        size_t start_index = current_trajectory;
+        if (start_index > 0)
+        {
+            --start_index;
+        }
 
-    writer_commonroad_obstacle.write(obstacle);
+        //Send current and future points, but do not create the final point here if that one would be reached
+        for (size_t index = start_index; index < start_index + 4 && index < trajectory.trajectory.size() - 2; ++index)
+        {
+            auto& current_point = trajectory.trajectory.at(index);
+
+            TrajectoryPoint point;
+            point.t(TimeStamp(current_point.time.value().get_mean() * time_step_size));
+
+            auto position = get_position(current_point);
+            point.px(position.first);
+            point.py(position.second);
+
+            //Different behaviour for start point: Here, the velocity must be zero
+            if (index == 0)
+            {
+                point.vx(0);
+                point.vy(0);
+            }
+            else
+            {
+                //Else: Interpolate speed linearly between current and next point
+                auto next_position = get_position(trajectory.trajectory.at(index + 1));
+                point.vx((next_position.first - position.first) / time_step_size);
+                point.vy((next_position.second - position.second) / time_step_size);
+            }
+            
+            trajectory_points.push_back(point);
+        }
+    }
+
+    //If we have reached the final point, send that point (multiple times)
+    if (trajectory_points.size() < 4)
+    {
+        auto& last_point = trajectory.trajectory.at(trajectory.trajectory.size() - 1);
+        for (int i = trajectory_points.size(); i < 4; ++i)
+        {
+            TrajectoryPoint point;
+            point.t(TimeStamp(t_now + i * time_step_size));
+            
+            auto position = get_position(last_point);
+            point.px(position.first);
+            point.py(position.second);
+            point.vx(0);
+            point.vy(0);
+
+            trajectory_points.push_back(point);
+        }
+    }
+
+    return construct_trajectory(trajectory_points, t_now);
 }
 
-void ObstacleSimulation::reset(uint64_t new_custom_stop_signal)
+uint8_t ObstacleSimulation::get_id()
 {
-    stop_timers();
-    custom_stop_signal = new_custom_stop_signal;
+    return obstacle_id;
+}
 
+void ObstacleSimulation::reset()
+{
     current_trajectory = 0;
-    start_time = 0;
-
-    send_init_state();
-}
-
-void ObstacleSimulation::stop()
-{
-    stop_timers();
 }
