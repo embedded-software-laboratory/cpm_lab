@@ -1,0 +1,30 @@
+[Desktop Entry]
+
+# if you want to have a link for all users, do:
+# subsitute all "~" here with the path to your base directory
+# sudo cp $HOME/dev/software/lab_control_center/lab-control-center.desktop /usr/share/applications/
+# sudo mkdir -p /usr/share/icons/LCC
+# sudo cp $HOME/dev/software/lab_control_center/icon.png /usr/share/icons/LCC/icon.png
+
+# Application, Links (URL), or Directory (sub-group for applications)
+Type=Application
+
+Encoding=UTF-8
+Icon=~/dev/software/lab_control_center/icon.png
+Name=Lab Control Center
+GenericName=LCC
+Comment=Starts the LCC
+Exec=~/dev/software/lab_control_center/run.bash
+# To pass arguments use %u or %U
+# Exec=/thing/to/execute %u
+
+# Should run in a terminal?
+Terminal=true
+
+# Name of the window. Optional. See below.
+# Allows windows to stack
+# If this does not match, duplicate icons may show up in your dock
+StartupWMClass=Lab Control Center
+
+# Optional categories
+Categories=Development;
