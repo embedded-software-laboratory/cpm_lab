@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "defaults.hpp"
 #include "stdio.h"
 #include <unistd.h>
@@ -73,7 +99,7 @@ int main(int argc, char *argv[])
 {
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("LabControlCenter");
+    cpm::Logging::Instance().set_id("lab_control_center");
 
     //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
     struct sigaction interruptHandler;
@@ -93,15 +119,15 @@ int main(int argc, char *argv[])
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
     //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
-    std::string filepath_2018 = "/home/cpm-lab/dev/software/LabControlCenter/test/C-USA_US101-30_1_T-1.xml";
-    std::string filepath_2020 = "/home/cpm-lab/dev/software/LabControlCenter/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
-    std::string filepath_parked_vehicles = "/home/cpm-lab/dev/software/LabControlCenter/test/RUS_Bicycle-4_1_T-1.xml";
-    std::string filepath_occupancy = "/home/cpm-lab/dev/software/LabControlCenter/test/DEU_Ffb-1_2_S-1.xml";
+    std::string filepath_2018 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_2020 = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_parked_vehicles = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_occupancy = "./ui/map_view/LabMapCommonRoad.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
     try
     {
-        commonroad_scenario->load_file(filepath_parked_vehicles);
-        commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
+        commonroad_scenario->load_file(filepath_2018);
+        //commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
     }
     catch(const std::exception& e)
     {

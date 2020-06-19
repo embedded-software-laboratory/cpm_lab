@@ -1,10 +1,36 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "MapViewUi.hpp"
 #include <cassert>
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
 
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.hpp"
-#include "../vehicle_raspberry_firmware/src/TrajectoryInterpolation.cxx"
+#include "../mid_level_controller/src/TrajectoryInterpolation.hpp"
+#include "../mid_level_controller/src/TrajectoryInterpolation.cxx"
 
 using namespace std::placeholders; //For std::bind
 
@@ -288,21 +314,44 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     for(const auto& entry : vehicleTrajectories) 
     {
         //const auto vehicle_id = entry.first;
-        const auto& trajectory_points = entry.second;
+        const auto& trajectory = entry.second;
 
-        std::vector<TrajectoryPoint> trajectory_segment;
-        for (const auto& trajectory_point : trajectory_points)
+        rti::core::vector<TrajectoryPoint> trajectory_segment = trajectory.trajectory_points();
+        size_t start_trajectory_index = 0; //Keep track of the most recent trajectory index, because we are not interested in (too) old data
+        for (size_t i = 0; i < trajectory_segment.size(); ++i)
         {
-            trajectory_segment.push_back(trajectory_point.second);
-        }        
+            if (trajectory_segment.at(i).t().nanoseconds() < cpm::get_time_ns())
+            {
+                start_trajectory_index = i;
+            }
+        }  
+
+        //We want to output a bit of the past values
+        //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
+        int past_length = 3;
+        while (start_trajectory_index > 0 && past_length > 0)
+        {
+            --start_trajectory_index;
+            --past_length;
+        }      
 
         if(trajectory_segment.size() > 1)
         {
-            // Draw trajectory interpolation
-            for (int i = 2; i < int(trajectory_segment.size()); ++i)
+            // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+            // Also, only draw recent data
+            for (int i = start_trajectory_index + 2; i < int(trajectory_segment.size()); ++i)
             {
                 const int n_interp = 20;
-                ctx->set_source_rgb(0,0,0.8);
+                //Color based on future / past interpolation
+                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                {
+                    ctx->set_source_rgb(0.4,1.0,0.4);
+                }
+                else
+                {
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+                
                 ctx->move_to(trajectory_segment[i-1].px(), trajectory_segment[i-1].py());
 
                 for (int interp_step = 1; interp_step < n_interp; ++interp_step)
@@ -326,9 +375,18 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             }
 
             // Draw trajectory points
-            for(size_t i = 1; i < trajectory_segment.size(); ++i)
+            for(size_t i = start_trajectory_index + 1; i < trajectory_segment.size(); ++i)
             {
-                ctx->set_source_rgb(0,0,0.8);
+                //Color based on future / past interpolation
+                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                {
+                    ctx->set_source_rgb(0.4,1.0,0.4);
+                }
+                else
+                {
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+
                 ctx->arc(
                     trajectory_segment[i].px(),
                     trajectory_segment[i].py(),
@@ -490,7 +548,7 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
 {
     // Draw map (roads) image     
     
-    std::string filepath = "/home/cpm-lab/dev/software/LabControlCenter/ui/map_view/C-USA_US101-30_1_T-1.xml";
+    std::string filepath = "./ui/map_view/LabMapCommonRoad.xml";
 
     xmlpp::DomParser parser;
     vector<double> lanelet_x;

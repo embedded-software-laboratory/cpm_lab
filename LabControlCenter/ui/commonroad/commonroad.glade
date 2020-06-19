@@ -36,7 +36,7 @@
               <object class="GtkEntry" id="commonroad_path">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="text" translatable="yes">/home/cpm-lab/dev/software/LabControlCenter/test/C-USA_US101-30_1_T-1.xml</property>
+                <property name="text" translatable="yes">./ui/map_view/LabMapCommonRoad.xml</property>
               </object>
               <packing>
                 <property name="expand">False</property>

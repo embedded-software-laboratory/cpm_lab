@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "SetupViewUI.hpp"
 #include <cstdlib>
 #include <chrono>
@@ -77,8 +103,11 @@ SetupViewUI::SetupViewUI
 
     assert(vehicle_flowbox);
 
+    //Get number of vehicles
+    unsigned int number_of_vehicles = cpm::cmd_parameter_int("number_of_vehicles", 20, argc, argv);
+
     //Create vehicle toggles
-    for (unsigned int id = 1; id <= 20; ++id)
+    for (unsigned int id = 1; id <= number_of_vehicles; ++id)
     {
         vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
     }
@@ -101,7 +130,7 @@ SetupViewUI::SetupViewUI
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
-    //Extract relevant parameters from command line
+    //Extract other relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
@@ -338,7 +367,7 @@ void SetupViewUI::deploy_applications() {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
 
-        //Get current online vehicle and hlc IDs
+        //Get current online vehicle and high_level_controller IDs
         std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
         if (get_hlc_ids)
@@ -391,7 +420,7 @@ void SetupViewUI::deploy_applications() {
         thread_count.store(min_hlc_vehicle);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
-            //Deploy on hlc with given vehicle id(s)
+            //Deploy on high_level_controller with given vehicle id(s)
             std::stringstream vehicle_id_stream;
             vehicle_id_stream << vehicle_ids.at(i);
 

@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "Deploy.hpp"
 
 Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle) :
@@ -13,7 +39,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
-    kill_session("hlc");
+    kill_session("high_level_controller");
 
     if (active_vehicle_ids.size() > 0)
     {
@@ -38,8 +64,8 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Matlab script
             command 
             << "tmux new-session -d "
-            << "-s \"hlc\" "
-            << "'. ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
+            << "-s \"high_level_controller\" "
+            << "'. ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
             << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
@@ -50,10 +76,10 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Any executable 
             command 
             << "tmux new-session -d "
-            << "-s \"hlc\" "
-            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;"
+            << "-s \"high_level_controller\" "
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
-            << " --node_id=hlc"
+            << " --node_id=high_level_controller"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
             << " --dds_domain=" << cmd_domain_id;
@@ -83,7 +109,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         middleware_command 
             << "tmux new-session -d "
             << "-s \"middleware\" "
-            << "\". ~/dev/software/LabControlCenter/bash/environment_variables_local.bash;cd ~/dev/software/hlc/middleware/build/;./middleware"
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << vehicle_ids_stream.str()
@@ -102,7 +128,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
 void Deploy::kill_local_hlc() 
 {
-    kill_session("hlc");
+    kill_session("high_level_controller");
     kill_session("middleware");
 }
 
@@ -129,7 +155,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     command 
         << "tmux new-session -d "
         << "-s \"" << session_name.str() << "\" "
-        << "\"cd ~/dev/software/vehicle_raspberry_firmware/build_x64_sim;./vehicle_rpi_firmware "
+        << "\"cd ~/dev/software/mid_level_controller/build_x64_sim;./vehicle_rpi_firmware "
         << "--simulated_time=" << sim_time_string
         << " --vehicle_id=" << id
         << " --dds_domain=" << cmd_domain_id;
@@ -220,7 +246,7 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     //Copy all relevant data over to the remote system
     std::stringstream copy_command;
     //Okay, do this using a template script instead, I think that's better in this case
-    copy_command << "~/dev/software/LabControlCenter/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
+    copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
@@ -242,7 +268,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/LabControlCenter/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     //Spawn and manage new process
     return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);
@@ -258,7 +284,7 @@ void Deploy::deploy_ips()
     command_ips 
         << "tmux new-session -d "
         << "-s \"ips_pipeline\" "
-        << "\"cd ~/dev/software/ips2/;./build/ips_pipeline "
+        << "\"cd ~/dev/software/indoor_positioning_system/;./build/ips_pipeline "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
         command_ips 
@@ -275,7 +301,7 @@ void Deploy::deploy_ips()
     command_basler 
         << "tmux new-session -d "
         << "-s \"ips_basler\" "
-        << "\"cd ~/dev/software/ips2/;./build/BaslerLedDetection "
+        << "\"cd ~/dev/software/indoor_positioning_system/;./build/BaslerLedDetection "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
         command_basler 
@@ -303,7 +329,7 @@ void Deploy::deploy_recording()
 
     // Update recording config
     std::string config_path_in = std::getenv("HOME");
-    config_path_in.append("/dev/software/dds_record/rti_recording_config_template.xml");
+    config_path_in.append("/dev/software/lab_control_center/recording/rti_recording_config_template.xml");
     std::ifstream xml_config_template(config_path_in);
     
     std::string xml_config_str;
@@ -334,10 +360,17 @@ void Deploy::deploy_recording()
         std::regex("TEMPLATE_DOMAIN_ID"),
         std::to_string(cmd_domain_id)
     );
+    // extract ip from initial peer
+    std::smatch ip_matched;
+    std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    std::string ip_string;
+    bool is_ip_contained = std::regex_search (cmd_dds_initial_peer,ip_matched,ip_regex);
+    assert(is_ip_contained);
+    ip_string = ip_matched.str(0);
     xml_config_str = std::regex_replace(
         xml_config_str,
-        std::regex("TEMPLATE_DISCOVERY_URL"),
-        cmd_dds_initial_peer
+        std::regex("TEMPLATE_IP"),
+        ip_string
     );
 
     std::string config_path_out = "/tmp/rti_recording_config.xml";

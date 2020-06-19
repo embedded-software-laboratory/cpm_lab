@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "TimeSeriesAggregator.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
@@ -21,13 +47,14 @@ TimeSeriesAggregator::TimeSeriesAggregator()
         cpm::get_topic<VehicleObservation>("vehicleObservation")
     );
 
-
-    vehicle_commandTrajectory_reader = make_shared<cpm::AsyncReader<VehicleCommandTrajectory>>(
-        [this](dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples){
-            handle_new_commandTrajectory_samples(samples);
-        },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
+    //Set vehicle IDs to listen to in the aggregator - 30 is chosen rather arbitrarily, 20 vehicles are planned atm - change if you need higher values as well
+    for (uint8_t i = 1; i < 30; ++i)
+    {
+        vehicle_ids.push_back(i);
+    }
+    vehicle_commandTrajectory_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandTrajectory>>(
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
+        vehicle_ids
     );
 }
 
@@ -83,7 +110,7 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 static inline double voltage_to_percent(const double& v)
 {
     // approximate discharge curve with three linear segments,
-    // see matlab_scripts/linear_discharge.m
+    // see tools/linear_discharge.m
     if (v >= 7.55)
     {
         return std::min({72.83 * (v-7.55) + 52.66, 100.0});
@@ -153,61 +180,24 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
     }
 }
 
-
-void TimeSeriesAggregator::handle_new_commandTrajectory_samples(
-    dds::sub::LoanedSamples<VehicleCommandTrajectory>& samples
-)
-{
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        for(auto sample : samples)
-        {
-            if(sample.info().valid())
-            {
-                const uint8_t vehicle_id = sample.data().vehicle_id();
-                auto dds_trajectory_points = sample.data().trajectory_points();                                    
-                for(auto trajectory_point : dds_trajectory_points) 
-                {
-                    const uint64_t t = trajectory_point.t().nanoseconds();
-                    vehicle_reference_trajectories[vehicle_id][t] = trajectory_point;
-                }
-            }
-        }
-    }
-    erase_past_commandTrajectory_samples();    
-}
-
-void TimeSeriesAggregator::erase_past_commandTrajectory_samples()
-{
-    std::lock_guard<std::mutex> lock(_mutex);
-    // Erase trajectory points which are older than 3 second
-    const uint64_t past_threshold_time = clock_gettime_nanoseconds() - 3000000000ull;
-    for (auto vehicle_trajectory_it = vehicle_reference_trajectories.begin();
-         vehicle_trajectory_it != vehicle_reference_trajectories.end();
-         ++vehicle_trajectory_it)
-    {
-        auto last_valid_it = vehicle_trajectory_it->second.upper_bound(past_threshold_time);
-        vehicle_trajectory_it->second.erase(
-            vehicle_trajectory_it->second.begin(),
-            last_valid_it
-        );
-    }
-}
-
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
     return timeseries_vehicles; 
 }
 
 VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
-    erase_past_commandTrajectory_samples(); 
-    std::lock_guard<std::mutex> lock(_mutex);
-    return vehicle_reference_trajectories; 
+    VehicleTrajectories trajectory_sample;
+    std::map<uint8_t, uint64_t> trajectory_sample_age;
+    vehicle_commandTrajectory_reader->get_samples(cpm::get_time_ns(), trajectory_sample, trajectory_sample_age);
+    return trajectory_sample;
 }
 
 void TimeSeriesAggregator::reset_all_data()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     timeseries_vehicles.clear();
-    vehicle_reference_trajectories.clear();
+    vehicle_commandTrajectory_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandTrajectory>>(
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
+        vehicle_ids
+    );
 }

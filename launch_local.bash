@@ -51,9 +51,9 @@ then
 fi
 
 exit_script() {
-    tmux kill-session -t "LabControlCenter"
+    tmux kill-session -t "lab_control_center"
     tmux kill-session -t "middleware"
-    tmux kill-session -t "hlc"
+    tmux kill-session -t "high_level_controller"
 
     # Stop HLCs and vehicles
     IFS=,
@@ -71,17 +71,17 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 trap exit_script SIGINT SIGTERM
 
-tmux new-session -d -s "LabControlCenter" "(cd LabControlCenter;./build/LabControlCenter --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
+tmux new-session -d -s "lab_control_center" "(cd lab_control_center;./build/lab_control_center --dds_domain=${dds_domain} --simulated_time=${simulated_time} --dds_initial_peer=$DDS_INITIAL_PEER >stdout.txt 2>stderr.txt)"
 # Start middleware
-tmux new-session -d -s "middleware" "cd ./hlc/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
+tmux new-session -d -s "middleware" "cd ./high_level_controller/;bash middleware_start_local.bash ${vehicle_ids} ${simulated_time} &> middleware.txt"
 # Start HLCs
-tmux new-session -d -s "hlc" "cd ./hlc/;bash hlc_start_local.bash ${script_path} ${script_name} ${vehicle_ids} &> hlc.txt"
+tmux new-session -d -s "high_level_controller" "cd ./high_level_controller/;bash hlc_start_local.bash ${script_path} ${script_name} ${vehicle_ids} &> high_level_controller.txt"
 
 IFS=,
 for val in $vehicle_ids;
 do
     # Start vehicle
-    tmux new-session -d -s "vehicle_${val}" "cd ./vehicle_raspberry_firmware/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
+    tmux new-session -d -s "vehicle_${val}" "cd ./mid_level_controller/;bash run_w_flexible_domain.bash ${val} 3 ${simulated_time}"
 done
 
 sleep infinity

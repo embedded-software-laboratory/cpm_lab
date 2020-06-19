@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #include "TrajectoryCommand.hpp"
 
 const uint64_t dt_nanos = 100000000ull;
@@ -171,22 +197,42 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
         const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
+        size_t trajectory_index = 0;
+        bool trajectory_found = false; //One could also use another type for the index and start with -1, but I did not prefer the necessary typecasts over using a boolean instead
 
-        for (size_t i = 0; i < trajectory.size(); ++i)
+        for (size_t i = 0; i < trajectory.size(); ++i) 
         {
             // find active trajectory point
             if(t_now + 1500000000ull < trajectory.at(i).t().nanoseconds())
             {
-                auto trajectoryPoint = trajectory.at(i);
-                VehicleCommandTrajectory command;
-                command.vehicle_id(vehicle_id);
-                command.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectoryPoint));
-                writer_vehicleCommandTrajectory.write(command);
+                trajectory_index = i;
+                trajectory_found = true;
                 break;
             }
 
-            // TODO delete trajectory if it is in the past
+            // TODO delete trajectory if it is in the past (Janis' TODO, I don't know if this is still necessary)
         }
 
+        if (trajectory_found)
+        {
+            //For interpolation: Create trajectory that starts before and ends after the found point (if possible)
+            std::vector<TrajectoryPoint> trajectory_points;
+            if (trajectory_index > 0)
+            {
+                trajectory_points.push_back(trajectory.at(trajectory_index - 1));
+            }
+            for (size_t i = trajectory_index; i < trajectory.size() && i < trajectory_index + 20; ++i)
+            {
+                //+20 because we cannot add too many points, else RTI causes a crash
+                trajectory_points.push_back(trajectory.at(i));
+            }
+
+            VehicleCommandTrajectory command;
+            command.vehicle_id(vehicle_id);
+            command.trajectory_points(rti::core::vector<TrajectoryPoint>(trajectory_points));
+            command.header().create_stamp().nanoseconds(t_now);
+            command.header().valid_after_stamp().nanoseconds(trajectory.at(trajectory_index).t().nanoseconds());
+            writer_vehicleCommandTrajectory.write(command);
+        }
     }
 }
