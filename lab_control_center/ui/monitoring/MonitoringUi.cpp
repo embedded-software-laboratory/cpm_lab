@@ -277,6 +277,7 @@ void MonitoringUi::init_ui_thread()
                         if(trajectory == vehicleTrajectories.end()) 
                         {
                             label->get_style_context()->add_class("ok");
+                            label->set_text("--");
                             continue;
                         }
 
@@ -286,8 +287,8 @@ void MonitoringUi::init_ui_thread()
                         {
                             trajectory_segment.push_back(trajectory_point);
                         }        
-
-                        if(trajectory_segment.size() > 1)
+                        
+                        if(trajectory_segment.size() > 2)
                         {
                             
                             //TrajectoryPoint current_trajectory_segment = trajectory_segment[0];
@@ -337,6 +338,12 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("ok");
                             }
+                        }
+                        else 
+                        {
+                            label->get_style_context()->add_class("ok");
+                            label->set_text("--");
+                            continue;
                         }
                         
                     }
