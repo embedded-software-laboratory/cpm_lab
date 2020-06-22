@@ -327,7 +327,7 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
-                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f and %l. Shutting down ...", vehicle_id, error, dt);
+                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Shutting down ...", vehicle_id, error, dt);
                                 deploy_functions->kill_vehicles({},vehicle_ids);
                             }
                             else if (error > 0.1)
