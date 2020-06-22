@@ -222,7 +222,7 @@ void ObstacleSimulationManager::start()
         //Send test trajectory messages - currently only for ID 1
         for (auto& obstacle : simulated_obstacles)
         {
-            if (obstacle.get_id() == 1)
+            if (obstacle.get_id() == 1) //TODO: Let the user choose which obstacle should be real in the UI
             {
                 writer_vehicle_trajectory.write(obstacle.get_trajectory(start_time, t_now, time_step_size));
             }

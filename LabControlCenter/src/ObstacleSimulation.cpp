@@ -80,6 +80,7 @@ VehicleCommandTrajectory ObstacleSimulation::construct_trajectory(std::vector<Tr
     header.valid_after_stamp(TimeStamp(t_now));
     trajectory.header(header);
     trajectory.trajectory_points(trajectory_points);
+    trajectory.vehicle_id(obstacle_id);
 
     return trajectory;
 }
@@ -284,7 +285,7 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
     //Behaviour for points before the final point
     if (t_now - start_time < trajectory.trajectory.at(trajectory.trajectory.size() - 1).time.value().get_mean() * time_step_size)
     {
-        //Send from previous over current point up to 2 time steps in the future
+        //Send from previous over current point up to some time steps in the future
         size_t start_index = current_trajectory;
         if (start_index > 0)
         {
@@ -292,12 +293,12 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
         }
 
         //Send current and future points, but do not create the final point here if that one would be reached
-        for (size_t index = start_index; index < start_index + 4 && index < trajectory.trajectory.size() - 2; ++index)
+        for (size_t index = start_index; index < start_index + future_time_steps && index < trajectory.trajectory.size() - 2; ++index)
         {
             auto& current_point = trajectory.trajectory.at(index);
 
             TrajectoryPoint point;
-            point.t(TimeStamp(current_point.time.value().get_mean() * time_step_size));
+            point.t(TimeStamp(start_time + current_point.time.value().get_mean() * time_step_size));
 
             auto position = get_position(current_point);
             point.px(position.first);
@@ -322,7 +323,7 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
     }
 
     //If we have reached the final point, send that point (multiple times)
-    if (trajectory_points.size() < 4)
+    if (trajectory_points.size() < future_time_steps)
     {
         auto& last_point = trajectory.trajectory.at(trajectory.trajectory.size() - 1);
         for (int i = trajectory_points.size(); i < 4; ++i)

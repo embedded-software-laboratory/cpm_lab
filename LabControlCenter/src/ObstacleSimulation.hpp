@@ -55,6 +55,8 @@ private:
     ObstacleSimulationData trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
     size_t current_trajectory = 0;
 
+    const size_t future_time_steps = 10; //Send up to 10 trajectory points from future time steps
+
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
      * \return x,y,yaw values using references as input
