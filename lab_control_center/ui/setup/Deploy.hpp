@@ -92,7 +92,7 @@ public:
     void deploy_ips();
     void kill_ips();
 
-    bool diagnosis_switch = true; 
+    bool diagnosis_switch = false; 
     //Deploy and kill the rtirecordingservice
     void deploy_recording();
     void kill_recording();
