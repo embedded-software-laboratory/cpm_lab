@@ -209,6 +209,9 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+                            
+                            if(restarting[vehicle_id-1]) continue; 
+                            restarting[vehicle_id-1] = true; 
                             cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
                             
                             std::string reboot;
@@ -228,6 +231,8 @@ void MonitoringUi::init_ui_thread()
                                 }
                             ));
                             deploy_functions->kill_vehicles({},vehicle_ids);
+                            sleep(5); 
+                            restarting[vehicle_id-1] = false; 
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
