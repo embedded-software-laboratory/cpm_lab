@@ -72,8 +72,13 @@ int main(int argc, char *argv[])
     Eight eight;
 
     // This variabel tracks the reference state of the time,
-    // it is incremented as time passes.
+    // it is incremented as time passes. It refers to the first trajectory point the vehicle will drive to.
     uint64_t reference_trajectory_time = 0;
+    // This variable refers to the last currently planned trajectory point the vehicle will drive to.           --TODO
+    uint64_t trajectory_duration = 0;
+
+    // Saves the current trajectory which is to be sent
+    vector<TrajectoryPoint> trajectory_points;
 
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
@@ -85,24 +90,53 @@ int main(int argc, char *argv[])
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 2000000000ull;
 
-        // Send the current trajectory point to the vehicle
-        TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
-        trajectory_point.t().nanoseconds(reference_trajectory_time);
+        // Append new points to the trajectory
+        while (reference_trajectory_time + trajectory_duration < t_now + 1000000000ull){
+            TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
+            trajectory_point.t().nanoseconds(reference_trajectory_time + trajectory_duration);
 
+            trajectory_points.push_back(trajectory_point);
+
+            trajectory_duration += eight.get_segment_duration();
+            eight.move_forward(); //TODO Fitting with initial point?
+        }
+
+        // Delete outdated points, i.e., remove first point if second one lies in past, too,
+        while (trajectory_points.at(1).t() < t_now){
+            uint64_t delta_t = trajectory_points.at(1).t() - trajectory_points.at(0).t();
+            trajectory_duration -= delta_t;
+            reference_trajectory_time += delta_t;
+
+            trajectory_points.pop_front();
+        }
+
+        // Send the current trajectory 
+        rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
         VehicleCommandTrajectory vehicle_command_trajectory;
         vehicle_command_trajectory.vehicle_id(vehicle_id);
-        vehicle_command_trajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
+        vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
+        vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
+        vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+
+        // // Send the current trajectory point to the vehicle
+        // TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
+        // trajectory_point.t().nanoseconds(reference_trajectory_time);
+
+        // VehicleCommandTrajectory vehicle_command_trajectory;
+        // vehicle_command_trajectory.vehicle_id(vehicle_id);
+        // vehicle_command_trajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
+        // writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
 
         // Advance the reference state to T+2sec.
         // The reference state must be in the future,
         // to allow some time for the vehicle to receive
         // the message and anticipate the next turn.
-        while(reference_trajectory_time < t_now + 2000000000ull)
-        {
-            reference_trajectory_time += eight.get_segment_duration();
-            eight.move_forward();
-        }
+        // while(reference_trajectory_time < t_now + 2000000000ull)
+        // {
+        //     reference_trajectory_time += eight.get_segment_duration();
+        //     eight.move_forward();
+        // }
 
     });
 }
