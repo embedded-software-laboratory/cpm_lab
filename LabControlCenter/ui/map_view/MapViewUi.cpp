@@ -52,12 +52,19 @@ MapViewUi::MapViewUi(
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
     drawingArea->show();
+    
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
+        //Pan depending on key press
+        if (key_up) pan_y += key_move;
+        if (key_down) pan_y -= key_move;
+        if (key_left) pan_x += key_move;
+        if (key_right) pan_x -= key_move;
+
         vehicle_data = this->get_vehicle_data();
         drawingArea->queue_draw(); 
     });
@@ -73,7 +80,10 @@ MapViewUi::MapViewUi(
     drawingArea->add_events(Gdk::BUTTON_PRESS_MASK);
     drawingArea->add_events(Gdk::BUTTON_RELEASE_MASK);
     drawingArea->add_events(Gdk::POINTER_MOTION_MASK);
+    drawingArea->add_events(Gdk::KEY_PRESS_MASK);
+    drawingArea->add_events(Gdk::KEY_RELEASE_MASK);
 
+    drawingArea->set_can_focus(true);
 
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
@@ -103,6 +113,34 @@ MapViewUi::MapViewUi(
         return true; 
     });
 
+    //For moving the area with the arrow keys - the according values are 
+    drawingArea->signal_key_press_event().connect([&] (GdkEventKey* event) {
+        if (event->type == GDK_KEY_PRESS)
+        {
+            //Multiple keys may be pressed at once
+            if (event->keyval == GDK_KEY_Up) key_up = true;
+            if (event->keyval == GDK_KEY_Down) key_down = true;
+            if (event->keyval == GDK_KEY_Left) key_left = true;
+            if (event->keyval == GDK_KEY_Right) key_right = true;
+
+            if (key_up || key_down || key_left || key_right) return true; //Signal was handled
+        }
+        return false; //Propagate signal
+    }, false);
+
+    drawingArea->signal_key_release_event().connect([&] (GdkEventKey* event) {
+        if (event->type == GDK_KEY_RELEASE)
+        {
+            if (event->keyval == GDK_KEY_Up) key_up = false;
+            if (event->keyval == GDK_KEY_Down) key_down = false;
+            if (event->keyval == GDK_KEY_Left) key_left = false;
+            if (event->keyval == GDK_KEY_Right) key_right = false;
+
+            if (key_up || key_down || key_left || key_right) return true; //Signal was handled
+        }
+        return false; //Propagate signal
+    }, false);
+
     drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = true;
         if(event->button == 3) mouse_right_button = true;
@@ -110,6 +148,9 @@ MapViewUi::MapViewUi(
         // start path drawing mode
         if(mouse_left_button)
         {
+            //Get focus for key events
+            drawingArea->grab_focus();
+
             path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
             if(path_painting_in_progress_vehicle_id >= 0)
             {
@@ -125,6 +166,9 @@ MapViewUi::MapViewUi(
         }
         else if (mouse_right_button)
         {
+            //Get focus for key events
+            drawingArea->grab_focus();
+
             old_event_x = event->x;
             old_event_y = event->y;
         }

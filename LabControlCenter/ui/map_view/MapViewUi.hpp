@@ -87,7 +87,12 @@ class MapViewUi
     double mouse_y = 0;
 
     bool mouse_left_button = false;
-    bool mouse_right_button = false;
+    bool mouse_right_button = false; //The right mouse button or (new) the arrow keys can be used to move the view
+    bool key_up = false;
+    bool key_down = false;
+    bool key_right = false;
+    bool key_left = false;
+    double key_move = 5.0; //Move value during key press, moved each time the dispatcher is called (change for higher / lower speed)
 
     //Used for dragging the view with the right mouse button
     double old_event_x = 0;
