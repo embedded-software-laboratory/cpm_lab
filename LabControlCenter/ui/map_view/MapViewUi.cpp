@@ -858,7 +858,9 @@ std::pair<double, double> MapViewUi::get_shape_center(CommonroadDDSShape& shape)
 
 void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 {
-    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
+    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on    
+    ctx->set_source_rgb(1,.5,.1);
+
     assert(get_obstacle_data);
     for (auto entry : get_obstacle_data())
     {
