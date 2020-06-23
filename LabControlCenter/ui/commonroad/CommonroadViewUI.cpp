@@ -44,6 +44,8 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("button_choose_commonroad", button_choose_commonroad);
     builder->get_widget("button_load_commonroad", button_load_commonroad);
     builder->get_widget("button_apply_transformation", button_apply_transformation);
+    builder->get_widget("static_obstacles_flowbox", static_obstacles_flowbox);
+    builder->get_widget("dynamic_obstacles_flowbox", dynamic_obstacles_flowbox);
     builder->get_widget("problem_treeview", problem_treeview);
     builder->get_widget("problem_scrolled_window", problem_scrolled_window);
 
@@ -56,6 +58,8 @@ CommonroadViewUI::CommonroadViewUI
     assert(button_choose_commonroad);
     assert(button_load_commonroad);
     assert(button_apply_transformation);
+    assert(static_obstacles_flowbox);
+    assert(dynamic_obstacles_flowbox);
     assert(problem_treeview);
     assert(problem_scrolled_window);
 
@@ -99,6 +103,8 @@ CommonroadViewUI::CommonroadViewUI
 
     //Try to load planning problems from current translation, if they exist
     reload_problems.store(true);
+    //Also load the obstacle list
+    load_obstacle_list.store(true);
 }
 
 void CommonroadViewUI::dispatcher_callback() {
@@ -194,6 +200,53 @@ void CommonroadViewUI::dispatcher_callback() {
             }
         }
     }
+    if (load_obstacle_list.load())
+    {
+        load_obstacle_list.store(false);
+
+        //Remove old vehicle toggles
+        for (auto& vehicle_toggle : static_vehicle_toggles)
+        {
+            static_obstacles_flowbox->remove(*(vehicle_toggle->get_parent()->get_parent()));
+        }
+        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+        {
+            dynamic_obstacles_flowbox->remove(*(vehicle_toggle->get_parent()->get_parent()));
+        }
+        static_vehicle_toggles.clear();
+        dynamic_vehicle_toggles.clear();
+
+        //Create vehicle toggles for static and dynamic IDs
+        for (auto id : commonroad_scenario->get_static_obstacle_ids())
+        {
+            static_vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
+        }
+        for (auto& vehicle_toggle : static_vehicle_toggles)
+        {
+            static_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
+        }
+
+        for (auto id : commonroad_scenario->get_dynamic_obstacle_ids())
+        {
+            dynamic_vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
+        }
+        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+        {
+            dynamic_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
+        }
+
+        //Set vehicle toggles to "simulation" by default
+        for (auto& vehicle_toggle : static_vehicle_toggles)
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+        }
+        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+        }
+
+        //TODO: Listener or smth for toggles s.t. the ObstacleSimulationManager can be informed about changes; delete outdated participants s.t. "Off" state has an effect
+    }
 }
 
 void CommonroadViewUI::update_ui() {
@@ -282,6 +335,7 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
 
         //Reload/reset shown planning problems
         reload_problems.store(true);
+        load_obstacle_list.store(true);
     }
 }
 
@@ -429,6 +483,8 @@ void CommonroadViewUI::set_sensitive(bool is_sensitive)
     button_choose_commonroad->set_sensitive(is_sensitive);
     button_load_commonroad->set_sensitive(is_sensitive);
     button_apply_transformation->set_sensitive(is_sensitive);
+    problem_treeview->set_sensitive(is_sensitive);
+    problem_scrolled_window->set_sensitive(is_sensitive);
 }
 
 Gtk::Widget* CommonroadViewUI::get_parent()

@@ -32,6 +32,7 @@
 #include "cpm/Logging.hpp"
 #include "../../src/commonroad_classes/CommonRoadScenario.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
+#include "ui/setup/VehicleToggle.hpp"
 
 #include <atomic>
 #include <array>
@@ -72,6 +73,13 @@ private:
 
     //Button to apply a transformation set in the UI to the currently loaded scenario permanently
     Gtk::Button* button_apply_transformation = nullptr;
+
+    //View to set / edit which obstacles should be simulated / shown
+    Gtk::FlowBox* static_obstacles_flowbox = nullptr;
+    Gtk::FlowBox* dynamic_obstacles_flowbox = nullptr; 
+    std::vector<std::shared_ptr<VehicleToggle>> static_vehicle_toggles;
+    std::vector<std::shared_ptr<VehicleToggle>> dynamic_vehicle_toggles;
+    std::atomic_bool load_obstacle_list; //When a new scenario was selected, redraw the obstacle lists in the dispatcher
 
     //Treeview that shows information about planning problems
     Gtk::TreeView* problem_treeview;

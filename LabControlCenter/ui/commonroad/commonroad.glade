@@ -21,9 +21,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">
-  Commonroad Path
-</property>
+                <property name="label" translatable="yes">  Commonroad Path</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
@@ -82,8 +80,7 @@
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-  Transform settings
-</property>
+  Transform Settings</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
@@ -267,20 +264,111 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_problems">
+              <object class="GtkLabel" id="label_dynamic_obstacles">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-  Planning problems
-</property>
+  Dynamic Obstacles</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">7</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="window_dynamic_obstacles">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="vexpand">True</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="valign">start</property>
+                    <child>
+                      <object class="GtkFlowBox" id="dynamic_obstacles_flowbox">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="homogeneous">True</property>
+                        <property name="min_children_per_line">1</property>
+                        <property name="max_children_per_line">3</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">8</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_static_obstacles">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">
+  Static Obstacles</property>
+                <property name="ellipsize">start</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">9</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="window_static_obstacles">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="vexpand">True</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="valign">start</property>
+                    <child>
+                      <object class="GtkFlowBox" id="static_obstacles_flowbox">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="homogeneous">True</property>
+                        <property name="min_children_per_line">1</property>
+                        <property name="max_children_per_line">3</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">10</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_problems">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">
+  Planning Problems</property>
+                <property name="ellipsize">start</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">11</property>
               </packing>
             </child>
             <child>
@@ -301,7 +389,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">8</property>
+                <property name="position">12</property>
               </packing>
             </child>
           </object>
