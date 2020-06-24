@@ -40,7 +40,7 @@
 
 /**
  * \class ObstacleAggregator
- * \brief Keeps received data from commonroad obstacles in map that regards multiple messages + timestamps; analogous to TimeSeriesAggregator but for commonroad obstacles
+ * \brief Keeps received data from commonroad obstacles in map that regards multiple messages + timestamps; analogous to TimeSeriesAggregator but for commonroad obstacles; ignores more than 2 seconds old data
  *
 */
 
@@ -53,6 +53,7 @@ class ObstacleAggregator
     std::mutex commonroad_obstacle_mutex;
 
     uint64_t reset_time = 0; //After a reset, ignore all previous data (->Header) - remember when last reset was called
+    uint64_t timeout = 2e9; //Ignore all data that is more than two seconds old
 
 public:
     /**

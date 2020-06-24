@@ -54,6 +54,7 @@ public:
     //Setter
     void set_state(ToggleState state);
     void set_sensitive(bool sensitive);
+    void set_selection_callback(std::function<void(unsigned int, ToggleState)> _selection_callback); //If set, callback gets called on state change
 
 private:
     void on_state_changed();
@@ -71,5 +72,5 @@ private:
 
     //Given values
     unsigned int id;
-    std::function<void(ToggleState)> selection_callback;
+    std::function<void(unsigned int, ToggleState)> selection_callback;
 };

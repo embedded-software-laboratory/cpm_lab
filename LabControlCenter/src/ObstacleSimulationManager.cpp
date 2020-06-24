@@ -82,17 +82,30 @@ void ObstacleSimulationManager::send_init_states()
     //Send initial states with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
     //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
     standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
+    uint64_t time_step_size_ns = 1000ull * 1e9;
     standby_timer->start_async([&] (uint64_t t_now) {
         //Get and send initial states
         std::vector<CommonroadObstacle> initial_obstacle_states;
         for (auto& simulated_obstacle : simulated_obstacles)
         {
-            initial_obstacle_states.push_back(simulated_obstacle.get_init_state(t_now));
+            if (simulated_obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::Simulated)
+            {
+                initial_obstacle_states.push_back(simulated_obstacle.second.get_init_state(t_now));
+            }
         }
 
         CommonroadObstacleList obstacle_list;
         obstacle_list.commonroad_obstacle_list(initial_obstacle_states);
         writer_commonroad_obstacle.write(obstacle_list);
+
+        //Send test init. trajectory messages
+        for (auto& obstacle : simulated_obstacles)
+        {
+            if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+            {
+                writer_vehicle_trajectory.write(obstacle.second.get_init_trajectory(t_now, time_step_size_ns));
+            }
+        }
     });
 }
 
@@ -103,7 +116,12 @@ std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_stat
 
     for (auto& obstacle : simulated_obstacles)
     {
-        next_obstacle_states.push_back(obstacle.get_state(start_time, t_now, time_step_size));
+        //Only simulate obstacles that are supposed to be simulated
+        if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::Simulated)
+        {
+            next_obstacle_states.push_back(obstacle.second.get_state(start_time, t_now, time_step_size));
+        }
+        
     }
 
     return next_obstacle_states;
@@ -188,9 +206,7 @@ void ObstacleSimulationManager::create_obstacle_simulation(int id, ObstacleSimul
         }
     }
 
-    simulated_obstacles.push_back(
-        ObstacleSimulation(data, id)
-    );
+    simulated_obstacles.emplace(id, ObstacleSimulation(data, id));
 }
 
 //Suppress warning for unused parameter
@@ -219,12 +235,12 @@ void ObstacleSimulationManager::start()
         obstacle_list.commonroad_obstacle_list(next_obstacle_states);
         writer_commonroad_obstacle.write(obstacle_list);
 
-        //Send test trajectory messages - currently only for ID 1
+        //Send test trajectory messages
         for (auto& obstacle : simulated_obstacles)
         {
-            if (obstacle.get_id() == 1) //TODO: Let the user choose which obstacle should be real in the UI
+            if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
             {
-                writer_vehicle_trajectory.write(obstacle.get_trajectory(start_time, t_now, time_step_size));
+                writer_vehicle_trajectory.write(obstacle.second.get_trajectory(start_time, t_now, time_step_size));
             }
         }
     });
@@ -236,7 +252,7 @@ void ObstacleSimulationManager::stop()
 
     for (auto& simulated_obstacle : simulated_obstacles)
     {
-        simulated_obstacle.reset();
+        simulated_obstacle.second.reset();
     }
 
     send_init_states();
@@ -247,4 +263,15 @@ void ObstacleSimulationManager::reset()
     stop_timers();
 
     simulated_obstacles.clear();
+}
+
+void ObstacleSimulationManager::set_obstacle_simulation_state(int id, VehicleToggle::ToggleState state)
+{
+    auto element = simulated_obstacles.find(id);
+    if (element != simulated_obstacles.end())
+    {
+        element->second.set_simulation_state(state);
+    }
+
+    //TODO: Maybe use mutex
 }

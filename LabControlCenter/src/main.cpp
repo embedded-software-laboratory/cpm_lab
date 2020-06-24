@@ -173,7 +173,10 @@ int main(int argc, char *argv[])
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
+    auto commonroadViewUi = make_shared<CommonroadViewUI>(
+        commonroad_scenario,
+        [=](int id, VehicleToggle::ToggleState state){return obstacle_simulation_manager->set_obstacle_simulation_state(id, state);} 
+    );
     auto setupViewUi = make_shared<SetupViewUI>(
         vehicleAutomatedControl, 
         obstacle_simulation_manager,

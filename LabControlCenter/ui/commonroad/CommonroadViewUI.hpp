@@ -55,6 +55,9 @@
 class CommonroadViewUI
 {
 private:
+    //Shared pointer to modify the current commonroad scenario
+    std::shared_ptr<CommonRoadScenario> commonroad_scenario;
+
     //Builder and pointer to UI elements
     Glib::RefPtr<Gtk::Builder> builder;
 
@@ -80,6 +83,9 @@ private:
     std::vector<std::shared_ptr<VehicleToggle>> static_vehicle_toggles;
     std::vector<std::shared_ptr<VehicleToggle>> dynamic_vehicle_toggles;
     std::atomic_bool load_obstacle_list; //When a new scenario was selected, redraw the obstacle lists in the dispatcher
+    //Callback function for state changes in the toggles
+    void vehicle_selection_changed(unsigned int id, VehicleToggle::ToggleState state);
+    std::function<void(int, VehicleToggle::ToggleState state)> set_obstacle_manager_obstacle_state;
 
     //Treeview that shows information about planning problems
     Gtk::TreeView* problem_treeview;
@@ -100,9 +106,6 @@ private:
 
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
-
-    //Shared pointer to modify the current commonroad scenario
-    std::shared_ptr<CommonRoadScenario> commonroad_scenario;
 
     //File chooser to select script(s) + location
     void open_file_explorer();
@@ -130,9 +133,11 @@ public:
     /**
      * \brief Constructor
      * \param _commonroad_scenario The commonroad scenario to be managed by this view
+     * \param _set_obstacle_manager_obstacle_state Callback function to change the state of an obstacle in the obstacle manager, given its ID
      */
     CommonroadViewUI(
-        std::shared_ptr<CommonRoadScenario> _commonroad_scenario
+        std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
+        std::function<void(int, VehicleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
     );
 
     /**

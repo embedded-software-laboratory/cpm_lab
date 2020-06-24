@@ -28,10 +28,12 @@
 
 CommonroadViewUI::CommonroadViewUI
     (
-    std::shared_ptr<CommonRoadScenario> _commonroad_scenario
+    std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
+    std::function<void(int, VehicleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
     ) 
     :
-    commonroad_scenario(_commonroad_scenario)
+    commonroad_scenario(_commonroad_scenario),
+    set_obstacle_manager_obstacle_state(_set_obstacle_manager_obstacle_state)
 {
     builder = Gtk::Builder::create_from_file("ui/commonroad/commonroad.glade");
 
@@ -107,6 +109,7 @@ CommonroadViewUI::CommonroadViewUI
     load_obstacle_list.store(true);
 }
 
+using namespace std::placeholders;
 void CommonroadViewUI::dispatcher_callback() {
     if (reload_problems.load())
     {
@@ -216,7 +219,10 @@ void CommonroadViewUI::dispatcher_callback() {
         static_vehicle_toggles.clear();
         dynamic_vehicle_toggles.clear();
 
+        
         //Create vehicle toggles for static and dynamic IDs
+        //Set vehicle toggles to "simulation" by default
+        //Set listener for vehicle toggle state changes
         for (auto id : commonroad_scenario->get_static_obstacle_ids())
         {
             static_vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
@@ -224,6 +230,8 @@ void CommonroadViewUI::dispatcher_callback() {
         for (auto& vehicle_toggle : static_vehicle_toggles)
         {
             static_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
+            vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
         }
 
         for (auto id : commonroad_scenario->get_dynamic_obstacle_ids())
@@ -233,21 +241,20 @@ void CommonroadViewUI::dispatcher_callback() {
         for (auto& vehicle_toggle : dynamic_vehicle_toggles)
         {
             dynamic_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
-        }
-
-        //Set vehicle toggles to "simulation" by default
-        for (auto& vehicle_toggle : static_vehicle_toggles)
-        {
+            vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
             vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
         }
-        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
-        {
-            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
-        }
-
-        //TODO: Listener or smth for toggles s.t. the ObstacleSimulationManager can be informed about changes; delete outdated participants s.t. "Off" state has an effect
     }
 }
+
+void CommonroadViewUI::vehicle_selection_changed(unsigned int id, VehicleToggle::ToggleState state)
+{
+    if(set_obstacle_manager_obstacle_state)
+    {
+        set_obstacle_manager_obstacle_state(static_cast<int>(id), state);
+    }
+}
+
 
 void CommonroadViewUI::update_ui() {
     while (run_thread.load()) {

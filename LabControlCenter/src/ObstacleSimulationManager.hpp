@@ -37,6 +37,10 @@
 #include "CommonroadObstacleList.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
+#include "ui/setup/VehicleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
+
+#include <map>
+
 /**
  * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
  * It sends trajectories/... defined in the scenario (which may define position, time, velocity...)
@@ -47,7 +51,7 @@ class ObstacleSimulationManager
 private:
     std::shared_ptr<CommonRoadScenario> scenario; //Data object that can be used to access the obstacle's trajectories
 
-    std::vector<ObstacleSimulation> simulated_obstacles;
+    std::map<int, ObstacleSimulation> simulated_obstacles; //Store obstacles by ID
 
     //Timing
     bool use_simulated_time;
@@ -85,7 +89,9 @@ private:
     //Send initial state of all simulation objects (when sim. is not running, to show initial position in MapView)
     void send_init_states();
 
-    //Compute next states of commonroad obstacles based on the current time and return them
+    /**
+     * \brief Compute next states of commonroad obstacles based on the current time and return them; only consider obstacles that are supposed to be simulated by the LCC
+     */
     std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now);
 
 public:
@@ -113,4 +119,11 @@ public:
      * \brief Stop the simulation (callback for UI)
      */
     void stop();
+
+    /**
+     * \brief Set the simulation state (off, visualized/simulated, trajectory) for an obstacle (default is simulated)
+     * \param id ID of the obstacle in commonroad
+     * \param state New state of the simulation
+     */
+    void set_obstacle_simulation_state(int id, VehicleToggle::ToggleState state);
 };

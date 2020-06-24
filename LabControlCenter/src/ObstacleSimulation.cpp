@@ -82,6 +82,8 @@ VehicleCommandTrajectory ObstacleSimulation::construct_trajectory(std::vector<Tr
     trajectory.trajectory_points(trajectory_points);
     trajectory.vehicle_id(obstacle_id);
 
+    std::cout << trajectory.trajectory_points().at(0).px() << std::endl;
+
     return trajectory;
 }
 
@@ -269,6 +271,29 @@ CommonroadObstacle ObstacleSimulation::get_state(uint64_t start_time, uint64_t t
     return construct_obstacle(point, x, y, yaw, t_now);
 }
 
+VehicleCommandTrajectory ObstacleSimulation::get_init_trajectory(uint64_t t_now, uint64_t timer_step_size)
+{
+    std::vector<TrajectoryPoint> trajectory_points;
+
+    assert(trajectory.trajectory.at(0).time.has_value());
+    auto& first_point = trajectory.trajectory.at(0);
+
+    for (size_t i = 0; i < future_time_steps; ++i)
+    {
+        TrajectoryPoint point;
+        point.t(TimeStamp(t_now + i * (timer_step_size / static_cast<uint64_t>(future_time_steps) * 2)));
+        
+        auto position = get_position(first_point);
+        point.px(position.first);
+        point.py(position.second);
+        point.vx(0);
+        point.vy(0);
+
+        trajectory_points.push_back(point);
+    }
+    return construct_trajectory(trajectory_points, t_now);
+}
+
 VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time, uint64_t t_now, uint64_t time_step_size)
 {
     std::vector<TrajectoryPoint> trajectory_points;
@@ -352,4 +377,14 @@ uint8_t ObstacleSimulation::get_id()
 void ObstacleSimulation::reset()
 {
     current_trajectory = 0;
+}
+
+VehicleToggle::ToggleState ObstacleSimulation::get_simulation_state()
+{
+    return simulation_state;
+}
+
+void ObstacleSimulation::set_simulation_state(VehicleToggle::ToggleState new_state)
+{
+    simulation_state = new_state;
 }

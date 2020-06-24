@@ -41,6 +41,8 @@
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
 
+#include "ui/setup/VehicleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
+
 
 /**
  * \class ObstacleSimulation
@@ -56,6 +58,9 @@ private:
     size_t current_trajectory = 0;
 
     const size_t future_time_steps = 10; //Send up to 10 trajectory points from future time steps
+
+    //Simulation state - relevant to decide which data to send for this obstacle (DDS Obstacle / Trajectory / Nothing)
+    VehicleToggle::ToggleState simulation_state = VehicleToggle::ToggleState::Simulated;
 
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
@@ -104,6 +109,13 @@ public:
     // VehicleCommandTrajectory get_init_trajectory(uint64_t t_now);
 
     /**
+     * \brief This just returns the initial trajectory point multiple times (for a standing vehicle)
+     * \param t_now Current time, used for timestamp of msg
+     * \param timer_step_size Time step size of the calling timer, to create enough trajectory messages
+     */
+    VehicleCommandTrajectory get_init_trajectory(uint64_t t_now, uint64_t timer_step_size);
+
+    /**
      * \brief Get the current trajectory point of the vehicle, which is interpolated
      * \param start_time Time when the simulation was started
      * \param t_now Current time, used for tiemstamp of msg
@@ -115,4 +127,8 @@ public:
 
     //Reset internal counter variable which was implemented to make the lookup a bit faster
     void reset();
+
+    //Getter / setter for simulation state, which tells in which simulation mode the object is supposed to be
+    VehicleToggle::ToggleState get_simulation_state();
+    void set_simulation_state(VehicleToggle::ToggleState new_state);
 };

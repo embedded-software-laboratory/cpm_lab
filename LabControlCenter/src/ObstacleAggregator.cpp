@@ -83,8 +83,16 @@ std::vector<CommonroadObstacle> ObstacleAggregator::get_obstacle_data()
     std::lock_guard<std::mutex> lock(commonroad_obstacle_mutex);
     std::vector<CommonroadObstacle> return_vec;
 
+    auto current_time = cpm::get_time_ns();
+
     for (auto entry : commonroad_obstacle_data)
     {
+        //Ignore outdated data
+        if (entry.second.header().create_stamp().nanoseconds() + timeout < current_time)
+        {
+            continue;
+        }
+
         return_vec.push_back(entry.second);
     }
 
