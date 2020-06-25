@@ -41,8 +41,6 @@
 #include "commonroad_classes/DynamicObstacle.hpp"
 #include <dds/pub/ddspub.hpp>
 
-#include "ui/setup/VehicleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
-
 
 /**
  * \class ObstacleSimulation

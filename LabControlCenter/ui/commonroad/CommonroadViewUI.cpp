@@ -29,7 +29,7 @@
 CommonroadViewUI::CommonroadViewUI
     (
     std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-    std::function<void(int, VehicleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
+    std::function<void(int, ObstacleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
     ) 
     :
     commonroad_scenario(_commonroad_scenario),
@@ -225,29 +225,29 @@ void CommonroadViewUI::dispatcher_callback() {
         //Set listener for vehicle toggle state changes
         for (auto id : commonroad_scenario->get_static_obstacle_ids())
         {
-            static_vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
+            static_vehicle_toggles.emplace_back(std::make_shared<ObstacleToggle>(id));
         }
         for (auto& vehicle_toggle : static_vehicle_toggles)
         {
             static_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
             vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
-            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+            vehicle_toggle->set_state(ObstacleToggle::ToggleState::Simulated);
         }
 
         for (auto id : commonroad_scenario->get_dynamic_obstacle_ids())
         {
-            dynamic_vehicle_toggles.emplace_back(std::make_shared<VehicleToggle>(id));
+            dynamic_vehicle_toggles.emplace_back(std::make_shared<ObstacleToggle>(id));
         }
         for (auto& vehicle_toggle : dynamic_vehicle_toggles)
         {
             dynamic_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
             vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
-            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+            vehicle_toggle->set_state(ObstacleToggle::ToggleState::Simulated);
         }
     }
 }
 
-void CommonroadViewUI::vehicle_selection_changed(unsigned int id, VehicleToggle::ToggleState state)
+void CommonroadViewUI::vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state)
 {
     if(set_obstacle_manager_obstacle_state)
     {

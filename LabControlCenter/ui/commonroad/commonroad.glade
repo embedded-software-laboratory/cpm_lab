@@ -270,7 +270,7 @@
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-  Dynamic Obstacles</property>
+  Dynamic Obstacles (ID % 256)</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
@@ -316,7 +316,7 @@
                 <property name="halign">start</property>
                 <property name="valign">center</property>
                 <property name="label" translatable="yes">
-  Static Obstacles</property>
+  Static Obstacles (ID % 256)</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>

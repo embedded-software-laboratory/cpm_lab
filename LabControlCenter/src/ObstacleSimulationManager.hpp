@@ -37,7 +37,7 @@
 #include "CommonroadObstacleList.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
-#include "ui/setup/VehicleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
+#include "ui/commonroad/ObstacleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
 
 #include <map>
 
@@ -53,7 +53,7 @@ private:
 
     std::map<int, ObstacleSimulation> simulated_obstacles; //Store obstacles by ID
     //Simulation state - relevant to decide which data to send for this obstacle (DDS Obstacle / Trajectory / Nothing)
-    std::map<int, VehicleToggle::ToggleState> simulated_obstacle_states;
+    std::map<int, ObstacleToggle::ToggleState> simulated_obstacle_states;
     std::mutex map_mutex;
 
     //Timing
@@ -98,7 +98,7 @@ private:
     std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now);
 
     //Either returns the content of the map or the default value (simulated); does not lock, so lock before calling!
-    VehicleToggle::ToggleState get_obstacle_simulation_state(int id);
+    ObstacleToggle::ToggleState get_obstacle_simulation_state(int id);
 
 public:
     /**
@@ -131,5 +131,5 @@ public:
      * \param id ID of the obstacle in commonroad
      * \param state New state of the simulation
      */
-    void set_obstacle_simulation_state(int id, VehicleToggle::ToggleState state);
+    void set_obstacle_simulation_state(int id, ObstacleToggle::ToggleState state);
 };

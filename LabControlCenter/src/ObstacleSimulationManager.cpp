@@ -90,7 +90,7 @@ void ObstacleSimulationManager::send_init_states()
         std::vector<CommonroadObstacle> initial_obstacle_states;
         for (auto& obstacle : simulated_obstacles)
         {
-            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::Simulated)
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::Simulated)
             {
                 initial_obstacle_states.push_back(obstacle.second.get_init_state(t_now));
             }
@@ -103,7 +103,7 @@ void ObstacleSimulationManager::send_init_states()
         //Send test init. trajectory messages
         for (auto& obstacle : simulated_obstacles)
         {
-            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
             {
                 writer_vehicle_trajectory.write(obstacle.second.get_init_trajectory(t_now, time_step_size_ns));
             }
@@ -120,7 +120,7 @@ std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_stat
     for (auto& obstacle : simulated_obstacles)
     {
         //Only simulate obstacles that are supposed to be simulated
-        if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::Simulated)
+        if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::Simulated)
         {
             next_obstacle_states.push_back(obstacle.second.get_state(start_time, t_now, time_step_size));
         }
@@ -243,7 +243,7 @@ void ObstacleSimulationManager::start()
         std::lock_guard<std::mutex> lock(map_mutex);
         for (auto& obstacle : simulated_obstacles)
         {
-            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
             {
                 writer_vehicle_trajectory.write(obstacle.second.get_trajectory(start_time, t_now, time_step_size));
             }
@@ -272,7 +272,7 @@ void ObstacleSimulationManager::reset()
     simulated_obstacles.clear();
 }
 
-void ObstacleSimulationManager::set_obstacle_simulation_state(int id, VehicleToggle::ToggleState state)
+void ObstacleSimulationManager::set_obstacle_simulation_state(int id, ObstacleToggle::ToggleState state)
 {
     std::lock_guard<std::mutex> lock(map_mutex);
     simulated_obstacle_states[id] = state;
@@ -280,12 +280,12 @@ void ObstacleSimulationManager::set_obstacle_simulation_state(int id, VehicleTog
     //TODO: Maybe use mutex
 }
 
-VehicleToggle::ToggleState ObstacleSimulationManager::get_obstacle_simulation_state(int id)
+ObstacleToggle::ToggleState ObstacleSimulationManager::get_obstacle_simulation_state(int id)
 {
     auto element = simulated_obstacle_states.find(id);
     if (element != simulated_obstacle_states.end())
     {
         return element->second;
     }
-    return VehicleToggle::ToggleState::Simulated;
+    return ObstacleToggle::ToggleState::Simulated;
 }

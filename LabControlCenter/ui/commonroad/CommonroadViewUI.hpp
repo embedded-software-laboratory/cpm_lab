@@ -32,7 +32,7 @@
 #include "cpm/Logging.hpp"
 #include "../../src/commonroad_classes/CommonRoadScenario.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
-#include "ui/setup/VehicleToggle.hpp"
+#include "ui/commonroad/ObstacleToggle.hpp"
 
 #include <atomic>
 #include <array>
@@ -80,12 +80,12 @@ private:
     //View to set / edit which obstacles should be simulated / shown
     Gtk::FlowBox* static_obstacles_flowbox = nullptr;
     Gtk::FlowBox* dynamic_obstacles_flowbox = nullptr; 
-    std::vector<std::shared_ptr<VehicleToggle>> static_vehicle_toggles;
-    std::vector<std::shared_ptr<VehicleToggle>> dynamic_vehicle_toggles;
+    std::vector<std::shared_ptr<ObstacleToggle>> static_vehicle_toggles;
+    std::vector<std::shared_ptr<ObstacleToggle>> dynamic_vehicle_toggles;
     std::atomic_bool load_obstacle_list; //When a new scenario was selected, redraw the obstacle lists in the dispatcher
     //Callback function for state changes in the toggles
-    void vehicle_selection_changed(unsigned int id, VehicleToggle::ToggleState state);
-    std::function<void(int, VehicleToggle::ToggleState state)> set_obstacle_manager_obstacle_state;
+    void vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state);
+    std::function<void(int, ObstacleToggle::ToggleState state)> set_obstacle_manager_obstacle_state;
 
     //Treeview that shows information about planning problems
     Gtk::TreeView* problem_treeview;
@@ -137,7 +137,7 @@ public:
      */
     CommonroadViewUI(
         std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-        std::function<void(int, VehicleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
+        std::function<void(int, ObstacleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
     );
 
     /**
