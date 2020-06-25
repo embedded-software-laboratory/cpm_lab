@@ -59,9 +59,6 @@ private:
 
     const size_t future_time_steps = 10; //Send up to 10 trajectory points from future time steps
 
-    //Simulation state - relevant to decide which data to send for this obstacle (DDS Obstacle / Trajectory / Nothing)
-    VehicleToggle::ToggleState simulation_state = VehicleToggle::ToggleState::Simulated;
-
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
      * \return x,y,yaw values using references as input
@@ -127,8 +124,4 @@ public:
 
     //Reset internal counter variable which was implemented to make the lookup a bit faster
     void reset();
-
-    //Getter / setter for simulation state, which tells in which simulation mode the object is supposed to be
-    VehicleToggle::ToggleState get_simulation_state();
-    void set_simulation_state(VehicleToggle::ToggleState new_state);
 };

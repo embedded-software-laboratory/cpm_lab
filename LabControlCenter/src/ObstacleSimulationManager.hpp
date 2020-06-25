@@ -52,6 +52,9 @@ private:
     std::shared_ptr<CommonRoadScenario> scenario; //Data object that can be used to access the obstacle's trajectories
 
     std::map<int, ObstacleSimulation> simulated_obstacles; //Store obstacles by ID
+    //Simulation state - relevant to decide which data to send for this obstacle (DDS Obstacle / Trajectory / Nothing)
+    std::map<int, VehicleToggle::ToggleState> simulated_obstacle_states;
+    std::mutex map_mutex;
 
     //Timing
     bool use_simulated_time;
@@ -93,6 +96,9 @@ private:
      * \brief Compute next states of commonroad obstacles based on the current time and return them; only consider obstacles that are supposed to be simulated by the LCC
      */
     std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now);
+
+    //Either returns the content of the map or the default value (simulated); does not lock, so lock before calling!
+    VehicleToggle::ToggleState get_obstacle_simulation_state(int id);
 
 public:
     /**

@@ -82,15 +82,17 @@ void ObstacleSimulationManager::send_init_states()
     //Send initial states with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
     //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
     standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
-    uint64_t time_step_size_ns = 1000ull * 1e9;
+    uint64_t time_step_size_ns = 1000ull * 1e6;
     standby_timer->start_async([&] (uint64_t t_now) {
+        std::lock_guard<std::mutex> lock(map_mutex);
+
         //Get and send initial states
         std::vector<CommonroadObstacle> initial_obstacle_states;
-        for (auto& simulated_obstacle : simulated_obstacles)
+        for (auto& obstacle : simulated_obstacles)
         {
-            if (simulated_obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::Simulated)
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::Simulated)
             {
-                initial_obstacle_states.push_back(simulated_obstacle.second.get_init_state(t_now));
+                initial_obstacle_states.push_back(obstacle.second.get_init_state(t_now));
             }
         }
 
@@ -101,7 +103,7 @@ void ObstacleSimulationManager::send_init_states()
         //Send test init. trajectory messages
         for (auto& obstacle : simulated_obstacles)
         {
-            if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
             {
                 writer_vehicle_trajectory.write(obstacle.second.get_init_trajectory(t_now, time_step_size_ns));
             }
@@ -113,11 +115,12 @@ std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_stat
 {
     //TODO: Thread pool?
     std::vector<CommonroadObstacle> next_obstacle_states;
+    std::lock_guard<std::mutex> lock(map_mutex);
 
     for (auto& obstacle : simulated_obstacles)
     {
         //Only simulate obstacles that are supposed to be simulated
-        if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::Simulated)
+        if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::Simulated)
         {
             next_obstacle_states.push_back(obstacle.second.get_state(start_time, t_now, time_step_size));
         }
@@ -206,6 +209,7 @@ void ObstacleSimulationManager::create_obstacle_simulation(int id, ObstacleSimul
         }
     }
 
+    std::lock_guard<std::mutex> lock(map_mutex);
     simulated_obstacles.emplace(id, ObstacleSimulation(data, id));
 }
 
@@ -236,9 +240,10 @@ void ObstacleSimulationManager::start()
         writer_commonroad_obstacle.write(obstacle_list);
 
         //Send test trajectory messages
+        std::lock_guard<std::mutex> lock(map_mutex);
         for (auto& obstacle : simulated_obstacles)
         {
-            if (obstacle.second.get_simulation_state() == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+            if (get_obstacle_simulation_state(obstacle.second.get_id()) == VehicleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
             {
                 writer_vehicle_trajectory.write(obstacle.second.get_trajectory(start_time, t_now, time_step_size));
             }
@@ -250,6 +255,7 @@ void ObstacleSimulationManager::stop()
 {
     stop_timers();
 
+    std::lock_guard<std::mutex> lock(map_mutex);
     for (auto& simulated_obstacle : simulated_obstacles)
     {
         simulated_obstacle.second.reset();
@@ -262,16 +268,24 @@ void ObstacleSimulationManager::reset()
 {
     stop_timers();
 
+    std::lock_guard<std::mutex> lock(map_mutex);
     simulated_obstacles.clear();
 }
 
 void ObstacleSimulationManager::set_obstacle_simulation_state(int id, VehicleToggle::ToggleState state)
 {
-    auto element = simulated_obstacles.find(id);
-    if (element != simulated_obstacles.end())
-    {
-        element->second.set_simulation_state(state);
-    }
+    std::lock_guard<std::mutex> lock(map_mutex);
+    simulated_obstacle_states[id] = state;
 
     //TODO: Maybe use mutex
+}
+
+VehicleToggle::ToggleState ObstacleSimulationManager::get_obstacle_simulation_state(int id)
+{
+    auto element = simulated_obstacle_states.find(id);
+    if (element != simulated_obstacle_states.end())
+    {
+        return element->second;
+    }
+    return VehicleToggle::ToggleState::Simulated;
 }

@@ -278,10 +278,10 @@ VehicleCommandTrajectory ObstacleSimulation::get_init_trajectory(uint64_t t_now,
     assert(trajectory.trajectory.at(0).time.has_value());
     auto& first_point = trajectory.trajectory.at(0);
 
-    for (size_t i = 0; i < future_time_steps; ++i)
+    for (size_t i = 0; i < 2; ++i)
     {
         TrajectoryPoint point;
-        point.t(TimeStamp(t_now + i * (timer_step_size / static_cast<uint64_t>(future_time_steps) * 2)));
+        point.t(TimeStamp(t_now + i * timer_step_size));
         
         auto position = get_position(first_point);
         point.px(position.first);
@@ -377,14 +377,4 @@ uint8_t ObstacleSimulation::get_id()
 void ObstacleSimulation::reset()
 {
     current_trajectory = 0;
-}
-
-VehicleToggle::ToggleState ObstacleSimulation::get_simulation_state()
-{
-    return simulation_state;
-}
-
-void ObstacleSimulation::set_simulation_state(VehicleToggle::ToggleState new_state)
-{
-    simulation_state = new_state;
 }
