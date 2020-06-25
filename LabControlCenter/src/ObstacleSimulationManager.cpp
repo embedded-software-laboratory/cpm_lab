@@ -82,7 +82,7 @@ void ObstacleSimulationManager::send_init_states()
     //Send initial states with slow timer (do not need to send often in this case) - send, but less frequently, to make sure that everyone gets this data
     //Sending once at the right time would be sufficient as well, but this should not take up much computation time / energy
     standby_timer = std::make_shared<cpm::SimpleTimer>(node_id, 1000ull, false, false);
-    uint64_t time_step_size_ns = 1000ull * 1e6;
+    //uint64_t time_step_size_ns = 1000ull * 1e6;
     standby_timer->start_async([&] (uint64_t t_now) {
         std::lock_guard<std::mutex> lock(map_mutex);
 
@@ -90,10 +90,10 @@ void ObstacleSimulationManager::send_init_states()
         std::vector<CommonroadObstacle> initial_obstacle_states;
         for (auto& obstacle : simulated_obstacles)
         {
-            if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::Simulated)
-            {
+            //if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::Simulated)
+            //{
                 initial_obstacle_states.push_back(obstacle.second.get_init_state(t_now));
-            }
+            //}
         }
 
         CommonroadObstacleList obstacle_list;
@@ -101,13 +101,13 @@ void ObstacleSimulationManager::send_init_states()
         writer_commonroad_obstacle.write(obstacle_list);
 
         //Send test init. trajectory messages
-        for (auto& obstacle : simulated_obstacles)
-        {
-            if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
-            {
-                writer_vehicle_trajectory.write(obstacle.second.get_init_trajectory(t_now, time_step_size_ns));
-            }
-        }
+        // for (auto& obstacle : simulated_obstacles)
+        // {
+        //     if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+        //     {
+        //         writer_vehicle_trajectory.write(obstacle.second.get_init_trajectory(t_now, time_step_size_ns));
+        //     }
+        // }
     });
 }
 
