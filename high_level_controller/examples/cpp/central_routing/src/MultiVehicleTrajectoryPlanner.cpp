@@ -40,7 +40,7 @@ std::vector<VehicleCommandTrajectory> MultiVehicleTrajectoryPlanner::get_traject
         vehicleCommandTrajectory.vehicle_id(e.first);
         vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(e.second));
         vehicleCommandTrajectory.header().create_stamp().nanoseconds(t_now); //You just need to set t_now here, as it was created at t_now
-        vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + 2000000000ull); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
+        vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
         result.push_back(vehicleCommandTrajectory);
     }
     return result;
@@ -90,6 +90,12 @@ void MultiVehicleTrajectoryPlanner::start()
                 if(t_start == 0)
                 {
                     t_start = t_real_time + 2000000000ull;
+                    for(auto &e:trajectoryPlans)
+                    {
+                        auto trajectory_point = e.second->get_trajectory_point();
+                        trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
+                        trajectory_point_buffer[e.first].push_back(trajectory_point);
+                    }
                 }
 
                 for(auto &e:trajectoryPlans)
