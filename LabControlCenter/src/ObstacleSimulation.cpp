@@ -82,8 +82,6 @@ VehicleCommandTrajectory ObstacleSimulation::construct_trajectory(std::vector<Tr
     trajectory.trajectory_points(trajectory_points);
     trajectory.vehicle_id(obstacle_id);
 
-    std::cout << trajectory.trajectory_points().at(0).px() << std::endl;
-
     return trajectory;
 }
 
@@ -317,6 +315,8 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
             --start_index;
         }
 
+        double previous_direction = 0.0; //For trajectory interpolation
+
         //Send current and future points, but do not create the final point here if that one would be reached
         for (size_t index = start_index; index < start_index + future_time_steps && index < trajectory.trajectory.size() - 2; ++index)
         {
@@ -329,16 +329,35 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
             point.px(position.first);
             point.py(position.second);
 
-            //Different behaviour for start point: Here, the velocity must be zero
-            if (index == 0)
+            //Get next position for interpolation, calculate angle to it (current direction) and total speed to reach the point based on dx, dy and dt
+            auto next_position = get_position(trajectory.trajectory.at(index + 1));
+            const double current_direction = atan2(
+                next_position.second - position.second,
+                next_position.first - position.first
+            );
+
+            double v_total = 0.0;
+            if (! current_point.velocity.has_value())
             {
-                point.vx(0);
-                point.vy(0);
+                v_total = sqrt(pow((next_position.first - position.first), 2) + pow((next_position.second - position.second), 2));
             }
             else
             {
-                auto next_position = get_position(trajectory.trajectory.at(index + 1));
+                v_total = current_point.velocity.value().get_mean();
+            }
 
+            //Different behaviour for start point: Here, the velocity can simply be calculated using the difference in position
+            if (index == 0)
+            {
+                point.vx(cos(current_direction) * v_total);
+                point.vy(sin(current_direction) * v_total);
+
+                previous_direction = current_direction;
+            }
+            else
+            {
+                auto previous_position = get_position(trajectory.trajectory.at(index - 1));
+                
                 //Calculate angles regarding dx and dy to the distance dp between points: Between the previous and current and the current and next point
                 //Use angle:            |
                 // alpha                | dy
@@ -372,8 +391,24 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
                 // point.vx(cos(alpha) * v_total);
                 // point.vy(sin(alpha) * v_total);
 
-                point.vx((next_position.first - position.first) / time_step_size);
-                point.vy((next_position.second - position.second) / time_step_size);
+                //Very basic method
+                // point.vx((next_position.first - position.first) / time_step_size);
+                // point.vy((next_position.second - position.second) / time_step_size);
+
+                //Janis' method
+                const double current_direction = atan2(
+                    position.second - previous_position.second,
+                    position.first - previous_position.first
+                );
+
+                double delta_yaw = current_direction - previous_direction;
+                delta_yaw = remainder(delta_yaw, 2*M_PI);
+
+                double new_direction = remainder(previous_direction+delta_yaw, 2*M_PI);
+                point.vx(cos(new_direction) * v_total);
+                point.vy(sin(new_direction) * v_total);
+
+                previous_direction = new_direction;
             }
             
             trajectory_points.push_back(point);
