@@ -337,8 +337,41 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
             }
             else
             {
-                //Else: Interpolate speed linearly between current and next point
                 auto next_position = get_position(trajectory.trajectory.at(index + 1));
+
+                //Calculate angles regarding dx and dy to the distance dp between points: Between the previous and current and the current and next point
+                //Use angle:            |
+                // alpha                | dy
+                // _____________________|
+                //           dx
+                //to get from total speed set to vx and vz
+                // double alpha = 0.0;
+                // double v_total = 0.0;
+
+                // if (! current_point.velocity.has_value())
+                // {
+                //     v_total = sqrt(pow((next_position.first - position.first), 2) + pow((next_position.second - position.second), 2));
+                // }
+                // else
+                // {
+                //     v_total = current_point.velocity.value().get_mean();
+                // }
+
+                // //Angle to next point
+                // alpha = atan((next_position.second - position.second) / (next_position.first - position.first)); //alpha = arctan(dy / dx)
+
+                // //Calculate alpha from both the previous and next or only the next point
+                // if (index > 0)
+                // {
+                //     auto prev_position = get_position(trajectory.trajectory.at(index + 1));
+                //     alpha += atan((position.second - prev_position.second) / (position.first - prev_position.first));
+                //     alpha /= 2.0;
+                // }
+                
+                // //Calculate speed parts from angle
+                // point.vx(cos(alpha) * v_total);
+                // point.vy(sin(alpha) * v_total);
+
                 point.vx((next_position.first - position.first) / time_step_size);
                 point.vy((next_position.second - position.second) / time_step_size);
             }
