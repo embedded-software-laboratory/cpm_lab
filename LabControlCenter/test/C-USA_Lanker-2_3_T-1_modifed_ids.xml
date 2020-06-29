@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<commonRoad affiliation="Technical University of Munich, Germany" author="Lukas Braunstorfer, Marat Faizov, Markus Koschi, Alexander Zhu" benchmarkID="C-USA_Lanker-2_3_T-1" commonRoadVersion="2018b" date="2018-10-30" source="Next Generation Simulation (NGSIM) and OpenStreetMaps (OSM)" tags="urban multi_lane oncoming_traffic intersection lane_following lane_change comfort speed_limit" timeStepSize="0.2">
+<commonRoad affiliation="Technical University of Munich, Germany" author="Lukas Braunstorfer, Marat Faizov, Markus Koschi, Alexander Zhu" benchmarkID="C-USA_Lanker-2_3_T-1" commonRoadVersion="2018b" date="2018-10-30" source="Next Generation Simulation (NGSIM) and OpenStreetMaps (OSM)" tags="urban multi_lane oncoming_traffic intersection lane_following lane_change comfort speed_limit" timeStepSize="0.1">
    <lanelet id="3498">
       <leftBound>
          <point>

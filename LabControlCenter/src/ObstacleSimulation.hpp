@@ -63,6 +63,12 @@ private:
      */
     void interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &yaw_interp);
 
+    /**
+     * \brief Interpolation function that delivers trajectory values in between set trajectory points
+     * \return x,y,vx,vy values using references as input
+     */
+    void interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &vx, double& vy);
+
     CommonroadObstacle construct_obstacle(ObstacleSimulationSegment& point, double x, double y, double yaw, uint64_t t_now);
 
     VehicleCommandTrajectory construct_trajectory(std::vector<TrajectoryPoint>& trajectory_points, uint64_t t_now);
@@ -97,7 +103,7 @@ public:
 
     /**
      * \brief Get the initial trajectory point of the vehicle
-     * \param t_now Current time, used for tiemstamp of msg
+     * \param t_now Current time, used for timestamp of msg
      */
     //Does not make sense, as with the current implementation the initial trajectory point would not get sent often enough
     //TODO & @Max: We need a "Drive to point" for this, before the simulation starts
@@ -113,8 +119,8 @@ public:
     /**
      * \brief Get the current trajectory point of the vehicle, which is interpolated
      * \param start_time Time when the simulation was started
-     * \param t_now Current time, used for tiemstamp of msg
-     * \param time_step_size Must be known to find out which current point is active
+     * \param t_now Current time, used for timestamp of msg, in ns
+     * \param time_step_size Must be known to find out which current point is active, also in ns
      */
     VehicleCommandTrajectory get_trajectory(uint64_t start_time, uint64_t t_now, uint64_t time_step_size);
 

@@ -339,16 +339,25 @@ VehicleCommandTrajectory ObstacleSimulation::get_trajectory(uint64_t start_time,
             double v_total = 0.0;
             if (! current_point.velocity.has_value())
             {
-                v_total = sqrt(pow((next_position.first - position.first), 2) + pow((next_position.second - position.second), 2));
+                v_total = sqrt(pow((next_position.first - position.first), 2) + pow((next_position.second - position.second), 2)) / time_step_size * 1e9;
             }
             else
             {
-                v_total = current_point.velocity.value().get_mean();
+                v_total = current_point.velocity.value().get_mean() / 2;
             }
 
-            //Different behaviour for start point: Here, the velocity can simply be calculated using the difference in position
-            if (index == 0)
+            //If an orientation value already exists, we do not need to interpolate that
+            if (current_point.orientation.has_value())
             {
+                auto yaw = current_point.orientation.value();
+                point.vx(cos(yaw) * v_total);
+                point.vy(sin(yaw) * v_total);
+
+                previous_direction = yaw;
+            }
+            else if (index == 0)
+            {
+                //Different behaviour for start point: Here, the velocity can simply be calculated using the difference in position
                 point.vx(cos(current_direction) * v_total);
                 point.vy(sin(current_direction) * v_total);
 
