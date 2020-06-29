@@ -211,7 +211,9 @@ void MonitoringUi::init_ui_thread()
                             if(!deploy_functions->diagnosis_switch) continue; 
                             
                             if(restarting[vehicle_id-1]) continue; 
+                            write_reboot_in_use.lock();
                             restarting[vehicle_id-1] = true; 
+                            write_reboot_in_use.unlock();
                             cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
                             
                             std::string reboot;
@@ -224,15 +226,16 @@ void MonitoringUi::init_ui_thread()
                                 reboot = reboot_script + std::to_string(vehicle_id);
                             }
                             thread_count.fetch_add(1);
-                            reboot_threads.push_back(std::thread([this, reboot] () {
+                            reboot_threads.push_back(std::thread([this, reboot, vehicle_id] () {
                                     std::system(reboot.c_str());
-                                    usleep(2000);
+                                    sleep(5);
+                                    write_reboot_in_use.lock();
+                                    this->restarting[vehicle_id-1] = false; 
+                                    write_reboot_in_use.unlock();
                                     this->notify_reboot_finished();
                                 }
                             ));
                             deploy_functions->kill_vehicles({},vehicle_ids);
-                            sleep(5); 
-                            restarting[vehicle_id-1] = false; 
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -247,7 +250,7 @@ void MonitoringUi::init_ui_thread()
                         {  
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Shutting down ...", vehicle_id);
+                            cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Stopping vehicles ...", vehicle_id);
                             deploy_functions->kill_vehicles({},vehicle_ids);
                         }
                     }
@@ -259,7 +262,7 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Shutting down ...", vehicle_id);
+                            cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Stopping vehicles ...", vehicle_id);
                             deploy_functions->kill_vehicles({},vehicle_ids);
                         }
                     }
@@ -332,7 +335,7 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
-                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Shutting down ...", vehicle_id, error, dt);
+                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", vehicle_id, error, dt);
                                 deploy_functions->kill_vehicles({},vehicle_ids);
                             }
                             else if (error > 0.1)
