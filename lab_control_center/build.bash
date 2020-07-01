@@ -15,7 +15,7 @@ fi
 popd
 
 
-mkdir build
+mkdir -p build
 
 cd build
 cmake .. -DSIMULATION=$SIMULATION 
@@ -24,4 +24,4 @@ cd ..
 
 # Create launcher link to LCC
 escaped_home=$(printf '%s\n' "$HOME" | sed 's:[][\/.^$*]:\\&:g')
-sed 's/~/'"$escaped_home"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
+[ -d "${HOME}/.local/share/applications/" ] && sed 's/~/'"$escaped_home"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
