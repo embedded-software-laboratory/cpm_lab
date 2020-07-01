@@ -164,6 +164,7 @@ void Controller::update_remote_parameters()
 
 std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_command(uint64_t t_now)
 {
+    if (m_vehicleCommandTrajectory.trajectory_points().size() < 2) return nullptr;
     //m_vehicleCommandTrajectory is updated in receive_commands, which gets called in get_control_signals
     //The reason for this confusing structure is that it was most compatible to the already existing solution for the other data types
     if(m_vehicleCommandTrajectory.header().create_stamp().nanoseconds() > 0) 
@@ -190,8 +191,9 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         {
             cpm::Logging::Instance().write(
                 "%s",
-                "No valid interpolation data could be found within the current trajectory segment - no end value could be found!"
+                "Trajectory interpolation error: Missing trajectory point in the FUTURE."
             );
+            return nullptr;
         }
 
         //Log an error if we could not find a valid trajectory segment w.r.t. start
@@ -199,8 +201,9 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         {
             cpm::Logging::Instance().write(
                 "%s",
-                "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
+                "Trajectory interpolation error: Missing trajectory point in the PAST."
             );
+            return nullptr;
         }
     
         assert(t_now >= start_point.t().nanoseconds());
@@ -214,7 +217,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
     {
         cpm::Logging::Instance().write(
             "%s",
-            "No valid trajectory data exists at this point in time!"
+            "Trajectory interpolation error: No valid trajectory data."
         );
     }
     return nullptr;
