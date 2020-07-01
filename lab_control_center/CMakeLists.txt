@@ -43,6 +43,9 @@ find_package(LibXML++ REQUIRED)
 message("-- found libxml++2.6")
 include_directories(${LibXML++_INCLUDE_DIRS})
 
+# Trajectory interpolaton
+include_directories(../mid_level_controller/src)
+
 set(COMMONROAD
     src/commonroad_classes/CommonRoadScenario.hpp
     src/commonroad_classes/CommonRoadScenario.cpp
