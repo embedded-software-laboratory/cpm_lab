@@ -24,7 +24,7 @@ Terminal=true
 # Name of the window. Optional. See below.
 # Allows windows to stack
 # If this does not match, duplicate icons may show up in your dock
-StartupWMClass=Lab Control Center
+StartupWMClass=lab_control_center
 
 # Optional categories
 Categories=Development;
