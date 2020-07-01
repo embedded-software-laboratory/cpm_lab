@@ -37,9 +37,8 @@ include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
 # commonroad integration
-include_directories(../../../../../usr/include/libxml++-2.6/)
-include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
-link_directories(../../../../../usr/lib/x86_64-linux-gnu/)
+include_directories(/usr/include/libxml++-2.6/)
+include_directories(/usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
 
 set(COMMONROAD
     src/commonroad_classes/CommonRoadScenario.hpp
