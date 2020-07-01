@@ -1,0 +1,47 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
+#include "TimeStamp.idl"
+
+/*
+ * TimeStamps sent by the Lab Control Center to control the workflow of all programs
+ * Real time: SystemTrigger is only used for two purposes
+ *   1) Deliver an initial TimeStamp to all Participants (after all ready signals have been received by them so that all participants are guaranteed to get the time stamp). 
+ *      This stamp is the absolute start time of the computation, in nanoseconds, according to the shared system time.
+ *   2) Deliver a final TimeStamp to all Participants (the maximum value of uint64_t). This stamp tells all connected clients to stop the computation.
+ * Simulated time: SystemTrigger is used to define the current point in time in the whole system.
+ *   1) The ready signals of all participants can be ordered and are the discrete points in time that need to given by a simulated clock. The SystemTrigger fulfills this purpose: During the computation the lowest next value for the TimeStamp is sent to simulate a clock, and the next value is only sent if all participants that had to perform computations in that time step sent another ready signal to show that their computation could be finished. The SystemTrigger is used to simulate passing time until a stop signal is sent.
+ *   2) The final TimeStamp / stop signal is again the maximum value of uint64_t.
+ */
+
+#ifndef SYSTEMTRIGGER_IDL
+#define SYSTEMTRIGGER_IDL
+
+struct SystemTrigger {
+    /*TimeStamp: Used to define the starting time, further time steps during the computation and to send a stop signal to stop computation on all devices*/
+    TimeStamp next_start;
+};
+#endif

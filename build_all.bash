@@ -20,62 +20,49 @@ done
 #make simulation variable available in all bash scripts called
 export SIMULATION=$simulation
 
-pushd ..
-if [ ! -d "cpm_base" ]; then
-    git clone https://git.rwth-aachen.de/CPM/Project/Lab/cpm_base.git
-fi
-
-cd cpm_base
-cd cpm_lib
-if [ $simulation == 0 ]
-then
-    bash build_arm.bash
-fi
-rm -rf dds
-bash build.bash
+# cpm lib
+pushd cpm_lib
+    if [ $simulation == 0 ]
+    then
+        bash build_arm.bash  
+    fi
+    bash build.bash
 popd
 
 
-pushd LabControlCenter
-bash build.bash
+pushd lab_control_center
+    bash build.bash
 popd
 
-pushd hlc
+pushd high_level_controller
+    pushd autostart
+        bash build.bash
+        bash create_nuc_package.bash
+    popd
+    pushd examples/cpp/central_routing
+        bash build.bash
+    popd
+popd
+
+
 pushd middleware
-bash build.bash
-popd
-pushd autostart
-bash build.bash
-popd
-pushd matlab
-bash create_nuc_package.bash
-popd
-popd
-
-
-pushd vehicle_raspberry_firmware
-if [ $simulation == 0 ]
-then
     bash build.bash
-else
-    bash build.bash --simulation
-fi
 popd
 
-
-pushd controller_test_loop
-bash build.bash
+pushd mid_level_controller
+    if [ $simulation == 0 ]
+    then
+        bash build.bash
+    else
+        bash build.bash --simulation
+    fi
 popd
 
-
-pushd central_routing_example
-bash build.bash
-popd
 
 if [ $simulation == 0 ]
 then
-    pushd ips2
-    bash build.bash
+    pushd indoor_positioning_system
+        bash build.bash
     popd
 fi
 

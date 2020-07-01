@@ -28,6 +28,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ### 0. Preconditioning #########################################################
 
+
+
 ## 0.1 Check for Super User Privileges and Handle User Rights
 # ref: https://askubuntu.com/a/30157/8698
 if ! [ $(id -u) = 0 ]; then
@@ -61,7 +63,7 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 apache2 expect git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass ntp jstest-gtk -y"
+    BUILD_TOOLS="install iproute2 expect apache2 git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
@@ -253,8 +255,9 @@ fi
 
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to build the cpm software suit."
-echo "The next steps are:"
-echo "  1.) Reboot OR open up a NEW Terminal and type \'cd ~/dev; source /etc/profile.d/rti_connext_dds.sh\'."
-echo "  2.) ./build_all.bash or ./build_all.bash --simulation"
+echo "The next steps is: ./build_all.bash or ./build_all.bash --simulation"
+echo "PC will reboot now to finish environment variables setup"
+
+sudo reboot
 
 exit 0
