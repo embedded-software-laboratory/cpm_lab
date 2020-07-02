@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Get directory of bash script
+CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Get yaml
 pushd ../..
@@ -22,5 +24,5 @@ make -j8
 cd ..
 
 # Create launcher link to LCC
-escaped_home=$(printf '%s\n' "$HOME" | sed 's:[][\/.^$*]:\\&:g')
-sed 's/~/'"$escaped_home"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
+escaped_dir=$(printf '%s\n' "${CURDIR}" | sed 's:[][\/.^$*]:\\&:g')
+sed 's/TEMPLATE_LCC_DIR/'"$escaped_dir"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
