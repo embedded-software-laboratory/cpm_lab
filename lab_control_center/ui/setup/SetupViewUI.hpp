@@ -28,6 +28,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include "TimeSeriesAggregator.hpp"
 #include "ObstacleSimulationManager.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
@@ -77,7 +78,6 @@ private:
     //Vehicle selection
     Gtk::Button* button_select_none = nullptr;
     Gtk::Button* button_select_all_simulated = nullptr;
-    Gtk::Button* button_select_all_real = nullptr;
 
     //Set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
@@ -122,6 +122,13 @@ private:
 
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
+
+    //Function to get IDs of real vehicles (and simulated ones) which are currently active
+    std::function<VehicleData()> get_vehicle_data;
+    std::vector<unsigned int> active_real_vehicles;
+    std::mutex active_real_vehicles_mutex;
+    std::thread check_real_vehicle_data_thread;
+    std::atomic_bool simulation_is_running;
 
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
@@ -187,7 +194,6 @@ private:
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
     //Vehicle button toggle callbacks, to set which vehicles are real / simulated / deactivated
-    void select_all_vehicles_real();
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
@@ -197,6 +203,7 @@ public:
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
      * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
      * \param _reset_time_series_aggregator Reset received vehicle data
      * \param _reset_obstacle_aggregator Reset received obstacle data
@@ -213,6 +220,7 @@ public:
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
         std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _reset_time_series_aggregator,
         std::function<void()> _reset_obstacle_aggregator,

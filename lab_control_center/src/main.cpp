@@ -188,6 +188,7 @@ int main(int argc, char *argv[])
         vehicleAutomatedControl, 
         obstacle_simulation_manager,
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return timeSeriesAggregator->reset_all_data();}, 
         [=](){return obstacleAggregator->reset_all_data();}, 

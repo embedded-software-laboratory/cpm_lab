@@ -36,6 +36,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
     std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
+    std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
     std::function<void()> _reset_obstacle_aggregator,
@@ -52,6 +53,7 @@ SetupViewUI::SetupViewUI
     vehicle_control(_vehicle_control),
     obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
+    get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
     reset_obstacle_aggregator(_reset_obstacle_aggregator),
@@ -71,7 +73,6 @@ SetupViewUI::SetupViewUI
     
     builder->get_widget("button_select_none", button_select_none);
     builder->get_widget("button_select_all_simulated", button_select_all_simulated);
-    builder->get_widget("button_select_all_real", button_select_all_real);
 
     builder->get_widget("switch_simulated_time", switch_simulated_time);
 
@@ -94,7 +95,6 @@ SetupViewUI::SetupViewUI
 
     assert(button_select_none);
     assert(button_select_all_simulated);
-    assert(button_select_all_real);
     
     assert(switch_simulated_time);
     assert(switch_deploy_remote);
@@ -130,7 +130,6 @@ SetupViewUI::SetupViewUI
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
-    button_select_all_real->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_real));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
@@ -155,6 +154,31 @@ SetupViewUI::SetupViewUI
     notify_count = 0;
     participants_available.store(false);
     kill_called.store(false);
+
+    //Regularly check / update which real vehicles are currently turned on, to use them when the simulation is started
+    simulation_is_running.store(false);
+    check_real_vehicle_data_thread = std::thread([&]{
+        //Don't update data during simulation
+        if (! simulation_is_running.load())
+        {
+            //Only perform action if simulation currently does not take place
+            //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
+            auto currently_simulated_vehicles = get_vehicle_ids_simulated();
+            std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+            active_real_vehicles.clear();
+            for (auto vehicle_entry : get_vehicle_data())
+            {
+                auto id = vehicle_entry.first;
+                if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) == currently_simulated_vehicles.end())
+                {
+                    active_real_vehicles.push_back(id);
+                }
+            }
+        }
+
+        //Sleep for a while, then update again
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    });
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -332,6 +356,12 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
+
+    //Kill real vehicle data thread
+    if(check_real_vehicle_data_thread.joinable())
+    {
+        check_real_vehicle_data_thread.join();
+    }
 }
 
 bool SetupViewUI::check_if_online(uint8_t hlc_id)
@@ -344,6 +374,7 @@ bool SetupViewUI::check_if_online(uint8_t hlc_id)
 void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
+    simulation_is_running.store(true);
 
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
@@ -478,6 +509,8 @@ void SetupViewUI::kill_deployed_applications() {
     labcam->stopRecording();
 #endif
 
+    simulation_is_running.store(false);
+
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
@@ -561,7 +594,9 @@ void SetupViewUI::perform_post_kill_cleanup()
 }
 
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
-    std::vector<unsigned int> active_vehicle_ids;
+    std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
+    std::vector<unsigned int> active_vehicle_ids = active_real_vehicles;
+    lock.unlock();
 
     for (auto& vehicle_toggle : vehicle_toggles)
     {
@@ -574,18 +609,10 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
     return active_vehicle_ids;
 }
 
+//Works because a copy is created
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_real() {
-    std::vector<unsigned int> active_vehicle_ids;
-
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        if (vehicle_toggle->get_state() == VehicleToggle::On)
-        {
-            active_vehicle_ids.push_back(vehicle_toggle->get_id());
-        }
-    }
-
-    return active_vehicle_ids;
+    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+    return active_real_vehicles;
 }
 
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
@@ -610,7 +637,6 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     
     button_select_none->set_sensitive(is_sensitive);
     button_select_all_simulated->set_sensitive(is_sensitive);
-    button_select_all_real->set_sensitive(is_sensitive);
 
     button_deploy->set_sensitive(is_sensitive);
 
@@ -623,14 +649,6 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
     assert(set_commonroad_tab_sensitive);
     set_commonroad_tab_sensitive(is_sensitive);
-}
-
-void SetupViewUI::select_all_vehicles_real()
-{
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::On);
-    }
 }
 
 void SetupViewUI::select_all_vehicles_sim()

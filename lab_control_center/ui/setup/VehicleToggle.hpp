@@ -44,7 +44,7 @@ class VehicleToggle
 public:
     VehicleToggle(unsigned int _id);
 
-    enum ToggleState{Off, Simulated, On};
+    enum ToggleState{Off, Simulated};
 
     //Getter
     ToggleState get_state() const;
@@ -65,9 +65,7 @@ private:
 
     Gtk::Label* label = nullptr;
 
-    Gtk::RadioButton* vehicle_off = nullptr;
-    Gtk::RadioButton* vehicle_sim = nullptr;
-    Gtk::RadioButton* vehicle_on = nullptr;
+    Gtk::Switch* vehicle_switch = nullptr;
 
     //Given values
     unsigned int id;
