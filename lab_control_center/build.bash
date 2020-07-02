@@ -7,7 +7,7 @@ pushd ../..
 if [ ! -d "yaml-cpp" ]; then
     git clone https://github.com/jbeder/yaml-cpp.git
     cd yaml-cpp
-    mkdir build
+    mkdir -p build
     cd build
     cmake .. -DBUILD_SHARED_LIBS=ON
     make -j$(nproc)

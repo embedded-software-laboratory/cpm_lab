@@ -18,9 +18,9 @@ do
     esac
 done
 
-mkdir build_arm
-mkdir build_arm_sim
-mkdir build_x64_sim
+mkdir -p build_arm
+mkdir -p build_arm_sim
+mkdir -p build_x64_sim
 
 
 # Build for simulation on desktop
