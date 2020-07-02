@@ -12,21 +12,21 @@ before_script:
   - chmod 700 ~/.ssh
   - ssh-keyscan git.rwth-aachen.de >> ~/.ssh/known_hosts
   - chmod 644 ~/.ssh/known_hosts
+  - pwd
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt-get update
+  - apt-get install -y tzdata sudo
+  - adduser --disabled-password --gecos '' docker
+  - adduser docker sudo
+  - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+  - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+  - dpkg-reconfigure --frontend noninteractive tzdata
+  - echo $RTI_LICENSE_KEY
+  - cat $RTI_LICENSE_KEY
 
 build_sim:
   stage: build_sim
   script:
-    - pwd
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update
-    - apt-get install -y tzdata sudo
-    - adduser --disabled-password --gecos '' docker
-    - adduser docker sudo
-    - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-    - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-    - dpkg-reconfigure --frontend noninteractive tzdata
-    - echo $RTI_LICENSE_KEY
-    - cat $RTI_LICENSE_KEY
     - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation
     - cat /etc/profile.d/rti_connext_dds.sh
     - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/include/ndds/hpp
@@ -37,17 +37,6 @@ build_sim:
 build_nosim:
   stage: build_nosim
   script:
-    - pwd
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update
-    - apt-get install -y tzdata sudo
-    - adduser --disabled-password --gecos '' docker
-    - adduser docker sudo
-    - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-    - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-    - dpkg-reconfigure --frontend noninteractive tzdata
-    - echo $RTI_LICENSE_KEY
-    - cat $RTI_LICENSE_KEY
     - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100
     - cat /etc/profile.d/rti_connext_dds.sh
     - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds
