@@ -12,6 +12,6 @@ cd /tmp
 mkdir autostart_package
 cp ~/dev/software/high_level_controller/autostart/build/autostart ./autostart_package
 cp ~/dev/software/high_level_controller/autostart/build/download_error_logger ./autostart_package
-tar -czvf autostart_package.tar.gz autostart_package
+tar -czf autostart_package.tar.gz autostart_package
 rm -f /var/www/html/nuc/autostart_package.tar.gz
 cp ./autostart_package.tar.gz /var/www/html/nuc
