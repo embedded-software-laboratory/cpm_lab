@@ -141,6 +141,15 @@ echo "Simulation =" $SIMULATION
 echo "License Path =" $LICENSE_PATH
 echo "Domain ID =" $DOMAIN_ID
 
+
+### 0.5 Create folders for nuc and raspberry packages
+if [[ $SIMULATION == 0 ]]; then
+    sudo mkdir -p "/var/www/html/nuc"
+    sudo chmod a+rwx "/var/www/html/nuc"
+    sudo mkdir -p "/var/www/html/raspberry"
+    sudo chmod a+rwx "/var/www/html/raspberry"
+fi
+
 ### 1. Ubuntu & Packages #######################################################
 
 eval "${PM}" "${UPDATE}"
