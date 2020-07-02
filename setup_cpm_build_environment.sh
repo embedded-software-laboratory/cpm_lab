@@ -63,7 +63,8 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 expect apache2 git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
+    BUILD_TOOLS="install iproute2 expect git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
+    DEP_NO_SIM="install apache2 gstreamer1.0-*"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
@@ -145,24 +146,27 @@ echo "Domain ID =" $DOMAIN_ID
 eval "${PM}" "${UPDATE}"
 eval "${PM}" "${BUILD_ESSENTIALS}"
 eval "${PM}" "${BUILD_TOOLS}"
+if [ $SIMULATION == 0 ]; then
+    eval "${PM}" "${DEP_NO_SIM}"
+fi
 
 
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-    if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
-        eval "${PM}" install libsigc++-devel gtkmm24-devel -y
-        sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
-        cd ./jstest-gtk/
-    # checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
-    # TODO consider updating jstest-gtk because more recent versions don't require 
-    # gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
-        sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
-        sudo -u $real_user mkdir ./build
-        cd ./build
-        sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
-        sudo -u $real_user make
-    fi
+if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
+    eval "${PM}" install libsigc++-devel gtkmm24-devel -y
+    sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
+    cd ./jstest-gtk/
+# checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
+# TODO consider updating jstest-gtk because more recent versions don't require 
+# gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
+    sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
+    sudo -u $real_user mkdir ./build
+    cd ./build
+    sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
+    sudo -u $real_user make
+fi
 
 
 ### 3. RTI DDS #################################################################
