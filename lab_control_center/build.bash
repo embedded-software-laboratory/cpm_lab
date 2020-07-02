@@ -23,5 +23,7 @@ make -j8
 cd ..
 
 # Create launcher link to LCC
-escaped_home=$(printf '%s\n' "$HOME" | sed 's:[][\/.^$*]:\\&:g')
-[ -d "${HOME}/.local/share/applications/" ] && sed 's/~/'"$escaped_home"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
+if [ -d "${HOME}/.local/share/applications/" ]; then
+    escaped_home=$(printf '%s\n' "$HOME" | sed 's:[][\/.^$*]:\\&:g')
+    sed 's/~/'"$escaped_home"'/g' lab-control-center.desktop > $HOME/.local/share/applications/lab-control-center.desktop
+fi
