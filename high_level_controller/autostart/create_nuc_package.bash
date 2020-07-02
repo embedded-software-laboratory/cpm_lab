@@ -5,16 +5,16 @@
 # exit when any command fails
 set -e
 
-# Get current directory
-CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# Get directory of bash script
+BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Publish NUC package via http/apache for the HLCs to download
 
 
 cd /tmp
 mkdir matlab_package
-cp ${CURDIR}/../examples/matlab/init_script.m ./matlab_package
-cp ${CURDIR}/../examples/matlab/QOS_READY_TRIGGER.xml ./matlab_package
+cp ${BASH_DIR}/../examples/matlab/init_script.m ./matlab_package
+cp ${BASH_DIR}/../examples/matlab/QOS_READY_TRIGGER.xml ./matlab_package
 tar -czvf matlab_package.tar.gz matlab_package
 rm -f /var/www/html/nuc/matlab_package.tar.gz
 cp ./matlab_package.tar.gz /var/www/html/nuc
