@@ -24,7 +24,7 @@ before_script:
   - echo $RTI_LICENSE_KEY
   - cat $RTI_LICENSE_KEY
   - cat $RTI_INSTALLER_AUTOMATION
-  - export $RTI_INSTALLER_AUTOMATION
+  - export RTI_INSTALLER_AUTOMATION_PATH=$RTI_INSTALLER_AUTOMATION
 
 build_sim:
   stage: build_sim
