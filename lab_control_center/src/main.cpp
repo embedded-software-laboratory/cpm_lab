@@ -69,6 +69,9 @@
 
 using namespace std::placeholders;
 
+//We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+std::shared_ptr<SetupViewUI> setupViewUi;
+
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
     system(command.c_str());
@@ -85,6 +88,13 @@ void kill_cloud_discovery() {
 
 void interrupt_handler(int s) {
     kill_cloud_discovery();
+
+    //Kill remaining programs opened by setup view ui
+    if (setupViewUi)
+    {
+        setupViewUi->on_lcc_close();
+    }
+
     exit(1);
 }
 
@@ -92,6 +102,12 @@ void interrupt_handler(int s) {
 
 void exit_handler() {
     kill_cloud_discovery();
+
+    //Kill remaining programs opened by setup view ui
+    if (setupViewUi)
+    {
+        setupViewUi->on_lcc_close();
+    }
 }
 
 int main(int argc, char *argv[])
@@ -183,7 +199,7 @@ int main(int argc, char *argv[])
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
-    auto setupViewUi = make_shared<SetupViewUI>(
+    setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
         obstacle_simulation_manager,

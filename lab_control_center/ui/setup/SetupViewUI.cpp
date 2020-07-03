@@ -189,7 +189,19 @@ SetupViewUI::SetupViewUI
 }
 
 SetupViewUI::~SetupViewUI() {
-    //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
+    //Join all old threads
+    kill_all_threads();
+
+    //Kill real vehicle data thread
+    vehicle_data_thread_running.store(false);
+    if(check_real_vehicle_data_thread.joinable())
+    {
+        check_real_vehicle_data_thread.join();
+    }
+}
+
+//Do the same as in the destructor, because there we do not get the desired results sadly
+void SetupViewUI::on_lcc_close() {
     kill_deployed_applications();
 
     //Join all old threads
@@ -604,13 +616,6 @@ void SetupViewUI::perform_post_kill_cleanup()
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
     std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
     std::vector<unsigned int> active_vehicle_ids = active_real_vehicles;
-
-    std::cout << "REAL VEHICLES:" << std::endl;
-    for (auto id : active_real_vehicles)
-    {
-        std::cout << id << " | " << std::endl;
-    }
-
     lock.unlock();
 
     for (auto& vehicle_toggle : vehicle_toggles)

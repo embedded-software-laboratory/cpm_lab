@@ -243,4 +243,11 @@ public:
 
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
+
+    /**
+     * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
+     * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill
+     * the according programs
+     */
+    void on_lcc_close();
 };
