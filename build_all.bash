@@ -25,8 +25,7 @@ export SIMULATION=$simulation
 
 # cpm lib
 pushd cpm_lib
-    if [ $simulation == 0 ]
-    then
+    if [ $simulation == 0 ]; then
         bash build_arm.bash  
     fi
     bash build.bash
@@ -38,10 +37,12 @@ pushd lab_control_center
 popd
 
 pushd high_level_controller
-    pushd autostart
-        bash build.bash
-        bash create_nuc_package.bash
-    popd
+    if [ $simulation == 0 ]; then
+        pushd autostart
+            bash build.bash
+            bash create_nuc_package.bash
+        popd
+    fi
     pushd examples/cpp/central_routing
         bash build.bash
     popd

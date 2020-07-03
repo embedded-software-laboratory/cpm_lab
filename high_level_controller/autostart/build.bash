@@ -14,7 +14,7 @@ cd ..
 
 # Publish autostart package via http/apache for the HLCs to download - TODO: Change tmp-version to local version after merge, similar to middleware build
 cd /tmp
-mkdir autostart_package
+mkdir -p autostart_package
 cp ${BASH_DIR}/build/autostart ./autostart_package
 cp ${BASH_DIR}/build/download_error_logger ./autostart_package
 tar -czf autostart_package.tar.gz autostart_package

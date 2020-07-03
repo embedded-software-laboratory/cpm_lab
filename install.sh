@@ -277,11 +277,7 @@ fi
 
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to build the cpm software suit."
+echo "Reboot your PC or execute `source /etc/profile.d/rti_connext.sh`"
+echo "Then: `./build_all.bash` or `./build_all.bash --simulation`"
 
-source /etc/profile.d/rti_connext_dds.sh
-if [ $SIMULATION == 0 ]; then
-    ${DIR}/build_all.bash
-else
-    ${DIR}/build_all.bash --simulation
-fi
 exit 0

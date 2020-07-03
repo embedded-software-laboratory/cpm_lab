@@ -18,20 +18,22 @@ cmake ..
 make -j$(nproc)
 
 # Publish middleware package via http/apache for the HLCs to download
-if [ ! -d "/var/www/html/nuc" ]; then
-    sudo mkdir -p "/var/www/html/nuc"
-    sudo chmod a+rwx "/var/www/html/nuc"
+if [ $SIMULATION == 0 ]; then
+    if [ ! -d "/var/www/html/nuc" ]; then
+        sudo mkdir -p "/var/www/html/nuc"
+        sudo chmod a+rwx "/var/www/html/nuc"
+    fi
+    cd ${BASH_DIR}
+    rm -rf middleware_package
+    mkdir middleware_package
+    cp ${BASH_DIR}/build/middleware ./middleware_package
+    cp ${BASH_DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
+    tar -czf middleware_package.tar.gz middleware_package
+    rm -f /var/www/html/nuc/middleware_package.tar.gz
+    cp ./middleware_package.tar.gz /var/www/html/nuc
+    rm -rf middleware_package
+    rm -rf middleware_package.tar.gz
 fi
-cd ${BASH_DIR}
-rm -rf middleware_package
-mkdir middleware_package
-cp ${BASH_DIR}/build/middleware ./middleware_package
-cp ${BASH_DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-tar -czf middleware_package.tar.gz middleware_package
-rm -f /var/www/html/nuc/middleware_package.tar.gz
-cp ./middleware_package.tar.gz /var/www/html/nuc
-rm -rf middleware_package
-rm -rf middleware_package.tar.gz
 
 # Perform unittest
 cd ${BASH_DIR}/build 
