@@ -283,8 +283,5 @@ fi
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to build the cpm software suit."
 echo "The next steps is: ./build_all.bash or ./build_all.bash --simulation"
-echo "PC will reboot now to finish environment variables setup"
-
-sudo shutdown -r now
 
 exit 0
