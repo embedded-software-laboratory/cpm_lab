@@ -107,6 +107,8 @@ do
            LICENSE_PATH="${opt#*=}";;
         "--simulation" )
            SIMULATION="1";;     #set to some default value
+        "--rti_installer_automation_path="* )
+           RTI_INSTALLER_AUTOMATION_PATH="${opt#*=}";;
         *) echo >&2 "Invalid option: $@"; exit 1;;
    esac
 done
