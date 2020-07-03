@@ -203,6 +203,7 @@ SetupViewUI::~SetupViewUI() {
 //Do the same as in the destructor, because there we do not get the desired results sadly
 void SetupViewUI::on_lcc_close() {
     kill_deployed_applications();
+    deploy_functions->kill_ips();
 
     //Join all old threads
     kill_all_threads();
