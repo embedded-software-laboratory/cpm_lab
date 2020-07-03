@@ -18,7 +18,7 @@
 # - Default Arguments may be passed via commandline ./setup_cpm_build_environment.sh path_to_rti_license domain_id
 
 # This causes the bash script to return non-zero exit code as soon a command fails
-
+set -e
 # keep track of the last executed command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
@@ -56,6 +56,7 @@ if [[ ! -z $YUM ]]; then
     UPDATE="--refresh update -y"
     BUILD_ESSENTIALS="install gcc g++ glibc-devel libnsl2-devel make -y"
     # BUILD_ESSENTIALS="groupinstall \"Development Tools\" \"Development Libraries\" -y && dnf install libnsl2-devel g++ -y"
+    # TODO Update if support for other OS is desired
     BUILD_TOOLS="install ip expect apache2 git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
     OPENJDK="install java-11-openjdk-devel -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
@@ -63,8 +64,8 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
-    DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
+    BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk -y"
+    DEP_NO_SIM="install apache2 openssh-client openssh-server sshpass libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
     DEP_CI="install expect -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
@@ -200,23 +201,23 @@ cd $RU_HOME/dev
 sudo -u $real_user mkdir ./downloads
 cd ./downloads
 sudo -u $real_user wget https://s3.amazonaws.com/RTI/Bundles/6.0.0/Evaluation/rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
-sudo -u $real_user wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
-sudo -u $real_user wget https://community.rti.com/static/downloads/connext-dds/6.0.0/rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
-sudo -u $real_user tar xvzf ./raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
 sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
+if [ $SIMULATION == 0 ]; then
+    sudo -u $real_user wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
+    sudo -u $real_user tar xvzf ./raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
+    cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
+    sudo -u $real_user wget https://community.rti.com/static/downloads/connext-dds/6.0.0/rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
+fi
 
 ## 3.2 Installation
-
-echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
 mkdir /opt/rti_connext_dds-6.0.0
-
 if [ $CI == 1 ]; then
     echo ${RTI_INSTALLER_AUTOMATION_PATH}
     ${RTI_INSTALLER_AUTOMATION_PATH}
 else
+    echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
     ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0
 fi
-cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
 cp "$LICENSE_PATH" /opt/rti_connext_dds-6.0.0/rti_license.dat
 
 ## 3.3 Environment Setup
@@ -238,11 +239,10 @@ echo "export RPIPWD=cpmcpmcpm" >> /etc/profile.d/rti_connext_dds.sh
 # Reboot or source to apply the changes made to the environment variables.
 source /etc/profile.d/rti_connext_dds.sh
 
-if [ $SIMULATION == 0 ]
-then
 ## 3.4 Install RTI ARM libraries
 # only needed in real lab mode
-yes | /opt/rti_connext_dds-6.0.0/bin/rtipkginstall rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
+if [ $SIMULATION == 0 ]; then
+    yes | /opt/rti_connext_dds-6.0.0/bin/rtipkginstall rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
 fi
 
 ### 4. Indoor Positioning System (Setup) #######################################
