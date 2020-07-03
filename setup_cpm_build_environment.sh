@@ -22,7 +22,7 @@ set -e
 # keep track of the last executed command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -44,12 +44,9 @@ fi
 RU_HOME=$( getent passwd $real_user | cut -d: -f6 )
 
 ## 0.2 Determine OS & Set Commands Accordinaly
-YUM=$(which yum 2>/dev/null)
-DNF=$(which dnf 2>/dev/null)
-APT=$(which apt 2>/dev/null)
-if [[ ! -z $YUM ]]; then
+if [[ ! -z $(which yum) ]]; then
     PM="yum"
-    if [[ ! -z $DNF ]]; then
+    if [[ ! -z $(which dnf) ]]; then
         PM="dnf"
     fi
     echo "You aren't using Ubuntu. Watch out for further compatibility issues!"
@@ -60,12 +57,12 @@ if [[ ! -z $YUM ]]; then
     BUILD_TOOLS="install ip expect apache2 git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
     OPENJDK="install java-11-openjdk-devel -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
-elif [[ ! -z $APT ]]; then
+elif [[ ! -z $(which apt) ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk -y"
-    DEP_NO_SIM="install apache2 openssh-client openssh-server sshpass libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
+    BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
+    DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
     DEP_CI="install expect -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
@@ -175,7 +172,7 @@ fi
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
+if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
     eval "${PM}" install libsigc++-devel gtkmm24-devel -y
     sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
     cd ./jstest-gtk/
@@ -273,12 +270,12 @@ then
     ## 4.2 Basler Pylon 5
     cd $RU_HOME/dev/downloads
     sudo -u $real_user wget "${PYLON_URL}"
-    if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
+    if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
         sudo -u $real_user tar xvzf ./pylon*.tar.gz
         cd ./pylon*x86_64
         tar -C /opt -xzf pylonSDK*.tar.gz
         yes | ./setup-usb.sh
-    elif [[ ! -z $APT ]]; then
+    elif [[ ! -z $(which apt) ]]; then
         dpkg -i pylon*.deb
     fi
 fi
