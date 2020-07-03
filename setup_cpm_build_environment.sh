@@ -285,6 +285,6 @@ echo "Success! Ready to build the cpm software suit."
 echo "The next steps is: ./build_all.bash or ./build_all.bash --simulation"
 echo "PC will reboot now to finish environment variables setup"
 
-sudo reboot
+sudo shutdown -r now
 
 exit 0
