@@ -1,8 +1,11 @@
 #!/bin/bash
+# exit when any command fails
 set -e
-simulation=0
-
+# Get directory of bash script
+BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd ${BASH_DIR}
 #Get command line arguments
+simulation=0
 for arg in "$@"
 do
     case $arg in

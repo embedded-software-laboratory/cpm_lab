@@ -280,8 +280,8 @@ echo "Success! Ready to build the cpm software suit."
 
 source /etc/profile.d/rti_connext_dds.sh
 if [ $SIMULATION == 0 ]; then
-    ./build_all.bash
+    ${DIR}/build_all.bash
 else
-    ./build_all.bash --simulation
+    ${DIR}/build_all.bash --simulation
 fi
 exit 0
