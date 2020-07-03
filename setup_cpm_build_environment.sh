@@ -209,7 +209,7 @@ echo "Unattended mode is not supported in the evaluation bundle thus you have to
 mkdir /opt/rti_connext_dds-6.0.0
 
 if [ $CI == 1 ]; then
-    $DIR/rti_installer_automation.sh
+    $RTI_INSTALLER_AUTOMATION
 else
     ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0
 fi

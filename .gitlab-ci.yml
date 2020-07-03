@@ -23,11 +23,13 @@ before_script:
   - dpkg-reconfigure --frontend noninteractive tzdata
   - echo $RTI_LICENSE_KEY
   - cat $RTI_LICENSE_KEY
+  - cat $RTI_INSTALLER_AUTOMATION
+  - export $RTI_INSTALLER_AUTOMATION
 
 build_sim:
   stage: build_sim
   script:
-    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation
+    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation --ci
     - cat /etc/profile.d/rti_connext_dds.sh
     - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/include/ndds/hpp
     - ls -alh /opt/
@@ -37,7 +39,7 @@ build_sim:
 build_nosim:
   stage: build_nosim
   script:
-    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100
+    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --ci
     - cat /etc/profile.d/rti_connext_dds.sh
     - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds
     - ls -alh /opt/
