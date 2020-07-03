@@ -129,6 +129,7 @@ private:
     std::mutex active_real_vehicles_mutex;
     std::thread check_real_vehicle_data_thread;
     std::atomic_bool simulation_is_running;
+    std::atomic_bool vehicle_data_thread_running;
 
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;

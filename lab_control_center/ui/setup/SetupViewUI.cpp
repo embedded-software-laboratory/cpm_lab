@@ -157,27 +157,34 @@ SetupViewUI::SetupViewUI
 
     //Regularly check / update which real vehicles are currently turned on, to use them when the simulation is started
     simulation_is_running.store(false);
+    vehicle_data_thread_running.store(true);
     check_real_vehicle_data_thread = std::thread([&]{
-        //Don't update data during simulation
-        if (! simulation_is_running.load())
+        while(vehicle_data_thread_running.load())
         {
-            //Only perform action if simulation currently does not take place
-            //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
-            auto currently_simulated_vehicles = get_vehicle_ids_simulated();
-            std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
-            active_real_vehicles.clear();
-            for (auto vehicle_entry : get_vehicle_data())
+            //Don't update data during simulation
+            if (! simulation_is_running.load())
             {
-                auto id = vehicle_entry.first;
-                if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) == currently_simulated_vehicles.end())
+                //Only perform action if simulation currently does not take place
+                //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
+                auto currently_simulated_vehicles = get_vehicle_ids_simulated();
+                std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+                active_real_vehicles.clear();
+                for (auto vehicle_entry : get_vehicle_data())
                 {
-                    active_real_vehicles.push_back(id);
+                    auto id = vehicle_entry.first;
+
+                    //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
+                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && 
+                        std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) == currently_simulated_vehicles.end())
+                    {
+                        active_real_vehicles.push_back(id);
+                    }
                 }
             }
-        }
 
-        //Sleep for a while, then update again
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            //Sleep for a while, then update again
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
     });
 }
 
@@ -187,6 +194,13 @@ SetupViewUI::~SetupViewUI() {
 
     //Join all old threads
     kill_all_threads();
+
+    //Kill real vehicle data thread
+    vehicle_data_thread_running.store(false);
+    if(check_real_vehicle_data_thread.joinable())
+    {
+        check_real_vehicle_data_thread.join();
+    }
 }
 
 void SetupViewUI::switch_timer_set()
@@ -356,12 +370,6 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
-
-    //Kill real vehicle data thread
-    if(check_real_vehicle_data_thread.joinable())
-    {
-        check_real_vehicle_data_thread.join();
-    }
 }
 
 bool SetupViewUI::check_if_online(uint8_t hlc_id)
@@ -596,6 +604,13 @@ void SetupViewUI::perform_post_kill_cleanup()
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
     std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
     std::vector<unsigned int> active_vehicle_ids = active_real_vehicles;
+
+    std::cout << "REAL VEHICLES:" << std::endl;
+    for (auto id : active_real_vehicles)
+    {
+        std::cout << id << " | " << std::endl;
+    }
+
     lock.unlock();
 
     for (auto& vehicle_toggle : vehicle_toggles)
