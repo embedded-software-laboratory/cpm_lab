@@ -15,6 +15,6 @@ cd /tmp
 mkdir matlab_package
 cp ${BASH_DIR}/../examples/matlab/init_script.m ./matlab_package
 cp ${BASH_DIR}/../examples/matlab/QOS_READY_TRIGGER.xml ./matlab_package
-tar -czvf matlab_package.tar.gz matlab_package
+tar -czf matlab_package.tar.gz matlab_package
 rm -f /var/www/html/nuc/matlab_package.tar.gz
 cp ./matlab_package.tar.gz /var/www/html/nuc

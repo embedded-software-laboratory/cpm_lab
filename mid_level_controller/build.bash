@@ -38,7 +38,7 @@ then
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
     cp ../../cpm_lib/build_arm/libcpm.so package
-    tar -czvf package.tar.gz package
+    tar -czf package.tar.gz package
     popd
     
     
@@ -49,7 +49,7 @@ then
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
     cp ../../cpm_lib/build_arm/libcpm.so package
-    tar -czvf package.tar.gz package
+    tar -czf package.tar.gz package
     popd
     
     

@@ -27,7 +27,7 @@ rm -rf middleware_package
 mkdir middleware_package
 cp ${BASH_DIR}/build/middleware ./middleware_package
 cp ${BASH_DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-tar -czvf middleware_package.tar.gz middleware_package
+tar -czf middleware_package.tar.gz middleware_package
 rm -f /var/www/html/nuc/middleware_package.tar.gz
 cp ./middleware_package.tar.gz /var/www/html/nuc
 rm -rf middleware_package

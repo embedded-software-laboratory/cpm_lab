@@ -35,6 +35,6 @@ if [ ! -d "/var/www/html/nuc" ]; then
 fi
 cp -R $DIR/dds_idl/ $DIR/cpm_library_package
 cp $DIR/build/libcpm.so $DIR/cpm_library_package
-tar -czvf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
+tar -czf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
 rm -f /var/www/html/nuc/cpm_library_package.tar.gz
 mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc
