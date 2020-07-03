@@ -28,10 +28,10 @@ build_sim:
   stage: build_sim
   script:
     - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
-    - source /etc/profile.d/rti_connext.sh && ./build_all.bash --simulation
+    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash --simulation
 
 build_nosim:
   stage: build_nosim
   script:
     - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
-    - source /etc/profile.d/rti_connext.sh && ./build_all.bash
+    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash

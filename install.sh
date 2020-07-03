@@ -4,7 +4,7 @@
 # super user privileges (e.g. sudo)
 #
 # This script will download various files and therefor creates its own
-# directory 'cpm' relative to this scripts ablsoute path. It will also link it
+# directory 'tmp' relative to this scripts ablsoute path. It will also link it
 # to ~/dev for easier accessablity (if ~/dev is not already present).
 #
 # This script is compatible with Debian and RedHat based distirbutions but has
@@ -70,19 +70,16 @@ else
     exit 1;
 fi
 
-## 0.3 Create 'cpm ' Folder and Link it to '~/dev'
-if [ ! -d "cpm" ]; then
-    sudo -u $real_user mkdir ./cpm
+## 0.3 Link folder to '~/dev'
+if [ ! -d $RU_HOME/dev/software ]; then
+    echo "Creating a link to expected installation location ${RU_HOME}/dev/software"
+    sudo -u ${real_user} mkdir -p $RU_HOME/dev
+    sudo -u ${real_user} ln -s $PWD $RU_HOME/dev/software
+elif [ "${RU_HOME}/dev/software" == "${PWD}" ]; then
+    : # We are in the expected folder
 else
-    echo "The folder cpm already exists. Rename it or run this script in a different folder. Otherwise this script may overwrite files within cpm."
-    exit 1
-fi
-cd ./cpm
-if [ ! -d $RU_HOME/dev ]; then
-    sudo -u $real_user ln -s $PWD $RU_HOME/dev
-else
-    RU_HOME=$PWD
-    sudo -u $real_user ln -s $PWD $RU_HOME/dev
+    # TODO: Installation without relying on absolute location
+    echo "WARNING: Installing at another location than /home/user/dev/software is currently not supported. Prepare for compatibility issues."
 fi
 
 ### 0.4 Parse Command Line Arguments
@@ -154,8 +151,10 @@ if [[ $SIMULATION == 0 ]]; then
     sudo chmod a+rwx "/var/www/html/raspberry"
 fi
 
-### 1. Ubuntu & Packages #######################################################
+### 0.6 Create temporary folder
+sudo -u ${real_user} mkdir tmp
 
+### 1. Ubuntu & Packages #######################################################
 eval "${PM}" "${UPDATE}"
 eval "${PM}" "${BUILD_ESSENTIALS}"
 eval "${PM}" "${BUILD_TOOLS}"
@@ -169,6 +168,7 @@ fi
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
 if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
+    cd tmp
     eval "${PM}" install libsigc++-devel gtkmm24-devel -y
     sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
     cd ./jstest-gtk/
@@ -178,7 +178,7 @@ if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
     sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
     sudo -u $real_user mkdir ./build
     cd ./build
-    sudo -u $real_user cmake $RU_HOME/dev/jstest-gtk
+    sudo -u $real_user cmake ..
     sudo -u $real_user make
 fi
 
@@ -190,9 +190,7 @@ fi
 # https://cpm.embedded.rwth-aachen.de/doc/display/CLD/RTI+DDS
 
 ## 3.1 Downloads
-cd $RU_HOME/dev
-sudo -u $real_user mkdir ./downloads
-cd ./downloads
+cd $DIR/tmp
 sudo -u $real_user wget https://s3.amazonaws.com/RTI/Bundles/6.0.0/Evaluation/rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
 sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
 if [ $SIMULATION == 0 ]; then
@@ -256,14 +254,14 @@ then
     N=$(nproc)
     sudo -u $real_user make -j$N
     make install
-    cd $RU_HOME/dev
+    cd "$DIR"
     if [ ! -d "/opt/opencv400/lib" ]; then
         ln -s /opt/opencv400/lib64 /opt/opencv400/lib
     fi
     rm -rf /tmp/opencv
 
     ## 4.2 Basler Pylon 5
-    cd $RU_HOME/dev/downloads
+    cd "$DIR/tmp"
     sudo -u $real_user wget "${PYLON_URL}"
     if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
         sudo -u $real_user tar xvzf ./pylon*.tar.gz
@@ -275,9 +273,11 @@ then
     fi
 fi
 
+rm -rf "${DIR}/tmp"
+
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to build the cpm software suit."
-echo "Reboot your PC or execute `source /etc/profile.d/rti_connext.sh`"
-echo "Then: `./build_all.bash` or `./build_all.bash --simulation`"
+echo "Reboot your PC or execute 'source /etc/profile.d/rti_connext_dds.sh'"
+echo "Then: './build_all.bash' or './build_all.bash --simulation'"
 
 exit 0
