@@ -5,7 +5,7 @@ stages:
   - build_nosim
 
 before_script:
-  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - 'which ssh-agent || ( apt update -y && apt install openssh-client -y )'
   - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
@@ -14,8 +14,8 @@ before_script:
   - chmod 644 ~/.ssh/known_hosts
   - pwd
   - export DEBIAN_FRONTEND=noninteractive
-  - apt-get update
-  - apt-get install -y tzdata sudo
+  - apt update
+  - apt install -y tzdata sudo expect
   - adduser --disabled-password --gecos '' docker
   - adduser docker sudo
   - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
@@ -27,19 +27,9 @@ before_script:
 build_sim:
   stage: build_sim
   script:
-    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
-    - cat /etc/profile.d/rti_connext_dds.sh
-    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds && ls -alh ${NDDSHOME}/include/ndds/hpp
-    - ls -alh /opt/
-    - ls -alh /opt/rti_connext_dds-6.0.0
-    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash --simulation
+    - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
 
 build_nosim:
   stage: build_nosim
   script:
-    - sudo ./setup_cpm_build_environment.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
-    - cat /etc/profile.d/rti_connext_dds.sh
-    - source /etc/profile.d/rti_connext_dds.sh && ls -alh ${NDDSHOME}/include && ls -alh ${NDDSHOME}/include/ndds
-    - ls -alh /opt/
-    - ls -alh /opt/rti_connext_dds-6.0.0
-    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash
+    - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh

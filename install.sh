@@ -63,7 +63,6 @@ elif [[ ! -z $(which apt) ]]; then
     BUILD_ESSENTIALS="install build-essential -y"
     BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
     DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
-    DEP_CI="install expect -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
@@ -163,9 +162,6 @@ eval "${PM}" "${BUILD_TOOLS}"
 if [ $SIMULATION == 0 ]; then
     eval "${PM}" "${DEP_NO_SIM}"
 fi
-if [ $CI == 1 ]; then
-    eval "${PM}" "${DEP_CI}"
-fi
 
 
 
@@ -209,7 +205,6 @@ fi
 ## 3.2 Installation
 mkdir /opt/rti_connext_dds-6.0.0
 if [ $CI == 1 ]; then
-    echo ${RTI_INSTALLER_AUTOMATION_PATH}
     ${RTI_INSTALLER_AUTOMATION_PATH}
 else
     echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
@@ -282,6 +277,11 @@ fi
 
 ### 5. Inform user about success and next steps ################################
 echo "Success! Ready to build the cpm software suit."
-echo "The next steps is: ./build_all.bash or ./build_all.bash --simulation"
 
+source /etc/profile.d/rti_connext_dds.sh
+if [ $SIMULATION == 0 ]; then
+    ./build_all.bash
+else
+    ./build_all.bash --simulation
+fi
 exit 0
