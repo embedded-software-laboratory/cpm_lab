@@ -63,8 +63,9 @@ elif [[ ! -z $APT ]]; then
     PM="apt"
     UPDATE="update && apt upgrade -y"
     BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 expect git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
+    BUILD_TOOLS="install iproute2 git tmux openssh-client openssh-server cmake libgtkmm-3.0-dev sshpass libxml++2.6-dev ntp jstest-gtk -y"
     DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
+    DEP_CI="install expect -y"
     OPENJDK="install openjdk-11-jdk -y"
     PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
 else
@@ -88,19 +89,22 @@ else
 fi
 
 ### 0.4 Parse Command Line Arguments
-SIMULATION=0
-LICENSE_PATH=0
+CI=0
 DOMAIN_ID="NONE"
+LICENSE_PATH=0
+SIMULATION=0
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]] ;
 do
     opt="$1";
     shift;              #expose next argument
     case "$opt" in
         "--" ) break 2;;
-        "--license_path="* )
-           LICENSE_PATH="${opt#*=}";;
+        "--ci" )
+           CI="1";;
         "--domain_id="* )
            DOMAIN_ID="${opt#*=}";;
+        "--license_path="* )
+           LICENSE_PATH="${opt#*=}";;
         "--simulation" )
            SIMULATION="1";;     #set to some default value
         *) echo >&2 "Invalid option: $@"; exit 1;;
@@ -137,9 +141,10 @@ if [ "$DOMAIN_ID" == "NONE" ]; then
     fi
 fi
 
-echo "Simulation =" $SIMULATION
-echo "License Path =" $LICENSE_PATH
+echo "CI =" $CI
 echo "Domain ID =" $DOMAIN_ID
+echo "License Path =" $LICENSE_PATH
+echo "Simulation =" $SIMULATION
 
 
 ### 0.5 Create folders for nuc and raspberry packages
@@ -158,6 +163,10 @@ eval "${PM}" "${BUILD_TOOLS}"
 if [ $SIMULATION == 0 ]; then
     eval "${PM}" "${DEP_NO_SIM}"
 fi
+if [ $CI == 1 ]; then
+    eval "${PM}" "${DEP_CI}"
+fi
+
 
 
 
@@ -167,9 +176,9 @@ if [[ ! -z $YUM ]] || [[ ! -z $DNF ]]; then
     eval "${PM}" install libsigc++-devel gtkmm24-devel -y
     sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
     cd ./jstest-gtk/
-# checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
-# TODO consider updating jstest-gtk because more recent versions don't require 
-# gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
+    # checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
+    # TODO consider updating jstest-gtk because more recent versions don't require 
+    # gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
     sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
     sudo -u $real_user mkdir ./build
     cd ./build
@@ -198,8 +207,12 @@ sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.
 
 echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
 mkdir /opt/rti_connext_dds-6.0.0
-$DIR/rti_installer_automation.sh
-#yes "y" | sudo ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0 # --mode unattended
+
+if [ $CI == 1 ]; then
+    $DIR/rti_installer_automation.sh
+else
+    ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0
+fi
 cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
 cp "$LICENSE_PATH" /opt/rti_connext_dds-6.0.0/rti_license.dat
 
