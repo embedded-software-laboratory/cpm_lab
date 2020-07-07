@@ -50,13 +50,15 @@ int main(int argc, char *argv[])
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
+    std::cout << "HERE" << std::endl;
     for(auto i:vehicle_ids_int)
     {
         assert(i>0);
         assert(i<255);
         vehicle_ids.push_back(i);
     }
-    uint8_t vehicle_id = vehicle_ids[0];
+    assert(vehicle_ids.size() > 0);
+    uint8_t vehicle_id = vehicle_ids.at(0);
 
 
 
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
     // The code inside the cpm::Timer is executed every 400 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
-    const uint64_t dt_nanos = 150000000ull; // 400 milliseconds == 400000000 nanoseconds
+    const uint64_t dt_nanos = 200000000ull; // 400 milliseconds == 400000000 nanoseconds
     auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
     timer->start([&](uint64_t t_now)
     {
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 2000000000ull;
 
         // Append new points to the trajectory
-        while (reference_trajectory_time + trajectory_duration < t_now + 1000000000ull){
+        while (reference_trajectory_time + trajectory_duration < t_now + 4000000000ull){
             TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
             trajectory_point.t().nanoseconds(reference_trajectory_time + trajectory_duration);
 
@@ -101,13 +103,16 @@ int main(int argc, char *argv[])
             eight.move_forward(); //TODO Fitting with initial point?
         }
 
+        std::cout << reference_trajectory_time << ";" << trajectory_duration << std::endl;
+
+
         // Delete outdated points, i.e., remove first point if second one lies in past, too,
-        while (trajectory_points.at(1).t() < t_now){
-            uint64_t delta_t = trajectory_points.at(1).t() - trajectory_points.at(0).t();
+        while (!trajectory_points.empty() && trajectory_points.at(1).t().nanoseconds() < t_now){
+            uint64_t delta_t = trajectory_points.at(1).t().nanoseconds() - trajectory_points.at(0).t().nanoseconds();
             trajectory_duration -= delta_t;
             reference_trajectory_time += delta_t;
 
-            trajectory_points.pop_front();
+            trajectory_points.erase(trajectory_points.begin());
         }
 
         // Send the current trajectory 
