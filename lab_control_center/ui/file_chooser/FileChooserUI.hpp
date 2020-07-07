@@ -32,6 +32,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <locale>
@@ -71,6 +72,11 @@ private:
     bool handle_button_released(GdkEventKey* event);
     bool handle_double_click(GdkEventButton* event);
     bool called_callback = false;
+
+    //Remember last opened file (also in between program executions)
+    static std::string previous_file;
+    static bool file_config_loaded;
+    static const std::string file_dialog_config_location;
 public:
     FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
 
@@ -79,4 +85,9 @@ public:
      * For each filter name in filter_name, one or more filters are set using filter_type (first entry in filter name corresponds to first entry in filter_type etc)
      */
     FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters);
+
+    /**
+     * \brief Returns the previously selected path of last program execution
+     */
+    static std::string get_last_execution_path();
 };

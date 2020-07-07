@@ -155,6 +155,9 @@ SetupViewUI::SetupViewUI
     notify_count = 0;
     participants_available.store(false);
     kill_called.store(false);
+
+    //Set initial text of script path (from previous program execution, if that existed)
+    script_path->set_text(FileChooserUI::get_last_execution_path());
 }
 
 SetupViewUI::~SetupViewUI() {
