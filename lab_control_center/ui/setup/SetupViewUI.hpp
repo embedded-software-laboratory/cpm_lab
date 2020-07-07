@@ -86,6 +86,9 @@ private:
     //(De)Activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
 
+    //(De)Activate diagnosis
+    Gtk::Switch* switch_diagnosis = nullptr;
+
     //(De)Activate remote deployment on HLCs (NUCs)
     Gtk::Switch* switch_deploy_remote = nullptr;
 
@@ -96,10 +99,15 @@ private:
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
-
+    
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
     void switch_timer_set();
+
+    //Class containing all functions that are relevant for deployment, local and remote
+    std::shared_ptr<Deploy> deploy_functions;
+    unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
+    unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
     // Interface to LabCam
 #ifndef SIMULATION
@@ -155,6 +163,9 @@ private:
     //IPS switch callback (-> lab mode)
     void switch_ips_set();
 
+    //diagnosis switch callback 
+    void switch_diagnosis_set();
+
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
     void kill_deployed_applications();
@@ -169,8 +180,6 @@ private:
 
     //Get parameters that were set in the command line (upon starting the LCC)
     bool cmd_simulated_time;
-    unsigned int cmd_domain_id;
-    std::string cmd_dds_initial_peer;
 
     //File chooser to select script(s) + location
     void open_file_explorer();
@@ -181,11 +190,6 @@ private:
     void select_all_vehicles_real();
     void select_all_vehicles_sim();
     void select_no_vehicles();
-
-    //Class containing all functions that are relevant for deployment, local and remote
-    std::shared_ptr<Deploy> deploy_functions;
-    unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
-    unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
 public:
     /**
@@ -205,6 +209,7 @@ public:
      * \param argv Command line argument (from main())
      */
     SetupViewUI(
+        std::shared_ptr<Deploy> deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
         std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 

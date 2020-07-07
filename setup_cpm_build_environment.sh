@@ -167,6 +167,7 @@ echo "export PATH=\$PATH:/opt/raspbian-toolchain-gcc-4.7.2-linux64/bin" >> /etc/
 echo "export NDDSHOME=/opt/rti_connext_dds-6.0.0" >> /etc/profile.d/rti_connext_dds.sh
 echo "export RASPBIAN_TOOLCHAIN=/opt/raspbian-toolchain-gcc-4.7.2-linux64" >> /etc/profile.d/rti_connext_dds.sh
 echo "export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat" >> /etc/profile.d/rti_connext_dds.sh
+echo "export RPIPWD=cpmcpmcpm" >> /etc/profile.d/rti_connext_dds.sh
 # Reboot or source to apply the changes made to the environment variables.
 source /etc/profile.d/rti_connext_dds.sh
 

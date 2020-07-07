@@ -29,8 +29,8 @@
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
 
-#include "../mid_level_controller/src/TrajectoryInterpolation.hpp"
-#include "../mid_level_controller/src/TrajectoryInterpolation.cxx"
+#include "TrajectoryInterpolation.hpp"
+#include "TrajectoryInterpolation.cxx"
 
 using namespace std::placeholders; //For std::bind
 

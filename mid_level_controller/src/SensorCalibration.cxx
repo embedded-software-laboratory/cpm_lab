@@ -51,7 +51,7 @@ VehicleState SensorCalibration::convert(spi_miso_data_t spi_miso_data) {
     vehicleState.imu_yaw                     (spi_miso_data.imu_yaw * imu_yaw_radian_per_step);
     vehicleState.imu_yaw_rate                (spi_miso_data.imu_yaw_rate * imu_yaw_rate_radian_per_second_per_step);
     vehicleState.speed                       (spi_miso_data.speed * speed_meter_per_second_per_step);
-    vehicleState.battery_voltage             (spi_miso_data.battery_voltage * battery_volt_per_step);
+    vehicleState.battery_voltage             (spi_miso_data.battery_voltage * battery_volt_per_step); //TODO: filter battery voltage 
     vehicleState.motor_current               (spi_miso_data.motor_current * motor_ampere_per_step);
     return vehicleState;
 }
