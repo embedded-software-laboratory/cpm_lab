@@ -270,6 +270,7 @@ void ObstacleSimulationManager::reset()
 
     std::lock_guard<std::mutex> lock(map_mutex);
     simulated_obstacles.clear();
+    simulated_obstacle_states.clear();
 }
 
 void ObstacleSimulationManager::set_obstacle_simulation_state(int id, ObstacleToggle::ToggleState state)

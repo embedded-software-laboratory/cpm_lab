@@ -63,8 +63,7 @@ private:
 
     Gtk::Label* label = nullptr;
 
-    Gtk::RadioButton* vehicle_sim = nullptr;
-    Gtk::RadioButton* vehicle_on = nullptr;
+    Gtk::Switch* obstacle_switch = nullptr;
 
     //Given values
     unsigned int id;

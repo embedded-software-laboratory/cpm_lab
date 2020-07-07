@@ -33,39 +33,33 @@ ObstacleToggle::ObstacleToggle(unsigned int _id) :
 
     builder->get_widget("parent", parent);
     builder->get_widget("label", label);
-    builder->get_widget("vehicle_sim", vehicle_sim);
-    builder->get_widget("vehicle_on", vehicle_on);
+    builder->get_widget("obstacle_switch", obstacle_switch);
 
     assert(parent);
     assert(label);
-    assert(vehicle_sim);
-    assert(vehicle_on);
+    assert(obstacle_switch);
 
     //Set label for vehicle toggle box
     std::stringstream label_str;
     label_str << "Obstacle " << id;
     label->set_text(label_str.str().c_str());
 
-    //Group buttons
-    vehicle_sim->join_group(*vehicle_on);
-    vehicle_sim->set_active(true);
-
     current_state = ToggleState::Simulated;
+    obstacle_switch->set_active(false);
 
-    //Register button callbacks
-    vehicle_sim->signal_toggled().connect(sigc::mem_fun(this, &ObstacleToggle::on_state_changed));
-    vehicle_on->signal_toggled().connect(sigc::mem_fun(this, &ObstacleToggle::on_state_changed));
+    //Register callbacks
+    obstacle_switch->property_active().signal_changed().connect(sigc::mem_fun(this, &ObstacleToggle::on_state_changed));
 }
 
 void ObstacleToggle::on_state_changed()
 {
-    if(vehicle_sim->get_active())
+    if(obstacle_switch->get_active())
     {
-        current_state = ToggleState::Simulated;
+        current_state = ToggleState::On;
     }
-    else if(vehicle_on->get_active())
+    else
     {
-        current_state = ToggleState::On;   
+        current_state = ToggleState::Simulated;   
     }
 
     if(selection_callback) selection_callback(id, current_state);
@@ -83,11 +77,11 @@ void ObstacleToggle::set_state(ToggleState state)
     switch(state)
     {
         case ToggleState::On:
-            vehicle_on->set_active(true);
+            obstacle_switch->set_active(true);
             break;
 
         case ToggleState::Simulated:
-            vehicle_sim->set_active(true);
+            obstacle_switch->set_active(false);
             break;
     }
 }
