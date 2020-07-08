@@ -197,30 +197,38 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
         const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
+        uint64_t const max_comm_delay = 200000000ull;
+        uint64_t const t_valid_nanos = t_now + max_comm_delay + dt_nanos;
+        uint64_t const t_command_timeout = 500000000ull;
+        
+
+        // check for sufficient lead time. A generous value is used here
+        uint64_t const t_min_lead = 500000000ull; 
+        if ((!trajectory.empty()) && (trajectory.back().t().nanoseconds() < t_valid_nanos + t_min_lead + t_command_timeout)) continue;
+
+        // don't send if trajectory starts too far in the future
+        if ((!trajectory.empty()) && (trajectory.front().t().nanoseconds() > t_valid_nanos)) continue;
+
+        // find active trajectory point
         size_t trajectory_index = 0;
         bool trajectory_found = false; //One could also use another type for the index and start with -1, but I did not prefer the necessary typecasts over using a boolean instead
-
         for (size_t i = 0; i < trajectory.size(); ++i) 
         {
-            // find active trajectory point
-            if(t_now + 1500000000ull < trajectory.at(i).t().nanoseconds())
+            if(t_valid_nanos >= trajectory.at(i).t().nanoseconds())
             {
                 trajectory_index = i;
                 trajectory_found = true;
+            }
+            else if (trajectory_found)
+            {
                 break;
             }
-
-            // TODO delete trajectory if it is in the past (Janis' TODO, I don't know if this is still necessary)
         }
 
         if (trajectory_found)
         {
             //For interpolation: Create trajectory that starts before and ends after the found point (if possible)
             std::vector<TrajectoryPoint> trajectory_points;
-            if (trajectory_index > 0)
-            {
-                trajectory_points.push_back(trajectory.at(trajectory_index - 1));
-            }
             for (size_t i = trajectory_index; i < trajectory.size() && i < trajectory_index + 20; ++i)
             {
                 //+20 because we cannot add too many points, else RTI causes a crash
@@ -231,7 +239,7 @@ void TrajectoryCommand::send_trajectory(uint64_t t_now)
             command.vehicle_id(vehicle_id);
             command.trajectory_points(rti::core::vector<TrajectoryPoint>(trajectory_points));
             command.header().create_stamp().nanoseconds(t_now);
-            command.header().valid_after_stamp().nanoseconds(trajectory.at(trajectory_index).t().nanoseconds());
+            command.header().valid_after_stamp().nanoseconds(t_valid_nanos);
             writer_vehicleCommandTrajectory.write(command);
         }
     }
