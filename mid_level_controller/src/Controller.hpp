@@ -84,8 +84,6 @@ class Controller
 
     const uint64_t command_timeout = 500000000ull;
 
-    uint64_t latest_command_receive_time = 0;
-
     double speed_throttle_error_integral = 0;
 
     std::mutex command_receive_mutex;
@@ -119,7 +117,7 @@ class Controller
 
     //Used for stop steps in stop mode
     unsigned int stop_count = 5; 
-    unsigned int STOP_STEPS = 5;
+    unsigned int const STOP_STEPS = 5;
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);

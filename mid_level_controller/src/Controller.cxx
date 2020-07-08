@@ -72,58 +72,63 @@ void Controller::receive_commands(uint64_t t_now)
     {
         m_vehicleCommandDirect = sample_CommandDirect;
         state = ControllerState::Direct;
-        latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
             3,
-            "Vehicle %u read direct message timestamp: %llu, at time %llu", 
-            vehicle_id, 
+            "Controller: Read direct message. "
+            "Created at %llu, "
+            "Valid after %llu, "
+            "Read at %llu.",
             sample_CommandDirect.header().create_stamp().nanoseconds(), 
-            latest_command_receive_time
+            sample_CommandDirect.header().valid_after_stamp().nanoseconds(), 
+            t_now
         );
     }
     else if(sample_CommandSpeedCurvature_age < command_timeout)
     {
         m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;  
         state = ControllerState::SpeedCurvature;
-        latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
             3,
-            "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
-            vehicle_id, 
+            "Controller: Read speed curvature message. "
+            "Created at %llu, "
+            "Valid after %llu, "
+            "Read at %llu.",
             sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
-            latest_command_receive_time
+            sample_CommandSpeedCurvature.header().valid_after_stamp().nanoseconds(), 
+            t_now
         );
     }
     else if (sample_CommandTrajectory_age < command_timeout)
     {
-        //First, we must also check if we have already reached the last point of the received trajectory, 
-        //as we might already have reached it up until now if we did not receive any new data within the command_timeout
-        //In that case, we would not be able to interpolate to reach a new state, but that would also not be necessary, as we would already have reached it
-        //This happens e.g. when the sender has sent its last trajectory - we want the vehicle to go into stop mode then, not to crash because the last (old) command is invalid
-        assert(sample_CommandTrajectory.trajectory_points().end() != sample_CommandTrajectory.trajectory_points().begin()); //RTI does not have rbegin(), so we use end - 1 instead - crash on empty trajectories (Log before that?)
-        auto last_command = *(sample_CommandTrajectory.trajectory_points().end() - 1);
-        if (last_command.t().nanoseconds() >= t_now) //As stated before, the last point must still be our goal, else it is not interesting anymore
-        {
-            m_vehicleCommandTrajectory = sample_CommandTrajectory;  
-            state = ControllerState::Trajectory;
-            latest_command_receive_time = t_now;
+        m_vehicleCommandTrajectory = sample_CommandTrajectory;  
+        state = ControllerState::Trajectory;
 
-            //Evaluation: Log received timestamp
-            cpm::Logging::Instance().write(
-                3,
-                "Trajectory Controller: Read message. "
-                "Created at %llu, "
-                "Valid after %llu, "
-                "Read at %llu.",
-                sample_CommandTrajectory.header().create_stamp().nanoseconds(),
-                sample_CommandTrajectory.header().valid_after_stamp().nanoseconds(),
-                t_now
-            );
-        }
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            3,
+            "Controller: Read trajectory message. "
+            "Created at %llu, "
+            "Valid after %llu, "
+            "Read at %llu.",
+            sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
+            sample_CommandTrajectory.header().valid_after_stamp().nanoseconds(),
+            t_now
+        );
+    }
+    // no new commands received
+    else if (state != ControllerState::Stop)
+    {
+        state = ControllerState::Stop;
+        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+        cpm::Logging::Instance().write(
+            3,
+            "Controller: "
+            "No new commands received. %s", "Stopping."
+        );
     }
 }
 
@@ -370,18 +375,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
     double motor_throttle = 0;
     double steering_servo = 0;
-
-    if(latest_command_receive_time + command_timeout < t_now
-        && state != ControllerState::Stop)
-    {
-        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
-        cpm::Logging::Instance().write(
-            3,
-            "Controller: "
-            "No new commands received. %s", "Stopping.");
-
-        state = ControllerState::Stop;
-    }
 
     if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
         && state == ControllerState::Trajectory)
