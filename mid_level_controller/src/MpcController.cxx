@@ -442,24 +442,6 @@ bool MpcController::interpolate_reference_trajectory(
             }
         }
 
-        //Log an error if we could not find a valid trajectory segment w.r.t. end
-        if (end_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- no end value could be found!"
-            );
-        }
-
-        //Log an error if we could not find a valid trajectory segment w.r.t. start
-        if (start_point.t().nanoseconds() >= t_interpolation || start_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- start newer than expected or no start found!"
-            );
-        }
-    
         assert(t_now <= end_point.t().nanoseconds());
 
         assert(t_interpolation >= start_point.t().nanoseconds());
