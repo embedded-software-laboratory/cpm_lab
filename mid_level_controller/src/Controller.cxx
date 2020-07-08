@@ -394,18 +394,11 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         {
             // Use function that calculates motor values for stopping immediately - which is also already used in main
             get_stop_signals(motor_throttle, steering_servo);
-            if (stop_count > 0)
-            {
-                --stop_count;
-            }
         }
         break;
 
         case ControllerState::SpeedCurvature:
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             const double speed_target = m_vehicleCommandSpeedCurvature.speed();
             const double curvature    = m_vehicleCommandSpeedCurvature.curvature();
             const double speed_measured = m_vehicleState.speed();
@@ -417,9 +410,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         case ControllerState::Trajectory:
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             std::lock_guard<std::mutex> lock(command_receive_mutex);
             trajectory_tracking_statistics_update(t_now);
 
@@ -433,9 +423,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         default: // Direct
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             motor_throttle = m_vehicleCommandDirect.motor_throttle();
             steering_servo = m_vehicleCommandDirect.steering_servo();
         }
@@ -454,11 +441,7 @@ void Controller::get_stop_signals(double &out_motor_throttle, double &out_steeri
     //Init. values
     double steering_servo = 0;
     double speed_target = 0;
-    const double curvature    = 0;
     const double speed_measured = m_vehicleState.speed();
-
-    //Set steering servo as in other methods, we are only interested in throttle change
-    steering_servo = steering_curvature_calibration(curvature);
     
     // P controller to reach 0 speed (without "backshooting" like with the PI controller in speed controller)
     double motor_throttle = ((speed_target>=0)?(1.0):(-1.0)) * pow(fabs(0.152744 * speed_target),(0.627910));
