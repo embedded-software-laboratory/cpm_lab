@@ -76,6 +76,7 @@ void Controller::receive_commands(uint64_t t_now)
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
+            3,
             "Vehicle %u read direct message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandDirect.header().create_stamp().nanoseconds(), 
@@ -90,6 +91,7 @@ void Controller::receive_commands(uint64_t t_now)
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
+            3,
             "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
             vehicle_id, 
             sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
@@ -112,17 +114,16 @@ void Controller::receive_commands(uint64_t t_now)
 
             //Evaluation: Log received timestamp
             cpm::Logging::Instance().write(
-                "Vehicle %u read trajectory message timestamp: %llu, at time %llu", 
-                vehicle_id, 
-                sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
-                latest_command_receive_time
+                3,
+                "Trajectory Controller: Read message. "
+                "Created at %llu, "
+                "Valid after %llu, "
+                "Read at %llu.",
+                sample_CommandTrajectory.header().create_stamp().nanoseconds(),
+                sample_CommandTrajectory.header().valid_after_stamp().nanoseconds(),
+                t_now
             );
         }
-        else
-        {
-            state = ControllerState::Stop;
-        }
-        //Log else? Would be good for debugging, but lead to spamming after a last point was reached
     }
 }
 
@@ -190,6 +191,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         if (end_point.t().nanoseconds() == 0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "%s",
                 "Trajectory interpolation error: Missing trajectory point in the FUTURE."
             );
@@ -200,6 +202,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         if (start_point.t().nanoseconds() >= t_now)
         {
             cpm::Logging::Instance().write(
+                2,
                 "%s",
                 "Trajectory interpolation error: Missing trajectory point in the PAST."
             );
@@ -216,6 +219,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
     else 
     {
         cpm::Logging::Instance().write(
+            2,
             "%s",
             "Trajectory interpolation error: No valid trajectory data."
         );
@@ -338,6 +342,7 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
             const double lateral_error_std = sqrt(lateral_error_variance);
 
             cpm::Logging::Instance().write(
+                3,
                 "Vehicle Controller Tracking Errors:"
                 "long,mean: %f  "
                 "long,std: %f  "
@@ -371,7 +376,8 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     {
         //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            "Warning: Vehicle Controller: "
+            3,
+            "Controller: "
             "No new commands received. %s", "Stopping.");
 
         state = ControllerState::Stop;
@@ -382,7 +388,8 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     {
         //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            "Warning: Vehicle Controller: "
+            1,
+            "Error: Controller: "
             "Lost IPS position reference. %s", "Stopping.");
 
         state = ControllerState::Stop;
