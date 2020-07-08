@@ -30,6 +30,7 @@
 #include <array>
 #include <utility>
 #include <cstdint>
+#include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
 using std::vector;
 using std::array;
