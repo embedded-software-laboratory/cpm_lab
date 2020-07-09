@@ -33,11 +33,11 @@ VehicleToggle::VehicleToggle(unsigned int _id) :
 
     builder->get_widget("parent", parent);
     builder->get_widget("label", label);
-    builder->get_widget("vehicle_switch", vehicle_switch);
+    builder->get_widget("vehicle_button", vehicle_button);
 
     assert(parent);
     assert(label);
-    assert(vehicle_switch);
+    assert(vehicle_button);
 
     //Set label for vehicle toggle box
     std::stringstream label_str;
@@ -45,21 +45,24 @@ VehicleToggle::VehicleToggle(unsigned int _id) :
     label->set_text(label_str.str().c_str());
 
     current_state = ToggleState::Off;
+    update_style();
 
     //Register switch callback
-    vehicle_switch->property_active().signal_changed().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
+    vehicle_button->signal_clicked().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
 }
 
 void VehicleToggle::on_state_changed()
 {
-    if(vehicle_switch->get_active())
+    if(current_state == ToggleState::Off)
     {
         current_state = ToggleState::Simulated;
     }
-    else 
+    else if (current_state == ToggleState::Simulated)
     {
         current_state = ToggleState::Off;
     }
+
+    update_style();
 
     if(selection_callback) selection_callback(id, current_state);
 }
@@ -83,14 +86,28 @@ void VehicleToggle::set_state(ToggleState state)
 {
     current_state = state;
 
-    switch(state)
-    {
-        case ToggleState::Simulated:
-            vehicle_switch->set_active(true);
-            break;
+    update_style();
+}
 
-        default:
-            vehicle_switch->set_active(false);
+void VehicleToggle::update_style()
+{
+    if(current_state == ToggleState::Simulated)
+    {
+        vehicle_button->get_style_context()->remove_class("vehicle_toggle_off");
+        vehicle_button->get_style_context()->add_class("vehicle_toggle_sim");
+        vehicle_button->set_label("Turn Off");
+    }
+    else if (current_state == ToggleState::Off)
+    {
+        vehicle_button->get_style_context()->remove_class("vehicle_toggle_sim");
+        vehicle_button->get_style_context()->add_class("vehicle_toggle_off");
+        vehicle_button->set_label("Simulate");
+    }
+    else 
+    {
+        vehicle_button->get_style_context()->remove_class("vehicle_toggle_off");
+        vehicle_button->get_style_context()->remove_class("vehicle_toggle_sim");
+        vehicle_button->set_label("Reboot");
     }
 }
 

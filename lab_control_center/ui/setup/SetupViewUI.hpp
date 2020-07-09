@@ -43,6 +43,7 @@
     #include "labcam/LabCamIface.hpp"
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
@@ -99,6 +100,9 @@ private:
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+
+    //Remember which vehicle toggles were set to real before
+    std::vector<unsigned int> vehicle_toggles_set_to_real;
 
     //Callback for vehicle toggles - simulated vehicles are now created when the toggle is set to "simulated"
     void vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state);

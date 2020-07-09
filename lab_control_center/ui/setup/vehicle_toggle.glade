@@ -26,9 +26,11 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <child>
-          <object class="GtkSwitch" id="vehicle_switch">
+          <object class="GtkButton" id="vehicle_button">
+            <property name="label" translatable="yes">Simulate</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
           </object>

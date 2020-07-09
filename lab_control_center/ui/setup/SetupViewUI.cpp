@@ -169,7 +169,8 @@ SetupViewUI::SetupViewUI
                 //Only perform action if simulation currently does not take place
                 //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
                 auto currently_simulated_vehicles = get_vehicle_ids_simulated();
-                std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+
+                //Get currently active vehicles
                 active_real_vehicles.clear();
                 for (auto vehicle_entry : get_vehicle_data())
                 {
@@ -182,6 +183,9 @@ SetupViewUI::SetupViewUI
                         active_real_vehicles.push_back(id);
                     }
                 }
+
+                //The vehicle toggles must be updated in the UI thread
+
             }
 
             //Sleep for a while, then update again
@@ -342,6 +346,36 @@ void SetupViewUI::ui_dispatch()
             set_sensitive(true);
         }
     }
+
+    //Update vehicle toggles
+    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+
+    //Set vehicle toggles to real for all active vehicles
+    for (auto& id : active_real_vehicles)
+    {
+        if ((id - 1) < vehicle_toggles.size())
+        {
+            vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Real);
+        }
+    }
+
+    //Get diff to previous vehicles, set toggles for that
+    std::sort(active_real_vehicles.begin(), active_real_vehicles.end());
+    std::sort(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end());
+    std::vector<unsigned int> diff;
+    std::set_difference(active_real_vehicles.begin(), active_real_vehicles.end(), 
+        vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end(), 
+        std::inserter(diff, diff.begin()));
+    for (auto& id : diff)
+    {
+        if ((id - 1) < vehicle_toggles.size())
+        {
+            vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Off);
+        }
+    }
+
+    //Remember previously active vehicles to change toggles back if vehicle is offline
+    vehicle_toggles_set_to_real = active_real_vehicles;
 }
 
 void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)

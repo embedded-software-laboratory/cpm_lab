@@ -44,7 +44,7 @@ class VehicleToggle
 public:
     VehicleToggle(unsigned int _id);
 
-    enum ToggleState{Off, Simulated};
+    enum ToggleState{Off, Simulated, Real};
 
     //Getter
     ToggleState get_state() const;
@@ -60,13 +60,18 @@ private:
     void on_state_changed();
     ToggleState current_state;
 
+    /**
+     * \brief Set the right style / label / ... depending on the current state
+     */
+    void update_style();
+
     Glib::RefPtr<Gtk::Builder> builder;
 
     Gtk::FlowBox* parent = nullptr;
 
     Gtk::Label* label = nullptr;
 
-    Gtk::Switch* vehicle_switch = nullptr;
+    Gtk::Button* vehicle_button = nullptr;
 
     //Given values
     unsigned int id;
