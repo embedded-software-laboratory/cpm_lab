@@ -60,6 +60,8 @@ void VehicleToggle::on_state_changed()
     {
         current_state = ToggleState::Off;
     }
+
+    if(selection_callback) selection_callback(id, current_state);
 }
 
 VehicleToggle::ToggleState VehicleToggle::get_state() const
@@ -95,4 +97,9 @@ void VehicleToggle::set_state(ToggleState state)
 void VehicleToggle::set_sensitive(bool sensitive)
 {
     parent->set_sensitive(sensitive);
+}
+
+void VehicleToggle::set_selection_callback(std::function<void(unsigned int,ToggleState)> _selection_callback)
+{
+    selection_callback = _selection_callback;
 }

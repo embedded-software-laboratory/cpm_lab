@@ -99,6 +99,9 @@ private:
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+
+    //Callback for vehicle toggles - simulated vehicles are now created when the toggle is set to "simulated"
+    void vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state);
     
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;

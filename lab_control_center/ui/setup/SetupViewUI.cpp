@@ -120,6 +120,8 @@ SetupViewUI::SetupViewUI
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
+        vehicle_toggle->set_selection_callback(std::bind(&SetupViewUI::vehicle_toggle_callback, this, _1, _2));
+
     }
 #ifndef SIMULATION
     // Create labcam
@@ -200,6 +202,19 @@ SetupViewUI::~SetupViewUI() {
     }
 }
 
+void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state)
+{
+    if (state == VehicleToggle::ToggleState::Simulated)
+    {
+        deploy_functions->deploy_sim_vehicle(vehicle_id, switch_simulated_time->get_active()); //TODO: How do we handle sim-time switches? Restart all then?
+    }
+    else
+    {
+        deploy_functions->kill_vehicle(vehicle_id);
+    }
+}
+
+
 //Do the same as in the destructor, because there we do not get the desired results sadly
 void SetupViewUI::on_lcc_close() {
     kill_deployed_applications();
@@ -219,6 +234,10 @@ void SetupViewUI::on_lcc_close() {
 void SetupViewUI::switch_timer_set()
 {
     reset_timer(switch_simulated_time->get_active(), true);
+    //Restart simulated vehicles with new timer
+    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), std::vector<uint32_t>());
+    deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
+
 }
 
 void SetupViewUI::switch_ips_set()
@@ -478,7 +497,7 @@ void SetupViewUI::deploy_applications() {
         }
 
         //Deploy simulated vehicles locally
-        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
+        //deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
         
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
@@ -517,7 +536,7 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
+        //deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
 
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
@@ -586,6 +605,10 @@ void SetupViewUI::kill_deployed_applications() {
     }
 
     deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_real());
+    for (auto& vehicle_toggle : vehicle_toggles)
+    {
+        vehicle_toggle.get()->set_state(VehicleToggle::ToggleState::Off);
+    }
 
     // Recording
     deploy_functions->kill_recording();
