@@ -85,7 +85,7 @@ public:
 
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
-    void kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> active_vehicle_ids);
+    void kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids);
     void kill_vehicle(unsigned int id);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)

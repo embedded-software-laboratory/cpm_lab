@@ -156,13 +156,13 @@ SetupViewUI::SetupViewUI
     kill_called.store(false);
 
     //Regularly check / update which real vehicles are currently turned on, to use them when the simulation is started
-    simulation_is_running.store(false);
+    is_deployed.store(false);
     vehicle_data_thread_running.store(true);
     check_real_vehicle_data_thread = std::thread([&]{
         while(vehicle_data_thread_running.load())
         {
             //Don't update data during simulation
-            if (! simulation_is_running.load())
+            if (! is_deployed.load())
             {
                 //Only perform action if simulation currently does not take place
                 //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
@@ -395,7 +395,7 @@ bool SetupViewUI::check_if_online(uint8_t hlc_id)
 void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
-    simulation_is_running.store(true);
+    is_deployed.store(true);
 
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
@@ -530,7 +530,7 @@ void SetupViewUI::kill_deployed_applications() {
     labcam->stopRecording();
 #endif
 
-    simulation_is_running.store(false);
+    is_deployed.store(false);
 
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
@@ -585,7 +585,7 @@ void SetupViewUI::kill_deployed_applications() {
         perform_post_kill_cleanup();
     }
 
-    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
+    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_real());
 
     // Recording
     deploy_functions->kill_recording();

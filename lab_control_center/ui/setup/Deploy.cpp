@@ -171,7 +171,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     system(command.str().c_str());
 }
 
-void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> active_vehicle_ids) 
+void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids) 
 {
     for (const unsigned int id : simulated_vehicle_ids)
     {
@@ -179,7 +179,7 @@ void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std:
     }
 
     //Also make all vehicles stop immediately, so that they do not continue to drive for a while   
-    for (const auto id : active_vehicle_ids)
+    for (const auto id : real_vehicle_ids)
     {
         stop_vehicle(static_cast<uint8_t>(id));
     }
