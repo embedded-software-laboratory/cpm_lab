@@ -90,12 +90,12 @@ void spi_transfer(
         uint8_t* mosi_data_ptr = (uint8_t*)(&spi_mosi_data);
 
 
-        busy_wait(1000);
+        busy_wait(2000);
 
         for (int i = 0; i < SPI_BUFFER_SIZE; ++i)
         {
             SPI_recv_buffer[i] = bcm2835_spi_transfer(mosi_data_ptr[i]);
-            busy_wait(1000);
+            busy_wait(2000);
         }
 
         busy_wait(10000);
