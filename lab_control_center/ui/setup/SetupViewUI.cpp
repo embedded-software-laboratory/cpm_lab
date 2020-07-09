@@ -206,7 +206,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
 {
     if (state == VehicleToggle::ToggleState::Simulated)
     {
-        deploy_functions->deploy_sim_vehicle(vehicle_id, switch_simulated_time->get_active()); //TODO: How do we handle sim-time switches? Restart all then?
+        deploy_functions->deploy_sim_vehicle(vehicle_id, switch_simulated_time->get_active());
     }
     else
     {
