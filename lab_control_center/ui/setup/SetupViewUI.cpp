@@ -638,17 +638,20 @@ void SetupViewUI::perform_post_kill_cleanup()
 }
 
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
+    //Vector to store sim. and real vehicles
+    std::vector<unsigned int> active_vehicle_ids;
+
+    auto simulated_vehicle_ids = get_vehicle_ids_simulated();
+
+    //Add real vehicle IDs
     std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
-    std::vector<unsigned int> active_vehicle_ids = active_real_vehicles;
+    //Reserve for better efficiency before inserting
+    active_real_vehicles.reserve(simulated_vehicle_ids.size() + active_real_vehicles.size());
+    active_vehicle_ids.insert(active_vehicle_ids.end(), active_real_vehicles.begin(), active_real_vehicles.end());
     lock.unlock();
 
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        if (vehicle_toggle->get_state() != VehicleToggle::Off)
-        {
-            active_vehicle_ids.push_back(vehicle_toggle->get_id());
-        }
-    }
+    //Add simulated vehicle IDs
+    active_vehicle_ids.insert(active_vehicle_ids.end(), simulated_vehicle_ids.begin(), simulated_vehicle_ids.end());
 
     return active_vehicle_ids;
 }
