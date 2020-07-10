@@ -151,6 +151,7 @@ SetupViewUI::SetupViewUI
     switch_diagnosis->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_diagnosis_set));
 
     //Take care of GUI thread and worker thread separately
+    update_vehicle_toggles.store(false);
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
     thread_count.store(0);
     notify_count = 0;
@@ -185,7 +186,8 @@ SetupViewUI::SetupViewUI
                 }
 
                 //The vehicle toggles must be updated in the UI thread
-
+                update_vehicle_toggles.store(true);
+                ui_dispatcher.emit();
             }
 
             //Sleep for a while, then update again
@@ -212,10 +214,14 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     {
         deploy_functions->deploy_sim_vehicle(vehicle_id, switch_simulated_time->get_active());
     }
-    else
+    else if (state == VehicleToggle::ToggleState::Off)
     {
         deploy_functions->kill_vehicle(vehicle_id);
     }
+    else
+    {
+        //TODO: Implement reboot functionality
+    }   
 }
 
 
@@ -311,71 +317,80 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 
 void SetupViewUI::ui_dispatch()
 {
-    std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-    if (error_msg.size() > 0)
+    //Update vehicle toggles for real vehicles or take care of upload window
+    if (update_vehicle_toggles.load())
     {
-        for (auto &msg : error_msg)
+        update_vehicle_toggles.store(false);
+
+        //Update vehicle toggles
+        std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+
+        //Set vehicle toggles to real for all active vehicles
+        for (auto& id : active_real_vehicles)
         {
-            upload_window->add_error_message(msg);
+            if ((id - 1) < vehicle_toggles.size())
+            {
+                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Real);
+            }
         }
-        error_msg.clear();
+
+        //Get diff to previous vehicles, set toggles for that
+        std::sort(active_real_vehicles.begin(), active_real_vehicles.end());
+        std::sort(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end());
+        std::vector<unsigned int> diff;
+        std::set_difference(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end(), 
+            active_real_vehicles.begin(), active_real_vehicles.end(), 
+            std::inserter(diff, diff.begin()));
+        for (auto& id : diff)
+        {
+            if ((id - 1) < vehicle_toggles.size())
+            {
+                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Off);
+            }
+        }
+
+        //Remember previously active vehicles to change toggles back if vehicle is offline
+        vehicle_toggles_set_to_real = active_real_vehicles;
     }
-    else 
+    else
     {
-        //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-        //Plus now, kill is not grayed out anymore
-        if (upload_threads.size() != 0 && upload_window)
+        //Take care of upload window etc
+        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
+        if (error_msg.size() > 0)
         {
-            upload_window->close();
-            button_kill->set_sensitive(true);
+            for (auto &msg : error_msg)
+            {
+                upload_window->add_error_message(msg);
+            }
+            error_msg.clear();
         }
-
-        //Join all old threads
-        kill_all_threads();
-
-        //If kill caused the UI dispatch, clean up after everything has been killed
-        if (kill_called.load())
+        else 
         {
-            perform_post_kill_cleanup();
-            kill_called.store(false);
-        }
+            //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
+            //Plus now, kill is not grayed out anymore
+            if (upload_threads.size() != 0 && upload_window)
+            {
+                upload_window->close();
+                button_kill->set_sensitive(true);
+            }
 
-        //Free the UI if the upload was not successful
-        if (!participants_available.load())
-        {
-            set_sensitive(true);
-        }
-    }
+            //Join all old threads
+            kill_all_threads();
 
-    //Update vehicle toggles
-    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+            //If kill caused the UI dispatch, clean up after everything has been killed
+            if (kill_called.load())
+            {
+                perform_post_kill_cleanup();
+                kill_called.store(false);
+            }
 
-    //Set vehicle toggles to real for all active vehicles
-    for (auto& id : active_real_vehicles)
-    {
-        if ((id - 1) < vehicle_toggles.size())
-        {
-            vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Real);
-        }
-    }
-
-    //Get diff to previous vehicles, set toggles for that
-    std::sort(active_real_vehicles.begin(), active_real_vehicles.end());
-    std::sort(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end());
-    std::vector<unsigned int> diff;
-    std::set_difference(active_real_vehicles.begin(), active_real_vehicles.end(), 
-        vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end(), 
-        std::inserter(diff, diff.begin()));
-    for (auto& id : diff)
-    {
-        if ((id - 1) < vehicle_toggles.size())
-        {
-            vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Off);
+            //Free the UI if the upload was not successful
+            if (!participants_available.load())
+            {
+                set_sensitive(true);
+            }
         }
     }
-
-    //Remember previously active vehicles to change toggles back if vehicle is offline
-    vehicle_toggles_set_to_real = active_real_vehicles;
 }
 
 void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
@@ -737,6 +752,7 @@ void SetupViewUI::select_all_vehicles_sim()
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+        deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
     }
 }
 
@@ -745,6 +761,7 @@ void SetupViewUI::select_no_vehicles()
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
+        deploy_functions->kill_vehicle(vehicle_toggle->get_id());
     }
 }
 

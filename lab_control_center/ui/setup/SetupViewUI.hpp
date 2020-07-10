@@ -99,7 +99,8 @@ private:
 
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
-    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles; //Position in the vector and vehicle ID correlate (ID-1 = position)
+    std::atomic_bool update_vehicle_toggles; //For ui thread
 
     //Remember which vehicle toggles were set to real before
     std::vector<unsigned int> vehicle_toggles_set_to_real;
