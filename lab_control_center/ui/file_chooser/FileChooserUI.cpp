@@ -26,6 +26,11 @@
 
 #include "FileChooserUI.hpp"
 
+//Init static previous_file
+std::string FileChooserUI::previous_file = "./";
+const std::string FileChooserUI::file_dialog_config_location = "./file_dialog_open_config.txt";
+bool FileChooserUI::file_config_loaded = false;
+
 FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
     on_close_callback(_on_close_callback)
 {
@@ -90,8 +95,31 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     file_chooser_dialog->signal_button_press_event().connect(sigc::mem_fun(this, &FileChooserUI::handle_double_click));
     file_chooser_dialog->add_events(Gdk::KEY_RELEASE_MASK);
 
+    //Load filename from previous program execution once
+    if (!file_config_loaded)
+    {
+        file_config_loaded = true;
+        previous_file = get_last_execution_path();
+    }
+
+    //Open default or recently opened file / folder (not recommended by gtkmm documentation, because they want the user to use the "Recent"-Tab instead)
+    file_chooser_dialog->set_filename(previous_file);
+
     //Listen for delete event - so that callback function is always called properly
     window->signal_delete_event().connect(sigc::mem_fun(this, &FileChooserUI::on_delete));
+}
+
+std::string FileChooserUI::get_last_execution_path()
+{
+    std::string path = "";
+    std::ifstream input_stream(file_dialog_config_location);
+    if (input_stream.good())
+    {
+        std::getline(input_stream, path);
+    }   
+    input_stream.close();
+
+    return path;
 }
 
 bool FileChooserUI::handle_button_released(GdkEventKey* event) {
@@ -167,6 +195,13 @@ void FileChooserUI::on_abort() {
 
 void FileChooserUI::on_load() {
     std::string filename = file_chooser_dialog->get_filename();
+    previous_file = filename;
+
+    //Store previous_file for next program execution
+    std::ofstream file;
+    file.open(file_dialog_config_location, std::ofstream::out | std::ofstream::trunc);
+    file << previous_file << std::endl;
+    file.close();
     
     window->close();
     on_close_callback(filename, true);
