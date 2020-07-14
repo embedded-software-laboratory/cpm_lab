@@ -8,5 +8,5 @@ if [ $# -eq 0 ]
   then
     echo "Missing argument vehicle ID"
 else
-	./build/basic_circle --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_id=$1
+	./build/basic_line --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_id=$1
 fi

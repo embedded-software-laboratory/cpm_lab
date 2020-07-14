@@ -22,12 +22,9 @@ link_directories(../../../../cpm_lib/build/)
 include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
-add_executable(basic_circle
-    src/main.cpp
-)
-target_link_libraries(basic_circle cpm)
+
 
 add_executable(basic_line
-    src/main_line.cpp
+    src/main.cpp
 )
 target_link_libraries(basic_line cpm)

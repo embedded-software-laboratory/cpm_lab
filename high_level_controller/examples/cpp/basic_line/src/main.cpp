@@ -37,7 +37,7 @@
 using std::vector;
 
 /*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Circle+Example
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Line+Example
  */
 
 
@@ -76,43 +76,22 @@ int main(int argc, char *argv[])
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
     //They are relative to the defined center point defined below as map_center_x and map_center_y
-    vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             1,             0,            -1};
+    vector<double> trajectory_px        = vector<double>{            0,             2,            4};
+    vector<double> trajectory_py        = vector<double>{            2,             2,             2};
     //These vecotrs define the speed in x and y direction. Together the define the starting direction from the current trajectory point,
     // for example: vx = 1 and vy = 1 will lead to a positive diagonal starting vector from the starting point. For more informations see
     //our documentation website
-    vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
-    vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1570800000ull, 1570800000ull, 1570800000ull, 1570800000ull};
+    vector<double> trajectory_vx        = vector<double>{            1.3,            1.3,            1.3};
+    vector<double> trajectory_vy        = vector<double>{            0,             0,                 0};
+    vector<uint64_t> segment_duration = vector<uint64_t>{1538000000ull, 1538000000ull, 1538000000ull};
 
-    /*
-    // Figure eight trajectory data
-    vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
-    //In this figure eight the circles of the eight are not perfectly round but a little streched to show you the impact of the vector (Vx, vy)
-    //at the starting point. 
-    //Note that also the duration changes accordingly.
-    vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
-    vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
-    */
+
 
     assert(segment_duration.size() == trajectory_px.size());
     assert(segment_duration.size() == trajectory_py.size());
     assert(segment_duration.size() == trajectory_vx.size());
     assert(segment_duration.size() == trajectory_vy.size());
 
-    //Definition of the center point for the circle and the figure eight
-    const double map_center_x = 2.25;
-    const double map_center_y = 2.0;
-    for (double &px : trajectory_px)
-    {
-        px += map_center_x;
-    }
-    for (double &py : trajectory_py)
-    {
-        py += map_center_y;
-    }
 
 
     // These variabels track the reference state,
@@ -136,7 +115,9 @@ int main(int argc, char *argv[])
         for (size_t i = 0; i < segment_duration.size(); ++i)
         {
             size_t trajectory_index = (reference_trajectory_index + i) % segment_duration.size();
-            uint64_t trajectory_time = reference_trajectory_time + (i - 1) * segment_duration[reference_trajectory_index];
+            uint64_t trajectory_time = reference_trajectory_time + i * segment_duration[reference_trajectory_index];
+
+        
 
             TrajectoryPoint trajectory_point;
             trajectory_point.px(trajectory_px[trajectory_index]);
