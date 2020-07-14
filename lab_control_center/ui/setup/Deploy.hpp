@@ -85,8 +85,17 @@ public:
 
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
-    void kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids);
-    void kill_vehicle(unsigned int id);
+    void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids);
+    void kill_sim_vehicle(unsigned int id);
+
+    /**
+     * \brief Kill a single real vehicle using a simple via ssh using sudo reboot - does not work for simulated vehicles started without the LCC
+     * \param id of the vehicle, to infer its IP address
+     * \param timeout_seconds Timeout in case the IP is not reachable
+     * \param is_online Function to check if the vehicle is still online (-> if it is still part of the list of real vehicles)
+     * \return True if the vehicle reboot msg could be sent
+     */
+    bool reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds, std::function<bool()> is_online);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
     void deploy_ips();

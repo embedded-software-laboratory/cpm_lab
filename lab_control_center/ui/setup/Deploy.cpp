@@ -171,11 +171,11 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     system(command.str().c_str());
 }
 
-void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids) 
+void Deploy::kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids) 
 {
     for (const unsigned int id : simulated_vehicle_ids)
     {
-        kill_vehicle(id);
+        kill_sim_vehicle(id);
     }
 
     //Also make all vehicles stop immediately, so that they do not continue to drive for a while   
@@ -185,12 +185,31 @@ void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std:
     }
 }
 
-void Deploy::kill_vehicle(unsigned int id) 
+void Deploy::kill_sim_vehicle(unsigned int id) 
 {
     std::stringstream vehicle_id;
     vehicle_id << "vehicle_" << id;
     
     kill_session(vehicle_id.str());
+}
+
+bool Deploy::reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds, std::function<bool()> is_online) 
+{
+    //Get the IP address from the current id (192.168.1.1XX)
+    std::stringstream ip_stream;
+    ip_stream << "192.168.1.1";
+    if (id < 10)
+    {
+        ip_stream << "0";
+    }
+    ip_stream << id;
+
+    //Create and send the vehicle kill command via SSH (Open pw is cpmcpmcpm, can be in Git)
+    //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
+    std::stringstream command_kill_real_vehicle;
+    command_kill_real_vehicle 
+        << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 2) << " -t pi@" << ip_stream.str() << " \"sudo reboot now\"";
+    return spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, is_online);
 }
 
 bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 
@@ -483,7 +502,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_time).count() < static_cast<int64_t>(timeout_seconds))
     {
-        std::cout << "Waiting" << std::endl;
+        //std::cout << "Waiting" << std::endl;
         //Check current program state
         PROCESS_STATE state = get_child_process_state(process_id);
 
@@ -507,7 +526,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     }
 
     //Now kill the process, as it has not yet finished its execution
-    std::cout << "Killing" << std::endl;
+    //std::cout << "Killing" << std::endl;
     kill_process(process_id);
     return false;
 }

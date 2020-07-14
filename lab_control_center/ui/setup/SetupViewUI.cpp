@@ -216,11 +216,40 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     }
     else if (state == VehicleToggle::ToggleState::Off)
     {
-        deploy_functions->kill_vehicle(vehicle_id);
+        deploy_functions->kill_sim_vehicle(vehicle_id);
     }
     else
     {
-        //TODO: Implement reboot functionality
+        //Kill old reboot threads that are done before adding a new one
+        kill_finished_reboot_threads();
+
+        std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+        //Only create a reboot thread if no such thread already exists
+        if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
+        {
+            std::unique_lock<std::mutex> lock(reboot_done_mutex);
+            reboot_thread_done[vehicle_id] = false;
+            lock.unlock();
+
+            vehicle_reboot_threads[vehicle_id] = std::thread(
+                [this, vehicle_id] () {
+                    bool msg_success = deploy_functions->reboot_real_vehicle(
+                        vehicle_id, //reboot vehicle with this ID
+                        3, //wait for 3 seconds
+                        std::bind(&SetupViewUI::is_active_real, this, vehicle_id) //Check if vehicle is still active in between
+                    );
+
+                    if(!msg_success)
+                    {
+                        cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
+                    }
+
+                    std::lock_guard<std::mutex> lock(reboot_done_mutex);
+                    reboot_thread_done[vehicle_id] = true;
+                }
+            );
+        }
+        
     }   
 }
 
@@ -245,7 +274,7 @@ void SetupViewUI::switch_timer_set()
 {
     reset_timer(switch_simulated_time->get_active(), true);
     //Restart simulated vehicles with new timer
-    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), std::vector<uint32_t>());
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated(), std::vector<uint32_t>());
     deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
 
 }
@@ -368,11 +397,13 @@ void SetupViewUI::ui_dispatch()
         {
             //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
             //Plus now, kill is not grayed out anymore
+            std::unique_lock<std::mutex> lock(upload_threads_mutex);
             if (upload_threads.size() != 0 && upload_window)
             {
                 upload_window->close();
                 button_kill->set_sensitive(true);
             }
+            lock.unlock();
 
             //Join all old threads
             kill_all_threads();
@@ -428,29 +459,70 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
         std::this_thread::sleep_for(std::chrono::seconds(2));
         ui_dispatcher.emit();
     }
-    else if (notify_count == upload_threads.size())
+    else 
     {
-        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+        std::lock_guard<std::mutex> lock(upload_threads_mutex);
+        if (notify_count == upload_threads.size())
+        {
+            std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
 
-        notify_count = 0;
+            notify_count = 0;
 
-        //Close upload window again, but only after a while
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        ui_dispatcher.emit();
+            //Close upload window again, but only after a while
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            ui_dispatcher.emit();
+        }
     }
 }
 
 void SetupViewUI::kill_all_threads()
 {
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
+    std::lock_guard<std::mutex> lock(upload_threads_mutex);
     for (auto& thread : upload_threads)
     {
         if (thread.joinable())
         {
             thread.join();
         }
+        else 
+        {
+            std::cerr << "Warning: Shutting down with upload thread that cannot be joined" << std::endl;
+        }
     }
     upload_threads.clear();
+
+    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
+    for (auto& thread : vehicle_reboot_threads)
+    {
+        if (thread.second.joinable())
+        {
+            thread.second.join();
+        }
+        else 
+        {
+            std::cerr << "Warning: Shutting down with reboot thread that cannot be joined" << std::endl;
+        }
+    }
+    vehicle_reboot_threads.clear();
+}
+
+void SetupViewUI::kill_finished_reboot_threads()
+{
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+    for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
+    {
+        std::lock_guard<std::mutex> lock(reboot_done_mutex);
+        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
+        {
+            thread_ptr->second.join();
+            thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
+        }
+        else
+        {
+            ++thread_ptr;
+        }
+    }
 }
 
 bool SetupViewUI::check_if_online(uint8_t hlc_id)
@@ -536,6 +608,7 @@ void SetupViewUI::deploy_applications() {
             //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
             participants_available.store(false); //No HLCs available
             thread_count.store(1);
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this] () {
                     usleep(3000000);
@@ -567,6 +640,7 @@ void SetupViewUI::deploy_applications() {
             std::string vehicle_string = vehicle_id_stream.str();
 
             //Create thread
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
                     bool deploy_worked = deploy_functions->deploy_remote_hlc(
@@ -635,6 +709,7 @@ void SetupViewUI::kill_deployed_applications() {
         for (const auto& hlc_id : hlc_ids)
         {
             //Create thread
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
                     bool kill_worked = deploy_functions->kill_remote_hlc(
@@ -653,7 +728,7 @@ void SetupViewUI::kill_deployed_applications() {
         perform_post_kill_cleanup();
     }
 
-    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_real());
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_real());
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle.get()->set_state(VehicleToggle::ToggleState::Off);
@@ -711,6 +786,12 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_real() {
     return active_real_vehicles;
 }
 
+bool SetupViewUI::is_active_real(unsigned int vehicle_id)
+{
+    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+    return std::find(active_real_vehicles.begin(), active_real_vehicles.end(), vehicle_id) != active_real_vehicles.end();
+}
+
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
     std::vector<unsigned int> active_vehicle_ids;
 
@@ -761,7 +842,7 @@ void SetupViewUI::select_no_vehicles()
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
-        deploy_functions->kill_vehicle(vehicle_toggle->get_id());
+        deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
     }
 }
 
