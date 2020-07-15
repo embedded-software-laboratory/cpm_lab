@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 
-#include "lane_graph.hpp"                       //sw-folder central routing->include
+#include "lane_graph.hpp"                       //sw-folder vehicle_on_map->include
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
 #include "cpm/CommandLineReader.hpp"            //->cpm_lib->include->cpm
 #include "cpm/init.hpp"                         //->cpm_lib->include->cpm
@@ -34,20 +34,20 @@
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
-#include "VehicleTrajectoryPlanningState.hpp"   //sw-folder central routing
-#include "lane_graph_tools.hpp"                 //sw-folder central routing
+#include "VehicleTrajectoryPlanningState.hpp"   //sw-folder vehicle_on_map
+#include "lane_graph_tools.hpp"                 //sw-folder vehicle_on_map
 #include <dds/pub/ddspub.hpp>                   //rti folder
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <mutex>
 #include <thread>
-#include "MultiVehicleTrajectoryPlanner.hpp"    //sw-folder central routing
+#include "MultiVehicleTrajectoryPlanner.hpp"    //sw-folder vehicle_on_map
 
 using std::vector;
 
 int main(int argc, char *argv[])
-{   //////////////////Set logging details///////////////////////////////////////////////////////////
+{   //Initialization of cpm library
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing");
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
@@ -73,10 +73,55 @@ int main(int argc, char *argv[])
     std::cout << vehicle_ids_string << std::endl;
 
     //////////////Initialization for trajectory planning/////////////////////////////////
-    // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
+    // Definition of a timesegment in nano seconds
     const uint64_t dt_nanos = 400000000ull;
-    MultiVehicleTrajectoryPlanner planner(dt_nanos);
+ 
+  auto it = std::find(laneGraphTools.edges_start_index.begin(), laneGraphTools.edges_start_index.end(), 62);
+    
+   if (it != laneGraphTools.edges_start_index.end())
+    std::cout << "Element found in myvector: " << *it << '\n';
+  else
+    std::cout << "Element not found in myvector\n";  
+  return 0;
+   /* // Initial time used for trajectory generation
+        if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 1000000000ull;
 
+
+        vector<TrajectoryPoint> trajectory_points;
+        for (size_t i = 0; i < segment_duration.size(); ++i)
+        {
+            size_t trajectory_index = (reference_trajectory_index + i) % segment_duration.size();
+            uint64_t trajectory_time = reference_trajectory_time + (i - 1) * segment_duration[reference_trajectory_index];
+
+            TrajectoryPoint trajectory_point;
+            trajectory_point.px(trajectory_px[trajectory_index]);
+            trajectory_point.py(trajectory_py[trajectory_index]);
+            trajectory_point.vx(trajectory_vx[trajectory_index]);
+            trajectory_point.vy(trajectory_vy[trajectory_index]);
+            trajectory_point.t().nanoseconds(trajectory_time); //This needs to be improved in case the durations are different
+
+            trajectory_points.push_back(trajectory_point);
+        }
+
+        // Send the current trajectory 
+        rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
+        VehicleCommandTrajectory vehicle_command_trajectory;
+        vehicle_command_trajectory.vehicle_id(vehicle_id);
+        vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
+        vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
+        vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
+        writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+
+        // Advance the reference state to T+1sec.
+        // The reference state must be in the future,
+        // to allow some time for the vehicle to receive
+        // the message and anticipate the next turn.
+        // We repeat the current message until the segment_duration is lower than the passed time
+        while(reference_trajectory_time + segment_duration[reference_trajectory_index] < t_now + 1000000000ull)
+        {
+            reference_trajectory_time += segment_duration[reference_trajectory_index];
+            reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
+        } */
 
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID

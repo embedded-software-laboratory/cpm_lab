@@ -22,7 +22,7 @@ link_directories(../../../../cpm_lib/build/)
 include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
-add_executable(central_routing
+add_executable(vehicle_on_map
     src/main.cpp
     include/lane_graph_full/lane_graph.hpp
     src/lane_graph_tools.hpp
@@ -32,30 +32,6 @@ add_executable(central_routing
     src/MultiVehicleTrajectoryPlanner.hpp
     src/MultiVehicleTrajectoryPlanner.cpp
 )
-target_include_directories(central_routing PUBLIC
+target_include_directories(vehicle_on_map PUBLIC
     include/lane_graph_full)
-target_link_libraries(central_routing cpm)
-
-add_executable(central_routing_reduced
-    src/main.cpp
-    include/lane_graph_one_lane/lane_graph.hpp
-    src/lane_graph_tools.hpp
-    src/lane_graph_tools.cpp
-    src/VehicleTrajectoryPlanningState.hpp
-    src/VehicleTrajectoryPlanningState.cpp
-    src/MultiVehicleTrajectoryPlanner.hpp
-    src/MultiVehicleTrajectoryPlanner.cpp
-)
-target_include_directories(central_routing_reduced PUBLIC 
-    include/lane_graph_one_lane)
-target_link_libraries(central_routing_reduced cpm)
-
-add_executable(tests
-    src/tests.cpp
-    include/lane_graph_full/lane_graph.hpp
-    src/lane_graph_tools.hpp
-    src/lane_graph_tools.cpp
-)
-target_include_directories(tests PUBLIC
-    include/lane_graph_full)
-target_link_libraries(tests cpm)
+target_link_libraries(vehicle_on_map cpm)
