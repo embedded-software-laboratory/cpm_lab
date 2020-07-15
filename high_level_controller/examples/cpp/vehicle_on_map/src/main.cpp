@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     // Definition of a timesegment in nano seconds
     const uint64_t dt_nanos = 400000000ull;
  
-  auto it = std::find(laneGraphTools.edges_start_index.begin(), laneGraphTools.edges_start_index.end(), 62);
+  auto it = std::find(laneGraphTools.edges_start_index.begin(), laneGraphTools.edges_start_index.end(), 2);
     
    if (it != laneGraphTools.edges_start_index.end())
     std::cout << "Element found in myvector: " << *it << '\n';
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         } */
 
-    ///////////// writer and reader for sending trajectory commands////////////////////////
+  /*   ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
     (
@@ -204,5 +204,5 @@ int main(int argc, char *argv[])
                 planner.start();
             }
         }
-    });
-}
+    });*/
+} 
