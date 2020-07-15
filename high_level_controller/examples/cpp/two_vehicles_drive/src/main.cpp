@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     assert(segment_duration.size() == trajectory_vy.size());
 
     //Definition of the center point for the circle and the figure eight
-    const double map_center_x = 3.10;
+    const double map_center_x = 3.1;
     const double map_center_y = 1.1;
     for (double &px : trajectory_px)
     {

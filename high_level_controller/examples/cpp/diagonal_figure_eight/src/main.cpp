@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     //Note that also the duration changes accordingly.
     vector<double> trajectory_vx        = vector<double>{            0.928,          -0.928,           0.928,         -0.928};
     vector<double> trajectory_vy        = vector<double>{          -0.928,         0.928,           -0.928,         0.928};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
+    vector<uint64_t> segment_duration = vector<uint64_t>{2116000000ull, 2116000000ull, 2116000000ull, 2116000000ull};
 
 
     assert(segment_duration.size() == trajectory_px.size());
