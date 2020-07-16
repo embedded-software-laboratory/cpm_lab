@@ -20,7 +20,7 @@ mkdir build
 
 cd build
 cmake .. -DSIMULATION=$SIMULATION 
-make -j8
+make -j$(nproc)
 cd ..
 
 # Create launcher link to LCC
