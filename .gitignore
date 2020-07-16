@@ -25,7 +25,7 @@ Debug/
 .vs/
 vehicle_raspberry_pi_zero_w/cross_compile/tools/
 rtidds/
-*.glade~
+*~
 tools/map_print2/*.mat
 .vscode
 ParamServer/yaml-cpp
@@ -55,3 +55,5 @@ cpm_lib/dds_idl_matlab
 cpm_lib/include/cpm/dds
 cpm_lib/cpm_library_package
 build_arm/
+lab_control_center/file_dialog_open_config.txt
+lab_control_center/file_dialog_save_config.txt

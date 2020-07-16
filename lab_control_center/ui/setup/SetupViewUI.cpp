@@ -158,6 +158,9 @@ SetupViewUI::SetupViewUI
     participants_available.store(false);
     kill_called.store(false);
 
+    //Set initial text of script path (from previous program execution, if that existed)
+    script_path->set_text(FileChooserUI::get_last_execution_path());
+    
     //Regularly check / update which real vehicles are currently turned on, to use them when the simulation is started
     is_deployed.store(false);
     vehicle_data_thread_running.store(true);
