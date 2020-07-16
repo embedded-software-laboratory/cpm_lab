@@ -77,7 +77,7 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read direct message. "
-            "Valid after %llu."
+            "Valid after %llu.",
             sample_CommandDirect.header().valid_after_stamp().nanoseconds()
         );
     }
@@ -90,7 +90,7 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read speed curvature message. "
-            "Valid after %llu"
+            "Valid after %llu",
             sample_CommandSpeedCurvature.header().valid_after_stamp().nanoseconds()
         );
     }
@@ -103,7 +103,7 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read trajectory message. "
-            "Valid after %llu"
+            "Valid after %llu",
             sample_CommandTrajectory.header().valid_after_stamp().nanoseconds()
         );
     }
