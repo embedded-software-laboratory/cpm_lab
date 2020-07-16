@@ -277,7 +277,7 @@ void SetupViewUI::switch_timer_set()
 {
     reset_timer(switch_simulated_time->get_active(), true);
     //Restart simulated vehicles with new timer
-    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated(), std::vector<uint32_t>());
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated());
     deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
 
 }
@@ -731,12 +731,8 @@ void SetupViewUI::kill_deployed_applications() {
         perform_post_kill_cleanup();
     }
 
-    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_real());
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        vehicle_toggle.get()->set_state(VehicleToggle::ToggleState::Off);
-    }
-
+    deploy_functions->stop_vehicles(get_vehicle_ids_active());
+    
     // Recording
     deploy_functions->kill_recording();
 
@@ -844,8 +840,11 @@ void SetupViewUI::select_no_vehicles()
 {
     for (auto& vehicle_toggle : vehicle_toggles)
     {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
-        deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
+        if (vehicle_toggle->get_state() == VehicleToggle::ToggleState::Simulated)
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
+            deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
+        }
     }
 }
 

@@ -235,7 +235,7 @@ void MonitoringUi::init_ui_thread()
                                     this->notify_reboot_finished();
                                 }
                             ));
-                            deploy_functions->kill_sim_vehicles({},vehicle_ids);
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -251,7 +251,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
                             cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Stopping vehicles ...", vehicle_id);
-                            deploy_functions->kill_sim_vehicles({},vehicle_ids);
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
                     else if(rows_restricted[i] == "speed") 
@@ -263,7 +263,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
                             cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Stopping vehicles ...", vehicle_id);
-                            deploy_functions->kill_sim_vehicles({},vehicle_ids);
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
                     else if(rows_restricted[i] == "ips") 
@@ -336,7 +336,7 @@ void MonitoringUi::init_ui_thread()
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
                                 cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", vehicle_id, error, dt);
-                                deploy_functions->kill_sim_vehicles({},vehicle_ids);
+                                deploy_functions->stop_vehicles(vehicle_ids);
                             }
                             else if (error > 0.1)
                             {

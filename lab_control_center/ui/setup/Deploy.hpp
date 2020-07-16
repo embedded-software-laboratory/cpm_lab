@@ -83,9 +83,13 @@ public:
      */
     void deploy_sim_vehicle(unsigned int id, bool use_simulated_time);
 
+    /**
+     * \brief Make running vehicles brake and stop
+     */
+    void stop_vehicles(std::vector<unsigned int> vehicle_ids);
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
-    void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> real_vehicle_ids);
+    void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
     void kill_sim_vehicle(unsigned int id);
 
     /**
