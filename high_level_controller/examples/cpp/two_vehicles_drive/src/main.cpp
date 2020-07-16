@@ -37,7 +37,8 @@
 using std::vector;
 
 /*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?spaceKey=CLD&title=Two+Vehicles+drive
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?spaceKey=CLD&title=Two+Vehicles+Drive
+ * 
  */
 
 int main(int argc, char *argv[])
