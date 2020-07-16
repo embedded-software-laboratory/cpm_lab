@@ -3,7 +3,7 @@
 set -e
 
 if [ ! -d "build_arm" ]; then
-    mkdir build_arm
+    mkdir -p build_arm
 fi
 
 if [ ! -d "dds_idl_cpp" ]; then
