@@ -12,6 +12,7 @@ BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 
 cd /tmp
+rm -rf matlab_package
 mkdir matlab_package
 cp ${BASH_DIR}/../examples/matlab/init_script.m ./matlab_package
 cp ${BASH_DIR}/../examples/matlab/QOS_READY_TRIGGER.xml ./matlab_package
