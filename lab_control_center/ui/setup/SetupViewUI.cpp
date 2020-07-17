@@ -769,7 +769,7 @@ std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
     //Add real vehicle IDs
     std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
     //Reserve for better efficiency before inserting
-    active_real_vehicles.reserve(simulated_vehicle_ids.size() + active_real_vehicles.size());
+    active_vehicle_ids.reserve(simulated_vehicle_ids.size() + active_real_vehicles.size());
     active_vehicle_ids.insert(active_vehicle_ids.end(), active_real_vehicles.begin(), active_real_vehicles.end());
     lock.unlock();
 
