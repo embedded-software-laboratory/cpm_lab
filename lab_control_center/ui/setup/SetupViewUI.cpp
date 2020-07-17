@@ -659,8 +659,6 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        //deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
-
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
 }
