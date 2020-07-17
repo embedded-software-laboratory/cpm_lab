@@ -1,17 +1,17 @@
 // MIT License
-// 
+//
 // Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,45 +19,44 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-// 
+//
 // This file is part of cpm_lab.
-// 
+//
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-
-#include "lane_graph.hpp"                       //sw-folder vehicle_on_map->include
-#include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
-#include "cpm/CommandLineReader.hpp"            //->cpm_lib->include->cpm
-#include "cpm/init.hpp"                         //->cpm_lib->include->cpm
-#include "cpm/MultiVehicleReader.hpp"           //->cpm_lib->include->cpm
-#include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
-#include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
-#include "VehicleObservation.hpp" 
+#include "lane_graph.hpp"               //sw-folder vehicle_on_map->include
+#include "cpm/Logging.hpp"              //->cpm_lib->include->cpm
+#include "cpm/CommandLineReader.hpp"    //->cpm_lib->include->cpm
+#include "cpm/init.hpp"                 //->cpm_lib->include->cpm
+#include "cpm/MultiVehicleReader.hpp"   //->cpm_lib->include->cpm
+#include "cpm/ParticipantSingleton.hpp" //->cpm_lib->include->cpm
+#include "cpm/Timer.hpp"                //->cpm_lib->include->cpm
+#include "VehicleObservation.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include "VehicleTrajectoryPlanningState.hpp"   //sw-folder vehicle_on_map
-#include "lane_graph_tools.hpp"                 //sw-folder vehicle_on_map
-#include <dds/pub/ddspub.hpp>                   //rti folder
+#include "VehicleTrajectoryPlanningState.hpp" //sw-folder vehicle_on_map
+#include "lane_graph_tools.hpp"               //sw-folder vehicle_on_map
+#include <dds/pub/ddspub.hpp>                 //rti folder
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <mutex>
 #include <thread>
-#include "MultiVehicleTrajectoryPlanner.hpp"    //sw-folder vehicle_on_map
+#include "MultiVehicleTrajectoryPlanner.hpp" //sw-folder vehicle_on_map
 
 using std::vector;
 
 int main(int argc, char *argv[])
-{   //Initialization of cpm library
+{ //Initialization of cpm library
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing");
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
+    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false
     ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
-    for(auto i:vehicle_ids_int)
+    for (auto i : vehicle_ids_int)
     {
-        assert(i>0);
-        assert(i<255);
+        assert(i > 0);
+        assert(i < 255);
         vehicle_ids.push_back(i);
     }
 
@@ -75,15 +74,36 @@ int main(int argc, char *argv[])
     //////////////Initialization for trajectory planning/////////////////////////////////
     // Definition of a timesegment in nano seconds
     const uint64_t dt_nanos = 400000000ull;
- 
-  auto it = std::find(laneGraphTools.edges_start_index.begin(), laneGraphTools.edges_start_index.end(), 2);
-    
-   if (it != laneGraphTools.edges_start_index.end())
-    std::cout << "Element found in myvector: " << *it << '\n';
-  else
-    std::cout << "Element not found in myvector\n";  
-  return 0;
-   /* // Initial time used for trajectory generation
+
+    std::vector<int> node_indices;
+    node_indices.push_back(76);
+    node_indices.push_back(75);
+    node_indices.push_back(46);
+    node_indices.push_back(68);
+    node_indices.push_back(24);
+
+    std::vector<int> corresponding_edge_index;
+
+    for (uint i_node = 0; i_node < node_indices.size(); i_node++)
+    {
+        for (uint i_edge = 0; i_edge < laneGraphTools.edges_start_index.size(); i_edge++)
+        {
+
+            if (laneGraphTools.edges_start_index.at(i_edge) == node_indices.at(i_node))
+            {
+                for (int i_edge_end = 0; i_edge_end < node_indices.size(); i_edge_end++)
+                {
+                    if (laneGraphTools.edges_end_index.at(i_edge) == node_indices.at(i_edge_end))
+                    {
+                        corresponding_edge_index.push_back(i_edge);
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << "First edge found: " << corresponding_edge_index.at(0) << std::endl;
+    /* // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 1000000000ull;
 
 
@@ -123,7 +143,7 @@ int main(int argc, char *argv[])
             reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         } */
 
-  /*   ///////////// writer and reader for sending trajectory commands////////////////////////
+    /*   ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
     (
@@ -205,4 +225,4 @@ int main(int argc, char *argv[])
             }
         }
     });*/
-} 
+}
