@@ -620,9 +620,6 @@ void SetupViewUI::deploy_applications() {
             ));
             return;
         }
-
-        //Deploy simulated vehicles locally
-        //deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
         
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
