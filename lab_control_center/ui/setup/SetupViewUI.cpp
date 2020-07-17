@@ -323,6 +323,8 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 
 void SetupViewUI::kill_all_threads()
 {
+    kill_crash_check_thread();
+
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     for (auto& thread : upload_threads)
     {
@@ -361,9 +363,14 @@ void SetupViewUI::deploy_applications() {
     //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
     reset_logs();
 
+    //Remember these also for crash check thread
+    bool deploy_remote_toggled = switch_deploy_remote->get_active();
+    bool lab_mode_on = switch_lab_mode->get_active();
+    bool labcam_toggled = switch_record_labcam->get_active();
+
     // LabCam
 #ifndef SIMULATION
-    if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
+    if(lab_mode_on && labcam_toggled){
         std::cerr << "RECORDING LABCAM" << std::endl;
         auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
         labcam->startRecording("/tmp/", ctime(&timenow));
@@ -380,7 +387,7 @@ void SetupViewUI::deploy_applications() {
     deploy_functions->deploy_recording();
 
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
-    if(switch_deploy_remote->get_active())
+    if(deploy_remote_toggled)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
@@ -469,9 +476,64 @@ void SetupViewUI::deploy_applications() {
 
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
+
+    //Deploy crash check thread
+    crash_check_running.store(true);
+    thread_deploy_crash_check = std::thread(
+        [this, deploy_remote_toggled, lab_mode_on, labcam_toggled] () {
+            //If it had a crash before, skip checking for a while, so messages don't get spammed
+            //TODO: Maybe actually check for single failures, so that the same message does not appear twice
+            int crash_counter = 0;
+
+            //Give programs time to actually start
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+            while(crash_check_running.load())
+            {
+                if (crash_counter > 0)
+                {
+                    --crash_counter;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
+
+                std::string crash_report = deploy_functions->check_for_crashes(deploy_remote_toggled, lab_mode_on, labcam_toggled);
+
+                if (crash_report.size() > 0)
+                {
+                    crash_counter = 100; //Skip check for 10 seconds, be abortable in betweeen
+
+                    // Gtk::MessageDialog load_failed_dialog = Gtk::MessageDialog(
+                    //     get_main_window(),
+                    //     crash_report,
+                    //     false,
+                    //     Gtk::MessageType::MESSAGE_INFO,
+                    //     Gtk::ButtonsType::BUTTONS_OK,
+                    //     true
+                    // );
+                    // load_failed_dialog.run();
+                    //TODO: Must be done using the ui dispatcher
+                    std::cerr << crash_report << std::endl;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+    );
+}
+
+void SetupViewUI::kill_crash_check_thread()
+{
+    crash_check_running.store(false);
+    if (thread_deploy_crash_check.joinable())
+    {
+        thread_deploy_crash_check.join();
+    }
 }
 
 void SetupViewUI::kill_deployed_applications() {
+    //Kill crash check first, or else we get undesired error messages
+    kill_crash_check_thread();
 
     // Stop LabCam
 #ifndef SIMULATION

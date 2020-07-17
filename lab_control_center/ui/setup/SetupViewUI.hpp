@@ -170,6 +170,11 @@ private:
     void deploy_applications();
     void kill_deployed_applications();
 
+    //Watcher thread that checks if the locally deployed programs still run - else, an error message is displayed
+    std::thread thread_deploy_crash_check;
+    std::atomic_bool crash_check_running;
+    void kill_crash_check_thread();
+
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
     std::vector<unsigned int> get_vehicle_ids_active();
     std::vector<unsigned int> get_vehicle_ids_real();

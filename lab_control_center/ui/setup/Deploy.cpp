@@ -39,7 +39,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
-    kill_session("high_level_controller");
+    kill_session(hlc_session);
 
     if (active_vehicle_ids.size() > 0)
     {
@@ -64,7 +64,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Matlab script
             command 
             << "tmux new-session -d "
-            << "-s \"high_level_controller\" "
+            << "-s \"" << hlc_session << "\" "
             << "'. ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
@@ -76,7 +76,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Any executable 
             command 
             << "tmux new-session -d "
-            << "-s \"high_level_controller\" "
+            << "-s \"" << hlc_session << "\" "
             << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=high_level_controller"
@@ -102,13 +102,13 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         system(command.str().c_str());
 
         //Check if old session already exists - if so, kill it
-        kill_session("middleware");
+        kill_session(middleware_session);
 
         //Generate command
         std::stringstream middleware_command;
         middleware_command 
             << "tmux new-session -d "
-            << "-s \"middleware\" "
+            << "-s \"" << middleware_session << "\" "
             << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
@@ -128,8 +128,8 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
 void Deploy::kill_local_hlc() 
 {
-    kill_session("high_level_controller");
-    kill_session("middleware");
+    kill_session(hlc_session);
+    kill_session(middleware_session);
 }
 
 void Deploy::deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, bool use_simulated_time) 
@@ -277,13 +277,13 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 void Deploy::deploy_ips() 
 {
     //Check if old session already exists - if so, kill it
-    kill_session("ips_pipeline");
+    kill_session(ips_session);
 
     //Generate command
     std::stringstream command_ips;
     command_ips 
         << "tmux new-session -d "
-        << "-s \"ips_pipeline\" "
+        << "-s \"" << ips_session << "\" "
         << "\"cd ~/dev/software/indoor_positioning_system/;./build/ips_pipeline "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
@@ -294,13 +294,13 @@ void Deploy::deploy_ips()
         << " >~/dev/lcc_script_logs/stdout_ips.txt 2>~/dev/lcc_script_logs/stderr_ips.txt\"";
 
     //Kill previous ips basler session if it still exists
-    kill_session("ips_basler");
+    kill_session(basler_session);
 
     //Generate command
     std::stringstream command_basler;
     command_basler 
         << "tmux new-session -d "
-        << "-s \"ips_basler\" "
+        << "-s \"" << basler_session << "\" "
         << "\"cd ~/dev/software/indoor_positioning_system/;./build/BaslerLedDetection "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
@@ -316,8 +316,8 @@ void Deploy::deploy_ips()
 }
 
 void Deploy::kill_ips() {
-    kill_session("ips_pipeline");
-    kill_session("ips_basler");
+    kill_session(ips_session);
+    kill_session(basler_session);
 }
 
 
@@ -405,6 +405,28 @@ bool Deploy::session_exists(std::string session_id)
     std::string running_sessions = execute_command("tmux ls");
     session_id += ":";
     return running_sessions.find(session_id) != std::string::npos;
+}
+
+std::string Deploy::check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording)
+{
+    std::stringstream error_stream;
+    error_stream << "";
+    if (!deploy_remote)
+    {
+        if(! session_exists(hlc_session)) error_stream << " HLC crashed! ";
+        if(! session_exists(middleware_session)) error_stream << " Middleware crashed! ";
+    }
+    if (lab_mode_on)
+    {
+        if(! session_exists(ips_session)) error_stream << " IPS crashed! ";
+        if(! session_exists(basler_session)) error_stream << " Basler LED detection crashed! ";
+    }
+    if (check_for_recording)
+    {
+        if(! session_exists(recording_session)) error_stream << " Recording crashed! ";
+    }
+
+    return error_stream.str();
 }
 
 void Deploy::kill_session(std::string session_id)

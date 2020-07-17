@@ -126,6 +126,15 @@ public:
      */
     void create_log_folder(std::string name);
 
+    /**
+     * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
+     * \param deploy_remote Set to true if remote deploy of HLC chosen (will not check for hlc and middleware then)
+     * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
+     * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
+     * \return Empty string if everything is fine, else: Error msg
+     */
+    std::string check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording);
+
 private:
     //Used for process forking
     enum PROCESS_STATE {DONE, RUNNING, ERROR};
@@ -198,5 +207,10 @@ private:
     void kill_process(int process_id);
 
     // Session name for recording service
-    std::string recording_session = "dds_record";
+    const std::string recording_session = "dds_record";
+
+    const std::string ips_session = "ips_pipeline";
+    const std::string basler_session = "ips_basler";
+    const std::string middleware_session = "middleware";
+    const std::string hlc_session = "high_level_controller";
 };
