@@ -40,6 +40,6 @@
 
 void tests_setup();
 
-void tests_apply(uint32_t tick, spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received);
+void tests_apply(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received);
 
 #endif /* TESTS_H_ */

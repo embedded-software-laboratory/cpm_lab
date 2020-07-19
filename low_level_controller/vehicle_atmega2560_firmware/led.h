@@ -36,13 +36,14 @@
 #define LED_H_
 
 
+#include "servo_timer.h"
 #include "spi_packets.h"
 
 
-void led_set_state(spi_mosi_data_t* spi_mosi_data);
-void toggle_led();
+void led_set_state(uint8_t vehicle_id_in);
+void led_toggle();
 void led_setup();
-void test_led(uint8_t led1,uint8_t led2,uint8_t led3,uint8_t led4);
+void led_test(uint8_t led1, uint8_t led2, uint8_t led3, uint8_t led4);
 
 
 #endif /* LED_H_ */
