@@ -77,12 +77,8 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read direct message. "
-            "Created at %llu, "
-            "Valid after %llu, "
-            "Read at %llu.",
-            sample_CommandDirect.header().create_stamp().nanoseconds(), 
-            sample_CommandDirect.header().valid_after_stamp().nanoseconds(), 
-            t_now
+            "Valid after %llu.",
+            sample_CommandDirect.header().valid_after_stamp().nanoseconds()
         );
     }
     else if(sample_CommandSpeedCurvature_age < command_timeout)
@@ -94,12 +90,8 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read speed curvature message. "
-            "Created at %llu, "
-            "Valid after %llu, "
-            "Read at %llu.",
-            sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
-            sample_CommandSpeedCurvature.header().valid_after_stamp().nanoseconds(), 
-            t_now
+            "Valid after %llu",
+            sample_CommandSpeedCurvature.header().valid_after_stamp().nanoseconds()
         );
     }
     else if (sample_CommandTrajectory_age < command_timeout)
@@ -111,12 +103,8 @@ void Controller::receive_commands(uint64_t t_now)
         cpm::Logging::Instance().write(
             3,
             "Controller: Read trajectory message. "
-            "Created at %llu, "
-            "Valid after %llu, "
-            "Read at %llu.",
-            sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
-            sample_CommandTrajectory.header().valid_after_stamp().nanoseconds(),
-            t_now
+            "Valid after %llu",
+            sample_CommandTrajectory.header().valid_after_stamp().nanoseconds()
         );
     }
     // no new commands received
@@ -125,8 +113,8 @@ void Controller::receive_commands(uint64_t t_now)
         state = ControllerState::Stop;
         //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            3,
-            "Controller: "
+            2,
+            "Warning: Controller: "
             "No new commands received. %s", "Stopping."
         );
     }
@@ -197,7 +185,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         {
             cpm::Logging::Instance().write(
                 2,
-                "%s",
+                "Warning: Controller: %s",
                 "Trajectory interpolation error: Missing trajectory point in the FUTURE."
             );
             return nullptr;
@@ -208,7 +196,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         {
             cpm::Logging::Instance().write(
                 2,
-                "%s",
+                "Warning: Controller: %s",
                 "Trajectory interpolation error: Missing trajectory point in the PAST."
             );
             return nullptr;
@@ -225,7 +213,7 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
     {
         cpm::Logging::Instance().write(
             2,
-            "%s",
+            "Warning: Controller: %s",
             "Trajectory interpolation error: No valid trajectory data."
         );
     }
