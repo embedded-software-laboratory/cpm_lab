@@ -113,7 +113,7 @@ void Controller::receive_commands(uint64_t t_now)
         state = ControllerState::Stop;
         //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            2,
+            1,
             "Warning: Controller: "
             "No new commands received. %s", "Stopping."
         );

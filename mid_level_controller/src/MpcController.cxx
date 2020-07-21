@@ -345,7 +345,7 @@ void MpcController::optimize_control_inputs(
     else
     {
         cpm::Logging::Instance().write(
-            1,
+            2,
             "Warning: Trajectory Controller: "
             "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
