@@ -203,8 +203,8 @@ void MonitoringUi::init_ui_thread()
 
                     if(rows_restricted[i] == "clock_delta") 
                     {
-                        if     (fabs(value) < 50)  label->get_style_context()->add_class("ok");
-                        else if(fabs(value) < 200) label->get_style_context()->add_class("warn");
+                        if     (fabs(value) < 25)  label->get_style_context()->add_class("ok");
+                        else if(fabs(value) < 50) label->get_style_context()->add_class("warn");
                         else 
                         {
                             label->get_style_context()->add_class("alert");
