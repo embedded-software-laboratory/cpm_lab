@@ -42,8 +42,9 @@ uint8_t identification_LED_period_ticks[26]  = { 1, 4, 7, 10, 13, 16, 7, 10, 13,
 uint8_t identification_LED_enabled_ticks[26] = { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
 uint8_t vehicle_id = 0;
 
-void led_set_state(vehicle_id_in) {
-    if (vehicle_id_in != 0) { // only update vehicle ID on successful transmissions
+void led_set_state(uint8_t vehicle_id_in) {
+	// only update vehicle ID on successful transmissions
+    if (vehicle_id_in != 0) {
         vehicle_id = vehicle_id_in;
     }
 
@@ -77,15 +78,19 @@ void led_setup() {
 
 void led_toggle()
 {
-	if ((PINA & 1) == 0) return; // test mode 
+	// test mode 
+	if ((PINA & 1) == 0) return; 
 	
-	if(get_tick() % identification_LED_period_ticks[vehicle_id] < identification_LED_enabled_ticks[vehicle_id])
+	CLEAR_BIT(PORTC, 7);
+	
+	// safe mode
+	if (safe_mode_flag && (get_tick() % 25 == 0)){
+		SET_BIT(PORTC, 7);
+	}
+	// normal mode
+	else if(get_tick() % identification_LED_period_ticks[vehicle_id] < identification_LED_enabled_ticks[vehicle_id])
     {
         SET_BIT(PORTC, 7);
-    }
-	else
-    {
-        CLEAR_BIT(PORTC, 7);
     }
 }
 
