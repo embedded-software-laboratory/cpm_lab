@@ -98,7 +98,7 @@ void spi_transfer(
             busy_wait(3000);
         }
 
-        busy_wait(5000);
+        busy_wait(10000);
 
         *n_transmission_attempts_out = i;
 
