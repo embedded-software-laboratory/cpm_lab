@@ -357,32 +357,23 @@ void SetupViewUI::ui_dispatch()
         //Update vehicle toggles
         std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
 
-        //Set vehicle toggles to real for all active vehicles
-        for (auto& id : active_real_vehicles)
+        for (std::shared_ptr<VehicleToggle> toggle : vehicle_toggles)
         {
-            if ((id - 1) < vehicle_toggles.size())
-            {
-                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Real);
+            unsigned int id = toggle->get_id();
+            std::vector<unsigned int> active_sim_vehicles = get_vehicle_ids_simulated();
+            bool is_sim = (std::find(active_sim_vehicles.begin(), active_sim_vehicles.end(), id) != active_sim_vehicles.end());
+            bool is_real = (std::find(active_real_vehicles.begin(), active_real_vehicles.end(), id) != active_real_vehicles.end());
+            
+            if (is_sim){
+                toggle->set_state(VehicleToggle::Simulated);
+            } 
+            else if (is_real){
+                toggle->set_state(VehicleToggle::Real);
+            }
+            else {
+                toggle->set_state(VehicleToggle::Off);
             }
         }
-
-        //Get diff to previous vehicles, set toggles for that
-        std::sort(active_real_vehicles.begin(), active_real_vehicles.end());
-        std::sort(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end());
-        std::vector<unsigned int> diff;
-        std::set_difference(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end(), 
-            active_real_vehicles.begin(), active_real_vehicles.end(), 
-            std::inserter(diff, diff.begin()));
-        for (auto& id : diff)
-        {
-            if ((id - 1) < vehicle_toggles.size())
-            {
-                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Off);
-            }
-        }
-
-        //Remember previously active vehicles to change toggles back if vehicle is offline
-        vehicle_toggles_set_to_real = active_real_vehicles;
     }
     else
     {
