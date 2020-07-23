@@ -27,6 +27,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include "cpm/Logging.hpp"
 #include "types.hpp"
 
 class DetectVehicleID

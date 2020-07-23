@@ -98,7 +98,8 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                     const cv::Point2d centroid = (1.0/3) * (previous_vehicle.front + previous_vehicle.back_left + previous_vehicle.back_right);
                     const auto delta = tracked_vehicle.back().centroid - centroid;
                     const double max_distance_per_frame_squared = 0.09 * 0.09;
-
+                    
+                    // TODO: Check for smallest distance? Log warning if more than one candidate is found
                     if(delta.dot(delta) < max_distance_per_frame_squared)
                     {
                         // Matching vehicle found, add to tracking.
@@ -113,6 +114,12 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
             else
             {
                 // Tracking is lost. Do nothing.
+                // TODO: Remove from vehicles_tracked_by_proximity and from vehiclePointTimeseries
+                cpm::Logging::Instance().write(
+                    2,
+                    "%s",
+                    "Warning: unstable detection of vehicle"
+                );
             }
         }
     } 
