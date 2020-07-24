@@ -52,6 +52,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 /**
@@ -172,7 +173,11 @@ private:
 
     //Watcher thread that checks if the locally deployed programs still run - else, an error message is displayed
     std::thread thread_deploy_crash_check;
+    std::mutex crashed_mutex;
+    std::unordered_set<std::string> already_crashed_participants;
+    std::vector<std::string> newly_crashed_participants;
     std::atomic_bool crash_check_running;
+    std::shared_ptr<Gtk::MessageDialog> crash_dialog;
     void kill_crash_check_thread();
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles

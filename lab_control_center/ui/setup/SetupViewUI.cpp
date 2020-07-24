@@ -241,6 +241,7 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 void SetupViewUI::ui_dispatch()
 {
     std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
+    std::lock_guard<std::mutex> lock_crashes(crashed_mutex);
     if (error_msg.size() > 0)
     {
         for (auto &msg : error_msg)
@@ -248,6 +249,54 @@ void SetupViewUI::ui_dispatch()
             upload_window->add_error_message(msg);
         }
         error_msg.clear();
+    }
+    else if (newly_crashed_participants.size() > 0)
+    {
+        //Create dialog window that informs the user about a crash of one of the programs they started (besides vehicles, this can be seen in the UI already)
+        std::stringstream crash_report;
+        crash_report << "Newly crashed programs:\n";
+        for (auto& program : newly_crashed_participants)
+        {
+            crash_report << "\t" << program << "\n";
+        }
+        crash_report << "\nPreviously crashed programs:\n";
+        for (auto& program : already_crashed_participants)
+        {
+            crash_report << "\t" << program << "\n";
+        }
+
+        //Close window if it is still open
+        if (crash_dialog)
+        {
+            crash_dialog->close();
+            crash_dialog.reset();
+        }
+
+        //Create new window
+        crash_dialog = std::make_shared<Gtk::MessageDialog>(
+            get_main_window(),
+            crash_report.str(),
+            false,
+            Gtk::MessageType::MESSAGE_INFO,
+            Gtk::ButtonsType::BUTTONS_CLOSE,
+            true
+        );
+    
+        //Connect new window with parent, show window
+        crash_dialog->set_transient_for(get_main_window());
+        crash_dialog->property_destroy_with_parent().set_value(true);
+        crash_dialog->show();
+
+        //Callback for closing
+        crash_dialog->signal_response().connect(
+            [this] (auto response)
+            {
+                if (response == Gtk::ResponseType::RESPONSE_CLOSE)
+                {
+                    crash_dialog->close();
+                }
+            }
+        );
     }
     else 
     {
@@ -484,39 +533,40 @@ void SetupViewUI::deploy_applications() {
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
         [this, deploy_remote_toggled, lab_mode_on, labcam_toggled] () {
-            //If it had a crash before, skip checking for a while, so messages don't get spammed
-            //TODO: Maybe actually check for single failures, so that the same message does not appear twice
-            int crash_counter = 0;
-
             //Give programs time to actually start
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
             while(crash_check_running.load())
             {
-                if (crash_counter > 0)
-                {
-                    --crash_counter;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    continue;
-                }
+                auto crashed_participants = deploy_functions->check_for_crashes(deploy_remote_toggled, lab_mode_on, labcam_toggled);
 
-                std::string crash_report = deploy_functions->check_for_crashes(deploy_remote_toggled, lab_mode_on, labcam_toggled);
+                if (crashed_participants.size() > 0)
+                {                    
+                    std::lock_guard<std::mutex> lock(crashed_mutex);
 
-                if (crash_report.size() > 0)
-                {
-                    crash_counter = 100; //Skip check for 10 seconds, be abortable in betweeen
+                    //Remember previous crashes, clear for new crashed
+                    for (auto& participant : newly_crashed_participants)
+                    {
+                        already_crashed_participants.insert(participant);
+                    }
+                    newly_crashed_participants.clear();
 
-                    // Gtk::MessageDialog load_failed_dialog = Gtk::MessageDialog(
-                    //     get_main_window(),
-                    //     crash_report,
-                    //     false,
-                    //     Gtk::MessageType::MESSAGE_INFO,
-                    //     Gtk::ButtonsType::BUTTONS_OK,
-                    //     true
-                    // );
-                    // load_failed_dialog.run();
-                    //TODO: Must be done using the ui dispatcher
-                    std::cerr << crash_report << std::endl;
+                    //Store all new crashes so that they can be shown in the UI separately (New and old crashes)
+                    bool new_crash_detected = false;
+                    for (auto& participant : crashed_participants)
+                    {
+                        if (already_crashed_participants.find(participant) == already_crashed_participants.end())
+                        {
+                            newly_crashed_participants.push_back(participant);
+                            new_crash_detected = true;
+                        }
+                    }
+
+                    //If a new crash was detected, notify the UI thread. It will check the size of newly_crashed participants and create a dialog if is greater than zero
+                    if (new_crash_detected)
+                    {
+                        ui_dispatcher.emit();
+                    }
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));

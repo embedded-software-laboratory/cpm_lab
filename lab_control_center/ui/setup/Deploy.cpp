@@ -407,26 +407,25 @@ bool Deploy::session_exists(std::string session_id)
     return running_sessions.find(session_id) != std::string::npos;
 }
 
-std::string Deploy::check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording)
+std::vector<std::string> Deploy::check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording)
 {
-    std::stringstream error_stream;
-    error_stream << "";
+    std::vector<std::string> crashed_participants;
     if (!deploy_remote)
     {
-        if(! session_exists(hlc_session)) error_stream << " HLC crashed! ";
-        if(! session_exists(middleware_session)) error_stream << " Middleware crashed! ";
+        if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
+        if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
     if (lab_mode_on)
     {
-        if(! session_exists(ips_session)) error_stream << " IPS crashed! ";
-        if(! session_exists(basler_session)) error_stream << " Basler LED detection crashed! ";
+        if(! session_exists(ips_session)) crashed_participants.push_back("IPS");
+        if(! session_exists(basler_session)) crashed_participants.push_back("Basler LED detection");
     }
     if (check_for_recording)
     {
-        if(! session_exists(recording_session)) error_stream << " Recording crashed! ";
+        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
     }
 
-    return error_stream.str();
+    return crashed_participants;
 }
 
 void Deploy::kill_session(std::string session_id)

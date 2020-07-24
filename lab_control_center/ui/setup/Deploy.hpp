@@ -131,9 +131,9 @@ public:
      * \param deploy_remote Set to true if remote deploy of HLC chosen (will not check for hlc and middleware then)
      * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
      * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
-     * \return Empty string if everything is fine, else: Error msg
+     * \return Empty array if everything is fine, else: string of the crashed module
      */
-    std::string check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording);
+    std::vector<std::string> check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording);
 
 private:
     //Used for process forking
