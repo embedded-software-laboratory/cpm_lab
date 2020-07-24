@@ -249,7 +249,7 @@ void worker_grab_image()
         camera.TimestampLatch();
         const uint64_t startTime = get_time_ns();
         const int64_t startTicks = camera.TimestampLatchValue.GetValue();
-
+        uint64_t t_previous_frame_nanos = startTime;
         while(camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -259,7 +259,7 @@ void worker_grab_image()
 
             if(ptrGrabResult->GrabSucceeded())
             {
-                frameCount++;
+                ++frameCount;
 
                 // The result data is automatically filled with received chunk data.
                 // (Note:  This is not the case when using the low-level API)
@@ -298,6 +298,17 @@ void worker_grab_image()
                     std::cout << "FPS " << fps << std::endl;
                     lastFrameReportTime = now;
                 }
+                // check for frame drops
+                uint64_t dt = frame->timestamp - t_previous_frame_nanos;
+                if (dt > 25*1e6)
+                {
+                    cpm::Logging::Instance().write(
+                        2,
+                        "Time delta between frames is %.2f ms",
+                        dt/1e6
+                    );
+                }
+                t_previous_frame_nanos = frame->timestamp;
             }
             else
             {

@@ -92,6 +92,7 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
             // This happens when a vehicle is not detected in a frame.
             if(tracked_vehicle.size() == step_count)
             {
+                bool is_previous_vehicle_found = false;
                 // Search for the vehicle, which corresponds to "tracked_vehicle".
                 for(VehiclePointSet previous_vehicle : iter->vehicles)
                 {
@@ -107,19 +108,24 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                         vehicleTrackingInfo.centroid = centroid;
                         vehicleTrackingInfo.center_present = previous_vehicle.center_present;
                         tracked_vehicle.push_back(vehicleTrackingInfo);
-                        break;
+                        // break;
+                        if (is_previous_vehicle_found) {
+                            cpm::Logging::Instance().write(
+                                2,
+                                "%s", "Warning: Tracking: found multiple vehicle candidates"
+                            );
+                        }
+                        is_previous_vehicle_found = true;
                     }
                 }
+                cpm::Logging::Instance().write(
+                    2,
+                    "%s", "Warning: Tracking: lost track of vehicle"
+                );
             }
             else
             {
                 // Tracking is lost. Do nothing.
-                // TODO: Remove from vehicles_tracked_by_proximity and from vehiclePointTimeseries
-                cpm::Logging::Instance().write(
-                    2,
-                    "%s",
-                    "Warning: unstable detection of vehicle"
-                );
             }
         }
     } 
