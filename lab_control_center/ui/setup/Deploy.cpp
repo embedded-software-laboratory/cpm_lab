@@ -34,6 +34,23 @@ Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, s
 
 }
 
+Deploy::~Deploy()
+{
+    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
+    for (auto& thread : vehicle_reboot_threads)
+    {
+        if (thread.second.joinable())
+        {
+            thread.second.join();
+        }
+        else 
+        {
+            std::cerr << "Warning: Shutting down with reboot thread that cannot be joined" << std::endl;
+        }
+    }
+    vehicle_reboot_threads.clear();
+}
+
 void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params) 
 {
     std::string sim_time_string = bool_to_string(use_simulated_time);
@@ -197,23 +214,71 @@ void Deploy::kill_sim_vehicle(unsigned int id)
     kill_session(vehicle_id.str());
 }
 
-bool Deploy::reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds, std::function<bool()> is_online) 
+void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_seconds) 
 {
-    //Get the IP address from the current id (192.168.1.1XX)
+    //Kill old reboot threads that are done before adding a new one
+    kill_finished_reboot_threads();
+
+    //Get the IP address from the current vehicle_id (192.168.1.1XX)
     std::stringstream ip_stream;
     ip_stream << "192.168.1.1";
-    if (id < 10)
+    if (vehicle_id < 10)
     {
         ip_stream << "0";
     }
-    ip_stream << id;
+    ip_stream << vehicle_id;
+    std::string ip = ip_stream.str();
 
-    //Create and send the vehicle kill command via SSH (Open pw is cpmcpmcpm, can be in Git)
-    //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
-    std::stringstream command_kill_real_vehicle;
-    command_kill_real_vehicle 
-        << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 2) << " -t pi@" << ip_stream.str() << " \"sudo reboot now\"";
-    return spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, is_online);
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+    //Only create a reboot thread if no such thread already exists
+    if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
+    {
+        std::unique_lock<std::mutex> lock(reboot_done_mutex);
+        reboot_thread_done[vehicle_id] = false;
+        lock.unlock();
+
+        vehicle_reboot_threads[vehicle_id] = std::thread(
+            [this, vehicle_id, ip, timeout_seconds] () {
+                //Create and send the vehicle kill command via SSH (Open pw is cpmcpmcpm, can be in Git)
+                //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
+                std::stringstream command_kill_real_vehicle;
+                command_kill_real_vehicle 
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 2) << " -t pi@" << ip << " \"sudo reboot now\"";
+                bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
+                    [] () { 
+                        //Ignore the check if the vehicle is still online
+                        return true; 
+                    }
+                );
+
+                if(!msg_success)
+                {
+                    cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
+                }
+
+                std::lock_guard<std::mutex> lock(reboot_done_mutex);
+                reboot_thread_done[vehicle_id] = true;
+            }
+        );
+    }
+}
+
+void Deploy::kill_finished_reboot_threads()
+{
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+    for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
+    {
+        std::lock_guard<std::mutex> lock(reboot_done_mutex);
+        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
+        {
+            thread_ptr->second.join();
+            thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
+        }
+        else
+        {
+            ++thread_ptr;
+        }
+    }
 }
 
 bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 

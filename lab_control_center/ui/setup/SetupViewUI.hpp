@@ -105,14 +105,6 @@ private:
     //Remember which vehicle toggles were set to real before
     std::vector<unsigned int> vehicle_toggles_set_to_real;
 
-    //To reboot real vehicles
-    std::map<unsigned int, std::thread> vehicle_reboot_threads; //threads that are responsible for uploading scripts to the HLCs, map to have access to vehicle IDs
-    std::mutex vehicle_reboot_threads_mutex;
-    std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
-    std::mutex reboot_done_mutex;
-    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
-    void kill_finished_reboot_threads();
-
     //Callback for vehicle toggles - simulated vehicles are now created when the toggle is set to "simulated"
     void vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state);
     

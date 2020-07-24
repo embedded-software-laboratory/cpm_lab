@@ -223,36 +223,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     }
     else
     {
-        //Kill old reboot threads that are done before adding a new one
-        kill_finished_reboot_threads();
-
-        std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
-        //Only create a reboot thread if no such thread already exists
-        if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
-        {
-            std::unique_lock<std::mutex> lock(reboot_done_mutex);
-            reboot_thread_done[vehicle_id] = false;
-            lock.unlock();
-
-            vehicle_reboot_threads[vehicle_id] = std::thread(
-                [this, vehicle_id] () {
-                    bool msg_success = deploy_functions->reboot_real_vehicle(
-                        vehicle_id, //reboot vehicle with this ID
-                        3, //wait for 3 seconds
-                        std::bind(&SetupViewUI::is_active_real, this, vehicle_id) //Check if vehicle is still active in between
-                    );
-
-                    if(!msg_success)
-                    {
-                        cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
-                    }
-
-                    std::lock_guard<std::mutex> lock(reboot_done_mutex);
-                    reboot_thread_done[vehicle_id] = true;
-                }
-            );
-        }
-        
+        deploy_functions->reboot_real_vehicle(vehicle_id, 5);
     }   
 }
 
@@ -485,38 +456,6 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
-
-    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
-    for (auto& thread : vehicle_reboot_threads)
-    {
-        if (thread.second.joinable())
-        {
-            thread.second.join();
-        }
-        else 
-        {
-            std::cerr << "Warning: Shutting down with reboot thread that cannot be joined" << std::endl;
-        }
-    }
-    vehicle_reboot_threads.clear();
-}
-
-void SetupViewUI::kill_finished_reboot_threads()
-{
-    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
-    for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
-    {
-        std::lock_guard<std::mutex> lock(reboot_done_mutex);
-        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
-        {
-            thread_ptr->second.join();
-            thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
-        }
-        else
-        {
-            ++thread_ptr;
-        }
-    }
 }
 
 bool SetupViewUI::check_if_online(uint8_t hlc_id)
