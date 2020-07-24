@@ -125,7 +125,8 @@ VehicleState SimulationVehicle::update(
     for (auto const& colli : collisions)
     {
         cpm::Logging::Instance().write(
-            "Collision with vehicle %u at time %llu.", 
+            1,
+            "Warning: Simulation: Collision with vehicle %u at time %llu.", 
             colli.first, colli.second);
     }
     // Erase trajectory points which are older than 0.5 seconds

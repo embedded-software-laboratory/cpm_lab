@@ -197,7 +197,11 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
 
         if(idx_speed_reduction < 15)
         {
-            std::cout << "Collision unavoidable between " << int(vehicle_id) << " and " << colliding_vehicle_id << std::endl;
+            cpm::Logging::Instance().write(
+                1,
+                "Collision unavoidable between %d and %d.",
+                int(vehicle_id), colliding_vehicle_id
+            );
 
             for(double spd:speed_profile)
             {
