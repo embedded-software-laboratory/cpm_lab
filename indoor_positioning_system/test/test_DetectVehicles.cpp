@@ -470,6 +470,9 @@ TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detec
     
     // both vehicles have center point
     REQUIRE((vehicle_points_act.vehicles[0].center_present && vehicle_points_act.vehicles[1].center_present));
-    CHECK(((vehicle_points_act.vehicles[0].center == vehicle_points_exp.vehicles[1].center || 
-            vehicle_points_act.vehicles[1].center == vehicle_points_exp.vehicles[1].center)));
+
+    CHECK(((vehicle_points_act.vehicles[0].center == vehicle_points_exp.vehicles[0].center && 
+            vehicle_points_act.vehicles[1].center == vehicle_points_exp.vehicles[1].center) ||
+           (vehicle_points_act.vehicles[0].center == vehicle_points_exp.vehicles[1].center && 
+            vehicle_points_act.vehicles[1].center == vehicle_points_exp.vehicles[0].center)));
 }
