@@ -49,6 +49,7 @@
 #include <cstdio> //For popen
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -101,6 +102,7 @@ private:
     Gtk::FlowBox* vehicle_flowbox = nullptr;
     std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles; //Position in the vector and vehicle ID correlate (ID-1 = position)
     std::atomic_bool update_vehicle_toggles; //For ui thread
+    const unsigned int reboot_timeout = 5; //Reboot time in seconds
 
     //Remember which vehicle toggles were set to real before
     std::vector<unsigned int> vehicle_toggles_set_to_real;

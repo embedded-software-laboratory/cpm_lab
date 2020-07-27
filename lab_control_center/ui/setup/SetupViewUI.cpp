@@ -223,7 +223,8 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     }
     else
     {
-        deploy_functions->reboot_real_vehicle(vehicle_id, 5);
+        deploy_functions->reboot_real_vehicle(vehicle_id, reboot_timeout);
+        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout);
     }   
 }
 
@@ -387,6 +388,8 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
+
+    //Grey out vehicle toggles / undo this depending on their timestamp
 }
 
 void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
