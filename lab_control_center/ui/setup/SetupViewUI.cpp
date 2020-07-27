@@ -181,10 +181,22 @@ SetupViewUI::SetupViewUI
                     auto id = vehicle_entry.first;
 
                     //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
-                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && 
-                        std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) == currently_simulated_vehicles.end())
+                    //See if a signal of a real vehicle is among the past 10 signals (due to 50Hz -> 500ms); real is more important than simulated
+                    double is_real_sum = 0.0; //Is real if at least one value in the vector is 1
+                    for (auto& entry : vehicle_entry.second.at("is_real")->get_last_n_values(10))
+                    {
+                        is_real_sum += entry;
+                    }
+
+                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_sum > 0)
                     {
                         active_real_vehicles.push_back(id);
+
+                        //Kill simulated vehicle if real vehicle was detected
+                        if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
+                        {
+                            deploy_functions->kill_sim_vehicle(id);
+                        }
                     }
                 }
 
@@ -224,7 +236,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else
     {
         deploy_functions->reboot_real_vehicle(vehicle_id, reboot_timeout);
-        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout);
+        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout + 2); //Add two seconds because the whole reboot process might take a bit longer than the timeout
     }   
 }
 
@@ -336,11 +348,12 @@ void SetupViewUI::ui_dispatch()
             bool is_sim = (std::find(active_sim_vehicles.begin(), active_sim_vehicles.end(), id) != active_sim_vehicles.end());
             bool is_real = (std::find(active_real_vehicles.begin(), active_real_vehicles.end(), id) != active_real_vehicles.end());
             
-            if (is_sim){
-                toggle->set_state(VehicleToggle::Simulated);
-            } 
-            else if (is_real){
+            if (is_real){
+                //If we find it both in is_sim and is_real, the real vehicle is more important
                 toggle->set_state(VehicleToggle::Real);
+            } 
+            else if (is_sim){
+                toggle->set_state(VehicleToggle::Simulated);
             }
             else {
                 toggle->set_state(VehicleToggle::Off);

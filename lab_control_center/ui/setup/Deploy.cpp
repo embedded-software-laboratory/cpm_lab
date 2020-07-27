@@ -243,7 +243,7 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
-                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 2) << " -t pi@" << ip << " \"sudo reboot now\"";
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
                 bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
                     [] () { 
                         //Ignore the check if the vehicle is still online
@@ -255,6 +255,11 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 {
                     cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
                 }
+                if (msg_success)
+                {
+                    std::cout << "Got true" << std::endl;
+                }
+                std::cout << "Something went wrong if you did not get an error msg or true above" << std::endl;
 
                 std::lock_guard<std::mutex> lock(reboot_done_mutex);
                 reboot_thread_done[vehicle_id] = true;
@@ -568,8 +573,9 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();
 
+    auto time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
-    while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_time).count() < static_cast<int64_t>(timeout_seconds))
+    while (time_passed_ms < static_cast<int64_t>(timeout_seconds) * 1000)
     {
         //std::cout << "Waiting" << std::endl;
         //Check current program state
@@ -577,6 +583,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
 
         if (state == PROCESS_STATE::DONE)
         {
+            std::cout << "Returning done with passed time: " << time_passed_ms << std::endl;
             return true;
         }
         else if (state == PROCESS_STATE::ERROR)
@@ -591,12 +598,25 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
             return false;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        //Use longer sleep time until short before end of timeout
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+        auto remaining_time = static_cast<int64_t>(timeout_seconds) * 1000 - time_passed_ms;
+        if (remaining_time > 1000)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        else if (remaining_time > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(remaining_time));
+        }
+        
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     }
 
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
     kill_process(process_id);
+    std::cout << "Returning false" << std::endl;
     return false;
 }
 
