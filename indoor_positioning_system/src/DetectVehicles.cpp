@@ -169,7 +169,10 @@ DetectVehicles::resolve_conflicts
         is_conflict_solvable = 0;
         for (std::size_t m = 0; m < mat_conflicts.col(0).total(); ++m)
         {
-            if (resolved[m]) continue;
+            if (resolved[m]) 
+            {
+                continue;
+            }
             
             // sum conflicts
             std::vector<std::size_t> conflicts;
@@ -186,6 +189,7 @@ DetectVehicles::resolve_conflicts
                 resolved[m] = 1;
                 // add vehicle candidate to vehicles
                 vehicles.push_back(vehicle_candidates[m]);
+                continue;
             }
             // one conflict
             else if (conflicts.size() == 1)
@@ -209,6 +213,24 @@ DetectVehicles::resolve_conflicts
             }
         }
     }
+
+    //all conflicts resolved?
+    bool all_resolved = true; 
+    for (std::size_t m = 0; m < mat_conflicts.col(0).total(); ++m)
+    {
+        if(!resolved[m]) all_resolved = false;
+    }
+
+    if (!all_resolved) 
+    {
+        cpm::Logging::Instance().write(
+            1,
+            "IPS conflict not %s",
+            "solvable"
+        );
+
+    }
+
     return vehicles;
 }
 

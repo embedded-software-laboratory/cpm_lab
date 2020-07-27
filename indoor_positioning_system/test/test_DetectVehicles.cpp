@@ -26,10 +26,13 @@
 
 #include "catch.hpp"
 #include "DetectVehicles.hpp"
+#include "cpm/Logging.hpp"
 
 TEST_CASE("TEST_apply_WITH_0_points_SHOULD_not_crash")
 {
     // Setup
+
+    cpm::Logging::Instance().set_id("ips_pipeline");
 
     // Input
     FloorPoints floor_points;

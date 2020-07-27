@@ -31,6 +31,7 @@
 #include <array>
 #include "types.hpp"
 #include <opencv2/core.hpp>
+#include "cpm/Logging.hpp"
 
 class DetectVehicles
 {
