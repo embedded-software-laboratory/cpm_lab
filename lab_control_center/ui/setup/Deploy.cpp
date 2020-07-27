@@ -255,11 +255,6 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 {
                     cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
                 }
-                if (msg_success)
-                {
-                    std::cout << "Got true" << std::endl;
-                }
-                std::cout << "Something went wrong if you did not get an error msg or true above" << std::endl;
 
                 std::lock_guard<std::mutex> lock(reboot_done_mutex);
                 reboot_thread_done[vehicle_id] = true;
@@ -577,13 +572,11 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
     while (time_passed_ms < static_cast<int64_t>(timeout_seconds) * 1000)
     {
-        //std::cout << "Waiting" << std::endl;
         //Check current program state
         PROCESS_STATE state = get_child_process_state(process_id);
 
         if (state == PROCESS_STATE::DONE)
         {
-            std::cout << "Returning done with passed time: " << time_passed_ms << std::endl;
             return true;
         }
         else if (state == PROCESS_STATE::ERROR)
@@ -616,7 +609,6 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
     kill_process(process_id);
-    std::cout << "Returning false" << std::endl;
     return false;
 }
 
