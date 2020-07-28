@@ -246,6 +246,12 @@ public:
     std::pair<double, double> get_center() override;
 
     /**
+     * \brief Get center of all points of the lanelet
+     * \return Center of the shape of all points (get_center just takes a look at the two boundary points in the middle of the lanelet)
+     */
+    std::pair<double, double> get_center_of_all_points();
+
+    /**
      * \brief Get the lanelet shape as a polygon
      * \return Polygon of lanelet shape
      */

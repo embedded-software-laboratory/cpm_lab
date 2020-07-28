@@ -583,6 +583,25 @@ std::pair<double, double> Lanelet::get_center()
     return std::pair<double, double>(x, y);
 }
 
+std::pair<double, double> Lanelet::get_center_of_all_points()
+{
+    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    assert(left_bound.points.size() == right_bound.points.size());
+
+    size_t vec_size = left_bound.points.size();
+    
+    double x = 0.0;
+    double y = 0.0;
+    for (size_t index = 0; index < vec_size; ++index)
+    {
+        //Calculate avg iteratively to avoid overflow
+        x += ((left_bound.points.at(index).get_x() + right_bound.points.at(index).get_x()) / 2.0 - x) / (index + 1);
+        y += ((left_bound.points.at(index).get_y() + right_bound.points.at(index).get_y()) / 2.0 - y) / (index + 1);
+    }
+
+    return std::pair<double, double>(x, y);
+}
+
 std::vector<Point> Lanelet::get_shape()
 {
     std::vector<Point> shape; 
