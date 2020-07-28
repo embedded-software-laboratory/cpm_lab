@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_string();},
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return timeSeriesAggregator->reset_all_data();}
     );

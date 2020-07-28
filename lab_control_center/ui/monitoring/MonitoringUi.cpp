@@ -32,7 +32,7 @@
 MonitoringUi::MonitoringUi(
     std::shared_ptr<Deploy> deploy_functions_callback, 
     std::function<VehicleData()> get_vehicle_data_callback, 
-    std::function<std::vector<std::string>()> get_hlc_data_callback, 
+    std::function<std::vector<uint8_t>()> get_hlc_data_callback, 
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
     std::function<void()> reset_data_callback)
 {
@@ -129,12 +129,18 @@ void MonitoringUi::init_ui_thread()
                     label->set_width_chars(25);
                     label->set_xalign(0);
                     //Some rows may be empty (serve as separator) - ignore those
-                    if (rows_restricted[i] != "")
+                    if (rows_restricted[i] != "" && rows_restricted[i] != "nuc_connected")
                     {
                         label->set_text(
                             vehicle_data.begin()->second.at(rows_restricted[i])->get_name() + " [" + 
                             vehicle_data.begin()->second.at(rows_restricted[i])->get_unit() + "]"
                         );
+                    }
+                    else if (rows_restricted[i] == "nuc_connected")
+                    {
+                        //This is not part of the time series data, so we need a special case for this
+                        //Show if the NUC with the ID of the vehicle is online (= sends data from autostart program to LCC)
+                        label->set_text("NUC connected");
                     }
                     else 
                     {
@@ -152,6 +158,10 @@ void MonitoringUi::init_ui_thread()
         {
             vehicle_ids.push_back(entry.first);
         }
+
+        //Get currently online HLCs / NUCs
+        auto hlc_data = this->get_hlc_data();
+
         //Print actual information for each vehicle, using the const string vector rows_restricted to get the desired content
         for(const auto& entry: vehicle_data)
         {
@@ -177,8 +187,7 @@ void MonitoringUi::init_ui_thread()
                     }
                     continue;
                 }
-                if(!vehicle_sensor_timeseries.count(rows_restricted[i])) continue;
-                
+
                 Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
 
                 if(!label)
@@ -189,6 +198,28 @@ void MonitoringUi::init_ui_thread()
                     label->show_all();
                     grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
                 }
+
+                //Special case for nuc connected, which is not in the time series (not part of vehicle data)
+                if(rows_restricted[i] == "nuc_connected") 
+                {
+                    label->get_style_context()->remove_class("ok");
+                    label->get_style_context()->remove_class("warn");
+                    label->get_style_context()->remove_class("alert");
+
+                    if (std::find(hlc_data.begin(), hlc_data.end(), vehicle_id) != hlc_data.end())
+                    {
+                        label->set_text("Online");
+                        label->get_style_context()->add_class("ok");
+                    }
+                    else
+                    {
+                        label->set_text("Offline");
+                        label->get_style_context()->add_class("warn");
+                    }
+                }
+
+                //Ignore rows with non-existing data
+                if(!vehicle_sensor_timeseries.count(rows_restricted[i])) continue;
 
                 auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
 
@@ -371,8 +402,6 @@ void MonitoringUi::init_ui_thread()
         }
 
         //HLC entry update
-        auto hlc_data = this->get_hlc_data();
-
         //Show amount in entry
         std::stringstream text_stream;
         text_stream << "HLCs online: " << hlc_data.size();
@@ -385,9 +414,9 @@ void MonitoringUi::init_ui_thread()
         {
             for (size_t i = 0; i < hlc_data.size() - 1; ++i)
             {
-                list_stream << hlc_data.at(i) << ", ";
+                list_stream << static_cast<int>(hlc_data.at(i)) << ", ";
             }
-            list_stream << hlc_data.at(hlc_data.size() - 1);
+            list_stream << static_cast<int>(hlc_data.at(hlc_data.size() - 1));
         }
 
         label_hlc_description_long->set_text(list_stream.str().c_str());
