@@ -165,6 +165,11 @@ void LoggerViewUI::on_log_level_changed()
     
     //Set the new log level
     LogLevelSetter::Instance().set_log_level(log_level);
+
+    //Reset the list - abuse the search_reset boolean notation to make sure that also old entries are reloaded...
+    //... this time considering the new log level
+    search_reset.store(true);
+    ui_dispatcher.emit();
 }
 
 void LoggerViewUI::dispatcher_callback() {
