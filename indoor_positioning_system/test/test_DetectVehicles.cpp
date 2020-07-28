@@ -432,11 +432,11 @@ TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detec
     floor_points.points = {vehicle_point_set_2.back_left,
                            vehicle_point_set_2.back_right,
                            vehicle_point_set_1.front,
-                           vehicle_point_set_2.center,
+                           vehicle_point_set_1.center,
                            vehicle_point_set_1.back_left,
                            vehicle_point_set_1.back_right,
                            vehicle_point_set_2.front,
-                           vehicle_point_set_1.center};
+                           vehicle_point_set_2.center};
 
     // Expected result
     VehiclePoints vehicle_points_exp;
