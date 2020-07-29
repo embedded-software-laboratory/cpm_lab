@@ -271,6 +271,13 @@ void MonitoringUi::init_ui_thread()
                         label->get_style_context()->add_class("ok");
                         label->set_text("available");
                     }
+                    else if(rows_restricted[i] == "ips_t") 
+                    {
+                        label->get_style_context()->add_class("ok");
+                        const uint64_t t_now_nanos = clock_gettime_nanoseconds();
+                        uint64_t age_nanos = t_now_nanos - value;
+                        label->set_text(sensor_timeseries->format_value(1e-6*age_nanos));
+                    }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
                         // is vehicle on its reference trajectory? else stop 
