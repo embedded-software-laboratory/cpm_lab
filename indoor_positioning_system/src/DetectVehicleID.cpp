@@ -118,10 +118,12 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                         is_previous_vehicle_found = true;
                     }
                 }
-                cpm::Logging::Instance().write(
-                    2,
-                    "%s", "Warning: Tracking: lost track of vehicle"
-                );
+                if (!is_previous_vehicle_found){
+                    cpm::Logging::Instance().write(
+                        3,
+                        "%s", "Tracking: new vehicle or unstable detection"
+                    );
+                }
             }
             else
             {
