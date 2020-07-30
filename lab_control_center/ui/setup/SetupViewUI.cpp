@@ -32,6 +32,7 @@ using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
     (
+    std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
     std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
@@ -47,6 +48,7 @@ SetupViewUI::SetupViewUI
     char *argv[]
     ) 
     :
+    deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
     obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
@@ -77,6 +79,7 @@ SetupViewUI::SetupViewUI
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     builder->get_widget("switch_record_labcam", switch_record_labcam);
+    builder->get_widget("switch_diagnosis", switch_diagnosis);
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
@@ -97,6 +100,7 @@ SetupViewUI::SetupViewUI
     assert(switch_deploy_remote);
     assert(switch_lab_mode);
     assert(switch_record_labcam);
+    assert(switch_diagnosis);
 
     assert(button_deploy);
     assert(button_kill);
@@ -133,13 +137,6 @@ SetupViewUI::SetupViewUI
 
     //Extract other relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
-    cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
-
-    //Create deploy class
-    deploy_functions = std::make_shared<Deploy>(cmd_domain_id, cmd_dds_initial_peer, [&](uint8_t id){
-        vehicle_control->stop_vehicle(id);
-    });
 
     //Set switch to current simulated time value - due to current design sim. time cannot be changed after the LCC has been started
     switch_simulated_time->set_active(cmd_simulated_time);
@@ -149,12 +146,19 @@ SetupViewUI::SetupViewUI
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     switch_lab_mode->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_ips_set));
 
+    //The Diagnosis can be startet and restarted manually independent of the other components
+    builder->get_widget("switch_diagnosis", switch_diagnosis);
+    switch_diagnosis->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_diagnosis_set));
+
     //Take care of GUI thread and worker thread separately
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
     thread_count.store(0);
     notify_count = 0;
     participants_available.store(false);
     kill_called.store(false);
+
+    //Set initial text of script path (from previous program execution, if that existed)
+    script_path->set_text(FileChooserUI::get_last_execution_path());
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -191,11 +195,27 @@ void SetupViewUI::switch_ips_set()
 {
     if(switch_lab_mode->get_active())
     {
+        std::cout << "STARTING IPS" << std::endl;
         deploy_functions->deploy_ips();
     }
     else
     {
+        std::cout << "STOPPING IPS" << std::endl;
         deploy_functions->kill_ips();
+    }
+}
+
+void SetupViewUI::switch_diagnosis_set()
+{
+    if(switch_diagnosis->get_active())
+    {
+        std::cout << "STARTING DIAGNOSIS" << std::endl;
+        deploy_functions->diagnosis_switch = true;
+    }
+    else
+    {
+        std::cout << "STOPPING DIAGNOSIS" << std::endl;
+        deploy_functions->diagnosis_switch = false;
     }
 }
 
@@ -371,6 +391,7 @@ void SetupViewUI::deploy_applications() {
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
+
 #endif
 
     //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point

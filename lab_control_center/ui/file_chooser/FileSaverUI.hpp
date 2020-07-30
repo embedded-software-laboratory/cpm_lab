@@ -32,6 +32,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <locale>
@@ -58,6 +59,11 @@ private:
     //Key events - act depending on which button was released
     bool handle_button_released(GdkEventKey* event);
     bool called_callback = false;
+
+    //Remember last opened file (also in between program executions)
+    static std::string previous_file;
+    static bool file_config_loaded;
+    static const std::string file_dialog_config_location;
 public:
     FileSaverUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
 };

@@ -1,0 +1,37 @@
+image: ubuntu:18.04
+
+stages:
+  - build_sim
+  - build_nosim
+
+before_script:
+  - 'which ssh-agent || ( apt update -y && apt install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan git.rwth-aachen.de >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+  - pwd
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt update
+  - apt install -y tzdata sudo expect
+  - adduser --disabled-password --gecos '' docker
+  - adduser docker sudo
+  - echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+  - ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+  - dpkg-reconfigure --frontend noninteractive tzdata
+  - mv ${RTI_INSTALLER_AUTOMATION} ${RTI_INSTALLER_AUTOMATION}.sh
+  - chmod 700 ${RTI_INSTALLER_AUTOMATION}.sh
+
+build_sim:
+  stage: build_sim
+  script:
+    - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --simulation --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
+    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash --simulation
+
+build_nosim:
+  stage: build_nosim
+  script:
+    - sudo ./install.sh --license_path=$RTI_LICENSE_KEY --domain_id=100 --ci --rti_installer_automation_path=${RTI_INSTALLER_AUTOMATION}.sh
+    - source /etc/profile.d/rti_connext_dds.sh && ./build_all.bash

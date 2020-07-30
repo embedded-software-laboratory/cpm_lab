@@ -5,6 +5,8 @@ add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 17)
 link_libraries(dl nsl m pthread rt)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 message("Simulation Switch = ${SIMULATION}")
 
 # Pass simulation to C code
@@ -37,9 +39,12 @@ include_directories(../../yaml-cpp/include/)
 link_directories(../../yaml-cpp/build/)
 
 # commonroad integration
-include_directories(../../../../../usr/include/libxml++-2.6/)
-include_directories(../../../../../usr/lib/x86_64-linux-gnu/libxml++-2.6/include)
-link_directories(../../../../../usr/lib/x86_64-linux-gnu/)
+find_package(LibXML++ REQUIRED)
+message("-- found libxml++2.6")
+include_directories(${LibXML++_INCLUDE_DIRS})
+
+# Trajectory interpolaton
+include_directories(../mid_level_controller/src)
 
 set(COMMONROAD
     src/commonroad_classes/CommonRoadScenario.hpp
@@ -197,9 +202,9 @@ add_executable(lab_control_center
 
 
 if(NOT SIMULATION)
-    target_link_libraries(lab_control_center cpm yaml-cpp labcamlib xml++-2.6 ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp labcamlib ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(lab_control_center cpm yaml-cpp xml++-2.6 ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 endif()
 
 target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})

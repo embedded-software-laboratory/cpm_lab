@@ -1,4 +1,7 @@
 #!/bin/bash
+# exit when any command fails
+set -e
+
 simulation=0
 
 #Get command line arguments
@@ -15,9 +18,9 @@ do
     esac
 done
 
-mkdir build_arm
-mkdir build_arm_sim
-mkdir build_x64_sim
+mkdir -p build_arm
+mkdir -p build_arm_sim
+mkdir -p build_x64_sim
 
 
 # Build for simulation on desktop
@@ -35,7 +38,7 @@ then
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
     cp ../../cpm_lib/build_arm/libcpm.so package
-    tar -czvf package.tar.gz package
+    tar -czf package.tar.gz package
     popd
     
     
@@ -46,12 +49,15 @@ then
     cp -R ../package/ .
     cp vehicle_rpi_firmware package
     cp ../../cpm_lib/build_arm/libcpm.so package
-    tar -czvf package.tar.gz package
+    tar -czf package.tar.gz package
     popd
     
     
-    
-    # # Publish package via http/apache for the vehicles to download
+    # Publish package via http/apache for the vehicles to download
+    if [ ! -d "/var/www/html/raspberry" ]; then
+        sudo mkdir -p "/var/www/html/raspberry"
+        sudo chmod a+rwx "/var/www/html/raspberry"
+    fi
     rm -f /var/www/html/raspberry/package.tar.gz
     #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
     cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case

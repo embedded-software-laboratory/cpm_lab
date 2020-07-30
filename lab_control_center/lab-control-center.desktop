@@ -10,11 +10,11 @@
 Type=Application
 
 Encoding=UTF-8
-Icon=~/dev/software/lab_control_center/icon.png
+Icon=TEMPLATE_LCC_DIR/icon.png
 Name=Lab Control Center
 GenericName=LCC
 Comment=Starts the LCC
-Exec=~/dev/software/lab_control_center/run.bash
+Exec=TEMPLATE_LCC_DIR/run.bash
 # To pass arguments use %u or %U
 # Exec=/thing/to/execute %u
 
@@ -24,7 +24,7 @@ Terminal=true
 # Name of the window. Optional. See below.
 # Allows windows to stack
 # If this does not match, duplicate icons may show up in your dock
-StartupWMClass=Lab Control Center
+StartupWMClass=lab_control_center
 
 # Optional categories
 Categories=Development;

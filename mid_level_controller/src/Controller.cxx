@@ -72,57 +72,51 @@ void Controller::receive_commands(uint64_t t_now)
     {
         m_vehicleCommandDirect = sample_CommandDirect;
         state = ControllerState::Direct;
-        latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
-            "Vehicle %u read direct message timestamp: %llu, at time %llu", 
-            vehicle_id, 
-            sample_CommandDirect.header().create_stamp().nanoseconds(), 
-            latest_command_receive_time
+            3,
+            "Controller: Read direct message. "
+            "Valid after %llu.",
+            sample_CommandDirect.header().valid_after_stamp().nanoseconds()
         );
     }
     else if(sample_CommandSpeedCurvature_age < command_timeout)
     {
         m_vehicleCommandSpeedCurvature = sample_CommandSpeedCurvature;  
         state = ControllerState::SpeedCurvature;
-        latest_command_receive_time = t_now;
 
         //Evaluation: Log received timestamp
         cpm::Logging::Instance().write(
-            "Vehicle %u read speed curvature message timestamp: %llu, at time %llu", 
-            vehicle_id, 
-            sample_CommandSpeedCurvature.header().create_stamp().nanoseconds(), 
-            latest_command_receive_time
+            3,
+            "Controller: Read speed curvature message. "
+            "Valid after %llu",
+            sample_CommandSpeedCurvature.header().valid_after_stamp().nanoseconds()
         );
     }
     else if (sample_CommandTrajectory_age < command_timeout)
     {
-        //First, we must also check if we have already reached the last point of the received trajectory, 
-        //as we might already have reached it up until now if we did not receive any new data within the command_timeout
-        //In that case, we would not be able to interpolate to reach a new state, but that would also not be necessary, as we would already have reached it
-        //This happens e.g. when the sender has sent its last trajectory - we want the vehicle to go into stop mode then, not to crash because the last (old) command is invalid
-        assert(sample_CommandTrajectory.trajectory_points().end() != sample_CommandTrajectory.trajectory_points().begin()); //RTI does not have rbegin(), so we use end - 1 instead - crash on empty trajectories (Log before that?)
-        auto last_command = *(sample_CommandTrajectory.trajectory_points().end() - 1);
-        if (last_command.t().nanoseconds() >= t_now) //As stated before, the last point must still be our goal, else it is not interesting anymore
-        {
-            m_vehicleCommandTrajectory = sample_CommandTrajectory;  
-            state = ControllerState::Trajectory;
-            latest_command_receive_time = t_now;
+        m_vehicleCommandTrajectory = sample_CommandTrajectory;  
+        state = ControllerState::Trajectory;
 
-            //Evaluation: Log received timestamp
-            cpm::Logging::Instance().write(
-                "Vehicle %u read trajectory message timestamp: %llu, at time %llu", 
-                vehicle_id, 
-                sample_CommandTrajectory.header().create_stamp().nanoseconds(), 
-                latest_command_receive_time
-            );
-        }
-        else
-        {
-            state = ControllerState::Stop;
-        }
-        //Log else? Would be good for debugging, but lead to spamming after a last point was reached
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            3,
+            "Controller: Read trajectory message. "
+            "Valid after %llu",
+            sample_CommandTrajectory.header().valid_after_stamp().nanoseconds()
+        );
+    }
+    // no new commands received
+    else if (state != ControllerState::Stop)
+    {
+        state = ControllerState::Stop;
+        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+        cpm::Logging::Instance().write(
+            1,
+            "Warning: Controller: "
+            "No new commands received. %s", "Stopping."
+        );
     }
 }
 
@@ -164,6 +158,7 @@ void Controller::update_remote_parameters()
 
 std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_command(uint64_t t_now)
 {
+    if (m_vehicleCommandTrajectory.trajectory_points().size() < 2) return nullptr;
     //m_vehicleCommandTrajectory is updated in receive_commands, which gets called in get_control_signals
     //The reason for this confusing structure is that it was most compatible to the already existing solution for the other data types
     if(m_vehicleCommandTrajectory.header().create_stamp().nanoseconds() > 0) 
@@ -189,18 +184,22 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
         if (end_point.t().nanoseconds() == 0)
         {
             cpm::Logging::Instance().write(
-                "%s",
-                "No valid interpolation data could be found within the current trajectory segment - no end value could be found!"
+                2,
+                "Warning: Controller: %s",
+                "Trajectory interpolation error: Missing trajectory point in the FUTURE."
             );
+            return nullptr;
         }
 
         //Log an error if we could not find a valid trajectory segment w.r.t. start
         if (start_point.t().nanoseconds() >= t_now)
         {
             cpm::Logging::Instance().write(
-                "%s",
-                "No valid interpolation data could be found within the current trajectory segment - start newer than expected!"
+                2,
+                "Warning: Controller: %s",
+                "Trajectory interpolation error: Missing trajectory point in the PAST."
             );
+            return nullptr;
         }
     
         assert(t_now >= start_point.t().nanoseconds());
@@ -213,8 +212,9 @@ std::shared_ptr<TrajectoryInterpolation> Controller::interpolate_trajectory_comm
     else 
     {
         cpm::Logging::Instance().write(
-            "%s",
-            "No valid trajectory data exists at this point in time!"
+            2,
+            "Warning: Controller: %s",
+            "Trajectory interpolation error: No valid trajectory data."
         );
     }
     return nullptr;
@@ -335,6 +335,7 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
             const double lateral_error_std = sqrt(lateral_error_variance);
 
             cpm::Logging::Instance().write(
+                3,
                 "Vehicle Controller Tracking Errors:"
                 "long,mean: %f  "
                 "long,std: %f  "
@@ -363,23 +364,13 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
     double motor_throttle = 0;
     double steering_servo = 0;
 
-    if(latest_command_receive_time + command_timeout < t_now
-        && state != ControllerState::Stop)
-    {
-        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
-        cpm::Logging::Instance().write(
-            "Warning: Vehicle Controller: "
-            "No new commands received. %s", "Stopping.");
-
-        state = ControllerState::Stop;
-    }
-
     if(m_vehicleState.IPS_update_age_nanoseconds() > 3000000000ull 
         && state == ControllerState::Trajectory)
     {
         //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
         cpm::Logging::Instance().write(
-            "Warning: Vehicle Controller: "
+            1,
+            "Error: Controller: "
             "Lost IPS position reference. %s", "Stopping.");
 
         state = ControllerState::Stop;
@@ -391,18 +382,11 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         {
             // Use function that calculates motor values for stopping immediately - which is also already used in main
             get_stop_signals(motor_throttle, steering_servo);
-            if (stop_count > 0)
-            {
-                --stop_count;
-            }
         }
         break;
 
         case ControllerState::SpeedCurvature:
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             const double speed_target = m_vehicleCommandSpeedCurvature.speed();
             const double curvature    = m_vehicleCommandSpeedCurvature.curvature();
             const double speed_measured = m_vehicleState.speed();
@@ -414,9 +398,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         case ControllerState::Trajectory:
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             std::lock_guard<std::mutex> lock(command_receive_mutex);
             trajectory_tracking_statistics_update(t_now);
 
@@ -430,9 +411,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         default: // Direct
         {
-            //Reset stop count which is used in stop state
-            stop_count = STOP_STEPS;
-
             motor_throttle = m_vehicleCommandDirect.motor_throttle();
             steering_servo = m_vehicleCommandDirect.steering_servo();
         }
@@ -451,11 +429,7 @@ void Controller::get_stop_signals(double &out_motor_throttle, double &out_steeri
     //Init. values
     double steering_servo = 0;
     double speed_target = 0;
-    const double curvature    = 0;
     const double speed_measured = m_vehicleState.speed();
-
-    //Set steering servo as in other methods, we are only interested in throttle change
-    steering_servo = steering_curvature_calibration(curvature);
     
     // P controller to reach 0 speed (without "backshooting" like with the PI controller in speed controller)
     double motor_throttle = ((speed_target>=0)?(1.0):(-1.0)) * pow(fabs(0.152744 * speed_target),(0.627910));

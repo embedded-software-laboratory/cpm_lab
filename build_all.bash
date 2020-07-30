@@ -1,7 +1,11 @@
 #!/bin/bash
-simulation=0
-
+# exit when any command fails
+set -e
+# Get directory of bash script
+BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd ${BASH_DIR}
 #Get command line arguments
+simulation=0
 for arg in "$@"
 do
     case $arg in
@@ -21,8 +25,7 @@ export SIMULATION=$simulation
 
 # cpm lib
 pushd cpm_lib
-    if [ $simulation == 0 ]
-    then
+    if [ $simulation == 0 ]; then
         bash build_arm.bash  
     fi
     bash build.bash
@@ -34,10 +37,12 @@ pushd lab_control_center
 popd
 
 pushd high_level_controller
-    pushd autostart
-        bash build.bash
-        bash create_nuc_package.bash
-    popd
+    if [ $simulation == 0 ]; then
+        pushd autostart
+            bash build.bash
+            bash create_nuc_package.bash
+        popd
+    fi
     pushd examples/cpp/central_routing
         bash build.bash
     popd
