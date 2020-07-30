@@ -39,7 +39,7 @@ pushd cpm_lib
 popd
 
 # lcc
-if [ $HEADLESS == 1 ]; then
+if [ $HEADLESS == 0 ]; then
     pushd lab_control_center
         bash build.bash
     popd
