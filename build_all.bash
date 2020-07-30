@@ -5,14 +5,21 @@ set -e
 BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${BASH_DIR}
 #Get command line arguments
-simulation=0
+SIMULATION=0
+HEADLESS=0
+
 for arg in "$@"
 do
     case $arg in
         -s|--simulation)
-        simulation=1
-	echo "Building in simulation mode: no IPS, no ARM builds."
+        SIMULATION=1
+	    echo "Building in simulation mode: no IPS, no ARM builds."
         shift # Remove --simulation from processing
+        ;;
+        --headless)
+        HEADLESS=1
+	    echo "Building in headless mode: no LCC."
+        shift # Remove --headless from processing
         ;;
         *)
         shift # Remove generic argument from processing
@@ -21,23 +28,25 @@ do
 done
 
 #make simulation variable available in all bash scripts called
-export SIMULATION=$simulation
+export SIMULATION
 
 # cpm lib
 pushd cpm_lib
-    if [ $simulation == 0 ]; then
+    if [ $SIMULATION == 0 ]; then
         bash build_arm.bash  
     fi
     bash build.bash
 popd
 
-
-pushd lab_control_center
-    bash build.bash
-popd
+# lcc
+if [ $HEADLESS == 1 ]; then
+    pushd lab_control_center
+        bash build.bash
+    popd
+fi
 
 pushd high_level_controller
-    if [ $simulation == 0 ]; then
+    if [ $SIMULATION == 0 ]; then
         pushd autostart
             bash build.bash
             bash create_nuc_package.bash
@@ -48,23 +57,19 @@ pushd high_level_controller
     popd
 popd
 
-
 pushd middleware
     bash build.bash
 popd
 
 pushd mid_level_controller
-    if [ $simulation == 0 ]
-    then
+    if [ $SIMULATION == 0 ]; then
         bash build.bash
     else
         bash build.bash --simulation
     fi
 popd
 
-
-if [ $simulation == 0 ]
-then
+if [ $SIMULATION == 0 ]; then
     pushd indoor_positioning_system
         bash build.bash
     popd
