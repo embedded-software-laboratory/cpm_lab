@@ -236,7 +236,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else
     {
         deploy_functions->reboot_real_vehicle(vehicle_id, reboot_timeout);
-        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout + 2); //Add two seconds because the whole reboot process might take a bit longer than the timeout
+        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout + 3); //Add some seconds because the whole reboot process might take a bit longer than the timeout
     }   
 }
 
@@ -255,6 +255,9 @@ void SetupViewUI::on_lcc_close() {
     {
         check_real_vehicle_data_thread.join();
     }
+
+    //Kill simulated vehicles
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated());
 }
 
 void SetupViewUI::switch_timer_set()
