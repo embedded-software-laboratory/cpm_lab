@@ -565,6 +565,25 @@ void SetupViewUI::deploy_applications() {
                     //If a new crash was detected, notify the UI thread. It will check the size of newly_crashed participants and create a dialog if is greater than zero
                     if (new_crash_detected)
                     {
+                        //Log the new crash
+                        std::stringstream program_stream;
+                        program_stream << "New: ";
+                        for (auto& entry : newly_crashed_participants)
+                        {
+                            program_stream << entry << " | ";
+                        }
+
+                        if (already_crashed_participants.size() > 0)
+                        {
+                            program_stream << " - Previous: ";
+                            for (auto& entry : already_crashed_participants)
+                            {
+                                program_stream << entry << " | ";
+                            }
+                        }
+                        
+                        cpm::Logging::Instance().write("The following programs crashed during simulation: %s", program_stream.str().c_str());
+
                         ui_dispatcher.emit();
                     }
                 }
