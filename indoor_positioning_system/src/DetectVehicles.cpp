@@ -142,11 +142,26 @@ DetectVehicles::find_vehicle_candidates
                     cv::Point2d center_point = 0.270491803 * (vehicle_point_set.back_left + vehicle_point_set.back_right)
                                                 + 0.459016393 * vehicle_point_set.front;
                         
+
+                    // is front point in correct angle to vehicle back? 
+                    double mod1   = sqrt(pow(vehicle_point_set.back_left.y-vehicle_point_set.front.y,2)+pow(vehicle_point_set.back_left.x-vehicle_point_set.front.x,2));
+                    double mod2   = sqrt(pow(vehicle_point_set.back_right.y-vehicle_point_set.front.y,2)+pow(vehicle_point_set.back_right.x-vehicle_point_set.front.x,2));
+                    double innerp = (vehicle_point_set.back_left.x-vehicle_point_set.front.x)*(vehicle_point_set.back_right.x-vehicle_point_set.front.x) + (vehicle_point_set.back_left.y-vehicle_point_set.front.y)*(vehicle_point_set.back_right.y-vehicle_point_set.front.y);
+                    double angle  = acos(innerp / (mod1 * mod2)) * 180 / M_PI;
+
+                    if (!(angle-0.5 <= 11.8613 && angle+0.5 >= 11.8613))
+                    {
+                        // incorrect orientation - front point does not match to vehicle back
+                        continue; 
+                    }
+
+
+                    // add ID LED
                     for (std::size_t l = 0; l < points.size(); l++) 
                     {
                         if (fabs(length(center_point - points[l])) < 0.03) 
                         {
-                            // add __TENTATIVE__ ID LED 
+                            // correct distances  
                             vehicle_candidate = {i,j,k,l}; 
                             break;
                         }
@@ -226,6 +241,7 @@ DetectVehicles::resolve_conflicts
                     is_conflict_solvable = 1;
                 }                
             }
+            
         }
     }
 
