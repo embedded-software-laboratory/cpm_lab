@@ -107,6 +107,9 @@ CommonroadViewUI::CommonroadViewUI
     reload_problems.store(true);
     //Also load the obstacle list
     load_obstacle_list.store(true);
+
+    //Set initial text of script path (from previous program execution, if that existed)
+    commonroad_path->set_text(FileChooserUI::get_last_execution_path(config_file_location));
 }
 
 using namespace std::placeholders;
@@ -321,7 +324,8 @@ void CommonroadViewUI::open_file_explorer()
         file_chooser_window = std::make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&CommonroadViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { xml_filter }
+            std::vector<FileChooserUI::Filter> { xml_filter },
+            config_file_location
         );
     }
     else

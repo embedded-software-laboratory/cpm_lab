@@ -129,6 +129,9 @@ private:
     bool apply_entry_translate_x(GdkEventKey* event);
     bool apply_entry_translate_y(GdkEventKey* event);
 
+    //Config file that stores the previously selected script
+    const std::string config_file_location = "./commonroad_file_chooser.config";
+
 public:
     /**
      * \brief Constructor

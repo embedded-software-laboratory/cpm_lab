@@ -26,13 +26,9 @@
 
 #include "FileChooserUI.hpp"
 
-//Init static previous_file
-std::string FileChooserUI::previous_file = "./";
-const std::string FileChooserUI::file_dialog_config_location = "./file_dialog_open_config.txt";
-bool FileChooserUI::file_config_loaded = false;
-
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
-    on_close_callback(_on_close_callback)
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::string config_file) :
+    on_close_callback(_on_close_callback),
+    config_location(config_file)
 {
     FileChooserUI::Filter yaml_filter;
     yaml_filter.name = "YAML files";
@@ -40,8 +36,9 @@ FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string
     init(parent, std::vector<FileChooserUI::Filter> {{yaml_filter}});
 }
 
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters) :
-    on_close_callback(_on_close_callback)
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string config_file) :
+    on_close_callback(_on_close_callback),
+    config_location(config_file)
 {
     init(parent, filters);
 }
@@ -99,7 +96,7 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     if (!file_config_loaded)
     {
         file_config_loaded = true;
-        previous_file = get_last_execution_path();
+        previous_file = get_last_execution_path(config_location);
     }
 
     //Open default or recently opened file / folder (not recommended by gtkmm documentation, because they want the user to use the "Recent"-Tab instead)
@@ -109,10 +106,10 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     window->signal_delete_event().connect(sigc::mem_fun(this, &FileChooserUI::on_delete));
 }
 
-std::string FileChooserUI::get_last_execution_path()
+std::string FileChooserUI::get_last_execution_path(std::string config_file)
 {
     std::string path = "";
-    std::ifstream input_stream(file_dialog_config_location);
+    std::ifstream input_stream(config_file);
     if (input_stream.good())
     {
         std::getline(input_stream, path);
@@ -199,7 +196,7 @@ void FileChooserUI::on_load() {
 
     //Store previous_file for next program execution
     std::ofstream file;
-    file.open(file_dialog_config_location, std::ofstream::out | std::ofstream::trunc);
+    file.open(config_location, std::ofstream::out | std::ofstream::trunc);
     file << previous_file << std::endl;
     file.close();
     
