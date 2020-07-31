@@ -35,14 +35,18 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+#include <atomic>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 class VehicleToggle 
 {
 public:
     VehicleToggle(unsigned int _id);
+    ~VehicleToggle();
 
     enum ToggleState{Off, Simulated, Real};
 
@@ -54,6 +58,12 @@ public:
     //Setter
     void set_state(ToggleState state);
     void set_sensitive(bool sensitive);
+
+    /**
+     * \brief Set the toggle insensitive for the given timeout, then set it to sensitive again
+     * \param timeout_seconds Time in seconds for the toggle to not respond to input
+     */
+    void set_insensitive(uint timeout_seconds);
     void set_selection_callback(std::function<void(unsigned int, ToggleState)> _selection_callback); //If set, callback gets called on state change
 
 private:
@@ -76,4 +86,14 @@ private:
     //Given values
     unsigned int id;
     std::function<void(unsigned int, ToggleState)> selection_callback;
+
+    //Timing for set_insensitive
+    std::atomic_bool signal_thread_stop;
+    std::atomic_bool thread_set_sensitive;
+    std::thread set_insensitive_thread;
+
+    //UI thread for set_insensitive
+    //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    void ui_dispatch(); //dispatcher callback for the UI thread
 };

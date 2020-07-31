@@ -49,6 +49,21 @@ VehicleToggle::VehicleToggle(unsigned int _id) :
 
     //Register switch callback
     vehicle_button->signal_clicked().connect(sigc::mem_fun(this, &VehicleToggle::on_state_changed));
+
+    signal_thread_stop.store(false);
+    thread_set_sensitive.store(true); //Sensitive by default
+    ui_dispatcher.connect(sigc::mem_fun(*this, &VehicleToggle::ui_dispatch));
+}
+
+VehicleToggle::~VehicleToggle()
+{
+    //Tell thread to abort early
+    signal_thread_stop.store(true);
+
+    if(set_insensitive_thread.joinable())
+    {
+        set_insensitive_thread.join();
+    }
 }
 
 void VehicleToggle::on_state_changed()
@@ -114,6 +129,46 @@ void VehicleToggle::update_style()
 void VehicleToggle::set_sensitive(bool sensitive)
 {
     parent->set_sensitive(sensitive);
+}
+
+void VehicleToggle::set_insensitive(uint timeout_seconds)
+{
+    //Tell thread to abort early
+    signal_thread_stop.store(true);
+
+    if(set_insensitive_thread.joinable())
+    {
+        set_insensitive_thread.join();
+    }
+
+    signal_thread_stop.store(false);
+
+    set_insensitive_thread = std::thread(
+        [this, timeout_seconds] ()
+        {
+            thread_set_sensitive.store(false);
+            ui_dispatcher.emit();
+
+            for (uint i = 0; i < timeout_seconds * 10; ++i)
+            {
+                //Abort waiting early on destruction
+                if (signal_thread_stop.load())
+                {
+                    return;
+                }
+                
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            thread_set_sensitive.store(true);
+            ui_dispatcher.emit();
+        }
+    );
+}
+
+void VehicleToggle::ui_dispatch()
+{
+    set_sensitive(thread_set_sensitive.load());
 }
 
 void VehicleToggle::set_selection_callback(std::function<void(unsigned int,ToggleState)> _selection_callback)

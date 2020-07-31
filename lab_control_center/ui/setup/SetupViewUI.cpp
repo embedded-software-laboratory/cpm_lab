@@ -181,10 +181,22 @@ SetupViewUI::SetupViewUI
                     auto id = vehicle_entry.first;
 
                     //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
-                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && 
-                        std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) == currently_simulated_vehicles.end())
+                    //See if a signal of a real vehicle is among the past 10 signals (due to 50Hz -> 500ms); real is more important than simulated
+                    double is_real_sum = 0.0; //Is real if at least one value in the vector is 1
+                    for (auto& entry : vehicle_entry.second.at("is_real")->get_last_n_values(10))
+                    {
+                        is_real_sum += entry;
+                    }
+
+                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_sum > 0)
                     {
                         active_real_vehicles.push_back(id);
+
+                        //Kill simulated vehicle if real vehicle was detected
+                        if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
+                        {
+                            deploy_functions->kill_sim_vehicle(id);
+                        }
                     }
                 }
 
@@ -223,36 +235,8 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     }
     else
     {
-        //Kill old reboot threads that are done before adding a new one
-        kill_finished_reboot_threads();
-
-        std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
-        //Only create a reboot thread if no such thread already exists
-        if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
-        {
-            std::unique_lock<std::mutex> lock(reboot_done_mutex);
-            reboot_thread_done[vehicle_id] = false;
-            lock.unlock();
-
-            vehicle_reboot_threads[vehicle_id] = std::thread(
-                [this, vehicle_id] () {
-                    bool msg_success = deploy_functions->reboot_real_vehicle(
-                        vehicle_id, //reboot vehicle with this ID
-                        3, //wait for 3 seconds
-                        std::bind(&SetupViewUI::is_active_real, this, vehicle_id) //Check if vehicle is still active in between
-                    );
-
-                    if(!msg_success)
-                    {
-                        cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
-                    }
-
-                    std::lock_guard<std::mutex> lock(reboot_done_mutex);
-                    reboot_thread_done[vehicle_id] = true;
-                }
-            );
-        }
-        
+        deploy_functions->reboot_real_vehicle(vehicle_id, reboot_timeout);
+        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout + 3); //Add some seconds because the whole reboot process might take a bit longer than the timeout
     }   
 }
 
@@ -271,6 +255,9 @@ void SetupViewUI::on_lcc_close() {
     {
         check_real_vehicle_data_thread.join();
     }
+
+    //Kill simulated vehicles
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated());
 }
 
 void SetupViewUI::switch_timer_set()
@@ -357,32 +344,24 @@ void SetupViewUI::ui_dispatch()
         //Update vehicle toggles
         std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
 
-        //Set vehicle toggles to real for all active vehicles
-        for (auto& id : active_real_vehicles)
+        for (std::shared_ptr<VehicleToggle> toggle : vehicle_toggles)
         {
-            if ((id - 1) < vehicle_toggles.size())
-            {
-                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Real);
+            unsigned int id = toggle->get_id();
+            std::vector<unsigned int> active_sim_vehicles = get_vehicle_ids_simulated();
+            bool is_sim = (std::find(active_sim_vehicles.begin(), active_sim_vehicles.end(), id) != active_sim_vehicles.end());
+            bool is_real = (std::find(active_real_vehicles.begin(), active_real_vehicles.end(), id) != active_real_vehicles.end());
+            
+            if (is_real){
+                //If we find it both in is_sim and is_real, the real vehicle is more important
+                toggle->set_state(VehicleToggle::Real);
+            } 
+            else if (is_sim){
+                toggle->set_state(VehicleToggle::Simulated);
+            }
+            else {
+                toggle->set_state(VehicleToggle::Off);
             }
         }
-
-        //Get diff to previous vehicles, set toggles for that
-        std::sort(active_real_vehicles.begin(), active_real_vehicles.end());
-        std::sort(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end());
-        std::vector<unsigned int> diff;
-        std::set_difference(vehicle_toggles_set_to_real.begin(), vehicle_toggles_set_to_real.end(), 
-            active_real_vehicles.begin(), active_real_vehicles.end(), 
-            std::inserter(diff, diff.begin()));
-        for (auto& id : diff)
-        {
-            if ((id - 1) < vehicle_toggles.size())
-            {
-                vehicle_toggles.at((id - 1))->set_state(VehicleToggle::Off);
-            }
-        }
-
-        //Remember previously active vehicles to change toggles back if vehicle is offline
-        vehicle_toggles_set_to_real = active_real_vehicles;
     }
     else
     {
@@ -425,6 +404,8 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
+
+    //Grey out vehicle toggles / undo this depending on their timestamp
 }
 
 void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
@@ -494,38 +475,6 @@ void SetupViewUI::kill_all_threads()
         }
     }
     upload_threads.clear();
-
-    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
-    for (auto& thread : vehicle_reboot_threads)
-    {
-        if (thread.second.joinable())
-        {
-            thread.second.join();
-        }
-        else 
-        {
-            std::cerr << "Warning: Shutting down with reboot thread that cannot be joined" << std::endl;
-        }
-    }
-    vehicle_reboot_threads.clear();
-}
-
-void SetupViewUI::kill_finished_reboot_threads()
-{
-    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
-    for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
-    {
-        std::lock_guard<std::mutex> lock(reboot_done_mutex);
-        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
-        {
-            thread_ptr->second.join();
-            thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
-        }
-        else
-        {
-            ++thread_ptr;
-        }
-    }
 }
 
 bool SetupViewUI::check_if_online(uint8_t hlc_id)
