@@ -29,6 +29,7 @@
 #include <libxml++-2.6/libxml++/libxml++.h>
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -250,6 +251,12 @@ public:
      * \return Center of the shape of all points (get_center just takes a look at the two boundary points in the middle of the lanelet)
      */
     std::pair<double, double> get_center_of_all_points();
+
+    /**
+     * \brief Get min. and max. x and y value of all points of the lanelet
+     * \return [[min_x, max_x], [min_y, max_y]]
+     */
+    std::array<std::array<double, 2>, 2> get_range_x_y();
 
     /**
      * \brief Get the lanelet shape as a polygon

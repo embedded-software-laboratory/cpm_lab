@@ -688,47 +688,21 @@ void CommonRoadScenario::calculate_center()
     //Init center
     center = std::pair<double, double>(0.0, 0.0);
 
-    double x_avg = 0.0;
-    double y_avg = 0.0;
-    double count = 1.0;
+    double x_min, y_min = std::numeric_limits<double>::max();
+    double x_max, y_max = std::numeric_limits<double>::min();
+
     for (auto lanelet : lanelets)
     {
-        //Calculate avg iteratively
-        auto center = lanelet.second.get_center_of_all_points();
-        x_avg += (center.first - x_avg) / count;
-        y_avg += (center.second - y_avg) / count;
-        ++count;
+        auto x_y_range = lanelet.second.get_range_x_y();
+
+        x_min = std::min(x_min, x_y_range[0][0]);
+        x_max = std::min(x_max, x_y_range[0][1]);
+        y_min = std::min(y_min, x_y_range[1][0]);
+        y_max = std::min(y_max, x_y_range[1][1]);
     }
-    // for (auto static_obstacle : static_obstacles)
-    // {
-    //     auto state = static_obstacle.second.get_initial_state();
-    //     if (state.has_value())
-    //     {
-    //         auto position = state->get_position();
-    //         if (! position.position_is_lanelet_ref())
-    //         {
-    //             auto center = position.get_center();
-    //             x_sum += center.first;
-    //             y_sum += center.second;
-    //             ++count;
-    //         }
-    //     }
-    // }
-    // for (auto dynamic_obstacle : dynamic_obstacles)
-    // {
-    //     auto state = dynamic_obstacle.second.get_initial_state();
-    //     if (state.has_value())
-    //     {
-    //         auto position = state->get_position();
-    //         if (! position.position_is_lanelet_ref())
-    //         {
-    //             auto center = position.get_center();
-    //             x_sum += center.first;
-    //             y_sum += center.second;
-    //             ++count;
-    //         }
-    //     }
-    // }
+
+    center.first = (0.5 * x_min) + (0.5 * x_max);
+    center.second = (0.5 * y_min) + (0.5 * y_max);
 
     std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }
