@@ -306,7 +306,7 @@ std::list<cv::Point2d> DetectVehicles::find_remaining_points
 {
     // determine all indices of floor points that belong to vehicles
     std::vector<std::size_t> all_vehicle_indices;
-    for (const auto &veh_candidate : vehicle_candidates)
+    for (const auto &vehicle_candidate : vehicle_candidates)
     {
         for (const auto &idx : vehicle_candidate)
         {
@@ -401,7 +401,7 @@ VehiclePointSet DetectVehicles::assign_vehicle_points
     {
         // ID LED 
         vehicle_point_set.center_present = 1;
-        vehicle_point_set.center = vehicle_candidate[3];
+        vehicle_point_set.center = floor_points[vehicle_candidate[3]];
     }
     
 
