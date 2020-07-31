@@ -63,12 +63,10 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points) const
     vehicle_points.timestamp = floor_points.timestamp;
     for (const std::array<std::size_t, 4> &veh : vehicles)
     {
-        // assign point tripel to vehicle point set
+        // assign points to vehicle point set
         VehiclePointSet vehicle_point_set = 
             assign_vehicle_points(floor_points.points,
                                   veh);
-        // look for a center point
-        find_center_point(vehicle_point_set, remaining_points);
         // add vehicle point set to vehicle_points
         vehicle_points.vehicles.push_back(vehicle_point_set);
     }
@@ -138,7 +136,8 @@ DetectVehicles::find_vehicle_candidates
                 {
                     std::array<std::size_t, 4> vehicle_candidate = {i, j, k, ULONG_MAX};
 
-                    // TODO: check for ID LED 
+                    // Check for ID LED 
+                    // weighted average: 70/152.5 for front point, 82.5/152.5/2 for rear points
                     VehiclePointSet vehicle_point_set = assign_vehicle_points(points, vehicle_candidate);  
                     cv::Point2d center_point = 0.270491803 * (vehicle_point_set.back_left + vehicle_point_set.back_right)
                                                 + 0.459016393 * vehicle_point_set.front;
@@ -309,10 +308,11 @@ std::list<cv::Point2d> DetectVehicles::find_remaining_points
     std::vector<std::size_t> all_vehicle_indices;
     for (const auto &veh_candidate : vehicle_candidates)
     {
-        // drop all tentative ID LEDs 
-        std::array<std::size_t, 3> vehicle_candidate = {veh_candidate[0], veh_candidate[1], veh_candidate[2]};
         for (const auto &idx : vehicle_candidate)
         {
+            // skip ULONG_MAX if no ID LED is present 
+            if (idx == ULONG_MAX) continue; 
+            
             all_vehicle_indices.push_back(idx);
         }
     }
@@ -391,28 +391,19 @@ VehiclePointSet DetectVehicles::assign_vehicle_points
     vehicle_point_set.back_left = rear_left;
     vehicle_point_set.back_right = rear_right;    
 
-    return vehicle_point_set;
-}
-
-
-void DetectVehicles::find_center_point(VehiclePointSet &vehicle_point_set,
-                                       std::list<cv::Point2d> &remaining_points) const
-{
-    // weighted average: 70/152.5 for front point, 82.5/152.5/2 for rear points
-    cv::Point2d point_center = 
-          0.270491803 * (vehicle_point_set.back_left + vehicle_point_set.back_right)
-        + 0.459016393 * vehicle_point_set.front;
-    for (auto it = remaining_points.begin(); it != remaining_points.end(); ++it)
+    // determine ID LED
+    if (vehicle_candidate[3] == ULONG_MAX) 
     {
-        // if point is near vehicle center point, assign it to vehicle
-        if (fabs(length(*it - point_center)) < 0.03)
-        {
-            vehicle_point_set.center_present = 1;
-            vehicle_point_set.center = *it;
-            remaining_points.erase(it);
-            return;
-        }
+        // no ID LED
+        vehicle_point_set.center_present = 0; 
     }
-    vehicle_point_set.center_present = 0;
-    return;
+    else
+    {
+        // ID LED 
+        vehicle_point_set.center_present = 1;
+        vehicle_point_set.center = vehicle_candidate[3];
+    }
+    
+
+    return vehicle_point_set;
 }
