@@ -68,5 +68,10 @@ struct VehicleState {
      */
     double motor_throttle;                            // dimensionless, in [-1, 1]
     double steering_servo;                            // dimensionless, in [-1, 1]
+
+    /*
+     * The lab control center is, without this variable, unable to differentiate between signals from a simulated and from a real vehicle
+     */
+    boolean is_real;
 };
 #endif
