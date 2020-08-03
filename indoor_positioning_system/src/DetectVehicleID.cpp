@@ -51,7 +51,8 @@ struct SignalEdge
 
 VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointTimeseries)
 {
-    assert(vehiclePointTimeseries.size() > 30);
+    VehiclePoints result;
+    if (vehiclePointTimeseries.empty()) return result;
 
     // We want to identify the vehicles in the most recent frame: vehiclePointTimeseries.back().
     // Algorithm: Iterate backwards in time, and track which vehicle is
@@ -137,7 +138,7 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
     // corresponds to a particular physical vehicle.
     // Now extract the ID of each vehicle.
 
-    VehiclePoints result = vehiclePointTimeseries.back();
+    result = vehiclePointTimeseries.back();
 
     for (size_t vehicle_index = 0; vehicle_index < vehicles_tracked_by_proximity.size(); ++vehicle_index)
     {
