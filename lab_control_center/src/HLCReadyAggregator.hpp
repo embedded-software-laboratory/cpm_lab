@@ -34,6 +34,7 @@
 
 #include "ReadyStatus.hpp"
 
+#include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/get_time_ns.hpp"
@@ -57,6 +58,15 @@ private:
 
 public:
     HLCReadyAggregator();
+    /**
+     * \brief Gets currently online NUCs and checks if a NUC has crashed based on currently stored HLC entries and time to live
+     * \return NUC IDs as strings
+     */
     std::vector<std::string> get_hlc_ids_string();
+
+    /**
+     * \brief Gets currently online NUCs and checks if a NUC has crashed based on currently stored HLC entries and time to live
+     * \return NUC IDs as uint8_t
+     */
     std::vector<uint8_t> get_hlc_ids_uint8_t();
 };
