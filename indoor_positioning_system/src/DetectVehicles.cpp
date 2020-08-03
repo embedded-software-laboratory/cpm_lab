@@ -149,7 +149,7 @@ DetectVehicles::find_vehicle_candidates
                     double innerp = (vehicle_point_set.back_left.x-vehicle_point_set.front.x)*(vehicle_point_set.back_right.x-vehicle_point_set.front.x) + (vehicle_point_set.back_left.y-vehicle_point_set.front.y)*(vehicle_point_set.back_right.y-vehicle_point_set.front.y);
                     double angle  = acos(innerp / (mod1 * mod2)) * 180 / M_PI;
 
-                    if (!(angle-0.5 <= 11.8613 && angle+0.5 >= 11.8613))
+                    if (!(angle-0.9 <= 11.8613 && angle+0.9 >= 11.8613))
                     {
                         // incorrect orientation - front point does not match to vehicle back
                         continue; 
