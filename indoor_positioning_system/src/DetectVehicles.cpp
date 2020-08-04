@@ -241,20 +241,17 @@ DetectVehicles::resolve_conflicts
     }
 
     //all conflicts resolved?
-    bool all_resolved = true; 
     for (std::size_t m = 0; m < mat_conflicts.col(0).total(); ++m)
     {
-        if(!resolved[m]) all_resolved = false;
-    }
-
-    if (!all_resolved) 
-    {
-        cpm::Logging::Instance().write(
-            1,
-            "IPS conflict not %s",
-            "solvable"
-        );
-
+        if(!resolved[m])
+        {
+            cpm::Logging::Instance().write(
+                1,
+                "%s",
+                "IPS conflict not solvable"
+            );
+            break;
+        }
     }
 
     return vehicles;
