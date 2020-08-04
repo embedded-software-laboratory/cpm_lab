@@ -47,7 +47,7 @@
 
 
 typedef struct
-{ // 15 bytes
+{ // 12 bytes
 	uint32_t pi_tick;
 	int16_t motor_pwm;
 	int16_t servo_command;

@@ -30,6 +30,7 @@
 #include <array>
 #include <utility>
 #include <cstdint>
+#include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
 using std::vector;
 using std::array;
@@ -74,6 +75,6 @@ public:
     void apply_timestep(uint64_t dt_nanos);
 
     // Change the own speed profile so as not to collide with the other_vehicles.
-    void avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
+    bool avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
     uint8_t get_vehicle_id(){return vehicle_id;}
 };

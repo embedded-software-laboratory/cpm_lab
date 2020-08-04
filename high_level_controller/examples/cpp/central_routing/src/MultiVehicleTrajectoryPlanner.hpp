@@ -48,6 +48,7 @@ class MultiVehicleTrajectoryPlanner
 public:
 
     MultiVehicleTrajectoryPlanner(uint64_t dt_nanos);
+    ~MultiVehicleTrajectoryPlanner();
     std::vector<VehicleCommandTrajectory> get_trajectory_commands(uint64_t t_now);
     void set_real_time(uint64_t t);
     bool is_started() {return started;}

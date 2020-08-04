@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
         {
             //Log control cycle period
             //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write(3, "Vehicle %u control cycle timestamp: %llu", vehicle_id, update_loop->get_time());
+            cpm::Logging::Instance().write(3, "Control cycle timestamp: %llu", update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
@@ -175,12 +175,6 @@ int main(int argc, char *argv[])
                     sample_vehicleObservation,
                     sample_vehicleObservation_age
                 );
-
-                spi_mosi_data_t spi_mosi_data;
-                memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
-
-                // vehicle ID for LED flashing 
-                spi_mosi_data.vehicle_id = vehicle_id;
 
                 double motor_throttle = 0;
                 double steering_servo = 0;
@@ -213,22 +207,22 @@ int main(int argc, char *argv[])
                 uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
                 if(motor_throttle > 0.05) motor_mode = SPI_MOTOR_MODE_FORWARD;
                 if(motor_throttle < -0.05) motor_mode = SPI_MOTOR_MODE_REVERSE;
-                //Use break mode if stop signal was received
-                // if(stop_counter.load() != 0)
-                // {
-                //     motor_mode = SPI_MOTOR_MODE_BRAKE;
-                // }
 
-                // Convert to low level controller units
+                spi_mosi_data_t spi_mosi_data;
+                memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
+                
+                // Convert actuator input to low level controller units
                 spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
                 spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
                 spi_mosi_data.motor_mode = motor_mode;
+
+                // vehicle ID for LED flashing 
+                spi_mosi_data.vehicle_id = static_cast<uint8_t>(vehicle_id);
 
                 // Exchange data with low level micro-controller
                 spi_miso_data_t spi_miso_data;
 
                 //auto t_transfer_start = update_loop->get_time();
-
                 spi_transfer(
                     spi_mosi_data,
                     &spi_miso_data,
@@ -262,8 +256,10 @@ int main(int argc, char *argv[])
                 else 
                 {
                     cpm::Logging::Instance().write(
+                        1,
                         "Data corruption on ATmega SPI bus. CRC mismatch. After %i attempts.", 
-                        n_transmission_attempts);
+                        n_transmission_attempts
+                    );
                 }
 
                 if(loop_count == 25)
@@ -276,7 +272,10 @@ int main(int argc, char *argv[])
             {
                 //std::cerr << "Exception: " << e.what() << std::endl;
                 std::string err_message = e.what();
-                cpm::Logging::Instance().write("Exception: %s", err_message.c_str());
+                cpm::Logging::Instance().write(
+                    1,
+                    "Error: %s",
+                    err_message.c_str());
             }
 
             //If a stop signal was received, stop the vehicle (was done above, get_control_signals is ignored)
@@ -302,7 +301,10 @@ int main(int argc, char *argv[])
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
 
             //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
-            cpm::Logging::Instance().write("Received stop %s", "signal");
+            cpm::Logging::Instance().write(
+                3,
+                "Received stop %s",
+                "signal");
         }
     );
     
