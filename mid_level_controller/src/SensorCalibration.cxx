@@ -53,5 +53,6 @@ VehicleState SensorCalibration::convert(spi_miso_data_t spi_miso_data) {
     vehicleState.speed                       (spi_miso_data.speed * speed_meter_per_second_per_step);
     vehicleState.battery_voltage             (spi_miso_data.battery_voltage * battery_volt_per_step); //TODO: filter battery voltage 
     vehicleState.motor_current               (spi_miso_data.motor_current * motor_ampere_per_step);
+    vehicleState.is_real                     (true); //This part is only called for the real vehicle
     return vehicleState;
 }

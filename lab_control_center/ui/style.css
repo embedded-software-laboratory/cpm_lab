@@ -38,13 +38,13 @@
     color: white;
 }
 
-.vehicle_toggle{
+.vehicle_toggle_off{
     /* background-image: linear-gradient(#B71C1C);
     background-color: #B71C1C; */
     color: #B71C1C;
 }
 
-.vehicle_toggle:checked{
+.vehicle_toggle_sim{
     /* background-image: linear-gradient(#33691E);
     background-color: #33691E; */
     color: #33691E;

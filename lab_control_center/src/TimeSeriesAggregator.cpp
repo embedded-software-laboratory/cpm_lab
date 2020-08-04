@@ -111,6 +111,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id]["motor_current"] = make_shared<TimeSeries>(
         "Motor Current", "%5.2f", "A");
 
+    timeseries_vehicles[vehicle_id]["is_real"] = make_shared<TimeSeries>(
+        "Is Real", "%d", "-");
+
 }
 
 
@@ -157,6 +160,7 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             timeseries_vehicles[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
             timeseries_vehicles[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
             timeseries_vehicles[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
+            timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, static_cast<double>(state.is_real())); //Type conversion to fit the current way of handling data
             // initialize reference deviation, since no reference is available at start 
             timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
         }
