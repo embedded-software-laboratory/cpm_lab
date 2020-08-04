@@ -105,7 +105,11 @@ int main(int argc, char *argv[])
             auto commands = planner.get_trajectory_commands(t_now);
             auto computation_end_time = timer->get_time();
 
-            cpm::Logging::Instance().write("%s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string.c_str(), computation_start_time, computation_end_time);
+            cpm::Logging::Instance().write(
+                3,
+                "%s, Computation start time: %llu, Computation end time: %llu",
+                vehicle_ids_string.c_str(), computation_start_time, computation_end_time
+            );
             for(auto& command:commands)
             {
                 writer_vehicleCommandTrajectory.write(command);
@@ -125,7 +129,12 @@ int main(int argc, char *argv[])
 
             if(!all_vehicles_online)
             {
-                std::cout << "Waiting for vehicles ..." << std::endl;
+                // FIXME Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+                cpm::Logging::Instance().write(
+                    3,
+                    "Waiting for %s ...",
+                    "vehicles"
+                );
                 return;
             }
 
@@ -143,12 +152,20 @@ int main(int argc, char *argv[])
                 if(matched)
                 {
                     planner.add_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index));
-                    std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
+                    cpm::Logging::Instance().write(
+                        3,
+                        "Vehicle %d matched.",
+                        int(new_id)
+                    );
                 }
                 else //Errormessage, if not all vehicles could be matched to the map
                 {
                     all_vehicles_matched = false;
-                    std::cout << "Vehicle " << int(new_id) << " not matched" << std::endl;
+                    cpm::Logging::Instance().write(
+                        1,
+                        "Error: Vehicle %d not matched.",
+                        int(new_id)
+                    );
                 }
             }
 

@@ -94,12 +94,14 @@ void VehicleModel::log_sim_warnings(
     if (fabs(motor_throttle) > motor_throttle_lim)
     {
         cpm::Logging::Instance().write(
+            2,
             "Absolute of motor_throttle=%f exceeds limit of %f.", 
             motor_throttle, motor_throttle_lim);     
     }
     if (fabs(steering_servo) > steering_servo_lim)
     {
         cpm::Logging::Instance().write(
+            2,
             "Absolute of steering_servo=%f exceeds limit of %f.", 
             steering_servo, steering_servo_lim);     
     }
@@ -107,6 +109,7 @@ void VehicleModel::log_sim_warnings(
     if (fabs(d_speed) > a_lon_lim)
     {
         cpm::Logging::Instance().write(
+            2,
             "Absolute of longitudinal acceleration %f exceeds limit of %f.", 
             d_speed, a_lon_lim);
     }
@@ -114,6 +117,7 @@ void VehicleModel::log_sim_warnings(
     if (fabs(a_lat) > a_lat_lim)
     {
         cpm::Logging::Instance().write(
+            2,
             "Absolute of lateral acceleration %f exceeds limit of %f.", 
             a_lat, a_lat_lim);
     }

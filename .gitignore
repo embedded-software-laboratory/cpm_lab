@@ -25,7 +25,7 @@ Debug/
 .vs/
 vehicle_raspberry_pi_zero_w/cross_compile/tools/
 rtidds/
-*.glade~
+*~
 tools/map_print2/*.mat
 .vscode
 ParamServer/yaml-cpp

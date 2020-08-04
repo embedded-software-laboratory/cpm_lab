@@ -345,6 +345,7 @@ void MpcController::optimize_control_inputs(
     else
     {
         cpm::Logging::Instance().write(
+            2,
             "Warning: Trajectory Controller: "
             "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
 
@@ -394,20 +395,24 @@ bool MpcController::interpolate_reference_trajectory(
 
     if(t_trajectory_min >= t_start)
     {
-        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+        // TODO: Cleanup workaround to avoid logger compile warning when no formatting is used
         cpm::Logging::Instance().write(
-            "Warning: Trajectory Controller: The trajectory command starts in the %s.", "future");
-
+            2,
+            "Warning: Trajectory Controller: The first trajectory point is in the %s.",
+            "future"
+        );
         return false;
     }
 
     if(t_trajectory_max < t_end)
     {
         cpm::Logging::Instance().write(
+            2,
             "Warning: Trajectory Controller: "
             "The trajectory command has insufficient lead time. "
             "Increase lead time by %.2f ms.",
-            double(t_end - t_trajectory_max) * 1e-6);
+            double(t_end - t_trajectory_max) * 1e-6
+        );
         return false;
     }
 
@@ -426,6 +431,7 @@ bool MpcController::interpolate_reference_trajectory(
         end_point.t().nanoseconds(0);
 
         //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
+        // It is certain that this point exists, since we checked that (t_trajectory_min >= t_start) && (t_trajectory_max < t_end)
         for (size_t i = 1; i < trajectory_points.size(); ++i)
         {
             if (trajectory_points.at(i).t().nanoseconds() >= t_interpolation)
@@ -436,24 +442,6 @@ bool MpcController::interpolate_reference_trajectory(
             }
         }
 
-        //Log an error if we could not find a valid trajectory segment w.r.t. end
-        if (end_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- no end value could be found!"
-            );
-        }
-
-        //Log an error if we could not find a valid trajectory segment w.r.t. start
-        if (start_point.t().nanoseconds() >= t_interpolation || start_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- start newer than expected or no start found!"
-            );
-        }
-    
         assert(t_now <= end_point.t().nanoseconds());
 
         assert(t_interpolation >= start_point.t().nanoseconds());
@@ -464,6 +452,7 @@ bool MpcController::interpolate_reference_trajectory(
         if(fabs(trajectory_interpolation.acceleration_x) > 20.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_x = %f",
@@ -474,6 +463,7 @@ bool MpcController::interpolate_reference_trajectory(
         if(fabs(trajectory_interpolation.acceleration_y) > 20.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_y = %f",
@@ -484,6 +474,7 @@ bool MpcController::interpolate_reference_trajectory(
         if(fabs(trajectory_interpolation.curvature) > 50.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large curvature in reference trajectory. "
                 "curvature = %f",

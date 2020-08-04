@@ -77,6 +77,7 @@ private:
     static std::string previous_file;
     static bool file_config_loaded;
     static const std::string file_dialog_config_location;
+    static const std::string default_load_path;
 public:
     FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
 

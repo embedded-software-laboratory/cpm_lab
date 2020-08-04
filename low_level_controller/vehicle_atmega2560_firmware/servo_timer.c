@@ -98,7 +98,7 @@ uint32_t get_tick() {
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
 	// use the same timer for LEDs, as it has the same frequency-requirements 
-	toggle_led();
+	led_toggle();
 }
 
 

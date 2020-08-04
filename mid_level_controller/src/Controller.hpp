@@ -84,8 +84,6 @@ class Controller
 
     const uint64_t command_timeout = 500000000ull;
 
-    uint64_t latest_command_receive_time = 0;
-
     double speed_throttle_error_integral = 0;
 
     std::mutex command_receive_mutex;
@@ -99,7 +97,6 @@ class Controller
 
     double speed_controller(const double speed_measured, const double speed_target);
 
-
     void receive_commands(uint64_t t_now);
 
     std::shared_ptr<TrajectoryInterpolation> interpolate_trajectory_command(uint64_t t_now);
@@ -110,16 +107,6 @@ class Controller
     double trajectory_tracking_statistics_lateral_errors       [TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE];
     size_t trajectory_tracking_statistics_index = 0;
 
-    //If this variable is not zero, no new commands are received until the current time is greater than its value
-    //Is used for the stop signal, to prevent receiving late signals
-    uint64_t message_receive_pause = 0;
-
-    //Used to remember speed when stop signal is received, or when stop mode is enabled
-    double speed_at_stop = 0.0;
-
-    //Used for stop steps in stop mode
-    unsigned int stop_count = 5; 
-    unsigned int STOP_STEPS = 5;
 public:
     Controller(uint8_t vehicle_id, std::function<uint64_t()> _get_time);
     void update_vehicle_state(VehicleState vehicleState);

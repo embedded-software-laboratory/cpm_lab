@@ -34,6 +34,23 @@ Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, s
 
 }
 
+Deploy::~Deploy()
+{
+    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
+    for (auto& thread : vehicle_reboot_threads)
+    {
+        if (thread.second.joinable())
+        {
+            thread.second.join();
+        }
+        else 
+        {
+            std::cerr << "Warning: Shutting down with reboot thread that cannot be joined" << std::endl;
+        }
+    }
+    vehicle_reboot_threads.clear();
+}
+
 void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params) 
 {
     std::string sim_time_string = bool_to_string(use_simulated_time);
@@ -171,26 +188,97 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     system(command.str().c_str());
 }
 
-void Deploy::kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> active_vehicle_ids) 
+void Deploy::stop_vehicles(std::vector<unsigned int> vehicle_ids)
 {
-    for (const unsigned int id : simulated_vehicle_ids)
-    {
-        kill_vehicle(id);
-    }
-
-    //Also make all vehicles stop immediately, so that they do not continue to drive for a while   
-    for (const auto id : active_vehicle_ids)
+    // make all vehicles stop immediately, so that they do not continue to drive for a while   
+    for (const auto id : vehicle_ids)
     {
         stop_vehicle(static_cast<uint8_t>(id));
     }
 }
 
-void Deploy::kill_vehicle(unsigned int id) 
+
+void Deploy::kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids) 
+{
+    for (const unsigned int id : simulated_vehicle_ids)
+    {
+        kill_sim_vehicle(id);
+    }
+}
+
+void Deploy::kill_sim_vehicle(unsigned int id) 
 {
     std::stringstream vehicle_id;
     vehicle_id << "vehicle_" << id;
     
     kill_session(vehicle_id.str());
+}
+
+void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_seconds) 
+{
+    //Kill old reboot threads that are done before adding a new one
+    kill_finished_reboot_threads();
+
+    //Get the IP address from the current vehicle_id (192.168.1.1XX)
+    std::stringstream ip_stream;
+    ip_stream << "192.168.1.1";
+    if (vehicle_id < 10)
+    {
+        ip_stream << "0";
+    }
+    ip_stream << vehicle_id;
+    std::string ip = ip_stream.str();
+
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+    //Only create a reboot thread if no such thread already exists
+    if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
+    {
+        std::unique_lock<std::mutex> lock(reboot_done_mutex);
+        reboot_thread_done[vehicle_id] = false;
+        lock.unlock();
+
+        vehicle_reboot_threads[vehicle_id] = std::thread(
+            [this, vehicle_id, ip, timeout_seconds] () {
+                //Create and send the vehicle kill command via SSH (Open pw is cpmcpmcpm, can be in Git)
+                //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
+                std::stringstream command_kill_real_vehicle;
+                command_kill_real_vehicle 
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
+                bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
+                    [] () { 
+                        //Ignore the check if the vehicle is still online
+                        return true; 
+                    }
+                );
+
+                if(!msg_success)
+                {
+                    cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
+                }
+
+                std::lock_guard<std::mutex> lock(reboot_done_mutex);
+                reboot_thread_done[vehicle_id] = true;
+            }
+        );
+    }
+}
+
+void Deploy::kill_finished_reboot_threads()
+{
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
+    for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
+    {
+        std::lock_guard<std::mutex> lock(reboot_done_mutex);
+        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
+        {
+            thread_ptr->second.join();
+            thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
+        }
+        else
+        {
+            ++thread_ptr;
+        }
+    }
 }
 
 bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 
@@ -480,10 +568,10 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();
 
+    auto time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
-    while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start_time).count() < static_cast<int64_t>(timeout_seconds))
+    while (time_passed_ms < static_cast<int64_t>(timeout_seconds) * 1000)
     {
-        std::cout << "Waiting" << std::endl;
         //Check current program state
         PROCESS_STATE state = get_child_process_state(process_id);
 
@@ -503,11 +591,23 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
             return false;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        //Use longer sleep time until short before end of timeout
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+        auto remaining_time = static_cast<int64_t>(timeout_seconds) * 1000 - time_passed_ms;
+        if (remaining_time > 1000)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        else if (remaining_time > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(remaining_time));
+        }
+        
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
     }
 
     //Now kill the process, as it has not yet finished its execution
-    std::cout << "Killing" << std::endl;
+    //std::cout << "Killing" << std::endl;
     kill_process(process_id);
     return false;
 }
