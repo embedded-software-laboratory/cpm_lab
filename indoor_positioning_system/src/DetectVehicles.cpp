@@ -54,11 +54,6 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points) const
     std::vector< std::array<std::size_t, 4> > vehicles =
         resolve_conflicts(vehicle_candidates);
 
-    // remove points assigned to vehicles from input floor_points
-    std::list<cv::Point2d> remaining_points = 
-        find_remaining_points(floor_points.points,
-                              vehicles);
-
     VehiclePoints vehicle_points;
     vehicle_points.timestamp = floor_points.timestamp;
     for (const std::array<std::size_t, 4> &veh : vehicles)
