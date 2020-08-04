@@ -26,7 +26,6 @@
 
 #include "catch.hpp"
 #include "DetectVehicleID.hpp"
-#include "cpm/Logging.hpp"
 
 
 
