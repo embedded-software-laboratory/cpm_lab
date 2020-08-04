@@ -26,7 +26,6 @@
 
 #include "catch.hpp"
 #include "DetectVehicleID.hpp"
-#include "cpm/Logging.hpp"
 
 
 
@@ -35,8 +34,6 @@ TEST_CASE("test_DetectVehicleID")
     // Create test data
     std::vector<uint8_t> vehicle_id_4_blink_sequence {0,0,0,0,0,0,0,1,1,0,0,0,0};
     std::vector<uint8_t> vehicle_id_9_blink_sequence {0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0};
-
-    cpm::Logging::Instance().set_id("ips_pipeline");
 
     VehiclePointTimeseries input;
     for (int i = 0; i < 50; ++i) // Generate 50 samples == 1 second

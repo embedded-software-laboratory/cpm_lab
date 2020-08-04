@@ -54,11 +54,6 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points) const
     std::vector< std::array<std::size_t, 4> > vehicles =
         resolve_conflicts(vehicle_candidates);
 
-    // remove points assigned to vehicles from input floor_points
-    std::list<cv::Point2d> remaining_points = 
-        find_remaining_points(floor_points.points,
-                              vehicles);
-
     VehiclePoints vehicle_points;
     vehicle_points.timestamp = floor_points.timestamp;
     for (const std::array<std::size_t, 4> &veh : vehicles)
@@ -149,7 +144,7 @@ DetectVehicles::find_vehicle_candidates
                     double innerp = (vehicle_point_set.back_left.x-vehicle_point_set.front.x)*(vehicle_point_set.back_right.x-vehicle_point_set.front.x) + (vehicle_point_set.back_left.y-vehicle_point_set.front.y)*(vehicle_point_set.back_right.y-vehicle_point_set.front.y);
                     double angle  = acos(innerp / (mod1 * mod2)) * 180 / M_PI;
 
-                    if (!(angle-0.5 <= 11.8613 && angle+0.5 >= 11.8613))
+                    if (!(angle-0.9 <= 11.8613 && angle+0.9 >= 11.8613))
                     {
                         // incorrect orientation - front point does not match to vehicle back
                         continue; 
@@ -312,42 +307,6 @@ bool DetectVehicles::arrays_have_common_element
     }
     return false;
 }
-
-
-std::list<cv::Point2d> DetectVehicles::find_remaining_points
-(
-    const std::vector<cv::Point2d> &floor_points,
-    const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
-) const
-{
-    // determine all indices of floor points that belong to vehicles
-    std::vector<std::size_t> all_vehicle_indices;
-    for (const auto &vehicle_candidate : vehicle_candidates)
-    {
-        for (const auto &idx : vehicle_candidate)
-        {
-            // skip ULONG_MAX if no ID LED is present 
-            if (idx == ULONG_MAX) continue; 
-            
-            all_vehicle_indices.push_back(idx);
-        }
-    }
-    // find points that do not belong to vehicles
-    std::list<cv::Point2d> remaining_points;
-    for (std::size_t i = 0; i < floor_points.size(); ++i)
-    {
-        // current index is not assigned to a vehicle
-        if (std::find(all_vehicle_indices.begin(),
-                      all_vehicle_indices.end(),
-                      i)
-                == all_vehicle_indices.end())
-        {
-            remaining_points.push_back(floor_points[i]);
-        }
-    }
-    return remaining_points;
-}
-
 
 VehiclePointSet DetectVehicles::assign_vehicle_points
 (
