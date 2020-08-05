@@ -194,4 +194,10 @@ namespace cpm {
         return current_time;
     }
 
+    uint64_t TimerSimulated::get_start_time()
+    {
+        //For a simulated timer, 0 is always the starting point of the simulation
+        return 0;
+    }
+
 }

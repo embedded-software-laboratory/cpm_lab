@@ -149,7 +149,6 @@ namespace cpm {
         createTimer();
 
         //Send ready signal, wait for start signal
-        uint64_t start_point;
         uint64_t deadline;
         if (wait_for_start) {
             start_point = receiveStartTime();
@@ -168,6 +167,8 @@ namespace cpm {
         else {
             deadline = (((start_point - offset_nanoseconds) / period_nanoseconds) + 1) * period_nanoseconds + offset_nanoseconds;
         }
+
+        start_point_initialized = true;
 
         while(this->active) {
             this->wait();
@@ -254,6 +255,14 @@ namespace cpm {
     uint64_t TimerFD::get_time()
     {
         return cpm::get_time_ns();
+    }
+
+    uint64_t TimerFD::get_start_time()
+    {
+        //Return 0 if not yet started or stopped before started
+        if (!start_point_initialized) return 0;
+
+        return start_point;
     }
 
     bool TimerFD::received_stop_signal() 

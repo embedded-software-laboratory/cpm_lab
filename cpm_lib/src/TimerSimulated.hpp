@@ -79,6 +79,7 @@ namespace cpm {
         void start_async (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
         void stop() override;
         uint64_t get_time() override;
+        uint64_t get_start_time() override;
     };
 
 }

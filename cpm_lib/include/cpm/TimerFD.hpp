@@ -77,6 +77,8 @@ namespace cpm {
 
         void wait();
         uint64_t receiveStartTime(); //Bool: true if start signal was received, false if stop signal was received
+        uint64_t start_point = 0;
+        bool start_point_initialized = false; //Only retrieve start_point from outside if it was initialized (mutex costs too much performance, is only written once)
         bool received_stop_signal ();
         
         const bool wait_for_start; //If false, do not use receiveStartTime()
@@ -145,6 +147,13 @@ namespace cpm {
          * \return the current system time in nanoseconds
          */
         uint64_t get_time() override;
+
+        /**
+         * \brief Can be used to obtain the time the timer was started in nanoseconds
+         * \return The start time of the timer, either received as start signal or from internal start, in nanoseconds OR
+         * 0 if not yet started or stopped before started
+         */
+        uint64_t get_start_time() override;
     };
 
 }

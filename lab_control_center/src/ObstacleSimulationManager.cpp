@@ -73,8 +73,6 @@ void ObstacleSimulationManager::stop_timers()
         standby_timer->stop();
     }
     standby_timer.reset();
-
-    start_time = 0;
 }
 
 void ObstacleSimulationManager::send_init_states()
@@ -111,7 +109,7 @@ void ObstacleSimulationManager::send_init_states()
     });
 }
 
-std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_states(uint64_t t_now)
+std::vector<CommonroadObstacle> ObstacleSimulationManager::compute_all_next_states(uint64_t t_now, uint64_t start_time)
 {
     //TODO: Thread pool?
     std::vector<CommonroadObstacle> next_obstacle_states;
@@ -227,13 +225,13 @@ void ObstacleSimulationManager::start()
     stop_timers();
 
     //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
-    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, use_simulated_time);
-
-    //Remember start time, so that we can check how much time has passed / which obstacle to choose when
-    start_time = simulation_timer->get_time();
+    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, true, true, use_simulated_time);
 
     simulation_timer->start_async([&] (uint64_t t_now) {
-        auto next_obstacle_states = compute_all_next_states(t_now);
+        //Cannot be obtained before the timer was started
+        auto start_time = simulation_timer->get_start_time();
+        
+        auto next_obstacle_states = compute_all_next_states(t_now, start_time);
 
         CommonroadObstacleList obstacle_list;
         obstacle_list.commonroad_obstacle_list(next_obstacle_states);

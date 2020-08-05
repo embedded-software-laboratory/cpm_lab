@@ -34,7 +34,6 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
@@ -50,7 +49,6 @@ SetupViewUI::SetupViewUI
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
-    obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
@@ -394,9 +392,6 @@ void SetupViewUI::deploy_applications() {
     }
 
 #endif
-
-    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    obstacle_simulation_manager->start();
     
     // Recording
     deploy_functions->deploy_recording();
@@ -568,10 +563,7 @@ void SetupViewUI::kill_deployed_applications() {
 }
 
 void SetupViewUI::perform_post_kill_cleanup()
-{
-    //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
-    
+{    
     //Kill timer in UI as well, as it should not show invalid information
     //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
     //Reset all relevant UI parts

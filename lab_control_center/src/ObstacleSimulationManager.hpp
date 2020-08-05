@@ -61,7 +61,6 @@ private:
     std::string node_id;
     uint64_t dt_nanos;
     uint64_t time_step_size; //Defined by Commonroad scenario, here translated from seconds to nanoseconds
-    uint64_t start_time;
     std::shared_ptr<cpm::Timer> simulation_timer;
     std::shared_ptr<cpm::SimpleTimer> standby_timer;
 
@@ -94,8 +93,10 @@ private:
 
     /**
      * \brief Compute next states of commonroad obstacles based on the current time and return them; only consider obstacles that are supposed to be simulated by the LCC
+     * \param t_now Current time
+     * \param start_time Time the simulation was started, to compute diff to t_now
      */
-    std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now);
+    std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now, uint64_t start_time);
 
     //Either returns the content of the map or the default value (simulated); does not lock, so lock before calling!
     ObstacleToggle::ToggleState get_obstacle_simulation_state(int id);

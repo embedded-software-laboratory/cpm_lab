@@ -28,7 +28,6 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
-#include "ObstacleSimulationManager.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
@@ -119,9 +118,6 @@ private:
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
 
-    //Class to simulate obstacles based on the loaded commonroad file
-    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
-
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
@@ -197,7 +193,6 @@ public:
     /**
      * \brief Constructor
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
-     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
      * \param _reset_timer Reset timer & set up a new one for the next simulation
      * \param _reset_time_series_aggregator Reset received vehicle data
@@ -213,7 +208,6 @@ public:
     SetupViewUI(
         std::shared_ptr<Deploy> deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _reset_time_series_aggregator,

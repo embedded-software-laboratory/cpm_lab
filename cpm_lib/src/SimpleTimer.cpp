@@ -133,4 +133,9 @@ namespace cpm {
         return cpm::get_time_ns();
     }
 
+    uint64_t SimpleTimer::get_start_time()
+    {
+        return internal_timer->get_start_time();
+    }
+
 }

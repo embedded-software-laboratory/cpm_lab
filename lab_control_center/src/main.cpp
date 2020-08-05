@@ -148,7 +148,10 @@ int main(int argc, char *argv[])
     auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
 
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
-    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
+    auto timerViewUi = make_shared<TimerViewUI>(
+        timerTrigger,
+        obstacle_simulation_manager
+    );
     auto logStorage = make_shared<LogStorage>();
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
@@ -190,7 +193,6 @@ int main(int argc, char *argv[])
     auto setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
-        obstacle_simulation_manager,
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return timeSeriesAggregator->reset_all_data();}, 
