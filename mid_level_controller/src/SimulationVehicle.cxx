@@ -156,7 +156,6 @@ VehicleState SimulationVehicle::update(
     vehicleState.speed                       (speed);
     vehicleState.battery_voltage             (7.8 - 0.03 * fabs(d_speed));
     vehicleState.motor_current               (fabs((d_speed) * 0.2));
-    vehicleState.is_real                     (false); //Is not real, is simulated
     return vehicleState;
 }
 
