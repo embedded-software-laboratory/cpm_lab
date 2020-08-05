@@ -26,7 +26,11 @@
 
 #include "commonroad_classes/StaticObstacle.hpp"
 
-StaticObstacle::StaticObstacle(const xmlpp::Node* node)
+StaticObstacle::StaticObstacle(
+    const xmlpp::Node* node,
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    )
 {
     //Warn in case node does not have static obstacle role
     //Check if node is of type staticObstacle
@@ -108,6 +112,13 @@ StaticObstacle::StaticObstacle(const xmlpp::Node* node)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
+    }
+
+    //Set lanelet_ref functions
+    if(initial_state.has_value())
+    {
+        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //initial_state->set_lanelet_get_center_function(_get_lanelet_center);
     }
     
 }
@@ -209,14 +220,6 @@ void StaticObstacle::draw(const DrawingContext& ctx, double scale, double global
     // ctx->restore();
 }
 #pragma GCC diagnostic pop
-
-void StaticObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
-{
-    if(initial_state.has_value())
-    {
-        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
-}
 
 ObstacleSimulationData StaticObstacle::get_obstacle_simulation_data()
 {

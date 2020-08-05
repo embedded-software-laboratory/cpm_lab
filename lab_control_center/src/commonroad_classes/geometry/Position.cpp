@@ -116,6 +116,11 @@ void Position::set_lanelet_ref_draw_function(std::function<void (int, const Draw
     draw_lanelet_refs = _draw_lanelet_refs;
 }
 
+void Position::set_lanelet_get_center_function(std::function<std::pair<double, double> (int)> _get_lanelet_center)
+{
+    get_lanelet_center = _get_lanelet_center;
+}
+
 void Position::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
     if (point.has_value())
@@ -256,10 +261,10 @@ void Position::transform_context(const DrawingContext& ctx, double scale)
         auto center = get_center();
         ctx->translate(center.first * scale, center.second * scale);
 
-        if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
+        if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0 && lanelet_refs.size() == 0)
         {
             std::stringstream error_stream;
-            error_stream << "Cannot transform context in Position when position is empty / only lanelet references are used right now, from line " << commonroad_line;
+            error_stream << "Cannot transform context in Position when position is empty, from line " << commonroad_line;
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
@@ -274,36 +279,45 @@ std::pair<double, double> Position::get_center()
     }
 
     double x, y = 0.0;
-    double center_count = 0.0;
+    double center_count = 1.0;
 
     for (auto circle : circles)
     {
         auto center = circle.get_center();
-        x += center.first;
-        y += center.second;
+        x += (center.first - x) / center_count;
+        y += (center.second - y) / center_count;
         ++center_count;
     }
 
     for (auto polygon : polygons)
     {
         auto center = polygon.get_center();
-        x += center.first;
-        y += center.second;
+        x += (center.first - x) / center_count;
+        y += (center.second - y) / center_count;
         ++center_count;
     }
 
     for (auto rectangle : rectangles)
     {
         auto center = rectangle.get_center();
-        x += center.first;
-        y += center.second;
+        x += (center.first - x) / center_count;
+        y += (center.second - y) / center_count;
         ++center_count;
     }
 
-    if (center_count > 0)
+    if (get_lanelet_center)
     {
-        x /= center_count;
-        y /= center_count;
+        for (auto lanelet_ref : lanelet_refs)
+        {
+            auto center = get_lanelet_center(lanelet_ref);
+            x += (center.first - x) / center_count;
+            y += (center.second - y) / center_count;
+            ++center_count;
+        }
+    }
+    else if (lanelet_refs.size() > 0)
+    {
+        LCCErrorLogger::Instance().log_error("Cannot compute center properly without lanelet center function in Position, set function callback beforehand!");
     }
 
     return std::pair<double, double>(x, y);

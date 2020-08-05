@@ -26,7 +26,11 @@
 
 #include "commonroad_classes/states/GoalState.hpp"
 
-GoalState::GoalState(const xmlpp::Node* node)
+GoalState::GoalState(
+    const xmlpp::Node* node,
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    )
 {
     //2018 and 2020 specs are the same
     //Check if node is of type goal state
@@ -78,7 +82,12 @@ GoalState::GoalState(const xmlpp::Node* node)
         throw;
     }
     
-    
+    //Set lanelet_ref functions
+    if(position.has_value())
+    {
+        position->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        position->set_lanelet_get_center_function(_get_lanelet_center);
+    }
 
     //Test output
     std::cout << "GoalState: " << std::endl;
@@ -185,14 +194,6 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     //Goal information is only shown if a position has been set for the goal
 
     ctx->restore();
-}
-
-void GoalState::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
-{
-    if(position.has_value())
-    {
-        position->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
 }
 
 const std::optional<IntervalOrExact>& GoalState::get_time() const

@@ -74,6 +74,9 @@ private:
     //Function to draw lanelet_refs
     std::function<void (int, const DrawingContext&, double, double, double, double)> draw_lanelet_refs;
 
+    //Function to get center of lanelet_ref
+    std::function<std::pair<double, double> (int)> get_lanelet_center;
+
     //Remember line in commonroad file for logging
     int commonroad_line = 0;
 
@@ -91,9 +94,15 @@ public:
 
     /**
      * \brief Setter for drawing lanelet references (Position can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _draw_lanelet_refs Function that, given a lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+
+    /**
+     * \brief Setter for getting lanelet center
+     * \param _get_lanelet_center Function that returns a lanelet center
+     */
+    void set_lanelet_get_center_function(std::function<std::pair<double, double> (int)> _get_lanelet_center);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

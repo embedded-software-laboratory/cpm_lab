@@ -85,8 +85,14 @@ public:
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (static) obstacle node
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _get_lanelet_center Function that returns a lanelet center
      */
-    StaticObstacle(const xmlpp::Node* node);
+    StaticObstacle(
+        const xmlpp::Node* node,
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+        std::function<std::pair<double, double> (int)> _get_lanelet_center
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -110,12 +116,6 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
-
-    /**
-     * \brief Setter for drawing lanelet references (Can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
-     */
-    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
 
     //Getter
     /**

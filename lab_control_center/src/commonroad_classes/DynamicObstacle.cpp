@@ -26,7 +26,11 @@
 
 #include "commonroad_classes/DynamicObstacle.hpp"
 
-DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
+DynamicObstacle::DynamicObstacle(
+    const xmlpp::Node* node,
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    )
 {
     //Check if node is of type dynamicObstacle
     assert(node->get_name() == "dynamicObstacle" || node->get_name() == "obstacle");
@@ -164,6 +168,18 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
+    }
+
+    //Set lanelet ref functions for geometry
+    if(initial_state.has_value())
+    {
+        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //initial_state->set_lanelet_get_center_function(_get_lanelet_center);
+    }
+    for (auto& state : trajectory)
+    {
+        state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //state.set_lanelet_get_center_function(_get_lanelet_center);
     }
     
 
@@ -327,19 +343,6 @@ void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double globa
     // ctx->restore();
 }
 #pragma GCC diagnostic pop
-
-void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
-{
-    if(initial_state.has_value())
-    {
-        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
-
-    for (auto& state : trajectory)
-    {
-        state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
-}
 
 ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
 {

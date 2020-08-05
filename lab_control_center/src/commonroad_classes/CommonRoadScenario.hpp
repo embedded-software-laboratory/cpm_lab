@@ -196,6 +196,10 @@ private:
     void calculate_center();
     std::pair<double, double> center;
 
+    //Lanelet ref functions
+    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
+    std::pair<double, double> get_lanelet_center(int id);
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -257,8 +261,6 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
-
-    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
 
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
