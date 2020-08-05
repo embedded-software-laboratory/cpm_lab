@@ -271,6 +271,12 @@ void MonitoringUi::init_ui_thread()
                         label->get_style_context()->add_class("ok");
                         label->set_text("available");
                     }
+                    else if(rows_restricted[i] == "ips_dt") 
+                    {
+                        if      (value < 100) label->get_style_context()->add_class("ok");
+                        else if (value < 500) label->get_style_context()->add_class("warn");
+                        else                  label->get_style_context()->add_class("alert");
+                    }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
                         // is vehicle on its reference trajectory? else stop 
