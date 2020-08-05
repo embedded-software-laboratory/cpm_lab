@@ -75,6 +75,7 @@ private:
 
     //Callback function for log_level_combobox
     void on_log_level_changed();
+    std::atomic_ushort log_level;
     //Labels for log_level_combobox (the string vector is transformed to the ustring vector in the settings, where we also add the selection options to the UI)
     std::vector<std::string> log_labels = {"0 - No logs", "1 - Critical errors only", "2 - Errors only", "3 - Verbose"};
     std::vector<Glib::ustring> log_level_labels; //Vector used so that we can infer the level number from the index (no need to transform the ustring to a number)

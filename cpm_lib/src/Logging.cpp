@@ -68,7 +68,7 @@ namespace cpm {
         filename += ".csv";
 
         file.open(filename, std::ofstream::out | std::ofstream::trunc);
-        file << "ID,Timestamp,Content" << std::endl;
+        file << "ID,Level,Timestamp,Content" << std::endl;
         file.close();
     }
 
