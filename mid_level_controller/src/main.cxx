@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
                     period_nanoseconds/1e9,
                     vehicle_id
                 );
+                vehicleState.is_real(false); // Is not real, is simulated
     #else
                 // Motor deadband, to prevent small stall currents when standing still
                 uint8_t motor_mode = SPI_MOTOR_MODE_BRAKE;
@@ -231,6 +232,7 @@ int main(int argc, char *argv[])
                 );
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
+                vehicleState.is_real(true); // Is real, is not simulated
     #endif
 
                 // Process sensor data
