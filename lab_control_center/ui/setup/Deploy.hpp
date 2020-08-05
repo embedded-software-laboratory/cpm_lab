@@ -229,5 +229,5 @@ private:
     std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
     std::mutex reboot_done_mutex;
     //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
-    void kill_finished_reboot_threads();
+    void join_finished_reboot_threads();
 };

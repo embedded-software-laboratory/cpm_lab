@@ -252,7 +252,7 @@ void SetupViewUI::on_lcc_close() {
     join_upload_threads();
 
     //Kill real vehicle data thread
-    vehicle_data_thread_running.store(false); // TODO PADDE warte bis terminiert?
+    vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
