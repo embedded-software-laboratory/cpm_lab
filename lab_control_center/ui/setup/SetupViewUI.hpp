@@ -167,7 +167,7 @@ private:
      * \param upload_success Whether the upload was successful
      */
     void notify_upload_finished(uint8_t hlc_id, bool upload_success);
-    void kill_all_threads(); //function to join all threads
+    void join_upload_threads(); //function to join all threads
     bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
     size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)

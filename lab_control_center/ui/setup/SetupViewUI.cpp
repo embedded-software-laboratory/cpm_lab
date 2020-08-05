@@ -215,7 +215,7 @@ SetupViewUI::SetupViewUI
 
 SetupViewUI::~SetupViewUI() {
     //Join all old threads
-    kill_all_threads();
+    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -249,7 +249,7 @@ void SetupViewUI::on_lcc_close() {
     deploy_functions->kill_ips();
 
     //Join all old threads
-    kill_all_threads(); // TODO PADDE rename kill_all_upload_threads
+    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false); // TODO PADDE warte bis terminiert?
@@ -390,7 +390,7 @@ void SetupViewUI::ui_dispatch()
             lock.unlock();
 
             //Join all old threads
-            kill_all_threads();
+            join_upload_threads();
 
             //If kill caused the UI dispatch, clean up after everything has been killed
             if (kill_called.load())
@@ -459,7 +459,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
     }
 }
 
-void SetupViewUI::kill_all_threads()
+void SetupViewUI::join_upload_threads()
 {
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     std::lock_guard<std::mutex> lock(upload_threads_mutex);
