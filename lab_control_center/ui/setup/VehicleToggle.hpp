@@ -89,7 +89,7 @@ private:
 
     //Timing for set_insensitive
     std::atomic_bool signal_thread_stop;
-    std::atomic_bool thread_set_sensitive;
+    std::atomic_bool is_sensitive;
     std::thread set_insensitive_thread;
 
     //UI thread for set_insensitive

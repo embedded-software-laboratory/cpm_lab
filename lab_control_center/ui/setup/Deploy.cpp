@@ -36,7 +36,7 @@ Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, s
 
 Deploy::~Deploy()
 {
-    std::lock_guard<std::mutex> lock2(vehicle_reboot_threads_mutex);
+    std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
     for (auto& thread : vehicle_reboot_threads)
     {
         if (thread.second.joinable())
@@ -217,7 +217,7 @@ void Deploy::kill_sim_vehicle(unsigned int id)
 void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_seconds) 
 {
     //Kill old reboot threads that are done before adding a new one
-    kill_finished_reboot_threads();
+    join_finished_reboot_threads();
 
     //Get the IP address from the current vehicle_id (192.168.1.1XX)
     std::stringstream ip_stream;
@@ -263,7 +263,7 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
     }
 }
 
-void Deploy::kill_finished_reboot_threads()
+void Deploy::join_finished_reboot_threads()
 {
     std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
     for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
@@ -563,7 +563,7 @@ void Deploy::create_log_folder(std::string name)
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
 {
-    std::cout << "Executing" << std::endl;
+    std::cout << "Executing " << cmd << std::endl;
     //Spawn and manage new process
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();

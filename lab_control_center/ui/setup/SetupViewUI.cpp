@@ -161,16 +161,15 @@ SetupViewUI::SetupViewUI
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
     
-    //Regularly check / update which real vehicles are currently turned on, to use them when the simulation is started
+    //Regularly check / update which real vehicles are currently turned on, to use them when the experiment is deployed
     is_deployed.store(false);
     vehicle_data_thread_running.store(true);
     check_real_vehicle_data_thread = std::thread([&]{
         while(vehicle_data_thread_running.load())
         {
-            //Don't update data during simulation
+            //Don't update data during experiment
             if (! is_deployed.load())
             {
-                //Only perform action if simulation currently does not take place
                 //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
                 auto currently_simulated_vehicles = get_vehicle_ids_simulated();
 
@@ -181,14 +180,17 @@ SetupViewUI::SetupViewUI
                     auto id = vehicle_entry.first;
 
                     //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
-                    //See if a signal of a real vehicle is among the past 10 signals (due to 50Hz -> 500ms); real is more important than simulated
-                    double is_real_sum = 0.0; //Is real if at least one value in the vector is 1
-                    for (auto& entry : vehicle_entry.second.at("is_real")->get_last_n_values(10))
+                    //See if a signal of a real vehicle is among the past 25 signals (due to 50Hz -> 500ms); real is more important than simulated
+                    bool is_real_vehicle = false;
+                    for (bool const is_real : vehicle_entry.second.at("is_real")->get_last_n_values(25))
                     {
-                        is_real_sum += entry;
+                        if (is_real) {
+                            is_real_vehicle = true;
+                            break;
+                        }
                     }
 
-                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_sum > 0)
+                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_vehicle)
                     {
                         active_real_vehicles.push_back(id);
 
@@ -213,7 +215,7 @@ SetupViewUI::SetupViewUI
 
 SetupViewUI::~SetupViewUI() {
     //Join all old threads
-    kill_all_threads();
+    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -247,7 +249,7 @@ void SetupViewUI::on_lcc_close() {
     deploy_functions->kill_ips();
 
     //Join all old threads
-    kill_all_threads();
+    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -388,7 +390,7 @@ void SetupViewUI::ui_dispatch()
             lock.unlock();
 
             //Join all old threads
-            kill_all_threads();
+            join_upload_threads();
 
             //If kill caused the UI dispatch, clean up after everything has been killed
             if (kill_called.load())
@@ -404,8 +406,6 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
-
-    //Grey out vehicle toggles / undo this depending on their timestamp
 }
 
 void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
@@ -459,7 +459,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
     }
 }
 
-void SetupViewUI::kill_all_threads()
+void SetupViewUI::join_upload_threads()
 {
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
     std::lock_guard<std::mutex> lock(upload_threads_mutex);
