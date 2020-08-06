@@ -288,7 +288,7 @@ void MpcController::optimize_control_inputs(
         Visualization vis;
         vis.id(vehicle_id);
         vis.type(VisualizationType::LineStrips);
-        vis.time_to_live(2000000000ull);
+        vis.time_to_live(25000000ull);
         vis.size(0.03);
         vis.color().r(255);
         vis.color().g(0);
@@ -346,13 +346,14 @@ void MpcController::optimize_control_inputs(
     else
     {
         cpm::Logging::Instance().write(
-            2,
-            "Warning: Trajectory Controller: "
-            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
+            1,
+            "Error: Trajectory Controller: "
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.",
+            casadi_vars["objective"][0]
+        );
 
         reset_optimizer();
-        out_motor_throttle = 0.0;
-        out_steering_servo = 0.0;
+        stop_vehicle(out_motor_throttle, out_steering_servo);
     }
 }
 
