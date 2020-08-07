@@ -34,6 +34,7 @@ HLCReadyAggregator::HLCReadyAggregator() :
             std::lock_guard<std::mutex> lock(hlc_list_mutex);
 
             //Store new IDs / update receive time
+            //Regular checks for on-/offline NUCs are performed in 
             for (auto sample : samples)
             {
                 if(sample.info().valid())
@@ -85,7 +86,7 @@ std::vector<uint8_t> HLCReadyAggregator::get_hlc_ids_uint8_t()
                 valid_hlc_ids.push_back(static_cast<uint8_t>(int_value));
             }
             catch (...) {
-                std::cerr << "Error: Could not convert HLC ID '" << entry.first << "' to int" << std::endl;
+                cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", entry.first);
             }
         }
     }
