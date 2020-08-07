@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
 
+    //To receive logs as early as possible, and for Logging in main
+    auto logStorage = make_shared<LogStorage>();
+
     //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
     struct sigaction interruptHandler;
     interruptHandler.sa_handler = interrupt_handler;
@@ -142,11 +145,10 @@ int main(int argc, char *argv[])
     try
     {
         commonroad_scenario->load_file(filepath_2018);
-        //commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cpm::Logging::Instance().write(1, "Could not load initial commonroad scenario, error is: %s", e.what());
     }
 
     auto storage = make_shared<ParameterStorage>(config_file, 32);
@@ -164,12 +166,11 @@ int main(int argc, char *argv[])
 
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
     auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
-    auto logStorage = make_shared<LogStorage>();
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
-    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(30); //LISTEN FOR VEHICLE DATA UP TO ID 30
     auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();

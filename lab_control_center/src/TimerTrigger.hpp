@@ -58,6 +58,11 @@ struct TimerData {
     ParticipantStatus participant_status;
 };
 
+/**
+ * \brief TimerTrigger is responsible for:
+ * - Realtime: Sending start & stop signals to start / stop the simulation
+ * - Simulated time: Managing timing for all participants with simulated time steps
+ */
 class TimerTrigger {
 private:
     const bool use_simulated_time;
@@ -95,6 +100,11 @@ public:
      */
     void send_stop_signal();
 
+    /**
+     * \brief Retrieve participants that
+     * - Realtime: Sent a message to indicate to the user of the LCC that they are now online (data is visualized in UI)
+     * - Simulated time: Registered for use of simulated time
+     */
     std::map<string, TimerData> get_participant_message_data();
 
     void get_current_simulated_time(bool& use_simulated_time, uint64_t& current_time);

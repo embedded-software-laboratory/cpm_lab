@@ -28,6 +28,9 @@
 #include "defaults.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
+/**
+ * \brief Data class for storing values & (receive) times to get latest / newest data etc
+ */
 template<typename T>
 class _TimeSeries
 {

@@ -45,7 +45,6 @@ using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
  * \brief Keeps received data from vehicles and vehicle trajectories in map with custom data structure that regards multiple messages + timestamps
  *
 */
-
 class TimeSeriesAggregator
 {
     VehicleData timeseries_vehicles;
@@ -63,7 +62,11 @@ class TimeSeriesAggregator
     std::mutex _mutex;
 
 public:
-    TimeSeriesAggregator();
+    /**
+     * \brief Constructor
+     * \param max_vehicle_id The aggregator does not listen to IDs above this value; must be set for setting listener properly (storage etc)
+     */
+    TimeSeriesAggregator(uint8_t max_vehicle_id);
     VehicleData get_vehicle_data();
     VehicleTrajectories get_vehicle_trajectory_commands();
     void reset_all_data(); //Reset the data structures if desired by the user (e.g. bc the simulation was stopped)

@@ -28,7 +28,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
-TimeSeriesAggregator::TimeSeriesAggregator()
+TimeSeriesAggregator::TimeSeriesAggregator(uint8_t max_vehicle_id)
 {
     vehicle_state_reader = make_shared<cpm::AsyncReader<VehicleState>>(
         [this](dds::sub::LoanedSamples<VehicleState>& samples){
@@ -47,8 +47,8 @@ TimeSeriesAggregator::TimeSeriesAggregator()
         cpm::get_topic<VehicleObservation>("vehicleObservation")
     );
 
-    //Set vehicle IDs to listen to in the aggregator - 30 is chosen rather arbitrarily, 20 vehicles are planned atm - change if you need higher values as well
-    for (uint8_t i = 1; i < 30; ++i)
+    //Set vehicle IDs to listen to in the aggregator
+    for (uint8_t i = 1; i < max_vehicle_id; ++i)
     {
         vehicle_ids.push_back(i);
     }
@@ -201,6 +201,9 @@ VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
     VehicleTrajectories trajectory_sample;
     std::map<uint8_t, uint64_t> trajectory_sample_age;
     vehicle_commandTrajectory_reader->get_samples(cpm::get_time_ns(), trajectory_sample, trajectory_sample_age);
+
+    //TODO: Could check for age of each sample by looking at the header & log if received trajectory commands are outdated
+
     return trajectory_sample;
 }
 
