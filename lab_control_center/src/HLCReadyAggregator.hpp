@@ -34,6 +34,7 @@
 
 #include "ReadyStatus.hpp"
 
+#include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/get_time_ns.hpp"
@@ -41,7 +42,7 @@
 
 /**
  * \brief This class collects all the ReadySignal messages sent by the HLCs (NUCs) to present the GUI user the NUCs (/IDs) that are currently online
- * This class can also be used to just retrieve the currently available IDs for distribution of scripts on several NUCs (TODO/WIP)
+ * This class can also be used to just retrieve the currently available IDs for distribution of scripts on several NUCs
  */
 class HLCReadyAggregator
 {
