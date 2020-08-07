@@ -114,6 +114,12 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id]["is_real"] = make_shared<TimeSeries>(
         "Is Real", "%d", "-");
 
+    //To detect deviations from the required message frequency
+    timeseries_vehicles[vehicle_id]["last_msg_state"] = make_shared<TimeSeries>(
+    "Last VehicleState message", "%ull", "s");
+    timeseries_vehicles[vehicle_id]["last_msg_observation"] = make_shared<TimeSeries>(
+    "Last VehicleObservation message", "%ull", "s");
+
 }
 
 
@@ -163,10 +169,42 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, state.is_real());
             // initialize reference deviation, since no reference is available at start 
             timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
+
+            //Check for deviation from expected update frequency once, reset if deviation was detected
+            auto it = last_vehicle_state_time.find(state.vehicle_id());
+            if (it != last_vehicle_state_time.end())
+            {
+                check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
+            }
+
+            //Set (first time) or update the value for this ID
+            last_vehicle_state_time[state.vehicle_id()] = now;
         }
+    }
+
+    //Now check for deviations on all participants that did not receive any new data, reset if deviation was detected (prevents spam)
+    for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); ++it)
+    {
+        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
     }
 }
 
+void TimeSeriesAggregator::check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff)
+{
+    if (entry->second > 0)
+    {
+        if (t_now - entry->second > allowed_diff)
+        {
+            cpm::Logging::Instance().write(2, "Vehicle %i deviated from expected vehicle state frequency on LCC side", static_cast<int>(entry->first));
+            entry->second = 0;
+        }
+        else if (t_now < entry->second)
+        {
+            //This should never occur, due to the way timestamps are stored, unless the clock values are obtained in a way that negative clock changes of the system change the timestamps
+            cpm::Logging::Instance().write(1, "Critical error in TimeSeriesAggregator check, this should never happen; (vehicle id %i)", static_cast<int>(entry->second));
+        }
+    }
+}
 
 void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
     dds::sub::LoanedSamples<VehicleObservation>& samples
@@ -188,7 +226,25 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
             // timeseries to check if any IPS data are available, push any data 
             timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, true);
+
+            //Check for long intervals without new information - TODO: WHICH VALUE MAKES SENSE HERE?
+            auto it = last_vehicle_observation_time.find(state.vehicle_id());
+            if (it != last_vehicle_observation_time.end())
+            {
+                //Currently: Only warn if no new observation sample has been received for over a second
+                check_for_deviation(now, it, 1000000000ull);
+            }
+
+            //Set (first time) or update the value for this ID
+            last_vehicle_observation_time[state.vehicle_id()] = now;
         }
+    }
+
+    //Now check for deviations on all participants that did not receive any new data
+    for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
+    {
+        //TODO as above
+        check_for_deviation(now, it, 1000000000ull);
     }
 }
 

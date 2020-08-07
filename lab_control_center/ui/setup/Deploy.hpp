@@ -239,7 +239,6 @@ private:
     std::mutex reboot_done_mutex;
     //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
     void join_finished_reboot_threads();
-    const std::string recording_session = "dds_record";
 
     const std::string ips_session = "ips_pipeline";
     const std::string basler_session = "ips_basler";
