@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
     if (!bcm2835_init())
     {
         printf("bcm2835_init failed. Are you running as root??\n");
+        cpm::Logging::Instance().write(1, "%s", "bcm2835_init failed. Are you running as root??");
         exit(EXIT_FAILURE);
     }
     spi_init();

@@ -584,7 +584,8 @@ void Deploy::create_log_folder(std::string name)
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
 {
-    std::cout << "Executing " << cmd << std::endl;
+    cpm::Logging::Instance().write(3, "Executing '%s'", cmd);
+
     //Spawn and manage new process
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -598,17 +599,20 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
 
         if (state == PROCESS_STATE::DONE)
         {
+            cpm::Logging::Instance().write(3, "Success: execution of '%s'", cmd);
             return true;
         }
         else if (state == PROCESS_STATE::ERROR)
         {
             kill_process(process_id);
+            cpm::Logging::Instance().write(2, "Error state in execution of '%s'", cmd);
             return false;
         }
         else if (! is_online())
         {
             //The HLC is no longer online, so abort
             kill_process(process_id);
+            cpm::Logging::Instance().write(2, "No longer online - stopped execution of '%s'", cmd);
             return false;
         }
 
@@ -630,6 +634,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
     kill_process(process_id);
+    cpm::Logging::Instance().write(2, "Could not execute in time: '%s'", cmd);
     return false;
 }
 
@@ -646,7 +651,7 @@ int Deploy::execute_command_get_pid(const char* cmd)
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
-        std::cerr << "Exec error: " << errno << "!" << std::endl;
+        cpm::Logging::Instance().write(1, "Execl error in Deploy class: %s, for execution of '%s'", std::strerror(errno), cmd);
 
         exit(1);
     }
@@ -659,7 +664,7 @@ int Deploy::execute_command_get_pid(const char* cmd)
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
         //TODO: Change behaviour
-        std::cerr << "There was an error during the creation of a child process for program execution" << std::endl;
+        cpm::Logging::Instance().write(1, "Error in Deploy class: Could not create child process for '%s'", cmd);
         exit(1);
     }
 }

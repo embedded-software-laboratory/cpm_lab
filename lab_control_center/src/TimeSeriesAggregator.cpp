@@ -195,7 +195,7 @@ void TimeSeriesAggregator::check_for_deviation(uint64_t t_now, std::unordered_ma
     {
         if (t_now - entry->second > allowed_diff)
         {
-            cpm::Logging::Instance().write(2, "Vehicle %i deviated from expected vehicle state frequency on LCC side", static_cast<int>(entry->first));
+            cpm::Logging::Instance().write(2, "Vehicle %i deviated from expected vehicle state frequency on LCC side or is offline", static_cast<int>(entry->first));
             entry->second = 0;
         }
         else if (t_now < entry->second)

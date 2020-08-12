@@ -101,11 +101,12 @@ int main (int argc, char *argv[]) {
             }
             else {
                 std::cerr << "Incompatible vehicle id" << std::endl;
-                cpm::Logging::Instance().write("Incompatible vehicle ids sent - not within 0 and 255");
+                cpm::Logging::Instance().write(1, "Error in middleware - incompatible vehicle ID set - not within 0 and 255: %i", vehicle_id);
             }
         }
         if (unsigned_vehicle_ids.size() == 0) {
-            std::cerr << "No vehicle ids set!" << std::endl; //TODO LOG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            std::cerr << "No vehicle ids set!" << std::endl;
+            cpm::Logging::Instance().write(1, "Error in middleware - %s", "No vehicle IDs set");
             exit(EXIT_FAILURE);
         }
     }
@@ -160,6 +161,16 @@ int main (int argc, char *argv[]) {
         }
         cpm::Logging::Instance().write(3, stream.str().c_str());
 
+        /**
+         * TODO / Proposal: Rework getLastHLCResponseTime
+         * Replace by checkHLCResponse(uint8_t id), done in TypedCommunication, covered in Communication, callable from here
+         * Returns bool, true if everything was fine, logs errors itself (again in TypedCommunication)
+         * false return can be used for waiting in case of simulated time
+         * 
+         * -> Less lines of code, more readable
+         * -> Also: Check for long waiting times (in 'real' time) in case of simulated time and log these as well
+         */
+
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
         // Simulated time -> Busy waiting until an answer for all connected HLCs (vehicle_ids) has been received
@@ -212,7 +223,7 @@ int main (int argc, char *argv[]) {
                     stream << "Timestep missed by HLC number " << static_cast<uint32_t>(it->first) << ", last response: " << (it->second) 
                         << ", current time: " << t_now 
                         << ", periods missed: " << passed_time / period_nanoseconds;
-                    cpm::Logging::Instance().write(stream.str().c_str());
+                    cpm::Logging::Instance().write(1, stream.str().c_str());
                 }
 
                 //Evaluation log - only for higher log level
@@ -228,7 +239,7 @@ int main (int argc, char *argv[]) {
                 if (lastHLCResponseTimes.find(id) == lastHLCResponseTimes.end()) {
                     std::stringstream stream;
                     stream << "HLC number " << static_cast<uint32_t>(id) << " has not yet sent any data";
-                    cpm::Logging::Instance().write(stream.str().c_str());
+                    cpm::Logging::Instance().write(1, stream.str().c_str());
                 }
             }
         }

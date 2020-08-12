@@ -237,6 +237,8 @@ class Communication {
             }
 
             //Wait until all vehicle ids have been received at least once
+            //Log if waiting for longer times
+            unsigned int wait_cycles = 0;
             while(vehicle_ids_string.size() > 0) {
                 for (auto sample : hlc_ready_status_reader.take()) {
                     if (sample.info().valid()) {
@@ -247,8 +249,21 @@ class Communication {
                         }
                     }
                 }
+
+                if (wait_cycles > 10)
+                {
+                    wait_cycles = 0;
+                    std::stringstream remaining_ids;
+                    for (auto id : vehicle_ids_string)
+                    {
+                        remaining_ids << id << " | ";
+                    }
+
+                    cpm::Logging::Instance().write(2, "Still waiting for ready messages from the HLC in the Middleware for IDs: %s", remaining_ids.str().c_str());
+                }
                 
                 usleep(200000);
+                ++wait_cycles;
             }
         }
 };

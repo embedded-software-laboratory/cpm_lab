@@ -197,6 +197,7 @@ SetupViewUI::SetupViewUI
                         //Kill simulated vehicle if real vehicle was detected
                         if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
                         {
+                            cpm::Logging::Instance().write(3, "Killing simulated vehicle %i, replaced by real vehicle", static_cast<int>(id));
                             deploy_functions->kill_sim_vehicle(id);
                         }
                     }
@@ -323,7 +324,7 @@ void SetupViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+        cpm::Logging::Instance().write(1, "%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
     }
     
 }
@@ -466,7 +467,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
     //If this happens, the thread count has been initialized incorrectly
     if (thread_count.load() == 0)
     {
-        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+        cpm::Logging::Instance().write(2, "WARNING(1): Upload thread count has not been initialized correctly! In SetupViewUI, happened with ID %i", static_cast<int>(hlc_id));
     }
 
     //Trigger error msg if the upload failed
@@ -497,7 +498,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
         std::lock_guard<std::mutex> lock(upload_threads_mutex);
         if (notify_count == upload_threads.size())
         {
-            std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+            cpm::Logging::Instance().write(2, "WARNING(2): Upload thread count has not been initialized correctly! In SetupViewUI, happened with ID %i", static_cast<int>(hlc_id));
 
             notify_count = 0;
 
@@ -594,7 +595,7 @@ void SetupViewUI::deploy_applications() {
         }
         else 
         {
-            std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
+            cpm::Logging::Instance().write(1, "%s", "No lookup function to get HLC IDs given, cannot deploy on HLCs");
             return;
         }
 
@@ -606,7 +607,7 @@ void SetupViewUI::deploy_applications() {
         }
         else
         {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+            cpm::Logging::Instance().write(1, "%s", "ERROR: Main window reference is missing, cannot create upload dialog");
         }
 
         //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
@@ -762,7 +763,7 @@ void SetupViewUI::kill_deployed_applications() {
         }
         else 
         {
-            std::cerr << "No lookup function to get HLC IDs given, cannot kill on HLCs" << std::endl;
+            cpm::Logging::Instance().write(1, "%s", "No lookup function to get HLC IDs given, cannot kill on HLCs");
             return;
         }
 

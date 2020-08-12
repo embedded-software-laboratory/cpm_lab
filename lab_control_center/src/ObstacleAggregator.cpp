@@ -73,6 +73,9 @@ void ObstacleAggregator::commonroad_obstacle_receive_callback(dds::sub::LoanedSa
                 //Store the new obstacle
                 commonroad_obstacle_data[obstacle.vehicle_id()] = obstacle;
             }
+
+            //TODO for test concept - one could test if data is updated periodically, but the period depends on the scenario and we only receive data while the 
+            //scenario is running - does it still make sense to check for frequent updates?
         }
     }
 }
