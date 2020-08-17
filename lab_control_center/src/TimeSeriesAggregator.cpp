@@ -78,6 +78,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id]["ips"] = make_shared<TimeSeries>(
         "IPS", "%s", "-");
 
+    timeseries_vehicles[vehicle_id]["ips_dt"] = make_shared<TimeSeries>(
+        "IPS age", "%3.0f", "ms");
+
     timeseries_vehicles[vehicle_id]["speed"] = make_shared<TimeSeries>(
         "Speed", "%5.2f", "m/s");
     
@@ -163,6 +166,7 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, state.is_real());
             // initialize reference deviation, since no reference is available at start 
             timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
+            timeseries_vehicles[state.vehicle_id()]["ips_dt"]                   ->push_sample(now, static_cast<double>(1e-6*state.IPS_update_age_nanoseconds()));
         }
     }
 }
@@ -187,7 +191,7 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
             // timeseries to check if any IPS data are available, push any data 
-            timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, true);
+            timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
         }
     }
 }

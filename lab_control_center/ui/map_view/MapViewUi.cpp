@@ -64,7 +64,7 @@ MapViewUi::MapViewUi(
 
     draw_loop_thread = std::thread([&](){
         while(1) {
-            usleep(40000);
+            usleep(20000);
             update_dispatcher.emit();
         }
     });

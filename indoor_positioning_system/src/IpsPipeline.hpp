@@ -61,6 +61,8 @@ class IpsPipeline
     std::mutex ipsVisualizationInput_buffer_mutex;
     std::thread visualization_thread;
 
+    uint64_t t_previous_nanos = 0;
+
 public:
     IpsPipeline(const bool enable_visualization);
     void apply(LedPoints led_points);
