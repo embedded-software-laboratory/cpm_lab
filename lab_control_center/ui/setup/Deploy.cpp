@@ -253,7 +253,11 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
 
                 if(!msg_success)
                 {
-                    cpm::Logging::Instance().write(2, "Could not reboot vehicle %u (timeout or connection lost)", vehicle_id);
+                    cpm::Logging::Instance().write(
+                        2, 
+                        "Could not reboot vehicle %u (timeout or connection lost)", 
+                        vehicle_id
+                    );
                 }
 
                 std::lock_guard<std::mutex> lock(reboot_done_mutex);

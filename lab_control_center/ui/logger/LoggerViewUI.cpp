@@ -159,7 +159,11 @@ void LoggerViewUI::on_log_level_changed()
     }
     else
     {
-        cpm::Logging::Instance().write(1, "ERROR: Log level set that does not exist!");
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Log level set that does not exist!"
+        );
         log_level.store(1);
     }
 
