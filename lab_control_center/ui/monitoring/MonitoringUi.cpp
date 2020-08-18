@@ -66,31 +66,14 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
-
-    // for threads 
-    thread_count.store(0);
 }
 
 MonitoringUi::~MonitoringUi()
 {
     stop_ui_thread();
-
-    //Join all old threads
-    kill_all_threads();
 }
 
-void MonitoringUi::kill_all_threads()
-{
-    //Join all old threads 
-    for (auto& thread : reboot_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-    }
-    reboot_threads.clear();
-}
+
 
 void MonitoringUi::init_ui_thread()
 {
@@ -210,35 +193,12 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
                             
-                            if(restarting[vehicle_id-1]) continue; 
-                            write_reboot_in_use.lock();
-                            restarting[vehicle_id-1] = true; 
-                            write_reboot_in_use.unlock();
                             cpm::Logging::Instance().write(
-                                1,
-                                "Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", 
-                                vehicle_id, vehicle_id
+                                2,
+                                "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
+                                vehicle_id
                             );
-                            
-                            std::string reboot;
-                            if(vehicle_id<10)
-                            {
-                                reboot = reboot_script + "0" + std::to_string(vehicle_id);
-                            }
-                            else
-                            {
-                                reboot = reboot_script + std::to_string(vehicle_id);
-                            }
-                            thread_count.fetch_add(1);
-                            reboot_threads.push_back(std::thread([this, reboot, vehicle_id] () {
-                                    std::system(reboot.c_str());
-                                    sleep(5);
-                                    write_reboot_in_use.lock();
-                                    this->restarting[vehicle_id-1] = false; 
-                                    write_reboot_in_use.unlock();
-                                    this->notify_reboot_finished();
-                                }
-                            ));
+                            deploy_functions->reboot_real_vehicle(vehicle_id, 5);
                             deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
@@ -424,29 +384,7 @@ void MonitoringUi::init_ui_thread()
     ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }
 
-void MonitoringUi::notify_reboot_finished()
-{
-    //Just try to join all worker threads here
-    std::lock_guard<std::mutex> lock(notify_callback_in_use);
 
-    //This should never be the case
-    //If this happens, the thread count has been initialized incorrectly
-    if (thread_count.load() == 0)
-    {
-        std::cerr << "WARNING: Reboot thread count has not been initialized correctly!" << std::endl;
-    }
-
-    //Also count notify amount s.t one can check if the thread count has been set properly
-    thread_count.fetch_sub(1);
-
-    std::cout << thread_count.load() << std::endl;
-    std::lock_guard<std::mutex> unlock(notify_callback_in_use);
-    if (thread_count.load() == 0)
-    {
-
-        kill_all_threads();
-    }
-}
 
 void MonitoringUi::reset_ui_thread()
 {

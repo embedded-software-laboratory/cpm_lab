@@ -63,17 +63,6 @@ public:
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
 
-    std::string reboot_script = "bash ./bash/reboot_raspberry.bash 192.168.1.1";
-
-    bool restarting[30] = {}; 
-
-    std::vector<std::thread> reboot_threads; //threads that are responsible for rebooting vehicles    
-    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all threads that need to be created have finished their work
-    void notify_reboot_finished(); //notify function that gets called by the threads when they have finished their work
-    std::mutex notify_callback_in_use; //the notify_reboot_finished function should only be accessible by one thread at once, thus use this mutex
-    std::mutex write_reboot_in_use; 
-    void kill_all_threads(); //function to join all threads
-    
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
     //Thus: Own timer implementation instead
     void ui_update_loop();
