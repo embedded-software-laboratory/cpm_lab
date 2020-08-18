@@ -323,7 +323,11 @@ void SetupViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Main window reference is missing, cannot create file chooser dialog"
+        );
     }
     
 }
@@ -550,7 +554,11 @@ void SetupViewUI::deploy_applications() {
         }
         else
         {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ERROR: Main window reference is missing, cannot create upload dialog"
+            );
         }
 
         //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
@@ -644,7 +652,11 @@ void SetupViewUI::kill_deployed_applications() {
         }
         else
         {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ERROR: Main window reference is missing, cannot create upload dialog"
+            );
         }
         
         //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished

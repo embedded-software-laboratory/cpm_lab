@@ -214,7 +214,11 @@ void MonitoringUi::init_ui_thread()
                         {  
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Stopping vehicles ...", vehicle_id);
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: Battery level of vehicle %d too low. Stopping vehicles ...", 
+                                vehicle_id
+                            );
                             deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
@@ -226,14 +230,29 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Stopping vehicles ...", vehicle_id);
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: speed of vehicle %d too high. Stopping vehicles ...", 
+                                vehicle_id
+                            );
                             deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
-                    else if(rows_restricted[i] == "ips") 
+                    else if(rows_restricted[i] == "ips_dt") 
                     {
-                        label->get_style_context()->add_class("ok");
-                        label->set_text("available");
+                        if      (value < 100) label->get_style_context()->add_class("ok");
+                        else if (value < 500) label->get_style_context()->add_class("warn");
+                        else                  
+                        {
+                            label->get_style_context()->add_class("alert");
+                            if(!deploy_functions->diagnosis_switch) continue; 
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping vehicles ...", 
+                                vehicle_id, value
+                            );
+                            deploy_functions->stop_vehicles(vehicle_ids);
+                        }
                     }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
@@ -299,7 +318,11 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
-                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", vehicle_id, error, dt);
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", 
+                                    vehicle_id, error, dt
+                                );
                                 deploy_functions->stop_vehicles(vehicle_ids);
                             }
                             else if (error > 0.1)
