@@ -161,51 +161,38 @@ int main (int argc, char *argv[]) {
         }
         cpm::Logging::Instance().write(3, stream.str().c_str());
 
-        /**
-         * TODO / Proposal: Rework getLastHLCResponseTime
-         * Replace by checkHLCResponse(uint8_t id), done in TypedCommunication, covered in Communication, callable from here
-         * Returns bool, true if everything was fine, logs errors itself (again in TypedCommunication)
-         * false return can be used for waiting in case of simulated time
-         * 
-         * -> Less lines of code, more readable
-         * -> Also: Check for long waiting times (in 'real' time) in case of simulated time and log these as well
-         */
-
-        //Get the last response time of the HLC
+        //Check the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
         // Simulated time -> Busy waiting until an answer for all connected HLCs (vehicle_ids) has been received
-        std::map<uint8_t, uint64_t> lastHLCResponseTimes;
-        lastHLCResponseTimes = communication->getLastHLCResponseTimes();
 
         if (simulated_time) {
-            //Wait until any command has been received for all vehicle ids
+            //Wait until any command or the latest msg has been received for all vehicle ids
             bool id_missing = true;
+            unsigned int count = 0; //Log regularly for irregularly long waiting times
+
             while(id_missing) {
                 id_missing = false;
+                uint8_t missing_id = 0;
+
                 for (uint8_t id : unsigned_vehicle_ids) {
-                    if (lastHLCResponseTimes.find(id) == lastHLCResponseTimes.end()) {
-                        id_missing = true;
+                    id_missing = ! (communication->checkHLCResponseTime(id, timer->get_time(), 0));
+                    
+                    if (id_missing)
+                    {
+                        missing_id = id;
                         break;
                     }
                 }
 
-                usleep(100000);
-                lastHLCResponseTimes = communication->getLastHLCResponseTimes();
-            }
+                ++count;
+                usleep(20000); //20ms
 
-            //Check if the last message was received in the current timestep
-            bool message_missing = true;
-            while (message_missing) {
-                message_missing = false;
-                for (std::map<uint8_t, uint64_t>::iterator it = lastHLCResponseTimes.begin(); it != lastHLCResponseTimes.end(); ++it){
-                    if (it->second != timer->get_time()) {
-                        message_missing = true;
-                        //break; -> Program does not work for some reason if break is used at this point
-                    }
+                //Log long waiting cycles - here, log every second of waiting
+                if (count > 50)
+                {
+                    count = 0;
+                    cpm::Logging::Instance().write(2, "Still waiting for a response from HLC with ID %i (and potentially others)", static_cast<int>(missing_id));
                 }
-
-                usleep(100000);
-                lastHLCResponseTimes = communication->getLastHLCResponseTimes();
             }
         }
         else {
@@ -216,31 +203,8 @@ int main (int argc, char *argv[]) {
             //          then the time between both timestamps is always greater than period_nanoseconds (one period) -> an error can be logged
             //          This does NOT work if the message is received in between starting the next period and fetching the last response times
             //          But: The time discrepancy should be so small that this behaviour is not considered problematic
-            for (std::map<uint8_t, uint64_t>::iterator it = lastHLCResponseTimes.begin(); it != lastHLCResponseTimes.end(); ++it) {
-                uint64_t passed_time = (t_now - it->second);
-                if (passed_time > period_nanoseconds) {
-                    std::stringstream stream;
-                    stream << "Timestep missed by HLC number " << static_cast<uint32_t>(it->first) << ", last response: " << (it->second) 
-                        << ", current time: " << t_now 
-                        << ", periods missed: " << passed_time / period_nanoseconds;
-                    cpm::Logging::Instance().write(1, stream.str().c_str());
-                }
-
-                //Evaluation log - only for higher log level
-                // cpm::Logging::Instance().write(
-                //     "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
-                //     it->first, 
-                //     it->second, 
-                //     t_now
-                // );
-            }
-            //Also log an error if no HLC data has yet been received
             for (uint8_t id : unsigned_vehicle_ids) {
-                if (lastHLCResponseTimes.find(id) == lastHLCResponseTimes.end()) {
-                    std::stringstream stream;
-                    stream << "HLC number " << static_cast<uint32_t>(id) << " has not yet sent any data";
-                    cpm::Logging::Instance().write(1, stream.str().c_str());
-                }
+                communication->checkHLCResponseTime(id, timer->get_time(), period_nanoseconds);
             }
         }
     });

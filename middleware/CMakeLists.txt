@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 add_definitions(-Wall -Wextra -Werror=return-type)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 
 # RTI DDS
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)

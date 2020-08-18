@@ -67,7 +67,7 @@ std::vector<std::string> HLCReadyAggregator::get_hlc_ids_string()
         }
         else
         {
-            cpm::Logging::Instance().write("HLC / NUC crashed / now offline: %s", iterator->first.c_str());
+            cpm::Logging::Instance().write(1, "HLC / NUC crashed / now offline / missed online message: %s", iterator->first.c_str());
             iterator = hlc_map.erase(iterator);
         }
         
