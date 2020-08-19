@@ -116,9 +116,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     //To detect deviations from the required message frequency
     timeseries_vehicles[vehicle_id]["last_msg_state"] = make_shared<TimeSeries>(
-    "Last VehicleState message", "%ull", "s");
+    "Last VehicleState", "%ull", "ms");
     timeseries_vehicles[vehicle_id]["last_msg_observation"] = make_shared<TimeSeries>(
-    "Last VehicleObservation message", "%ull", "s");
+    "Last VehicleObservation", "%ull", "ms");
 
 }
 
@@ -170,6 +170,8 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             // initialize reference deviation, since no reference is available at start 
             timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
             timeseries_vehicles[state.vehicle_id()]["ips_dt"]                   ->push_sample(now, static_cast<double>(1e-6*state.IPS_update_age_nanoseconds()));
+            //To detect deviations from the required message frequency
+            timeseries_vehicles[state.vehicle_id()]["last_msg_state"]           ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
 
             //Check for deviation from expected update frequency once, reset if deviation was detected
             auto it = last_vehicle_state_time.find(state.vehicle_id());
@@ -226,7 +228,9 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
             // timeseries to check if any IPS data are available, push any data 
-            timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
+            //timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
+            //To detect deviations from the required message frequency
+            timeseries_vehicles[state.vehicle_id()]["last_msg_observation"] ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
 
             //Check for long intervals without new information - TODO: WHICH VALUE MAKES SENSE HERE?
             auto it = last_vehicle_observation_time.find(state.vehicle_id());

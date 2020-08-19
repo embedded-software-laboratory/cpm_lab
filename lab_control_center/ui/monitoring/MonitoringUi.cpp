@@ -384,6 +384,35 @@ void MonitoringUi::init_ui_thread()
                     label->get_style_context()->add_class("alert");
                 }
                 
+                //Additional treatment for data where we are also interested in outdated entries
+                if (sensor_timeseries->has_data())
+                {
+                    const auto value = sensor_timeseries->get_latest_value();
+
+                    label->get_style_context()->remove_class("ok");
+                    label->get_style_context()->remove_class("warn");
+                    label->get_style_context()->remove_class("alert");
+
+                    if(rows_restricted[i] == "last_msg_state")
+                    {
+                        //Calculate diff
+                        double t_now_ms = static_cast<double>(cpm::get_time_ns() * 1e-6);
+                        double t_diff = t_now_ms - value;
+                        std::stringstream text;
+                        text << t_diff;
+                        label->set_text(text.str().c_str());
+
+                        //20 would be ideal (50Hz for vehicle data)
+                        if     (fabs(t_diff) < 20)  label->get_style_context()->add_class("ok");
+                        else if(fabs(t_diff) < 30) label->get_style_context()->add_class("warn");
+                        else 
+                        {
+                            label->get_style_context()->add_class("alert");
+                        }
+                    }
+
+                    //BITTE LESEN: @Max, @Patrick: I would check ips_dt here as well, it does not really make sense to not check it if data is older than 0.5s (within has_new_data)
+                }
                 
             }
         }
