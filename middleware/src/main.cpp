@@ -101,7 +101,11 @@ int main (int argc, char *argv[]) {
             }
             else {
                 std::cerr << "Incompatible vehicle id" << std::endl;
-                cpm::Logging::Instance().write(1, "Error in middleware - incompatible vehicle ID set - not within 0 and 255: %i", vehicle_id);
+                cpm::Logging::Instance().write(
+                    1, 
+                    "%s",
+                    "Middleware: Incompatible vehicle ids set - not within 0 and 255"
+                );
             }
         }
         if (unsigned_vehicle_ids.size() == 0) {
@@ -159,7 +163,10 @@ int main (int argc, char *argv[]) {
         if (states.size() > 0) {
             stream << " - sample data: " << states.at(0).battery_voltage();
         }
-        cpm::Logging::Instance().write(3, stream.str().c_str());
+        cpm::Logging::Instance().write(
+            3, 
+            stream.str().c_str()
+        );
 
         //Check the last response time of the HLC
         // Real time -> Print an error message if a period has been missed

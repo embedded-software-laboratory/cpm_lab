@@ -75,8 +75,8 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
     timeseries_vehicles[vehicle_id]["pose_yaw"] = make_shared<TimeSeries>(
         "Yaw", "%6.3f", "rad");
 
-    timeseries_vehicles[vehicle_id]["ips"] = make_shared<TimeSeries>(
-        "IPS", "%s", "-");
+    timeseries_vehicles[vehicle_id]["ips_dt"] = make_shared<TimeSeries>(
+        "IPS age", "%3.0f", "ms");
 
     timeseries_vehicles[vehicle_id]["speed"] = make_shared<TimeSeries>(
         "Speed", "%5.2f", "m/s");
@@ -169,6 +169,7 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, state.is_real());
             // initialize reference deviation, since no reference is available at start 
             timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
+            timeseries_vehicles[state.vehicle_id()]["ips_dt"]                   ->push_sample(now, static_cast<double>(1e-6*state.IPS_update_age_nanoseconds()));
 
             //Check for deviation from expected update frequency once, reset if deviation was detected
             auto it = last_vehicle_state_time.find(state.vehicle_id());

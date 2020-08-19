@@ -161,9 +161,6 @@ int main(int argc, char *argv[])
         //Callback for update signal
         [&](uint64_t t_now) 
         {
-            //Log control cycle period
-            //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write(3, "Control cycle timestamp: %llu", update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
