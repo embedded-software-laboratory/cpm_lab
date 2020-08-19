@@ -226,14 +226,14 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
             timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
             // timeseries to check if any IPS data are available, push any data 
-            timeseries_vehicles[state.vehicle_id()]["ips"]  ->push_sample(now, true);
+            timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
 
             //Check for long intervals without new information - TODO: WHICH VALUE MAKES SENSE HERE?
             auto it = last_vehicle_observation_time.find(state.vehicle_id());
             if (it != last_vehicle_observation_time.end())
             {
-                //Currently: Only warn if no new observation sample has been received for over a second
-                check_for_deviation(now, it, 1000000000ull);
+                //Currently: Only warn if no new observation sample has been received for over a second - TODO
+                check_for_deviation(now, it, allowed_deviation_ips);
             }
 
             //Set (first time) or update the value for this ID
@@ -245,12 +245,69 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
     for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
     {
         //TODO as above
-        check_for_deviation(now, it, 1000000000ull);
+        check_for_deviation(now, it, allowed_deviation_ips);
     }
 }
 
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
+    const uint64_t now = clock_gettime_nanoseconds();
+
+    //--------------------------------------------------------------------------- CHECKS ------------------------------------
+    //This function is called regularly in the UI, so we make sure that everything is checked regularly just by putting the tests in here as well
+    //Also store vehicle IDs in between to check for missing vehicles as well
+    std::vector<uint8_t> vehicle_state_ids;
+    std::vector<uint8_t> vehicle_observation_ids;
+
+    if (now - t_last_check > 500000000ull) //-> Do not perform these checks too often, or they could lead to Log msg spamming
+    {
+        vehicle_state_ids.reserve(last_vehicle_state_time.size());
+        vehicle_observation_ids.reserve(last_vehicle_observation_time.size());
+    }
+
+    // - Check for deviations in vehicle state msgs
+    for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); ++it)
+    {
+        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
+
+        if (now - t_last_check > 500000000ull)
+            vehicle_state_ids.push_back(it->first);
+    }
+    // - Check for deviations in IPS observation msgs
+    for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
+    {
+        check_for_deviation(now, it, allowed_deviation_ips);
+
+        if (now - t_last_check > 500000000ull)
+        {
+            vehicle_observation_ids.push_back(it->first);
+
+            //Check for missing entry in vehicle_state_ids
+            if (std::find(vehicle_state_ids.begin(), vehicle_state_ids.end(), it->first) == vehicle_state_ids.end())
+            {
+                //Entry is only in observation, but not in vehicle_state
+                cpm::Logging::Instance().write(1, "Vehicle ID %i in IPS, but not in vehicle msgs", static_cast<int>(it->first));
+            }
+        }
+    }
+
+    //Check for missing entry in vehicle_observation_ids
+    if (now - t_last_check > 500000000ull)
+    {
+        for (auto entry : vehicle_state_ids)
+        {
+            if (std::find(vehicle_observation_ids.begin(), vehicle_observation_ids.end(), entry) == vehicle_observation_ids.end())
+            {
+                //Entry is only in observation, but not in vehicle_state
+                cpm::Logging::Instance().write(1, "Vehicle ID %i in vehicle msgs, but not in IPS", static_cast<int>(entry));
+            }
+        }
+
+        //Update last check time
+        t_last_check = now;
+    }
+    //--------------------------------------------------------------------------- ------- ------------------------------------
+
     return timeseries_vehicles; 
 }
 

@@ -69,6 +69,8 @@ class TimeSeriesAggregator
     //Expected update frequency and structures to detect changes in update frequency
     const uint64_t expected_period_nanoseconds = 20000000ull; // 50 Hz
     const uint64_t allowed_deviation = expected_period_nanoseconds / 10;
+    const uint64_t allowed_deviation_ips = 1000000000ull; //1 second
+    uint64_t t_last_check = 0; //Some checks should not be performed too often, so store when they were done last
     std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time;
     std::unordered_map<uint8_t, uint64_t> last_vehicle_observation_time;
     //Checks if the sample deviates from the expected interval, resets in that case to prevent spamming in case of periodical checking without value changes
