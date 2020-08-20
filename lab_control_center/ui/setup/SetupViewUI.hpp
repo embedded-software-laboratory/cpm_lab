@@ -152,6 +152,10 @@ private:
     std::function<void()> reset_logs;
     std::function<void(bool)> set_commonroad_tab_sensitive;
 
+    //Functions for general callbacks before / after simulation
+    std::function<void()> callback_simulation_not_running;
+    std::function<void()> callback_simulation_running;
+
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
 
@@ -251,6 +255,8 @@ public:
         std::function<void()> _reset_visualization_commands,
         std::function<void()> _reset_logs,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
+        std::function<void()> _callback_simulation_not_running,
+        std::function<void()> _callback_simulation_running,
         unsigned int argc, 
         char *argv[]
         );

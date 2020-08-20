@@ -45,6 +45,8 @@ SetupViewUI::SetupViewUI
     std::function<void()> _reset_visualization_commands,
     std::function<void()> _reset_logs,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
+    std::function<void()> _callback_simulation_not_running,
+    std::function<void()> _callback_simulation_running,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -61,7 +63,9 @@ SetupViewUI::SetupViewUI
     reset_vehicle_view(_reset_vehicle_view),
     reset_visualization_commands(_reset_visualization_commands),
     reset_logs(_reset_logs),
-    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
+    callback_simulation_not_running(callback_simulation_not_running),
+    callback_simulation_running(callback_simulation_running)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -212,6 +216,8 @@ SetupViewUI::SetupViewUI
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     });
+
+    callback_simulation_not_running();
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -545,6 +551,8 @@ void SetupViewUI::deploy_applications() {
     set_sensitive(false);
     is_deployed.store(true);
 
+    callback_simulation_running();
+
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
@@ -753,6 +761,8 @@ void SetupViewUI::kill_crash_check_thread()
 void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
     kill_crash_check_thread();
+
+    callback_simulation_not_running();
 
     // Stop LabCam
 #ifndef SIMULATION

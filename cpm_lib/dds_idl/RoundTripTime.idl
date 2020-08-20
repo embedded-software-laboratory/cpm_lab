@@ -24,35 +24,17 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "InternalConfiguration.hpp"
-#include "cpm/init.hpp"
-#include "cpm/CommandLineReader.hpp"
-#include "cpm/Logging.hpp"
-#include "cpm/RTTTool.hpp"
+/*
+ * These messages are sent by the LCC to measure the best current round trip time in the network (and to estimate the worst)
+ */
 
-namespace cpm
-{
-    void init(int argc, char *argv[])
-    {
-        InternalConfiguration::init(argc, argv);
-    }
+#ifndef ROUNDTRIPTIME_IDL
+#define ROUNDTRIPTIME_IDL
 
+struct RoundTripTime {
+    string source_id; //To find out where the msg came from and to not answer to own msg
 
-    void InternalConfiguration::init(int argc, char *argv[])
-    {
-        InternalConfiguration::the_instance = InternalConfiguration(
-            cmd_parameter_int("dds_domain", 0, argc, argv),
-            cmd_parameter_string("logging_id", "uninitialized", argc, argv),
-            cmd_parameter_string("dds_initial_peer", "", argc, argv)
-        );
-
-        // TODO reverse access, i.e. access the config from the logging
-        cpm::Logging::Instance().set_id(InternalConfiguration::Instance().get_logging_id());
-
-        //Initialize the round trip time answering method
-        cpm::RTTTool::Instance().set_id(InternalConfiguration::Instance().get_logging_id());
-    }
-
-
-    InternalConfiguration InternalConfiguration::the_instance;
-}
+    boolean is_answer; //If true, do not respond to this msg, as it already is an answer to an RTT request
+    octet count; //Counter to not mix up old with new RTT requests
+};
+#endif

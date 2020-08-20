@@ -184,12 +184,6 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSampl
             last_vehicle_state_time[state.vehicle_id()] = now;
         }
     }
-
-    //Now check for deviations on all participants that did not receive any new data, reset if deviation was detected (prevents spam)
-    for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); ++it)
-    {
-        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
-    }
 }
 
 void TimeSeriesAggregator::check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff)
@@ -237,19 +231,12 @@ void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
             if (it != last_vehicle_observation_time.end())
             {
                 //Currently: Only warn if no new observation sample has been received for over a second - TODO
-                check_for_deviation(now, it, allowed_deviation_ips);
+                check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
             }
 
             //Set (first time) or update the value for this ID
             last_vehicle_observation_time[state.vehicle_id()] = now;
         }
-    }
-
-    //Now check for deviations on all participants that did not receive any new data
-    for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
-    {
-        //TODO as above
-        check_for_deviation(now, it, allowed_deviation_ips);
     }
 }
 
@@ -280,7 +267,7 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
     // - Check for deviations in IPS observation msgs
     for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
     {
-        check_for_deviation(now, it, allowed_deviation_ips);
+        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
 
         if (now - t_last_check > 500000000ull)
         {
