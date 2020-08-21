@@ -92,15 +92,23 @@ int main (int argc, char *argv[]) {
         false
     );
 
+    //Wait for DDS to connect properly, or the first msg is lost
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
     //Send program check request
     RemoteProgramCheck check_msg;
     check_msg.source_id("dummy_check");
     check_msg.is_answer(false);
-    check_msg.count(0);
-    program_check_writer.write(check_msg);
 
-    //Wait for replies & print them in DDS thread
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    for (uint8_t i = 0; i < 255; ++i)
+    {
+        check_msg.count(i);
+        program_check_writer.write(check_msg);
+        std::cout << "Msg written" << std::endl;
+
+        //Wait for replies & print them in DDS thread
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
 
     #pragma GCC diagnostic pop
 
