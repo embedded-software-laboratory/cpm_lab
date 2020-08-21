@@ -214,6 +214,8 @@ int main(int argc, char *argv[])
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
         [=](){return loggerViewUi->reset();}, 
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
+        [=](){ std::cout << "TODO" << std::endl; },
+        [=](){ std::cout << "TODO" << std::endl; },
         argc, 
         argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);

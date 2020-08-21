@@ -64,8 +64,8 @@ SetupViewUI::SetupViewUI
     reset_visualization_commands(_reset_visualization_commands),
     reset_logs(_reset_logs),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
-    callback_simulation_not_running(callback_simulation_not_running),
-    callback_simulation_running(callback_simulation_running)
+    callback_simulation_not_running(_callback_simulation_not_running),
+    callback_simulation_running(_callback_simulation_running)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 

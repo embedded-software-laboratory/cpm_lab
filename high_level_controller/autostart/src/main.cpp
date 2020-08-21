@@ -26,7 +26,10 @@
 
 /**
  * \class main.cpp
- * \brief This file includes a mechanism for a NUC to tell the LCC that it is online (should be called on NUC startup by a startup script, see lab_autostart.bash)
+ * \brief This file includes a mechanism for a NUC to tell the LCC that it is online 
+ * (should be called on NUC startup by a startup script, see lab_autostart.bash)
+ * It is also used to check if the scripts started remotely are (still) running
+ * (regarding their tmux session id)
  */
 
 #include <memory>
@@ -37,7 +40,9 @@
 #include <dds/pub/ddspub.hpp>
 
 #include "ReadyStatus.hpp"
+#include "RemoteProgramCheck.hpp"
 
+#include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/TimerFD.hpp"
@@ -50,6 +55,34 @@
 #include <sys/socket.h>
 #include <ifaddrs.h>
 #include <stdio.h>
+
+//To spawn a process & get its PID
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+//Helper functions to check for existing tmux sessions (same as in LCC's Deploy.cpp)
+std::string execute_command(const char* cmd) 
+{
+    //Code from stackoverflow
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("Could not use popen - deployment failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+bool session_exists(std::string session_id)
+{
+    std::string running_sessions = execute_command("tmux ls");
+    session_id += ":";
+    return running_sessions.find(session_id) != std::string::npos;
+}
 
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
@@ -116,6 +149,35 @@ int main (int argc, char *argv[]) {
 
     std::cout << "Set ID to " << hlc_id << std::endl;
 
+    //Create system that checks if tmux sessions are (still) running when the LCC requests that
+    dds::topic::Topic<RemoteProgramCheck> program_check_topic = cpm::get_topic<RemoteProgramCheck>(cpm::ParticipantSingleton::Instance(), "remote_program_check");
+    dds::pub::DataWriter<RemoteProgramCheck> program_check_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), program_check_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
+
+    cpm::AsyncReader<RemoteProgramCheck> program_check_reader(
+        [&](dds::sub::LoanedSamples<RemoteProgramCheck>& samples){
+            for(auto sample : samples)
+            {
+                if(sample.info().valid())
+                {
+                    //Only answer to the program check request, not the answers
+                    if (!(sample.data().is_answer()))
+                    {
+                        RemoteProgramCheck answer;
+                        answer.count(sample.data().count());
+                        answer.is_answer(true);
+                        answer.source_id(hlc_id);
+                        answer.script_running(session_exists("script"));
+                        answer.middleware_running(session_exists("middleware"));
+                        program_check_writer.write(answer);
+                    }
+                }
+            }
+        },
+        cpm::ParticipantSingleton::Instance(),
+        program_check_topic,
+        true,
+        false
+    );
 
     //Create ready message
     ReadyStatus ready_message;
