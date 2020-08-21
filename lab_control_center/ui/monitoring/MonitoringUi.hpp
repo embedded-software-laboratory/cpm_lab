@@ -37,6 +37,8 @@
 #include <thread>
 #include <vector>
 
+#include <math.h>
+
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
