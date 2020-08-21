@@ -50,6 +50,7 @@
 #include "ParameterStorage.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
+#include "cpm/RTTTool.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "TimerTrigger.hpp"
@@ -115,6 +116,7 @@ int main(int argc, char *argv[])
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
+    cpm::RTTTool::Instance().set_id("sender"); //TODO: Find a more elegant solution 
 
     //To receive logs as early as possible, and for Logging in main
     auto logStorage = make_shared<LogStorage>();
@@ -214,8 +216,6 @@ int main(int argc, char *argv[])
         [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
         [=](){return loggerViewUi->reset();}, 
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
-        [=](){ std::cout << "TODO" << std::endl; },
-        [=](){ std::cout << "TODO" << std::endl; },
         argc, 
         argv);
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);

@@ -45,8 +45,6 @@ SetupViewUI::SetupViewUI
     std::function<void()> _reset_visualization_commands,
     std::function<void()> _reset_logs,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
-    std::function<void()> _callback_simulation_not_running,
-    std::function<void()> _callback_simulation_running,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -63,9 +61,7 @@ SetupViewUI::SetupViewUI
     reset_vehicle_view(_reset_vehicle_view),
     reset_visualization_commands(_reset_visualization_commands),
     reset_logs(_reset_logs),
-    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
-    callback_simulation_not_running(_callback_simulation_not_running),
-    callback_simulation_running(_callback_simulation_running)
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -217,18 +213,49 @@ SetupViewUI::SetupViewUI
         }
     });
 
-    callback_simulation_not_running();
+    create_rtt_thread();
 }
 
 SetupViewUI::~SetupViewUI() {
     //Join all old threads
     join_upload_threads();
+    destroy_rtt_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
+    }
+}
+
+void SetupViewUI::create_rtt_thread()
+{
+    //Create thread to measure RTT regularly
+    run_rtt_thread.store(true);
+    check_rtt_thread = std::thread(
+        [&](){
+            while(run_rtt_thread.load())
+            {
+                auto rtt = cpm::RTTTool::Instance().measure_rtt();
+
+                //Check "best" RTT
+                //if (rtt.first > )
+
+                std::cout << "RTT measurement: " << rtt.first << "ns (best), " << rtt.second << "ns ('worst')" << std::endl;
+
+                //No waiting required, the functions itself already includes over 0.5s of waiting times
+            }
+        }
+    );
+}
+
+void SetupViewUI::destroy_rtt_thread()
+{
+    run_rtt_thread.store(false);
+    if (check_rtt_thread.joinable())
+    {
+        check_rtt_thread.join();
     }
 }
 
@@ -257,6 +284,7 @@ void SetupViewUI::on_lcc_close() {
 
     //Join all old threads
     join_upload_threads();
+    destroy_rtt_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -551,7 +579,8 @@ void SetupViewUI::deploy_applications() {
     set_sensitive(false);
     is_deployed.store(true);
 
-    callback_simulation_running();
+    //We do not want this msg overhead during simulation
+    destroy_rtt_thread();
 
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
@@ -762,7 +791,8 @@ void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
     kill_crash_check_thread();
 
-    callback_simulation_not_running();
+    //Re-create RTT thread
+    create_rtt_thread();
 
     // Stop LabCam
 #ifndef SIMULATION

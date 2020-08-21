@@ -33,6 +33,7 @@
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/RTTTool.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/setup/Deploy.hpp"
@@ -142,6 +143,12 @@ private:
     std::atomic_bool is_deployed;
     std::atomic_bool vehicle_data_thread_running;
 
+    //Check RTT if simulation is not running
+    std::thread check_rtt_thread;
+    std::atomic_bool run_rtt_thread;
+    void create_rtt_thread();
+    void destroy_rtt_thread();
+
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
     std::function<void()> reset_time_series_aggregator;
@@ -151,10 +158,6 @@ private:
     std::function<void()> reset_visualization_commands;
     std::function<void()> reset_logs;
     std::function<void(bool)> set_commonroad_tab_sensitive;
-
-    //Functions for general callbacks before / after simulation
-    std::function<void()> callback_simulation_not_running;
-    std::function<void()> callback_simulation_running;
 
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
@@ -255,8 +258,6 @@ public:
         std::function<void()> _reset_visualization_commands,
         std::function<void()> _reset_logs,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
-        std::function<void()> _callback_simulation_not_running,
-        std::function<void()> _callback_simulation_running,
         unsigned int argc, 
         char *argv[]
         );
