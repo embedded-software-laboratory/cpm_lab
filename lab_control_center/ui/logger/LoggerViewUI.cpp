@@ -109,6 +109,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     {
         log_level_combobox->set_active_text(log_level_labels.at(1));
     }
+    log_level.store(1);
     //Set callback for log_level_combobox
     log_level_combobox->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_log_level_changed));
 
@@ -146,25 +147,33 @@ LoggerViewUI::~LoggerViewUI() {
 }
 
 void LoggerViewUI::on_log_level_changed()
-{
-    //Get the newly set log level
+{    
+    //Get the new log level
     auto set_log_level = log_level_combobox->get_active_text();
 
     //Find its position in the log_level vector (which is equal to the log_level, see constructor)
     auto pos_it = std::find(log_level_labels.begin(), log_level_labels.end(), set_log_level);
-    unsigned short log_level;
     if (pos_it != log_level_labels.end())
     {
-        log_level = std::distance(log_level_labels.begin(), pos_it);
+        log_level.store(std::distance(log_level_labels.begin(), pos_it));
     }
     else
     {
-        cpm::Logging::Instance().write(1, "ERROR: Log level set that does not exist!");
-        log_level = 1;
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Log level set that does not exist!"
+        );
+        log_level.store(1);
     }
-    
+
     //Set the new log level
-    LogLevelSetter::Instance().set_log_level(log_level);
+    LogLevelSetter::Instance().set_log_level(log_level.load());
+
+    //Reset the list - abuse the search_reset boolean notation to make sure that also old entries are reloaded...
+    //... this time considering the new log level
+    search_reset.store(true);
+    ui_dispatcher.emit();
 }
 
 void LoggerViewUI::dispatcher_callback() {
@@ -187,12 +196,12 @@ void LoggerViewUI::dispatcher_callback() {
                 search_reset.store(false);
                 reset_list_store();
 
-                for(const auto& entry : log_storage->get_recent_logs(max_log_amount)) {
+                for(const auto& entry : log_storage->get_recent_logs(max_log_amount, log_level.load())) {
                     add_log_entry(entry);
                 }
             }
             else {
-                for(const auto& entry : log_storage->get_new_logs()) {
+                for(const auto& entry : log_storage->get_new_logs(log_level.load())) {
                     add_log_entry(entry);
                 }
             }
@@ -356,7 +365,7 @@ void LoggerViewUI::start_new_search_thread() {
     lock.unlock();
 
     search_thread = std::thread([filter_value, filter_type, this]() {
-        search_promise.set_value(log_storage->perform_abortable_search(filter_value, filter_type, search_thread_running));
+        search_promise.set_value(log_storage->perform_abortable_search(filter_value, filter_type, log_level.load(), search_thread_running));
     });
 }
 

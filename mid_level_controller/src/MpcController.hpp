@@ -108,12 +108,12 @@ class MpcController
 
     void reset_optimizer();
 
-
+    std::function<void(double&, double&)> stop_vehicle;
 
 
 public:
 
-    MpcController(uint8_t _vehicle_id);
+    MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle);
 
     void update(
         uint64_t t_now, 

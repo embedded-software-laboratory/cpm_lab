@@ -82,7 +82,7 @@ class Controller
 
     ControllerState state = ControllerState::Stop;
 
-    const uint64_t command_timeout = 500000000ull;
+    const uint64_t command_timeout = 1000000000ull;
 
     double speed_throttle_error_integral = 0;
 
