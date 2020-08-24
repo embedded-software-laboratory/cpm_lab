@@ -43,6 +43,9 @@ uint8_t identification_LED_enabled_ticks[26] = { 0, 2, 2,  2,  2,  2, 5,  5,  5,
 uint8_t vehicle_id = 0;
 
 void led_set_state(uint8_t vehicle_id_in) {
+	// test mode 
+	if ((PINA & 1) == 0) return; 
+    
 	// only update vehicle ID on successful transmissions
     if (vehicle_id_in != 0) {
         vehicle_id = vehicle_id_in;
