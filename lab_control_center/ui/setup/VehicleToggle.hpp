@@ -35,16 +35,20 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+#include <atomic>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 class VehicleToggle 
 {
 public:
     VehicleToggle(unsigned int _id);
+    ~VehicleToggle();
 
-    enum ToggleState{Off, Simulated, On};
+    enum ToggleState{Off, Simulated, Real};
 
     //Getter
     ToggleState get_state() const;
@@ -55,9 +59,21 @@ public:
     void set_state(ToggleState state);
     void set_sensitive(bool sensitive);
 
+    /**
+     * \brief Set the toggle insensitive for the given timeout, then set it to sensitive again
+     * \param timeout_seconds Time in seconds for the toggle to not respond to input
+     */
+    void set_insensitive(uint timeout_seconds);
+    void set_selection_callback(std::function<void(unsigned int, ToggleState)> _selection_callback); //If set, callback gets called on state change
+
 private:
     void on_state_changed();
     ToggleState current_state;
+
+    /**
+     * \brief Set the right style / label / ... depending on the current state
+     */
+    void update_style();
 
     Glib::RefPtr<Gtk::Builder> builder;
 
@@ -65,11 +81,19 @@ private:
 
     Gtk::Label* label = nullptr;
 
-    Gtk::RadioButton* vehicle_off = nullptr;
-    Gtk::RadioButton* vehicle_sim = nullptr;
-    Gtk::RadioButton* vehicle_on = nullptr;
+    Gtk::Button* vehicle_button = nullptr;
 
     //Given values
     unsigned int id;
-    std::function<void(ToggleState)> selection_callback;
+    std::function<void(unsigned int, ToggleState)> selection_callback;
+
+    //Timing for set_insensitive
+    std::atomic_bool signal_thread_stop;
+    std::atomic_bool is_sensitive;
+    std::thread set_insensitive_thread;
+
+    //UI thread for set_insensitive
+    //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    void ui_dispatch(); //dispatcher callback for the UI thread
 };

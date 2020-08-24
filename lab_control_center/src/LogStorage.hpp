@@ -94,30 +94,34 @@ public:
 
     /**
      * \brief Get all Log messages that have been received since the last time this function was called (up to 100 recent logs are remembered)
+     * \param log_level Get all messages up to this level
      * \return Vector of log messages
      */
-    std::vector<Log> get_new_logs();
+    std::vector<Log> get_new_logs(unsigned int log_level);
     
     /**
      * \brief Get all Log messages that have been received (remembers up to 10000 Log messages before old Log messages are deleted)
+     * \param log_level Get all messages up to this level
      * \return Vector of log messages
      */
-    std::vector<Log> get_all_logs();
+    std::vector<Log> get_all_logs(unsigned short log_level);
 
     /**
      * \brief Get the log_amount most recent Log messages of all that have been received
      * \param log_amount How many logs should be returned (max value)
+     * \param log_level Get all messages up to this level
      * \return Vector of log messages
      */
-    std::vector<Log> get_recent_logs(const long log_amount);
+    std::vector<Log> get_recent_logs(const long log_amount, unsigned short log_level);
 
     /**
      * \brief Performs a search that is supposed to be run asynchronously in a new thread - using a future is recommended to obtain the result. The search can be aborted by setting continue_search to false (should thus be false at start) - this is useful in case the user starts a new search before the old one is completed
      * \param filter_value the string to search for (TODO: Later REGEX)
      * \param filter_type where the filter should match (Log message, Log ID...)
+     * \param log_level Get all messages up to this level
      * \param continue_search should be true initially, set to false to abort the search before it finished - the algorithm then returns immediately
      */
-    std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search);
+    std::vector<Log> perform_abortable_search(std::string filter_value, FilterType filter_type, unsigned short log_level, std::atomic_bool &continue_search);
 
     /**
     * \brief Reset all data structures / delete all log data. Is called from the UI element only -> if you want to reset the storage, just call reset on the UI!

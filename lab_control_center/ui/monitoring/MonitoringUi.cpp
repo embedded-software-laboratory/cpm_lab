@@ -66,31 +66,14 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
-
-    // for threads 
-    thread_count.store(0);
 }
 
 MonitoringUi::~MonitoringUi()
 {
     stop_ui_thread();
-
-    //Join all old threads
-    kill_all_threads();
 }
 
-void MonitoringUi::kill_all_threads()
-{
-    //Join all old threads 
-    for (auto& thread : reboot_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-    }
-    reboot_threads.clear();
-}
+
 
 void MonitoringUi::init_ui_thread()
 {
@@ -241,32 +224,13 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
                             
-                            if(restarting[vehicle_id-1]) continue; 
-                            write_reboot_in_use.lock();
-                            restarting[vehicle_id-1] = true; 
-                            write_reboot_in_use.unlock();
-                            cpm::Logging::Instance().write("Warning: Clock delta of vehicle %d too high. Restarting vehicle %d...", vehicle_id, vehicle_id);
-                            
-                            std::string reboot;
-                            if(vehicle_id<10)
-                            {
-                                reboot = reboot_script + "0" + std::to_string(vehicle_id);
-                            }
-                            else
-                            {
-                                reboot = reboot_script + std::to_string(vehicle_id);
-                            }
-                            thread_count.fetch_add(1);
-                            reboot_threads.push_back(std::thread([this, reboot, vehicle_id] () {
-                                    std::system(reboot.c_str());
-                                    sleep(5);
-                                    write_reboot_in_use.lock();
-                                    this->restarting[vehicle_id-1] = false; 
-                                    write_reboot_in_use.unlock();
-                                    this->notify_reboot_finished();
-                                }
-                            ));
-                            deploy_functions->kill_vehicles({},vehicle_ids);
+                            cpm::Logging::Instance().write(
+                                2,
+                                "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
+                                vehicle_id
+                            );
+                            deploy_functions->reboot_real_vehicle(vehicle_id, 5);
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -281,8 +245,12 @@ void MonitoringUi::init_ui_thread()
                         {  
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: Battery level of vehicle %d too low. Stopping vehicles ...", vehicle_id);
-                            deploy_functions->kill_vehicles({},vehicle_ids);
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: Battery level of vehicle %d too low. Stopping vehicles ...", 
+                                vehicle_id
+                            );
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
                     else if(rows_restricted[i] == "speed") 
@@ -293,14 +261,29 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write("Warning: speed of vehicle %d too high. Stopping vehicles ...", vehicle_id);
-                            deploy_functions->kill_vehicles({},vehicle_ids);
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: speed of vehicle %d too high. Stopping vehicles ...", 
+                                vehicle_id
+                            );
+                            deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
-                    else if(rows_restricted[i] == "ips") 
+                    else if(rows_restricted[i] == "ips_dt") 
                     {
-                        label->get_style_context()->add_class("ok");
-                        label->set_text("available");
+                        if      (value < 100) label->get_style_context()->add_class("ok");
+                        else if (value < 500) label->get_style_context()->add_class("warn");
+                        else                  
+                        {
+                            label->get_style_context()->add_class("alert");
+                            if(!deploy_functions->diagnosis_switch) continue; 
+                            cpm::Logging::Instance().write(
+                                1,
+                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping vehicles ...", 
+                                vehicle_id, value
+                            );
+                            deploy_functions->stop_vehicles(vehicle_ids);
+                        }
                     }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
@@ -366,8 +349,12 @@ void MonitoringUi::init_ui_thread()
                             {
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue; 
-                                cpm::Logging::Instance().write("Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", vehicle_id, error, dt);
-                                deploy_functions->kill_vehicles({},vehicle_ids);
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", 
+                                    vehicle_id, error, dt
+                                );
+                                deploy_functions->stop_vehicles(vehicle_ids);
                             }
                             else if (error > 0.1)
                             {
@@ -426,29 +413,7 @@ void MonitoringUi::init_ui_thread()
     ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }
 
-void MonitoringUi::notify_reboot_finished()
-{
-    //Just try to join all worker threads here
-    std::lock_guard<std::mutex> lock(notify_callback_in_use);
 
-    //This should never be the case
-    //If this happens, the thread count has been initialized incorrectly
-    if (thread_count.load() == 0)
-    {
-        std::cerr << "WARNING: Reboot thread count has not been initialized correctly!" << std::endl;
-    }
-
-    //Also count notify amount s.t one can check if the thread count has been set properly
-    thread_count.fetch_sub(1);
-
-    std::cout << thread_count.load() << std::endl;
-    std::lock_guard<std::mutex> unlock(notify_callback_in_use);
-    if (thread_count.load() == 0)
-    {
-
-        kill_all_threads();
-    }
-}
 
 void MonitoringUi::reset_ui_thread()
 {

@@ -36,6 +36,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
     std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
     std::function<std::vector<uint8_t>()> _get_hlc_ids,
+    std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_time_series_aggregator,
     std::function<void()> _reset_obstacle_aggregator,
@@ -52,6 +53,7 @@ SetupViewUI::SetupViewUI
     vehicle_control(_vehicle_control),
     obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
+    get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
     reset_time_series_aggregator(_reset_time_series_aggregator),
     reset_obstacle_aggregator(_reset_obstacle_aggregator),
@@ -71,7 +73,6 @@ SetupViewUI::SetupViewUI
     
     builder->get_widget("button_select_none", button_select_none);
     builder->get_widget("button_select_all_simulated", button_select_all_simulated);
-    builder->get_widget("button_select_all_real", button_select_all_real);
 
     builder->get_widget("switch_simulated_time", switch_simulated_time);
 
@@ -94,7 +95,6 @@ SetupViewUI::SetupViewUI
 
     assert(button_select_none);
     assert(button_select_all_simulated);
-    assert(button_select_all_real);
     
     assert(switch_simulated_time);
     assert(switch_deploy_remote);
@@ -120,6 +120,8 @@ SetupViewUI::SetupViewUI
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
+        vehicle_toggle->set_selection_callback(std::bind(&SetupViewUI::vehicle_toggle_callback, this, _1, _2));
+
     }
 #ifndef SIMULATION
     // Create labcam
@@ -130,7 +132,6 @@ SetupViewUI::SetupViewUI
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
-    button_select_all_real->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_real));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
@@ -150,6 +151,7 @@ SetupViewUI::SetupViewUI
     switch_diagnosis->property_active().signal_changed().connect(sigc::mem_fun(this, &SetupViewUI::switch_diagnosis_set));
 
     //Take care of GUI thread and worker thread separately
+    update_vehicle_toggles.store(false);
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
     thread_count.store(0);
     notify_count = 0;
@@ -158,19 +160,115 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
+    
+    //Regularly check / update which real vehicles are currently turned on, to use them when the experiment is deployed
+    is_deployed.store(false);
+    vehicle_data_thread_running.store(true);
+    check_real_vehicle_data_thread = std::thread([&]{
+        while(vehicle_data_thread_running.load())
+        {
+            //Don't update data during experiment
+            if (! is_deployed.load())
+            {
+                //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
+                auto currently_simulated_vehicles = get_vehicle_ids_simulated();
+
+                //Get currently active vehicles
+                active_real_vehicles.clear();
+                for (auto vehicle_entry : get_vehicle_data())
+                {
+                    auto id = vehicle_entry.first;
+
+                    //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
+                    //See if a signal of a real vehicle is among the past 25 signals (due to 50Hz -> 500ms); real is more important than simulated
+                    bool is_real_vehicle = false;
+                    for (bool const is_real : vehicle_entry.second.at("is_real")->get_last_n_values(25))
+                    {
+                        if (is_real) {
+                            is_real_vehicle = true;
+                            break;
+                        }
+                    }
+
+                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_vehicle)
+                    {
+                        active_real_vehicles.push_back(id);
+
+                        //Kill simulated vehicle if real vehicle was detected
+                        if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
+                        {
+                            deploy_functions->kill_sim_vehicle(id);
+                        }
+                    }
+                }
+
+                //The vehicle toggles must be updated in the UI thread
+                update_vehicle_toggles.store(true);
+                ui_dispatcher.emit();
+            }
+
+            //Sleep for a while, then update again
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    });
 }
 
 SetupViewUI::~SetupViewUI() {
-    //TODO: Klappt nicht -> ergo auch bei deploy vorher clearen? (tmux kill-server)
+    //Join all old threads
+    join_upload_threads();
+
+    //Kill real vehicle data thread
+    vehicle_data_thread_running.store(false);
+    if(check_real_vehicle_data_thread.joinable())
+    {
+        check_real_vehicle_data_thread.join();
+    }
+}
+
+void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state)
+{
+    if (state == VehicleToggle::ToggleState::Simulated)
+    {
+        deploy_functions->deploy_sim_vehicle(vehicle_id, switch_simulated_time->get_active());
+    }
+    else if (state == VehicleToggle::ToggleState::Off)
+    {
+        deploy_functions->kill_sim_vehicle(vehicle_id);
+    }
+    else
+    {
+        deploy_functions->reboot_real_vehicle(vehicle_id, reboot_timeout);
+        vehicle_toggles.at(vehicle_id - 1)->set_insensitive(reboot_timeout + 3); //Add some seconds because the whole reboot process might take a bit longer than the timeout
+    }   
+}
+
+
+//Do the same as in the destructor, because there we do not get the desired results sadly
+void SetupViewUI::on_lcc_close() {
     kill_deployed_applications();
+    deploy_functions->kill_ips();
 
     //Join all old threads
-    kill_all_threads();
+    join_upload_threads();
+
+    //Kill real vehicle data thread
+    vehicle_data_thread_running.store(false);
+    if(check_real_vehicle_data_thread.joinable())
+    {
+        check_real_vehicle_data_thread.join();
+    }
+
+    //Kill simulated vehicles
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated());
 }
 
 void SetupViewUI::switch_timer_set()
 {
     reset_timer(switch_simulated_time->get_active(), true);
+    //Restart simulated vehicles with new timer
+    deploy_functions->kill_sim_vehicles(get_vehicle_ids_simulated());
+    deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
+
 }
 
 void SetupViewUI::switch_ips_set()
@@ -225,7 +323,11 @@ void SetupViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Main window reference is missing, cannot create file chooser dialog"
+        );
     }
     
 }
@@ -240,39 +342,72 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 
 void SetupViewUI::ui_dispatch()
 {
-    std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-    if (error_msg.size() > 0)
+    //Update vehicle toggles for real vehicles or take care of upload window
+    if (update_vehicle_toggles.load())
     {
-        for (auto &msg : error_msg)
+        update_vehicle_toggles.store(false);
+
+        //Update vehicle toggles
+        std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+
+        for (std::shared_ptr<VehicleToggle> toggle : vehicle_toggles)
         {
-            upload_window->add_error_message(msg);
+            unsigned int id = toggle->get_id();
+            std::vector<unsigned int> active_sim_vehicles = get_vehicle_ids_simulated();
+            bool is_sim = (std::find(active_sim_vehicles.begin(), active_sim_vehicles.end(), id) != active_sim_vehicles.end());
+            bool is_real = (std::find(active_real_vehicles.begin(), active_real_vehicles.end(), id) != active_real_vehicles.end());
+            
+            if (is_real){
+                //If we find it both in is_sim and is_real, the real vehicle is more important
+                toggle->set_state(VehicleToggle::Real);
+            } 
+            else if (is_sim){
+                toggle->set_state(VehicleToggle::Simulated);
+            }
+            else {
+                toggle->set_state(VehicleToggle::Off);
+            }
         }
-        error_msg.clear();
     }
-    else 
+    else
     {
-        //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-        //Plus now, kill is not grayed out anymore
-        if (upload_threads.size() != 0 && upload_window)
+        //Take care of upload window etc
+        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
+        if (error_msg.size() > 0)
         {
-            upload_window->close();
-            button_kill->set_sensitive(true);
+            for (auto &msg : error_msg)
+            {
+                upload_window->add_error_message(msg);
+            }
+            error_msg.clear();
         }
-
-        //Join all old threads
-        kill_all_threads();
-
-        //If kill caused the UI dispatch, clean up after everything has been killed
-        if (kill_called.load())
+        else 
         {
-            perform_post_kill_cleanup();
-            kill_called.store(false);
-        }
+            //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
+            //Plus now, kill is not grayed out anymore
+            std::unique_lock<std::mutex> lock(upload_threads_mutex);
+            if (upload_threads.size() != 0 && upload_window)
+            {
+                upload_window->close();
+                button_kill->set_sensitive(true);
+            }
+            lock.unlock();
 
-        //Free the UI if the upload was not successful
-        if (!participants_available.load())
-        {
-            set_sensitive(true);
+            //Join all old threads
+            join_upload_threads();
+
+            //If kill caused the UI dispatch, clean up after everything has been killed
+            if (kill_called.load())
+            {
+                perform_post_kill_cleanup();
+                kill_called.store(false);
+            }
+
+            //Free the UI if the upload was not successful
+            if (!participants_available.load())
+            {
+                set_sensitive(true);
+            }
         }
     }
 }
@@ -312,26 +447,35 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
         std::this_thread::sleep_for(std::chrono::seconds(2));
         ui_dispatcher.emit();
     }
-    else if (notify_count == upload_threads.size())
+    else 
     {
-        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+        std::lock_guard<std::mutex> lock(upload_threads_mutex);
+        if (notify_count == upload_threads.size())
+        {
+            std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
 
-        notify_count = 0;
+            notify_count = 0;
 
-        //Close upload window again, but only after a while
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        ui_dispatcher.emit();
+            //Close upload window again, but only after a while
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            ui_dispatcher.emit();
+        }
     }
 }
 
-void SetupViewUI::kill_all_threads()
+void SetupViewUI::join_upload_threads()
 {
     //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
+    std::lock_guard<std::mutex> lock(upload_threads_mutex);
     for (auto& thread : upload_threads)
     {
         if (thread.joinable())
         {
             thread.join();
+        }
+        else 
+        {
+            std::cerr << "Warning: Shutting down with upload thread that cannot be joined" << std::endl;
         }
     }
     upload_threads.clear();
@@ -347,6 +491,7 @@ bool SetupViewUI::check_if_online(uint8_t hlc_id)
 void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
+    is_deployed.store(true);
 
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
@@ -409,7 +554,11 @@ void SetupViewUI::deploy_applications() {
         }
         else
         {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ERROR: Main window reference is missing, cannot create upload dialog"
+            );
         }
 
         //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
@@ -419,6 +568,7 @@ void SetupViewUI::deploy_applications() {
             //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
             participants_available.store(false); //No HLCs available
             thread_count.store(1);
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this] () {
                     usleep(3000000);
@@ -427,9 +577,6 @@ void SetupViewUI::deploy_applications() {
             ));
             return;
         }
-
-        //Deploy simulated vehicles locally
-        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
         
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
@@ -450,6 +597,7 @@ void SetupViewUI::deploy_applications() {
             std::string vehicle_string = vehicle_id_stream.str();
 
             //Create thread
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this, hlc_id, vehicle_string] () {
                     bool deploy_worked = deploy_functions->deploy_remote_hlc(
@@ -468,8 +616,6 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        deploy_functions->deploy_sim_vehicles(get_vehicle_ids_simulated(), switch_simulated_time->get_active());
-
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
 }
@@ -480,6 +626,8 @@ void SetupViewUI::kill_deployed_applications() {
 #ifndef SIMULATION
     labcam->stopRecording();
 #endif
+
+    is_deployed.store(false);
 
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
@@ -504,7 +652,11 @@ void SetupViewUI::kill_deployed_applications() {
         }
         else
         {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ERROR: Main window reference is missing, cannot create upload dialog"
+            );
         }
         
         //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
@@ -516,6 +668,7 @@ void SetupViewUI::kill_deployed_applications() {
         for (const auto& hlc_id : hlc_ids)
         {
             //Create thread
+            std::lock_guard<std::mutex> lock(upload_threads_mutex);
             upload_threads.push_back(std::thread(
                 [this, hlc_id] () {
                     bool kill_worked = deploy_functions->kill_remote_hlc(
@@ -534,8 +687,8 @@ void SetupViewUI::kill_deployed_applications() {
         perform_post_kill_cleanup();
     }
 
-    deploy_functions->kill_vehicles(get_vehicle_ids_simulated(), get_vehicle_ids_active());
-
+    deploy_functions->stop_vehicles(get_vehicle_ids_active());
+    
     // Recording
     deploy_functions->kill_recording();
 
@@ -564,31 +717,34 @@ void SetupViewUI::perform_post_kill_cleanup()
 }
 
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_active() {
+    //Vector to store sim. and real vehicles
     std::vector<unsigned int> active_vehicle_ids;
 
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        if (vehicle_toggle->get_state() != VehicleToggle::Off)
-        {
-            active_vehicle_ids.push_back(vehicle_toggle->get_id());
-        }
-    }
+    auto simulated_vehicle_ids = get_vehicle_ids_simulated();
+
+    //Add real vehicle IDs
+    std::unique_lock<std::mutex> lock(active_real_vehicles_mutex);
+    //Reserve for better efficiency before inserting
+    active_vehicle_ids.reserve(simulated_vehicle_ids.size() + active_real_vehicles.size());
+    active_vehicle_ids.insert(active_vehicle_ids.end(), active_real_vehicles.begin(), active_real_vehicles.end());
+    lock.unlock();
+
+    //Add simulated vehicle IDs
+    active_vehicle_ids.insert(active_vehicle_ids.end(), simulated_vehicle_ids.begin(), simulated_vehicle_ids.end());
 
     return active_vehicle_ids;
 }
 
+//Works because a copy is created
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_real() {
-    std::vector<unsigned int> active_vehicle_ids;
+    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+    return active_real_vehicles;
+}
 
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        if (vehicle_toggle->get_state() == VehicleToggle::On)
-        {
-            active_vehicle_ids.push_back(vehicle_toggle->get_id());
-        }
-    }
-
-    return active_vehicle_ids;
+bool SetupViewUI::is_active_real(unsigned int vehicle_id)
+{
+    std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
+    return std::find(active_real_vehicles.begin(), active_real_vehicles.end(), vehicle_id) != active_real_vehicles.end();
 }
 
 std::vector<unsigned int> SetupViewUI::get_vehicle_ids_simulated() {
@@ -613,7 +769,6 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     
     button_select_none->set_sensitive(is_sensitive);
     button_select_all_simulated->set_sensitive(is_sensitive);
-    button_select_all_real->set_sensitive(is_sensitive);
 
     button_deploy->set_sensitive(is_sensitive);
 
@@ -628,19 +783,12 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     set_commonroad_tab_sensitive(is_sensitive);
 }
 
-void SetupViewUI::select_all_vehicles_real()
-{
-    for (auto& vehicle_toggle : vehicle_toggles)
-    {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::On);
-    }
-}
-
 void SetupViewUI::select_all_vehicles_sim()
 {
     for (auto& vehicle_toggle : vehicle_toggles)
     {
         vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+        deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
     }
 }
 
@@ -648,7 +796,11 @@ void SetupViewUI::select_no_vehicles()
 {
     for (auto& vehicle_toggle : vehicle_toggles)
     {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
+        if (vehicle_toggle->get_state() == VehicleToggle::ToggleState::Simulated)
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Off);
+            deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
+        }
     }
 }
 

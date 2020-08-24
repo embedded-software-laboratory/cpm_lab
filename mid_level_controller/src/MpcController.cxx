@@ -31,7 +31,7 @@
 #include "cpm/Logging.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-MpcController::MpcController(uint8_t _vehicle_id)
+MpcController::MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
 :topic_Visualization(cpm::get_topic<Visualization>("visualization"))
 ,writer_Visualization
 (
@@ -40,8 +40,10 @@ MpcController::MpcController(uint8_t _vehicle_id)
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         topic_Visualization
     )
+
 )
 ,vehicle_id(_vehicle_id)
+,stop_vehicle(_stop_vehicle)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -194,8 +196,7 @@ void MpcController::update(
     ))
     {
         reset_optimizer();
-        out_motor_throttle = 0;
-        out_steering_servo = 0;
+        stop_vehicle(out_motor_throttle, out_steering_servo);
         return;
     }
 
@@ -287,7 +288,7 @@ void MpcController::optimize_control_inputs(
         Visualization vis;
         vis.id(vehicle_id);
         vis.type(VisualizationType::LineStrips);
-        vis.time_to_live(2000000000ull);
+        vis.time_to_live(25000000ull);
         vis.size(0.03);
         vis.color().r(255);
         vis.color().g(0);
@@ -345,13 +346,14 @@ void MpcController::optimize_control_inputs(
     else
     {
         cpm::Logging::Instance().write(
-            2,
-            "Warning: Trajectory Controller: "
-            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
+            1,
+            "Error: Trajectory Controller: "
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.",
+            casadi_vars["objective"][0]
+        );
 
         reset_optimizer();
-        out_motor_throttle = 0.0;
-        out_steering_servo = 0.0;
+        stop_vehicle(out_motor_throttle, out_steering_servo);
     }
 }
 
