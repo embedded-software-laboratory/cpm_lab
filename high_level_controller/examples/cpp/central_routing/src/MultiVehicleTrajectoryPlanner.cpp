@@ -112,10 +112,20 @@ void MultiVehicleTrajectoryPlanner::start()
 
                 for(auto &e:trajectoryPlans)
                 {
-                    while(trajectory_point_buffer[e.first].size() > 50)
+                    // delete all points that are no longer relevant
+                    // find latest point in the past
+                    std::vector<TrajectoryPoint>::iterator it_to_delete = trajectory_point_buffer[e.first].begin();
+                    assert(!trajectory_point_buffer[e.first].empty());
+                    for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer[e.first].begin() + 1; tp_it != trajectory_point_buffer[e.first].end(); ++tp_it)
                     {
-                        trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin());
+                        if (tp_it->t().nanoseconds() > t_real_time)
+                        {
+                            it_to_delete = tp_it-1;
+                            break;
+                        }
                     }
+                    trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin(), it_to_delete);
+
                     auto trajectory_point = e.second->get_trajectory_point();
                     trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
                     trajectory_point_buffer[e.first].push_back(trajectory_point);
