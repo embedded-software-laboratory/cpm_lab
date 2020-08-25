@@ -320,8 +320,8 @@ void MonitoringUi::init_ui_thread()
                                 if(!deploy_functions->diagnosis_switch) continue; 
                                 cpm::Logging::Instance().write(
                                     1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", 
-                                    vehicle_id, error, dt
+                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping vehicles ...", 
+                                    vehicle_id, error, dt/1e6
                                 );
                                 deploy_functions->stop_vehicles(vehicle_ids);
                             }
