@@ -76,7 +76,7 @@ public:
     const vector<string> rows_restricted = {"ips_dt", "battery_level", "clock_delta", "reference_deviation", "speed"};
 
     // Indicates the starting time of the last error occurance for each vehicle
-    uint64_t error_timestamps[5][30] = {0};
+    vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
     
     // Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
