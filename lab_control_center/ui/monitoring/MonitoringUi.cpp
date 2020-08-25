@@ -254,12 +254,27 @@ void MonitoringUi::init_ui_thread()
                     }
                     else if(rows_restricted[i] == "speed") 
                     {
-                        if     (fabs(value) < 3)  label->get_style_context()->add_class("ok");
+                        if     (fabs(value) < 3)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
                         else 
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+
                             cpm::Logging::Instance().write(
                                 1,
                                 "Warning: speed of vehicle %d too high. Stopping vehicles ...", 
@@ -270,12 +285,27 @@ void MonitoringUi::init_ui_thread()
                     }
                     else if(rows_restricted[i] == "ips_dt") 
                     {
-                        if      (value < 100) label->get_style_context()->add_class("ok");
+                        if      (value < 100) 
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if (value < 500) label->get_style_context()->add_class("warn");
                         else                  
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+
                             cpm::Logging::Instance().write(
                                 1,
                                 "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping vehicles ...", 
@@ -346,7 +376,7 @@ void MonitoringUi::init_ui_thread()
                             double error = sqrt(pow(pose_x-current_px,2)+pow(pose_y-current_py,2));
 
                             label->set_text(std::to_string(error).substr(0,4));
-                            if(error > 0.1) 
+                            if(error > 0.15) 
                             {
                                 label->get_style_context()->add_class("alert");
                                 if(!deploy_functions->diagnosis_switch) continue;
