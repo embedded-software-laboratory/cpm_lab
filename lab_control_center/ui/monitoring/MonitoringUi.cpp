@@ -186,15 +186,30 @@ void MonitoringUi::init_ui_thread()
 
                     if(rows_restricted[i] == "clock_delta") 
                     {
-                        if     (fabs(value) < 25)  label->get_style_context()->add_class("ok");
+                        if  (fabs(value) < 25)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(value) < 50) label->get_style_context()->add_class("warn");
                         else 
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
                             cpm::Logging::Instance().write(
-                                2,
+                                1,
                                 "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
                                 vehicle_id
                             );
@@ -208,12 +223,27 @@ void MonitoringUi::init_ui_thread()
                         std::vector<double> values = sensor_timeseries->get_last_n_values(n);
                         auto max = std::max_element(values.begin(), values.end());
 
-                        if     (fabs(*max) > 30)  label->get_style_context()->add_class("ok");
+                        if     (fabs(*max) > 30)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
                         else
                         {  
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            
                             cpm::Logging::Instance().write(
                                 1,
                                 "Warning: Battery level of vehicle %d too low. Stopping vehicles ...", 
@@ -269,6 +299,8 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("ok");
                             label->set_text("--");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
                             continue;
                         }
 
@@ -287,24 +319,24 @@ void MonitoringUi::init_ui_thread()
                             double current_px = 0;
                             double current_py = 0;
 
-                            for(size_t i = 2; i < trajectory_segment.size(); ++i)
+                            for(size_t j = 2; j < trajectory_segment.size(); ++j)
                             {
                                 const int n_interp = 20;
                                 for (int interp_step = 1; interp_step < n_interp; ++interp_step)
                                 {
                                     const uint64_t delta_t = 
-                                        trajectory_segment[i].t().nanoseconds() 
-                                        - trajectory_segment[i-1].t().nanoseconds();
+                                        trajectory_segment[j].t().nanoseconds() 
+                                        - trajectory_segment[j-1].t().nanoseconds();
                                     
                                     std::shared_ptr<TrajectoryInterpolation> interp = std::make_shared<TrajectoryInterpolation>(
-                                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
-                                        trajectory_segment[i-1],  
-                                        trajectory_segment[i]
+                                        (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds(),  
+                                        trajectory_segment[j-1],  
+                                        trajectory_segment[j]
                                     );
                                     
-                                    if((delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
+                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
                                     {
-                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
+                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
                                         current_px = interp->position_x;
                                         current_py = interp->position_y;
                                     }
@@ -314,24 +346,36 @@ void MonitoringUi::init_ui_thread()
                             double error = sqrt(pow(pose_x-current_px,2)+pow(pose_y-current_py,2));
 
                             label->set_text(std::to_string(error).substr(0,4));
-                            if(error > 0.5) 
+                            if(error > 0.1) 
                             {
                                 label->get_style_context()->add_class("alert");
-                                if(!deploy_functions->diagnosis_switch) continue; 
+                                if(!deploy_functions->diagnosis_switch) continue;
+
+                                if(error_timestamps[i][vehicle_id] == 0) 
+                                {
+                                    // set error timestamp  
+                                    error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                    continue;
+                                }
+                                // an error occured before - do nothing if the error is not older than a threshold
+                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+
                                 cpm::Logging::Instance().write(
                                     1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", 
-                                    vehicle_id, error, dt
+                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping vehicles ...", 
+                                    vehicle_id, error, dt/1e6
                                 );
                                 deploy_functions->stop_vehicles(vehicle_ids);
                             }
-                            else if (error > 0.1)
+                            else if (error > 0.05)
                             {
                                 label->get_style_context()->add_class("warn");
                             }
                             else 
                             {
                                 label->get_style_context()->add_class("ok");
+                                // reset error timestamp 
+                                if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
                             }
                         }
                         else 
