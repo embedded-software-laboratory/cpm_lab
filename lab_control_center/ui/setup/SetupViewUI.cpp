@@ -156,6 +156,7 @@ SetupViewUI::SetupViewUI
     thread_count.store(0);
     notify_count = 0;
     participants_available.store(false);
+    both_local_and_remote_deploy.store(false);
     kill_called.store(false);
 
     //Set initial text of script path (from previous program execution, if that existed)
@@ -671,6 +672,21 @@ void SetupViewUI::deploy_applications() {
                 }
             ));
         }
+
+        //Now those vehicles that could not be matched are treated as in the local case
+        if (vehicle_ids.size() > hlc_ids.size())
+        {
+            std::vector<uint32_t> local_vehicles;
+            local_vehicles.reserve(vehicle_ids.size() - hlc_ids.size());
+
+            for (size_t i = hlc_ids.size(); i < vehicle_ids.size(); ++i)
+            {
+                local_vehicles.push_back(vehicle_ids.at(i));
+            }
+
+            both_local_and_remote_deploy.store(true);
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, script_path->get_text().c_str(), script_params->get_text().c_str());
+        }
     }
     else
     {
@@ -680,13 +696,13 @@ void SetupViewUI::deploy_applications() {
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
-        [this, deploy_remote_toggled, lab_mode_on, labcam_toggled] () {
+        [this, deploy_remote_toggled, lab_mode_on, labcam_toggled, local_and_remote = both_local_and_remote_deploy.load()] () {
             //Give programs time to actually start
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
             while(crash_check_running.load())
             {
-                auto crashed_participants = deploy_functions->check_for_crashes(deploy_remote_toggled, lab_mode_on, labcam_toggled);
+                auto crashed_participants = deploy_functions->check_for_crashes(deploy_remote_toggled, local_and_remote, lab_mode_on, labcam_toggled);
 
                 if (crashed_participants.size() > 0)
                 {                    
@@ -816,6 +832,12 @@ void SetupViewUI::kill_deployed_applications() {
                     this->notify_upload_finished(hlc_id, kill_worked);
                 }
             ));
+        }
+
+        //Also kill potential local HLC
+        if (both_local_and_remote_deploy.exchange(false))
+        {
+            deploy_functions->kill_local_hlc();
         }
     }
     else 

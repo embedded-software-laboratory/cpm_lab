@@ -151,12 +151,13 @@ public:
 
     /**
      * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
-     * \param deploy_remote Set to true if remote deploy of HLC chosen (will not check for hlc and middleware then)
+     * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
+     * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
      * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
      * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
      * \return Empty array if everything is fine, else: string of the crashed module
      */
-    std::vector<std::string> check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording);
+    std::vector<std::string> check_for_crashes(bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     //Used for process forking

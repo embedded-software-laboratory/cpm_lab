@@ -178,6 +178,7 @@ private:
     std::mutex error_msg_mutex;
     std::vector<std::string> error_msg;
     std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
+    std::atomic_bool both_local_and_remote_deploy; //True if in remote deployment local HLC had to be started
     void perform_post_kill_cleanup();
 
     //IPS switch callback (-> lab mode)
