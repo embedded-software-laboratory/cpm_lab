@@ -119,7 +119,11 @@ bool TimerTrigger::obtain_new_ready_signals() {
                 ready_status_storage[id] = data;
             }
             else {
-                cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id.c_str());
+                cpm::Logging::Instance().write(
+                    1,
+                    "LCC Timer: Received old timestamp from participant with ID %s", 
+                    id.c_str()
+                );
             }
         }
     }
@@ -163,10 +167,18 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
         std::lock_guard<std::mutex> lock(simulated_time_mutex);
         //React according to current data
         if (!has_data) {
-            cpm::Logging::Instance().write("LCC Timer: No data or only invalid data received!");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "LCC Timer: No data or only invalid data received!"
+            );
         }
         else if (next_simulated_time < current_simulated_time) {
-            cpm::Logging::Instance().write("LCC Timer: At least one participant is out of sync (or its answer was not received)!");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "LCC Timer: At least one participant is out of sync (or its answer was not received)!"
+            );
         }
         else {
             //The timer can progress to the next smallest timestep as all participants have performed their computations
@@ -198,7 +210,11 @@ void TimerTrigger::send_stop_signal() {
     trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
     system_trigger_writer.write(trigger);
 
-    cpm::Logging::Instance().write("LCC: Sent stop signal");
+    cpm::Logging::Instance().write(
+        1,
+        "%s", 
+        "LCC: Sent stop signal"
+    );
 
     timer_running.store(false);
     if(next_signal_thread.joinable()) {

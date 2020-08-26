@@ -106,7 +106,11 @@ int main (int argc, char *argv[]) {
         //Log error if the own ID could not yet be determined
         if (hlc_id == "")
         {
-            cpm::Logging::Instance().write("ID of a NUC could not yet be determined");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ID of a NUC could not yet be determined"
+            );
         }
     }
 

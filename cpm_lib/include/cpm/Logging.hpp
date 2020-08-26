@@ -122,17 +122,17 @@ namespace cpm {
                     //Mutex for writing the message (file, writer) - is released when going out of scope
                     std::lock_guard<std::mutex> lock(log_mutex);
 
-                    //Add the message to the log file
+                    //Add the message to the log file - cast for log level is necessary to not create garbage symbols
                     file.open(filename, std::ios::app);
-                    file << id << "," << time_now << "," << log_string << std::endl;
+                    file << id << "," << static_cast<int>(message_log_level) << "," << time_now << "," << log_string << std::endl;
                     file.close();
 
                     //Send the log message via RTI
-                    Log log(id, str, TimeStamp(time_now));
+                    Log log(id, str, TimeStamp(time_now), message_log_level);
                     logger.write(log);
 
                     //Show the log message on the console
-                    std::cerr << "Log at time " << time_now << ": " << str << std::endl;
+                    std::cerr << "Log at time " << time_now << ", level " << static_cast<int>(message_log_level) << ": " << str << std::endl;
                 }
             }
 

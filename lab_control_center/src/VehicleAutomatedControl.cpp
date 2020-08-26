@@ -87,7 +87,7 @@ void VehicleAutomatedControl::stop_vehicles(std::vector<uint8_t> id_list)
     for (const auto& id : id_list)
     {
         stop_vehicle(id);
-            std::cout << "Stopping " << id << std::endl;
+        std::cout << "Stopping " << static_cast<int>(id) << std::endl;
     }
 }
 
