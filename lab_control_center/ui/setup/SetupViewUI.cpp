@@ -601,6 +601,10 @@ void SetupViewUI::kill_crash_check_thread()
     {
         thread_deploy_crash_check.join();
     }
+
+    //Clear old crash data to prepare for new crash checks in next simulation
+    newly_crashed_participants.clear();
+    already_crashed_participants.clear();
 }
 
 void SetupViewUI::kill_deployed_applications() {
