@@ -4,7 +4,7 @@ set -e
 mkdir -p dds_idl_cpp
 
 # Generate IDL C++
-find dds_idl/ -type f | xargs -n 1 rtiddsgen -replace -legacyPlugin -language C++11 -d ./dds_idl_cpp/
+find dds_idl/ -type f -exec rtiddsgen -replace -legacyPlugin -language C++11 -d ./dds_idl_cpp/ {} \;
 
 # Copy headers to public inclues
 mkdir -p include/cpm/dds
