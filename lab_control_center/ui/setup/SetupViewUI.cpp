@@ -153,10 +153,15 @@ SetupViewUI::SetupViewUI
     //Take care of GUI thread and worker thread separately
     update_vehicle_toggles.store(false);
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
-    thread_count.store(0);
-    notify_count = 0;
-    participants_available.store(false);
-    kill_called.store(false);
+
+    //Create upload manager
+    upload_manager = std::make_shared<Upload>(
+        _get_hlc_ids,
+        deploy_functions,
+        [this] () { set_sensitive(true); },
+        [this] () { button_kill->set_sensitive(true); },
+        [this] () { perform_post_kill_cleanup(); }
+    );
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
@@ -214,9 +219,6 @@ SetupViewUI::SetupViewUI
 }
 
 SetupViewUI::~SetupViewUI() {
-    //Join all old threads
-    join_upload_threads();
-
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
@@ -247,9 +249,6 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
 void SetupViewUI::on_lcc_close() {
     kill_deployed_applications();
     deploy_functions->kill_ips();
-
-    //Join all old threads
-    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -369,123 +368,6 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
-    else
-    {
-        //Take care of upload window etc
-        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-        if (error_msg.size() > 0)
-        {
-            for (auto &msg : error_msg)
-            {
-                upload_window->add_error_message(msg);
-            }
-            error_msg.clear();
-        }
-        else 
-        {
-            //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-            //Plus now, kill is not grayed out anymore
-            std::unique_lock<std::mutex> lock(upload_threads_mutex);
-            if (upload_threads.size() != 0 && upload_window)
-            {
-                upload_window->close();
-                button_kill->set_sensitive(true);
-            }
-            lock.unlock();
-
-            //Join all old threads
-            join_upload_threads();
-
-            //If kill caused the UI dispatch, clean up after everything has been killed
-            if (kill_called.load())
-            {
-                perform_post_kill_cleanup();
-                kill_called.store(false);
-            }
-
-            //Free the UI if the upload was not successful
-            if (!participants_available.load())
-            {
-                set_sensitive(true);
-            }
-        }
-    }
-}
-
-void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
-{
-    //Just try to join all worker threads here
-    std::lock_guard<std::mutex> lock(notify_callback_in_use);
-
-    //This should never be the case
-    //If this happens, the thread count has been initialized incorrectly
-    if (thread_count.load() == 0)
-    {
-        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
-    }
-
-    //Trigger error msg if the upload failed
-    if (!upload_success)
-    {
-        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-        std::stringstream error_msg_stream;
-        error_msg_stream << "ERROR: Connection or upload failed for HLC ID " << static_cast<int>(hlc_id) << std::endl;
-        error_msg.push_back(error_msg_stream.str());
-        ui_dispatcher.emit();
-    }
-
-    //Also count notify amount s.t one can check if the thread count has been set properly
-    thread_count.fetch_sub(1);
-    ++notify_count;
-
-    std::cout << thread_count.load() << std::endl;
-    if (thread_count.load() == 0)
-    {
-        notify_count = 0;
-
-        //Close upload window again, but only after a while
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        ui_dispatcher.emit();
-    }
-    else 
-    {
-        std::lock_guard<std::mutex> lock(upload_threads_mutex);
-        if (notify_count == upload_threads.size())
-        {
-            std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
-
-            notify_count = 0;
-
-            //Close upload window again, but only after a while
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-            ui_dispatcher.emit();
-        }
-    }
-}
-
-void SetupViewUI::join_upload_threads()
-{
-    //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
-    std::lock_guard<std::mutex> lock(upload_threads_mutex);
-    for (auto& thread : upload_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-        else 
-        {
-            std::cerr << "Warning: Shutting down with upload thread that cannot be joined" << std::endl;
-        }
-    }
-    upload_threads.clear();
-}
-
-bool SetupViewUI::check_if_online(uint8_t hlc_id)
-{
-    //Check if the HLC is still online (in get_hlc_ids)
-    std::vector<uint8_t> hlc_ids = get_hlc_ids();
-    return std::find(hlc_ids.begin(), hlc_ids.end(), static_cast<uint8_t>(hlc_id)) != hlc_ids.end();
 }
 
 void SetupViewUI::deploy_applications() {
@@ -546,73 +428,17 @@ void SetupViewUI::deploy_applications() {
             return;
         }
 
-        //Show window indicating that the upload process currently takes place
-        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        if (get_main_window)
-        {
-            upload_window = make_shared<UploadWindow>(get_main_window(), vehicle_ids, hlc_ids);
-        }
-        else
-        {
-            cpm::Logging::Instance().write(
-                1,
-                "%s", 
-                "ERROR: Main window reference is missing, cannot create upload dialog"
-            );
-        }
-
-        //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
-        if (hlc_ids.size() == 0 || vehicle_ids.size() == 0)
-        {
-            //Waits a few seconds before the window is closed again 
-            //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
-            participants_available.store(false); //No HLCs available
-            thread_count.store(1);
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this] () {
-                    usleep(3000000);
-                    this->notify_upload_finished(0, true);
-                }
-            ));
-            return;
-        }
-        
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
-        //Deploy on each HLC individually, using different threads
-        participants_available.store(true); //HLCs are available
-        thread_count.store(min_hlc_vehicle);
-        for (size_t i = 0; i < min_hlc_vehicle; ++i)
-        {
-            //Deploy on high_level_controller with given vehicle id(s)
-            std::stringstream vehicle_id_stream;
-            vehicle_id_stream << vehicle_ids.at(i);
+        //Deploy remote
+        auto simulated_time = switch_simulated_time->get_active();
+        auto path = script_path->get_text().c_str();
+        auto params = script_params->get_text().c_str();
 
-            //Create variables for the thread
-            unsigned int hlc_id = static_cast<unsigned int>(hlc_ids.at(i));
-            std::string vehicle_string = vehicle_id_stream.str();
-
-            //Create thread
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this, hlc_id, vehicle_string] () {
-                    bool deploy_worked = deploy_functions->deploy_remote_hlc(
-                        hlc_id, 
-                        vehicle_string, 
-                        switch_simulated_time->get_active(), 
-                        script_path->get_text().c_str(), 
-                        script_params->get_text().c_str(), 
-                        remote_deploy_timeout,
-                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
-                    );
-                    this->notify_upload_finished(hlc_id, deploy_worked);
-                }
-            ));
-        }
+        upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
     }
     else
     {
@@ -632,54 +458,8 @@ void SetupViewUI::kill_deployed_applications() {
     //Kill scripts locally or remotely
     if(switch_deploy_remote->get_active())
     {
-        std::vector<uint8_t> hlc_ids;
-        if (get_hlc_ids)
-        {
-            hlc_ids = get_hlc_ids();
-        }
-        else 
-        {
-            std::cerr << "No lookup function to get HLC IDs given, cannot kill on HLCs" << std::endl;
-            return;
-        }
-
-        //Show window indicating that the upload process currently takes place
-        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        if (get_main_window)
-        {
-            upload_window = make_shared<UploadWindow>(get_main_window(), std::vector<unsigned int>(), hlc_ids);
-            upload_window->set_text("Killing on remote HLCs...");
-        }
-        else
-        {
-            cpm::Logging::Instance().write(
-                1,
-                "%s", 
-                "ERROR: Main window reference is missing, cannot create upload dialog"
-            );
-        }
-        
-        //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
-        kill_called.store(true);
-
-
-        //If a HLC went offline in between, we assume that it crashed and thus just use this script on all remaining running HLCs
-        thread_count.store(hlc_ids.size());
-        for (const auto& hlc_id : hlc_ids)
-        {
-            //Create thread
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this, hlc_id] () {
-                    bool kill_worked = deploy_functions->kill_remote_hlc(
-                        hlc_id, 
-                        remote_kill_timeout,
-                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
-                    );
-                    this->notify_upload_finished(hlc_id, kill_worked);
-                }
-            ));
-        }
+        //Performs post_kill_cleanup after remote kill
+        upload_manager->kill_remote();
     }
     else 
     {
@@ -807,6 +587,7 @@ void SetupViewUI::select_no_vehicles()
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
 {
     get_main_window = _get_main_window;
+    upload_manager->set_main_window_callback(_get_main_window);
 }
 
 Gtk::Widget* SetupViewUI::get_parent()
