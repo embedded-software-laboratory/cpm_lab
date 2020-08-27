@@ -30,6 +30,10 @@
 
 MultiVehicleTrajectoryPlanner::MultiVehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
 
+MultiVehicleTrajectoryPlanner::~MultiVehicleTrajectoryPlanner(){
+    if ( planning_thread.joinable() ) planning_thread.join();
+}
+
 std::vector<VehicleCommandTrajectory> MultiVehicleTrajectoryPlanner::get_trajectory_commands(uint64_t t_now)
 {
     std::lock_guard<std::mutex> lock(mutex);
@@ -77,12 +81,20 @@ void MultiVehicleTrajectoryPlanner::start()
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, in this example those with a smaller ID.
             vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
-            
+            bool is_collision_avoidable = false;
             for(auto &e:trajectoryPlans)
             {
-                e.second->avoid_collisions(previous_vehicles);
+                is_collision_avoidable = e.second->avoid_collisions(previous_vehicles);
+                if (!is_collision_avoidable){
+                    break;
+                }
                 previous_vehicles.push_back(e.second);
             }
+
+            if (!is_collision_avoidable){
+                started = false; // end planning
+                break;
+            }                
 
             {
                 std::lock_guard<std::mutex> lock(mutex); 

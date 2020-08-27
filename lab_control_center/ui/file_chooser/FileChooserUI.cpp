@@ -29,6 +29,7 @@
 //Init static previous_file
 std::string FileChooserUI::previous_file = "./";
 const std::string FileChooserUI::file_dialog_config_location = "./file_dialog_open_config.txt";
+const std::string FileChooserUI::default_load_path = "../high_level_controller/examples/cpp/central_routing/build/central_routing";
 bool FileChooserUI::file_config_loaded = false;
 
 FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback) :
@@ -118,6 +119,12 @@ std::string FileChooserUI::get_last_execution_path()
         std::getline(input_stream, path);
     }   
     input_stream.close();
+
+    //Behaviour if no last execution path could be found - set to HLC folder
+    if (path == "")
+    {
+        path = default_load_path;
+    }
 
     return path;
 }

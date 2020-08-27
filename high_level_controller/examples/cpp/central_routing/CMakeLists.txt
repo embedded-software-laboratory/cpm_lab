@@ -50,6 +50,35 @@ target_include_directories(central_routing_reduced PUBLIC
     include/lane_graph_one_lane)
 target_link_libraries(central_routing_reduced cpm)
 
+add_executable(150_jahre_RWTH_szenario
+    src/main.cpp
+    include/150_jahre_RWTH_szenario/lane_graph.hpp
+    src/lane_graph_tools.hpp
+    src/lane_graph_tools.cpp
+    src/VehicleTrajectoryPlanningState.hpp
+    src/VehicleTrajectoryPlanningState.cpp
+    src/MultiVehicleTrajectoryPlanner.hpp
+    src/MultiVehicleTrajectoryPlanner.cpp
+)
+target_include_directories(150_jahre_RWTH_szenario PUBLIC 
+    include/150_jahre_RWTH_szenario)
+target_link_libraries(150_jahre_RWTH_szenario cpm)
+
+add_executable(outer_circle
+    src/main.cpp
+    include/lane_graph_outer_circle/lane_graph.hpp
+    src/lane_graph_tools.hpp
+    src/lane_graph_tools.cpp
+    src/VehicleTrajectoryPlanningState.hpp
+    src/VehicleTrajectoryPlanningState.cpp
+    src/MultiVehicleTrajectoryPlanner.hpp
+    src/MultiVehicleTrajectoryPlanner.cpp
+)
+
+target_include_directories(outer_circle PUBLIC 
+    include/lane_graph_outer_circle)
+target_link_libraries(outer_circle cpm)
+
 add_executable(tests
     src/tests.cpp
     include/lane_graph_full/lane_graph.hpp

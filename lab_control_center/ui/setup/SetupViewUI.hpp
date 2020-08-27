@@ -28,6 +28,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include "TimeSeriesAggregator.hpp"
 #include "ObstacleSimulationManager.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
@@ -42,11 +43,13 @@
     #include "labcam/LabCamIface.hpp"
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -77,7 +80,6 @@ private:
     //Vehicle selection
     Gtk::Button* button_select_none = nullptr;
     Gtk::Button* button_select_all_simulated = nullptr;
-    Gtk::Button* button_select_all_real = nullptr;
 
     //Set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
@@ -98,7 +100,15 @@ private:
 
     //Vehicles - toggles in box to turn them on/off/simulated
     Gtk::FlowBox* vehicle_flowbox = nullptr;
-    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles; //Position in the vector and vehicle ID correlate (ID-1 = position)
+    std::atomic_bool update_vehicle_toggles; //For ui thread
+    const unsigned int reboot_timeout = 5; //Reboot time in seconds
+
+    //Remember which vehicle toggles were set to real before
+    std::vector<unsigned int> vehicle_toggles_set_to_real;
+
+    //Callback for vehicle toggles - simulated vehicles are now created when the toggle is set to "simulated"
+    void vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state);
     
     //Timer function - replace current timer in the whole system when user switches between simulated and real time
     std::shared_ptr<TimerViewUI> timer_ui;
@@ -123,6 +133,14 @@ private:
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
+    //Function to get IDs of real vehicles (and simulated ones) which are currently active
+    std::function<VehicleData()> get_vehicle_data;
+    std::vector<unsigned int> active_real_vehicles;
+    std::mutex active_real_vehicles_mutex;
+    std::thread check_real_vehicle_data_thread;
+    std::atomic_bool is_deployed;
+    std::atomic_bool vehicle_data_thread_running;
+
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
     std::function<void()> reset_time_series_aggregator;
@@ -140,6 +158,7 @@ private:
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
     std::vector<std::thread> upload_threads; //threads that are responsible for uploading scripts to the HLCs
+    std::mutex upload_threads_mutex;
     std::shared_ptr<UploadWindow> upload_window; //window that shows an upload message
     void ui_dispatch(); //dispatcher callback for the UI thread
     /**
@@ -148,7 +167,7 @@ private:
      * \param upload_success Whether the upload was successful
      */
     void notify_upload_finished(uint8_t hlc_id, bool upload_success);
-    void kill_all_threads(); //function to join all threads
+    void join_upload_threads(); //function to join all threads
     bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
     size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
@@ -187,7 +206,6 @@ private:
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
     //Vehicle button toggle callbacks, to set which vehicles are real / simulated / deactivated
-    void select_all_vehicles_real();
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
@@ -202,6 +220,7 @@ public:
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
      * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
      * \param _reset_time_series_aggregator Reset received vehicle data
      * \param _reset_obstacle_aggregator Reset received obstacle data
@@ -218,6 +237,7 @@ public:
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
         std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _reset_time_series_aggregator,
         std::function<void()> _reset_obstacle_aggregator,
@@ -237,10 +257,19 @@ public:
      */
     void set_main_window_callback(std::function<Gtk::Window&()> _get_main_window);
 
+    //True if currently active real vehicle, else false
+    bool is_active_real(unsigned int vehicle_id);
+
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 
     //This is subject to change, as the setup ui will be restructured soon
     //Returns: True if a simulation is running and in that case a map with mappings from vehicle ID to HLC ID
     std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
+    /**
+     * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
+     * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill
+     * the according programs
+     */
+    void on_lcc_close();
 };

@@ -40,6 +40,7 @@
 #include <fstream>
 #include <iomanip>      // put_time
 #include <iostream>
+#include <map>
 #include <memory>
 #include <regex>        // to replace file contents
 #include <stdexcept>
@@ -53,6 +54,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "cpm/Logging.hpp"
+
+/**
+ * \brief This class is responsible for managing deployment of HLC and vehicle scripts / programs and other participants that are launched from the LCC
+ */
 class Deploy 
 {
 public:
@@ -63,6 +69,11 @@ public:
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
      */
     Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle);
+
+    /**
+     * \brief Deconstructor required because of reboot threads
+     */
+    ~Deploy();
 
     //Specific local deploy functions
     /**
@@ -83,10 +94,22 @@ public:
      */
     void deploy_sim_vehicle(unsigned int id, bool use_simulated_time);
 
+    /**
+     * \brief Make running vehicles brake and stop
+     */
+    void stop_vehicles(std::vector<unsigned int> vehicle_ids);
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
-    void kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> active_vehicle_ids);
-    void kill_vehicle(unsigned int id);
+    void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
+    void kill_sim_vehicle(unsigned int id);
+
+    /**
+     * \brief Kill a single real vehicle using a simple via ssh using sudo reboot - does not work for simulated vehicles started without the LCC
+     * \param id of the vehicle, to infer its IP address
+     * \param timeout_seconds Timeout in case the IP is not reachable
+     * \return True if the vehicle reboot msg could be sent
+     */
+    void reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
     void deploy_ips();
@@ -199,4 +222,12 @@ private:
 
     // Session name for recording service
     std::string recording_session = "dds_record";
+
+    //To reboot real vehicles
+    std::map<unsigned int, std::thread> vehicle_reboot_threads; //threads that are responsible for uploading scripts to the HLCs, map to have access to vehicle IDs
+    std::mutex vehicle_reboot_threads_mutex;
+    std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex reboot_done_mutex;
+    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    void join_finished_reboot_threads();
 };

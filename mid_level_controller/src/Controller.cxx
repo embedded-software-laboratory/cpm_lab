@@ -29,10 +29,11 @@
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
 
+using namespace std::placeholders;
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
 :
-mpcController(_vehicle_id)
+mpcController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
 ,m_get_time(_get_time)
 ,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
 ,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
