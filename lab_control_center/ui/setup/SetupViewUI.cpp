@@ -157,6 +157,7 @@ SetupViewUI::SetupViewUI
     notify_count = 0;
     participants_available.store(false);
     both_local_and_remote_deploy.store(false);
+    triggered_by_upload.store(false);
     kill_called.store(false);
 
     //Set initial text of script path (from previous program execution, if that existed)
@@ -344,13 +345,10 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 void SetupViewUI::ui_dispatch()
 {
     std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-    std::lock_guard<std::mutex> lock_crashes(crashed_mutex);
     //if (error_msg.size() > 0)
     //Update vehicle toggles for real vehicles or take care of upload window
-    if (update_vehicle_toggles.load())
+    if (update_vehicle_toggles.exchange(false))
     {
-        update_vehicle_toggles.store(false);
-
         //Update vehicle toggles
         std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
 
@@ -373,9 +371,11 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
-    else if (newly_crashed_participants.size() > 0)
+
+    //Create dialog window that informs the user about a crash of one of the programs they started (besides vehicles, this can be seen in the UI already)
+    std::unique_lock<std::mutex> lock_crashes(crashed_mutex);
+    if (newly_crashed_participants.size() > 0)
     {
-        //Create dialog window that informs the user about a crash of one of the programs they started (besides vehicles, this can be seen in the UI already)
         std::stringstream crash_report;
         crash_report << "Newly crashed programs:\n";
         for (auto& program : newly_crashed_participants)
@@ -387,6 +387,14 @@ void SetupViewUI::ui_dispatch()
         {
             crash_report << "\t" << program << "\n";
         }
+
+        //Remember previous crashes, clear for new crashed - do this both in UI and check thread, as they interoperate non-deterministically
+        for (auto& participant : newly_crashed_participants)
+        {
+            already_crashed_participants.insert(participant);
+        }
+        newly_crashed_participants.clear();
+
 
         //Close window if it is still open
         if (crash_dialog)
@@ -421,7 +429,11 @@ void SetupViewUI::ui_dispatch()
             }
         );
     }
-    else 
+    
+    lock_crashes.unlock();
+    
+    //Take care of upload window etc
+    if (triggered_by_upload.exchange(false))
     {
         //Take care of upload window etc
         std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
@@ -449,10 +461,9 @@ void SetupViewUI::ui_dispatch()
             join_upload_threads();
 
             //If kill caused the UI dispatch, clean up after everything has been killed
-            if (kill_called.load())
+            if (kill_called.exchange(false))
             {
                 perform_post_kill_cleanup();
-                kill_called.store(false);
             }
 
             //Free the UI if the upload was not successful
@@ -483,6 +494,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
         std::stringstream error_msg_stream;
         error_msg_stream << "ERROR: Connection or upload failed for HLC ID " << static_cast<int>(hlc_id) << std::endl;
         error_msg.push_back(error_msg_stream.str());
+        triggered_by_upload.store(true);
         ui_dispatcher.emit();
     }
 
@@ -497,6 +509,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 
         //Close upload window again, but only after a while
         std::this_thread::sleep_for(std::chrono::seconds(2));
+        triggered_by_upload.store(true);
         ui_dispatcher.emit();
     }
     else 
@@ -510,6 +523,7 @@ void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
 
             //Close upload window again, but only after a while
             std::this_thread::sleep_for(std::chrono::seconds(2));
+            triggered_by_upload.store(true);
             ui_dispatcher.emit();
         }
     }

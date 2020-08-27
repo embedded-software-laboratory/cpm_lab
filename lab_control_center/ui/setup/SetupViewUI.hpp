@@ -177,6 +177,7 @@ private:
     //Horrible way to log an error message, because the UI cannot be accessed directly - if error_msg.size() > 0, emit just triggers that an error msg is added
     std::mutex error_msg_mutex;
     std::vector<std::string> error_msg;
+    std::atomic_bool triggered_by_upload; //For the UI thread to know where the trigger came from
     std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
     std::atomic_bool both_local_and_remote_deploy; //True if in remote deployment local HLC had to be started
     void perform_post_kill_cleanup();
