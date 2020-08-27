@@ -32,6 +32,8 @@
 #include <cstdint>
 #include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "LaneGraphTrajectory.hpp"
+
 using std::vector;
 using std::array;
 
@@ -41,6 +43,7 @@ using std::array;
 
 class VehicleTrajectoryPlanningState
 {
+
     uint8_t vehicle_id = 0;
     size_t current_edge_index = 0;
     size_t current_edge_path_index = 0;
@@ -62,6 +65,7 @@ class VehicleTrajectoryPlanningState
     void extend_random_route(size_t n);
     vector<std::pair<size_t, size_t>> get_planned_path();
     void set_speed(int idx_speed_reduction, double speed_value);
+    void publish_planned_path();
 
 public:
 
@@ -71,10 +75,11 @@ public:
         size_t _edge_index,
         size_t _edge_path_index);
 
+    LaneGraphTrajectory get_lane_graph_trajectory();
     TrajectoryPoint get_trajectory_point();
     void apply_timestep(uint64_t dt_nanos);
 
     // Change the own speed profile so as not to collide with the other_vehicles.
-    bool avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
+    bool avoid_collisions(std::map<uint8_t, LaneGraphTrajectory> other_vehicles);
     uint8_t get_vehicle_id(){return vehicle_id;}
 };

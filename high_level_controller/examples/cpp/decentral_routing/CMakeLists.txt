@@ -29,8 +29,8 @@ add_executable(decentral_routing
     src/lane_graph_tools.cpp
     src/VehicleTrajectoryPlanningState.hpp
     src/VehicleTrajectoryPlanningState.cpp
-    src/MultiVehicleTrajectoryPlanner.hpp
-    src/MultiVehicleTrajectoryPlanner.cpp
+    src/VehicleTrajectoryPlanner.hpp
+    src/VehicleTrajectoryPlanner.cpp
 )
 target_include_directories(decentral_routing PUBLIC
     include/lane_graph_full)
@@ -43,8 +43,8 @@ add_executable(decentral_routing_reduced
     src/lane_graph_tools.cpp
     src/VehicleTrajectoryPlanningState.hpp
     src/VehicleTrajectoryPlanningState.cpp
-    src/MultiVehicleTrajectoryPlanner.hpp
-    src/MultiVehicleTrajectoryPlanner.cpp
+    src/VehicleTrajectoryPlanner.hpp
+    src/VehicleTrajectoryPlanner.cpp
 )
 target_include_directories(decentral_routing_reduced PUBLIC 
     include/lane_graph_one_lane)
@@ -57,8 +57,8 @@ add_executable(150_jahre_RWTH_szenario
     src/lane_graph_tools.cpp
     src/VehicleTrajectoryPlanningState.hpp
     src/VehicleTrajectoryPlanningState.cpp
-    src/MultiVehicleTrajectoryPlanner.hpp
-    src/MultiVehicleTrajectoryPlanner.cpp
+    src/VehicleTrajectoryPlanner.hpp
+    src/VehicleTrajectoryPlanner.cpp
 )
 target_include_directories(150_jahre_RWTH_szenario PUBLIC 
     include/150_jahre_RWTH_szenario)
@@ -71,8 +71,8 @@ add_executable(outer_circle
     src/lane_graph_tools.cpp
     src/VehicleTrajectoryPlanningState.hpp
     src/VehicleTrajectoryPlanningState.cpp
-    src/MultiVehicleTrajectoryPlanner.hpp
-    src/MultiVehicleTrajectoryPlanner.cpp
+    src/VehicleTrajectoryPlanner.hpp
+    src/VehicleTrajectoryPlanner.cpp
 )
 
 target_include_directories(outer_circle PUBLIC 

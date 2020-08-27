@@ -50,6 +50,20 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 
 void VehicleTrajectoryPlanningState::invariant()
 {
+    cpm::Logging::Instance().write(
+            2,
+            "current_route_edge_indices.size(): %d\n\
+            current_route_edge_indices[0]: %d\n\
+            current_edge_index: %d\n\
+            current_edge_path_index: %d\n\
+            delta_s_path_node_offset: %d\n",
+            current_route_edge_indices.size(),
+            current_route_edge_indices[0],
+            current_edge_index,
+            current_edge_path_index,
+            delta_s_path_node_offset
+            );
+
     assert(current_route_edge_indices.size() >= 1);
     assert(current_route_edge_indices[0] == current_edge_index);
     assert(current_edge_index < laneGraphTools.n_edges);
@@ -133,12 +147,15 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 
 // Change the own speed profile so as not to collide with the other_vehicles.
 bool VehicleTrajectoryPlanningState::avoid_collisions(
-    vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles)
+    std::map<uint8_t, LaneGraphTrajectory> other_vehicles
+)
 {
     // TODO termination condition
     // for now: if this gets stuck the vehicles will stop, because they wont get a new command
     while(1)
     {
+        // TODO: Replace this with get_lane_graph_trajectory, then we don't need
+        // get_planned_path anymore
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
@@ -146,26 +163,29 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         int colliding_vehicle_id = 0;
 
         // Find the earliest collision
-        for(std::shared_ptr<VehicleTrajectoryPlanningState> other_vehicle:other_vehicles)
-        {
-            vector<std::pair<size_t, size_t>> other_path = other_vehicle->get_planned_path();
+        for(
+                std::map<uint8_t, LaneGraphTrajectory>::iterator it =
+                other_vehicles.begin(); it != other_vehicles.end(); ++it
+        ){
+            rti::core::vector<LaneGraphPosition> other_path = it->second.lane_graph_positions();
 
-            assert(self_path.size() == N_STEPS_SPEED_PROFILE);
-            assert(other_path.size() == N_STEPS_SPEED_PROFILE);
+            // Ignoring for now, because LaneGraphTrajectory doesn't have size()
+            //assert(self_path.size() == N_STEPS_SPEED_PROFILE);
+            //assert(other_path.size() == N_STEPS_SPEED_PROFILE);
 
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
                 if(laneGraphTools.edge_path_collisions
                     [self_path[i].first]
                     [self_path[i].second]
-                    [other_path[i].first]
-                    [other_path[i].second])
+                    [other_path[i].edge_index()]
+                    [other_path[i].edge_path_index()])
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
                     {
                         earliest_collision__speed_profile_index = i;
-                        colliding_vehicle_id = other_vehicle->vehicle_id;
+                        colliding_vehicle_id = it->second.vehicle_id();
                     }
                     // earliest collision for this vehicle found, stop
                     break;
@@ -266,6 +286,28 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
 
         result.push_back(std::make_pair(future_edge_index, future_edge_path_index));
     }
+
+    return result;
+}
+
+LaneGraphTrajectory VehicleTrajectoryPlanningState::get_lane_graph_trajectory()
+{
+    LaneGraphTrajectory result;
+
+    result.vehicle_id(vehicle_id);
+    
+    std::vector<LaneGraphPosition> lane_graph_positions;
+
+    for(std::pair<size_t, size_t> path_point:get_planned_path())
+    {
+        LaneGraphPosition lane_graph_pos;
+        lane_graph_pos.edge_index(path_point.first);
+        lane_graph_pos.edge_path_index(path_point.second);
+
+        lane_graph_positions.push_back(lane_graph_pos);
+    }
+
+    result.lane_graph_positions(lane_graph_positions);
 
     return result;
 }

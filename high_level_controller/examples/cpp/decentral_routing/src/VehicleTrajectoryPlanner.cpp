@@ -34,20 +34,19 @@ VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
     if ( planning_thread.joinable() ) planning_thread.join();
 }
 
-std::vector<VehicleCommandTrajectory> VehicleTrajectoryPlanner::get_trajectory_commands(uint64_t t_now)
+VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64_t t_now)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    std::vector<VehicleCommandTrajectory> result;
-    for(auto &e:trajectory_point_buffer)
-    {
-        VehicleCommandTrajectory vehicleCommandTrajectory;
-        vehicleCommandTrajectory.vehicle_id(e.first);
-        vehicleCommandTrajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(e.second));
-        vehicleCommandTrajectory.header().create_stamp().nanoseconds(t_now); //You just need to set t_now here, as it was created at t_now
-        vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
-        result.push_back(vehicleCommandTrajectory);
-    }
-    return result;
+
+    VehicleCommandTrajectory vehicleCommandTrajectory;
+    vehicleCommandTrajectory.vehicle_id(trajectoryPlan->get_vehicle_id());
+    vehicleCommandTrajectory.trajectory_points(
+            rti::core::vector<TrajectoryPoint>(trajectory_point_buffer)
+    );
+    vehicleCommandTrajectory.header().create_stamp().nanoseconds(t_now); //You just need to set t_now here, as it was created at t_now
+    vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
+
+    return vehicleCommandTrajectory;
 }
 
 void VehicleTrajectoryPlanner::set_real_time(uint64_t t)
@@ -57,15 +56,16 @@ void VehicleTrajectoryPlanner::set_real_time(uint64_t t)
 }
 
 
-void VehicleTrajectoryPlanner::add_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle)
-{   //fill vector with future trajectory points of other vehicles
+void VehicleTrajectoryPlanner::set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle)
+{
     assert(!started);
-    trajectoryPlans[vehicle->get_vehicle_id()] = vehicle;
+    trajectoryPlan = vehicle;
 }
 
 void VehicleTrajectoryPlanner::start()
 {
     assert(!started);
+
     started = true;
 
     planning_thread = std::thread([this](){
@@ -80,52 +80,44 @@ void VehicleTrajectoryPlanner::start()
         {
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, in this example those with a smaller ID.
-            vector< std::shared_ptr<VehicleTrajectoryPlanningState> > previous_vehicles;
             bool is_collision_avoidable = false;
-            for(auto &e:trajectoryPlans)
-            {
-                is_collision_avoidable = e.second->avoid_collisions(previous_vehicles);
-                if (!is_collision_avoidable){
-                    break;
-                }
-                previous_vehicles.push_back(e.second);
-            }
+
+            this->read_previous_vehicles();
+            
+            is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
 
             if (!is_collision_avoidable){
                 started = false; // end planning
                 break;
-            }                
+            } 
 
             {
                 std::lock_guard<std::mutex> lock(mutex); 
 
+                LaneGraphTrajectory lane_graph_trajectory = trajectoryPlan->get_lane_graph_trajectory();
+                // Is t_planning the correct time to use for this? I do not know
+                lane_graph_trajectory.header().create_stamp().nanoseconds(t_planning);
+                lane_graph_trajectory.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
+                this->writer_laneGraphTrajectory->write(lane_graph_trajectory);
+
                 if(t_start == 0)
                 {
                     t_start = t_real_time + 2000000000ull;
-                    for(auto &e:trajectoryPlans)
-                    {
-                        auto trajectory_point = e.second->get_trajectory_point();
-                        trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
-                        trajectory_point_buffer[e.first].push_back(trajectory_point);
-                    }
+                    auto trajectory_point = trajectoryPlan->get_trajectory_point();
+                    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
+                    trajectory_point_buffer.push_back(trajectory_point);
                 }
 
-                for(auto &e:trajectoryPlans)
+                while(trajectory_point_buffer.size() > 50)
                 {
-                    while(trajectory_point_buffer[e.first].size() > 50)
-                    {
-                        trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin());
-                    }
-                    auto trajectory_point = e.second->get_trajectory_point();
-                    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
-                    trajectory_point_buffer[e.first].push_back(trajectory_point);
+                    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
                 }
+                auto trajectory_point = trajectoryPlan->get_trajectory_point();
+                trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
+                trajectory_point_buffer.push_back(trajectory_point);
             }
 
-            for(auto &e:trajectoryPlans)
-            {
-                e.second->apply_timestep(dt_nanos);
-            }
+            trajectoryPlan->apply_timestep(dt_nanos);
 
             t_planning += dt_nanos;
 
@@ -133,4 +125,24 @@ void VehicleTrajectoryPlanner::start()
         }
     });
 
+}
+
+void VehicleTrajectoryPlanner::read_previous_vehicles()
+{
+    assert(started);
+    dds::sub::LoanedSamples<LaneGraphTrajectory> samples = reader_laneGraphTrajectory->take();
+    for (auto sample : samples) {
+        if (sample.info().valid()) {
+            // We ignore everything with lower priorities
+            if (sample.data().vehicle_id() <= trajectoryPlan->get_vehicle_id()){ continue; }
+            previous_vehicles_buffer[sample.data().vehicle_id()] = sample.data();
+        }
+    }
+}
+
+void VehicleTrajectoryPlanner::set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
+    writer_laneGraphTrajectory = writer;
+}
+void VehicleTrajectoryPlanner::set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader){
+    reader_laneGraphTrajectory = reader;
 }

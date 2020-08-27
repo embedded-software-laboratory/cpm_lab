@@ -29,30 +29,45 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include "cpm/Logging.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+//#include "cpm/Reader.hpp"
+#include <dds/sub/ddssub.hpp>
+#include <dds/pub/ddspub.hpp>
 #include "VehicleCommandTrajectory.hpp"
+#include "LaneGraphTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
 using std::vector;
 
 
 class VehicleTrajectoryPlanner
 {
-    std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;
+    std::shared_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
+    std::map<uint8_t, LaneGraphTrajectory> previous_vehicles_buffer;
+    std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer_laneGraphTrajectory;
+    std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
     bool started = false;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
     std::mutex mutex;
     std::thread planning_thread;
     const uint64_t dt_nanos;
-    std::map<uint8_t, std::vector<TrajectoryPoint> > trajectory_point_buffer;
+    std::vector<TrajectoryPoint> trajectory_point_buffer;
+    void read_previous_vehicles();
 
 public:
 
     VehicleTrajectoryPlanner(uint64_t dt_nanos);
     ~VehicleTrajectoryPlanner();
-    std::vector<VehicleCommandTrajectory> get_trajectory_commands(uint64_t t_now);
+    VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void set_real_time(uint64_t t);
     bool is_started() {return started;}
-    void add_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+    void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+    void set_other_vehicles(
+            std::map<uint8_t, std::vector<VehicleCommandTrajectory> > trajectory_samples
+    );
+    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
+    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
     void start();
 
 };
