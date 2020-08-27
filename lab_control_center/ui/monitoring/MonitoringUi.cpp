@@ -78,19 +78,6 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
-void MonitoringUi::kill_all_threads()
-{
-    //Join all old threads 
-    for (auto& thread : reboot_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-    }
-    reboot_threads.clear();
-}
-
 
 void MonitoringUi::init_ui_thread()
 {
