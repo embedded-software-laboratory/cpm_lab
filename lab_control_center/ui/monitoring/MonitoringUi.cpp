@@ -32,7 +32,7 @@
 MonitoringUi::MonitoringUi(
     std::shared_ptr<Deploy> deploy_functions_callback, 
     std::function<VehicleData()> get_vehicle_data_callback, 
-    std::function<std::vector<uint8_t>()> get_hlc_data_callback, 
+    std::function<std::vector<uint8_t>()> get_hlc_data_callback,
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
     std::function<void()> reset_data_callback)
 {
@@ -77,6 +77,11 @@ MonitoringUi::~MonitoringUi()
 
     //Join all old threads
     kill_all_threads();
+}
+
+void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> _get_vehicle_to_hlc_mapping)
+{
+    this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
 void MonitoringUi::kill_all_threads()
@@ -206,15 +211,46 @@ void MonitoringUi::init_ui_thread()
                     label->get_style_context()->remove_class("warn");
                     label->get_style_context()->remove_class("alert");
 
-                    if (std::find(hlc_data.begin(), hlc_data.end(), vehicle_id) != hlc_data.end())
+                    if (!get_vehicle_to_hlc_mapping)
                     {
-                        label->set_text("Online");
-                        label->get_style_context()->add_class("ok");
+                        label->set_text("Error in LCC");
+                        label->get_style_context()->add_class("alert");
                     }
                     else
                     {
-                        label->set_text("Offline");
-                        label->get_style_context()->add_class("warn");
+                        auto current_mapping = get_vehicle_to_hlc_mapping();
+
+                        if (current_mapping.first)
+                        {
+                            //During a simulation, where a mapping exists
+                            if (current_mapping.second.find(vehicle_id) == current_mapping.second.end())
+                            {
+                                //Was not matched
+                                label->set_text("Not matched");
+                                label->get_style_context()->add_class("ok");
+                            }
+                            else
+                            {
+                                auto hlc_id = current_mapping.second.at(vehicle_id);
+
+                                if (std::find(hlc_data.begin(), hlc_data.end(), hlc_id) != hlc_data.end())
+                                {
+                                    label->set_text("Online");
+                                    label->get_style_context()->add_class("ok");
+                                }
+                                else
+                                {
+                                    label->set_text("Offline");
+                                    label->get_style_context()->add_class("warn");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //No simulation
+                            label->set_text("Not matched");
+                            label->get_style_context()->add_class("ok");
+                        }
                     }
                 }
 

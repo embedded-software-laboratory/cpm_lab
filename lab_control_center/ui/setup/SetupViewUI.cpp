@@ -158,6 +158,8 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
+
+    simulation_running.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -348,6 +350,8 @@ void SetupViewUI::deploy_applications() {
     //Grey out UI until kill is clicked
     set_sensitive(false);
 
+    simulation_running.store(true);
+
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
@@ -436,11 +440,16 @@ void SetupViewUI::deploy_applications() {
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
+        //Remember mapping
+        std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+
         //Deploy on each HLC individually, using different threads
         participants_available.store(true); //HLCs are available
         thread_count.store(min_hlc_vehicle);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
+            vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
+
             //Deploy on high_level_controller with given vehicle id(s)
             std::stringstream vehicle_id_stream;
             vehicle_id_stream << vehicle_ids.at(i);
@@ -474,7 +483,19 @@ void SetupViewUI::deploy_applications() {
     }
 }
 
+std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
+{
+    std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    return { simulation_running.load(), vehicle_to_hlc_map };
+}
+
 void SetupViewUI::kill_deployed_applications() {
+    //Remember mapping
+    std::unique_lock<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    vehicle_to_hlc_map.clear();
+    simulation_running.store(false);
+    lock_map.unlock();
+
 
     // Stop LabCam
 #ifndef SIMULATION
