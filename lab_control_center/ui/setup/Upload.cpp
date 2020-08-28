@@ -232,10 +232,9 @@ void Upload::ui_dispatch()
         join_upload_threads();
 
         //If kill caused the UI dispatch, clean up after everything has been killed
-        if (kill_called.load())
+        if (kill_called.exchange(false))
         {
             on_kill_finished_callback();
-            kill_called.store(false);
         }
 
         //Free the UI if the upload was not successful

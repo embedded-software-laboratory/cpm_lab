@@ -128,9 +128,6 @@ private:
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
 
-    //Class to simulate obstacles based on the loaded commonroad file
-    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
-
     //Function to get a list of all currently online HLCs
     std::function<std::vector<uint8_t>()> get_hlc_ids;
 
@@ -144,12 +141,8 @@ private:
 
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
-    std::function<void()> reset_time_series_aggregator;
-    std::function<void()> reset_obstacle_aggregator;
-    std::function<void()> reset_trajectories;
-    std::function<void()> reset_vehicle_view;
-    std::function<void()> reset_visualization_commands;
-    std::function<void()> reset_logs;
+    std::function<void()> on_simulation_start;
+    std::function<void()> on_simulation_stop;
     std::function<void(bool)> set_commonroad_tab_sensitive;
 
     //Function to get the main window
@@ -196,34 +189,25 @@ private:
 public:
     /**
      * \brief Constructor
+     * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
-     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
      * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
      * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
-     * \param _reset_time_series_aggregator Reset received vehicle data
-     * \param _reset_obstacle_aggregator Reset received obstacle data
-     * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
-     * \param _reset_vehicle_view Reset list of connected vehicles
-     * \param _reset_visualization_commands Reset all visualization commands that were sent before
-     * \param _reset_logs Reset all logs that were sent before
+     * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
+     * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
     SetupViewUI(
-        std::shared_ptr<Deploy> deploy_functions, 
+        std::shared_ptr<Deploy> _deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
         std::function<std::vector<uint8_t>()> _get_hlc_ids, 
         std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
-        std::function<void()> _reset_time_series_aggregator,
-        std::function<void()> _reset_obstacle_aggregator,
-        std::function<void()> _reset_trajectories,
-        std::function<void()> _reset_vehicle_view,
-        std::function<void()> _reset_visualization_commands,
-        std::function<void()> _reset_logs,
+        std::function<void()> _on_simulation_start,
+        std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
         unsigned int argc, 
         char *argv[]

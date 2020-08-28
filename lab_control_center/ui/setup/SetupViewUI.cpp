@@ -34,16 +34,11 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
-    std::function<std::vector<uint8_t>()> _get_hlc_ids,
+    std::function<std::vector<uint8_t>()> _get_hlc_ids, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
-    std::function<void()> _reset_time_series_aggregator,
-    std::function<void()> _reset_obstacle_aggregator,
-    std::function<void()> _reset_trajectories,
-    std::function<void()> _reset_vehicle_view,
-    std::function<void()> _reset_visualization_commands,
-    std::function<void()> _reset_logs,
+    std::function<void()> _on_simulation_start,
+    std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
     unsigned int argc, 
     char *argv[]
@@ -51,16 +46,11 @@ SetupViewUI::SetupViewUI
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
-    obstacle_simulation_manager(_obstacle_simulation_manager),
     get_hlc_ids(_get_hlc_ids),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
-    reset_time_series_aggregator(_reset_time_series_aggregator),
-    reset_obstacle_aggregator(_reset_obstacle_aggregator),
-    reset_trajectories(_reset_trajectories),
-    reset_vehicle_view(_reset_vehicle_view),
-    reset_visualization_commands(_reset_visualization_commands),
-    reset_logs(_reset_logs),
+    on_simulation_start(_on_simulation_start),
+    on_simulation_stop(_on_simulation_stop),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
@@ -342,10 +332,8 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 void SetupViewUI::ui_dispatch()
 {
     //Update vehicle toggles for real vehicles or take care of upload window
-    if (update_vehicle_toggles.load())
+    if (update_vehicle_toggles.exchange(false))
     {
-        update_vehicle_toggles.store(false);
-
         //Update vehicle toggles
         std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
 
@@ -378,18 +366,17 @@ void SetupViewUI::deploy_applications() {
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
-    //Reset old UI elements (difference to kill: Also reset the Logs)
-    //Kill timer in UI as well, as it should not show invalid information
-    //Reset all relevant UI parts
+    //Reset old UI elements etc (call all functions that registered for this callback in main)
     reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)
-    reset_time_series_aggregator();
-    reset_obstacle_aggregator();
-    reset_trajectories();
-    reset_vehicle_view();
-    reset_visualization_commands();
+    if(on_simulation_start)
+    {
+        on_simulation_start();
+    }
+    else
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_start callback missing!");
+    }
     
-    //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
-    reset_logs();
 
     // LabCam
 #ifndef SIMULATION
@@ -402,9 +389,6 @@ void SetupViewUI::deploy_applications() {
     }
 
 #endif
-
-    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    obstacle_simulation_manager->start();
     
     // Recording
     deploy_functions->deploy_recording();
@@ -435,8 +419,8 @@ void SetupViewUI::deploy_applications() {
 
         //Deploy remote
         auto simulated_time = switch_simulated_time->get_active();
-        auto path = script_path->get_text().c_str();
-        auto params = script_params->get_text().c_str();
+        std::string path = script_path->get_text().c_str();
+        std::string params = script_params->get_text().c_str();
 
         upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
     }
@@ -479,18 +463,19 @@ void SetupViewUI::kill_deployed_applications() {
 
 void SetupViewUI::perform_post_kill_cleanup()
 {
-    //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
-    
-    //Kill timer in UI as well, as it should not show invalid information
-    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
-    //Reset all relevant UI parts
+    //Reset old UI elements etc
     reset_timer(switch_simulated_time->get_active(), true);
-    reset_time_series_aggregator();
-    reset_obstacle_aggregator();
-    reset_trajectories();
-    reset_vehicle_view();
-    reset_visualization_commands();
+
+    //TODO: USE ASSERT INSTEAD?
+    //(call all functions that registered for this callback in main)
+    if(on_simulation_stop)
+    {
+        on_simulation_stop();
+    }
+    else
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_stop callback missing!");
+    }
 
     //Undo grey out
     set_sensitive(true);
