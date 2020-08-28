@@ -206,6 +206,8 @@ SetupViewUI::SetupViewUI
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     });
+
+    lcc_closed.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
@@ -237,6 +239,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
 
 //Do the same as in the destructor, because there we do not get the desired results sadly
 void SetupViewUI::on_lcc_close() {
+    lcc_closed.store(true);
     kill_deployed_applications();
     deploy_functions->kill_ips();
 
@@ -439,8 +442,8 @@ void SetupViewUI::kill_deployed_applications() {
 
     is_deployed.store(false);
 
-    //Kill scripts locally or remotely
-    if(switch_deploy_remote->get_active())
+    //Kill scripts locally or remotely - do not perform remote kill (with new UI window creations etc) if the whole lcc is in the process of being destructed
+    if(switch_deploy_remote->get_active() && !lcc_closed.load())
     {
         //Performs post_kill_cleanup after remote kill
         upload_manager->kill_remote();

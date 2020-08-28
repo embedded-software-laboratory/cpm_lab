@@ -165,6 +165,7 @@ private:
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
     void kill_deployed_applications();
+    std::atomic_bool lcc_closed; //If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
     std::vector<unsigned int> get_vehicle_ids_active();
