@@ -26,7 +26,7 @@
 
 #include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 
-#include "lane_graph_tools.hpp" //sw folder central routing
+#include "lane_graph_tools.hpp" //sw folder decentral routing
 
 
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
@@ -50,20 +50,6 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 
 void VehicleTrajectoryPlanningState::invariant()
 {
-    cpm::Logging::Instance().write(
-            2,
-            "current_route_edge_indices.size(): %d\n\
-            current_route_edge_indices[0]: %d\n\
-            current_edge_index: %d\n\
-            current_edge_path_index: %d\n\
-            delta_s_path_node_offset: %d\n",
-            current_route_edge_indices.size(),
-            current_route_edge_indices[0],
-            current_edge_index,
-            current_edge_path_index,
-            delta_s_path_node_offset
-            );
-
     assert(current_route_edge_indices.size() >= 1);
     assert(current_route_edge_indices[0] == current_edge_index);
     assert(current_edge_index < laneGraphTools.n_edges);
@@ -196,6 +182,8 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         // stop if there is no collision
         if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return true;
 
+        cpm::Logging::Instance().write(2,
+                "Detected potential collision; avoiding");
 
         // fix speed profile to avoid collision
         int idx_speed_reduction = earliest_collision__speed_profile_index - 10;

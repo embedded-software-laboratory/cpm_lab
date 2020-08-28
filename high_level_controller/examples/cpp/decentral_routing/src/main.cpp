@@ -29,6 +29,7 @@
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
 #include "cpm/CommandLineReader.hpp"            //->cpm_lib->include->cpm
 #include "cpm/init.hpp"                         //->cpm_lib->include->cpm
+#include "cpm/MultiVehicleReader.hpp"           //->cpm_lib->include->cpm
 #include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "VehicleObservation.hpp" 
@@ -47,7 +48,6 @@ using std::vector;
 int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("central_routing");
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
     ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
@@ -55,12 +55,15 @@ int main(int argc, char *argv[])
 
     assert(vehicle_ids_int.size()==1);
 
+    std::vector<uint8_t> vehicle_ids;
     for(auto i:vehicle_ids_int)
     {
         assert(i>0);
         assert(i<255);
         vehicle_id = i;
+        vehicle_ids.push_back(i);
     }
+    cpm::Logging::Instance().set_id("decentral_routing_"+std::to_string(vehicle_id));
 
     ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
     std::stringstream vehicle_id_stream;
@@ -75,6 +78,8 @@ int main(int argc, char *argv[])
     const uint64_t dt_nanos = 400000000ull;
     // VehicleTrajectoryPlanner planner(dt_nanos);
     std::unique_ptr<VehicleTrajectoryPlanner> planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
+    cpm::Logging::Instance().write(3,
+            "Planner created");
 
 
     ///////////// writer and reader for sending trajectory commands////////////////////////
@@ -84,11 +89,16 @@ int main(int argc, char *argv[])
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
+    cpm::Logging::Instance().write(3,
+            "VehicleCommandTrajectory reader created.");
+    //
     //the reader will read the pose of a vehicle given by its vehicle ID
-    //cpm::Reader<VehicleObservation> ips_reader(
-    //    cpm::get_topic<VehicleObservation>("vehicleObservation"),
-    //    vehicle_id
-    //);
+    cpm::MultiVehicleReader<VehicleObservation> ips_reader(
+        cpm::get_topic<VehicleObservation>("vehicleObservation"),
+        vehicle_ids
+    );
+    cpm::Logging::Instance().write(3,
+            "VehicleObservation reader created.");
     
     // These readers and writers are used to exchange planned trajectories
     // between the VehicleTrajectoryPlanners
@@ -96,10 +106,14 @@ int main(int argc, char *argv[])
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
     );
+    cpm::Logging::Instance().write(3,
+            "LaneGraphTrajectory writer created.");
     auto reader_laneGraphTrajectory = std::make_shared< dds::sub::DataReader<LaneGraphTrajectory> >(
         dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
     );
+    cpm::Logging::Instance().write(3,
+            "LaneGraphTrajectory reader created.");
 
     /////////////////////////////////Trajectory planner//////////////////////////////////////////
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
@@ -125,21 +139,53 @@ int main(int argc, char *argv[])
         }
         else //prepare to start planner
         {
+            cpm::Logging::Instance().write(3,
+                    "Preparing to start planner");
             // reset planner object
             planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
             planner->set_real_time(t_now);
 
-            planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, -1, -1));
+            std::map<uint8_t, VehicleObservation> ips_sample;
+            std::map<uint8_t, uint64_t> ips_sample_age;
+            ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
+
+            // Check for the start position of our vehicle
+            for(auto e:ips_sample)
+            {
+                auto data = e.second;
+                if( vehicle_id == data.vehicle_id()) {
+                    auto pose = data.pose();
+                    int out_edge_index = -1;
+                    int out_edge_path_index = -1;
+                    bool matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
+                    //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
+                    if(matched)
+                    {
+                        planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
+                        cpm::Logging::Instance().write(
+                            3,
+                            "Vehicle %d matched.",
+                            int(vehicle_id)
+                        );
+                    }
+                    else //Errormessage, if not all vehicles could be matched to the map
+                    {
+                        cpm::Logging::Instance().write(
+                            1,
+                            "Error: Vehicle %d not matched.",
+                            int(vehicle_id)
+                        );
+                    }
+                }
             }
 
             planner->set_writer(writer_laneGraphTrajectory);
 
             planner->set_reader(reader_laneGraphTrajectory);
 
-            //TODO: Check if vehicles are ready like central_routing does
-
             //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
             //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
             planner->start();
+        }
     });
 }

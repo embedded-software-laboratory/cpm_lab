@@ -68,6 +68,10 @@ void VehicleTrajectoryPlanner::start()
 
     started = true;
 
+    cpm::Logging::Instance().write(
+            3,
+            "Starting VehicleTrajectoryPlanner");
+
     planning_thread = std::thread([this](){
         uint64_t t_planning = 0;
 
@@ -83,10 +87,12 @@ void VehicleTrajectoryPlanner::start()
             bool is_collision_avoidable = false;
 
             this->read_previous_vehicles();
-            
+
             is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
 
             if (!is_collision_avoidable){
+                cpm::Logging::Instance().write(1,
+                        "Found unavoidable collision");
                 started = false; // end planning
                 break;
             } 
@@ -94,6 +100,8 @@ void VehicleTrajectoryPlanner::start()
             {
                 std::lock_guard<std::mutex> lock(mutex); 
 
+                //cpm::Logging::Instance().write(3,
+                //        "About to publish LaneGraphTrajectory");
                 LaneGraphTrajectory lane_graph_trajectory = trajectoryPlan->get_lane_graph_trajectory();
                 // Is t_planning the correct time to use for this? I do not know
                 lane_graph_trajectory.header().create_stamp().nanoseconds(t_planning);
