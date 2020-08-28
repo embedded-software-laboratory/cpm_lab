@@ -162,6 +162,23 @@ void Upload::kill_remote()
     //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
     kill_called.store(true);
 
+    //Do not try to kill if no HLCs are online
+    if (hlc_ids.size() == 0)
+    {
+        //Waits a few seconds before the window is closed again 
+        //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
+        participants_available.store(false); //No HLCs available
+        thread_count.store(1);
+        std::lock_guard<std::mutex> lock(upload_threads_mutex);
+        upload_threads.push_back(std::thread(
+            [this] () {
+                usleep(1000000);
+                this->notify_upload_finished(0, true);
+            }
+        ));
+        return;
+    }
+
 
     //If a HLC went offline in between, we assume that it crashed and thus just use this script on all remaining running HLCs
     thread_count.store(hlc_ids.size());
