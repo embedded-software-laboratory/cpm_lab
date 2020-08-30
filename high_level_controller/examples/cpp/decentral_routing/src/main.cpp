@@ -65,10 +65,15 @@ int main(int argc, char *argv[])
     }
     cpm::Logging::Instance().set_id("decentral_routing_"+std::to_string(vehicle_id));
 
+    cpm::Logging::Instance().write(3,
+            "decentral_routing_%d coming online",
+            vehicle_id
+    );
+
     ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
     std::stringstream vehicle_id_stream;
     vehicle_id_stream << "Started HLC for Vehicle ID: ";
-    vehicle_id_stream << static_cast<uint32_t>(vehicle_id) << "|"; //Cast s.t. uint8_t is not interpreted as a character
+    vehicle_id_stream << static_cast<uint32_t>(vehicle_id); //Cast s.t. uint8_t is not interpreted as a character
     std::string vehicle_id_string = vehicle_id_stream.str();
 
     std::cout << vehicle_id_string << std::endl;
@@ -132,7 +137,7 @@ int main(int argc, char *argv[])
             cpm::Logging::Instance().write(
                 3,
                 "%s, Computation start time: %llu, Computation end time: %llu",
-                vehicle_id_string.c_str(), computation_start_time, computation_end_time
+                std::to_string(vehicle_id), computation_start_time, computation_end_time
             );
             
             writer_vehicleCommandTrajectory.write(command);
