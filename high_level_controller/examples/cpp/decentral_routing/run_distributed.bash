@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Usage:
-# ./run_distributed --vehicle_ids=1,2,3,4 --domain_id=1
+if [ $# -eq 0 ]
+then
+    printf "Usage (Example):\n./run_distributed --vehicle_ids=1,2,3,4 --domain_id=1\n"
+    exit 1
+fi
 
 for arg in "$@"
 do
@@ -49,6 +52,7 @@ do
 done
 printf "Done.\n"
 
+printf "To abort, press Ctrl+C"
 
 while true
 do
