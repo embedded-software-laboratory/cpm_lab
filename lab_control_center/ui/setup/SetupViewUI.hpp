@@ -36,6 +36,7 @@
 #include "cpm/RTTTool.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/setup/CrashChecker.hpp"
 #include "ui/setup/Deploy.hpp"
 #include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
@@ -162,6 +163,7 @@ private:
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     std::shared_ptr<Upload> upload_manager;
+    std::shared_ptr<CrashChecker> crash_checker;
     void perform_post_kill_cleanup();
 
     //IPS switch callback (-> lab mode)
@@ -174,15 +176,6 @@ private:
     void deploy_applications();
     void kill_deployed_applications();
     std::atomic_bool lcc_closed; //If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down
-
-    //Watcher thread that checks if the locally deployed programs still run - else, an error message is displayed
-    std::thread thread_deploy_crash_check;
-    std::mutex crashed_mutex;
-    std::unordered_set<std::string> already_crashed_participants;
-    std::vector<std::string> newly_crashed_participants;
-    std::atomic_bool crash_check_running;
-    std::shared_ptr<Gtk::MessageDialog> crash_dialog;
-    void kill_crash_check_thread();
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
     std::vector<unsigned int> get_vehicle_ids_active();

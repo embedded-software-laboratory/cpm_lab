@@ -153,6 +153,11 @@ SetupViewUI::SetupViewUI
         [this] () { perform_post_kill_cleanup(); }
     );
 
+    //Create crash checker (but don't start it yet)
+    crash_checker = std::make_shared<CrashChecker>(
+        deploy_functions
+    );
+
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
     
@@ -214,7 +219,6 @@ SetupViewUI::SetupViewUI
 
 SetupViewUI::~SetupViewUI() {
     destroy_rtt_thread();
-    kill_crash_check_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -280,7 +284,6 @@ void SetupViewUI::on_lcc_close() {
 
     //Join all old threads
     destroy_rtt_thread();
-    kill_crash_check_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -373,7 +376,7 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 
 void SetupViewUI::ui_dispatch()
 {
-    //Update vehicle toggles for real vehicles or take care of upload window
+    //Update vehicle toggles for real vehicles
     if (update_vehicle_toggles.exchange(false))
     {
         //Update vehicle toggles
@@ -398,64 +401,6 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
-
-    //Create dialog window that informs the user about a crash of one of the programs they started (besides vehicles, this can be seen in the UI already)
-    std::unique_lock<std::mutex> lock_crashes(crashed_mutex);
-    if (newly_crashed_participants.size() > 0)
-    {
-        std::stringstream crash_report;
-        crash_report << "Newly crashed programs:\n";
-        for (auto& program : newly_crashed_participants)
-        {
-            crash_report << "\t" << program << "\n";
-        }
-        crash_report << "\nPreviously crashed programs:\n";
-        for (auto& program : already_crashed_participants)
-        {
-            crash_report << "\t" << program << "\n";
-        }
-
-        //Remember previous crashes, clear for new crashed - do this both in UI and check thread, as they interoperate non-deterministically
-        for (auto& participant : newly_crashed_participants)
-        {
-            already_crashed_participants.insert(participant);
-        }
-        newly_crashed_participants.clear();
-
-        //Close window if it is still open
-        if (crash_dialog)
-        {
-            crash_dialog->close();
-            crash_dialog.reset();
-        }
-
-        //Create new window
-        crash_dialog = std::make_shared<Gtk::MessageDialog>(
-            get_main_window(),
-            crash_report.str(),
-            false,
-            Gtk::MessageType::MESSAGE_INFO,
-            Gtk::ButtonsType::BUTTONS_CLOSE,
-            true
-        );
-    
-        //Connect new window with parent, show window
-        crash_dialog->set_transient_for(get_main_window());
-        crash_dialog->property_destroy_with_parent().set_value(true);
-        crash_dialog->show();
-
-        //Callback for closing
-        crash_dialog->signal_response().connect(
-            [this] (auto response)
-            {
-                if (response == Gtk::ResponseType::RESPONSE_CLOSE)
-                {
-                    crash_dialog->close();
-                }
-            }
-        );
-    }
-    lock_crashes.unlock();
 }
 
 void SetupViewUI::deploy_applications() {
@@ -537,83 +482,13 @@ void SetupViewUI::deploy_applications() {
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
     }
 
-    //Deploy crash check thread
-    crash_check_running.store(true);
-    thread_deploy_crash_check = std::thread(
-        [this, deploy_remote_toggled, lab_mode_on, labcam_toggled] () {
-            //Give programs time to actually start
-            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
-            while(crash_check_running.load())
-            {
-                auto crashed_participants = deploy_functions->check_for_crashes(deploy_remote_toggled, lab_mode_on, labcam_toggled);
-
-                if (crashed_participants.size() > 0)
-                {                    
-                    std::lock_guard<std::mutex> lock(crashed_mutex);
-
-                    //Remember previous crashes, clear for new crashed
-                    for (auto& participant : newly_crashed_participants)
-                    {
-                        already_crashed_participants.insert(participant);
-                    }
-                    newly_crashed_participants.clear();
-
-                    //Store all new crashes so that they can be shown in the UI separately (New and old crashes)
-                    bool new_crash_detected = false;
-                    for (auto& participant : crashed_participants)
-                    {
-                        if (already_crashed_participants.find(participant) == already_crashed_participants.end())
-                        {
-                            newly_crashed_participants.push_back(participant);
-                            new_crash_detected = true;
-                        }
-                    }
-
-                    //If a new crash was detected, notify the UI thread. It will check the size of newly_crashed participants and create a dialog if is greater than zero
-                    if (new_crash_detected)
-                    {
-                        //Log the new crash
-                        std::stringstream program_stream;
-                        program_stream << "New: ";
-                        for (auto& entry : newly_crashed_participants)
-                        {
-                            program_stream << entry << " | ";
-                        }
-
-                        if (already_crashed_participants.size() > 0)
-                        {
-                            program_stream << " - Previous: ";
-                            for (auto& entry : already_crashed_participants)
-                            {
-                                program_stream << entry << " | ";
-                            }
-                        }
-                        
-                        cpm::Logging::Instance().write("The following programs crashed during simulation: %s", program_stream.str().c_str());
-
-                        ui_dispatcher.emit();
-                    }
-                }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-        }
-    );
-}
-
-void SetupViewUI::kill_crash_check_thread()
-{
-    crash_check_running.store(false);
-    if (thread_deploy_crash_check.joinable())
-    {
-        thread_deploy_crash_check.join();
-    }
+    //Start performing crash checks for deployed applications
+    crash_checker->start_checking(deploy_remote_toggled, lab_mode_on, labcam_toggled);
 }
 
 void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
-    kill_crash_check_thread();
+    crash_checker->stop_checking();
 
     if (! lcc_closed.load())
     {
@@ -762,6 +637,7 @@ void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_ma
 {
     get_main_window = _get_main_window;
     upload_manager->set_main_window_callback(_get_main_window);
+    crash_checker->set_main_window_callback(_get_main_window);
 }
 
 Gtk::Widget* SetupViewUI::get_parent()

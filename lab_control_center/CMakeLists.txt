@@ -166,14 +166,16 @@ add_executable(lab_control_center
     ui/logger/LoggerModelRecord.hpp
     ui/setup/SetupViewUI.hpp
     ui/setup/SetupViewUI.cpp
+    ui/setup/CrashChecker.hpp
+    ui/setup/CrashChecker.cpp
     ui/setup/Deploy.hpp
     ui/setup/Deploy.cpp
-    ui/setup/VehicleToggle.hpp
-    ui/setup/VehicleToggle.cpp
     ui/setup/Upload.hpp
     ui/setup/Upload.cpp
     ui/setup/UploadWindow.hpp
     ui/setup/UploadWindow.cpp
+    ui/setup/VehicleToggle.hpp
+    ui/setup/VehicleToggle.cpp
     ui/MainWindow.cpp
     ui/MainWindow.hpp
 
