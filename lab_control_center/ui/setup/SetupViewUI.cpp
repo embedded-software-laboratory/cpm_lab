@@ -153,7 +153,7 @@ SetupViewUI::SetupViewUI
         [this] () { perform_post_kill_cleanup(); }
     );
 
-    //Create crash checker (but don't start it yet)
+    //Create crash checker (but don't start it yet, as no simulation is running)
     crash_checker = std::make_shared<CrashChecker>(
         deploy_functions
     );
