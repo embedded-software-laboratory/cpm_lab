@@ -214,6 +214,7 @@ SetupViewUI::SetupViewUI
 
 SetupViewUI::~SetupViewUI() {
     destroy_rtt_thread();
+    kill_crash_check_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -279,6 +280,7 @@ void SetupViewUI::on_lcc_close() {
 
     //Join all old threads
     destroy_rtt_thread();
+    kill_crash_check_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -613,8 +615,11 @@ void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
     kill_crash_check_thread();
 
-    //Re-create RTT thread
-    create_rtt_thread();
+    if (! lcc_closed.load())
+    {
+        //Re-create RTT thread
+        create_rtt_thread();
+    }
 
     // Stop LabCam
 #ifndef SIMULATION
