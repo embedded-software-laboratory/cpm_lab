@@ -209,7 +209,7 @@ void MonitoringUi::init_ui_thread()
                             {
                                 //Was not matched
                                 label->set_text("Not matched");
-                                label->get_style_context()->add_class("ok");
+                                label->get_style_context()->add_class("warn");
                             }
                             else
                             {
@@ -223,7 +223,13 @@ void MonitoringUi::init_ui_thread()
                                 else
                                 {
                                     label->set_text("Offline");
-                                    label->get_style_context()->add_class("warn");
+                                    label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: NUCs %d disconnected. Stopping vehicles ...", 
+                                        hlc_id
+                                    );
+                                    deploy_functions->stop_vehicles(vehicle_ids);
                                 }
                             }
                         }
