@@ -60,11 +60,13 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
+    Gtk::Label* label_rtt_info;
     std::shared_ptr<Deploy> deploy_functions;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<uint8_t>()> get_hlc_data;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
+    std::function<bool(uint64_t&, uint64_t&, uint64_t&)> get_rtt_values;
 
     //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
     //Thus: Own timer implementation instead
@@ -93,7 +95,8 @@ public:
         std::function<VehicleData()> get_vehicle_data_callback, 
         std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-        std::function<void()> reset_data_callback
+        std::function<void()> reset_data_callback,
+        std::function<bool(uint64_t&, uint64_t&, uint64_t&)> get_rtt_values
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();

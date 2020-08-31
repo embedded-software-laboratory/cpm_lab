@@ -142,12 +142,6 @@ private:
     std::atomic_bool is_deployed;
     std::atomic_bool vehicle_data_thread_running;
 
-    //Check RTT if simulation is not running
-    std::thread check_rtt_thread;
-    std::atomic_bool run_rtt_thread;
-    void create_rtt_thread();
-    void destroy_rtt_thread();
-
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
     std::function<void()> on_simulation_start;

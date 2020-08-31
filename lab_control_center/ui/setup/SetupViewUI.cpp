@@ -213,48 +213,15 @@ SetupViewUI::SetupViewUI
         }
     });
 
-    create_rtt_thread();
     lcc_closed.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
-    destroy_rtt_thread();
-
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
-    }
-}
-
-void SetupViewUI::create_rtt_thread()
-{
-    //Create thread to measure RTT regularly
-    run_rtt_thread.store(true);
-    check_rtt_thread = std::thread(
-        [&](){
-            while(run_rtt_thread.load())
-            {
-                auto rtt = cpm::RTTTool::Instance().measure_rtt();
-
-                //Check "best" RTT
-                //if (rtt.first > )
-
-                std::cout << "RTT measurement: " << rtt.first << "ns (best), " << rtt.second << "ns ('worst')" << std::endl;
-
-                //No waiting required, the functions itself already includes over 0.5s of waiting times
-            }
-        }
-    );
-}
-
-void SetupViewUI::destroy_rtt_thread()
-{
-    run_rtt_thread.store(false);
-    if (check_rtt_thread.joinable())
-    {
-        check_rtt_thread.join();
     }
 }
 
@@ -281,9 +248,6 @@ void SetupViewUI::on_lcc_close() {
     lcc_closed.store(true);
     kill_deployed_applications();
     deploy_functions->kill_ips();
-
-    //Join all old threads
-    destroy_rtt_thread();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
@@ -408,9 +372,6 @@ void SetupViewUI::deploy_applications() {
     set_sensitive(false);
     is_deployed.store(true);
 
-    //We do not want this msg overhead during simulation
-    destroy_rtt_thread();
-
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
@@ -490,12 +451,6 @@ void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
     crash_checker->stop_checking();
 
-    if (! lcc_closed.load())
-    {
-        //Re-create RTT thread
-        create_rtt_thread();
-    }
-
     // Stop LabCam
 #ifndef SIMULATION
     labcam->stopRecording();
@@ -531,8 +486,8 @@ void SetupViewUI::perform_post_kill_cleanup()
     reset_timer(switch_simulated_time->get_active(), true);
 
     //TODO: USE ASSERT INSTEAD?
-    //(call all functions that registered for this callback in main)
-    if(on_simulation_stop)
+    //(call all functions that registered for this callback in main) -> callback becomes unnecessary if cleanup was called due to LCC close
+    if(on_simulation_stop && !lcc_closed.load())
     {
         on_simulation_stop();
     }

@@ -48,6 +48,7 @@
 #include "LogStorage.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
+#include "RTTAggregator.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/RTTTool.hpp"
@@ -192,12 +193,14 @@ int main(int argc, char *argv[])
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
+    auto rtt_aggregator = make_shared<RTTAggregator>();
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->reset_all_data();}
+        [=](){return timeSeriesAggregator->reset_all_data();},
+        [=](uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt){return rtt_aggregator->get_rtt(c_best_rtt, c_worst_rtt, a_worst_rtt);}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
@@ -210,6 +213,9 @@ int main(int argc, char *argv[])
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){
             //Things to do when the simulation is started
+
+            //Stop RTT measurement
+            rtt_aggregator->stop_measurement();
 
             //Reset old UI elements (difference to kill: Also reset the Logs)
             //Kill timer in UI as well, as it should not show invalid information
@@ -242,6 +248,8 @@ int main(int argc, char *argv[])
             monitoringUi->reset_vehicle_view();
             visualizationCommandsAggregator->reset_visualization_commands();
 
+            //Restart RTT measurement
+            rtt_aggregator->restart_measurement();
         },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
