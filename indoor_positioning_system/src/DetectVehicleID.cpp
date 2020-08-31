@@ -121,8 +121,8 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                 }
                 if (!is_previous_vehicle_found){
                     cpm::Logging::Instance().write(
-                        3,
-                        "%s", "Tracking: new vehicle or unstable detection"
+                        1,
+                        "%s", "IPS: new vehicle or unstable detection"
                     );
                 }
             }
