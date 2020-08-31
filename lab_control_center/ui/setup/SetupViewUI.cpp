@@ -407,6 +407,7 @@ void SetupViewUI::deploy_applications() {
     // Recording
     deploy_functions->deploy_recording();
 
+    std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(deploy_remote_toggled)
     {
@@ -431,6 +432,9 @@ void SetupViewUI::deploy_applications() {
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
+        remote_hlc_ids = hlc_ids;
+        remote_hlc_ids.erase(remote_hlc_ids.begin() + min_hlc_vehicle, remote_hlc_ids.end());
+
         //Deploy remote
         auto simulated_time = switch_simulated_time->get_active();
         std::string path = script_path->get_text().c_str();
@@ -444,7 +448,7 @@ void SetupViewUI::deploy_applications() {
     }
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(deploy_remote_toggled, lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(remote_hlc_ids, lab_mode_on, labcam_toggled);
 }
 
 void SetupViewUI::kill_deployed_applications() {
@@ -491,7 +495,7 @@ void SetupViewUI::perform_post_kill_cleanup()
     {
         on_simulation_stop();
     }
-    else
+    else if (!on_simulation_stop)
     {
         cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_stop callback missing!");
     }

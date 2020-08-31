@@ -39,7 +39,6 @@
 
 #include <dds/pub/ddspub.hpp>
 
-#include "ReadyStatus.hpp"
 #include "RemoteProgramCheck.hpp"
 
 #include "cpm/AsyncReader.hpp"
@@ -85,6 +84,7 @@ int main (int argc, char *argv[]) {
                     //Only print answers
                     if ((sample.data().is_answer()))
                     {
+                        //TODO: Use count! -> Only update if newest answer
                         script_running[sample.data().source_id()] = sample.data().script_running();
                         middleware_running[sample.data().source_id()] = sample.data().middleware_running();
                     }

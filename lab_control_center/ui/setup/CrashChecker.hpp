@@ -28,7 +28,14 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+
 #include "ui/setup/Deploy.hpp"
+
+#include "cpm/AsyncReader.hpp"
+#include "cpm/SimpleTimer.hpp"
+#include "RemoteProgramCheck.hpp"
+
+#include <dds/pub/ddspub.hpp>
 
 #include <algorithm>
 #include <atomic>
@@ -69,6 +76,25 @@ private:
     std::shared_ptr<Gtk::MessageDialog> crash_dialog;
     void kill_crash_check_thread();
 
+    //Data structures for remote program crash check
+    std::mutex map_mutex;
+    std::map<std::string, bool> script_running;
+    std::map<std::string, bool> middleware_running;
+    std::vector<uint8_t> hlc_ids_copy;
+    std::atomic_uint8_t check_msg_count;
+    std::atomic_bool is_first_run;
+    std::shared_ptr<cpm::SimpleTimer> remote_crash_check;
+
+    //DDS participants for remote program crash check
+    dds::topic::Topic<RemoteProgramCheck> program_check_topic;
+    dds::pub::DataWriter<RemoteProgramCheck> program_check_writer;
+    cpm::AsyncReader<RemoteProgramCheck> program_check_reader;
+
+    //Further helper functions
+    void send_remote_check_msg();
+    std::vector<std::string> check_for_remote_crashes(std::vector<uint8_t>& remote_hlc_ids);
+    void update_crashed_participants(std::vector<std::string> crashed_participants);
+
 public:
     /**
      * \brief Constructor
@@ -82,11 +108,11 @@ public:
 
     /**
      * \brief Start checking if the deployed applications are still running
-     * \param deploy_remote_toggled Whether programs are deployed locally or on HLCs
+     * \param remote_hlc_ids If deployed remotely: IDs of HLCs on which the software was deployed
      * \param lab_mode_on Whether the IPS etc. should be running
      * \param labcam_toggled If true, the labcam program should be running too
      */
-    void start_checking(bool deploy_remote_toggled, bool lab_mode_on, bool labcam_toggled);
+    void start_checking(std::vector<uint8_t> remote_hlc_ids, bool lab_mode_on, bool labcam_toggled);
 
     /**
      * \brief Stop checking for crashes
