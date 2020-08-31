@@ -436,6 +436,7 @@ void MonitoringUi::init_ui_thread()
         }
         else
         {
+            //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
             std::stringstream rtt_stream;
             rtt_stream << "RTT (ms): " 
                 << static_cast<uint64_t>(current_best_rtt / 1e6) << " (current best), "
