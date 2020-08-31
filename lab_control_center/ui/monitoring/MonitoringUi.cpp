@@ -388,7 +388,7 @@ void MonitoringUi::init_ui_thread()
                                     continue;
                                 }
                                 // an error occured before - do nothing if the error is not older than a threshold
-                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<200000000) continue;
 
                                 cpm::Logging::Instance().write(
                                     1,
