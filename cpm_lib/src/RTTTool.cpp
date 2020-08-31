@@ -81,13 +81,13 @@ std::pair<uint64_t, uint64_t> cpm::RTTTool::measure_rtt()
     rtt_writer.write(request);
 
     //Wait for answers to appear in the RTT times vector
-    unsigned int wait_count = 0; //Do not wait longer than 5 seconds
+    unsigned int wait_count = 0; //Do not wait longer than 2 seconds
     lock.lock();
     while (receive_times.size() == 0)
     {
         lock.unlock();
 
-        if (wait_count == 5)
+        if (wait_count == 10)
         {
             break;
         }
@@ -98,8 +98,8 @@ std::pair<uint64_t, uint64_t> cpm::RTTTool::measure_rtt()
         lock.lock();
     }
 
-    //Check if the 5 second timeout was reached before any message was received
-    if (wait_count < 5)
+    //Check if the 2 second timeout was reached before any message was received
+    if (wait_count < 10)
     {
         //Now that we got answers, calculate the 'fastest' RTT - due to the saving order, this is stored in the first entry of the vector
         auto fastest_answer = receive_times.at(0);
