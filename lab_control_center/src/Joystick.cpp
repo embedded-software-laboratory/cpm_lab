@@ -38,6 +38,10 @@
 Joystick::Joystick(string device_file) {
     js_fd = open(device_file.c_str(), O_RDONLY | O_NONBLOCK);
     if (js_fd == -1) throw runtime_error("Could not open joystick: " + device_file);
+
+    // hack to get init values of shoulder triggers
+    joystick_axes[2] = -int16_t(1<<15);
+    joystick_axes[5] = -int16_t(1<<15);
 }
 
 void Joystick::update() {
