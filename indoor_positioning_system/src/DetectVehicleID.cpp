@@ -121,8 +121,8 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                 }
                 if (!is_previous_vehicle_found){
                     cpm::Logging::Instance().write(
-                        1,
-                        "%s", "IPS: vehicle IDs differ from previous steps"
+                        2,
+                        "%s", "IPS: new vehicle or unstable detection"
                     );
                 }
             }
