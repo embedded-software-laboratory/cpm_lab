@@ -26,7 +26,8 @@
 
 #include "MultiVehicleTrajectoryPlanner.hpp"
 
-
+#define T_START_DELAY_NANOS 5000000000ull
+#define T_PLAN_AHEAD_NANOS 6000000000ull
 
 MultiVehicleTrajectoryPlanner::MultiVehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
 
@@ -101,7 +102,7 @@ void MultiVehicleTrajectoryPlanner::start()
 
                 if(t_start == 0)
                 {
-                    t_start = t_real_time + 2000000000ull;
+                    t_start = t_real_time + T_START_DELAY_NANOS;
                     for(auto &e:trajectoryPlans)
                     {
                         auto trajectory_point = e.second->get_trajectory_point();
@@ -112,10 +113,20 @@ void MultiVehicleTrajectoryPlanner::start()
 
                 for(auto &e:trajectoryPlans)
                 {
-                    while(trajectory_point_buffer[e.first].size() > 50)
+                    // delete all points that are no longer relevant
+                    // find latest point in the past
+                    std::vector<TrajectoryPoint>::iterator it_to_delete = trajectory_point_buffer[e.first].begin();
+                    assert(!trajectory_point_buffer[e.first].empty());
+                    for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer[e.first].begin() + 1; tp_it != trajectory_point_buffer[e.first].end(); ++tp_it)
                     {
-                        trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin());
+                        if (tp_it->t().nanoseconds() > t_real_time)
+                        {
+                            it_to_delete = tp_it-1;
+                            break;
+                        }
                     }
+                    trajectory_point_buffer[e.first].erase(trajectory_point_buffer[e.first].begin(), it_to_delete);
+
                     auto trajectory_point = e.second->get_trajectory_point();
                     trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
                     trajectory_point_buffer[e.first].push_back(trajectory_point);
@@ -129,7 +140,7 @@ void MultiVehicleTrajectoryPlanner::start()
 
             t_planning += dt_nanos;
 
-            while(t_real_time + 6000000000ull < t_planning) usleep(110000);
+            while(t_real_time + T_PLAN_AHEAD_NANOS < t_planning) usleep(110000);
         }
     });
 
