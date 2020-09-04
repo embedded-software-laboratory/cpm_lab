@@ -135,6 +135,7 @@ int main(void)
 			spi_miso_data.imu_acceleration_forward = imu_acceleration_forward;
 			spi_miso_data.imu_acceleration_left = imu_acceleration_left;
 			spi_miso_data.imu_acceleration_up = imu_acceleration_up;
+			CLEAR_BIT(spi_miso_data.status_flags, 0);
 		}
 		else {
 			SET_BIT(spi_miso_data.status_flags, 0);

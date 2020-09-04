@@ -203,8 +203,8 @@ namespace cpm {
                 {
                     Logging::Instance().write(
                         1,
-                        "TimerFD: Deadline: %" PRIu64 ", current time: %" PRIu64 ", periods missed: %" PRIu64, 
-                        deadline, current_time, ((current_time - deadline) / period_nanoseconds) + 1
+                        "TimerFD: Periods missed: %d", 
+                        static_cast<int>(((current_time - deadline) / period_nanoseconds) + 1)
                     );
 
                     deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
