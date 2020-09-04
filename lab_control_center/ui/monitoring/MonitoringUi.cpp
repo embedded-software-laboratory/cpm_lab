@@ -220,7 +220,7 @@ void MonitoringUi::init_ui_thread()
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
                                 }
-                                else
+                                else if (label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
@@ -231,6 +231,12 @@ void MonitoringUi::init_ui_thread()
                                     );
                                     deploy_functions->stop_vehicles(vehicle_ids);
                                 }
+                                else
+                                {
+                                    //But still keep color in Offline case
+                                    label->get_style_context()->add_class("alert");
+                                }
+                                
                             }
                         }
                         else
