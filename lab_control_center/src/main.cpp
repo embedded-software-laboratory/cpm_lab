@@ -117,11 +117,7 @@ int main(int argc, char *argv[])
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
-    cpm::RTTTool::Instance().set_id("sender"); //TODO: Find a more elegant solution (see below)
-    //Proposal: Use cpm::init to init Logging and RTT with a given name if no name is set in argc/argv
-    //Alternatively: RTTTool just uses ID "receiver", only the sender (here: the LCC) needs to change its own ID before sending 
-    //  (to distinguish between RTT request and reply)
-    //Or: Use two different message types to distinguish (a bit more efficient?)
+    cpm::RTTTool::Instance().activate("lab_control_center");
 
     //To receive logs as early as possible, and for Logging in main
     auto logStorage = make_shared<LogStorage>();
@@ -204,7 +200,10 @@ int main(int argc, char *argv[])
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return timeSeriesAggregator->reset_all_data();},
-        [=](uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt){return rtt_aggregator->get_rtt(c_best_rtt, c_worst_rtt, a_worst_rtt);}
+        [=](std::string id, uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt, double& missed_msgs)
+            {
+                return rtt_aggregator->get_rtt(id, c_best_rtt, c_worst_rtt, a_worst_rtt, missed_msgs);
+            }
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);

@@ -46,7 +46,7 @@
 
 TEST_CASE( "RTT" ) {
     cpm::Logging::Instance().set_id("test_rtt");
-    cpm::RTTTool::Instance().set_id("test_rtt");
+    cpm::RTTTool::Instance().activate("test_rtt");
 
     auto participant = cpm::ParticipantSingleton::Instance();
     auto topic_rtt = cpm::get_topic<RoundTripTime>("round_trip_time");
@@ -92,12 +92,11 @@ TEST_CASE( "RTT" ) {
     }
     std::cout << std::endl;
 
-    //Now perform testing: Require a RTT measurement and then require a fake one where we should actually expect to receive an answer
+    //Now perform testing: Require a RTT measurement and then require a fake one where we should actually expect to receive an answer    
     auto rtt_result = cpm::RTTTool::Instance().measure_rtt();
 
-    //Result should contain only zeros, as the measurement should fail
-    REQUIRE( rtt_result.first == 0 );
-    REQUIRE( rtt_result.second == 0 );
+    //Result should be empty, as the measurement should fail
+    REQUIRE( rtt_result.size() == 0 );
 
     RoundTripTime fake_request;
     fake_request.count(100);

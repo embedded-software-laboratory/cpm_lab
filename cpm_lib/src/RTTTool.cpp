@@ -67,7 +67,7 @@ std::map<std::string, std::pair<uint64_t, uint64_t>> cpm::RTTTool::measure_rtt()
 {
     std::map<std::string, std::pair<uint64_t, uint64_t>> results;
 
-    //Return (0, 0) if the measurement was not activated
+    //Return nothing if the measurement was not activated
     if(!rtt_measurement_active.load())
         return results;
 
@@ -111,16 +111,22 @@ std::map<std::string, std::pair<uint64_t, uint64_t>> cpm::RTTTool::measure_rtt()
         }
         ++ wait_count;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        usleep(200000);
 
         lock.lock();
     }
+    //The lock seems to go out of scope here, so it needs to be acquired again (thus, lock.owns_lock is used later on)
 
     //Check if the 2 second timeout was reached before any message was received
     if (wait_count < 10)
     {
-        //Also wait another 200ms to get a worse RTT time
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        //Also wait another 500ms to get a worse RTT time
+        usleep(500000);
+
+        if (!lock.owns_lock())
+        {
+            lock.lock();
+        }
 
         //Calculate values for each id
         for (auto& entry : receive_times)
@@ -143,7 +149,10 @@ std::map<std::string, std::pair<uint64_t, uint64_t>> cpm::RTTTool::measure_rtt()
         }
     }
 
-    lock.unlock();
+    if (lock.owns_lock())
+    {
+        lock.unlock();
+    }
         
     return results;
 }

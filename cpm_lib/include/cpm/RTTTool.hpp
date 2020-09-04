@@ -67,7 +67,7 @@ namespace cpm
         //Measure RTT request receive times, read async, requested by measure_rtt
         std::atomic_bool rtt_measurement_active;
         std::atomic_bool rtt_measure_requested;
-        std::atomic_uint8_t rtt_count;
+        std::atomic<std::uint8_t> rtt_count; //Cannot use atomic_uint8_t due to compatability to lower C++ standards for vehicles
         std::mutex receive_times_mutex;
         std::map<std::string, std::vector<uint64_t>> receive_times;
 
@@ -95,7 +95,7 @@ namespace cpm
          * \brief Use this function to measure the (best and worst) round trip time in your network in ns
          * WARNING: Make sure that this function is only used by one program in your whole network, 
          * or you might get wrong results due to bad timing of both functions!
-         * \return empty map / missing entries in case of an error / missing answers, else the best and 'worst' (within 500ms) measured RTT for each participant id
+         * \return empty map / missing entries in case of an error / missing answers, else the best and 'worst' (within 2200ms) measured RTT for each participant id
          */
         std::map<std::string, std::pair<uint64_t, uint64_t>> measure_rtt();
     };

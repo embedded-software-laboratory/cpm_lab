@@ -35,7 +35,7 @@ MonitoringUi::MonitoringUi(
     std::function<std::vector<uint8_t>()> get_hlc_data_callback, 
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
     std::function<void()> reset_data_callback,
-    std::function<bool(uint64_t&, uint64_t&, uint64_t&)> get_rtt_values)
+    std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values)
 {
     this->deploy_functions = deploy_functions_callback;
     this->get_vehicle_data = get_vehicle_data_callback;
@@ -428,9 +428,13 @@ void MonitoringUi::init_ui_thread()
         label_hlc_description_long->set_text(list_stream.str().c_str());
 
         //RTT update
-        uint64_t current_best_rtt, current_worst_rtt, all_time_worst_rtt = 0;
-        bool rtt_exists = get_rtt_values(current_best_rtt, current_worst_rtt, all_time_worst_rtt);
-        if (!rtt_exists)
+        uint64_t hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt = 0;
+        double hlc_missed_rtt_percentage = 0.0;
+        bool hlc_rtt_exists = get_rtt_values("hlc", hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt, hlc_missed_rtt_percentage);
+        uint64_t vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt = 0;
+        double vehicle_missed_rtt_percentage = 0.0;
+        bool vehicle_rtt_exists = get_rtt_values("vehicle", vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt, vehicle_missed_rtt_percentage);
+        if (!hlc_rtt_exists && !vehicle_rtt_exists)
         {
             label_rtt_info->set_text("RTT: ---");
         }
@@ -438,10 +442,30 @@ void MonitoringUi::init_ui_thread()
         {
             //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
             std::stringstream rtt_stream;
-            rtt_stream << "RTT (ms): " 
-                << static_cast<uint64_t>(current_best_rtt / 1e6) << " (current best), "
-                << static_cast<uint64_t>(current_worst_rtt / 1e6) << " (current worst), "
-                << static_cast<uint64_t>(all_time_worst_rtt / 1e6) << " (all-time worst)";
+            if (hlc_rtt_exists)
+            {
+                rtt_stream << "RTT (ms), hlc: " 
+                << static_cast<uint64_t>(hlc_current_best_rtt / 1e6) << " (best), "
+                << static_cast<uint64_t>(hlc_current_worst_rtt / 1e6) << " (worst), "
+                << static_cast<uint64_t>(hlc_all_time_worst_rtt / 1e6) << " (worst ever), "
+                << static_cast<uint64_t>(hlc_missed_rtt_percentage * 100) << " (missed, percent)";
+            }
+            else
+            {
+                rtt_stream << "RTT (ms), hlc: ---";
+            }
+            if (vehicle_rtt_exists)
+            {
+                rtt_stream << "\t| RTT (ms), vehicle: " 
+                << static_cast<uint64_t>(vehicle_current_best_rtt / 1e6) << " (best), "
+                << static_cast<uint64_t>(vehicle_current_worst_rtt / 1e6) << " (worst), "
+                << static_cast<uint64_t>(vehicle_all_time_worst_rtt / 1e6) << " (worst ever), "
+                << static_cast<uint64_t>(vehicle_missed_rtt_percentage * 100) << " (missed, percent)";
+            }
+            else
+            {
+                rtt_stream << "\t| RTT (ms), vehicle: ---";
+            }
             label_rtt_info->set_text(rtt_stream.str().c_str());
         }
     });

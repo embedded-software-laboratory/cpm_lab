@@ -49,6 +49,7 @@ using std::vector;
 #include "cpm/VehicleIDFilteredTopic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
+#include "cpm/RTTTool.hpp"
 #include "cpm/stamp_message.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
@@ -114,6 +115,9 @@ int main(int argc, char *argv[])
     }
     spi_init();
     const bool allow_simulated_time = false;
+
+    //Enable RTT measurement
+    cpm::RTTTool::Instance().activate("vehicle");
 #else
     // Get vehicle starting position from argv
     vector<double> starting_position = cpm::cmd_parameter_doubles("pose", {0.0}, argc, argv);

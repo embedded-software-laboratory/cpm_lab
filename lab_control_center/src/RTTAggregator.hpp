@@ -26,7 +26,10 @@
 
 #pragma once
 
+#include <map>
 #include <mutex>
+#include <set>
+#include <string>
 
 #include "ReadyStatus.hpp"
 
@@ -39,13 +42,14 @@
 class RTTAggregator
 {
 private:
-    //Calculated RTT values
+    //Calculated RTT values - one mutex for all, because we read / write on all at the same time
     std::mutex rtt_values_mutex;
-    uint64_t current_best_rtt = 0;
-    uint64_t current_worst_rtt = 0;
-    uint64_t all_time_worst_rtt = 0;
-
-    bool rtt_was_measured = false;
+    std::map<std::string, uint64_t> current_best_rtt;
+    std::map<std::string, uint64_t> current_worst_rtt;
+    std::map<std::string, uint64_t> all_time_worst_rtt;
+    std::map<std::string, double> measure_count; //Starts counting as soon as the first answer was received, also counts missing ones
+    std::map<std::string, double> missed_answers; //Total of missed answers, counting starts as for measure_count
+    std::set<std::string> received_ids; //Remember IDs to notice missing ones
 
     //Thread for measuring the RTT regularly
     std::thread check_rtt_thread;
@@ -72,10 +76,12 @@ public:
     
     /**
      * \brief Get current measurements for RTT
+     * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist)
      * \param current_best_rtt Best RTT of the current measurement (in ns)
      * \param current_worst_rtt Worst RTT of the current measurement (in ns)
      * \param all_time_worst_rtt Worst RTT of all measurements (in ns)
+     * \param missed_answers Percentage of missed answers for this participant (Measured from first received answer)
      * \returns False if no RTT has yet been measured, else true
      */
-    bool get_rtt(uint64_t &_current_best_rtt, uint64_t &_current_worst_rtt, uint64_t &_all_time_worst_rtt);
+    bool get_rtt(std::string participant_id, uint64_t &_current_best_rtt, uint64_t &_current_worst_rtt, uint64_t &_all_time_worst_rtt, double &_missed_answers);
 };
