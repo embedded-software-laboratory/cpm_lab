@@ -113,7 +113,7 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                         if (is_previous_vehicle_found) {
                             cpm::Logging::Instance().write(
                                 2,
-                                "%s", "Warning: Tracking: found multiple vehicle candidates"
+                                "%s", "IPS: found multiple vehicle candidates"
                             );
                         }
                         is_previous_vehicle_found = true;
@@ -121,8 +121,8 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                 }
                 if (!is_previous_vehicle_found){
                     cpm::Logging::Instance().write(
-                        3,
-                        "%s", "Tracking: new vehicle or unstable detection"
+                        2,
+                        "%s", "IPS: new vehicle or unstable detection"
                     );
                 }
             }
