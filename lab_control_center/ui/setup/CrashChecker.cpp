@@ -67,7 +67,7 @@ void CrashChecker::ui_dispatch()
             false,
             Gtk::MessageType::MESSAGE_INFO,
             Gtk::ButtonsType::BUTTONS_CLOSE,
-            true
+            false
         );
     
         //Connect new window with parent, show window
