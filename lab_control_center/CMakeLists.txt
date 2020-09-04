@@ -170,6 +170,8 @@ add_executable(lab_control_center
     ui/setup/Deploy.cpp
     ui/setup/VehicleToggle.hpp
     ui/setup/VehicleToggle.cpp
+    ui/setup/Upload.hpp
+    ui/setup/Upload.cpp
     ui/setup/UploadWindow.hpp
     ui/setup/UploadWindow.cpp
     ui/MainWindow.cpp
