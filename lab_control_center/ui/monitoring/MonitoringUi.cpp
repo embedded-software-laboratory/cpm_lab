@@ -34,13 +34,15 @@ MonitoringUi::MonitoringUi(
     std::function<VehicleData()> get_vehicle_data_callback, 
     std::function<std::vector<uint8_t>()> get_hlc_data_callback, 
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-    std::function<void()> reset_data_callback)
+    std::function<void()> reset_data_callback,
+    std::function<bool(uint64_t&, uint64_t&, uint64_t&)> get_rtt_values)
 {
     this->deploy_functions = deploy_functions_callback;
     this->get_vehicle_data = get_vehicle_data_callback;
     this->get_hlc_data = get_hlc_data_callback;
     this->get_vehicle_trajectory = get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
+    this->get_rtt_values = get_rtt_values;
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
     builder->get_widget("parent", parent);
@@ -50,6 +52,7 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("box_buttons", box_buttons);
     builder->get_widget("label_hlc_description_short", label_hlc_description_short);
     builder->get_widget("label_hlc_description_long", label_hlc_description_long);
+    builder->get_widget("label_rtt_info", label_rtt_info);
 
     assert(parent);
     assert(viewport_monitoring);
@@ -58,6 +61,7 @@ MonitoringUi::MonitoringUi(
     assert(box_buttons);
     assert(label_hlc_description_short);
     assert(label_hlc_description_long);
+    assert(label_rtt_info);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -368,8 +372,8 @@ void MonitoringUi::init_ui_thread()
                                 if(!deploy_functions->diagnosis_switch) continue; 
                                 cpm::Logging::Instance().write(
                                     1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %" PRIu64 " ms. Stopping vehicles ...", 
-                                    vehicle_id, error, dt
+                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping vehicles ...", 
+                                    vehicle_id, error, dt/1e6
                                 );
                                 deploy_functions->stop_vehicles(vehicle_ids);
                             }
@@ -422,6 +426,24 @@ void MonitoringUi::init_ui_thread()
         }
 
         label_hlc_description_long->set_text(list_stream.str().c_str());
+
+        //RTT update
+        uint64_t current_best_rtt, current_worst_rtt, all_time_worst_rtt = 0;
+        bool rtt_exists = get_rtt_values(current_best_rtt, current_worst_rtt, all_time_worst_rtt);
+        if (!rtt_exists)
+        {
+            label_rtt_info->set_text("RTT: ---");
+        }
+        else
+        {
+            //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
+            std::stringstream rtt_stream;
+            rtt_stream << "RTT (ms): " 
+                << static_cast<uint64_t>(current_best_rtt / 1e6) << " (current best), "
+                << static_cast<uint64_t>(current_worst_rtt / 1e6) << " (current worst), "
+                << static_cast<uint64_t>(all_time_worst_rtt / 1e6) << " (all-time worst)";
+            label_rtt_info->set_text(rtt_stream.str().c_str());
+        }
     });
 
     run_thread.store(true);

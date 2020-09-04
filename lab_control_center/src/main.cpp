@@ -48,6 +48,7 @@
 #include "LogStorage.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
+#include "RTTAggregator.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
 #include "cpm/RTTTool.hpp"
@@ -116,7 +117,11 @@ int main(int argc, char *argv[])
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
-    cpm::RTTTool::Instance().set_id("sender"); //TODO: Find a more elegant solution 
+    cpm::RTTTool::Instance().set_id("sender"); //TODO: Find a more elegant solution (see below)
+    //Proposal: Use cpm::init to init Logging and RTT with a given name if no name is set in argc/argv
+    //Alternatively: RTTTool just uses ID "receiver", only the sender (here: the LCC) needs to change its own ID before sending 
+    //  (to distinguish between RTT request and reply)
+    //Or: Use two different message types to distinguish (a bit more efficient?)
 
     //To receive logs as early as possible, and for Logging in main
     auto logStorage = make_shared<LogStorage>();
@@ -192,12 +197,14 @@ int main(int argc, char *argv[])
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
+    auto rtt_aggregator = make_shared<RTTAggregator>();
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->reset_all_data();}
+        [=](){return timeSeriesAggregator->reset_all_data();},
+        [=](uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt){return rtt_aggregator->get_rtt(c_best_rtt, c_worst_rtt, a_worst_rtt);}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
@@ -205,19 +212,53 @@ int main(int argc, char *argv[])
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
-        obstacle_simulation_manager,
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){return timeSeriesAggregator->reset_all_data();}, 
-        [=](){return obstacleAggregator->reset_all_data();}, 
-        [=](){return trajectoryCommand->stop_all();}, 
-        [=](){return monitoringUi->reset_vehicle_view();}, 
-        [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
-        [=](){return loggerViewUi->reset();}, 
+        [=](){
+            //Things to do when the simulation is started
+
+            //Stop RTT measurement
+            rtt_aggregator->stop_measurement();
+
+            //Reset old UI elements (difference to kill: Also reset the Logs)
+            //Kill timer in UI as well, as it should not show invalid information
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->reset_vehicle_view();
+            visualizationCommandsAggregator->reset_visualization_commands();
+            
+            //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
+            loggerViewUi->reset();
+
+            //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+            obstacle_simulation_manager->start();
+
+        }, 
+        [=](){
+            //Things to do when the simulation is stopped
+
+            //Stop obstacle simulation
+            obstacle_simulation_manager->stop();
+            
+            //Kill timer in UI as well, as it should not show invalid information
+            //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->reset_vehicle_view();
+            visualizationCommandsAggregator->reset_visualization_commands();
+
+            //Restart RTT measurement
+            rtt_aggregator->restart_measurement();
+        },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
-        argv);
+        argv
+    );
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
