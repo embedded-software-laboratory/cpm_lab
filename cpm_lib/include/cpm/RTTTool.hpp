@@ -27,6 +27,7 @@
 #pragma once
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -64,10 +65,11 @@ namespace cpm
         std::string program_id = "no_prog_id_set";
 
         //Measure RTT request receive times, read async, requested by measure_rtt
+        std::atomic_bool rtt_measurement_active;
         std::atomic_bool rtt_measure_requested;
         std::atomic_uint8_t rtt_count;
         std::mutex receive_times_mutex;
-        std::vector<uint64_t> receive_times;
+        std::map<std::string, std::vector<uint64_t>> receive_times;
 
         /**
          * \brief Constructor - private bc singleton
@@ -81,17 +83,20 @@ namespace cpm
         static RTTTool& Instance();
 
         /**
-         * \brief Set the ID of RTT msgs here (should already be done in internal configuration, same as log ID, but can be changed afterwards if desired)
+         * \brief Activate the RTT measurement for this participant
+         * It will answer to RTT requests with the ID set in the parameter
+         * If not activated, RTT requests are being ignored by the participant
+         * Must also be called for the RTT measurer, to set a correct program id for RTT requests
          * \param _program_id ID set for the answers to round trip time messages, to identify the program (type) (e.g. vehicle (5), middleware, ...)
          */
-        void set_id(std::string _program_id);
+        void activate(std::string _program_id);
 
         /**
          * \brief Use this function to measure the (best and worst) round trip time in your network in ns
          * WARNING: Make sure that this function is only used by one program in your whole network, 
          * or you might get wrong results due to bad timing of both functions!
-         * \return {0, 0} in case of an error / no answer, else the best and 'worst' (within 500ms) measured RTT
+         * \return empty map / missing entries in case of an error / missing answers, else the best and 'worst' (within 500ms) measured RTT for each participant id
          */
-        std::pair<uint64_t, uint64_t> measure_rtt();
+        std::map<std::string, std::pair<uint64_t, uint64_t>> measure_rtt();
     };
 };

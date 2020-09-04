@@ -48,9 +48,6 @@ namespace cpm
 
         // TODO reverse access, i.e. access the config from the logging
         cpm::Logging::Instance().set_id(InternalConfiguration::Instance().get_logging_id());
-
-        //Initialize the round trip time answering method
-        cpm::RTTTool::Instance().set_id(InternalConfiguration::Instance().get_logging_id());
     }
 
 
