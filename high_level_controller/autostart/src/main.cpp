@@ -39,8 +39,7 @@
 
 #include <dds/pub/ddspub.hpp>
 
-#include "ReadyStatus.hpp"
-#include "RemoteProgramCheck.hpp"
+#include "HLCHello.hpp"
 
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
@@ -97,10 +96,10 @@ int main (int argc, char *argv[]) {
     std::shared_ptr<cpm::Timer> timer = std::make_shared<cpm::TimerFD>("hlc_timer", callback_period, 0, false);
 
     //Create DataWriter that sends ready messages to the Lab
-    dds::pub::DataWriter<ReadyStatus> writer_readyMessage
+    dds::pub::DataWriter<HLCHello> writer_readyMessage
     (
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<ReadyStatus>("hlc_startup")
+        cpm::get_topic<HLCHello>("hlc_hello")
     );
 
     //Wait a bit (10 seconds) for the NUC to get its IP address; the NUCs ID can be read from its IP
@@ -151,46 +150,20 @@ int main (int argc, char *argv[]) {
 
     std::cout << "Set ID to " << hlc_id << std::endl;
 
-    //Create system that checks if tmux sessions are (still) running when the LCC requests that
-    dds::topic::Topic<RemoteProgramCheck> program_check_topic = cpm::get_topic<RemoteProgramCheck>(cpm::ParticipantSingleton::Instance(), "remote_program_check");
-    dds::pub::DataWriter<RemoteProgramCheck> program_check_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), program_check_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
-
-    cpm::AsyncReader<RemoteProgramCheck> program_check_reader(
-        [&](dds::sub::LoanedSamples<RemoteProgramCheck>& samples){
-            for(auto sample : samples)
-            {
-                if(sample.info().valid())
-                {
-                    //Only answer to the program check request, not the answers
-                    if (!(sample.data().is_answer()))
-                    {
-                        RemoteProgramCheck answer;
-                        answer.count(sample.data().count());
-                        answer.is_answer(true);
-                        answer.source_id(hlc_id);
-                        answer.script_running(session_exists("script"));
-                        answer.middleware_running(session_exists("middleware"));
-                        program_check_writer.write(answer);
-                    }
-                }
-            }
-        },
-        cpm::ParticipantSingleton::Instance(),
-        program_check_topic,
-        true,
-        false
-    );
-
     //Create ready message
-    ReadyStatus ready_message;
-    ready_message.source_id(hlc_id);
+    HLCHello hello_msg;
+    hello_msg.source_id(hlc_id);
 
     //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 
     timer->start([&](uint64_t t_now) {
-        writer_readyMessage.write(ready_message);
+        //Check if script / middleware are running with hello msg (distinguish between simulation running / not running at receiver (LCC))
+        hello_msg.script_running(session_exists("script"));
+        hello_msg.middleware_running(session_exists("middleware"));
+
+        writer_readyMessage.write(hello_msg);
     },
     [](){
         //Ignore stop signals

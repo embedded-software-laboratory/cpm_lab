@@ -28,16 +28,13 @@
  * These messages are sent by the LCC to check if a program is still running on a remote machine
  */
 
-#ifndef REMOTE_PROGRAM_CHECK_IDL
-#define REMOTE_PROGRAM_CHECK_IDL
+#ifndef HLC_HELLO_IDL
+#define HLC_HELLO_IDL
 
-struct RemoteProgramCheck {
+struct HLCHello {
     string source_id; //To find out where the msg came from and to not answer to own msg
 
-    boolean is_answer; //If true, do not respond to this msg, as it already is an answer to a request
     boolean script_running; //If true, a Matlab / C++ session is still running
     boolean middleware_running; //If true, a Middleware session is still running
-
-    octet count; //Counter to not mix up old with new requests
 };
 #endif

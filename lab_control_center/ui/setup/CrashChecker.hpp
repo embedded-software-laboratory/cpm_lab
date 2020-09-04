@@ -30,10 +30,13 @@
 #include <gtkmm.h>
 
 #include "ui/setup/Deploy.hpp"
+#include "ui/setup/Upload.hpp"
 
 #include "cpm/AsyncReader.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "cpm/SimpleTimer.hpp"
-#include "RemoteProgramCheck.hpp"
+
+#include "src/HLCReadyAggregator.hpp"
 
 #include <dds/pub/ddspub.hpp>
 
@@ -77,18 +80,13 @@ private:
     void kill_crash_check_thread();
 
     //Data structures for remote program crash check
-    std::mutex map_mutex;
-    std::map<std::string, bool> script_running;
-    std::map<std::string, bool> middleware_running;
     std::vector<uint8_t> hlc_ids_copy;
-    std::atomic_uint8_t check_msg_count;
-    std::atomic_bool is_first_run;
-    std::shared_ptr<cpm::SimpleTimer> remote_crash_check;
 
-    //DDS participants for remote program crash check
-    dds::topic::Topic<RemoteProgramCheck> program_check_topic;
-    dds::pub::DataWriter<RemoteProgramCheck> program_check_writer;
-    cpm::AsyncReader<RemoteProgramCheck> program_check_reader;
+    //Access to remote program check
+    std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
+    std::shared_ptr<Upload> upload_manager;
+    uint64_t upload_success_time = 0;
+    const uint64_t remote_waiting_time = 2e9;
 
     //Further helper functions
     void send_remote_check_msg();
@@ -98,10 +96,14 @@ private:
 public:
     /**
      * \brief Constructor
-     * \param _deploy_functions Needed to call deploy / upload on NUCs
+     * \param _deploy_functions Needed to find out if local programs are still running
+     * \param _hlc_ready_aggregator Required to find out if remote programs are still running
+     * \param _upload_manager Required to check if an upload was finished, for remote checking
      */
     CrashChecker(
-        std::shared_ptr<Deploy> _deploy_functions
+        std::shared_ptr<Deploy> _deploy_functions,
+        std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator,
+        std::shared_ptr<Upload> _upload_manager
     );
 
     ~CrashChecker();

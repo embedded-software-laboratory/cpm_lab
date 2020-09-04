@@ -34,7 +34,7 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-    std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+    std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _on_simulation_start,
@@ -46,7 +46,7 @@ SetupViewUI::SetupViewUI
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
-    get_hlc_ids(_get_hlc_ids),
+    hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
     on_simulation_start(_on_simulation_start),
@@ -146,7 +146,7 @@ SetupViewUI::SetupViewUI
 
     //Create upload manager
     upload_manager = std::make_shared<Upload>(
-        _get_hlc_ids,
+        [this] () { return hlc_ready_aggregator->get_hlc_ids_uint8_t(); },
         deploy_functions,
         [this] () { set_sensitive(true); },
         [this] () { button_kill->set_sensitive(true); },
@@ -155,7 +155,9 @@ SetupViewUI::SetupViewUI
 
     //Create crash checker (but don't start it yet, as no simulation is running)
     crash_checker = std::make_shared<CrashChecker>(
-        deploy_functions
+        deploy_functions,
+        hlc_ready_aggregator,
+        upload_manager
     );
 
     //Set initial text of script path (from previous program execution, if that existed)
@@ -417,9 +419,9 @@ void SetupViewUI::deploy_applications() {
         //Get current online vehicle and high_level_controller IDs
         std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
-        if (get_hlc_ids)
+        if (hlc_ready_aggregator)
         {
-            hlc_ids = get_hlc_ids();
+            hlc_ids = hlc_ready_aggregator->get_hlc_ids_uint8_t();
         }
         else 
         {

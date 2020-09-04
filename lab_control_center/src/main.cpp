@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){

@@ -29,7 +29,7 @@
 //The reader callback is initialized in the init list of the constructor; store all IDs in a map together with the current time in nanoseconds
 HLCReadyAggregator::HLCReadyAggregator() :
     async_hlc_reader(
-        [&](dds::sub::LoanedSamples<ReadyStatus>& samples){
+        [&](dds::sub::LoanedSamples<HLCHello>& samples){
             //Lock the mutex for thread-safe access
             std::lock_guard<std::mutex> lock(hlc_list_mutex);
 
@@ -41,11 +41,15 @@ HLCReadyAggregator::HLCReadyAggregator() :
                 {
                     auto data = sample.data();
                     hlc_map[data.source_id()] = cpm::get_time_ns();
+
+                    //Store whether the programs on the HLC are currently running (with a small risk that the order of msgs is not correct)
+                    hlc_script_running[data.source_id()] = data.script_running();
+                    hlc_middleware_running[data.source_id()] = data.middleware_running();
                 }
             }
         },
         cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<ReadyStatus>("hlc_startup"))
+        cpm::get_topic<HLCHello>("hlc_hello"))
 {
 }
 
@@ -94,4 +98,42 @@ std::vector<uint8_t> HLCReadyAggregator::get_hlc_ids_uint8_t()
     }
 
     return valid_hlc_ids;
+}
+
+bool HLCReadyAggregator::script_running_on(std::string hlc_id)
+{
+    std::lock_guard<std::mutex> lock(hlc_list_mutex);
+
+    //Considered not running if no HLC msg has been received
+    auto iterator = hlc_map.find(hlc_id);
+    if (iterator == hlc_map.end())
+        return false;
+
+    //Considered not running if data is not up to date
+    if (cpm::get_time_ns() - iterator->second >= time_to_live_ns)
+    {
+        return false;
+    }
+
+    //Else, obtain the actual value - which must exist if an entry in hlc_map exists 
+    return hlc_script_running.at(hlc_id);
+}
+
+bool HLCReadyAggregator::middleware_running_on(std::string hlc_id)
+{
+    std::lock_guard<std::mutex> lock(hlc_list_mutex);
+
+    //Considered not running if no HLC msg has been received
+    auto iterator = hlc_map.find(hlc_id);
+    if (iterator == hlc_map.end())
+        return false;
+
+    //Considered not running if data is not up to date
+    if (cpm::get_time_ns() - iterator->second >= time_to_live_ns)
+    {
+        return false;
+    }
+
+    //Else, obtain the actual value - which must exist if an entry in hlc_map exists 
+    return hlc_middleware_running.at(hlc_id);
 }
