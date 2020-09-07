@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_string();},
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return timeSeriesAggregator->reset_all_data();}
     );
@@ -242,7 +242,9 @@ int main(int argc, char *argv[])
         },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
-        argv
+        argv);
+    monitoringUi->register_vehicle_to_hlc_mapping(
+        [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);

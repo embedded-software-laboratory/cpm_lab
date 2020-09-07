@@ -193,6 +193,11 @@ private:
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
+    //For vehicle to HLC mapping
+    std::atomic_bool simulation_running;
+    std::mutex vehicle_to_hlc_mutex;
+    std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
+
 public:
     /**
      * \brief Constructor
@@ -233,6 +238,9 @@ public:
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 
+    //This is subject to change, as the setup ui will be restructured soon
+    //Returns: True if a simulation is running and in that case a map with mappings from vehicle ID to HLC ID
+    std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
     /**
      * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
      * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill

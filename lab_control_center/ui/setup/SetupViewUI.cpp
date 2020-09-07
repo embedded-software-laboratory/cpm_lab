@@ -162,6 +162,8 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
+
+    simulation_running.store(false);
     
     //Regularly check / update which real vehicles are currently turned on, to use them when the experiment is deployed
     is_deployed.store(false);
@@ -373,6 +375,8 @@ void SetupViewUI::deploy_applications() {
     set_sensitive(false);
     is_deployed.store(true);
 
+    simulation_running.store(true);
+
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
@@ -453,6 +457,12 @@ void SetupViewUI::deploy_applications() {
             both_local_and_remote_deploy.store(true);
             deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, script_path->get_text().c_str(), script_params->get_text().c_str());
         }
+        //Remember vehicle to HLC mapping
+        std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+        for (size_t i = 0; i < min_hlc_vehicle; ++i)
+        {
+            vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
+        }
     }
     else
     {
@@ -463,9 +473,24 @@ void SetupViewUI::deploy_applications() {
     crash_checker->start_checking(deploy_remote_toggled, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
 }
 
+std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
+{
+    std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    return { simulation_running.load(), vehicle_to_hlc_map };
+}
+
 void SetupViewUI::kill_deployed_applications() {
+<<<<<<< HEAD
     //Kill crash check first, or else we get undesired error messages
     crash_checker->stop_checking();
+=======
+    //Remember mapping
+    std::unique_lock<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    vehicle_to_hlc_map.clear();
+    simulation_running.store(false);
+    lock_map.unlock();
+
+>>>>>>> origin/show_nuc_connected
 
     // Stop LabCam
 #ifndef SIMULATION

@@ -29,6 +29,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <sstream>
@@ -59,7 +60,8 @@ public:
     Gtk::Label* label_hlc_description_long;
     std::shared_ptr<Deploy> deploy_functions;
     std::function<VehicleData()> get_vehicle_data;
-    std::function<std::vector<std::string>()> get_hlc_data;
+    std::function<std::vector<uint8_t>()> get_hlc_data;
+    std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
 
@@ -73,7 +75,7 @@ public:
     //full rows
     const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
-    const vector<string> rows_restricted = {"ips_dt", "battery_level", "clock_delta", "reference_deviation", "speed"};
+    const vector<string> rows_restricted = {"ips_dt", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
     
     //Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
@@ -88,11 +90,12 @@ public:
     explicit MonitoringUi(
         std::shared_ptr<Deploy> deploy_functions_callback,  
         std::function<VehicleData()> get_vehicle_data_callback, 
-        std::function<std::vector<std::string>()> get_hlc_data_callback,
+        std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
         std::function<void()> reset_data_callback
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();
     void reset_vehicle_view();
+    void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
 };
