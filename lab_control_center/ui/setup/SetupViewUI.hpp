@@ -170,7 +170,6 @@ private:
 
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
-    void kill_deployed_applications();
     std::atomic_bool lcc_closed; //If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
@@ -199,6 +198,7 @@ private:
     std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
 
 public:
+    void kill_deployed_applications();
     /**
      * \brief Constructor
      * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc

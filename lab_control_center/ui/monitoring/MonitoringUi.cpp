@@ -34,13 +34,15 @@ MonitoringUi::MonitoringUi(
     std::function<VehicleData()> get_vehicle_data_callback, 
     std::function<std::vector<uint8_t>()> get_hlc_data_callback,
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-    std::function<void()> reset_data_callback)
+    std::function<void()> reset_data_callback,
+    std::function<void()> kill_deployed_applications_callback)
 {
     this->deploy_functions = deploy_functions_callback;
     this->get_vehicle_data = get_vehicle_data_callback;
     this->get_hlc_data = get_hlc_data_callback;
     this->get_vehicle_trajectory = get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
+    this->kill_deployed_applications = kill_deployed_applications_callback; 
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
     builder->get_widget("parent", parent);
@@ -226,10 +228,10 @@ void MonitoringUi::init_ui_thread()
                                     label->get_style_context()->add_class("alert");
                                     cpm::Logging::Instance().write(
                                         1,
-                                        "Warning: NUCs %d disconnected. Stopping vehicles ...", 
+                                        "Warning: NUCs %d disconnected. Stopping experiment ...", 
                                         hlc_id
                                     );
-                                    deploy_functions->stop_vehicles(vehicle_ids);
+                                    this->kill_deployed_applications();
                                 }
                                 else
                                 {
@@ -288,10 +290,10 @@ void MonitoringUi::init_ui_thread()
                             
                             cpm::Logging::Instance().write(
                                 1,
-                                "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
+                                "Warning: Clock delta of vehicle %d too high. Stopping experiment ...",
                                 vehicle_id
                             );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+                            this->kill_deployed_applications();
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -323,10 +325,10 @@ void MonitoringUi::init_ui_thread()
                             
                             cpm::Logging::Instance().write(
                                 1,
-                                "Warning: Battery level of vehicle %d too low. Stopping vehicles ...", 
+                                "Warning: Battery level of vehicle %d too low. Stopping experiment ...", 
                                 vehicle_id
                             );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+                            this->kill_deployed_applications();
                         }
                     }
                     else if(rows_restricted[i] == "speed") 
@@ -354,10 +356,10 @@ void MonitoringUi::init_ui_thread()
 
                             cpm::Logging::Instance().write(
                                 1,
-                                "Warning: speed of vehicle %d too high. Stopping vehicles ...", 
+                                "Warning: speed of vehicle %d too high. Stopping experiment ...", 
                                 vehicle_id
                             );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+                            this->kill_deployed_applications();
                         }
                     }
                     else if(rows_restricted[i] == "ips_dt") 
@@ -385,10 +387,10 @@ void MonitoringUi::init_ui_thread()
 
                             cpm::Logging::Instance().write(
                                 1,
-                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping vehicles ...", 
+                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping experiment ...", 
                                 vehicle_id, value
                             );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+                            this->kill_deployed_applications();
                         }
                     }
                     else if(rows_restricted[i] == "reference_deviation") 
@@ -469,10 +471,10 @@ void MonitoringUi::init_ui_thread()
 
                                 cpm::Logging::Instance().write(
                                     1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping vehicles ...", 
+                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping experiment ...", 
                                     vehicle_id, error, dt/1e6
                                 );
-                                deploy_functions->stop_vehicles(vehicle_ids);
+                                this->kill_deployed_applications();
                             }
                             else if (error > 0.05)
                             {

@@ -64,6 +64,7 @@ public:
     std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
+    std::function<void()> kill_deployed_applications; 
 
     // Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
     // Thus: Own timer implementation instead
@@ -89,13 +90,17 @@ public:
     // Called when resetting the ui or when the object gets deleted - kills the currently running thread
     void stop_ui_thread();
 
+    // Stop vehicles and HLCs 
+    void stop_experiment(std::vector<unsigned int>, std::vector<uint8_t>);
+
 public:
     explicit MonitoringUi(
         std::shared_ptr<Deploy> deploy_functions_callback,  
         std::function<VehicleData()> get_vehicle_data_callback, 
         std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-        std::function<void()> reset_data_callback
+        std::function<void()> reset_data_callback,
+        std::function<void()> kill_deployed_applications_callback 
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();
