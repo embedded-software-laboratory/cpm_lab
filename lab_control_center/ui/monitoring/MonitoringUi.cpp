@@ -291,7 +291,6 @@ void MonitoringUi::init_ui_thread()
                                 "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
                                 vehicle_id
                             );
-                            deploy_functions->reboot_real_vehicle(vehicle_id, 5);
                             deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
