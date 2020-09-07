@@ -480,17 +480,14 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 }
 
 void SetupViewUI::kill_deployed_applications() {
-<<<<<<< HEAD
     //Kill crash check first, or else we get undesired error messages
     crash_checker->stop_checking();
-=======
     //Remember mapping
     std::unique_lock<std::mutex> lock_map(vehicle_to_hlc_mutex);
     vehicle_to_hlc_map.clear();
     simulation_running.store(false);
     lock_map.unlock();
 
->>>>>>> origin/show_nuc_connected
 
     // Stop LabCam
 #ifndef SIMULATION
