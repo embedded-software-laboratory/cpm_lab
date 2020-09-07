@@ -221,17 +221,33 @@ void MonitoringUi::init_ui_thread()
                                 {
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
+                                    if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
+                                    if(error_triggered[0][0]) error_triggered[0][0] = false; 
                                 }
                                 else if (label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
-                                    cpm::Logging::Instance().write(
-                                        1,
-                                        "Warning: NUCs %d disconnected. Stopping experiment ...", 
-                                        hlc_id
-                                    );
-                                    this->kill_deployed_applications();
+                                    if(error_timestamps[0][0] == 0) 
+                                    {
+                                        // set error timestamp  
+                                        error_timestamps[0][0] = clock_gettime_nanoseconds(); 
+                                        continue;
+                                    }
+
+                                    // an error occured before - do nothing if the error is not older than a threshold
+                                    if(clock_gettime_nanoseconds()-error_timestamps[0][0]<500000000) continue;
+                                    
+                                    if(!error_triggered[0][0])
+                                    {
+                                        cpm::Logging::Instance().write(
+                                            1,
+                                            "Warning: NUCs %d disconnected. Stopping experiment ...", 
+                                            hlc_id
+                                            );
+                                        this->kill_deployed_applications();
+                                        error_triggered[0][0] = true; 
+                                    }
                                 }
                                 else
                                 {
@@ -288,12 +304,16 @@ void MonitoringUi::init_ui_thread()
                             // an error occured before - do nothing if the error is not older than a threshold
                             if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: Clock delta of vehicle %d too high. Stopping experiment ...",
-                                vehicle_id
-                            );
-                            this->kill_deployed_applications();
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: Clock delta of vehicle %d too high. Stopping experiment ...",
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -323,12 +343,16 @@ void MonitoringUi::init_ui_thread()
                             // an error occured before - do nothing if the error is not older than a threshold
                             if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: Battery level of vehicle %d too low. Stopping experiment ...", 
-                                vehicle_id
-                            );
-                            this->kill_deployed_applications();
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: Battery level of vehicle %d too low. Stopping experiment ...", 
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "speed") 
@@ -354,12 +378,16 @@ void MonitoringUi::init_ui_thread()
                             // an error occured before - do nothing if the error is not older than a threshold
                             if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
 
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: speed of vehicle %d too high. Stopping experiment ...", 
-                                vehicle_id
-                            );
-                            this->kill_deployed_applications();
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: speed of vehicle %d too high. Stopping experiment ...", 
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "ips_dt") 
@@ -385,12 +413,16 @@ void MonitoringUi::init_ui_thread()
                             // an error occured before - do nothing if the error is not older than a threshold
                             if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
 
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping experiment ...", 
-                                vehicle_id, value
-                            );
-                            this->kill_deployed_applications();
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping experiment ...", 
+                                    vehicle_id, value
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "reference_deviation") 
@@ -469,12 +501,16 @@ void MonitoringUi::init_ui_thread()
                                 // an error occured before - do nothing if the error is not older than a threshold
                                 if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<200000000) continue;
 
-                                cpm::Logging::Instance().write(
-                                    1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping experiment ...", 
-                                    vehicle_id, error, dt/1e6
-                                );
-                                this->kill_deployed_applications();
+                                if(!error_triggered[i][vehicle_id])
+                                {
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping experiment ...", 
+                                        vehicle_id, error, dt/1e6
+                                    );
+                                    this->kill_deployed_applications();
+                                    error_triggered[i][vehicle_id] = true;
+                                }
                             }
                             else if (error > 0.05)
                             {

@@ -80,6 +80,9 @@ public:
 
     // Indicates the starting time of the last error occurance for each vehicle
     vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
+
+    // Indicates if an error already triggered a kill 
+    vector<vector<bool> > error_triggered{vector<vector<bool> > (rows_restricted.size(), vector<bool>(30,false))};
     
     // Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
