@@ -56,12 +56,20 @@ std::vector<std::string> HLCReadyAggregator::get_hlc_ids_string()
     //Only use IDs that are still up-to-date
     uint64_t current_time_ns = cpm::get_time_ns();
     std::vector<std::string> valid_hlc_ids;
-    for (auto entry : hlc_map)
+
+    for (auto iterator = hlc_map.begin(); iterator != hlc_map.end();)
     {
-        if (current_time_ns - entry.second < time_to_live_ns)
+        if (current_time_ns - iterator->second < time_to_live_ns)
         {
-            valid_hlc_ids.push_back(entry.first);
+            valid_hlc_ids.push_back(iterator->first);
+            ++iterator;
         }
+        else
+        {
+            cpm::Logging::Instance().write("HLC / NUC crashed / now offline: %s", iterator->first.c_str());
+            iterator = hlc_map.erase(iterator);
+        }
+        
     }
 
     return valid_hlc_ids;
@@ -69,24 +77,18 @@ std::vector<std::string> HLCReadyAggregator::get_hlc_ids_string()
 
 std::vector<uint8_t> HLCReadyAggregator::get_hlc_ids_uint8_t()
 {
-    //Lock the mutex for thread-safe access
-    std::lock_guard<std::mutex> lock(hlc_list_mutex);
+    auto ids_string = get_hlc_ids_string();
 
-    //Only use IDs that are still up-to-date
-    uint64_t current_time_ns = cpm::get_time_ns();
     std::vector<uint8_t> valid_hlc_ids;
-    for (auto entry : hlc_map)
+    for (auto entry : ids_string)
     {
-        if (current_time_ns - entry.second < time_to_live_ns)
-        {
-            //Convert ID to uint8_t
-            try {
-                int int_value = std::stoi(entry.first);
-                valid_hlc_ids.push_back(static_cast<uint8_t>(int_value));
-            }
-            catch (...) {
-                std::cerr << "Error: Could not convert HLC ID '" << entry.first << "' to int" << std::endl;
-            }
+        //Convert ID to uint8_t
+        try {
+            int int_value = std::stoi(entry);
+            valid_hlc_ids.push_back(static_cast<uint8_t>(int_value));
+        }
+        catch (...) {
+            std::cerr << "Error: Could not convert HLC ID '" << entry << "' to int" << std::endl;
         }
     }
 

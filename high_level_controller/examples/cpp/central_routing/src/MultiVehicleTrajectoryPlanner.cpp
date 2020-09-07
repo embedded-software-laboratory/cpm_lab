@@ -26,7 +26,8 @@
 
 #include "MultiVehicleTrajectoryPlanner.hpp"
 
-
+#define T_START_DELAY_NANOS 5000000000ull
+#define T_PLAN_AHEAD_NANOS 6000000000ull
 
 MultiVehicleTrajectoryPlanner::MultiVehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
 
@@ -101,7 +102,7 @@ void MultiVehicleTrajectoryPlanner::start()
 
                 if(t_start == 0)
                 {
-                    t_start = t_real_time + 2000000000ull;
+                    t_start = t_real_time + T_START_DELAY_NANOS;
                     for(auto &e:trajectoryPlans)
                     {
                         auto trajectory_point = e.second->get_trajectory_point();
@@ -139,7 +140,7 @@ void MultiVehicleTrajectoryPlanner::start()
 
             t_planning += dt_nanos;
 
-            while(t_real_time + 6000000000ull < t_planning) usleep(110000);
+            while(t_real_time + T_PLAN_AHEAD_NANOS < t_planning) usleep(110000);
         }
     });
 
