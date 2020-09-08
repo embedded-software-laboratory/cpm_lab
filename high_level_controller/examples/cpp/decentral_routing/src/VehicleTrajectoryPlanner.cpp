@@ -142,7 +142,7 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
     for (auto sample : samples) {
         if (sample.info().valid()) {
             // We ignore everything with lower priorities
-            if (sample.data().vehicle_id() <= trajectoryPlan->get_vehicle_id()){ continue; }
+            if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
             previous_vehicles_buffer[sample.data().vehicle_id()] = sample.data();
         }
     }
