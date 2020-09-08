@@ -80,17 +80,18 @@ private:
     void kill_crash_check_thread();
 
     //Data structures for remote program crash check
-    std::vector<uint8_t> hlc_ids_copy;
+    std::vector<uint8_t> running_remote_hlcs;
+    std::vector<uint8_t> crashed_remote_hlcs;
 
     //Access to remote program check
     std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
     std::shared_ptr<Upload> upload_manager;
     uint64_t upload_success_time = 0;
-    const uint64_t remote_waiting_time = 2e9;
+    const uint64_t remote_waiting_time = 5e9; //Report remote crashes only after 5 seconds (messages seem to "stutter" / are not yet correct directly after the upload)
 
     //Further helper functions
     void send_remote_check_msg();
-    std::vector<std::string> check_for_remote_crashes(std::vector<uint8_t>& remote_hlc_ids);
+    std::vector<std::string> check_for_remote_crashes();
     void update_crashed_participants(std::vector<std::string> crashed_participants);
 
 public:

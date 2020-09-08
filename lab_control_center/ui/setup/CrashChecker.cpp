@@ -93,9 +93,9 @@ void CrashChecker::ui_dispatch()
     lock_crashes.unlock();
 }
 
-std::vector<std::string> CrashChecker::check_for_remote_crashes(std::vector<uint8_t>& remote_hlc_ids)
+std::vector<std::string> CrashChecker::check_for_remote_crashes()
 {
-    //remote_hlc_ids should maybe also be updated if a NUC went offline/crashed, but reporting this twice would also not be too bad 
+    //running_remote_hlcs should maybe also be updated if a NUC went offline/crashed, but reporting this twice would also not be too bad 
     //(Report would then be: Programs XY have crashed, NUC crashed -> probably even better this way)
     std::vector<std::string> crashed_programs;
 
@@ -115,12 +115,12 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes(std::vector<uint
     //Check for answers for all IDs, we made sure that some time has passed before missing answers are being reported 
     //(from testing experience: in the beginning, the connection is not stable enough to assume that the other party is offline,
     //and there are tests for offline NUCs already)
-    for (auto id_iterator = remote_hlc_ids.begin(); id_iterator != remote_hlc_ids.end();)
+    for (auto id_iterator = running_remote_hlcs.begin(); id_iterator != running_remote_hlcs.end();)
     {
         auto id_string = std::to_string(static_cast<int>(*id_iterator));
 
-        auto script_running = hlc_ready_aggregator->script_running_on(id_string);
-        auto middleware_running = hlc_ready_aggregator->middleware_running_on(id_string);
+        auto script_running = hlc_ready_aggregator->script_running_on(*id_iterator);
+        auto middleware_running = hlc_ready_aggregator->middleware_running_on(*id_iterator);
 
         if (!script_running)
         {
@@ -144,7 +144,28 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes(std::vector<uint
         {
             //Erase entry s.t. the message does not appear again
             //TODO: Currently, this means that, if only one of them crashed, the other crash will no longer be reported. Is that acceptable?
-            id_iterator = remote_hlc_ids.erase(id_iterator);
+            crashed_remote_hlcs.push_back(*id_iterator);
+            id_iterator = running_remote_hlcs.erase(id_iterator);
+        }
+        else
+        {
+            ++id_iterator;
+        }
+    }
+
+    //Sometimes, crash detection fails (remote), because of timeouts or wrong messages in the beginning
+    //Manual re-starts of programs on NUCs are also possible
+    //Thus: Re-integrate an ID if it is detected to be online again
+    for (auto id_iterator = crashed_remote_hlcs.begin(); id_iterator != crashed_remote_hlcs.end();)
+    {
+        auto script_running = hlc_ready_aggregator->script_running_on(*id_iterator);
+        auto middleware_running = hlc_ready_aggregator->middleware_running_on(*id_iterator);
+
+        if(script_running && middleware_running)
+        {
+            //Put entry back in entries that are checked
+            running_remote_hlcs.push_back(*id_iterator);
+            id_iterator = crashed_remote_hlcs.erase(id_iterator);
         }
         else
         {
@@ -160,12 +181,13 @@ void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_
     kill_crash_check_thread();
 
     //Copy hlc IDs s.t. they can be removed for remote deploy
-    hlc_ids_copy = remote_hlc_ids;
+    running_remote_hlcs = remote_hlc_ids;
+    crashed_remote_hlcs.clear();
 
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
-        [this, remote_hlc_ids, lab_mode_on, labcam_toggled] () {
+        [this, remote_hlc_ids, has_local_hlc, lab_mode_on, labcam_toggled] () {
             //Give programs time to actually start
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -173,7 +195,7 @@ void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_
             {
                 auto crashed_participants_local = deploy_functions->check_for_crashes((remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
 
-                auto crashed_participants_remote = check_for_remote_crashes(hlc_ids_copy);
+                auto crashed_participants_remote = check_for_remote_crashes();
 
                 std::vector<std::string> crashed_participants;
                 crashed_participants.reserve(crashed_participants_local.size() + crashed_participants_remote.size());

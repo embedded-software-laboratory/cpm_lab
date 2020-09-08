@@ -52,9 +52,9 @@ private:
     //A map is used because each ID has a time to live, which is updated whenever a new sample with this ID is received - this is supposed to handle NUC crashes (-> not shown to be online anymore)
     cpm::AsyncReader<HLCHello> async_hlc_reader;
     std::mutex hlc_list_mutex;
-    std::map<std::string, uint64_t> hlc_map;
-    std::map<std::string, bool> hlc_script_running;
-    std::map<std::string, bool> hlc_middleware_running;
+    std::map<uint8_t, uint64_t> hlc_map;
+    std::map<uint8_t, bool> hlc_script_running;
+    std::map<uint8_t, bool> hlc_middleware_running;
 
     //The HLCs send a signal every second, so they are probably offline if no signal was received within 3 seconds
     const uint64_t time_to_live_ns = 3000000000;
@@ -78,12 +78,12 @@ public:
      * \param hlc_id HLC for which to check if the script is still running
      * \return True if the script is currently running, else false
      */
-    bool script_running_on(std::string hlc_id);
+    bool script_running_on(uint8_t hlc_id);
 
     /**
      * \brief Check if the middleware that was uploaded is currently running on the HLC
      * \param hlc_id HLC for which to check if the middleware is still running
      * \return True if the middleware is currently running, else false
      */
-    bool middleware_running_on(std::string hlc_id);
+    bool middleware_running_on(uint8_t hlc_id);
 };

@@ -668,7 +668,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
-            ctx->get_text_extents(to_string(vehicle_id), extents);
+            ctx->get_text_extents(to_string(static_cast<int>(vehicle_id)), extents); //Need to cast, else uint8_t is interpreted not as number, but as symbol
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(1,1,1);

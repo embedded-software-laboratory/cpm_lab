@@ -159,6 +159,7 @@ SetupViewUI::SetupViewUI
         hlc_ready_aggregator,
         upload_manager
     );
+    both_local_and_remote_deploy.store(false);
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
