@@ -82,6 +82,10 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
+void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
+}
 
 void MonitoringUi::init_ui_thread()
 {
@@ -219,18 +223,35 @@ void MonitoringUi::init_ui_thread()
                             {
                                 auto hlc_id = current_mapping.second.at(vehicle_id);
 
-                                if (std::find(hlc_data.begin(), hlc_data.end(), hlc_id) != hlc_data.end())
+                                //Find out if the programs are still running on the NUC
+                                assert(crash_checker);
+                                bool program_crashed = crash_checker->check_if_crashed(hlc_id);
+
+                                bool nuc_crashed = std::find(hlc_data.begin(), hlc_data.end(), hlc_id) == hlc_data.end();
+
+                                if (!nuc_crashed && !program_crashed)
                                 {
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
                                 }
-                                else if (label->get_text() != "Offline") //Do not log this more than once
+                                else if (nuc_crashed && label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
                                     cpm::Logging::Instance().write(
                                         1,
-                                        "Warning: NUCs %d disconnected. Stopping vehicles ...", 
+                                        "Warning: NUC %d disconnected. Stopping vehicles ...", 
+                                        hlc_id
+                                    );
+                                    deploy_functions->stop_vehicles(vehicle_ids);
+                                }
+                                else if (program_crashed && label->get_text() != "Prog. crash")
+                                {
+                                    label->set_text("Prg. crash");
+                                    label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: NUC %d had a program crash. Stopping vehicles ...", 
                                         hlc_id
                                     );
                                     deploy_functions->stop_vehicles(vehicle_ids);

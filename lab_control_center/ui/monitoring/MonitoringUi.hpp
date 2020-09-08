@@ -46,6 +46,8 @@
 
 #include "TrajectoryInterpolation.hpp"
 
+#include "ui/setup/CrashChecker.hpp"
+
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 
@@ -62,6 +64,7 @@ public:
     Gtk::Label* label_hlc_description_long;
     Gtk::Label* label_rtt_info;
     std::shared_ptr<Deploy> deploy_functions;
+    std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<uint8_t>()> get_hlc_data;
     std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
@@ -103,4 +106,9 @@ public:
     Gtk::Box* get_parent();
     void reset_vehicle_view();
     void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
+
+    /**
+     * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
+     */
+    void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
 };

@@ -248,4 +248,6 @@ public:
      * the according programs
      */
     void on_lcc_close();
+
+    std::shared_ptr<CrashChecker> get_crash_checker();
 };

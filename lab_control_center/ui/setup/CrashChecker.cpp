@@ -115,6 +115,7 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes()
     //Check for answers for all IDs, we made sure that some time has passed before missing answers are being reported 
     //(from testing experience: in the beginning, the connection is not stable enough to assume that the other party is offline,
     //and there are tests for offline NUCs already)
+    std::lock_guard<std::mutex> lock(hlc_id_mutex);
     for (auto id_iterator = running_remote_hlcs.begin(); id_iterator != running_remote_hlcs.end();)
     {
         auto id_string = std::to_string(static_cast<int>(*id_iterator));
@@ -264,6 +265,17 @@ void CrashChecker::update_crashed_participants(std::vector<std::string> crashed_
 void CrashChecker::stop_checking()
 {
     kill_crash_check_thread();
+    running_remote_hlcs.clear();
+    crashed_remote_hlcs.clear();
+    already_crashed_participants.clear();
+    newly_crashed_participants.clear();
+    upload_success_time = 0;
+}
+
+bool CrashChecker::check_if_crashed(uint8_t hlc_id)
+{
+    std::lock_guard<std::mutex> lock(hlc_id_mutex);
+    return (std::find(crashed_remote_hlcs.begin(), crashed_remote_hlcs.end(), hlc_id) != crashed_remote_hlcs.end());
 }
 
 void CrashChecker::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

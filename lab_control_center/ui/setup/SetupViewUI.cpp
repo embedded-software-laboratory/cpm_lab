@@ -649,3 +649,8 @@ Gtk::Widget* SetupViewUI::get_parent()
 {
     return parent;
 }
+
+std::shared_ptr<CrashChecker> SetupViewUI::get_crash_checker()
+{
+    return crash_checker;
+}

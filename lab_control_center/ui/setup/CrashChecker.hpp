@@ -80,6 +80,7 @@ private:
     void kill_crash_check_thread();
 
     //Data structures for remote program crash check
+    std::mutex hlc_id_mutex;
     std::vector<uint8_t> running_remote_hlcs;
     std::vector<uint8_t> crashed_remote_hlcs;
 
@@ -122,6 +123,13 @@ public:
      * \brief Stop checking for crashes
      */
     void stop_checking();
+
+    /**
+     * \brief This function can be used to check if the program deployed on an HLC with the given ID crashed (remote)
+     * \param hlc_id ID of the HLC
+     * \return True if the checker is running and the program crashed, else false
+     */
+    bool check_if_crashed(uint8_t hlc_id);
 
     /**
      * \brief Set the callback function that returns a reference to the application's main window

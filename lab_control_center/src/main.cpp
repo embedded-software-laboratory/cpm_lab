@@ -260,6 +260,7 @@ int main(int argc, char *argv[])
     monitoringUi->register_vehicle_to_hlc_mapping(
         [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
+    monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
     auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
