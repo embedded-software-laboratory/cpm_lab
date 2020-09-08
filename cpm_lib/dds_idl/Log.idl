@@ -32,5 +32,10 @@ struct Log {
     string id; //@key
     string content;
     TimeStamp stamp;
+
+    /*
+    * Log level from 0 (log nothing) to e.g. 3 (high verbosity) for filtering after message was received
+    */
+    unsigned short log_level;
 };
 #endif

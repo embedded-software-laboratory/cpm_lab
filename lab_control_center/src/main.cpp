@@ -70,6 +70,9 @@
 
 using namespace std::placeholders;
 
+//We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+std::shared_ptr<SetupViewUI> setupViewUi;
+
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
     system(command.c_str());
@@ -86,6 +89,13 @@ void kill_cloud_discovery() {
 
 void interrupt_handler(int s) {
     kill_cloud_discovery();
+
+    //Kill remaining programs opened by setup view ui
+    if (setupViewUi)
+    {
+        setupViewUi->on_lcc_close();
+    }
+
     exit(1);
 }
 
@@ -93,6 +103,12 @@ void interrupt_handler(int s) {
 
 void exit_handler() {
     kill_cloud_discovery();
+
+    //Kill remaining programs opened by setup view ui
+    if (setupViewUi)
+    {
+        setupViewUi->on_lcc_close();
+    }
 }
 
 int main(int argc, char *argv[])
@@ -180,7 +196,7 @@ int main(int argc, char *argv[])
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_string();},
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
         [=](){return timeSeriesAggregator->reset_all_data();}
     );
@@ -190,20 +206,53 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         [=](int id, ObstacleToggle::ToggleState state){return obstacle_simulation_manager->set_obstacle_simulation_state(id, state);} 
     );
-    auto setupViewUi = make_shared<SetupViewUI>(
+    setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){return timeSeriesAggregator->reset_all_data();}, 
-        [=](){return obstacleAggregator->reset_all_data();}, 
-        [=](){return trajectoryCommand->stop_all();}, 
-        [=](){return monitoringUi->reset_vehicle_view();}, 
-        [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
-        [=](){return loggerViewUi->reset();}, 
+        [=](){
+            //Things to do when the simulation is started
+
+            //Reset old UI elements (difference to kill: Also reset the Logs)
+            //Kill timer in UI as well, as it should not show invalid information
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->reset_vehicle_view();
+            visualizationCommandsAggregator->reset_visualization_commands();
+            
+            //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
+            loggerViewUi->reset();
+
+            //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+            obstacle_simulation_manager->start();
+
+        }, 
+        [=](){
+            //Things to do when the simulation is stopped
+
+            //Stop obstacle simulation
+            obstacle_simulation_manager->stop();
+            
+            //Kill timer in UI as well, as it should not show invalid information
+            //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->reset_vehicle_view();
+            visualizationCommandsAggregator->reset_visualization_commands();
+
+        },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
         argv);
+    monitoringUi->register_vehicle_to_hlc_mapping(
+        [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
+    );
     auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
     auto tabsViewUi = make_shared<TabsViewUI>(
         setupViewUi, 

@@ -74,8 +74,9 @@ private:
     bool called_callback = false;
 
     //Remember last opened file (also in between program executions)
-    std::string previous_file = "./";
-    bool file_config_loaded = false;
+    static std::string previous_file;
+    static bool file_config_loaded;
+    static const std::string default_load_path;
     std::string config_location;
 public:
     /**

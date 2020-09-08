@@ -71,7 +71,7 @@ MapViewUi::MapViewUi(
 
     draw_loop_thread = std::thread([&](){
         while(1) {
-            usleep(40000);
+            usleep(20000);
             update_dispatcher.emit();
         }
     });
@@ -602,7 +602,14 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
     {
         parser.parse_file(filepath);
 
-        if(!parser) cpm::Logging::Instance().write("%s", "ERROR: can not parse file");
+        if(!parser) 
+        {
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ERROR: can not parse file"
+            );
+        }
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
         print_node(pNode);
 

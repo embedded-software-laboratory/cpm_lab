@@ -39,7 +39,6 @@
 #include "LedPoints.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/CommandLineReader.hpp"
-#include "cpm/Logging.hpp"
 #include "cpm/init.hpp"
 #include <dds/pub/ddspub.hpp>
 
@@ -61,6 +60,7 @@ struct FrameInfo
 };
 
 bool enable_visualization;
+bool enable_debug;
 
 
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
@@ -110,9 +110,9 @@ void worker_led_detection()
         if( frame->points_x.size() < 3 && n_points_previous >= 3 )
         {
             std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
-            auto t =  std::to_string(get_time_ns());
-            //cv::imwrite("debug_" + t + "_raw.png",frame->image);
-            //cv::imwrite("debug_" + t + "_thresh.png",img_binary);
+            // auto t =  std::to_string(get_time_ns());
+            // cv::imwrite("debug_" + t + "_raw.png",frame->image);
+            // cv::imwrite("debug_" + t + "_thresh.png",img_binary);
         }
         n_points_previous = frame->points_x.size();
         
@@ -128,6 +128,23 @@ void worker_led_detection()
         }
         LED_writer.write(myledPoints);
 
+        
+        if (enable_debug)
+        {
+            cv::hconcat(frame->image, img_binary, frame->image);
+            
+            // Draw contours
+            cv::Mat img_contours = cv::Mat::zeros( img_binary.size(), CV_8UC1 );
+            for( size_t i = 0; i < contours.size(); i++ )
+            {
+                double size = cv::contourArea(contours[i]);
+                if (size < 60 && size > 3) {
+                    cv::Scalar color = cv::Scalar( 255,255,255 );
+                    cv::drawContours( img_contours, contours, i, color, 3);
+                }
+            }
+            cv::hconcat(frame->image, img_contours, frame->image);
+        }
         if(enable_visualization) queue_visualization.push(frame);
     }
 }
@@ -154,7 +171,7 @@ void worker_visualization()
         if(cv::waitKey(1) == 27) // close on escape key
         {
             exit(0);
-        }
+        }        
     }
 }
 
@@ -231,7 +248,6 @@ void worker_grab_image()
         camera.TimestampLatch();
         const uint64_t startTime = get_time_ns();
         const int64_t startTicks = camera.TimestampLatchValue.GetValue();
-
         while(camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -241,7 +257,7 @@ void worker_grab_image()
 
             if(ptrGrabResult->GrabSucceeded())
             {
-                frameCount++;
+                ++frameCount;
 
                 // The result data is automatically filled with received chunk data.
                 // (Note:  This is not the case when using the low-level API)
@@ -304,9 +320,9 @@ int main(int argc, char* argv[])
     }
 
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("led_detection");
 
     enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
+    enable_debug = cpm::cmd_parameter_bool("debug", false, argc, argv);
 
     std::thread thread_led_detection([](){worker_led_detection();});
     std::thread thread_visualization;

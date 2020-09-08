@@ -101,7 +101,10 @@ int main (int argc, char *argv[]) {
             }
             else {
                 std::cerr << "Incompatible vehicle id" << std::endl;
-                cpm::Logging::Instance().write("Incompatible vehicle ids sent - not within 0 and 255");
+                cpm::Logging::Instance().write(
+                    1, 
+                    "Incompatible vehicle ids sent - not within 0 and 255"
+                );
             }
         }
         if (unsigned_vehicle_ids.size() == 0) {
@@ -158,7 +161,10 @@ int main (int argc, char *argv[]) {
         if (states.size() > 0) {
             stream << " - sample data: " << states.at(0).battery_voltage();
         }
-        cpm::Logging::Instance().write(3, stream.str().c_str());
+        cpm::Logging::Instance().write(
+            3, 
+            stream.str().c_str()
+        );
 
         //Get the last response time of the HLC
         // Real time -> Print an error message if a period has been missed
@@ -212,11 +218,15 @@ int main (int argc, char *argv[]) {
                     stream << "Timestep missed by HLC number " << static_cast<uint32_t>(it->first) << ", last response: " << (it->second) 
                         << ", current time: " << t_now 
                         << ", periods missed: " << passed_time / period_nanoseconds;
-                    cpm::Logging::Instance().write(stream.str().c_str());
+                    cpm::Logging::Instance().write(
+                        1, 
+                        stream.str().c_str()
+                    );
                 }
 
                 //Evaluation log - only for higher log level
                 // cpm::Logging::Instance().write(
+                //     3, 
                 //     "Vehicle: %u, Received HLC timestamp: %llu, Valid after timestamp: %llu", 
                 //     it->first, 
                 //     it->second, 
@@ -228,7 +238,10 @@ int main (int argc, char *argv[]) {
                 if (lastHLCResponseTimes.find(id) == lastHLCResponseTimes.end()) {
                     std::stringstream stream;
                     stream << "HLC number " << static_cast<uint32_t>(id) << " has not yet sent any data";
-                    cpm::Logging::Instance().write(stream.str().c_str());
+                    cpm::Logging::Instance().write(
+                        1, 
+                        stream.str().c_str()
+                    );
                 }
             }
         }

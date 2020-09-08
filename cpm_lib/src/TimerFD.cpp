@@ -57,7 +57,11 @@ namespace cpm {
     {
         //Offset must be smaller than period
         if (offset_nanoseconds >= period_nanoseconds) {
-            Logging::Instance().write("%s", "TimerFD: Offset set higher than period.");
+            Logging::Instance().write(
+                1,
+                "%s", 
+                "TimerFD: Offset set higher than period."
+            );
             fprintf(stderr, "Offset set higher than period.\n");
             fflush(stderr); 
             exit(EXIT_FAILURE);
@@ -71,7 +75,11 @@ namespace cpm {
         // Timer setup
         timer_fd = timerfd_create(CLOCK_REALTIME, 0);
         if (timer_fd == -1) {
-            Logging::Instance().write("%s", "TimerFD: Call to timerfd_create failed.");
+            Logging::Instance().write(
+                1,
+                "%s", 
+                "TimerFD: Call to timerfd_create failed."
+            );
             fprintf(stderr, "Call to timerfd_create failed.\n"); 
             perror("timerfd_create");
             fflush(stderr); 
@@ -91,7 +99,11 @@ namespace cpm {
         its.it_interval.tv_nsec = period_nanoseconds % 1000000000ull;
         int status = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &its, NULL);
         if (status != 0) {
-            Logging::Instance().write("TimerFD: Call to timer_settime returned error status (%d).", status);
+            Logging::Instance().write(
+                1,
+                "TimerFD: Call to timer_settime returned error status (%d).", 
+                status
+            );
             fprintf(stderr, "Call to timer_settime returned error status (%d).\n", status);
             fflush(stderr); 
             exit(EXIT_FAILURE);
@@ -103,7 +115,11 @@ namespace cpm {
         unsigned long long missed;
         int status = read(timer_fd, &missed, sizeof(missed));
         if(status != sizeof(missed)) {
-            Logging::Instance().write("TimerFD: Error: read(timerfd), status %d.", status);
+            Logging::Instance().write(
+                1,
+                "TimerFD: Error: read(timerfd), status %d.", 
+                status
+            );
             fprintf(stderr, "Error: read(timerfd), status %d.\n", status);
             fflush(stderr); 
             exit(EXIT_FAILURE);
@@ -137,7 +153,11 @@ namespace cpm {
     void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     {
         if(this->active) {
-            Logging::Instance().write("%s", "TimerFD: The cpm::Timer can not be started twice.");
+            Logging::Instance().write(
+            2,
+            "%s", 
+            "TimerFD: The cpm::Timer can not be started twice."
+        );
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
@@ -182,7 +202,11 @@ namespace cpm {
                 //Error if deadline was missed, correction to next deadline
                 if (current_time >= deadline)
                 {
-                    Logging::Instance().write("TimerFD: Deadline: %" PRIu64 ", current time: %" PRIu64 ", periods missed: %" PRIu64, deadline, current_time, ((current_time - deadline) / period_nanoseconds) + 1);
+                    Logging::Instance().write(
+                        1,
+                        "TimerFD: Periods missed: %d", 
+                        static_cast<int>(((current_time - deadline) / period_nanoseconds) + 1)
+                    );
 
                     deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
                 }
@@ -221,7 +245,11 @@ namespace cpm {
         }
         else
         {
-            Logging::Instance().write("%s", "TimerFD: The cpm::Timer can not be started twice.");
+            Logging::Instance().write(
+                2,
+                "%s", 
+                "TimerFD: The cpm::Timer can not be started twice."
+            );
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
     }

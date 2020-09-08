@@ -40,6 +40,7 @@
 #include <fstream>
 #include <iomanip>      // put_time
 #include <iostream>
+#include <map>
 #include <memory>
 #include <regex>        // to replace file contents
 #include <stdexcept>
@@ -53,6 +54,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "cpm/Logging.hpp"
+
+/**
+ * \brief This class is responsible for managing deployment of HLC and vehicle scripts / programs and other participants that are launched from the LCC
+ */
 class Deploy 
 {
 public:
@@ -63,6 +69,11 @@ public:
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
      */
     Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle);
+
+    /**
+     * \brief Deconstructor required because of reboot threads
+     */
+    ~Deploy();
 
     //Specific local deploy functions
     /**
@@ -83,10 +94,22 @@ public:
      */
     void deploy_sim_vehicle(unsigned int id, bool use_simulated_time);
 
+    /**
+     * \brief Make running vehicles brake and stop
+     */
+    void stop_vehicles(std::vector<unsigned int> vehicle_ids);
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
-    void kill_vehicles(std::vector<unsigned int> simulated_vehicle_ids, std::vector<unsigned int> active_vehicle_ids);
-    void kill_vehicle(unsigned int id);
+    void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
+    void kill_sim_vehicle(unsigned int id);
+
+    /**
+     * \brief Kill a single real vehicle using a simple via ssh using sudo reboot - does not work for simulated vehicles started without the LCC
+     * \param id of the vehicle, to infer its IP address
+     * \param timeout_seconds Timeout in case the IP is not reachable
+     * \return True if the vehicle reboot msg could be sent
+     */
+    void reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
     void deploy_ips();
@@ -125,6 +148,16 @@ public:
      * \param name name of the log folder
      */
     void create_log_folder(std::string name);
+
+    /**
+     * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
+     * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
+     * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
+     * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
+     * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
+     * \return Empty array if everything is fine, else: string of the crashed module
+     */
+    std::vector<std::string> check_for_crashes(bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     //Used for process forking
@@ -198,5 +231,18 @@ private:
     void kill_process(int process_id);
 
     // Session name for recording service
-    std::string recording_session = "dds_record";
+    const std::string recording_session = "dds_record";
+
+    const std::string ips_session = "ips_pipeline";
+    const std::string basler_session = "ips_basler";
+    const std::string middleware_session = "middleware";
+    const std::string hlc_session = "high_level_controller";
+
+    //To reboot real vehicles
+    std::map<unsigned int, std::thread> vehicle_reboot_threads; //threads that are responsible for uploading scripts to the HLCs, map to have access to vehicle IDs
+    std::mutex vehicle_reboot_threads_mutex;
+    std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex reboot_done_mutex;
+    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    void join_finished_reboot_threads();
 };

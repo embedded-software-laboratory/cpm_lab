@@ -84,7 +84,7 @@ void spi_transfer(
     // CS low => transmission start
     bcm2835_gpio_clr(RPI_GPIO_P1_24);
 
-    for (int i = 1; i < 5; ++i)
+    for (int i = 1; i < 4; ++i)
     {
         uint8_t SPI_recv_buffer[SPI_BUFFER_SIZE];
         uint8_t* mosi_data_ptr = (uint8_t*)(&spi_mosi_data);

@@ -330,7 +330,11 @@ void CommonroadViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+        cpm::Logging::Instance().write(
+            1,
+            "%s",
+            "ERROR: Main window reference is missing, cannot create file chooser dialog"
+        );
     }
     
 }

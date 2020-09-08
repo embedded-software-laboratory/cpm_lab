@@ -66,7 +66,11 @@ namespace cpm {
             }
             else
             {
-                cpm::Logging::Instance().write(2, "%s", "Callback function for simple timer is undefined!");
+                cpm::Logging::Instance().write(
+                    2, 
+                    "%s", 
+                    "Callback function for simple timer is undefined!"
+                );
             }
         }
     }

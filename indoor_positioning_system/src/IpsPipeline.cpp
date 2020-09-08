@@ -59,23 +59,38 @@ void IpsPipeline::apply(LedPoints led_points)
     VehiclePoints identifiedVehicles;
     std::vector<VehicleObservation> vehicleObservations;
 
+    // Check for continuity of camera stream
+    uint64_t t_current_nanos = led_points.time_stamp().nanoseconds();
+    uint64_t dt_nanos =  t_current_nanos - t_previous_nanos;
+    if (dt_nanos > 25*1e6)
+    {
+        cpm::Logging::Instance().write(
+            1,
+            "Time delta between frames is %.2f ms. Reset tracking...",
+            dt_nanos/1e6
+        );
+        vehiclePointTimeseries.clear();
+    }
+    t_previous_nanos = t_current_nanos;
 
     FloorPoints floorPoints = undistortPointsFn->apply(led_points);
     VehiclePoints vehiclePoints = detectVehiclesFn->apply(floorPoints);
+    
     vehiclePointTimeseries.push_back(vehiclePoints);
     if(vehiclePointTimeseries.size() > 50)
     {
         vehiclePointTimeseries.pop_front();
-        identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
-        vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
+    }
 
-        // Send via DDS
-        for(const auto &vehicleObservation:vehicleObservations)
+    identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
+    vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
+
+    // Send via DDS
+    for(const auto &vehicleObservation:vehicleObservations)
+    {
+        if(vehicleObservation.vehicle_id() > 0)
         {
-            if(vehicleObservation.vehicle_id() > 0)
-            {
-                writer_vehicleObservation.write(vehicleObservation);
-            }
+            writer_vehicleObservation.write(vehicleObservation);
         }
     }
 
