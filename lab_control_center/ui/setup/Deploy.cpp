@@ -499,10 +499,10 @@ bool Deploy::session_exists(std::string session_id)
     return running_sessions.find(session_id) != std::string::npos;
 }
 
-std::vector<std::string> Deploy::check_for_crashes(bool deploy_remote, bool lab_mode_on, bool check_for_recording)
+std::vector<std::string> Deploy::check_for_crashes(bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
     std::vector<std::string> crashed_participants;
-    if (!deploy_remote)
+    if (!(deploy_remote) || has_local_hlc)
     {
         if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");

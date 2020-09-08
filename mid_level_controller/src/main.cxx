@@ -232,6 +232,14 @@ int main(int argc, char *argv[])
                     &n_transmission_attempts,
                     &transmission_successful
                 );
+                if (transmission_successful && (spi_miso_data.status_flags & 1)) // IMU status
+                {
+                    cpm::Logging::Instance().write(
+                        1,
+                        "%s",
+                        "Data transmission via TWI from IMU failed"
+                    );
+                }
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 vehicleState.is_real(true); // Is real, is not simulated

@@ -162,6 +162,8 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     script_path->set_text(FileChooserUI::get_last_execution_path());
+
+    simulation_running.store(false);
     
     //Regularly check / update which real vehicles are currently turned on, to use them when the experiment is deployed
     is_deployed.store(false);
@@ -374,6 +376,8 @@ void SetupViewUI::deploy_applications() {
     set_sensitive(false);
     is_deployed.store(true);
 
+    simulation_running.store(true);
+
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
@@ -443,6 +447,27 @@ void SetupViewUI::deploy_applications() {
         std::string params = script_params->get_text().c_str();
 
         upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
+
+        //Now those vehicles that could not be matched are treated as in the local case
+        if (vehicle_ids.size() > hlc_ids.size())
+        {
+            std::vector<uint32_t> local_vehicles;
+            local_vehicles.reserve(vehicle_ids.size() - hlc_ids.size());
+
+            for (size_t i = hlc_ids.size(); i < vehicle_ids.size(); ++i)
+            {
+                local_vehicles.push_back(vehicle_ids.at(i));
+            }
+
+            both_local_and_remote_deploy.store(true);
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, script_path->get_text().c_str(), script_params->get_text().c_str());
+        }
+        //Remember vehicle to HLC mapping
+        std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+        for (size_t i = 0; i < min_hlc_vehicle; ++i)
+        {
+            vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
+        }
     }
     else
     {
@@ -450,12 +475,24 @@ void SetupViewUI::deploy_applications() {
     }
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(remote_hlc_ids, lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+}
+
+std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
+{
+    std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    return { simulation_running.load(), vehicle_to_hlc_map };
 }
 
 void SetupViewUI::kill_deployed_applications() {
     //Kill crash check first, or else we get undesired error messages
     crash_checker->stop_checking();
+    //Remember mapping
+    std::unique_lock<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    vehicle_to_hlc_map.clear();
+    simulation_running.store(false);
+    lock_map.unlock();
+
 
     // Stop LabCam
 #ifndef SIMULATION
@@ -469,6 +506,12 @@ void SetupViewUI::kill_deployed_applications() {
     {
         //Performs post_kill_cleanup after remote kill
         upload_manager->kill_remote();
+
+        //Also kill potential local HLC
+        if (both_local_and_remote_deploy.exchange(false))
+        {
+            deploy_functions->kill_local_hlc();
+        }
     }
     else 
     {

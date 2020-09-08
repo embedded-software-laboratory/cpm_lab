@@ -154,9 +154,12 @@ private:
     Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
     void ui_dispatch(); //dispatcher callback for the UI thread
 
+    std::atomic_bool both_local_and_remote_deploy; //True if in remote deployment local HLC had to be started for additional vehicles
+
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
     std::shared_ptr<Upload> upload_manager;
+    //Watcher thread that checks if the locally deployed programs still run - else, an error message is displayed
     std::shared_ptr<CrashChecker> crash_checker;
     void perform_post_kill_cleanup();
 
@@ -190,6 +193,11 @@ private:
     //Vehicle button toggle callbacks, to set which vehicles are real / simulated / deactivated
     void select_all_vehicles_sim();
     void select_no_vehicles();
+
+    //For vehicle to HLC mapping
+    std::atomic_bool simulation_running;
+    std::mutex vehicle_to_hlc_mutex;
+    std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
 
 public:
     /**
@@ -231,6 +239,9 @@ public:
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 
+    //This is subject to change, as the setup ui will be restructured soon
+    //Returns: True if a simulation is running and in that case a map with mappings from vehicle ID to HLC ID
+    std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
     /**
      * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
      * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill

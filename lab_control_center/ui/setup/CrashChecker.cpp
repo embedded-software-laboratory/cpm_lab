@@ -71,7 +71,7 @@ void CrashChecker::ui_dispatch()
             false,
             Gtk::MessageType::MESSAGE_INFO,
             Gtk::ButtonsType::BUTTONS_CLOSE,
-            true
+            false
         );
     
         //Connect new window with parent, show window
@@ -155,7 +155,7 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes(std::vector<uint
     return crashed_programs;
 }
 
-void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool lab_mode_on, bool labcam_toggled)
+void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
 {
     kill_crash_check_thread();
 
@@ -171,7 +171,7 @@ void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool lab_
 
             while(crash_check_running.load())
             {
-                auto crashed_participants_local = deploy_functions->check_for_crashes((remote_hlc_ids.size() > 0), lab_mode_on, labcam_toggled);
+                auto crashed_participants_local = deploy_functions->check_for_crashes((remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
 
                 auto crashed_participants_remote = check_for_remote_crashes(hlc_ids_copy);
 

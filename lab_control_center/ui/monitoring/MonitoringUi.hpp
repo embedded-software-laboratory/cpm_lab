@@ -64,6 +64,7 @@ public:
     std::shared_ptr<Deploy> deploy_functions;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<uint8_t>()> get_hlc_data;
+    std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
     std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values;
@@ -101,4 +102,5 @@ public:
     ~MonitoringUi();
     Gtk::Box* get_parent();
     void reset_vehicle_view();
+    void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
 };
