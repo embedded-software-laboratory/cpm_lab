@@ -23,6 +23,7 @@ include_directories(src)
 set (SOURCES 
     src/Communication.hpp
     src/TypedCommunication.hpp
+    src/TypedCommunication.cpp
 )
 
 add_executable( middleware

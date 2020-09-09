@@ -84,7 +84,6 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
         vehicleTrajectoryTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicleID,
         timer,
         vehicle_ids);
 

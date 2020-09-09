@@ -27,6 +27,7 @@
 /**
  * \class main.cpp
  * \brief This class includes the main function and is mainly responsible for the initialization of the middleware
+ * Params etc are documented in the cpm lab documentation
  */
 
 #include <memory>
@@ -66,7 +67,8 @@ int main (int argc, char *argv[]) {
     
     //Vehicle ID(s) set in command line, correspond to HLC IDs
     //Vehicle amount: Tell system amount of vehicles, IDs range from 1 to vehicle_amount
-    int vehicleID = cpm::cmd_parameter_int("vehicle_id", 1, argc, argv); 
+    //Only set one of those
+    int vehicleID = cpm::cmd_parameter_int("vehicle_id", -1, argc, argv); //If only a single vehicle ID is supposed to be set 
     int amount_of_vehicles = cpm::cmd_parameter_int("vehicle_amount", -1, argc, argv);
     std::vector<int> default_ids{ 1 };
     std::vector<int> vehicle_ids = cpm::cmd_parameter_ints("vehicle_ids", default_ids, argc, argv);
@@ -86,7 +88,22 @@ int main (int argc, char *argv[]) {
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
-    if (amount_of_vehicles > 0 && amount_of_vehicles <= 255) {
+    if (vehicleID >= 0)
+    {
+        //A single vehicle ID was set
+        if (vehicleID >= 0 && vehicleID <= 255) {
+            unsigned_vehicle_ids.push_back(static_cast<uint8_t>(vehicleID));
+        }
+        else {
+            std::cerr << "Incompatible vehicle id" << std::endl;
+            cpm::Logging::Instance().write(
+                1, 
+                "%s",
+                "Middleware: Incompatible vehicle ids set - not within 0 and 255"
+            );
+        }
+    }
+    else if (amount_of_vehicles > 0 && amount_of_vehicles <= 255) {
         //Get vehicle ID list from set vehicle amount
         uint8_t u_amount_of_vehicles = static_cast<uint8_t>(amount_of_vehicles);
         for (uint8_t vehicle_id = 1; vehicle_id <= u_amount_of_vehicles; ++vehicle_id) {
@@ -128,7 +145,6 @@ int main (int argc, char *argv[]) {
         vehicleTrajectoryTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicleID,
         timer,
         unsigned_vehicle_ids
     );

@@ -63,6 +63,12 @@
 
 using namespace std::placeholders;
 
+/**
+ * \brief This class is responsible for handling "any" message type (via templating) which can 
+ * be received by the HLC script and must be forwarded to the vehicle
+ * It also checks these messages for consistency and remembers when they were received (simulated or real time)
+ * for further checks in main
+ */
 template<class MessageType> class TypedCommunication {
     private:
         //For HLC - communication
@@ -79,6 +85,9 @@ template<class MessageType> class TypedCommunication {
         std::unordered_map<uint8_t, uint64_t> lastHLCResponseTimes;
         std::mutex map_mutex;
 
+        //To check messages received from the HLC regarding their consistency with the vehicle IDs set for the middleware
+        std::vector<uint8_t> vehicle_ids;
+
         //Handler for commands received by the HLC
         void handler(dds::sub::LoanedSamples<MessageType>& samples)
         {
@@ -90,9 +99,27 @@ template<class MessageType> class TypedCommunication {
                     //First send the data to the vehicle
                     sendToVehicle(sample.data());
 
-                    //Then check if the sent data was plausible -> TODO?
+                    //This might be problematic, but if we perform checks before sending the message then this 
+                    //might lead to a violation of timing boundaries
+
+                    //Then check if the sent data was plausible -> TODO? 
                     // - Check if the valid after time is correct - TODO: Make sure that header() exists?
                     //sample.data().header().valid_after_stamp().nanoseconds()
+
+                    //1. Make sure that the set vehicle ID is valid (assertion of field done in constructor)
+                    auto set_id = sample.data().vehicle_id();
+                    if(std::find(vehicle_ids.begin(), vehicle_ids.end(), set_id) == vehicle_ids.end())
+                    {
+                        //ID should not have been sent, print warning
+                        cpm::Logging::Instance().write(
+                            1,
+                            "Middleware received vehicle ID %i from HLC script - ID was not set to be used!",
+                            static_cast<int>(set_id)
+                        );
+                    }
+
+                    //Perform type specific checks (like amount of trajectory points for trajectory data)
+                    type_specific_msg_check(sample.data());
 
                     //Then update the last response time of the HLC that sent the data
                     std::lock_guard<std::mutex> lock(map_mutex);
@@ -100,11 +127,35 @@ template<class MessageType> class TypedCommunication {
                 }
             }
         }
+
+        //Ignore warning that t_start is unused
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wunused-parameter"
+
+        //Type specific / unspecific handlers
+        void type_specific_msg_check(MessageType msg)
+        {
+            //Unspecific version, thus empty
+            //Specializations can be found in the .cpp file
+        }
+
+        #pragma GCC diagnostic pop
+
+        
     public:
+        /**
+         * \brief Constructor
+         * \param hlcParticipant DDS participant instance for the communication with the HLC script
+         * \param vehicleCommandTopicName Topic name for the selected message type
+         * \param _timer To get the current time for real and simulated timing
+         * \param _vehicle_ids List of IDs the Middleware and HLC are responsible for
+         */
         TypedCommunication(
             dds::domain::DomainParticipant& hlcParticipant,
             std::string vehicleCommandTopicName,
-            std::shared_ptr<cpm::Timer> _timer)
+            std::shared_ptr<cpm::Timer> _timer,
+            std::vector<uint8_t> _vehicle_ids
+        )
         :hlcCommandTopic(hlcParticipant, vehicleCommandTopicName)
         ,hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, hlcCommandTopic)
         ,vehicleCommandTopic(cpm::ParticipantSingleton::Instance(), vehicleCommandTopicName)
@@ -114,6 +165,7 @@ template<class MessageType> class TypedCommunication {
             (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()))
         ,timer(_timer)
         ,lastHLCResponseTimes()
+        ,vehicle_ids(_vehicle_ids)
         {
             static_assert(std::is_same<decltype(std::declval<MessageType>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
         }
