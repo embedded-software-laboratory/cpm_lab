@@ -102,7 +102,11 @@ void VehicleTrajectoryPlanner::start()
 
                 //cpm::Logging::Instance().write(3,
                 //        "About to publish LaneGraphTrajectory");
-                LaneGraphTrajectory lane_graph_trajectory = trajectoryPlan->get_lane_graph_trajectory();
+                LaneGraphTrajectory lane_graph_trajectory;
+                trajectoryPlan->get_lane_graph_positions(
+                        &lane_graph_trajectory
+                        );
+
                 // Is t_planning the correct time to use for this? I do not know
                 lane_graph_trajectory.header().create_stamp().nanoseconds(t_planning);
                 lane_graph_trajectory.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
@@ -114,7 +118,23 @@ void VehicleTrajectoryPlanner::start()
                     auto trajectory_point = trajectoryPlan->get_trajectory_point();
                     trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
                     trajectory_point_buffer.push_back(trajectory_point);
+
+                    //TODO: Change this, so the initial trajectory gets send as well
+                    prev_lane_graph_trajectory = lane_graph_trajectory;
                 }
+
+                LaneGraphTrajectoryChanges lane_graph_trajectory_changes = get_changes(
+                        prev_lane_graph_trajectory,
+                        lane_graph_trajectory
+                        );
+
+                // We got our changes to the trajectory; so this is now the old trajectory of our next step
+                prev_lane_graph_trajectory = lane_graph_trajectory;
+
+                lane_graph_trajectory_changes.vehicle_id(trajectoryPlan->get_vehicle_id());
+                lane_graph_trajectory_changes.header().create_stamp().nanoseconds(t_planning);
+                lane_graph_trajectory_changes.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
+                this->writer_laneGraphTrajectoryChanges->write(lane_graph_trajectory_changes);
 
                 while(trajectory_point_buffer.size() > 50)
                 {
@@ -146,6 +166,40 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
             previous_vehicles_buffer[sample.data().vehicle_id()] = sample.data();
         }
     }
+
+    dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples2 = reader_laneGraphTrajectoryChanges->take();
+    for(auto sample : samples2) {
+        if (sample.info().valid()) {
+            // We ignore everything with lower priorities
+            if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
+
+            for ( auto change : sample.data().lane_graph_position_changes() ) {
+                previous_vehicles_buffer2[sample.data().vehicle_id()][change.index()] =
+                    std::make_pair(
+                        change.lane_graph_position().edge_index(),
+                        change.lane_graph_position().edge_path_index()
+                        );
+            }
+        }
+    }
+}
+
+LaneGraphTrajectoryChanges VehicleTrajectoryPlanner::get_changes(
+        LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new) {
+    
+    LaneGraphTrajectoryChanges result;
+    
+    //TODO: this hardcoded 100 is N_STEPS_SPEED_PROFILE and should NOT be hardcoded
+    for(int i=0; i<100; i++) {
+       if(trajectory_old.lane_graph_positions()[i] != trajectory_new.lane_graph_positions()[i]) {
+           //std::cout << "Change in lane_graph_trajectory at index " << i <<std::endl;
+           std::cout << "Index: " << i << "\tOld: " << trajectory_old.lane_graph_positions()[i] << "\tNew: " << trajectory_new.lane_graph_positions()[i] << std::endl;
+       } 
+    }
+
+    std::cout << "-------------------------------------------------------------------" << std::endl;
+
+    return result;
 }
 
 void VehicleTrajectoryPlanner::set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
@@ -153,4 +207,12 @@ void VehicleTrajectoryPlanner::set_writer(std::shared_ptr< dds::pub::DataWriter<
 }
 void VehicleTrajectoryPlanner::set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader){
     reader_laneGraphTrajectory = reader;
+}
+
+//TODO: Switch everything from LaneGraphTrajectory to LaneGraphTrajectoryChanges
+void VehicleTrajectoryPlanner::set_writer2(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer){
+    writer_laneGraphTrajectoryChanges = writer;
+}
+void VehicleTrajectoryPlanner::set_reader2(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader){
+    reader_laneGraphTrajectoryChanges = reader;
 }

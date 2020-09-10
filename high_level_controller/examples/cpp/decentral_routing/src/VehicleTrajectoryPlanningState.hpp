@@ -33,6 +33,7 @@
 #include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
+#include "LaneGraphTrajectoryChanges.hpp"
 
 using std::vector;
 using std::array;
@@ -75,7 +76,7 @@ public:
         size_t _edge_index,
         size_t _edge_path_index);
 
-    LaneGraphTrajectory get_lane_graph_trajectory();
+    void get_lane_graph_positions(LaneGraphTrajectory *lane_graph_trajectory);
     TrajectoryPoint get_trajectory_point();
     void apply_timestep(uint64_t dt_nanos);
 

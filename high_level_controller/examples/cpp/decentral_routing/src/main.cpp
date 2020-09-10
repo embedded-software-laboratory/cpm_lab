@@ -120,6 +120,21 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().write(3,
             "LaneGraphTrajectory reader created.");
 
+    // These readers and writers are used to exchange changes in planned trajectories
+    // between the VehicleTrajectoryPlanners
+    auto writer_laneGraphTrajectoryChanges = std::make_shared< dds::pub::DataWriter<LaneGraphTrajectoryChanges> >(
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+    );
+    cpm::Logging::Instance().write(3,
+            "LaneGraphTrajectoryChanges writer created.");
+    auto reader_laneGraphTrajectoryChanges = std::make_shared< dds::sub::DataReader<LaneGraphTrajectoryChanges> >(
+        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+        cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+    );
+    cpm::Logging::Instance().write(3,
+            "LaneGraphTrajectoryChanges reader created.");
+
     /////////////////////////////////Trajectory planner//////////////////////////////////////////
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
     auto timer = cpm::Timer::create("decentral_routing", dt_nanos, 0, false, true, enable_simulated_time); 
@@ -185,8 +200,10 @@ int main(int argc, char *argv[])
             }
 
             planner->set_writer(writer_laneGraphTrajectory);
-
             planner->set_reader(reader_laneGraphTrajectory);
+
+            planner->set_writer2(writer_laneGraphTrajectoryChanges);
+            planner->set_reader2(reader_laneGraphTrajectoryChanges);
 
             //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
             //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)

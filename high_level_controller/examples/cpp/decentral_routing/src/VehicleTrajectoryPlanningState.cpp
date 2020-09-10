@@ -60,6 +60,13 @@ void VehicleTrajectoryPlanningState::invariant()
 void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
 {
     uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
+    //cpm::Logging::Instance().write(3,
+    //        "n_steps: %d\n\
+    //        dt_nanos: %d\n\
+    //        dt_speed_profile_nanos: %d",
+    //        n_steps,
+    //        dt_nanos,
+    //        dt_speed_profile_nanos);
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
     assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
     assert(n_steps >= 1);
@@ -93,10 +100,12 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     {
         if(i + n_steps < N_STEPS_SPEED_PROFILE)
         {
+            // Shift the current speed profile by n_steps if possible
             speed_profile[i] = speed_profile[i + n_steps];
         }
         else
         {
+            // else, accelerate up to max_speed
             speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
         }
     }
@@ -132,6 +141,7 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 
 
 // Change the own speed profile so as not to collide with the other_vehicles.
+// other_vehicles may only contain vehicles with a higher priority
 bool VehicleTrajectoryPlanningState::avoid_collisions(
     std::map<uint8_t, LaneGraphTrajectory> other_vehicles
 )
@@ -185,9 +195,14 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         cpm::Logging::Instance().write(2,
                 "Detected potential collision; avoiding");
 
-        // fix speed profile to avoid collision
+        // fix speed profile to avoid collision,
+        // beginning from 10 steps before the collision
+        // TODO: Change magic numbers to named parameters/constants
         int idx_speed_reduction = earliest_collision__speed_profile_index - 10;
 
+        // If we already are almost at min_speed at the planned index for
+        // speed reduction we cannot slow down much more,
+        // so we try reducing the speed 10 steps earlier
         while(idx_speed_reduction > 0
             && speed_profile[idx_speed_reduction] < min_speed + 0.05)
         {
@@ -278,11 +293,11 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     return result;
 }
 
-LaneGraphTrajectory VehicleTrajectoryPlanningState::get_lane_graph_trajectory()
+void VehicleTrajectoryPlanningState::get_lane_graph_positions(
+        LaneGraphTrajectory *lane_graph_trajectory)
 {
-    LaneGraphTrajectory result;
 
-    result.vehicle_id(vehicle_id);
+    lane_graph_trajectory->vehicle_id(vehicle_id);
     
     std::vector<LaneGraphPosition> lane_graph_positions;
 
@@ -295,7 +310,5 @@ LaneGraphTrajectory VehicleTrajectoryPlanningState::get_lane_graph_trajectory()
         lane_graph_positions.push_back(lane_graph_pos);
     }
 
-    result.lane_graph_positions(lane_graph_positions);
-
-    return result;
+    lane_graph_trajectory->lane_graph_positions(lane_graph_positions);
 }
