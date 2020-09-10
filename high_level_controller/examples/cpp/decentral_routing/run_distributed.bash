@@ -21,11 +21,9 @@ done
 printf "vehicle_ids: ${vehicle_ids}\n"
 printf "DDS_DOMAIN: ${DDS_DOMAIN}\n"
 
-# # Sollten eigentlich auch in environment_variables_local.bash gesetzt werden
-# IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-# DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
-
-# $DDS_DOMAIN wird irgendwo gesetzt, aber wann?
+# These are exported inside environment_variables_local.bash as well
+IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 cleanup(){
     printf "Cleaning up ... "
@@ -40,6 +38,8 @@ trap cleanup EXIT
 
 tmux new-session -d -s "dds_record" rtirecordingservice -cfgFile /tmp/rti_recording_config.xml -cfgName cpm_recorder
 
+sleep 3
+
 printf "Starting HLCs ...\n"
 for vehicle_id in ${vehicle_ids//,/ }
 do
@@ -49,9 +49,14 @@ do
     printf "\tStarting high_level_controller${vehicle_id}.\n"
     sleep 10
 done
-printf "Done.\n"
+printf "Done.\n\n"
 
 printf "To abort, press Ctrl+C\n"
+
+# This displays all log files of hlcs in lcc_script_logs
+# This may be more than we actually created
+printf "Displaying stdout and stderr of all started High Level Controller\n"
+tail -f ~/dev/lcc_script_logs/std*hlc*.txt
 
 while true
 do
