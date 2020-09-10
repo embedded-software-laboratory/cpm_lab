@@ -34,13 +34,15 @@ MonitoringUi::MonitoringUi(
     std::function<VehicleData()> get_vehicle_data_callback, 
     std::function<std::vector<uint8_t>()> get_hlc_data_callback,
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-    std::function<void()> reset_data_callback)
+    std::function<void()> reset_data_callback,
+    std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values)
 {
     this->deploy_functions = deploy_functions_callback;
     this->get_vehicle_data = get_vehicle_data_callback;
     this->get_hlc_data = get_hlc_data_callback;
     this->get_vehicle_trajectory = get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
+    this->get_rtt_values = get_rtt_values;
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
     builder->get_widget("parent", parent);
@@ -50,6 +52,7 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("box_buttons", box_buttons);
     builder->get_widget("label_hlc_description_short", label_hlc_description_short);
     builder->get_widget("label_hlc_description_long", label_hlc_description_long);
+    builder->get_widget("label_rtt_info", label_rtt_info);
 
     assert(parent);
     assert(viewport_monitoring);
@@ -58,6 +61,7 @@ MonitoringUi::MonitoringUi(
     assert(box_buttons);
     assert(label_hlc_description_short);
     assert(label_hlc_description_long);
+    assert(label_rtt_info);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -78,6 +82,10 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
+void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
+}
 
 void MonitoringUi::init_ui_thread()
 {
@@ -215,18 +223,35 @@ void MonitoringUi::init_ui_thread()
                             {
                                 auto hlc_id = current_mapping.second.at(vehicle_id);
 
-                                if (std::find(hlc_data.begin(), hlc_data.end(), hlc_id) != hlc_data.end())
+                                //Find out if the programs are still running on the NUC
+                                assert(crash_checker);
+                                bool program_crashed = crash_checker->check_if_crashed(hlc_id);
+
+                                bool nuc_crashed = std::find(hlc_data.begin(), hlc_data.end(), hlc_id) == hlc_data.end();
+
+                                if (!nuc_crashed && !program_crashed)
                                 {
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
                                 }
-                                else if (label->get_text() != "Offline") //Do not log this more than once
+                                else if (nuc_crashed && label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
                                     cpm::Logging::Instance().write(
                                         1,
-                                        "Warning: NUCs %d disconnected. Stopping vehicles ...", 
+                                        "Warning: NUC %d disconnected. Stopping vehicles ...", 
+                                        hlc_id
+                                    );
+                                    deploy_functions->stop_vehicles(vehicle_ids);
+                                }
+                                else if (program_crashed && label->get_text() != "Prog. crash")
+                                {
+                                    label->set_text("Prg. crash");
+                                    label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: NUC %d had a program crash. Stopping vehicles ...", 
                                         hlc_id
                                     );
                                     deploy_functions->stop_vehicles(vehicle_ids);
@@ -332,6 +357,23 @@ void MonitoringUi::init_ui_thread()
                             deploy_functions->stop_vehicles(vehicle_ids);
                         }
                     }
+                    else if(rows_restricted[i] == "last_msg_state")
+                    {
+                        //Calculate diff
+                        double t_now_ms = static_cast<double>(cpm::get_time_ns() * 1e-6);
+                        double t_diff = t_now_ms - value;
+                        std::stringstream text;
+                        text << ceil(t_diff * 100) / 100; //Round to 2 values after comma
+                        label->set_text(text.str().c_str());
+
+                        //20 would be ideal (50Hz for vehicle data)
+                        if     (fabs(t_diff) < 20)  label->get_style_context()->add_class("ok");
+                        else if(fabs(t_diff) < 30) label->get_style_context()->add_class("warn");
+                        else 
+                        {
+                            label->get_style_context()->add_class("alert");
+                        }
+                    }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
                         // is vehicle on its reference trajectory? else stop 
@@ -429,9 +471,7 @@ void MonitoringUi::init_ui_thread()
                     label->get_style_context()->remove_class("ok");
                     label->get_style_context()->remove_class("warn");
                     label->get_style_context()->add_class("alert");
-                }
-                
-                
+                }                
             }
         }
 
@@ -454,6 +494,48 @@ void MonitoringUi::init_ui_thread()
         }
 
         label_hlc_description_long->set_text(list_stream.str().c_str());
+
+        //RTT update
+        uint64_t hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt = 0;
+        double hlc_missed_rtt_percentage = 0.0;
+        bool hlc_rtt_exists = get_rtt_values("hlc", hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt, hlc_missed_rtt_percentage);
+        uint64_t vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt = 0;
+        double vehicle_missed_rtt_percentage = 0.0;
+        bool vehicle_rtt_exists = get_rtt_values("vehicle", vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt, vehicle_missed_rtt_percentage);
+        if (!hlc_rtt_exists && !vehicle_rtt_exists)
+        {
+            label_rtt_info->set_text("RTT: ---");
+        }
+        else
+        {
+            //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
+            std::stringstream rtt_stream;
+            if (hlc_rtt_exists)
+            {
+                rtt_stream << "RTT (ms), hlc: " 
+                << static_cast<uint64_t>(hlc_current_best_rtt / 1e6) << " (best), "
+                << static_cast<uint64_t>(hlc_current_worst_rtt / 1e6) << " (worst), "
+                << static_cast<uint64_t>(hlc_all_time_worst_rtt / 1e6) << " (worst ever), "
+                << static_cast<uint64_t>(hlc_missed_rtt_percentage * 100) << " (missed, percent)";
+            }
+            else
+            {
+                rtt_stream << "RTT (ms), hlc: ---";
+            }
+            if (vehicle_rtt_exists)
+            {
+                rtt_stream << "\t| RTT (ms), vehicle: " 
+                << static_cast<uint64_t>(vehicle_current_best_rtt / 1e6) << " (best), "
+                << static_cast<uint64_t>(vehicle_current_worst_rtt / 1e6) << " (worst), "
+                << static_cast<uint64_t>(vehicle_all_time_worst_rtt / 1e6) << " (worst ever), "
+                << static_cast<uint64_t>(vehicle_missed_rtt_percentage * 100) << " (missed, percent)";
+            }
+            else
+            {
+                rtt_stream << "\t| RTT (ms), vehicle: ---";
+            }
+            label_rtt_info->set_text(rtt_stream.str().c_str());
+        }
     });
 
     run_thread.store(true);

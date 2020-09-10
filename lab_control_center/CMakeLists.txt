@@ -186,7 +186,6 @@ add_executable(lab_control_center
     ui/setup/UploadWindow.cpp
     ui/setup/VehicleToggle.hpp
     ui/setup/VehicleToggle.cpp
-
     ui/MainWindow.cpp
     ui/MainWindow.hpp
 
@@ -198,6 +197,8 @@ add_executable(lab_control_center
     src/ParameterServer.hpp
     src/ParameterStorage.cpp
     src/ParameterStorage.hpp
+    src/RTTAggregator.hpp
+    src/RTTAggregator.cpp
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
     src/main.cpp

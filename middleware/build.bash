@@ -18,7 +18,8 @@ cmake ..
 make -j$(nproc)
 
 # Publish middleware package via http/apache for the HLCs to download
-if [ $SIMULATION == 0 ]; then
+# This if does not work, must be changed (the package is never created on the main PC, at least with my account (leon), but is created without the if)
+#if [ $SIMULATION == 0 ]; then
     if [ ! -d "/var/www/html/nuc" ]; then
         sudo mkdir -p "/var/www/html/nuc"
         sudo chmod a+rwx "/var/www/html/nuc"
@@ -33,7 +34,7 @@ if [ $SIMULATION == 0 ]; then
     cp ./middleware_package.tar.gz /var/www/html/nuc
     rm -rf middleware_package
     rm -rf middleware_package.tar.gz
-fi
+#fi
 
 # Perform unittest
 cd ${BASH_DIR}/build 

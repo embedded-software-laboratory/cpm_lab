@@ -31,10 +31,12 @@
  * \brief This class can be used to create all readers and writers required for the middleware whose type can change, e.g. if instead of the trajectory the speed + curvature are used as commands
  * WARNING: There is no error handling for incompatible types
  */
+#include <optional>
 #include <string>
 #include <functional>
 #include <memory>
-#include <map>
+#include <mutex>
+#include <unordered_map>
 #include <cassert>
 #include <type_traits>
 
@@ -74,7 +76,8 @@ template<class MessageType> class TypedCommunication {
         //Real time: Last receive time of HLC message (To check for violation of period) for each HLC ID
         //Simulated time: last response time should match the current time
         std::shared_ptr<cpm::Timer> timer;
-        std::map<uint8_t, uint64_t> lastHLCResponseTimes;
+        std::unordered_map<uint8_t, uint64_t> lastHLCResponseTimes;
+        std::mutex map_mutex;
 
         //Handler for commands received by the HLC
         void handler(dds::sub::LoanedSamples<MessageType>& samples)
@@ -82,11 +85,17 @@ template<class MessageType> class TypedCommunication {
             // Process sample 
             for (auto sample : samples) {
                 if (sample.info().valid()) {
+                    uint64_t receive_timestamp = timer->get_time();
+
                     //First send the data to the vehicle
                     sendToVehicle(sample.data());
 
+                    //Then check if the sent data was plausible -> TODO?
+                    // - Check if the valid after time is correct - TODO: Make sure that header() exists?
+                    //sample.data().header().valid_after_stamp().nanoseconds()
+
                     //Then update the last response time of the HLC that sent the data
-                    uint64_t receive_timestamp = timer->get_time();
+                    std::lock_guard<std::mutex> lock(map_mutex);
                     lastHLCResponseTimes[sample.data().vehicle_id()] = receive_timestamp;
                 }
             }
@@ -109,7 +118,20 @@ template<class MessageType> class TypedCommunication {
             static_assert(std::is_same<decltype(std::declval<MessageType>().vehicle_id()), uint8_t>::value, "IDL type must have a vehicle_id.");
         }
 
-        const std::map<uint8_t, uint64_t>& getLastHLCResponseTimes() {
+        /**
+         * \brief Returns latest HLC response time or an empty optional if no entry could be found
+         */
+        std::optional<uint64_t> getLatestHLCResponseTime(uint8_t id) {
+            std::lock_guard<std::mutex> lock(map_mutex);
+            if (lastHLCResponseTimes.find(id) != lastHLCResponseTimes.end())
+                return std::optional<uint64_t>(lastHLCResponseTimes[id]);
+            
+            return std::nullopt;
+        }
+
+        //Only left for testing purposes, do not use for anything else
+        const std::unordered_map<uint8_t, uint64_t> getLastHLCResponseTimes() {
+            std::lock_guard<std::mutex> lock(map_mutex);
             return lastHLCResponseTimes;
         }
 

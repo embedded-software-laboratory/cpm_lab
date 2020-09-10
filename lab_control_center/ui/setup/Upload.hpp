@@ -91,6 +91,9 @@ private:
     std::vector<std::string> error_msg;
     std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
 
+    //Can be retrieved to find out if the upload was finished
+    std::atomic_bool upload_done;
+
 public:
     /**
      * \brief Constructor
@@ -123,10 +126,14 @@ public:
     );
 
     /**
-     * \brief
-     * \param
+     * \brief Kill on all set hlc ids
      */
     void kill_remote();
+
+    /**
+     * \brief True if an upload was requested, not killed and if all upload threads have finished
+     */
+    bool upload_finished();
 
     /**
      * \brief Set the callback function that returns a reference to the application's main window

@@ -233,7 +233,7 @@ std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus respons
             return "(realtime)";
         }
         else if (response == ParticipantStatus::WAITING) {
-            return "WAITING";
+            return "WAITING"; //TODO: For long waiting times with simulated time, one could log the responsible participant ID - on the other hand, this is already shown in the UI in the timer tab
         }
         else if (response == ParticipantStatus::WORKING) {
             return "WORKING";

@@ -1,9 +1,13 @@
 #include "CrashChecker.hpp"
 
 CrashChecker::CrashChecker(
-    std::shared_ptr<Deploy> _deploy_functions
+    std::shared_ptr<Deploy> _deploy_functions,
+    std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator,
+    std::shared_ptr<Upload> _upload_manager
 ) :
-    deploy_functions(_deploy_functions)
+    deploy_functions(_deploy_functions),
+    hlc_ready_aggregator(_hlc_ready_aggregator),
+    upload_manager(_upload_manager)
 {
     //Create connection to UI thread
     ui_dispatcher.connect(sigc::mem_fun(*this, &CrashChecker::ui_dispatch));
@@ -89,66 +93,117 @@ void CrashChecker::ui_dispatch()
     lock_crashes.unlock();
 }
 
-void CrashChecker::start_checking(bool deploy_remote_toggled, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
+std::vector<std::string> CrashChecker::check_for_remote_crashes()
 {
+    //running_remote_hlcs should maybe also be updated if a NUC went offline/crashed, but reporting this twice would also not be too bad 
+    //(Report would then be: Programs XY have crashed, NUC crashed -> probably even better this way)
+    std::vector<std::string> crashed_programs;
+
+    //Only start checking if an upload was performed; remember starting time when upload was finished to add some extra delay before checking
+    if (! upload_manager->upload_finished())
+    {
+        upload_success_time = cpm::get_time_ns();
+        return crashed_programs;
+    }
+
+    //Additional waiting time (make sure that remote_waiting time is longer than the periodic call of this check, else this is skipped)
+    if (cpm::get_time_ns() - upload_success_time < remote_waiting_time)
+    {
+        return crashed_programs;
+    }
+
+    //Check for answers for all IDs, we made sure that some time has passed before missing answers are being reported 
+    //(from testing experience: in the beginning, the connection is not stable enough to assume that the other party is offline,
+    //and there are tests for offline NUCs already)
+    std::lock_guard<std::mutex> lock(hlc_id_mutex);
+    for (auto id_iterator = running_remote_hlcs.begin(); id_iterator != running_remote_hlcs.end();)
+    {
+        auto id_string = std::to_string(static_cast<int>(*id_iterator));
+
+        auto script_running = hlc_ready_aggregator->script_running_on(*id_iterator);
+        auto middleware_running = hlc_ready_aggregator->middleware_running_on(*id_iterator);
+
+        if (!script_running)
+        {
+            cpm::Logging::Instance().write("Script crashed on NUC %s (remote)", id_string.c_str());
+
+            std::stringstream report_stream;
+            report_stream << "Script at HLC " << id_string;
+            crashed_programs.push_back(report_stream.str());
+        }
+
+        if (!middleware_running)
+        {
+            cpm::Logging::Instance().write("Middleware crashed on NUC %s (remote)", id_string.c_str());
+
+            std::stringstream report_stream;
+            report_stream << "Middleware at HLC " << id_string;
+            crashed_programs.push_back(report_stream.str());
+        }
+
+        if(!script_running || !middleware_running)
+        {
+            //Erase entry s.t. the message does not appear again
+            //TODO: Currently, this means that, if only one of them crashed, the other crash will no longer be reported. Is that acceptable?
+            crashed_remote_hlcs.push_back(*id_iterator);
+            id_iterator = running_remote_hlcs.erase(id_iterator);
+        }
+        else
+        {
+            ++id_iterator;
+        }
+    }
+
+    //Sometimes, crash detection fails (remote), because of timeouts or wrong messages in the beginning
+    //Manual re-starts of programs on NUCs are also possible
+    //Thus: Re-integrate an ID if it is detected to be online again
+    for (auto id_iterator = crashed_remote_hlcs.begin(); id_iterator != crashed_remote_hlcs.end();)
+    {
+        auto script_running = hlc_ready_aggregator->script_running_on(*id_iterator);
+        auto middleware_running = hlc_ready_aggregator->middleware_running_on(*id_iterator);
+
+        if(script_running && middleware_running)
+        {
+            //Put entry back in entries that are checked
+            running_remote_hlcs.push_back(*id_iterator);
+            id_iterator = crashed_remote_hlcs.erase(id_iterator);
+        }
+        else
+        {
+            ++id_iterator;
+        }
+    }
+
+    return crashed_programs;
+}
+
+void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
+{
+    kill_crash_check_thread();
+
+    //Copy hlc IDs s.t. they can be removed for remote deploy
+    running_remote_hlcs = remote_hlc_ids;
+    crashed_remote_hlcs.clear();
+
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
-        [this, deploy_remote_toggled, has_local_hlc, lab_mode_on, labcam_toggled] () {
+        [this, remote_hlc_ids, has_local_hlc, lab_mode_on, labcam_toggled] () {
             //Give programs time to actually start
-            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             while(crash_check_running.load())
             {
-                auto crashed_participants = deploy_functions->check_for_crashes(deploy_remote_toggled, has_local_hlc, lab_mode_on, labcam_toggled);
+                auto crashed_participants_local = deploy_functions->check_for_crashes((remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
 
-                if (crashed_participants.size() > 0)
-                {                    
-                    std::lock_guard<std::mutex> lock(crashed_mutex);
+                auto crashed_participants_remote = check_for_remote_crashes();
 
-                    //Remember previous crashes, clear for new crashed
-                    for (auto& participant : newly_crashed_participants)
-                    {
-                        already_crashed_participants.insert(participant);
-                    }
-                    newly_crashed_participants.clear();
+                std::vector<std::string> crashed_participants;
+                crashed_participants.reserve(crashed_participants_local.size() + crashed_participants_remote.size());
+                crashed_participants.insert(crashed_participants.end(), crashed_participants_local.begin(), crashed_participants_local.end());
+                crashed_participants.insert(crashed_participants.end(), crashed_participants_remote.begin(), crashed_participants_remote.end());
 
-                    //Store all new crashes so that they can be shown in the UI separately (New and old crashes)
-                    bool new_crash_detected = false;
-                    for (auto& participant : crashed_participants)
-                    {
-                        if (already_crashed_participants.find(participant) == already_crashed_participants.end())
-                        {
-                            newly_crashed_participants.push_back(participant);
-                            new_crash_detected = true;
-                        }
-                    }
-
-                    //If a new crash was detected, notify the UI thread. It will check the size of newly_crashed participants and create a dialog if is greater than zero
-                    if (new_crash_detected)
-                    {
-                        //Log the new crash
-                        std::stringstream program_stream;
-                        program_stream << "New: ";
-                        for (auto& entry : newly_crashed_participants)
-                        {
-                            program_stream << entry << " | ";
-                        }
-
-                        if (already_crashed_participants.size() > 0)
-                        {
-                            program_stream << " - Previous: ";
-                            for (auto& entry : already_crashed_participants)
-                            {
-                                program_stream << entry << " | ";
-                            }
-                        }
-                        
-                        cpm::Logging::Instance().write("The following programs crashed during simulation: %s", program_stream.str().c_str());
-
-                        ui_dispatcher.emit();
-                    }
-                }
+                update_crashed_participants(crashed_participants);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
@@ -156,9 +211,71 @@ void CrashChecker::start_checking(bool deploy_remote_toggled, bool has_local_hlc
     );
 }
 
+void CrashChecker::update_crashed_participants(std::vector<std::string> crashed_participants)
+{
+    if (crashed_participants.size() > 0)
+    {                    
+        std::lock_guard<std::mutex> lock(crashed_mutex);
+
+        //Remember previous crashes, clear for new crashed
+        for (auto& participant : newly_crashed_participants)
+        {
+            already_crashed_participants.insert(participant);
+        }
+        newly_crashed_participants.clear();
+
+        //Store all new crashes so that they can be shown in the UI separately (New and old crashes)
+        bool new_crash_detected = false;
+        for (auto& participant : crashed_participants)
+        {
+            if (already_crashed_participants.find(participant) == already_crashed_participants.end())
+            {
+                newly_crashed_participants.push_back(participant);
+                new_crash_detected = true;
+            }
+        }
+
+        //If a new crash was detected, notify the UI thread. It will check the size of newly_crashed participants and create a dialog if is greater than zero
+        if (new_crash_detected)
+        {
+            //Log the new crash
+            std::stringstream program_stream;
+            program_stream << "New: ";
+            for (auto& entry : newly_crashed_participants)
+            {
+                program_stream << entry << " | ";
+            }
+
+            if (already_crashed_participants.size() > 0)
+            {
+                program_stream << " - Previous: ";
+                for (auto& entry : already_crashed_participants)
+                {
+                    program_stream << entry << " | ";
+                }
+            }
+            
+            cpm::Logging::Instance().write("The following programs crashed during simulation: %s", program_stream.str().c_str());
+
+            ui_dispatcher.emit();
+        }
+    }
+}
+
 void CrashChecker::stop_checking()
 {
     kill_crash_check_thread();
+    running_remote_hlcs.clear();
+    crashed_remote_hlcs.clear();
+    already_crashed_participants.clear();
+    newly_crashed_participants.clear();
+    upload_success_time = 0;
+}
+
+bool CrashChecker::check_if_crashed(uint8_t hlc_id)
+{
+    std::lock_guard<std::mutex> lock(hlc_id_mutex);
+    return (std::find(crashed_remote_hlcs.begin(), crashed_remote_hlcs.end(), hlc_id) != crashed_remote_hlcs.end());
 }
 
 void CrashChecker::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

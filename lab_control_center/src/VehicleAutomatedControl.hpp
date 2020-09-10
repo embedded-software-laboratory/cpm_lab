@@ -39,6 +39,8 @@
  * \brief This class is used to send automated control structures to the vehicles. A prominent example would be a stop signal that is sent to 
  * all vehicles after a simulation was stopped, so that they try to freeze at their current position and do not 'drive on while slowing down'
  * 
+ * 
+ * TODO: UNUSED CLASS - this class can probably be deleted, as proper vehicle stopping is now part of the stop signal??
  */
 class VehicleAutomatedControl
 {

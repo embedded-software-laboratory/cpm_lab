@@ -56,6 +56,7 @@ void ObstacleAggregator::commonroad_obstacle_receive_callback(dds::sub::LoanedSa
                 //@Max: Ist das okay so?
                 if (obstacle.header().create_stamp().nanoseconds() < reset_time)
                 {
+                    cpm::Logging::Instance().write(2, "%s", "Received outdated obstacle data (likely event in case of reset)");
                     continue;
                 }
 

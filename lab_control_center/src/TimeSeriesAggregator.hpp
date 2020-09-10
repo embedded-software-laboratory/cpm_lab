@@ -27,14 +27,19 @@
 #pragma once
 #include "defaults.hpp"
 #include <dds/sub/ddssub.hpp>
+
 #include "VehicleState.hpp"
 #include "VehicleObservation.hpp"
 #include "TimeSeries.hpp"
 #include "VehicleCommandTrajectory.hpp"
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_time_ns.hpp"
+#include "cpm/Logging.hpp"
 #include "cpm/MultiVehicleReader.hpp"
+
 #include <mutex>
+#include <unordered_map>
 
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
@@ -45,7 +50,6 @@ using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
  * \brief Keeps received data from vehicles and vehicle trajectories in map with custom data structure that regards multiple messages + timestamps
  *
 */
-
 class TimeSeriesAggregator
 {
     VehicleData timeseries_vehicles;
@@ -62,8 +66,21 @@ class TimeSeriesAggregator
 
     std::mutex _mutex;
 
+    //Expected update frequency and structures to detect changes in update frequency
+    const uint64_t expected_period_nanoseconds = 20000000ull; // 50 Hz
+    const uint64_t allowed_deviation = expected_period_nanoseconds / 10;
+    uint64_t t_last_check = 0; //Some checks should not be performed too often, so store when they were done last
+    std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time;
+    std::unordered_map<uint8_t, uint64_t> last_vehicle_observation_time;
+    //Checks if the sample deviates from the expected interval, resets in that case to prevent spamming in case of periodical checking without value changes
+    void check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff);
+
 public:
-    TimeSeriesAggregator();
+    /**
+     * \brief Constructor
+     * \param max_vehicle_id The aggregator does not listen to IDs above this value; must be set for setting listener properly (storage etc)
+     */
+    TimeSeriesAggregator(uint8_t max_vehicle_id);
     VehicleData get_vehicle_data();
     VehicleTrajectories get_vehicle_trajectory_commands();
     void reset_all_data(); //Reset the data structures if desired by the user (e.g. bc the simulation was stopped)

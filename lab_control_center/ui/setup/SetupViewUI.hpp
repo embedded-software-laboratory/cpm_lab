@@ -33,6 +33,7 @@
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/RTTTool.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/setup/CrashChecker.hpp"
@@ -130,8 +131,8 @@ private:
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
 
-    //Function to get a list of all currently online HLCs
-    std::function<std::vector<uint8_t>()> get_hlc_ids;
+    //Class to get a list of all currently online HLCs and if script / middleware are running on them
+    std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
 
     //Function to get IDs of real vehicles (and simulated ones) which are currently active
     std::function<VehicleData()> get_vehicle_data;
@@ -203,7 +204,7 @@ public:
      * \brief Constructor
      * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
-     * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _hlc_ready_aggregator Get all IDs of currently active HLCs for correct remote deployment, get currently running scripts etc
      * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
      * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
@@ -215,7 +216,7 @@ public:
     SetupViewUI(
         std::shared_ptr<Deploy> _deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-        std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
         std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _on_simulation_start,
@@ -247,4 +248,6 @@ public:
      * the according programs
      */
     void on_lcc_close();
+
+    std::shared_ptr<CrashChecker> get_crash_checker();
 };

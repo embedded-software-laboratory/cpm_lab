@@ -28,6 +28,9 @@
 #include "defaults.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
+/**
+ * \brief Data class for storing values & (receive) times to get latest / newest data etc
+ */
 template<typename T>
 class _TimeSeries
 {
@@ -50,6 +53,7 @@ public:
     T get_latest_value() const;
     uint64_t get_latest_time() const;
     bool has_new_data(double dt) const;
+    bool has_data() const;
     string get_name() const {return name;}
     string get_unit() const {return unit;}
     vector<T> get_last_n_values(size_t n) const;

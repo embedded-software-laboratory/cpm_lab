@@ -24,36 +24,17 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#pragma once
-#include <stdint.h>
-#include "defaults.hpp"
-#include "Pose2D.hpp"
-#include "VehicleCommandTrajectory.hpp"
-#include "cpm/TimerFD.hpp"
-#include "cpm/get_topic.hpp"
-#include <dds/pub/ddspub.hpp>
-
-/**
- * \class TrajectoryCommand
- * \brief Using this class, trajectories from 2D paths can be created and sent to the vehicles
+/*
+ * These messages are sent by the LCC to check if a program is still running on a remote machine
  */
-class TrajectoryCommand
-{
-    std::mutex _mutex;
-    map<uint8_t, vector<TrajectoryPoint>> vehicle_trajectories;
-    std::shared_ptr<cpm::TimerFD> timer;
 
-    dds::topic::Topic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory;
+#ifndef HLC_HELLO_IDL
+#define HLC_HELLO_IDL
 
+struct HLCHello {
+    string source_id; //To find out where the msg came from and to not answer to own msg
 
-    void send_trajectory(uint64_t t_now);
-
-public:
-    TrajectoryCommand();
-    ~TrajectoryCommand();
-    void set_path(uint8_t vehicle_id, std::vector<Pose2D> path);
-    void stop(uint8_t vehicle_id);
-    void stop_all();
-    
+    boolean script_running; //If true, a Matlab / C++ session is still running
+    boolean middleware_running; //If true, a Middleware session is still running
 };
+#endif
