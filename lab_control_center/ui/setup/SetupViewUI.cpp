@@ -619,10 +619,15 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
 void SetupViewUI::select_all_vehicles_sim()
 {
+    auto real_vehicles = get_vehicle_ids_real();
     for (auto& vehicle_toggle : vehicle_toggles)
     {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
-        deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        auto real_ptr = std::find(real_vehicles.begin(), real_vehicles.end(), vehicle_toggle->get_id());
+        if (real_ptr == real_vehicles.end())
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+            deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        }
     }
 }
 
