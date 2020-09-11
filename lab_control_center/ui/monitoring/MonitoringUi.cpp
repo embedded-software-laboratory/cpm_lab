@@ -287,6 +287,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             // reset error timestamp 
                             if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                            if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                         }
                         else if(fabs(value) < 50) label->get_style_context()->add_class("warn");
                         else 
@@ -327,6 +328,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             // reset error timestamp 
                             if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                            if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                         }
                         else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
                         else
@@ -362,6 +364,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             // reset error timestamp 
                             if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                            if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                         }
                         else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
                         else 
@@ -397,6 +400,7 @@ void MonitoringUi::init_ui_thread()
                             label->get_style_context()->add_class("ok");
                             // reset error timestamp 
                             if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                            if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                         }
                         else if (value < 500) label->get_style_context()->add_class("warn");
                         else                  
@@ -442,6 +446,7 @@ void MonitoringUi::init_ui_thread()
                             label->set_text("--");
                             // reset error timestamp 
                             if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                            if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                             continue;
                         }
 
@@ -521,6 +526,7 @@ void MonitoringUi::init_ui_thread()
                                 label->get_style_context()->add_class("ok");
                                 // reset error timestamp 
                                 if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                                if(error_triggered[i][vehicle_id]) error_triggered[i][vehicle_id] = false;
                             }
                         }
                         else 
