@@ -34,13 +34,15 @@ MonitoringUi::MonitoringUi(
     std::function<VehicleData()> get_vehicle_data_callback, 
     std::function<std::vector<uint8_t>()> get_hlc_data_callback,
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-    std::function<void()> reset_data_callback)
+    std::function<void()> reset_data_callback,
+    std::function<void()> kill_deployed_applications_callback)
 {
     this->deploy_functions = deploy_functions_callback;
     this->get_vehicle_data = get_vehicle_data_callback;
     this->get_hlc_data = get_hlc_data_callback;
     this->get_vehicle_trajectory = get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
+    this->kill_deployed_applications = kill_deployed_applications_callback; 
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
     builder->get_widget("parent", parent);
@@ -219,17 +221,33 @@ void MonitoringUi::init_ui_thread()
                                 {
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
+                                    if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
+                                    if(error_triggered[0][0]) error_triggered[0][0] = false; 
                                 }
                                 else if (label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
-                                    cpm::Logging::Instance().write(
-                                        1,
-                                        "Warning: NUCs %d disconnected. Stopping vehicles ...", 
-                                        hlc_id
-                                    );
-                                    deploy_functions->stop_vehicles(vehicle_ids);
+                                    if(error_timestamps[0][0] == 0) 
+                                    {
+                                        // set error timestamp  
+                                        error_timestamps[0][0] = clock_gettime_nanoseconds(); 
+                                        continue;
+                                    }
+
+                                    // an error occured before - do nothing if the error is not older than a threshold
+                                    if(clock_gettime_nanoseconds()-error_timestamps[0][0]<500000000) continue;
+                                    
+                                    if(!error_triggered[0][0])
+                                    {
+                                        cpm::Logging::Instance().write(
+                                            1,
+                                            "Warning: NUCs %d disconnected. Stopping experiment ...", 
+                                            hlc_id
+                                            );
+                                        this->kill_deployed_applications();
+                                        error_triggered[0][0] = true; 
+                                    }
                                 }
                                 else
                                 {
@@ -264,20 +282,38 @@ void MonitoringUi::init_ui_thread()
 
                     if(rows_restricted[i] == "clock_delta") 
                     {
-                        if     (fabs(value) < 25)  label->get_style_context()->add_class("ok");
+                        if  (fabs(value) < 25)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(value) < 50) label->get_style_context()->add_class("warn");
                         else 
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
-                            cpm::Logging::Instance().write(
-                                2,
-                                "Warning: Clock delta of vehicle %d too high. Stop and reboot...",
-                                vehicle_id
-                            );
-                            deploy_functions->reboot_real_vehicle(vehicle_id, 5);
-                            deploy_functions->stop_vehicles(vehicle_ids);
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: Clock delta of vehicle %d too high. Stopping experiment ...",
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "battery_level") 
@@ -286,50 +322,107 @@ void MonitoringUi::init_ui_thread()
                         std::vector<double> values = sensor_timeseries->get_last_n_values(n);
                         auto max = std::max_element(values.begin(), values.end());
 
-                        if     (fabs(*max) > 30)  label->get_style_context()->add_class("ok");
+                        if     (fabs(*max) > 30)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(*max) > 10)  label->get_style_context()->add_class("warn");
                         else
                         {  
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: Battery level of vehicle %d too low. Stopping vehicles ...", 
-                                vehicle_id
-                            );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: Battery level of vehicle %d too low. Stopping experiment ...", 
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "speed") 
                     {
-                        if     (fabs(value) < 3)  label->get_style_context()->add_class("ok");
+                        if     (fabs(value) < 3)  
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if(fabs(value) < 3.6)  label->get_style_context()->add_class("warn");
                         else 
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: speed of vehicle %d too high. Stopping vehicles ...", 
-                                vehicle_id
-                            );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: speed of vehicle %d too high. Stopping experiment ...", 
+                                    vehicle_id
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "ips_dt") 
                     {
-                        if      (value < 100) label->get_style_context()->add_class("ok");
+                        if      (value < 100) 
+                        {
+                            label->get_style_context()->add_class("ok");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
+                        }
                         else if (value < 500) label->get_style_context()->add_class("warn");
                         else                  
                         {
                             label->get_style_context()->add_class("alert");
                             if(!deploy_functions->diagnosis_switch) continue; 
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping vehicles ...", 
-                                vehicle_id, value
-                            );
-                            deploy_functions->stop_vehicles(vehicle_ids);
+
+                            if(error_timestamps[i][vehicle_id] == 0) 
+                            {
+                                // set error timestamp  
+                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                continue;
+                            }
+                            // an error occured before - do nothing if the error is not older than a threshold
+                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+
+                            if(!error_triggered[i][vehicle_id])
+                            {
+                                cpm::Logging::Instance().write(
+                                    1,
+                                    "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping experiment ...", 
+                                    vehicle_id, value
+                                );
+                                this->kill_deployed_applications();
+                                error_triggered[i][vehicle_id] = true;
+                            }
                         }
                     }
                     else if(rows_restricted[i] == "reference_deviation") 
@@ -347,6 +440,8 @@ void MonitoringUi::init_ui_thread()
                         {
                             label->get_style_context()->add_class("ok");
                             label->set_text("--");
+                            // reset error timestamp 
+                            if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
                             continue;
                         }
 
@@ -365,24 +460,24 @@ void MonitoringUi::init_ui_thread()
                             double current_px = 0;
                             double current_py = 0;
 
-                            for(size_t i = 2; i < trajectory_segment.size(); ++i)
+                            for(size_t j = 2; j < trajectory_segment.size(); ++j)
                             {
                                 const int n_interp = 20;
                                 for (int interp_step = 1; interp_step < n_interp; ++interp_step)
                                 {
                                     const uint64_t delta_t = 
-                                        trajectory_segment[i].t().nanoseconds() 
-                                        - trajectory_segment[i-1].t().nanoseconds();
+                                        trajectory_segment[j].t().nanoseconds() 
+                                        - trajectory_segment[j-1].t().nanoseconds();
                                     
                                     std::shared_ptr<TrajectoryInterpolation> interp = std::make_shared<TrajectoryInterpolation>(
-                                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
-                                        trajectory_segment[i-1],  
-                                        trajectory_segment[i]
+                                        (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds(),  
+                                        trajectory_segment[j-1],  
+                                        trajectory_segment[j]
                                     );
                                     
-                                    if((delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
+                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
                                     {
-                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
+                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
                                         current_px = interp->position_x;
                                         current_py = interp->position_y;
                                     }
@@ -392,24 +487,40 @@ void MonitoringUi::init_ui_thread()
                             double error = sqrt(pow(pose_x-current_px,2)+pow(pose_y-current_py,2));
 
                             label->set_text(std::to_string(error).substr(0,4));
-                            if(error > 0.5) 
+                            if(error > 0.15) 
                             {
                                 label->get_style_context()->add_class("alert");
-                                if(!deploy_functions->diagnosis_switch) continue; 
-                                cpm::Logging::Instance().write(
-                                    1,
-                                    "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping vehicles ...", 
-                                    vehicle_id, error, dt/1e6
-                                );
-                                deploy_functions->stop_vehicles(vehicle_ids);
+                                if(!deploy_functions->diagnosis_switch) continue;
+
+                                if(error_timestamps[i][vehicle_id] == 0) 
+                                {
+                                    // set error timestamp  
+                                    error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                    continue;
+                                }
+                                // an error occured before - do nothing if the error is not older than a threshold
+                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<200000000) continue;
+
+                                if(!error_triggered[i][vehicle_id])
+                                {
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping experiment ...", 
+                                        vehicle_id, error, dt/1e6
+                                    );
+                                    this->kill_deployed_applications();
+                                    error_triggered[i][vehicle_id] = true;
+                                }
                             }
-                            else if (error > 0.1)
+                            else if (error > 0.05)
                             {
                                 label->get_style_context()->add_class("warn");
                             }
                             else 
                             {
                                 label->get_style_context()->add_class("ok");
+                                // reset error timestamp 
+                                if(error_timestamps[i][vehicle_id] != 0) error_timestamps[i][vehicle_id] = 0; 
                             }
                         }
                         else 
