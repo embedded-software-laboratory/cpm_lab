@@ -344,4 +344,15 @@ class Communication {
                 ++wait_cycles;
             }
         }
+
+        /**
+         * \brief Update the current period start time stored in typed communication for internal checks
+         * \param t_now Current period time, obtained by the cpm timer
+         */
+        void update_period_t_now(uint64_t t_now)
+        {
+            trajectoryCommunication.update_period_t_now(t_now);
+            speedCurvatureCommunication.update_period_t_now(t_now);
+            directCommunication.update_period_t_now(t_now);
+        }
 };

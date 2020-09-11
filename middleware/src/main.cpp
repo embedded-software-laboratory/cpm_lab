@@ -159,6 +159,7 @@ int main (int argc, char *argv[]) {
     //Start the communication with the HLC
     using namespace std::placeholders;
     timer->start_async([&](uint64_t t_now) {
+        communication->update_period_t_now(t_now);
         std::vector<VehicleState> states = communication->getLatestVehicleMessages(t_now);
         std::vector<VehicleObservation> observations = communication->getLatestVehicleObservationMessages(t_now);
 
