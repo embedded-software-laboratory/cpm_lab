@@ -34,6 +34,7 @@
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/RTTTool.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/setup/CrashChecker.hpp"
@@ -122,6 +123,13 @@ private:
     std::shared_ptr<Deploy> deploy_functions;
     unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
     unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
+
+    //To remember last kill button press - s.t. it can't be spammed (would not be beneficial / can lead to crashes)
+    std::mutex kill_button_mutex;
+    std::thread kill_grey_out_thread;
+    std::atomic_bool kill_grey_out_running;
+    std::atomic_bool undo_kill_grey_out;
+    const uint64_t kill_timeout = 3e9; //3 seconds
 
     // Interface to LabCam
 #ifndef SIMULATION
