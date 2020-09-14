@@ -194,7 +194,8 @@ int main(int argc, char *argv[])
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
         [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->reset_all_data();}
+        [=](){return timeSeriesAggregator->reset_all_data();},
+        [=](){return setupViewUi->kill_deployed_applications();}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
