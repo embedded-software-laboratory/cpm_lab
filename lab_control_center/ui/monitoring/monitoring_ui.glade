@@ -24,11 +24,11 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="label_simulation_time">
+          <object class="GtkLabel" id="label_experiment_time">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="margin_left">12</property>
-            <property name="label" translatable="yes">Sim time: ---</property>
+            <property name="label" translatable="yes">Exp time: ---</property>
           </object>
           <packing>
             <property name="expand">False</property>

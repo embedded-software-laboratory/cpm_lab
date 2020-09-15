@@ -67,7 +67,7 @@ public:
     Gtk::Label* label_rtt_hlc_long;
     Gtk::Label* label_rtt_vehicle_short;
     Gtk::Label* label_rtt_vehicle_long;
-    Gtk::Label* label_simulation_time;
+    Gtk::Label* label_experiment_time;
     std::shared_ptr<Deploy> deploy_functions;
     std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;

@@ -56,7 +56,7 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("label_rtt_hlc_long", label_rtt_hlc_long);
     builder->get_widget("label_rtt_vehicle_short", label_rtt_vehicle_short);
     builder->get_widget("label_rtt_vehicle_long", label_rtt_vehicle_long);
-    builder->get_widget("label_simulation_time", label_simulation_time);
+    builder->get_widget("label_experiment_time", label_experiment_time);
 
     assert(parent);
     assert(viewport_monitoring);
@@ -69,7 +69,7 @@ MonitoringUi::MonitoringUi(
     assert(label_rtt_hlc_long);
     assert(label_rtt_vehicle_short);
     assert(label_rtt_vehicle_long);
-    assert(label_simulation_time);
+    assert(label_experiment_time);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -569,7 +569,7 @@ void MonitoringUi::init_ui_thread()
             t_min = t_min % 60;
 
             std::stringstream sim_time_stream;
-            sim_time_stream << "Sim time: ";
+            sim_time_stream << "Exp time: ";
 
             if (t_hr > 0)
             {
@@ -581,11 +581,11 @@ void MonitoringUi::init_ui_thread()
             }
             sim_time_stream << t_sec << "s";
 
-            label_simulation_time->set_text(sim_time_stream.str().c_str());
+            label_experiment_time->set_text(sim_time_stream.str().c_str());
         }
         else
         {
-            label_simulation_time->set_text("Sim time: ---");
+            label_experiment_time->set_text("Exp time: ---");
         }
         
     });
