@@ -83,7 +83,7 @@ void RTTAggregator::create_rtt_thread()
                     }
                 }
 
-                //Store data for missing IDs
+                //Store data for missing IDs (ID: Here just identifier for object type (e.g. 'vehicle'))
                 for (auto& id : missing_ids)
                 {
                     //Store new data

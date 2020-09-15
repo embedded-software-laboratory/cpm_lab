@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkBox" id="parent">
@@ -29,13 +29,12 @@
             <property name="can_focus">False</property>
             <property name="halign">start</property>
             <property name="valign">center</property>
-            <property name="margin_left">8</property>
+            <property name="margin_left">12</property>
             <child>
               <object class="GtkExpander" id="expander_hlcs_description">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="valign">center</property>
-                <property name="margin_left">3</property>
                 <property name="margin_right">8</property>
                 <property name="margin_top">3</property>
                 <property name="spacing">1</property>
@@ -75,18 +74,69 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="label_rtt_info">
+          <object class="GtkExpander" id="expander_rtt_hlc">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="halign">start</property>
+            <property name="can_focus">True</property>
             <property name="valign">center</property>
-            <property name="label" translatable="yes">RTT:</property>
+            <property name="margin_left">12</property>
+            <property name="margin_top">3</property>
+            <property name="spacing">1</property>
+            <property name="resize_toplevel">True</property>
+            <child>
+              <object class="GtkLabel" id="label_rtt_hlc_long">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">center</property>
+                <property name="margin_top">1</property>
+                <property name="margin_bottom">1</property>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label_rtt_hlc_short">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">HLC RTT (ms):</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="padding">12</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkExpander" id="expander_rtt_vehicle">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="valign">center</property>
+            <property name="margin_left">12</property>
+            <property name="margin_top">3</property>
+            <property name="spacing">1</property>
+            <property name="resize_toplevel">True</property>
+            <child>
+              <object class="GtkLabel" id="label_rtt_vehicle_long">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">center</property>
+                <property name="margin_top">1</property>
+                <property name="margin_bottom">1</property>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label_rtt_vehicle_short">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">Vehicle RTT (ms):</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <style>

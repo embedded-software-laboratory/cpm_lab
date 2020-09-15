@@ -76,7 +76,7 @@ public:
     
     /**
      * \brief Get current measurements for RTT
-     * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist)
+     * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist), e.g. 'vehicle'
      * \param current_best_rtt Best RTT of the current measurement (in ns)
      * \param current_worst_rtt Worst RTT of the current measurement (in ns)
      * \param all_time_worst_rtt Worst RTT of all measurements (in ns)

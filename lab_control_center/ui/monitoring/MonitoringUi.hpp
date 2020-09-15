@@ -62,7 +62,10 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
-    Gtk::Label* label_rtt_info;
+    Gtk::Label* label_rtt_hlc_short;
+    Gtk::Label* label_rtt_hlc_long;
+    Gtk::Label* label_rtt_vehicle_short;
+    Gtk::Label* label_rtt_vehicle_long;
     std::shared_ptr<Deploy> deploy_functions;
     std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
