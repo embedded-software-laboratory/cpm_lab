@@ -42,6 +42,7 @@
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/setup/Deploy.hpp"
 
 #include "TrajectoryInterpolation.hpp"
@@ -66,6 +67,7 @@ public:
     Gtk::Label* label_rtt_hlc_long;
     Gtk::Label* label_rtt_vehicle_short;
     Gtk::Label* label_rtt_vehicle_long;
+    Gtk::Label* label_simulation_time;
     std::shared_ptr<Deploy> deploy_functions;
     std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
@@ -81,6 +83,9 @@ public:
     Glib::Dispatcher update_dispatcher; //to communicate between thread and GUI
     std::thread ui_thread;
     std::atomic_bool run_thread;
+
+    //To measure how long the simulation has been running
+    std::atomic_uint64_t sim_start_time;
 
     //full rows
     const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
@@ -114,4 +119,14 @@ public:
      * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
      */
     void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
+
+    /**
+     * \brief Function to call when the simulation starts, to reset data structures, start timers etc
+     */
+    void notify_sim_start();
+
+    /**
+     * \brief Function to call when the simulation stops, to reset data structures, start timers etc
+     */
+    void notify_sim_stop();
 };

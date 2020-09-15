@@ -56,6 +56,7 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("label_rtt_hlc_long", label_rtt_hlc_long);
     builder->get_widget("label_rtt_vehicle_short", label_rtt_vehicle_short);
     builder->get_widget("label_rtt_vehicle_long", label_rtt_vehicle_long);
+    builder->get_widget("label_simulation_time", label_simulation_time);
 
     assert(parent);
     assert(viewport_monitoring);
@@ -68,6 +69,7 @@ MonitoringUi::MonitoringUi(
     assert(label_rtt_hlc_long);
     assert(label_rtt_vehicle_short);
     assert(label_rtt_vehicle_long);
+    assert(label_simulation_time);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -76,6 +78,9 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
+
+    //Store start time of simulation when simulation is running - this is the default value (uninitialized)
+    sim_start_time.store(0);
 }
 
 MonitoringUi::~MonitoringUi()
@@ -549,6 +554,40 @@ void MonitoringUi::init_ui_thread()
             rtt_short << "Vehicle RTT (ms): " << static_cast<uint64_t>(vehicle_current_worst_rtt / 1e6);
             label_rtt_vehicle_short->set_text(rtt_short.str().c_str());
         }
+
+        //Update running time of simulation, if it is currently running
+        auto sim_start = sim_start_time.load();
+        if (sim_start > 0)
+        {
+            auto t_diff = cpm::get_time_ns() - sim_start;
+            t_diff /= 1e9; //Convert to seconds
+
+            //Now calculate hours, minutes and seconds
+            auto t_sec = t_diff % 60;
+            auto t_min = t_diff / 60;
+            auto t_hr = t_min / 60;
+            t_min = t_min % 60;
+
+            std::stringstream sim_time_stream;
+            sim_time_stream << "Sim time: ";
+
+            if (t_hr > 0)
+            {
+                sim_time_stream << t_hr << "h ";
+            }
+            if (t_min > 0 || t_hr > 0)
+            {
+                sim_time_stream << t_min << "min ";
+            }
+            sim_time_stream << t_sec << "s";
+
+            label_simulation_time->set_text(sim_time_stream.str().c_str());
+        }
+        else
+        {
+            label_simulation_time->set_text("Sim time: ---");
+        }
+        
     });
 
     run_thread.store(true);
@@ -603,4 +642,20 @@ Gtk::Box* MonitoringUi::get_parent()
 void MonitoringUi::reset_vehicle_view()
 {
     reset_ui_thread();
+}
+
+void MonitoringUi::notify_sim_start()
+{
+    reset_vehicle_view();
+
+    //Timer start (to determine how long the simulation has been running)
+    sim_start_time.store(cpm::get_time_ns());
+}
+
+void MonitoringUi::notify_sim_stop()
+{
+    reset_vehicle_view();
+
+    //Timer reset
+    sim_start_time.store(0);
 }
