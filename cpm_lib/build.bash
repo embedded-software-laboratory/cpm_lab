@@ -18,6 +18,9 @@ fi
 if [[ ! -z $(which matlab) ]] && [[ ! -d "dds_idl_matlab" ]]; then
 	echo "Generating Matlab IDL files..."
     matlab -sd "./" -batch "rtigen_matlab"
+fi 
+
+if [[ -d "dds_idl_matlab" ]]; then
     cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
 fi 
 
@@ -35,7 +38,6 @@ cd $DIR
         sudo mkdir -p "/var/www/html/nuc"
         sudo chmod a+rwx "/var/www/html/nuc"
     fi
-    cp -R $DIR/dds_idl_matlab/ $DIR/cpm_library_package
     cp $DIR/build/libcpm.so $DIR/cpm_library_package
     tar -czf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
     rm -f /var/www/html/nuc/cpm_library_package.tar.gz
