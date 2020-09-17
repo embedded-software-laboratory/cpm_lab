@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
             timeSeriesAggregator->reset_all_data();
             obstacleAggregator->reset_all_data();
             trajectoryCommand->stop_all();
-            monitoringUi->reset_vehicle_view();
+            monitoringUi->notify_sim_start();
             visualizationCommandsAggregator->reset_visualization_commands();
             
             //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
             timeSeriesAggregator->reset_all_data();
             obstacleAggregator->reset_all_data();
             trajectoryCommand->stop_all();
-            monitoringUi->reset_vehicle_view();
+            monitoringUi->notify_sim_stop();
             visualizationCommandsAggregator->reset_visualization_commands();
 
             //Restart RTT measurement

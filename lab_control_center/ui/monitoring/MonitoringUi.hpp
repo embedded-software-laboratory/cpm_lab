@@ -42,6 +42,7 @@
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/setup/Deploy.hpp"
 
 #include "TrajectoryInterpolation.hpp"
@@ -62,7 +63,11 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
-    Gtk::Label* label_rtt_info;
+    Gtk::Label* label_rtt_hlc_short;
+    Gtk::Label* label_rtt_hlc_long;
+    Gtk::Label* label_rtt_vehicle_short;
+    Gtk::Label* label_rtt_vehicle_long;
+    Gtk::Label* label_experiment_time;
     std::shared_ptr<Deploy> deploy_functions;
     std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
@@ -80,9 +85,12 @@ public:
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
-    // Full rows
+    //To measure how long the simulation has been running
+    std::atomic_uint64_t sim_start_time;
+
+    //full rows
     const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
-    // We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
+    //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
     const vector<string> rows_restricted = {"ips_dt", "last_msg_state", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
 
     // Indicates the starting time of the last error occurance for each vehicle
@@ -122,4 +130,14 @@ public:
      * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
      */
     void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
+
+    /**
+     * \brief Function to call when the simulation starts, to reset data structures, start timers etc
+     */
+    void notify_sim_start();
+
+    /**
+     * \brief Function to call when the simulation stops, to reset data structures, start timers etc
+     */
+    void notify_sim_stop();
 };

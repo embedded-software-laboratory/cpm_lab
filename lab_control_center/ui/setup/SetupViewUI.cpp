@@ -395,6 +395,16 @@ void SetupViewUI::ui_dispatch()
 }
 
 void SetupViewUI::deploy_applications() {
+    //Only allow the simulation to start if there are actually vehicles to control
+    std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
+    auto simulation_possible = vehicle_ids.size() > 0;
+
+    if (!simulation_possible)
+    {
+        cpm::Logging::Instance().write(1, "%s", "LCC Deploy: No vehicles are online, deploy was aborted");
+        return;
+    }
+
     //Grey out UI until kill is clicked
     set_sensitive(false);
     is_deployed.store(true);
@@ -438,13 +448,13 @@ void SetupViewUI::deploy_applications() {
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
+
     if(deploy_remote_toggled)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
 
         //Get current online vehicle and high_level_controller IDs
-        std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
         if (hlc_ready_aggregator)
         {
@@ -494,9 +504,9 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), vehicle_ids, script_path->get_text().c_str(), script_params->get_text().c_str());
     }
-
+    
     //Start performing crash checks for deployed applications
     crash_checker->start_checking(remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
 }
