@@ -118,6 +118,9 @@ private:
      */
     void load_chosen_file();
 
+    //Callback for load button in UI
+    void load_button_callback();
+
     //Transform text to double, if possible
     double string_to_double(std::string value, double default_value);
 

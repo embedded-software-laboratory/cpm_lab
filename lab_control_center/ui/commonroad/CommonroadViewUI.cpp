@@ -67,7 +67,7 @@ CommonroadViewUI::CommonroadViewUI
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
-    button_load_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_chosen_file));
+    button_load_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_button_callback));
     button_apply_transformation->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_transformation));
 
     //Also, single transformation values can be applied on a single key press within the entry
@@ -447,6 +447,15 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
     return false;
 }
 
+void CommonroadViewUI::load_button_callback()
+{
+    //Load chosen file
+    load_chosen_file();
+
+    //Reload/reset shown planning problems
+    reload_problems.store(true);
+    load_obstacle_list.store(true);
+}
 
 void CommonroadViewUI::load_chosen_file()
 {
