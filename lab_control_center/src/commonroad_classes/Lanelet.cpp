@@ -602,17 +602,33 @@ std::pair<double, double> Lanelet::get_center_of_all_points()
     return std::pair<double, double>(x, y);
 }
 
-std::array<std::array<double, 2>, 2> Lanelet::get_range_x_y()
+std::optional<std::array<std::array<double, 2>, 2>> Lanelet::get_range_x_y()
 {
     //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
     assert(left_bound.points.size() == right_bound.points.size());
 
     size_t vec_size = left_bound.points.size();
+
+    //Return empty optional if points are missing
+    if (vec_size == 0)
+    {
+        return std::nullopt;
+    }
     
-    double x_min, y_min = std::numeric_limits<double>::max();
-    double x_max, y_max = std::numeric_limits<double>::min();
+    //Working with numeric limits at start lead to unforseeable behaviour with min and max, thus we now use this approach instead
+    bool uninitialized = true;
+    double x_min, x_max, y_min, y_max;
     for (size_t index = 0; index < vec_size; ++index)
     {
+        if (uninitialized)
+        {
+            x_min = left_bound.points.at(index).get_x();
+            y_min = left_bound.points.at(index).get_y();
+            x_max = left_bound.points.at(index).get_x();
+            y_max = left_bound.points.at(index).get_y();
+            uninitialized = false;
+        }
+
         x_min = std::min(left_bound.points.at(index).get_x(), x_min);
         y_min = std::min(left_bound.points.at(index).get_y(), y_min);
         x_max = std::max(left_bound.points.at(index).get_x(), x_max);

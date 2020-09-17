@@ -195,10 +195,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
     }
 
+    lock.unlock();
+
     //Calculate the center of the planning problem
     calculate_center();
-
-    lock.unlock();
 
     //Automatically center the planning problem
     if (center_coordinates)
@@ -549,6 +549,7 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
             } 
 
             //Update center
+            std::cout << "New center after transformation:" << std::endl;
             calculate_center();
         }
 
@@ -718,17 +719,46 @@ void CommonRoadScenario::calculate_center()
     //Init center
     center = std::pair<double, double>(0.0, 0.0);
 
-    double x_min, y_min = std::numeric_limits<double>::max();
-    double x_max, y_max = std::numeric_limits<double>::min();
-
+    //Working with numeric limits at start lead to unforseeable behaviour with min and max, thus we now use this approach instead
+    bool uninitialized = true;
+    double x_min, x_max, y_min, y_max;
     for (auto lanelet : lanelets)
     {
         auto x_y_range = lanelet.second.get_range_x_y();
 
-        x_min = std::min(x_min, x_y_range[0][0]);
-        x_max = std::min(x_max, x_y_range[0][1]);
-        y_min = std::min(y_min, x_y_range[1][0]);
-        y_max = std::min(y_max, x_y_range[1][1]);
+        if (x_y_range.has_value())
+        {
+            if (uninitialized)
+            {
+                x_min = x_y_range.value()[0][0];
+                x_max = x_y_range.value()[0][1];
+                y_min = x_y_range.value()[1][0];
+                y_max = x_y_range.value()[1][1];
+
+                uninitialized = false;
+            }
+            else
+            {
+                x_min = std::min(x_min, x_y_range.value()[0][0]);
+                x_max = std::max(x_max, x_y_range.value()[0][1]);
+                y_min = std::min(y_min, x_y_range.value()[1][0]);
+                y_max = std::max(y_max, x_y_range.value()[1][1]);
+            }
+        }
+    }
+
+    std::cout << "New x_min: " << x_min << std::endl;
+    std::cout << "New x_max: " << x_max << std::endl;
+    std::cout << "New y_min: " << y_min << std::endl;
+    std::cout << "New y_max: " << y_max << std::endl;
+
+    //Set values to zero if no values could be found in any of the lanelets
+    if (lanelets.size() == 0 || uninitialized)
+    {
+        x_min = 0.0;
+        x_max = 0.0;
+        y_min = 0.0;
+        y_max = 0.0;
     }
 
     center.first = (0.5 * x_min) + (0.5 * x_max);
