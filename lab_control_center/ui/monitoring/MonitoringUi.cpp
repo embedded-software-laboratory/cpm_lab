@@ -258,7 +258,7 @@ void MonitoringUi::init_ui_thread()
                                 }
                                 else if (program_crashed && label->get_text() != "Offline" && label->get_text() != "Prog. crash")
                                 {
-                                    label->set_text("Prg. crash");
+                                    label->set_text("Prog. crash");
                                     label->get_style_context()->add_class("alert");
                                     cpm::Logging::Instance().write(
                                         1,
