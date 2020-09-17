@@ -256,7 +256,7 @@ void MonitoringUi::init_ui_thread()
                                     );
                                     deploy_functions->stop_vehicles(vehicle_ids);
                                 }
-                                else if (program_crashed && label->get_text() != "Prog. crash")
+                                else if (program_crashed && label->get_text() != "Offline" && label->get_text() != "Prog. crash")
                                 {
                                     label->set_text("Prg. crash");
                                     label->get_style_context()->add_class("alert");
