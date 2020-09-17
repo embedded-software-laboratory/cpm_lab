@@ -87,7 +87,7 @@ TimerViewUI::~TimerViewUI() {
 
 void TimerViewUI::button_reset_callback() {
     //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
+    // obstacle_simulation_manager->stop();
 
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
@@ -202,8 +202,8 @@ void TimerViewUI::update_ui() {
 }
 
 void TimerViewUI::button_start_callback() {
-    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    obstacle_simulation_manager->start();
+    // //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+    // obstacle_simulation_manager->start();
 
     timer_trigger->send_start_signal();
 
@@ -215,7 +215,7 @@ void TimerViewUI::button_stop_callback() {
     timer_trigger->send_stop_signal();
 
     //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
+    // obstacle_simulation_manager->stop();
 
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);

@@ -62,12 +62,14 @@ ObstacleSimulationManager::~ObstacleSimulationManager()
 
 void ObstacleSimulationManager::stop_timers()
 {
+    std::cout << "Stopping sim timer" << std::endl;
     if (simulation_timer)
     {
         simulation_timer->stop();
     }
     simulation_timer.reset();
 
+    std::cout << "Stopping standby timer" << std::endl;
     if (standby_timer)
     {
         standby_timer->stop();
