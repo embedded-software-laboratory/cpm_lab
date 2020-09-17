@@ -207,7 +207,8 @@ int main(int argc, char *argv[])
         [=](std::string id, uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt, double& missed_msgs)
             {
                 return rtt_aggregator->get_rtt(id, c_best_rtt, c_worst_rtt, a_worst_rtt, missed_msgs);
-            }
+            },
+        [=](){return setupViewUi->kill_deployed_applications();}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);

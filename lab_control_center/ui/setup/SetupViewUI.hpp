@@ -34,6 +34,7 @@
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/RTTTool.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/setup/CrashChecker.hpp"
@@ -123,6 +124,13 @@ private:
     unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
     unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
+    //To remember last kill button press - s.t. it can't be spammed (would not be beneficial / can lead to crashes)
+    std::mutex kill_button_mutex;
+    std::thread kill_grey_out_thread;
+    std::atomic_bool kill_grey_out_running;
+    std::atomic_bool undo_kill_grey_out;
+    const uint64_t kill_timeout = 3e9; //3 seconds
+
     // Interface to LabCam
 #ifndef SIMULATION
     LabCamIface* labcam;
@@ -171,7 +179,6 @@ private:
 
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
-    void kill_deployed_applications();
     std::atomic_bool lcc_closed; //If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
@@ -200,6 +207,7 @@ private:
     std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
 
 public:
+    void kill_deployed_applications();
     /**
      * \brief Constructor
      * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc

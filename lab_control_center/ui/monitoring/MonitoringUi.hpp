@@ -71,27 +71,37 @@ public:
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
     std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values;
+    std::function<void()> kill_deployed_applications; 
 
-    //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
-    //Thus: Own timer implementation instead
+    // Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
+    // Thus: Own timer implementation instead
     void ui_update_loop();
     Glib::Dispatcher update_dispatcher; //to communicate between thread and GUI
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
-    //full rows
-    const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
-    //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
+    // Full rows
+    const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
+    // We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
     const vector<string> rows_restricted = {"ips_dt", "last_msg_state", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
+
+    // Indicates the starting time of the last error occurance for each vehicle
+    vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
+
+    // Indicates if an error already triggered a kill 
+    vector<vector<bool> > error_triggered{vector<vector<bool> > (rows_restricted.size(), vector<bool>(30,false))};
     
-    //Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
+    // Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
 
-    //This resets the ui thread, to get rid of old vehicle boxes (if the user desires to get rid of them)
+    // This resets the ui thread, to get rid of old vehicle boxes (if the user desires to get rid of them)
     void reset_ui_thread();
 
-    //Called when resetting the ui or when the object gets deleted - kills the currently running thread
+    // Called when resetting the ui or when the object gets deleted - kills the currently running thread
     void stop_ui_thread();
+
+    // Stop vehicles and HLCs 
+    void stop_experiment(std::vector<unsigned int>, std::vector<uint8_t>);
 
 public:
     explicit MonitoringUi(
@@ -100,7 +110,8 @@ public:
         std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
         std::function<void()> reset_data_callback,
-        std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values
+        std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values,
+        std::function<void()> kill_deployed_applications_callback 
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();
