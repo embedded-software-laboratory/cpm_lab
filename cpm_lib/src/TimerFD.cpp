@@ -69,6 +69,8 @@ namespace cpm {
 
         //Add Waitset for reader_system_trigger
         waitset += readCondition;
+
+        active.store(false);
     }
 
     void TimerFD::createTimer() {
@@ -135,9 +137,9 @@ namespace cpm {
         ready_status.next_start_stamp(TimeStamp(0));
         ready_status.source_id(node_id);
         
-        //Poll for start signal, send ready signal every 2 seconds until the start signal has been received
+        //Poll for start signal, send ready signal every 2 seconds until the start signal has been received or the thread has been killed
         //Break if stop signal was received
-        while(true) {
+        while(active.load()) {
             writer_ready_status.write(ready_status);
 
             waitset.wait(dds::core::Duration::from_millisecs(2000));
@@ -148,11 +150,14 @@ namespace cpm {
                 }
             }
         }
+
+        //Active is false, just return stop signal here
+        return stop_signal;
     }
 
     void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     {
-        if(this->active) {
+        if(active.load()) {
             Logging::Instance().write(
             2,
             "%s", 
@@ -161,7 +166,7 @@ namespace cpm {
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
-        this->active = true;
+        active.store(true);
 
         m_update_callback = update_callback;
 
@@ -190,7 +195,7 @@ namespace cpm {
 
         start_point_initialized = true;
 
-        while(this->active) {
+        while(active.load()) {
             this->wait();
             if(this->get_time() >= deadline) {
                 if(m_update_callback) m_update_callback(deadline);
@@ -219,7 +224,7 @@ namespace cpm {
                     }
                     else 
                     {
-                        this->active = false;
+                        active.store(false);
                     }
                 }
             }
@@ -262,7 +267,7 @@ namespace cpm {
 
     void TimerFD::stop()
     {
-        active = false;
+        active.store(false);
         if(runner_thread.joinable())
         {
             runner_thread.join();
@@ -271,7 +276,7 @@ namespace cpm {
 
     TimerFD::~TimerFD()
     {
-        active = false;
+        active.store(false);
         if(runner_thread.joinable())
         {
             runner_thread.join();

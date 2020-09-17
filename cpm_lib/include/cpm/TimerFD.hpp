@@ -42,6 +42,8 @@
 #include "cpm/exceptions.hpp"
 #include "cpm/get_time_ns.hpp"
 
+#include <atomic>
+
 /**
  * \class TimerFD.hpp
  * This class calls a callback function periodically 
@@ -68,7 +70,7 @@ namespace cpm {
         dds::sub::cond::ReadCondition readCondition;
         dds::core::cond::WaitSet waitset;
         
-        bool active = false;
+        std::atomic_bool active;
         int timer_fd = -1;
         std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
