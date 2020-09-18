@@ -372,14 +372,34 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
         //We want to output a bit of the past values
         //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
+        //But we only want to do this if not too much time has passed (we are not interested in e.g. 10 second old points)
         int past_length = 3;
-        while (start_trajectory_index > 0 && past_length > 0)
+        auto current_time = cpm::get_time_ns();
+        uint64_t max_age = 1e9; //1 second
+        while (start_trajectory_index > 0 && past_length > 0 
+            && (current_time - trajectory_segment.at(start_trajectory_index - 1).t().nanoseconds()) < max_age) //age check
         {
             --start_trajectory_index;
             --past_length;
         }      
 
-        if(trajectory_segment.size() > 1)
+        //Also perform an age check here and ignore the whole segment if even the newest point is too old
+        auto t_size = trajectory_segment.size();
+        bool trajectory_outdated = true;
+        if (t_size > 1)
+        {
+            auto newest_time = trajectory_segment.at(t_size - 1).t().nanoseconds();
+            if (newest_time > current_time)
+            {
+                trajectory_outdated = false;
+            }
+            else
+            {
+                trajectory_outdated = (current_time - newest_time) >= max_age;
+            }
+        }
+
+        if(t_size > 1 && !trajectory_outdated)
         {
             // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
             // Also, only draw recent data
