@@ -38,10 +38,6 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {   
-    init();
-}
-
-void VehicleTrajectoryPlanningState::init() {
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
@@ -161,12 +157,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             {
                 // It's possible that we don't have data for this index
                 // We will skip it, which is unsafe, but our only option right now
-                if( other_path.count(i) == 0 ) {
-                    if(i==26) {
-                    std::cout << unsigned(vehicle_id) << " has no up-to-date data on " << unsigned(iter->first) << " for collision avoidance" << std::endl;
-                    }
-                    continue;
-                }
+                if( other_path.count(i) == 0 ) { continue; }
 
                 if(laneGraphTools.edge_path_collisions
                     [self_path[i].first]
@@ -229,7 +220,6 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             }
             std::cout << std::endl;
 
-            //TODO: What if we just restarted the PlanningState, with a new random route?
             return false;
         }
 

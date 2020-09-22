@@ -62,7 +62,6 @@ class VehicleTrajectoryPlanningState
 
     array<double, N_STEPS_SPEED_PROFILE> speed_profile;
 
-    void init();
     void invariant();
     void extend_random_route(size_t n);
     vector<std::pair<size_t, size_t>> get_planned_path();
