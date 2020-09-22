@@ -104,21 +104,6 @@ int main(int argc, char *argv[])
     );
     cpm::Logging::Instance().write(3,
             "VehicleObservation reader created.");
-    
-    // These readers and writers are used to exchange planned trajectories
-    // between the VehicleTrajectoryPlanners
-    auto writer_laneGraphTrajectory = std::make_shared< dds::pub::DataWriter<LaneGraphTrajectory> >(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
-    cpm::Logging::Instance().write(3,
-            "LaneGraphTrajectory writer created.");
-    auto reader_laneGraphTrajectory = std::make_shared< dds::sub::DataReader<LaneGraphTrajectory> >(
-        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
-    cpm::Logging::Instance().write(3,
-            "LaneGraphTrajectory reader created.");
 
     // These readers and writers are used to exchange changes in planned trajectories
     // between the VehicleTrajectoryPlanners
@@ -199,11 +184,8 @@ int main(int argc, char *argv[])
                 }
             }
 
-            planner->set_writer(writer_laneGraphTrajectory);
-            planner->set_reader(reader_laneGraphTrajectory);
-
-            planner->set_writer2(writer_laneGraphTrajectoryChanges);
-            planner->set_reader2(reader_laneGraphTrajectoryChanges);
+            planner->set_writer(writer_laneGraphTrajectoryChanges);
+            planner->set_reader(reader_laneGraphTrajectoryChanges);
 
             //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
             //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)

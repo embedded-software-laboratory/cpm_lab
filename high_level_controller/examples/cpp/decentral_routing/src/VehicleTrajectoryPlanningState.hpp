@@ -38,7 +38,7 @@
 using std::vector;
 using std::array;
 
-#define N_STEPS_SPEED_PROFILE (100)
+#define N_STEPS_SPEED_PROFILE (3000)
 
 
 
@@ -62,6 +62,7 @@ class VehicleTrajectoryPlanningState
 
     array<double, N_STEPS_SPEED_PROFILE> speed_profile;
 
+    void init();
     void invariant();
     void extend_random_route(size_t n);
     vector<std::pair<size_t, size_t>> get_planned_path();
@@ -81,6 +82,6 @@ public:
     void apply_timestep(uint64_t dt_nanos);
 
     // Change the own speed profile so as not to collide with the other_vehicles.
-    bool avoid_collisions(std::map<uint8_t, LaneGraphTrajectory> other_vehicles);
+    bool avoid_collisions(std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles);
     uint8_t get_vehicle_id(){return vehicle_id;}
 };

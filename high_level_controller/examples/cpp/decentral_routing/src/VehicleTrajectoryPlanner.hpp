@@ -43,9 +43,8 @@ using std::vector;
 class VehicleTrajectoryPlanner
 {
     std::shared_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
-    std::map<uint8_t, LaneGraphTrajectory> previous_vehicles_buffer;
-    std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer_laneGraphTrajectory;
-    std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
+    std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> previous_vehicles_buffer;
+    LaneGraphTrajectory old_lane_graph_trajectory;
     std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer_laneGraphTrajectoryChanges;
     std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader_laneGraphTrajectoryChanges;
     bool started = false;
@@ -57,10 +56,8 @@ class VehicleTrajectoryPlanner
     vector<TrajectoryPoint> trajectory_point_buffer;
     void read_previous_vehicles();
     void shift_previous_vehicles_buffer();
-    std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> previous_vehicles_buffer2;
     vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
     void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes, uint64_t t_planning );
-    LaneGraphTrajectory prev_lane_graph_trajectory;
     
 public:
 
@@ -73,10 +70,8 @@ public:
     void set_other_vehicles(
             std::map<uint8_t, std::vector<VehicleCommandTrajectory> > trajectory_samples
     );
-    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
-    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
-    void set_writer2(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer);
-    void set_reader2(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader);
+    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer);
+    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader);
     void start();
 
 };

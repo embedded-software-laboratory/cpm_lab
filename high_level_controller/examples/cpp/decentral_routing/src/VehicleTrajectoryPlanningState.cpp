@@ -38,6 +38,10 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {   
+    init();
+}
+
+void VehicleTrajectoryPlanningState::init() {
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
@@ -60,13 +64,6 @@ void VehicleTrajectoryPlanningState::invariant()
 void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
 {
     uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
-    //cpm::Logging::Instance().write(3,
-    //        "n_steps: %d\n\
-    //        dt_nanos: %d\n\
-    //        dt_speed_profile_nanos: %d",
-    //        n_steps,
-    //        dt_nanos,
-    //        dt_speed_profile_nanos);
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
     assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
     assert(n_steps >= 1);
@@ -143,15 +140,13 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 // Change the own speed profile so as not to collide with the other_vehicles.
 // other_vehicles may only contain vehicles with a higher priority
 bool VehicleTrajectoryPlanningState::avoid_collisions(
-    std::map<uint8_t, LaneGraphTrajectory> other_vehicles
+    std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles
 )
 {
     // TODO termination condition
     // for now: if this gets stuck the vehicles will stop, because they wont get a new command
     while(1)
     {
-        // TODO: Replace this with get_lane_graph_trajectory, then we don't need
-        // get_planned_path anymore
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
@@ -159,29 +154,31 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         int colliding_vehicle_id = 0;
 
         // Find the earliest collision
-        for(
-                std::map<uint8_t, LaneGraphTrajectory>::iterator it =
-                other_vehicles.begin(); it != other_vehicles.end(); ++it
-        ){
-            rti::core::vector<LaneGraphPosition> other_path = it->second.lane_graph_positions();
-
-            // Ignoring for now, because LaneGraphTrajectory doesn't have size()
-            //assert(self_path.size() == N_STEPS_SPEED_PROFILE);
-            //assert(other_path.size() == N_STEPS_SPEED_PROFILE);
+        for( auto iter = other_vehicles.begin(); iter != other_vehicles.end(); ++iter ){
+            std::map<size_t, std::pair<size_t, size_t>> other_path = iter->second;
 
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
+                // It's possible that we don't have data for this index
+                // We will skip it, which is unsafe, but our only option right now
+                if( other_path.count(i) == 0 ) {
+                    if(i==26) {
+                    std::cout << unsigned(vehicle_id) << " has no up-to-date data on " << unsigned(iter->first) << " for collision avoidance" << std::endl;
+                    }
+                    continue;
+                }
+
                 if(laneGraphTools.edge_path_collisions
                     [self_path[i].first]
                     [self_path[i].second]
-                    [other_path[i].edge_index()]
-                    [other_path[i].edge_path_index()])
+                    [other_path[i].first]
+                    [other_path[i].second])
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
                     {
                         earliest_collision__speed_profile_index = i;
-                        colliding_vehicle_id = it->second.vehicle_id();
+                        colliding_vehicle_id = iter->first;
                     }
                     // earliest collision for this vehicle found, stop
                     break;
@@ -232,6 +229,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             }
             std::cout << std::endl;
 
+            //TODO: What if we just restarted the PlanningState, with a new random route?
             return false;
         }
 
