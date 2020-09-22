@@ -54,10 +54,12 @@ class VehicleTrajectoryPlanner
     std::mutex mutex;
     std::thread planning_thread;
     const uint64_t dt_nanos;
-    std::vector<TrajectoryPoint> trajectory_point_buffer;
+    vector<TrajectoryPoint> trajectory_point_buffer;
     void read_previous_vehicles();
+    void shift_previous_vehicles_buffer();
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> previous_vehicles_buffer2;
-    LaneGraphTrajectoryChanges get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
+    vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
+    void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes, uint64_t t_planning );
     LaneGraphTrajectory prev_lane_graph_trajectory;
     
 public:

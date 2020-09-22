@@ -123,18 +123,15 @@ void VehicleTrajectoryPlanner::start()
                     prev_lane_graph_trajectory = lane_graph_trajectory;
                 }
 
-                LaneGraphTrajectoryChanges lane_graph_trajectory_changes = get_changes(
+                vector<LaneGraphTrajectoryChanges> lane_graph_trajectory_changes = get_changes(
                         prev_lane_graph_trajectory,
                         lane_graph_trajectory
                         );
 
+                write_changes( lane_graph_trajectory_changes, t_planning );
+
                 // We got our changes to the trajectory; so this is now the old trajectory of our next step
                 prev_lane_graph_trajectory = lane_graph_trajectory;
-
-                lane_graph_trajectory_changes.vehicle_id(trajectoryPlan->get_vehicle_id());
-                lane_graph_trajectory_changes.header().create_stamp().nanoseconds(t_planning);
-                lane_graph_trajectory_changes.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
-                this->writer_laneGraphTrajectoryChanges->write(lane_graph_trajectory_changes);
 
                 while(trajectory_point_buffer.size() > 50)
                 {
@@ -148,6 +145,8 @@ void VehicleTrajectoryPlanner::start()
             trajectoryPlan->apply_timestep(dt_nanos);
 
             t_planning += dt_nanos;
+
+            shift_previous_vehicles_buffer();
 
             while(t_real_time + 6000000000ull < t_planning) usleep(110000);
         }
@@ -173,6 +172,9 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
             // We ignore everything with lower priorities
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
 
+            if( sample.data().lane_graph_position_changes().size() > 0 ) { 
+                std::cout << "Inputting " << sample.data().lane_graph_position_changes().size() << " changes" << std::endl;
+            }
             for ( auto change : sample.data().lane_graph_position_changes() ) {
                 previous_vehicles_buffer2[sample.data().vehicle_id()][change.index()] =
                     std::make_pair(
@@ -182,37 +184,97 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
             }
         }
     }
+    for(auto it = previous_vehicles_buffer2.begin(); it != previous_vehicles_buffer2.end(); ++it){
+        //std::cout << "Key: " << (int) it->first << std::endl;
+    }
 }
 
-LaneGraphTrajectoryChanges VehicleTrajectoryPlanner::get_changes(
+vector<LaneGraphTrajectoryChanges> VehicleTrajectoryPlanner::get_changes(
         LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new) {
     
-    LaneGraphTrajectoryChanges result;
-    
+    vector<LaneGraphTrajectoryChanges> result;
+    uint64_t msg_max_length = 100; // Maximum length of a DDS message
+
+    // 16000000ull is dt_speed_profile_nanos from PlanningState
+    int steps = dt_nanos / 16000000ull;
     //TODO: this hardcoded 100 is N_STEPS_SPEED_PROFILE and should NOT be hardcoded
-    for(int i=0; i<100; i++) {
-       if(trajectory_old.lane_graph_positions()[i] != trajectory_new.lane_graph_positions()[i]) {
-           //std::cout << "Change in lane_graph_trajectory at index " << i <<std::endl;
-           std::cout << "Index: " << i << "\tOld: " << trajectory_old.lane_graph_positions()[i] << "\tNew: " << trajectory_new.lane_graph_positions()[i] << std::endl;
+    int n_steps_speed_profile = 100;
+
+    std::vector<LaneGraphPositionChange> temp;
+    
+    for(int i=0; i<n_steps_speed_profile - steps; i++) {
+
+        if ( i%msg_max_length == 0 && i>0 ) {
+            // We split the changes into messages of length < 100 each
+            LaneGraphTrajectoryChanges msg;
+            msg.lane_graph_position_changes(temp);
+            result.push_back(msg); 
+
+            std::vector<LaneGraphPositionChange> temp;
+        }
+
+        LaneGraphPosition pos_old = trajectory_old.lane_graph_positions()[i+steps];
+        LaneGraphPosition pos_new = trajectory_new.lane_graph_positions()[i];
+
+        if(pos_old != pos_new) {
+            //std::cout << "Change at Index: " << i << "; Old: " << pos_old << "; New: " << pos_new << std::endl;
+
+            LaneGraphPositionChange change;
+            change.index(i);
+            change.lane_graph_position().edge_index(pos_new.edge_index());
+            change.lane_graph_position().edge_path_index(pos_new.edge_path_index());
+            temp.push_back(change); 
        } 
     }
 
-    std::cout << "-------------------------------------------------------------------" << std::endl;
+    // Push the last remaining <100 changes to the result
+    LaneGraphTrajectoryChanges msg;
+    msg.lane_graph_position_changes(temp);
+    result.push_back(msg); 
 
     return result;
 }
 
-void VehicleTrajectoryPlanner::set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
+void VehicleTrajectoryPlanner::write_changes( vector<LaneGraphTrajectoryChanges> vector_changes, uint64_t t_planning ) {
+    for ( uint64_t i = 0; i < vector_changes.size(); i++ ) {
+        LaneGraphTrajectoryChanges msg = vector_changes[i];
+        msg.vehicle_id(trajectoryPlan->get_vehicle_id());
+        msg.header().create_stamp().nanoseconds(t_planning);
+        msg.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
+        this->writer_laneGraphTrajectoryChanges->write(msg);
+    }
+}
+
+void VehicleTrajectoryPlanner::shift_previous_vehicles_buffer() {
+
+    uint64_t offset_per_timestep = 25;
+    for(auto iter_vehicle = previous_vehicles_buffer2.begin(); iter_vehicle != previous_vehicles_buffer2.end(); ++iter_vehicle){
+        std::map<size_t, std::pair<size_t, size_t>> trajectory = iter_vehicle->second;
+
+        for( auto iter_trajectory = trajectory.begin(); iter_trajectory != trajectory.end(); ++iter_trajectory ) {
+            //TODO: 25 is dt_nanos divided by dt_speed_steps_nanos
+            if( iter_trajectory->first < offset_per_timestep ) { continue; }  
+            previous_vehicles_buffer2[ iter_trajectory->first - offset_per_timestep ] =
+                previous_vehicles_buffer2[ iter_trajectory->first ];
+        }
+    }
+}
+
+void VehicleTrajectoryPlanner::set_writer(
+        std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
     writer_laneGraphTrajectory = writer;
 }
-void VehicleTrajectoryPlanner::set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader){
+void VehicleTrajectoryPlanner::set_reader(
+        std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader){
     reader_laneGraphTrajectory = reader;
 }
 
 //TODO: Switch everything from LaneGraphTrajectory to LaneGraphTrajectoryChanges
-void VehicleTrajectoryPlanner::set_writer2(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer){
+void VehicleTrajectoryPlanner::set_writer2(
+        std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer){
     writer_laneGraphTrajectoryChanges = writer;
 }
-void VehicleTrajectoryPlanner::set_reader2(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader){
+void VehicleTrajectoryPlanner::set_reader2(
+        std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader){
     reader_laneGraphTrajectoryChanges = reader;
 }
