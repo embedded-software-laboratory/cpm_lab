@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
     );
-
+    /*
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
     //They are relative to the defined center point defined below as map_center_x and map_center_y
@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
     vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
     vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
     vector<uint64_t> segment_duration = vector<uint64_t>{1570800000ull, 1570800000ull, 1570800000ull, 1570800000ull};
-
-    /*
+    */
+    
     // Figure eight trajectory data
     vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
     vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
     vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
     vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
-    */
+    
 
     assert(segment_duration.size() == trajectory_px.size());
     assert(segment_duration.size() == trajectory_py.size());
