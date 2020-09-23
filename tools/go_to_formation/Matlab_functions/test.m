@@ -1,13 +1,29 @@
-startPose = [0.3, 3.7, -90]; % [meters, meters, degrees]
-goalPose  = [2.0, 1.5, 90];
 
-xObstacles = [0.3, 0.4, 0.5, 0.6, 0.7, 1.0, 1.3, 1.4, 1.5, 1.6, 1.8, 1.9, 2.2, 2.5, 2.8, 3.1, 3.4, 3.7, 4.0]'; 
-yObstacles = [0.3, 0.4, 0.5, 0.6, 0.7, 1.0, 1.3, 1.4, 1.5, 1.6, 1.8, 1.9, 2.2, 2.5, 2.8, 3.1, 3.4, 3.7, 4.0]';
+% to be created from VehicleObservation
+startPoses = struct('vehicle_1', []);
+startPoses.vehicle_1.x = 2.3;
+startPoses.vehicle_1.y = 1.5;
+%actually rad
+startPoses.vehicle_1.yaw = 225;
 
-[transitionPoses] = PlanAndShowRRTPath(startPose, goalPose, xObstacles, yObstacles);
 
-figure
-scatter(transitionPoses(:,1),transitionPoses(:,2),[],'filled', ...
-    'DisplayName','Transition Poses')
-xlim([0 4.5])
-ylim([0 4])
+startPoses.vehicle_4 = [];
+startPoses.vehicle_4.x = 1.3;
+startPoses.vehicle_4.y = 2.5;
+%actually rad
+startPoses.vehicle_4.yaw = 125;
+
+startPoses.vehicle_7 = [];
+startPoses.vehicle_7.x = 2.3;
+startPoses.vehicle_7.y = 2.5;
+%actually rad
+startPoses.vehicle_7.yaw = 25;
+
+goalPoses = setHomePoses(startPoses);
+[transitionPoses] = PlanAndShowRRTPath(startPoses, goalPoses);
+
+% figure
+% scatter(transitionPoses(:,1),transitionPoses(:,2),[],'filled', ...
+%     'DisplayName','Transition Poses')
+% xlim([0 4.5])
+% ylim([0 4])
