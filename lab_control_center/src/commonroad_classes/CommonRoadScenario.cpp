@@ -764,6 +764,10 @@ void CommonRoadScenario::calculate_center()
     center.first = (0.5 * x_min) + (0.5 * x_max);
     center.second = (0.5 * y_min) + (0.5 * y_max);
 
+    //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
+    center.first -= 2.25;
+    center.second -= 2.0;
+
     std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }
 

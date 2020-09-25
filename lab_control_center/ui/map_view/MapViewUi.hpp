@@ -104,6 +104,11 @@ class MapViewUi
 
     void draw_grid(const DrawingContext& ctx);
 
+    /**
+     * \brief Draw the boundaries of the IPS / Lab to allow for fine-tuning the adjustment of commonroad maps, see where vehicle can be put etc.
+     */
+    void draw_lab_boundaries(const DrawingContext& ctx);
+
     void draw_vehicle_past_trajectory(
         const DrawingContext& ctx, 
         const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries

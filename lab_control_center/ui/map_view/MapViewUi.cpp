@@ -319,6 +319,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
             ctx->fill();
         }
 
+        draw_lab_boundaries(ctx);
+
         draw_received_trajectory_commands(ctx);
 
         for(const auto& entry : vehicle_data) {
@@ -347,6 +349,39 @@ void MapViewUi::draw(const DrawingContext& ctx)
             }
         }
     }
+    ctx->restore();
+}
+
+void MapViewUi::draw_lab_boundaries(const DrawingContext& ctx)
+{
+    ctx->save();
+
+    ctx->set_line_width(0.005);
+    ctx->set_source_rgb(77.0/255.0, 147.0/255.0, 215.0/255.0);
+
+    auto lab_bound_x_1 = 0.0;
+    auto lab_bound_x_2 = 4.5;
+    auto lab_bound_y_1 = 0.0;
+    auto lab_bound_y_2 = 4.0;
+
+    //Move to first corner of lab boundaries
+    ctx->move_to(lab_bound_x_1, lab_bound_y_1);
+
+    //Draw lines
+    ctx->line_to(lab_bound_x_1, lab_bound_y_2);
+    ctx->line_to(lab_bound_x_2, lab_bound_y_2);
+    ctx->line_to(lab_bound_x_2, lab_bound_y_1);
+    ctx->line_to(lab_bound_x_1, lab_bound_y_1);
+    ctx->stroke();
+
+    //Show LCC boundaries text
+    ctx->move_to(lab_bound_x_1, lab_bound_y_2);
+    //Flip font
+    Cairo::Matrix font_matrix(0.1, 0.0, 0.0, -0.1, 0.0, 0.0);
+    ctx->set_font_matrix(font_matrix);
+    //Draw text
+    ctx->show_text("IPS boundary");
+
     ctx->restore();
 }
 
