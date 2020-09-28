@@ -448,20 +448,33 @@ void SetupViewUI::deploy_applications() {
 
     //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
     //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
-    auto filepath_c_str = script_path->get_text().c_str();
     bool file_exists = false;
     //First make sure that there is anything but spaces in the string
-    std::string filepath_str = filepath_c_str;
+    std::string filepath_str = script_path->get_text().c_str();
     if (filepath_str.find_first_not_of(' ') != std::string::npos)
     {
         //Now also check if the path actually exists
-        std::filesystem::path filepath = filepath_c_str;
+        std::filesystem::path filepath = filepath_str;
 
         if (std::filesystem::exists(filepath))
         {
-            file_exists = true;
+            //Update path to absolute path, s.t. deploy remote does not have any problems
+            try
+            {
+                filepath_str = std::filesystem::absolute(filepath);
+                file_exists = true;
+            }
+            catch(const std::filesystem::filesystem_error& e)
+            {
+                std::stringstream error_stream;
+                error_stream << "Could not convert given script path to absolute path, error is: " << e.what();
+                cpm::Logging::Instance().write(1, "%s", error_stream.str().c_str());
+            }
         }
     }
+
+    std::filesystem::path filepath = filepath_str;
+    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
@@ -492,10 +505,9 @@ void SetupViewUI::deploy_applications() {
 
         //Deploy remote
         auto simulated_time = switch_simulated_time->get_active();
-        std::string path = filepath_c_str;
         std::string params = script_params->get_text().c_str();
 
-        upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
+        upload_manager->deploy_remote(simulated_time, filepath_str, params, hlc_ids, vehicle_ids);
 
         //Now those vehicles that could not be matched are treated as in the local case
         if (vehicle_ids.size() > hlc_ids.size())
@@ -509,7 +521,7 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_c_str, script_params->get_text().c_str());
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
@@ -520,7 +532,7 @@ void SetupViewUI::deploy_applications() {
     }
     else if (file_exists)
     {
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_c_str, script_params->get_text().c_str());
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_str, script_params->get_text().c_str());
     }
     else
     {

@@ -127,7 +127,7 @@ public:
      * \param hlc_id The ID of the HLC on which the software shall be deployed -> used to get the IP address
      * \param vehicle_ids One or multiple vehicle IDs, comma-separated, as string - to be passed to the middleware and the script
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
-     * \param script_path Path to the script, including the script name (and possible file ending)
+     * \param script_path Path to the script, including the script name (and possible file ending) - MUST BE ABSOLUTE
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
      * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
