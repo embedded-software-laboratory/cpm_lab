@@ -39,6 +39,8 @@
 
 /**
  * \brief This class can be used to get RTT measurements and stop (/restart) them during simulation (/afterwards)
+ * Measurements also include the number of missing replies (if no reply was received by any sender with the same ID (e.g. 'vehicle'))
+ * After a timeout and no replies, measurements are reset / deleted for that ID (they are assumed to be turned off on purpose)
  */
 class RTTAggregator
 {

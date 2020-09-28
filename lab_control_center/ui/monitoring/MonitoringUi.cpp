@@ -636,6 +636,7 @@ void MonitoringUi::init_ui_thread()
         if (!hlc_rtt_exists)
         {
             label_rtt_hlc_short->set_text("HLC RTT (ms): ---");
+            label_rtt_hlc_long->set_text("---");
         }
         else
         {
@@ -660,6 +661,7 @@ void MonitoringUi::init_ui_thread()
         if (!vehicle_rtt_exists)
         {
             label_rtt_vehicle_short->set_text("Vehicle RTT (ms): ---");
+            label_rtt_vehicle_long->set_text("---");
         }
         else
         {

@@ -56,6 +56,7 @@
 
 /**
  * \brief This class is responsible for checking if background tasks that are supposed to be running are still running - else, a warning is displayed
+ * It also reports wrong script/program locations set in the LCC for the main script
  */
 class CrashChecker
 {
@@ -112,12 +113,13 @@ public:
 
     /**
      * \brief Start checking if the deployed applications are still running
+     * \param script_used If a script + middleware was deployed (else only check for crashes of IPS etc) 
      * \param remote_hlc_ids If deployed remotely: IDs of HLCs on which the software was deployed
      * \param has_local_hlc True if local HLCs are used on top of remote ones
      * \param lab_mode_on Whether the IPS etc. should be running
      * \param labcam_toggled If true, the labcam program should be running too
      */
-    void start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled);
+    void start_checking(bool script_used, std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled);
 
     /**
      * \brief Stop checking for crashes

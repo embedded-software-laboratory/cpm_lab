@@ -177,7 +177,7 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes()
     return crashed_programs;
 }
 
-void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
+void CrashChecker::start_checking(bool script_used, std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
 {
     kill_crash_check_thread();
 
@@ -192,20 +192,33 @@ void CrashChecker::start_checking(std::vector<uint8_t> remote_hlc_ids, bool has_
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
-        [this, remote_hlc_ids, has_local_hlc, lab_mode_on, labcam_toggled] () {
+        [this, script_used, remote_hlc_ids, has_local_hlc, lab_mode_on, labcam_toggled] () {
             //Give programs time to actually start
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+            //Warn once in case no script was used
+            bool script_used_warned = false;
+
             while(crash_check_running.load())
             {
-                auto crashed_participants_local = deploy_functions->check_for_crashes((remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
+                auto crashed_participants_local = deploy_functions->check_for_crashes(script_used, (remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
 
-                auto crashed_participants_remote = check_for_remote_crashes();
+                std::vector<std::string> crashed_participants_remote;
+                if (script_used)
+                    crashed_participants_remote = check_for_remote_crashes();
+                
 
                 std::vector<std::string> crashed_participants;
                 crashed_participants.reserve(crashed_participants_local.size() + crashed_participants_remote.size());
                 crashed_participants.insert(crashed_participants.end(), crashed_participants_local.begin(), crashed_participants_local.end());
                 crashed_participants.insert(crashed_participants.end(), crashed_participants_remote.begin(), crashed_participants_remote.end());
+
+                //Display msg if no script was started due to path settings
+                if (!script_used_warned && !script_used)
+                {
+                    crashed_participants.push_back("HLC/Middleware (invalid path set by user)");
+                    script_used_warned = true;
+                }
 
                 update_crashed_participants(crashed_participants);
 
