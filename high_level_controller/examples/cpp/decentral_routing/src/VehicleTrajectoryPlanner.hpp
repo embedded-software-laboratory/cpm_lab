@@ -54,7 +54,7 @@ class VehicleTrajectoryPlanner
     std::thread planning_thread;
     const uint64_t dt_nanos;
     vector<TrajectoryPoint> trajectory_point_buffer;
-    void read_previous_vehicles();
+    void read_previous_vehicles(uint64_t t_planning);
     void shift_previous_vehicles_buffer();
     vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
     void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes, uint64_t t_planning );
