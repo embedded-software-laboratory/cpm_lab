@@ -52,7 +52,7 @@
 class Circle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    std::optional<Point> center; //must not be set
+    std::optional<Point> center = std::nullopt; //must not be set
     double radius; //In constructor: Check if >= 0, must be unsigned
 
 public:

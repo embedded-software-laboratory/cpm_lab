@@ -63,7 +63,7 @@ private:
     double transform_scale = 1.0;
     
     //Exact position (positionExact)
-    std::optional<Point> point;
+    std::optional<Point> point = std::nullopt;
 
     //Inexact position (positionInterval)
     std::vector<Circle> circles;

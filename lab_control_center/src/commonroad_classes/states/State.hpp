@@ -55,43 +55,43 @@ class State : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<Position> position;
-    std::optional<IntervalOrExact> orientation;
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double
-    std::optional<IntervalOrExact> velocity;
-    std::optional<IntervalOrExact> acceleration;
-    std::optional<IntervalOrExact> yaw_rate;
-    std::optional<IntervalOrExact> slip_angle;
+    std::optional<Position> position = std::nullopt;
+    std::optional<IntervalOrExact> orientation = std::nullopt;
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double
+    std::optional<IntervalOrExact> velocity = std::nullopt;
+    std::optional<IntervalOrExact> acceleration = std::nullopt;
+    std::optional<IntervalOrExact> yaw_rate = std::nullopt;
+    std::optional<IntervalOrExact> slip_angle = std::nullopt;
 
     //2020 specs only
-    std::optional<IntervalOrExact> steering_angle;
-    std::optional<IntervalOrExact> roll_angle;
-    std::optional<IntervalOrExact> roll_rate;
-    std::optional<IntervalOrExact> pitch_angle;
-    std::optional<IntervalOrExact> pitch_rate;
-    std::optional<IntervalOrExact> velocity_y;
-    std::optional<IntervalOrExact> position_z;
-    std::optional<IntervalOrExact> velocity_z;
-    std::optional<IntervalOrExact> roll_angle_front;
-    std::optional<IntervalOrExact> roll_rate_front;
-    std::optional<IntervalOrExact> velocity_y_front;
-    std::optional<IntervalOrExact> position_z_front;
-    std::optional<IntervalOrExact> velocity_z_front;
-    std::optional<IntervalOrExact> roll_angle_rear;
-    std::optional<IntervalOrExact> roll_rate_rear;
-    std::optional<IntervalOrExact> velocity_y_rear;
-    std::optional<IntervalOrExact> position_z_rear;
-    std::optional<IntervalOrExact> velocity_z_rear;
-    std::optional<IntervalOrExact> left_front_wheel_angular_speed;
-    std::optional<IntervalOrExact> right_front_wheel_angular_speed;
-    std::optional<IntervalOrExact> left_rear_wheel_angular_speed;
-    std::optional<IntervalOrExact> right_rear_wheel_angular_speed;
-    std::optional<IntervalOrExact> delta_y_front;
-    std::optional<IntervalOrExact> delta_y_rear;
-    std::optional<IntervalOrExact> curvature;
-    std::optional<IntervalOrExact> curvature_change;
-    std::optional<IntervalOrExact> jerk;
-    std::optional<IntervalOrExact> jounce;
+    std::optional<IntervalOrExact> steering_angle = std::nullopt;
+    std::optional<IntervalOrExact> roll_angle = std::nullopt;
+    std::optional<IntervalOrExact> roll_rate = std::nullopt;
+    std::optional<IntervalOrExact> pitch_angle = std::nullopt;
+    std::optional<IntervalOrExact> pitch_rate = std::nullopt;
+    std::optional<IntervalOrExact> velocity_y = std::nullopt;
+    std::optional<IntervalOrExact> position_z = std::nullopt;
+    std::optional<IntervalOrExact> velocity_z = std::nullopt;
+    std::optional<IntervalOrExact> roll_angle_front = std::nullopt;
+    std::optional<IntervalOrExact> roll_rate_front = std::nullopt;
+    std::optional<IntervalOrExact> velocity_y_front = std::nullopt;
+    std::optional<IntervalOrExact> position_z_front = std::nullopt;
+    std::optional<IntervalOrExact> velocity_z_front = std::nullopt;
+    std::optional<IntervalOrExact> roll_angle_rear = std::nullopt;
+    std::optional<IntervalOrExact> roll_rate_rear = std::nullopt;
+    std::optional<IntervalOrExact> velocity_y_rear = std::nullopt;
+    std::optional<IntervalOrExact> position_z_rear = std::nullopt;
+    std::optional<IntervalOrExact> velocity_z_rear = std::nullopt;
+    std::optional<IntervalOrExact> left_front_wheel_angular_speed = std::nullopt;
+    std::optional<IntervalOrExact> right_front_wheel_angular_speed = std::nullopt;
+    std::optional<IntervalOrExact> left_rear_wheel_angular_speed = std::nullopt;
+    std::optional<IntervalOrExact> right_rear_wheel_angular_speed = std::nullopt;
+    std::optional<IntervalOrExact> delta_y_front = std::nullopt;
+    std::optional<IntervalOrExact> delta_y_rear = std::nullopt;
+    std::optional<IntervalOrExact> curvature = std::nullopt;
+    std::optional<IntervalOrExact> curvature_change = std::nullopt;
+    std::optional<IntervalOrExact> jerk = std::nullopt;
+    std::optional<IntervalOrExact> jounce = std::nullopt;
 
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;

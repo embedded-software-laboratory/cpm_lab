@@ -54,8 +54,8 @@ class Rectangle : public InterfaceTransform, public InterfaceDraw, public Interf
 private:
     double length; //In constructor: Check if >= 0, must be unsigned
     double width;  //In constructor: Check if >= 0, must be unsigned
-    std::optional<Point> center; //must not be set (probably has default value then)
-    std::optional<double> orientation; //must not be set (probably has default value then)
+    std::optional<Point> center = std::nullopt; //must not be set (probably has default value then)
+    std::optional<double> orientation = std::nullopt; //must not be set (probably has default value then)
 
 public:
     Rectangle(const xmlpp::Node* node);

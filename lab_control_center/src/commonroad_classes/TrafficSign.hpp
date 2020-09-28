@@ -71,7 +71,7 @@ struct TrafficSignPost
 struct TrafficSignElement
 {
     std::vector<TrafficSignPost> traffic_sign_posts;
-    std::optional<Position> position; //Must be exact according to spec! Ptr because we do not have a default constructor
+    std::optional<Position> position = std::nullopt; //Must be exact according to spec! Ptr because we do not have a default constructor
     std::vector<bool> is_virtual;
 };
 

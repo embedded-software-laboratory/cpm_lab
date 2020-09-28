@@ -56,3 +56,4 @@ cpm_lib/include/cpm/dds
 cpm_lib/cpm_library_package
 build_arm/
 lab_control_center/*.config
+lab_control_center/vgdump

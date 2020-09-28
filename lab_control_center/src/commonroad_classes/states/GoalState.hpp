@@ -57,10 +57,10 @@ class GoalState : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double
-    std::optional<Position> position; //Must not be defined 
-    std::optional<Interval> orientation; //Must not be defined
-    std::optional<Interval> velocity; //Must not be defined
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double
+    std::optional<Position> position = std::nullopt; //Must not be defined 
+    std::optional<Interval> orientation = std::nullopt; //Must not be defined
+    std::optional<Interval> velocity = std::nullopt; //Must not be defined
 
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;

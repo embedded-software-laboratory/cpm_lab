@@ -56,11 +56,11 @@ class StateExact : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<Position> position; //Exact position!
+    std::optional<Position> position = std::nullopt; //Exact position!
     double orientation;
     double time; //In some parts, this is a double (though it shouldn't be a double here) - double chosen for consistency
     double velocity;
-    std::optional<double> acceleration; //Must not exist
+    std::optional<double> acceleration = std::nullopt; //Must not exist
     double yaw_rate;
     double slip_angle;
 

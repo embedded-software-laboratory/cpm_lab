@@ -79,7 +79,7 @@ struct TrafficCycleElement
 struct TrafficLightCycle
 {
     std::vector<TrafficCycleElement> cycle_elements;
-    std::optional<unsigned int> time_offset;
+    std::optional<unsigned int> time_offset = std::nullopt;
 };
 
 /**
@@ -90,7 +90,7 @@ struct TrafficLightElement
 {
     //Commonroad types
     TrafficLightCycle cycle;
-    std::optional<Position> position; //TODO: Position is specified as being always exact
+    std::optional<Position> position = std::nullopt; //TODO: Position is specified as being always exact
     Direction direction;
     bool is_active; //Probably defaults to true, as it must not occur
 };

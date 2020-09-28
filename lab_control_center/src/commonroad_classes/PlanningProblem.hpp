@@ -55,7 +55,7 @@
  */
 struct PlanningProblemElement
 {
-    std::optional<StateExact> initial_state;
+    std::optional<StateExact> initial_state = std::nullopt;
     std::vector<GoalState> goal_states;
 };
 

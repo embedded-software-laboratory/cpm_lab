@@ -19,11 +19,11 @@
  */
 struct ObstacleSimulationSegment
 {
-    std::optional<std::pair<double, double>> position; //x, y
-    std::optional<int> lanelet_ref; //Must be set if position is not set
-    std::optional<double> orientation; //yaw
-    std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
-    std::optional<IntervalOrExact> velocity;
+    std::optional<std::pair<double, double>> position = std::nullopt; //x, y
+    std::optional<int> lanelet_ref = std::nullopt; //Must be set if position is not set
+    std::optional<double> orientation = std::nullopt; //yaw
+    std::optional<IntervalOrExact> time = std::nullopt; //Must exist, but is not default-constructable -> use optional
+    std::optional<IntervalOrExact> velocity = std::nullopt;
 
     CommonroadDDSShape shape; //Occupancy set or lanelet ref might encode current position in form of a shape
 

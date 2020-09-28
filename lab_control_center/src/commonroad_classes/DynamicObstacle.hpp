@@ -75,9 +75,9 @@ private:
     //Commonroad type
     ObstacleTypeDynamic type;
     std::string obstacle_type_text;
-    std::optional<Shape> shape;
-    std::optional<State> initial_state;
-    std::optional<SignalState> initial_signal_state;
+    std::optional<Shape> shape = std::nullopt;
+    std::optional<State> initial_state = std::nullopt;
+    std::optional<SignalState> initial_signal_state = std::nullopt;
 
     //Choice in specification - thus, only one of these two value will be valid for each object
     std::vector<State> trajectory;

@@ -51,11 +51,11 @@
  */
 struct Incoming
 {
-    std::optional<int> incoming_lanelet; //Lanelet ref - must exist, optional in case of faulty XML-file
-    std::optional<int> successors_right; //Lanelet ref
-    std::optional<int> successors_straight; //Lanelet ref
-    std::optional<int> successors_left; //Lanelet ref
-    std::optional<int> is_left_of; //Incoming ref
+    std::optional<int> incoming_lanelet = std::nullopt; //Lanelet ref - must exist, optional in case of faulty XML-file
+    std::optional<int> successors_right = std::nullopt; //Lanelet ref
+    std::optional<int> successors_straight = std::nullopt; //Lanelet ref
+    std::optional<int> successors_left = std::nullopt; //Lanelet ref
+    std::optional<int> is_left_of = std::nullopt; //Incoming ref
 };
 
 /**

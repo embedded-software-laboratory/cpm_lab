@@ -57,8 +57,8 @@ class Occupancy : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    std::optional<Shape> shape;
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<Shape> shape = std::nullopt;
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
 
 
     //Remember line in commonroad file for logging

@@ -49,8 +49,8 @@
 class IntervalOrExact : public InterfaceTransform
 {
 private:
-    std::optional<Interval> interval;
-    std::optional<double> exact;
+    std::optional<Interval> interval = std::nullopt;
+    std::optional<double> exact = std::nullopt;
 public:
     /**
      * \brief Constructor

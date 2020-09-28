@@ -101,8 +101,8 @@ struct Location
     std::string federal_state;
     int gps_latitude = -1;
     int gps_longitude = -1;
-    std::optional<std::string> zipcode;
-    std::optional<std::string> name;
+    std::optional<std::string> zipcode = std::nullopt;
+    std::optional<std::string> name = std::nullopt;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
     //For 2018 versions, this means that country / location information are missing too
 };
@@ -127,7 +127,7 @@ private:
 
     //Commonroad data
     std::vector<ScenarioTag> scenario_tags; //From 2020 specs
-    std::optional<Location> location;
+    std::optional<Location> location = std::nullopt;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;

@@ -70,8 +70,8 @@ class StaticObstacle : public InterfaceTransform, public InterfaceDraw
 private:
     ObstacleTypeStatic type;
     std::string obstacle_type_text;
-    std::optional<Shape> shape;
-    std::optional<State> initial_state;
+    std::optional<Shape> shape = std::nullopt;
+    std::optional<State> initial_state = std::nullopt;
     //Other 2018 obstacle-values should only be set for dynamic obstacles - nonetheless, we check for their existence in the constructor (and show warnings, if necessary)
 
     //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled

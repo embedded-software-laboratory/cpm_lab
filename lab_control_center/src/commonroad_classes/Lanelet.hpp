@@ -97,7 +97,7 @@ struct Adjacent
 struct Bound
 {
     std::vector<Point> points; //min. 2
-    std::optional<LineMarking> line_marking;
+    std::optional<LineMarking> line_marking = std::nullopt;
 };
 
 /**
@@ -125,15 +125,15 @@ private:
     Bound right_bound;
     std::vector<int> predecessors; //Multiple possible e.g. in case of a fork; laneletref
     std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
-    std::optional<Adjacent> adjacent_left; 
-    std::optional<Adjacent> adjacent_right;
-    std::optional<StopLine> stop_line;
+    std::optional<Adjacent> adjacent_left = std::nullopt; 
+    std::optional<Adjacent> adjacent_right = std::nullopt;
+    std::optional<StopLine> stop_line = std::nullopt;
     LaneletType lanelet_type; //enum class possible
     std::vector<VehicleType> user_one_way; //enum class possible
     std::vector<VehicleType> user_bidirectional; //enum class possible
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_refs; //trafficlightref
-    std::optional<double> speed_limit; //From 2018 specs, must not be set
+    std::optional<double> speed_limit = std::nullopt; //From 2018 specs, must not be set
 
     //Remember line in commonroad file for logging
     int commonroad_line = 0;

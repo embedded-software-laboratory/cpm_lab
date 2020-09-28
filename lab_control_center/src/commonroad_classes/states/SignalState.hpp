@@ -54,13 +54,13 @@ class SignalState : public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
-    std::optional<bool> horn;
-    std::optional<bool> indicator_left;
-    std::optional<bool> indicator_right;
-    std::optional<bool> braking_lights;
-    std::optional<bool> hazard_warning_lights;
-    std::optional<bool> flashing_blue_lights;
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<bool> horn = std::nullopt;
+    std::optional<bool> indicator_left = std::nullopt;
+    std::optional<bool> indicator_right = std::nullopt;
+    std::optional<bool> braking_lights = std::nullopt;
+    std::optional<bool> hazard_warning_lights = std::nullopt;
+    std::optional<bool> flashing_blue_lights = std::nullopt;
 
 public:
     /**
