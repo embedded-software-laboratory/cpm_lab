@@ -1,5 +1,5 @@
 function [map] = setOccMap(vehiclePoses, egoVehicle)
-egoVehicle = 'vehicle_1';
+
 mapX = 4.5;
 mapY = 4.0;
 resolution = 100;
@@ -9,8 +9,6 @@ mat = zeros(mapY * resolution, mapX * resolution);
 setOccupancy(map, [0 0], mat)
 
 %% 
-
-% can be read from vehicleDimensions
 vehicleLength = 0.2200;
 vehicleWidth= 0.1070;
 vehicleHalfLength = vehicleLength/2;
@@ -65,11 +63,3 @@ setOccupancy(map,midpoints,occval,"grid")
 
 [endpoints,midpoints] = raycast(map, [mapX 0], [0 0]);
 setOccupancy(map,midpoints,occval,"grid")
-
-
-show(map)
-
-
-
-
-
