@@ -414,9 +414,26 @@ void SetupViewUI::deploy_applications() {
     // Recording
     deploy_functions->deploy_recording();
 
+    //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
+    //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
+    auto filepath_c_str = script_path->get_text().c_str();
+    bool file_exists = false;
+    //First make sure that there is anything but spaces in the string
+    std::string filepath_str = filepath_c_str;
+    if (filepath_str.find_first_not_of(' ') != std::string::npos)
+    {
+        //Now also check if the path actually exists
+        std::filesystem::path filepath = filepath_c_str;
+
+        if (std::filesystem::exists(filepath))
+        {
+            file_exists = true;
+        }
+    }
+
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
-    if(deploy_remote_toggled)
+    if(deploy_remote_toggled && file_exists)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
@@ -444,7 +461,7 @@ void SetupViewUI::deploy_applications() {
 
         //Deploy remote
         auto simulated_time = switch_simulated_time->get_active();
-        std::string path = script_path->get_text().c_str();
+        std::string path = filepath_c_str;
         std::string params = script_params->get_text().c_str();
 
         upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
@@ -461,7 +478,7 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, script_path->get_text().c_str(), script_params->get_text().c_str());
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_c_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
@@ -470,13 +487,19 @@ void SetupViewUI::deploy_applications() {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
         }
     }
+    else if (file_exists)
+    {
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_c_str, script_params->get_text().c_str());
+    }
     else
     {
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+        cpm::Logging::Instance().write(1, "%s", "Script path is empty or invalid, thus neither script nor middleware could be started");
+        //Possible TODO: Stop in UI immediately (annoying if you want to use commonroad without script, so maybe do not warn at all?)
     }
+    
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()

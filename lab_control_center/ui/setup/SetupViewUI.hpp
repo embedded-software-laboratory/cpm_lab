@@ -50,6 +50,7 @@
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <limits>
