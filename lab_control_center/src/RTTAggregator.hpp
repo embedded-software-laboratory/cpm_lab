@@ -35,9 +35,12 @@
 
 #include "cpm/Logging.hpp"
 #include "cpm/RTTTool.hpp"
+#include "cpm/get_time_ns.hpp"
 
 /**
  * \brief This class can be used to get RTT measurements and stop (/restart) them during simulation (/afterwards)
+ * Measurements also include the number of missing replies (if no reply was received by any sender with the same ID (e.g. 'vehicle'))
+ * After a timeout and no replies, measurements are reset / deleted for that ID (they are assumed to be turned off on purpose)
  */
 class RTTAggregator
 {
@@ -49,13 +52,23 @@ private:
     std::map<std::string, uint64_t> all_time_worst_rtt;
     std::map<std::string, double> measure_count; //Starts counting as soon as the first answer was received, also counts missing ones
     std::map<std::string, double> missed_answers; //Total of missed answers, counting starts as for measure_count
+    std::map<std::string, uint64_t> last_msg_timestamp;
     std::set<std::string> received_ids; //Remember IDs to notice missing ones
+
+    //Timeout before entries are deleted again, because no answer was received for a longer time
+    const uint64_t delete_entry_timeout_ns = 10e9; //10 seconds, because the RTT Tool already takes a while for one missing message
 
     //Thread for measuring the RTT regularly
     std::thread check_rtt_thread;
     std::atomic_bool run_rtt_thread;
     void create_rtt_thread();
     void destroy_rtt_thread();
+
+    /**
+     * \brief Used to delete an entry from all data structures
+     * \param id Key of the entry
+     */
+    void delete_entry(std::string& id);
 
 public:
     /**
@@ -76,7 +89,7 @@ public:
     
     /**
      * \brief Get current measurements for RTT
-     * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist)
+     * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist), e.g. 'vehicle'
      * \param current_best_rtt Best RTT of the current measurement (in ns)
      * \param current_worst_rtt Worst RTT of the current measurement (in ns)
      * \param all_time_worst_rtt Worst RTT of all measurements (in ns)

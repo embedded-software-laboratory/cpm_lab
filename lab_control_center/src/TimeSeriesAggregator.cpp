@@ -246,56 +246,10 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
 
     //--------------------------------------------------------------------------- CHECKS ------------------------------------
     //This function is called regularly in the UI, so we make sure that everything is checked regularly just by putting the tests in here as well
-    //Also store vehicle IDs in between to check for missing vehicles as well
-    std::vector<uint8_t> vehicle_state_ids;
-    std::vector<uint8_t> vehicle_observation_ids;
-
-    if (now - t_last_check > 500000000ull) //-> Do not perform these checks too often, or they could lead to Log msg spamming
-    {
-        vehicle_state_ids.reserve(last_vehicle_state_time.size());
-        vehicle_observation_ids.reserve(last_vehicle_observation_time.size());
-    }
-
     // - Check for deviations in vehicle state msgs
     for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); ++it)
     {
         check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
-
-        if (now - t_last_check > 500000000ull)
-            vehicle_state_ids.push_back(it->first);
-    }
-    // - Check for deviations in IPS observation msgs
-    for (auto it = last_vehicle_observation_time.begin(); it != last_vehicle_observation_time.end(); ++it)
-    {
-        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
-
-        if (now - t_last_check > 500000000ull)
-        {
-            vehicle_observation_ids.push_back(it->first);
-
-            //Check for missing entry in vehicle_state_ids
-            if (std::find(vehicle_state_ids.begin(), vehicle_state_ids.end(), it->first) == vehicle_state_ids.end())
-            {
-                //Entry is only in observation, but not in vehicle_state
-                cpm::Logging::Instance().write(1, "Vehicle ID %i in IPS, but not in vehicle msgs", static_cast<int>(it->first));
-            }
-        }
-    }
-
-    //Check for missing entry in vehicle_observation_ids
-    if (now - t_last_check > 500000000ull)
-    {
-        for (auto entry : vehicle_state_ids)
-        {
-            if (std::find(vehicle_observation_ids.begin(), vehicle_observation_ids.end(), entry) == vehicle_observation_ids.end())
-            {
-                //Entry is only in observation, but not in vehicle_state
-                cpm::Logging::Instance().write(1, "Vehicle ID %i in vehicle msgs, but not in IPS", static_cast<int>(entry));
-            }
-        }
-
-        //Update last check time
-        t_last_check = now;
     }
     //--------------------------------------------------------------------------- ------- ------------------------------------
 

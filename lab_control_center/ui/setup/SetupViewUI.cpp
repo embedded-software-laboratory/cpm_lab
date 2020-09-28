@@ -125,6 +125,9 @@ SetupViewUI::SetupViewUI
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
 
+    kill_grey_out_running.store(false);
+    undo_kill_grey_out.store(false);
+
     //Extract other relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
 
@@ -228,6 +231,13 @@ SetupViewUI::~SetupViewUI() {
     {
         check_real_vehicle_data_thread.join();
     }
+
+    //Kill grey out thread for kill button, if it exists
+    kill_grey_out_running.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
+    }
 }
 
 void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state)
@@ -259,6 +269,13 @@ void SetupViewUI::on_lcc_close() {
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
+    }
+
+    //Kill grey out thread for kill button, if it exists
+    kill_grey_out_running.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
     }
 
     //Kill simulated vehicles
@@ -370,9 +387,24 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
+
+    if (undo_kill_grey_out.exchange(false))
+    {
+        button_kill->set_sensitive(true);
+    }
 }
 
 void SetupViewUI::deploy_applications() {
+    //Only allow the simulation to start if there are actually vehicles to control
+    std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
+    auto simulation_possible = vehicle_ids.size() > 0;
+
+    if (!simulation_possible)
+    {
+        cpm::Logging::Instance().write(1, "%s", "LCC Deploy: No vehicles are online, deploy was aborted");
+        return;
+    }
+
     //Grey out UI until kill is clicked
     set_sensitive(false);
     is_deployed.store(true);
@@ -439,7 +471,6 @@ void SetupViewUI::deploy_applications() {
         button_kill->set_sensitive(false);
 
         //Get current online vehicle and high_level_controller IDs
-        std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
         if (hlc_ready_aggregator)
         {
@@ -509,6 +540,43 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 }
 
 void SetupViewUI::kill_deployed_applications() {
+    //Make sure that this button cannot be "spammed"
+    std::unique_lock<std::mutex> lock(kill_button_mutex);
+    button_kill->set_sensitive(false);
+    kill_grey_out_running.store(true);
+    undo_kill_grey_out.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
+    }
+    kill_grey_out_thread = std::thread(
+        [&] ()
+        {
+            int count = 0;
+            //Wait for 3 seconds, be interruptible on class destruction
+            while(count < 30 && kill_grey_out_running.load())
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ++count;
+            }
+
+            //Undo button grey-out
+            undo_kill_grey_out.store(true);
+            ui_dispatcher.emit();
+        }
+    );
+    lock.unlock();
+    
+    //Kill button functionality if no simulation was performed before
+    if (! simulation_running.load())
+    {
+        //Do only a part of the logic below
+        deploy_functions->stop_vehicles(get_vehicle_ids_active());
+        perform_post_kill_cleanup(); //Even this part is not really required
+
+        return;
+    }
+
     //Kill crash check first, or else we get undesired error messages
     crash_checker->stop_checking();
     //Remember mapping
@@ -551,6 +619,7 @@ void SetupViewUI::kill_deployed_applications() {
     //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
     //But only if threads are used, so only in case of remote deployment
     //For local deployment, perform_post_kill_cleanup is called directly
+
 }
 
 void SetupViewUI::perform_post_kill_cleanup()
@@ -642,10 +711,15 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
 void SetupViewUI::select_all_vehicles_sim()
 {
+    auto real_vehicles = get_vehicle_ids_real();
     for (auto& vehicle_toggle : vehicle_toggles)
     {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
-        deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        auto real_ptr = std::find(real_vehicles.begin(), real_vehicles.end(), vehicle_toggle->get_id());
+        if (real_ptr == real_vehicles.end())
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+            deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        }
     }
 }
 

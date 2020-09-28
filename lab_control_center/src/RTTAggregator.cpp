@@ -65,6 +65,7 @@ void RTTAggregator::create_rtt_thread()
                         //Store new data
                         current_best_rtt[entry.first] = entry.second.first;
                         current_worst_rtt[entry.first] = entry.second.second;
+                        last_msg_timestamp[entry.first] = cpm::get_time_ns();
 
                         //Special behaviour in case this is the first data
                         if (measure_count.find(entry.first) == measure_count.end())
@@ -83,22 +84,30 @@ void RTTAggregator::create_rtt_thread()
                     }
                 }
 
-                //Store data for missing IDs
-                for (auto& id : missing_ids)
+                //Store data for missing IDs (ID: Here just identifier for object type (e.g. 'vehicle'))
+                for (auto id : missing_ids)
                 {
-                    //Store new data
-                    current_best_rtt[id] = 0;
-                    current_worst_rtt[id] = 0;
-
-                    if (measure_count.find(id) == measure_count.end())
+                    //Reset data for missing IDs if no new messages have been received for some timeout
+                    if (cpm::get_time_ns() - last_msg_timestamp[id] > delete_entry_timeout_ns)
                     {
-                        missed_answers[id] = 1;
-                        measure_count[id] = 1;
+                        delete_entry(id);
                     }
                     else
                     {
-                        missed_answers[id] += 1;
-                        measure_count[id] += 1;
+                        //Store new data
+                        current_best_rtt[id] = 0;
+                        current_worst_rtt[id] = 0;
+
+                        if (measure_count.find(id) == measure_count.end())
+                        {
+                            missed_answers[id] = 1;
+                            measure_count[id] = 1;
+                        }
+                        else
+                        {
+                            missed_answers[id] += 1;
+                            measure_count[id] += 1;
+                        }
                     }
                 }
             }
@@ -115,6 +124,17 @@ void RTTAggregator::destroy_rtt_thread()
     }
 }
 
+void RTTAggregator::delete_entry(std::string& id)
+{
+    current_best_rtt.erase(id);
+    current_worst_rtt.erase(id);
+    all_time_worst_rtt.erase(id);
+    measure_count.erase(id);
+    missed_answers.erase(id);
+    last_msg_timestamp.erase(id);
+    received_ids.erase(id);
+}
+
 void RTTAggregator::restart_measurement()
 {
     destroy_rtt_thread();
@@ -127,6 +147,7 @@ void RTTAggregator::restart_measurement()
     measure_count.clear();
     missed_answers.clear();
     received_ids.clear();
+    last_msg_timestamp.clear();
 
     create_rtt_thread();
 }

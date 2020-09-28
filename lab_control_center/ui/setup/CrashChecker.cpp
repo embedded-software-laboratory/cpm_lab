@@ -185,6 +185,10 @@ void CrashChecker::start_checking(bool script_used, std::vector<uint8_t> remote_
     running_remote_hlcs = remote_hlc_ids;
     crashed_remote_hlcs.clear();
 
+    //First-time update of upload success time, in case upload is finished before its success could be checked
+    //Is used to calculate time-diff before checking for remote crashes
+    upload_success_time = cpm::get_time_ns();
+
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
