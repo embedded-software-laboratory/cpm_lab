@@ -130,7 +130,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="text" translatable="yes">0.0</property>
                             <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>
@@ -179,7 +178,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="text" translatable="yes">0.0</property>
                             <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>
@@ -228,7 +226,6 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="valign">center</property>
-                            <property name="text" translatable="yes">0.0</property>
                             <property name="placeholder_text" translatable="yes">0.0</property>
                             <property name="input_purpose">number</property>
                           </object>

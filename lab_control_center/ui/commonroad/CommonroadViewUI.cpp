@@ -385,9 +385,9 @@ void CommonroadViewUI::apply_transformation()
         commonroad_scenario->transform_coordinate_system(lane_width, translate_x, translate_y);
     }
 
-    entry_lane_width->set_text("0.0");
-    entry_translate_x->set_text("0.0");
-    entry_translate_y->set_text("0.0");
+    entry_lane_width->set_text("");
+    entry_translate_x->set_text("");
+    entry_translate_y->set_text("");
 }
 
 bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
@@ -402,7 +402,7 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(lane_width, 0.0, 0.0);
         }
 
-        entry_lane_width->set_text("0.0");
+        entry_lane_width->set_text("");
 
         return true;
     }
@@ -421,7 +421,7 @@ bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(0.0, translate_x, 0.0);
         }
 
-        entry_translate_x->set_text("0.0");
+        entry_translate_x->set_text("");
 
         return true;
     }
@@ -440,7 +440,7 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(0.0, 0.0, translate_y);
         }
 
-        entry_translate_y->set_text("0.0");
+        entry_translate_y->set_text("");
 
         return true;
     }
