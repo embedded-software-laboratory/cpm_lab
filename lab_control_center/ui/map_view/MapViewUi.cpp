@@ -326,29 +326,25 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             }
         }  
 
-        //We want to output a bit of the past values
-        //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
-        int past_length = 3;
-        while (start_trajectory_index > 0 && past_length > 0)
-        {
-            --start_trajectory_index;
-            --past_length;
-        }      
+        //CHANGE: Output of past values removed    
 
         if(trajectory_segment.size() > 1)
         {
             // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
             // Also, only draw recent data
-            for (int i = start_trajectory_index + 2; i < int(trajectory_segment.size()); ++i)
+            //+1 because of i-1
+            for (int i = start_trajectory_index + 1; i < int(trajectory_segment.size()); ++i)
             {
                 const int n_interp = 20;
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                //Color based on future / current interpolation
+                if (i <= start_trajectory_index + 1)
                 {
+                    //Color for segment that is part of current interpolation
                     ctx->set_source_rgb(0.4,1.0,0.4);
                 }
                 else
                 {
+                    //Color for future segments
                     ctx->set_source_rgb(0,0,0.8);
                 }
                 
@@ -375,10 +371,10 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             }
 
             // Draw trajectory points
-            for(size_t i = start_trajectory_index + 1; i < trajectory_segment.size(); ++i)
+            for(size_t i = start_trajectory_index; i < trajectory_segment.size(); ++i)
             {
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
+                //Color based on future / current interpolation
+                if (i <= start_trajectory_index + 1)
                 {
                     ctx->set_source_rgb(0.4,1.0,0.4);
                 }
