@@ -54,7 +54,7 @@ printf "Done.\n\n"
 printf "To abort, press Ctrl+C\n"
 
 # This displays all log files of hlcs in lcc_script_logs
-# This may be more than we actually created
+# This may be more than we actually created (bug)
 printf "Displaying stdout and stderr of all started High Level Controller\n"
 tail -f ~/dev/lcc_script_logs/std*hlc*.txt
 

@@ -180,6 +180,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         // stop if there is no collision
         if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) {
 
+            /*
             // Print planned path
             std::cout << int(vehicle_id) << std::endl;
             for(auto pt:get_planned_path())
@@ -187,6 +188,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
                 std::cout << pt.first << "," << pt.second << std::endl;
             }
             std::cout << std::endl;
+            */
             return true;
         }
 
@@ -224,12 +226,15 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
                 "Collision unavoidable between %d and %d.",
                 int(vehicle_id), colliding_vehicle_id
             );
+            std::cout << "Collision unavoidable" << std::endl;
 
             //for(double spd:speed_profile)
             //{
             //    std::cout << spd << ", ";
             //}
             //std::cout << std::endl;
+
+            /*
             // Print planned path
             std::cout << vehicle_id << std::endl;
             for(auto pt:get_planned_path())
@@ -251,6 +256,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
                 std::cout << other_path[i].first << "," << other_path[i].second << std::endl;
             }
             std::cout << std::endl;
+            */
 
             return false;
         }
@@ -258,6 +264,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         set_speed(idx_speed_reduction, reduced_speed);
     }
 
+    /*
     // Print planned path
     std::cout << int(vehicle_id) << std::endl;
     for(auto pt:get_planned_path())
@@ -265,6 +272,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         std::cout << pt.first << "," << pt.second << std::endl;
     }
     std::cout << std::endl;
+    */
     return true;
 }
 

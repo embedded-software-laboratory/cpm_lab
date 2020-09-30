@@ -88,7 +88,16 @@ void VehicleTrajectoryPlanner::start()
 
             this->read_previous_vehicles(t_planning);
 
-            std::cout << "Timestep " << t_planning << std::endl;
+            std::cout << "Timestep (ms) " << t_planning/1000000 << std::endl;
+            // Print previous_vehicles_buffer for debugging
+            for(auto iter_vehicle = previous_vehicles_buffer.begin(); iter_vehicle != previous_vehicles_buffer.end(); ++iter_vehicle){
+                std::cout << int(iter_vehicle->first) << std::endl;
+                for(auto pt:iter_vehicle->second)
+                {
+                    std::cout << pt.first << "," << pt.second.first << "," << pt.second.second << std::endl;
+                }
+                std::cout << std::endl;
+            }
             is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
 
             if (!is_collision_avoidable){
@@ -163,6 +172,11 @@ void VehicleTrajectoryPlanner::read_previous_vehicles(uint64_t t_planning)
             uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
             size_t index_offset = time_diff / dt_nanos;
 
+            //FIXME: After a restart, there temporarily is an unrealistically large offset
+            if(index_offset > 100) {
+                std::cout << "Large offset of " << index_offset << std::endl;
+            }
+            
             for ( auto change : sample.data().lane_graph_position_changes() ) {
                 if( change.index() - 25*index_offset > 0 ) {
                     previous_vehicles_buffer[sample.data().vehicle_id()][change.index() - 25*index_offset] =
@@ -266,10 +280,14 @@ void VehicleTrajectoryPlanner::shift_previous_vehicles_buffer() {
         std::map<size_t, std::pair<size_t, size_t>> trajectory = iter_vehicle->second;
 
         for( auto iter_trajectory = trajectory.begin(); iter_trajectory != trajectory.end(); ++iter_trajectory ) {
-            if( iter_trajectory->first < offset_per_timestep ) { continue; }  
+            if( iter_trajectory->first < offset_per_timestep ) {
+                previous_vehicles_buffer[iter_vehicle->first].erase( iter_trajectory->first );
+            }
+            else {
             previous_vehicles_buffer[iter_vehicle->first][iter_trajectory->first - offset_per_timestep] =
                 iter_trajectory->second;
             previous_vehicles_buffer[iter_vehicle->first].erase( iter_trajectory->first );
+            }
         }
     }
 }
