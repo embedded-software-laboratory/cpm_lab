@@ -37,8 +37,8 @@
 #include "LaneGraphTrajectory.hpp"
 #include "LaneGraphTrajectoryChanges.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
-using std::vector;
 
+using std::vector;
 
 class VehicleTrajectoryPlanner
 {
@@ -50,14 +50,15 @@ class VehicleTrajectoryPlanner
     bool started = false;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
+    uint64_t t_planning;
     std::mutex mutex;
     std::thread planning_thread;
     const uint64_t dt_nanos;
     vector<TrajectoryPoint> trajectory_point_buffer;
-    void read_previous_vehicles(uint64_t t_planning);
-    void shift_previous_vehicles_buffer();
+    void read_previous_vehicles();
+    void apply_timestep();
     vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
-    void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes, uint64_t t_planning );
+    void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes );
     
 public:
 

@@ -228,35 +228,11 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             );
             std::cout << "Collision unavoidable" << std::endl;
 
-            //for(double spd:speed_profile)
-            //{
-            //    std::cout << spd << ", ";
-            //}
-            //std::cout << std::endl;
-
-            /*
-            // Print planned path
-            std::cout << vehicle_id << std::endl;
-            for(auto pt:get_planned_path())
+            for(double spd:speed_profile)
             {
-                std::cout << pt.first << "," << pt.second << std::endl;
+                std::cout << spd << ", ";
             }
             std::cout << std::endl;
-
-            // Print colliding vehicle planned path
-            std::cout << colliding_vehicle_id << std::endl;
-            auto other_path = other_vehicles[colliding_vehicle_id];
-            for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
-            {
-                std::cout << int(i) << ",";
-                if( other_path.count(i) == 0 ) {
-                    std::cout << "," << std::endl;    
-                    continue;
-                }
-                std::cout << other_path[i].first << "," << other_path[i].second << std::endl;
-            }
-            std::cout << std::endl;
-            */
 
             return false;
         }
@@ -264,15 +240,6 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         set_speed(idx_speed_reduction, reduced_speed);
     }
 
-    /*
-    // Print planned path
-    std::cout << int(vehicle_id) << std::endl;
-    for(auto pt:get_planned_path())
-    {
-        std::cout << pt.first << "," << pt.second << std::endl;
-    }
-    std::cout << std::endl;
-    */
     return true;
 }
 
