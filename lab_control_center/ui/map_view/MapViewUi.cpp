@@ -422,28 +422,37 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     for(const auto& entry : visualization_commands) 
     {
         if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
-            && entry.points().size() > 1) 
+            && entry.points().size() > 0)
         {
             const auto& message_points = entry.points();
 
-            //Set beginning point
+            //Set beginning point / center of circle
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
-            for (size_t i = 1; i < message_points.size(); ++i)
+            if(entry.points().size() == 1)
             {
-                //const auto& current_point = message_points.at(i);
-
-                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
-            }  
-
-            //Line from end to beginning point to close the polygon
-            if (entry.type() == VisualizationType::Polygon) {
-                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                //Draw filled circle
+                const auto& radius = entry.size();
+                ctx->arc(message_points.at(0).x(), message_points.at(0).y(), radius, 0.0, 2.0 * M_PI);
+                ctx->fill();
             }
+            else
+            {
+                //Draw real Line/Polygon otherwise
+                for (size_t i = 1; i < message_points.size(); ++i)
+                {
+                    ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+                }
 
-            ctx->set_line_width(entry.size());
-            ctx->stroke();      
+                //Line from end to beginning point to close the polygon
+                if (entry.type() == VisualizationType::Polygon) {
+                    ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                }
+
+                ctx->set_line_width(entry.size());
+                ctx->stroke();
+            }
         }
         else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
