@@ -35,7 +35,7 @@ for nTrajectoryPoints = 1:length(segmentLengths)
 end
 
 %Last TrajectoryPoint - correct home position guaranteed?
-trajectory_points(end).px = transitionPoses(end, 1);TI 
+trajectory_points(end).px = transitionPoses(end, 1);
 trajectory_points(end).py = transitionPoses(end, 2);
 trajectory_points(end).vx = 0;
 trajectory_points(end).vy = 0;
