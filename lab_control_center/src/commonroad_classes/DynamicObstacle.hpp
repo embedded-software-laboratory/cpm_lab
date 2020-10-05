@@ -44,6 +44,7 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <sstream>
@@ -69,7 +70,7 @@ enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, P
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a DynamicObstacle specified in an XML file
  */
-class DynamicObstacle : public InterfaceTransform, public InterfaceDraw
+class DynamicObstacle : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
     //Commonroad type
@@ -112,6 +113,12 @@ public:
      * \param scale The factor by which to transform all number values related to position
      */
     void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     */
+    void transform_timing(double time_scale) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface

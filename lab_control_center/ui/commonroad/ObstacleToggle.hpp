@@ -48,6 +48,8 @@ public:
 
     //Getter
     Gtk::Widget* get_parent();
+    ToggleState get_state();
+    unsigned int get_id();
 
     //Setter
     void set_state(ToggleState state);

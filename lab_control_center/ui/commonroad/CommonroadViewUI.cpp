@@ -40,6 +40,7 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("parent", parent);
     builder->get_widget("commonroad_box", commonroad_box);
     builder->get_widget("commonroad_path", commonroad_path);
+    builder->get_widget("entry_time_step_size", entry_time_step_size);
     builder->get_widget("entry_lane_width", entry_lane_width);
     builder->get_widget("entry_translate_x", entry_translate_x);
     builder->get_widget("entry_translate_y", entry_translate_y);
@@ -54,6 +55,7 @@ CommonroadViewUI::CommonroadViewUI
     assert(parent);
     assert(commonroad_box);
     assert(commonroad_path);
+    assert(entry_time_step_size);
     assert(entry_lane_width);
     assert(entry_translate_x);
     assert(entry_translate_y);
@@ -71,15 +73,25 @@ CommonroadViewUI::CommonroadViewUI
     button_apply_transformation->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_transformation));
 
     //Also, single transformation values can be applied on a single key press within the entry
+    entry_time_step_size->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_time));
     entry_lane_width->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_scale));
     entry_translate_x->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_x));
     entry_translate_y->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_y));
 
     //Information on transformation on hover
+    entry_time_step_size->set_tooltip_text("Set time step size for the simulation. <= 0 means no change desired. Applies w. Return.");
     entry_lane_width->set_tooltip_text("Set min. lane width. <= 0 means no change desired. Also applies w. Return.");
     entry_translate_x->set_tooltip_text("Set x translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     entry_translate_y->set_tooltip_text("Set y translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     button_apply_transformation->set_tooltip_text("Permanently apply set transformation to coordinate system. Future transformations are applied relative to new coordinate system.");
+
+    //Set current time step size as initial text for entry
+    std::stringstream current_time_step_size_stream;
+    if (commonroad_scenario)
+    {
+        current_time_step_size_stream << commonroad_scenario->get_time_step_size();
+    }
+    entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
 
     //Setup for planning problem treeview
     //Create model for view
@@ -114,9 +126,12 @@ CommonroadViewUI::CommonroadViewUI
 
 using namespace std::placeholders;
 void CommonroadViewUI::dispatcher_callback() {
-    if (reload_problems.load())
+    if (reload_problems.exchange(false))
     {
-        reload_problems.store(false);
+        //Reset time step size
+        std::stringstream current_time_step_size_stream;
+        current_time_step_size_stream << commonroad_scenario->get_time_step_size();
+        entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
 
         //Get current number of elements
         size_t count = 0;
@@ -206,10 +221,8 @@ void CommonroadViewUI::dispatcher_callback() {
             }
         }
     }
-    if (load_obstacle_list.load())
+    if (load_obstacle_list.exchange(false))
     {
-        load_obstacle_list.store(false);
-
         //Remove old vehicle toggles
         for (auto& vehicle_toggle : static_vehicle_toggles)
         {
@@ -247,6 +260,19 @@ void CommonroadViewUI::dispatcher_callback() {
             vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
             vehicle_toggle->set_state(ObstacleToggle::ToggleState::Simulated);
         }
+    }
+}
+
+void CommonroadViewUI::apply_current_vehicle_selection()
+{
+    for (auto& vehicle_toggle : static_vehicle_toggles)
+    {
+        vehicle_selection_changed(vehicle_toggle->get_id(), vehicle_toggle->get_state());
+    } 
+
+    for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+    {
+        vehicle_selection_changed(vehicle_toggle->get_id(), vehicle_toggle->get_state());
     }
 }
 
@@ -385,9 +411,32 @@ void CommonroadViewUI::apply_transformation()
         commonroad_scenario->transform_coordinate_system(lane_width, translate_x, translate_y);
     }
 
+    //Re-enter vehicle selection for obstacle simulation manager
+    apply_current_vehicle_selection();
+
     entry_lane_width->set_text("");
     entry_translate_x->set_text("");
     entry_translate_y->set_text("");
+}
+
+bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
+{
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        //Get desired lane width and translation
+        double new_step_size = string_to_double(std::string(entry_time_step_size->get_text().c_str()), 0.0);
+
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->set_time_step_size(new_step_size);
+        }
+
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
+        return true;
+    }
+    return false;
 }
 
 bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
@@ -401,6 +450,9 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
         {
             commonroad_scenario->transform_coordinate_system(lane_width, 0.0, 0.0);
         }
+
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
 
         entry_lane_width->set_text("");
 
@@ -421,6 +473,9 @@ bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(0.0, translate_x, 0.0);
         }
 
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
         entry_translate_x->set_text("");
 
         return true;
@@ -439,6 +494,9 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
         {
             commonroad_scenario->transform_coordinate_system(0.0, 0.0, translate_y);
         }
+
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
 
         entry_translate_y->set_text("");
 

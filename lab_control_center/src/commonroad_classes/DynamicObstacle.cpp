@@ -223,6 +223,19 @@ void DynamicObstacle::transform_coordinate_system(double scale, double translate
     }
 }
 
+void DynamicObstacle::transform_timing(double time_scale)
+{
+    if (initial_state.has_value())
+    {
+        initial_state->transform_timing(time_scale);
+    }
+
+    for (auto& state : trajectory)
+    {
+        state.transform_timing(time_scale);
+    }
+}
+
 void DynamicObstacle::draw_shape_with_text(const DrawingContext& ctx, double scale, double local_orientation)
 {
     if (shape.has_value())

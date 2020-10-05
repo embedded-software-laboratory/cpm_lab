@@ -67,6 +67,7 @@ set(COMMONROAD
     src/commonroad_classes/TrafficSign.cpp
 
     src/commonroad_classes/InterfaceTransform.hpp
+    src/commonroad_classes/InterfaceTransformTime.hpp
     src/commonroad_classes/InterfaceDraw.hpp
     src/commonroad_classes/InterfaceGeometry.hpp
 

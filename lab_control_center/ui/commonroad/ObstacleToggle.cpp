@@ -70,6 +70,16 @@ Gtk::Widget* ObstacleToggle::get_parent()
     return parent;
 }
 
+ObstacleToggle::ToggleState ObstacleToggle::get_state()
+{
+    return current_state;
+}
+
+unsigned int ObstacleToggle::get_id()
+{
+    return id;
+}
+
 void ObstacleToggle::set_state(ToggleState state)
 {
     current_state = state;

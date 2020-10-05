@@ -174,6 +174,64 @@ void State::transform_coordinate_system(double scale, double translate_x, double
     }
 }
 
+void State::transform_timing(double time_scale)
+{
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (acceleration.has_value())
+    {
+        acceleration->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_y.has_value())
+    {
+        velocity_y->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_y_front.has_value())
+    {
+        velocity_y_front->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_y_rear.has_value())
+    {
+        velocity_y_rear->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_z.has_value())
+    {
+        velocity_z->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_z_front.has_value())
+    {
+        velocity_z_front->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (velocity_z_rear.has_value())
+    {
+        velocity_z_rear->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (left_front_wheel_angular_speed.has_value())
+    {
+        left_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (right_front_wheel_angular_speed.has_value())
+    {
+        right_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (left_rear_wheel_angular_speed.has_value())
+    {
+        left_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (right_rear_wheel_angular_speed.has_value())
+    {
+        right_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+    }
+    if (yaw_rate.has_value())
+    {
+        yaw_rate->transform_coordinate_system(time_scale, 0, 0);
+    }
+    
+    //TODO: Scale curvature change as well?
+}
+
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if(!orientation.has_value())

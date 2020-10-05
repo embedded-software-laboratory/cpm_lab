@@ -633,6 +633,34 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
     }
 }
 
+void CommonRoadScenario::set_time_step_size(double new_time_step_size)
+{
+    //Only accept physically meaningful & useful values
+    if (new_time_step_size <= 0) return;
+
+    std::unique_lock<std::mutex> lock(xml_translation_mutex);
+    double time_scale = time_step_size / new_time_step_size;
+    time_step_size = new_time_step_size;
+
+    //Change velocity, acceleration
+    for (auto &planning_problem : planning_problems)
+    {
+        planning_problem.second.transform_timing(time_scale);
+    }
+
+    lock.unlock();
+
+    //Need to reset the simulation and aggregator as well (as the timing was changed)
+    if (reset_obstacle_sim_manager)
+    {
+        reset_obstacle_sim_manager();
+    }
+    if (setup_obstacle_sim_manager)
+    {
+        setup_obstacle_sim_manager();
+    }
+}
+
 //Suppress warning for unused parameter (s)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"

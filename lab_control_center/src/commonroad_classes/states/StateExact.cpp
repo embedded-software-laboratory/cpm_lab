@@ -109,6 +109,22 @@ void StateExact::transform_coordinate_system(double scale, double translate_x, d
     }
 }
 
+void StateExact::transform_timing(double time_scale)
+{
+    if (time_scale > 0)
+    {
+        velocity *= time_scale;
+
+        if (acceleration.has_value())
+        {
+            auto new_acceleration = time_scale * acceleration.value();
+            acceleration = std::optional<double>(new_acceleration);
+        }
+
+        yaw_rate *= time_scale;
+    }
+}
+
 void StateExact::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself

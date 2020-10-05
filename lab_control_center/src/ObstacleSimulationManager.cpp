@@ -229,6 +229,8 @@ void ObstacleSimulationManager::start()
     //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
     simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, true, true, use_simulated_time);
 
+    std::cout << std::endl << std::endl << "--------- Set time step size to: " << time_step_size << std::endl << std::endl;
+
     simulation_timer->start_async([&] (uint64_t t_now) {
         //Cannot be obtained before the timer was started
         auto start_time = simulation_timer->get_start_time();

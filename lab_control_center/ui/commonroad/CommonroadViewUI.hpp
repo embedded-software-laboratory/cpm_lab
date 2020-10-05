@@ -66,6 +66,7 @@ private:
 
     //Commonroad path and parameters
     Gtk::Entry* commonroad_path = nullptr;
+    Gtk::Entry* entry_time_step_size = nullptr;
     Gtk::Entry* entry_lane_width = nullptr;
     Gtk::Entry* entry_translate_x = nullptr;
     Gtk::Entry* entry_translate_y = nullptr;
@@ -86,6 +87,12 @@ private:
     //Callback function for state changes in the toggles
     void vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state);
     std::function<void(int, ObstacleToggle::ToggleState state)> set_obstacle_manager_obstacle_state;
+
+    /**
+     * \brief This function gets called after the simulation manager was reset due to a transformation
+     * It prevents the user from having to re-select which participants are simulated and which are supposed to be real
+     */
+    void apply_current_vehicle_selection();
 
     //Treeview that shows information about planning problems
     Gtk::TreeView* problem_treeview;
@@ -128,6 +135,7 @@ private:
     void apply_transformation();
 
     //Functions to apply one of the corresponding transformations after pressing enter within the entry
+    bool apply_entry_time(GdkEventKey* event);
     bool apply_entry_scale(GdkEventKey* event);
     bool apply_entry_translate_x(GdkEventKey* event);
     bool apply_entry_translate_y(GdkEventKey* event);

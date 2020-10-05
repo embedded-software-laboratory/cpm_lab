@@ -143,6 +143,14 @@ void StaticObstacle::transform_coordinate_system(double scale, double translate_
     }
 }
 
+void StaticObstacle::transform_timing(double time_scale)
+{
+    if (initial_state.has_value())
+    {
+        initial_state->transform_timing(time_scale);
+    }
+}
+
 //Suppress warning for unused parameter (s)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"

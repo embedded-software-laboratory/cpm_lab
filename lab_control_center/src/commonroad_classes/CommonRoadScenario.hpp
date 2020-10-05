@@ -277,7 +277,10 @@ public:
     const std::string& get_common_road_version();
     const std::string& get_date();
     const std::string& get_source();
+
+    //We need to be able to get and set time_step_size, to change the speed of the simulation
     double get_time_step_size();
+    void set_time_step_size(double new_time_step_size); 
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
     const std::optional<Location> get_location();

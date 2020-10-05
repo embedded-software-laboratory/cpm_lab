@@ -116,6 +116,14 @@ void GoalState::transform_coordinate_system(double scale, double translate_x, do
     }
 }
 
+void GoalState::transform_timing(double time_scale)
+{
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(time_scale, 0, 0);
+    }
+}
+
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     //Simple function that only draws the position (and orientation), but not the object itself
