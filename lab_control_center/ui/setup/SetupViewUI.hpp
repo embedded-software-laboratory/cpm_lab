@@ -51,7 +51,7 @@
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
-#include <filesystem>
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <functional>
 #include <iostream>
 #include <limits>

@@ -454,17 +454,17 @@ void SetupViewUI::deploy_applications() {
     if (filepath_str.find_first_not_of(' ') != std::string::npos)
     {
         //Now also check if the path actually exists
-        std::filesystem::path filepath = filepath_str;
+        std::experimental::filesystem::path filepath = filepath_str;
 
-        if (std::filesystem::exists(filepath))
+        if (std::experimental::filesystem::exists(filepath))
         {
             //Update path to absolute path, s.t. deploy remote does not have any problems
             try
             {
-                filepath_str = std::filesystem::absolute(filepath);
+                filepath_str = std::experimental::filesystem::absolute(filepath);
                 file_exists = true;
             }
-            catch(const std::filesystem::filesystem_error& e)
+            catch(const std::experimental::filesystem::filesystem_error& e)
             {
                 std::stringstream error_stream;
                 error_stream << "Could not convert given script path to absolute path, error is: " << e.what();
@@ -473,7 +473,7 @@ void SetupViewUI::deploy_applications() {
         }
     }
 
-    std::filesystem::path filepath = filepath_str;
+    std::experimental::filesystem::path filepath = filepath_str;
     std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
