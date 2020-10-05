@@ -473,9 +473,6 @@ void SetupViewUI::deploy_applications() {
         }
     }
 
-    std::experimental::filesystem::path filepath = filepath_str;
-    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
-
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
     if(deploy_remote_toggled && file_exists)

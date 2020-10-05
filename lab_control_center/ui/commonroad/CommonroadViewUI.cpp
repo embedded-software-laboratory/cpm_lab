@@ -122,6 +122,9 @@ CommonroadViewUI::CommonroadViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     commonroad_path->set_text(FileChooserUI::get_last_execution_path(config_file_location));
+
+    //Load yaml profile
+    load_transform_profile();
 }
 
 using namespace std::placeholders;
@@ -572,4 +575,99 @@ void CommonroadViewUI::set_sensitive(bool is_sensitive)
 Gtk::Widget* CommonroadViewUI::get_parent()
 {
     return parent;
+}
+
+//-------------------------------------------------------- YAML / Profile for transformation ------------------------------
+void CommonroadViewUI::load_transform_profile()
+{
+    //Make sure that the file exists, else create a file first
+    std::experimental::filesystem::path filepath = transformation_file_location;
+    bool file_exists = std::experimental::filesystem::exists(filepath);
+
+    if (!file_exists)
+    {
+        //Create file
+        std::ofstream yaml_file(transformation_file_location);
+        yaml_file.close();
+    }
+
+    //Now load the profile
+    yaml_transform_profile = YAML::LoadFile(transformation_file_location);
+}
+
+void CommonroadViewUI::load_transformation_from_profile()
+{
+    if (current_file_name != "" && yaml_transform_profile[current_file_name])
+    {
+        //Load profile
+        auto profile = yaml_transform_profile[current_file_name];
+
+        //Make sure that values exist
+        if (! (profile[time_scale_key] && profile[scale_key] && profile[transform_x_key] && profile[transform_y_key]))
+        {
+            cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
+        }
+    
+        //Load values from profile
+        auto time_scale = profile[time_scale_key].as<double>();
+        auto scale = profile[scale_key].as<double>();
+        auto transform_x = profile[transform_x_key].as<double>();
+        auto transform_y = profile[transform_y_key].as<double>();
+
+        //TODO APPLY VALUES
+        std::cout << "TODO: " << time_scale << ", " << scale << ", " << transform_x << ", " << transform_y << std::endl;
+    }
+}
+
+void CommonroadViewUI::store_transform_profile()
+{
+    //Store changed profile
+    std::ofstream yaml_file(transformation_file_location, std::ofstream::out | std::ofstream::trunc);
+    yaml_file << yaml_transform_profile;
+    yaml_file.close();
+}
+
+void CommonroadViewUI::add_change_to_transform_profile(double time_scale, double scale, double translate_x, double translate_y)
+{
+    if (current_file_name != "")
+    {
+        //Load profile
+        auto profile = yaml_transform_profile[current_file_name];
+
+        double transform_x_old = 0.0;
+        double transform_y_old = 0.0;
+
+        if (profile) //TODO: Also only regard old values if they have been loaded before
+        {
+            //Make sure that values exist
+            if (! (profile[time_scale_key] && profile[scale_key] && profile[transform_x_key] && profile[transform_y_key]))
+            {
+                cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
+            }
+
+            //Load old values from profile
+            auto transform_x_old = profile[transform_x_key].as<double>();
+            auto transform_y_old = profile[transform_y_key].as<double>();
+        }
+
+        //Store values
+        profile[time_scale_key] = time_scale;
+        profile[scale_key] = scale;
+        profile[transform_x_key] = transform_x_old + translate_x;
+        profile[transform_y_key] = transform_y_old + translate_y;
+    }
+}
+
+void CommonroadViewUI::reset_current_transform_profile()
+{
+    if (current_file_name != "")
+    {
+        //Load profile
+        auto profile = yaml_transform_profile[current_file_name];
+
+        if (profile)
+        {
+            yaml_transform_profile.remove(current_file_name);
+        }
+    }
 }
