@@ -59,6 +59,10 @@ class VehicleTrajectoryPlanner
     void apply_timestep();
     vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
     void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes );
+ 
+    // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
+    static constexpr uint64_t msg_max_length = 100; // Maximum length of DDS msg
+    static constexpr uint64_t timesteps_per_planningstep = 25; // For each dt_nanos, each HLC has 25 points planned
     
 public:
 

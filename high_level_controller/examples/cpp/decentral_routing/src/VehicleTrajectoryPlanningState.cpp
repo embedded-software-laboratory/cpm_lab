@@ -179,16 +179,6 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
 
         // stop if there is no collision
         if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) {
-
-            /*
-            // Print planned path
-            std::cout << int(vehicle_id) << std::endl;
-            for(auto pt:get_planned_path())
-            {
-                std::cout << pt.first << "," << pt.second << std::endl;
-            }
-            std::cout << std::endl;
-            */
             return true;
         }
 

@@ -88,16 +88,6 @@ void VehicleTrajectoryPlanner::start()
 
             this->read_previous_vehicles();
 
-            std::cout << "Timestep (ms) " << t_planning/1000000 << std::endl;
-            // Print previous_vehicles_buffer for debugging
-            for(auto iter_vehicle = previous_vehicles_buffer.begin(); iter_vehicle != previous_vehicles_buffer.end(); ++iter_vehicle){
-                std::cout << int(iter_vehicle->first) << std::endl;
-                for(auto pt:iter_vehicle->second)
-                {
-                    std::cout << pt.first << "," << pt.second.first << "," << pt.second.second << std::endl;
-                }
-                std::cout << std::endl;
-            }
             is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
 
             if (!is_collision_avoidable){
@@ -163,9 +153,7 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
 
     dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples = reader_laneGraphTrajectoryChanges->take();
     for(auto sample : samples) {
-        std::cout << "Received sample ...";
         if (sample.info().valid()) {
-            std::cout << "valid" << std::endl;
             // We ignore everything with lower priorities
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
 
@@ -176,9 +164,8 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
 
             //FIXME: After a restart, there temporarily is an unrealistically large offset
             if(index_offset > 100) {
-                std::cout << "Large offset of " << index_offset << std::endl;
+                std::cout << "Received data with unfeasible timestamp";
             }
-            std::cout << "Received " << sample.data().lane_graph_position_changes().size() << " changes from " << (int) sample.data().vehicle_id() << std::endl;
             
             // Save all received change messages that are not in the past already
             for ( auto change : sample.data().lane_graph_position_changes() ) {
@@ -206,17 +193,13 @@ vector<LaneGraphTrajectoryChanges> VehicleTrajectoryPlanner::get_changes(
         LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new) {
     
     vector<LaneGraphTrajectoryChanges> result;
-    uint64_t msg_max_length = 100; // Maximum length of a DDS message
-
-    // 16000000ull is dt_speed_profile_nanos from PlanningState
-    uint64_t steps = dt_nanos / 16000000ull;
 
     std::vector<LaneGraphPositionChange> temp;
     
     for(uint64_t i=0; i<N_STEPS_SPEED_PROFILE; i++) {
 
         if ( temp.size() == msg_max_length ) {
-            // We split the changes into messages of length < 100 each
+            // We split the changes into messages of length < msg_max_length each
             LaneGraphTrajectoryChanges msg;
             msg.lane_graph_position_changes(temp);
             result.push_back(msg); 
@@ -226,8 +209,8 @@ vector<LaneGraphTrajectoryChanges> VehicleTrajectoryPlanner::get_changes(
 
         /* Compare the new planned trajectory with the old planned trajectory,
          * shifted by the amount of speed steps per timestep */
-        if ( i < N_STEPS_SPEED_PROFILE - steps && trajectory_old.lane_graph_positions().size() > 0 ) {
-            LaneGraphPosition pos_old = trajectory_old.lane_graph_positions()[i+steps];
+        if ( i < N_STEPS_SPEED_PROFILE - timesteps_per_planningstep && trajectory_old.lane_graph_positions().size() > 0 ) {
+            LaneGraphPosition pos_old = trajectory_old.lane_graph_positions()[i+timesteps_per_planningstep];
             LaneGraphPosition pos_new = trajectory_new.lane_graph_positions()[i];
 
             if(pos_old != pos_new) {
@@ -266,7 +249,6 @@ vector<LaneGraphTrajectoryChanges> VehicleTrajectoryPlanner::get_changes(
  */
 void VehicleTrajectoryPlanner::write_changes( vector<LaneGraphTrajectoryChanges> vector_changes ) {
     for ( uint64_t i = 0; i < vector_changes.size(); i++ ) {
-        std::cout << "Sending " << vector_changes[i].lane_graph_position_changes().size() << std::endl;
         LaneGraphTrajectoryChanges msg = vector_changes[i];
         msg.vehicle_id(trajectoryPlan->get_vehicle_id());
         msg.header().create_stamp().nanoseconds(t_planning);
