@@ -97,8 +97,8 @@ enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, 
  */
 struct Location 
 {
-    std::string country;
-    std::string federal_state;
+    std::optional<std::string> country;
+    std::optional<std::string> federal_state;
     int gps_latitude = -1;
     int gps_longitude = -1;
     std::optional<std::string> zipcode = std::nullopt;

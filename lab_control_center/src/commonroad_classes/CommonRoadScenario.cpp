@@ -62,8 +62,8 @@ void CommonRoadScenario::test_output()
     std::cout << "Location data: " << std::endl;
     if (location.has_value())
     {
-        std::cout << "\tCountry: " << location.value().country << std::endl;
-        std::cout << "\tFederal state :" << location.value().federal_state << std::endl;
+        std::cout << "\tCountry: " << location.value().country.value_or("empty") << std::endl;
+        std::cout << "\tFederal state :" << location.value().federal_state.value_or("empty") << std::endl;
         std::cout << "\tLatitude: " << location.value().gps_latitude << std::endl;
         std::cout << "\tLongitude: " << location.value().gps_longitude << std::endl;
         std::cout << "\tName: " << location.value().name.value_or("empty") << std::endl;
@@ -354,8 +354,8 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 void CommonRoadScenario::translate_location(const xmlpp::Node* node) 
 {
     Location translated_location;
-    translated_location.country = xml_translation::get_child_child_text(node, "country", true).value(); //If no value: Error is thrown anyway (set to true)
-    translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.country = xml_translation::get_child_child_text(node, "country", false); 
+    translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", false); 
     translated_location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
