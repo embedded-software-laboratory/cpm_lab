@@ -71,6 +71,7 @@ namespace cpm {
         waitset += readCondition;
 
         active.store(false);
+        cancelled.store(false);
     }
 
     void TimerFD::createTimer() {
@@ -167,6 +168,11 @@ namespace cpm {
         }
 
         active.store(true);
+        //In the rare case that active was set too early to false in stop / deconstructor: we must check that these have already been called
+        if (cancelled.load())
+        {
+            return;
+        }
 
         m_update_callback = update_callback;
 
@@ -176,6 +182,7 @@ namespace cpm {
         //Send ready signal, wait for start signal
         uint64_t deadline;
         if (wait_for_start) {
+
             start_point = receiveStartTime();
             
             if (start_point == stop_signal) {
@@ -267,20 +274,33 @@ namespace cpm {
 
     void TimerFD::stop()
     {
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
         active.store(false);
+        
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
     }
 
     TimerFD::~TimerFD()
     {
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
         active.store(false);
+        
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
+
         close(timer_fd);
     }
 

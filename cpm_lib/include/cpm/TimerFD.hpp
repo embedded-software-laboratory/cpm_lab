@@ -32,6 +32,7 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+#include <mutex>
 #include <thread>
 #include <string>
 
@@ -71,6 +72,8 @@ namespace cpm {
         dds::core::cond::WaitSet waitset;
         
         std::atomic_bool active;
+        std::atomic_bool cancelled; //In rare cases, stop can be called even before active is set to true; in that case, active alone does not suffice
+        std::mutex join_mutex; //join does not work concurrently
         int timer_fd = -1;
         std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
