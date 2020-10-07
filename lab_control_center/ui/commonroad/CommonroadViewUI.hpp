@@ -46,10 +46,6 @@
 #include <thread>
 #include <vector>
 
-//For storing transformation profile
-#include <yaml-cpp/yaml.h>
-#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
-
 #include "ProblemModelRecord.hpp"
 
 /**
@@ -150,27 +146,6 @@ private:
     //Config file that stores the previously selected script
     const std::string config_file_location = "./commonroad_file_chooser.config";
 
-    //Config file that stores the applied transformation for each file name
-    const std::string transformation_file_location = "./commonroad_profiles.yaml";
-
-    //Name of current file
-    std::string current_file_name = "test"; //TODO
-
-    //Loaded profile
-    std::mutex yaml_profile_mutex;
-    YAML::Node yaml_transform_profile; //TODO MUTEX?; 'working' profile that is immediately changed with each change made by the user ("cache" which might not be used)
-    YAML::Node old_yaml_transform_profile; //Remembers state after last save of current setting, s.t. reset to those when loading again is possible without reloading the file
-    const std::string time_scale_key = "time_scale";
-    const std::string scale_key = "scale";
-    const std::string translate_x_key = "translate_x";
-    const std::string translate_y_key = "translate_y";
-    std::atomic_bool profile_applied;
-
-    /**
-     * \brief Load the transform profile that stores previously used transformations for commonroad scenarios. Create one if none exists
-     */
-    void load_transform_profile();
-
     /**
      * \brief Load, if exists, the stored transformation for the current file
      */
@@ -180,12 +155,6 @@ private:
      * \brief Store the transform profile that stores previously used transformations for commonroad scenarios
      */
     void store_transform_profile();
-
-    /**
-     * \brief Function that adds new transformation values for the currently selected file to the transform profile
-     * Relative to stored change if profile was loaded before, else overwritten TODO
-     */
-    void add_change_to_transform_profile(double time_scale, double scale, double translate_x, double translate_y);
 
     /**
      * \brief Reset transform profile for the currently selected files

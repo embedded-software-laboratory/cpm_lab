@@ -53,6 +53,8 @@
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "commonroad_classes/CommonRoadTransformation.hpp"
+
 #include "LCCErrorLogger.hpp"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -140,6 +142,9 @@ private:
     //Not commonroad
     //Mutex to lock the object while it is being translated from an XML file
     std::mutex xml_translation_mutex;
+
+    //Load / store translation in YAML
+    CommonRoadTransformation yaml_transformation_storage;
 
     //Obstacle simulation callback functions (when new scenario is loaded)
     std::function<void()> setup_obstacle_sim_manager; 
@@ -269,6 +274,19 @@ public:
      * TODO: Change return type to whatever the name of the IDL type is
      */
     void to_dds_msg() {}
+
+    /**
+     * \brief Access to internal YAML transformation profile; apply changes stored in profile (again) for the current file
+     */
+    void apply_stored_transformation();
+    /**
+     * \brief Access to internal YAML transformation profile; Store current changes in profile for the current file
+     */
+    void store_applied_transformation();
+    /**
+     * \brief Access to internal YAML transformation profile; Reset changes stored in profile for the current file
+     */
+    void reset_stored_transformation();
 
     //TODO: Getter, by type and by ID, and constructor
     const std::string& get_author();

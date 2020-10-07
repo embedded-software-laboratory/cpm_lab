@@ -49,6 +49,8 @@ include_directories(../mid_level_controller/src)
 set(COMMONROAD
     src/commonroad_classes/CommonRoadScenario.hpp
     src/commonroad_classes/CommonRoadScenario.cpp
+    src/commonroad_classes/CommonRoadTransformation.hpp
+    src/commonroad_classes/CommonRoadTransformation.cpp
     src/commonroad_classes/Crossing.hpp
     src/commonroad_classes/Crossing.cpp
     src/commonroad_classes/DynamicObstacle.hpp

@@ -33,6 +33,8 @@ CommonRoadScenario::CommonRoadScenario()
     //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
 
     //TODO: Translate time step size to uint64_t - nanoseconds representation?
+
+    //Sets up YAML storage for transformations of XML files stored in between sessions, done implicitly (yaml_transformation_storage)
 }
 
 void CommonRoadScenario::test_output()
@@ -211,6 +213,9 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     {
         setup_obstacle_sim_manager();
     }
+
+    //Set up / load (new) data entry for transformation profile
+    yaml_transformation_storage.set_scenario_name(xml_filepath);
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -553,6 +558,9 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
             calculate_center();
         }
 
+        //Update database entry for transformation
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, translate_x, translate_y);
+
         xml_translation_mutex.unlock();
     }
 }
@@ -619,6 +627,9 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
 
+        //Update database entry for transformation
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y);
+
         xml_translation_mutex.unlock();
 
         //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
@@ -647,6 +658,9 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
     {
         planning_problem.second.transform_timing(time_scale);
     }
+
+    //Update database entry for transformation
+    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0);
 
     lock.unlock();
 
@@ -734,6 +748,28 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
         error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
         LCCErrorLogger::Instance().log_error(error_stream.str());
     }
+}
+
+/******************************Access to YAML transformation storage***********************************/
+
+void CommonRoadScenario::apply_stored_transformation()
+{
+    double time_scale, scale, translate_x, translate_y = 0.0;
+    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y);
+
+    //TODO: Lock translate mutex / do all in one function to make sure that no new scenario is loaded in between?
+    transform_coordinate_system(scale, translate_x, translate_y);
+    set_time_step_size(time_scale);
+}
+
+void CommonRoadScenario::store_applied_transformation()
+{
+    yaml_transformation_storage.store_transform_profile();
+}
+
+void CommonRoadScenario::reset_stored_transformation()
+{
+    yaml_transformation_storage.reset_current_transform_profile();
 }
 
 

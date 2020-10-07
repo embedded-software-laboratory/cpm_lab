@@ -131,10 +131,6 @@ CommonroadViewUI::CommonroadViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     commonroad_path->set_text(FileChooserUI::get_last_execution_path(config_file_location));
-
-    //Load yaml profile
-    load_transform_profile();
-    profile_applied.store(false);
 }
 
 using namespace std::placeholders;
@@ -427,9 +423,6 @@ void CommonroadViewUI::apply_transformation()
     //Re-enter vehicle selection for obstacle simulation manager
     apply_current_vehicle_selection();
 
-    //Remember change in profile yaml
-    add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y);
-
     entry_lane_width->set_text("");
     entry_translate_x->set_text("");
     entry_translate_y->set_text("");
@@ -450,8 +443,6 @@ bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
 
-        //Remember change in profile yaml
-        add_change_to_transform_profile(new_step_size, 0.0, 0.0, 0.0);
         return true;
     }
     return false;
@@ -471,9 +462,6 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
 
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
-
-        //Remember change in profile yaml
-        add_change_to_transform_profile(0.0, lane_width, 0.0, 0.0);
 
         entry_lane_width->set_text("");
 
@@ -496,9 +484,6 @@ bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
 
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
-        
-        //Remember change in profile yaml
-        add_change_to_transform_profile(0.0, 0.0, translate_x, 0.0);
 
         entry_translate_x->set_text("");
 
@@ -521,9 +506,6 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
 
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
-
-        //Remember change in profile yaml
-        add_change_to_transform_profile(0.0, 0.0, 0.0, translate_y);
 
         entry_translate_y->set_text("");
 
@@ -548,16 +530,10 @@ void CommonroadViewUI::load_chosen_file()
 
     try
     {
-        std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-
         commonroad_scenario->load_file(filepath);
-        profile_applied.store(false);
 
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
-
-        //Reset yaml profile to last saved state / get rid of changes that were not supposed to be stored
-        yaml_transform_profile = YAML::Clone(old_yaml_transform_profile);
     }
     catch(const std::exception& e)
     {
@@ -609,126 +585,26 @@ Gtk::Widget* CommonroadViewUI::get_parent()
 }
 
 //-------------------------------------------------------- YAML / Profile for transformation ------------------------------
-void CommonroadViewUI::load_transform_profile()
-{
-    //Make sure that the file exists, else create a file first
-    std::experimental::filesystem::path filepath = transformation_file_location;
-    bool file_exists = std::experimental::filesystem::exists(filepath);
-
-    if (!file_exists)
-    {
-        //Create file
-        std::ofstream yaml_file(transformation_file_location);
-        yaml_file.close();
-    }
-
-    //Now load the profile
-    std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-    yaml_transform_profile = YAML::LoadFile(transformation_file_location);
-    old_yaml_transform_profile = YAML::Clone(yaml_transform_profile);
-}
-
 void CommonroadViewUI::load_transformation_from_profile()
 {
-    std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-
-    if (current_file_name != "" && old_yaml_transform_profile[current_file_name])
+    if (commonroad_scenario)
     {
-        //Load profile
-        auto profile = old_yaml_transform_profile[current_file_name];
-
-        //Make sure that values exist
-        if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key]))
-        {
-            cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
-        }
-    
-        //Load values from profile
-        auto time_scale = profile[time_scale_key].as<double>();
-        auto scale = profile[scale_key].as<double>();
-        auto translate_x = profile[translate_x_key].as<double>();
-        auto translate_y = profile[translate_y_key].as<double>();
-
-        if (commonroad_scenario)
-        {
-            //TODO: Load must reset
-            std::cout << "Start tr" << std::endl;
-            //WARNING Complications possible if in between these steps the scenario is reloaded
-            commonroad_scenario->transform_coordinate_system(scale, translate_x, translate_y);
-            std::cout << "Stop tr, start t" << std::endl;
-            commonroad_scenario->set_time_step_size(time_scale);
-            std::cout << "Stop t" << std::endl;
-        }
+        commonroad_scenario->apply_stored_transformation();
     }
-
-    profile_applied.store(true);
 }
 
 void CommonroadViewUI::store_transform_profile()
 {
-    std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-
-    //Store changed profile
-    std::ofstream yaml_file(transformation_file_location, std::ofstream::out | std::ofstream::trunc);
-    yaml_file << yaml_transform_profile;
-    yaml_file.close();
-
-    //Now also keep the change for loading from the newly set profile (copy)
-    old_yaml_transform_profile = YAML::Clone(yaml_transform_profile);
-}
-
-void CommonroadViewUI::add_change_to_transform_profile(double time_scale, double scale, double translate_x, double translate_y)
-{
-    std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-
-    if (current_file_name != "")
+    if (commonroad_scenario)
     {
-        //Load profile
-        auto profile = yaml_transform_profile[current_file_name];
-
-        double translate_x_old = 0.0;
-        double translate_y_old = 0.0;
-
-        //Only regard old values if they have been loaded before
-        if (profile && profile_applied.load())
-        {
-            //Make sure that values exist
-            if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key]))
-            {
-                cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
-            }
-
-            //Load old values from profile
-            translate_x_old = profile[translate_x_key].as<double>();
-            translate_y_old = profile[translate_y_key].as<double>();
-        }
-
-        //Store values
-        if ( time_scale > 0 ) profile[time_scale_key] = time_scale;
-        if ( scale > 0 ) profile[scale_key] = scale;
-        profile[translate_x_key] = translate_x_old + translate_x;
-        profile[translate_y_key] = translate_y_old + translate_y;
-
-        //Now we are in a situation where, if the profile was applied before or not, we now use the same profile as the one stored in the profile node
-        //As changes are additive from here on, we need to reuse old values
-        profile_applied.store(true);
+        commonroad_scenario->store_applied_transformation();
     }
 }
 
 void CommonroadViewUI::reset_current_transform_profile()
 {
-    std::lock_guard<std::mutex> lock(yaml_profile_mutex);
-
-    if (current_file_name != "")
+    if (commonroad_scenario)
     {
-        //Load profile
-        auto profile = yaml_transform_profile[current_file_name];
-
-        if (profile)
-        {
-            yaml_transform_profile.remove(current_file_name);
-        }
-
-        old_yaml_transform_profile = YAML::Clone(yaml_transform_profile);
+        commonroad_scenario->reset_stored_transformation();
     }
 }
