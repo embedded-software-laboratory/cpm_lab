@@ -78,6 +78,9 @@ private:
     //Button to choose commonroad file
     Gtk::Button* button_choose_commonroad = nullptr;
     Gtk::Button* button_load_commonroad = nullptr;
+    Gtk::Button* button_load_profile = nullptr;
+    Gtk::Button* button_save_profile = nullptr;
+    Gtk::Button* button_reset_profile = nullptr;
 
     //Button to apply a transformation set in the UI to the currently loaded scenario permanently
     Gtk::Button* button_apply_transformation = nullptr;
@@ -135,8 +138,8 @@ private:
     //Transform text to double, if possible
     double string_to_double(std::string value, double default_value);
 
-    //Function to apply the set transformation to the loaded scenario permanently
-    void apply_transformation();
+    //Function to apply the set transformation to the loaded scenario with a button click
+    void apply_transformation(); //Without time scale, from all currently used text fields
 
     //Functions to apply one of the corresponding transformations after pressing enter within the entry
     bool apply_entry_time(GdkEventKey* event);
@@ -151,14 +154,17 @@ private:
     const std::string transformation_file_location = "./commonroad_profiles.yaml";
 
     //Name of current file
-    std::string current_file_name; //TODO
+    std::string current_file_name = "test"; //TODO
 
     //Loaded profile
-    YAML::Node yaml_transform_profile; //TODO MUTEX?
+    std::mutex yaml_profile_mutex;
+    YAML::Node yaml_transform_profile; //TODO MUTEX?; 'working' profile that is immediately changed with each change made by the user ("cache" which might not be used)
+    YAML::Node old_yaml_transform_profile; //Remembers state after last save of current setting, s.t. reset to those when loading again is possible without reloading the file
     const std::string time_scale_key = "time_scale";
     const std::string scale_key = "scale";
-    const std::string transform_x_key = "transform_x";
-    const std::string transform_y_key = "transform_y";
+    const std::string translate_x_key = "translate_x";
+    const std::string translate_y_key = "translate_y";
+    std::atomic_bool profile_applied;
 
     /**
      * \brief Load the transform profile that stores previously used transformations for commonroad scenarios. Create one if none exists
