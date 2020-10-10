@@ -198,9 +198,9 @@ add_executable(lab_control_center
 
 
 if(NOT SIMULATION)
-    target_link_libraries(lab_control_center cpm yaml-cpp labcamlib ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp stdc++fs labcamlib ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(lab_control_center cpm yaml-cpp ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp stdc++fs ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 endif()
 
 target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})
