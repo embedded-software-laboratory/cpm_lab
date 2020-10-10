@@ -793,7 +793,6 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
 void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape)
 {
     ctx->save();
-
     ctx->set_line_width(0.005);
 
     for (auto circle : shape.circles())
@@ -948,6 +947,12 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
             // ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
             // ctx->set_source(image_object,0,0);
             // ctx->paint();
+            //Make vehicle a bit transparent if the position is not exact
+            if (! entry.pose_is_exact())
+            {
+                ctx->set_source_rgba(.7,.2,.7,.2);
+            }
+
             draw_vehicle_shape(ctx, entry.shape());
         }
         ctx->restore();

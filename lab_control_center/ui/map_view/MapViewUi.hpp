@@ -119,6 +119,9 @@ class MapViewUi
         const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries, 
         uint8_t vehicle_id
     );
+    /**
+     * \brief Draw vehicles that were received in form of commonroad shape messages ('static' vehicles defined by the commonroad file)
+     */
     void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
     std::pair<double, double> get_shape_center(CommonroadDDSShape& shape);
     void draw_path_painting(const DrawingContext& ctx);
