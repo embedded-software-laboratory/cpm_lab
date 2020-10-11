@@ -28,8 +28,7 @@
 
 DynamicObstacle::DynamicObstacle(
     const xmlpp::Node* node,
-    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
     )
 {
     //Check if node is of type dynamicObstacle
@@ -277,85 +276,6 @@ void DynamicObstacle::draw_text(const DrawingContext& ctx, double scale, double 
     ctx->set_line_width(0.002 * scale);
     ctx->stroke();
 }
-
-//Suppress warning for unused parameter (s)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
-{
-    // ctx->save();
-
-    // //Perform required translation + rotation
-    // ctx->translate(global_translate_x, global_translate_y);
-    // ctx->rotate(global_orientation);
-
-    // //TODO: Different color / sticker / ... based on type
-    // ctx->set_source_rgb(1.0,0.5,0.0);
-
-    // if (step == 0)
-    // {
-    //     if (initial_state.has_value())
-    //     {
-    //         ctx->save();
-
-    //         initial_state->transform_context(ctx, scale);
-
-    //         draw_shape_with_text(ctx, scale, local_orientation);
-
-    //         ctx->restore();
-    //     }
-    //     else
-    //     {
-    //         std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
-    //     }
-    // }
-    // else if (step <= trajectory.size() && trajectory.size() > 0)
-    // {
-    //     ctx->save();
-
-    //     trajectory.at(step - 1).transform_context(ctx, scale);
-
-    //     draw_shape_with_text(ctx, scale, local_orientation);
-
-    //     ctx->restore();
-    // }
-    // else if (step <= occupancy_set.size() && occupancy_set.size() > 0)
-    // {
-    //     //Draw occupancy shape
-    //     ctx->save();
-    //     occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
-    //     occupancy_set.at(step - 1).transform_context(ctx, scale);
-    //     draw_text(ctx, scale, local_orientation, occupancy_set.at(step - 1).get_center());
-    //     ctx->restore();
-
-    //     //Draw obstacle shape at centroid of occupancy shape
-    //     // ctx->save();
-    //     // occupancy_set.at(step - 1).transform_context(ctx, scale);
-    //     // if (shape.has_value())
-    //     // {
-    //     //     shape->draw(ctx, scale);
-    //     // }
-    //     // else
-    //     // {
-    //     //     std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-    //     // }
-    //     // ctx->restore();
-    // }
-
-    // //Step - 1 is current trajectory index (0 for initial state)
-    // step = step + 1;
-    // if (step > trajectory.size() && trajectory.size() > 0) 
-    // {
-    //     step = 0;
-    // }
-    // else if (step > occupancy_set.size() && occupancy_set.size() > 0)
-    // {
-    //     step = 0;
-    // }
-
-    // ctx->restore();
-}
-#pragma GCC diagnostic pop
 
 ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
 {

@@ -950,7 +950,7 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
             //Make vehicle a bit transparent if the position is not exact
             if (! entry.pose_is_exact())
             {
-                ctx->set_source_rgba(.7,.2,.7,.2);
+                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
             }
 
             draw_vehicle_shape(ctx, entry.shape());

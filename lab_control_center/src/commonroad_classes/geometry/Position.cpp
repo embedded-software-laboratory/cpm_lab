@@ -169,44 +169,11 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
         ctx->arc(point->get_x() * scale, point->get_y() * scale, radius * scale, 0.0, 2 * M_PI);
         ctx->stroke();
     }
-    else
+    
+    //Also draw "inexact" positional values, not only the point value
     {
-        //TODO: Rotation of combined forms is more complex than just rotation of the parts
-        // for (auto circle : circles)
-        // {
-        //     circle.draw(ctx, scale, 0, 0, 0, local_orientation);
-        // }
-        // for (auto polygon : polygons)
-        // {
-        //     polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
-        // }
-        // for (auto rectangle : rectangles)
-        // {
-        //     rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
-        // }
-
-        // if (lanelet_refs.size() > 0)
-        // {
-        //     if (draw_lanelet_refs)
-        //     {
-        //         for (auto lanelet_ref : lanelet_refs)
-        //         {
-        //             draw_lanelet_refs(lanelet_ref, ctx, scale, 0, 0, 0);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         std::cerr << "TODO: Better warning // Cannot draw using lanelet references - no lanelet ref draw function was set" << std::endl;
-        //     }
-        // }
-
-        // if (circles.size() + polygons.size() + rectangles.size() > 1)
-        // {
-        //     std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
-        //     //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
-        // }
-
-        //Alternative rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
+        //TODO?
+        //Rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
         ctx->save();
 
         auto center = get_center();

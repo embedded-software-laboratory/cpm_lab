@@ -301,8 +301,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             xml_translation::get_attribute_int(node, "id", true).value(), 
             DynamicObstacle(
                 node,
-                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
             )}
         );
     }
@@ -326,8 +325,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
                 xml_translation::get_attribute_int(node, "id", true).value(), 
                 DynamicObstacle(
                     node,
-                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                    std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
                 )}
             );
         }
@@ -696,15 +694,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             lanelet_entry.second.draw(ctx, scale);
         }
 
-        for (auto &static_obstacle : static_obstacles)
-        {
-            static_obstacle.second.draw(ctx, scale);
-        }
-
-        for (auto &dynamic_obstacle : dynamic_obstacles)
-        {
-            dynamic_obstacle.second.draw(ctx, scale);
-        }
+        //Obstacles are drawn elsewhere, as they are explicitly simulated within the LCC
 
         for (auto &planning_problem : planning_problems)
         {

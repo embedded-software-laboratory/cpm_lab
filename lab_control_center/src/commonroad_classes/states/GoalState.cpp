@@ -145,7 +145,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         for (auto& middle : orientation->get_interval_avg())
         {
             ctx->save();
-            ctx->set_source_rgb(1.0, 0.0, 0.0);
+            ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
 
             if(position.has_value())
             {
