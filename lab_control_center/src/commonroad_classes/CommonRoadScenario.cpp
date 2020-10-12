@@ -33,6 +33,8 @@ CommonRoadScenario::CommonRoadScenario()
     //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
 
     //TODO: Translate time step size to uint64_t - nanoseconds representation?
+
+    //Sets up YAML storage for transformations of XML files stored in between sessions, done implicitly (yaml_transformation_storage)
 }
 
 void CommonRoadScenario::test_output()
@@ -62,8 +64,8 @@ void CommonRoadScenario::test_output()
     std::cout << "Location data: " << std::endl;
     if (location.has_value())
     {
-        std::cout << "\tCountry: " << location.value().country << std::endl;
-        std::cout << "\tFederal state :" << location.value().federal_state << std::endl;
+        std::cout << "\tCountry: " << location.value().country.value_or("empty") << std::endl;
+        std::cout << "\tFederal state :" << location.value().federal_state.value_or("empty") << std::endl;
         std::cout << "\tLatitude: " << location.value().gps_latitude << std::endl;
         std::cout << "\tLongitude: " << location.value().gps_longitude << std::endl;
         std::cout << "\tName: " << location.value().name.value_or("empty") << std::endl;
@@ -116,13 +118,12 @@ void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _res
     reset_obstacle_aggregator = _reset;
 }
 
-void CommonRoadScenario::load_file(std::string xml_filepath)
+void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordinates)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
     //Delete all old data
     clear_data();
-
 
     //Translate new data
     xmlpp::DomParser parser;
@@ -196,11 +197,25 @@ void CommonRoadScenario::load_file(std::string xml_filepath)
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
     }
 
+    lock.unlock();
+
+    //Calculate the center of the planning problem
+    calculate_center();
+
+    //Automatically center the planning problem
+    if (center_coordinates)
+    {
+        transform_coordinate_system(- center.first, - center.second);
+    }
+
     //Load new obstacle simulations
     if (setup_obstacle_sim_manager)
     {
         setup_obstacle_sim_manager();
     }
+
+    //Set up / load (new) data entry for transformation profile
+    yaml_transformation_storage.set_scenario_name(xml_filepath);
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -236,7 +251,9 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     if(node_name.empty())
     {
         //TODO: Throw error or keep it this way?
-        std::cerr << "TODO: Better warning // Node element empty in scenario parse" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Node element empty in scenario parse, from line " << node->get_line();
+        LCCErrorLogger::Instance().log_error(error_stream.str());
         return;
     }
 
@@ -269,33 +286,61 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("staticObstacle") == 0)
     {
-        static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
-        static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
+        static_obstacles.insert({
+            xml_translation::get_attribute_int(node, "id", true).value(), 
+            StaticObstacle(
+                node,
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
+                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+            )}
+        );
     }
     else if (node_name.compare("dynamicObstacle") == 0)
     {
-        dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
-        dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
+        dynamic_obstacles.insert({
+            xml_translation::get_attribute_int(node, "id", true).value(), 
+            DynamicObstacle(
+                node,
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
+            )}
+        );
     }
     else if (node_name.compare("obstacle") == 0)
     {
         ObstacleRole obstacle_role = get_obstacle_role(node);
         if (obstacle_role == ObstacleRole::Static)
         {
-            static_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), StaticObstacle(node)});
-            static_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
+            static_obstacles.insert({
+                xml_translation::get_attribute_int(node, "id", true).value(), 
+                StaticObstacle(
+                    node,
+                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
+                    std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                )}
+            );
         }
         else if (obstacle_role == ObstacleRole::Dynamic)
         {
-            dynamic_obstacles.insert({xml_translation::get_attribute_int(node, "id", true).value(), DynamicObstacle(node)});
-            dynamic_obstacles.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
+            dynamic_obstacles.insert({
+                xml_translation::get_attribute_int(node, "id", true).value(), 
+                DynamicObstacle(
+                    node,
+                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
+                )}
+            );
         }
         
     }
     else if (node_name.compare("planningProblem") == 0)
     {
-        planning_problems.insert({xml_translation::get_attribute_int(node, "id", true).value(), PlanningProblem(node)});
-        planning_problems.at(xml_translation::get_attribute_int(node, "id", true).value()).set_lanelet_ref_draw_function(std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6));
+        planning_problems.insert({
+            xml_translation::get_attribute_int(node, "id", true).value(), 
+            PlanningProblem(
+                node,
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
+                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+            )}
+        );
     }
     else if (node_name.compare("comment") == 0)
     {
@@ -312,8 +357,8 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 void CommonRoadScenario::translate_location(const xmlpp::Node* node) 
 {
     Location translated_location;
-    translated_location.country = xml_translation::get_child_child_text(node, "country", true).value(); //If no value: Error is thrown anyway (set to true)
-    translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.country = xml_translation::get_child_child_text(node, "country", false); 
+    translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", false); 
     translated_location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
@@ -440,7 +485,9 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
         }
         else
         {
-            std::cerr << "TODO: Better warning // Unspecified scenario tag, ignored" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Unspecified scenario tag in scenario parse ignored, from line " << node->get_line();
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
 }
@@ -466,10 +513,61 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
     }
 }
 
+void CommonRoadScenario::transform_coordinate_system(double translate_x, double translate_y) 
+{
+    //Do not block the UI if locked, needs to be done again then
+    if (xml_translation_mutex.try_lock())
+    {
+        double scale = 1.0;
+        if (translate_x != 0.0 || translate_y != 0.0)
+        {
+            for (auto &lanelet_entry : lanelets)
+            {
+                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &static_obstacle : static_obstacles)
+            {
+                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &dynamic_obstacle : dynamic_obstacles)
+            {
+                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &planning_problem : planning_problems)
+            {
+                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
+            }
+
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
+            } 
+
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
+            } 
+
+            //Update center
+            std::cout << "New center after transformation:" << std::endl;
+            calculate_center();
+        }
+
+        //Update database entry for transformation
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, translate_x, translate_y);
+
+        xml_translation_mutex.unlock();
+    }
+}
+
 /******************************Interface functions***********************************/
 
 void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
 {
+    //Do not block the UI if locked, needs to be done again then
     if (xml_translation_mutex.try_lock())
     {
         //Get current min. lane width of lanelets (calculated from point distances)
@@ -516,11 +614,21 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
             {
                 traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
             } 
+
+            //Update center
+            calculate_center();
         }
         else if (min_width < 0)
         {
-            std::cerr << "TODO: Better warning // Could not transform coordinate system to min lane width, no lanelets / lanelet points set" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Could not transform scenario coordinate system to min lane width - no lanelets defined";
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
+
+        //Update database entry for transformation
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y);
+
+        xml_translation_mutex.unlock();
 
         //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
         if (reset_obstacle_sim_manager)
@@ -531,12 +639,38 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
         {
             setup_obstacle_sim_manager();
         }
-
-        xml_translation_mutex.unlock();
     }
-    
+}
 
-    //TODO: We probably need to center the problem as well, so get farthest left / right / ... points for this
+void CommonRoadScenario::set_time_step_size(double new_time_step_size)
+{
+    //Only accept physically meaningful & useful values
+    if (new_time_step_size <= 0) return;
+
+    std::unique_lock<std::mutex> lock(xml_translation_mutex);
+    double time_scale = time_step_size / new_time_step_size;
+    time_step_size = new_time_step_size;
+
+    //Change velocity, acceleration
+    for (auto &planning_problem : planning_problems)
+    {
+        planning_problem.second.transform_timing(time_scale);
+    }
+
+    //Update database entry for transformation
+    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0);
+
+    lock.unlock();
+
+    //Need to reset the simulation and aggregator as well (as the timing was changed)
+    if (reset_obstacle_sim_manager)
+    {
+        reset_obstacle_sim_manager();
+    }
+    if (setup_obstacle_sim_manager)
+    {
+        setup_obstacle_sim_manager();
+    }
 }
 
 //Suppress warning for unused parameter (s)
@@ -560,15 +694,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             lanelet_entry.second.draw(ctx, scale);
         }
 
-        for (auto &static_obstacle : static_obstacles)
-        {
-            static_obstacle.second.draw(ctx, scale);
-        }
-
-        for (auto &dynamic_obstacle : dynamic_obstacles)
-        {
-            dynamic_obstacle.second.draw(ctx, scale);
-        }
+        //Obstacles are drawn elsewhere, as they are explicitly simulated within the LCC
 
         for (auto &planning_problem : planning_problems)
         {
@@ -608,44 +734,136 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
     }
     else
     {
-        std::cerr << "TODO: Better warning // Lanelet ref not found (while drawing lanelet ref)" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 
+/******************************Access to YAML transformation storage***********************************/
+
+void CommonRoadScenario::apply_stored_transformation()
+{
+    double time_scale, scale, translate_x, translate_y = 0.0;
+    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y);
+
+    //TODO: Lock translate mutex / do all in one function to make sure that no new scenario is loaded in between?
+    transform_coordinate_system(scale, translate_x, translate_y);
+    set_time_step_size(time_scale);
+}
+
+void CommonRoadScenario::store_applied_transformation()
+{
+    yaml_transformation_storage.store_transform_profile();
+}
+
+void CommonRoadScenario::reset_stored_transformation()
+{
+    yaml_transformation_storage.reset_current_transform_profile();
+}
+
+
 /******************************Getter***********************************/
+
+//This one is private
+void CommonRoadScenario::calculate_center()
+{
+    //As for most functions in this class, this function should also only be called after locking the translation mutex, as translation might be performed by another thread
+
+    //Init center
+    center = std::pair<double, double>(0.0, 0.0);
+
+    //Working with numeric limits at start lead to unforseeable behaviour with min and max, thus we now use this approach instead
+    bool uninitialized = true;
+    double x_min, x_max, y_min, y_max;
+    for (auto lanelet : lanelets)
+    {
+        auto x_y_range = lanelet.second.get_range_x_y();
+
+        if (x_y_range.has_value())
+        {
+            if (uninitialized)
+            {
+                x_min = x_y_range.value()[0][0];
+                x_max = x_y_range.value()[0][1];
+                y_min = x_y_range.value()[1][0];
+                y_max = x_y_range.value()[1][1];
+
+                uninitialized = false;
+            }
+            else
+            {
+                x_min = std::min(x_min, x_y_range.value()[0][0]);
+                x_max = std::max(x_max, x_y_range.value()[0][1]);
+                y_min = std::min(y_min, x_y_range.value()[1][0]);
+                y_max = std::max(y_max, x_y_range.value()[1][1]);
+            }
+        }
+    }
+
+    std::cout << "New x_min: " << x_min << std::endl;
+    std::cout << "New x_max: " << x_max << std::endl;
+    std::cout << "New y_min: " << y_min << std::endl;
+    std::cout << "New y_max: " << y_max << std::endl;
+
+    //Set values to zero if no values could be found in any of the lanelets
+    if (lanelets.size() == 0 || uninitialized)
+    {
+        x_min = 0.0;
+        x_max = 0.0;
+        y_min = 0.0;
+        y_max = 0.0;
+    }
+
+    center.first = (0.5 * x_min) + (0.5 * x_max);
+    center.second = (0.5 * y_min) + (0.5 * y_max);
+
+    //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
+    center.first -= 2.25;
+    center.second -= 2.0;
+
+    std::cout << "New center: " << center.first << ", " << center.second << std::endl;
+}
 
 const std::string& CommonRoadScenario::get_author()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return author;
 }
 
 const std::string& CommonRoadScenario::get_affiliation()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return affiliation;
 }
 
 const std::string& CommonRoadScenario::get_benchmark_id()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return benchmark_id;
 }
 
 const std::string& CommonRoadScenario::get_common_road_version()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return common_road_version;
 }
 
 const std::string& CommonRoadScenario::get_date()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return date;
 }
 
 const std::string& CommonRoadScenario::get_source()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return source;
 }
 
 double CommonRoadScenario::get_time_step_size()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return time_step_size;
 }
 
@@ -661,11 +879,13 @@ double CommonRoadScenario::get_time_step_size()
 
 const std::optional<Location> CommonRoadScenario::get_location()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     return location;
 }
 
 std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     std::vector<int> ids;
     for (const auto& entry : dynamic_obstacles)
     {
@@ -677,20 +897,86 @@ std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 
 std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
     {
         return std::optional<DynamicObstacle>(dynamic_obstacles.at(id));
     }
-    return std::optional<DynamicObstacle>();
+    return std::nullopt;
 }
+
+std::vector<int> CommonRoadScenario::get_static_obstacle_ids()
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    std::vector<int> ids;
+    for (const auto& entry : static_obstacles)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
+
+std::optional<StaticObstacle> CommonRoadScenario::get_static_obstacle(int id)
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    if (static_obstacles.find(id) != static_obstacles.end())
+    {
+        return std::optional<StaticObstacle>(static_obstacles.at(id));
+    }
+    return std::nullopt;
+}
+
+
+std::vector<int> CommonRoadScenario::get_planning_problem_ids()
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    std::vector<int> ids;
+    for (const auto& entry : planning_problems)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
+
+std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    if (planning_problems.find(id) != planning_problems.end())
+    {
+        return std::optional<PlanningProblem>(planning_problems.at(id));
+    }
+    return std::nullopt;
+}
+
 
 std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
 {
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
     //TODO: Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
     if (lanelets.find(id) != lanelets.end())
     {
         return std::optional<Lanelet>(lanelets.at(id));
     }
-    return std::optional<Lanelet>();
+    return std::nullopt;
+}
+
+std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
+{
+    //Mutex locking not necessary / possible here (called within draw from other objects)
+
+    auto lanelet_it = lanelets.find(id);
+    if (lanelet_it != lanelets.end())
+    {
+        return lanelet_it->second.get_center();
+    }
+    else
+    {
+        std::stringstream error_stream;
+        error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
+        LCCErrorLogger::Instance().log_error(error_stream.str());
+        return {0, 0};
+    }
 }

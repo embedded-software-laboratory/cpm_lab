@@ -35,6 +35,7 @@ MonitoringUi::MonitoringUi(
     std::function<std::vector<uint8_t>()> get_hlc_data_callback,
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
     std::function<void()> reset_data_callback,
+    std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values,
     std::function<void()> kill_deployed_applications_callback)
 {
     this->deploy_functions = deploy_functions_callback;
@@ -42,6 +43,7 @@ MonitoringUi::MonitoringUi(
     this->get_hlc_data = get_hlc_data_callback;
     this->get_vehicle_trajectory = get_vehicle_trajectory_command_callback;
     this->reset_data = reset_data_callback;
+    this->get_rtt_values = get_rtt_values;
     this->kill_deployed_applications = kill_deployed_applications_callback; 
 
     builder = Gtk::Builder::create_from_file("ui/monitoring/monitoring_ui.glade");
@@ -52,6 +54,11 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("box_buttons", box_buttons);
     builder->get_widget("label_hlc_description_short", label_hlc_description_short);
     builder->get_widget("label_hlc_description_long", label_hlc_description_long);
+    builder->get_widget("label_rtt_hlc_short", label_rtt_hlc_short);
+    builder->get_widget("label_rtt_hlc_long", label_rtt_hlc_long);
+    builder->get_widget("label_rtt_vehicle_short", label_rtt_vehicle_short);
+    builder->get_widget("label_rtt_vehicle_long", label_rtt_vehicle_long);
+    builder->get_widget("label_experiment_time", label_experiment_time);
 
     assert(parent);
     assert(viewport_monitoring);
@@ -60,6 +67,11 @@ MonitoringUi::MonitoringUi(
     assert(box_buttons);
     assert(label_hlc_description_short);
     assert(label_hlc_description_long);
+    assert(label_rtt_hlc_short);
+    assert(label_rtt_hlc_long);
+    assert(label_rtt_vehicle_short);
+    assert(label_rtt_vehicle_long);
+    assert(label_experiment_time);
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
@@ -68,6 +80,9 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
+
+    //Store start time of simulation when simulation is running - this is the default value (uninitialized)
+    sim_start_time.store(0);
 }
 
 MonitoringUi::~MonitoringUi()
@@ -80,6 +95,10 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
+void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
+}
 
 void MonitoringUi::init_ui_thread()
 {
@@ -217,17 +236,28 @@ void MonitoringUi::init_ui_thread()
                             {
                                 auto hlc_id = current_mapping.second.at(vehicle_id);
 
-                                if (std::find(hlc_data.begin(), hlc_data.end(), hlc_id) != hlc_data.end())
+                                //Find out if the programs are still running on the NUC
+                                assert(crash_checker);
+                                bool program_crashed = crash_checker->check_if_crashed(hlc_id);
+
+                                bool nuc_crashed = std::find(hlc_data.begin(), hlc_data.end(), hlc_id) == hlc_data.end();
+
+                                if (!nuc_crashed && !program_crashed)
                                 {
                                     label->set_text("Online");
                                     label->get_style_context()->add_class("ok");
                                     if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
                                     if(error_triggered[0][0]) error_triggered[0][0] = false; 
                                 }
-                                else if (label->get_text() != "Offline") //Do not log this more than once
+                                else if (nuc_crashed && label->get_text() != "Offline") //Do not log this more than once
                                 {
                                     label->set_text("Offline");
                                     label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: NUC %d disconnected. Stopping vehicles ...", 
+                                        hlc_id
+                                    );
                                     if(error_timestamps[0][0] == 0) 
                                     {
                                         // set error timestamp  
@@ -248,6 +278,17 @@ void MonitoringUi::init_ui_thread()
                                         this->kill_deployed_applications();
                                         error_triggered[0][0] = true; 
                                     }
+                                }
+                                else if (program_crashed && label->get_text() != "Offline" && label->get_text() != "Prog. crash")
+                                {
+                                    label->set_text("Prog. crash");
+                                    label->get_style_context()->add_class("alert");
+                                    cpm::Logging::Instance().write(
+                                        1,
+                                        "Warning: NUC %d had a program crash. Stopping vehicles ...", 
+                                        hlc_id
+                                    );
+                                    deploy_functions->stop_vehicles(vehicle_ids);
                                 }
                                 else
                                 {
@@ -429,6 +470,23 @@ void MonitoringUi::init_ui_thread()
                             }
                         }
                     }
+                    else if(rows_restricted[i] == "last_msg_state")
+                    {
+                        //Calculate diff
+                        double t_now_ms = static_cast<double>(cpm::get_time_ns() * 1e-6);
+                        double t_diff = t_now_ms - value;
+                        std::stringstream text;
+                        text << ceil(t_diff * 100) / 100; //Round to 2 values after comma
+                        label->set_text(text.str().c_str());
+
+                        //20 would be ideal (50Hz for vehicle data)
+                        if     (fabs(t_diff) < 20)  label->get_style_context()->add_class("ok");
+                        else if(fabs(t_diff) < 30) label->get_style_context()->add_class("warn");
+                        else 
+                        {
+                            label->get_style_context()->add_class("alert");
+                        }
+                    }
                     else if(rows_restricted[i] == "reference_deviation") 
                     {
                         // is vehicle on its reference trajectory? else stop 
@@ -546,9 +604,7 @@ void MonitoringUi::init_ui_thread()
                     label->get_style_context()->remove_class("ok");
                     label->get_style_context()->remove_class("warn");
                     label->get_style_context()->add_class("alert");
-                }
-                
-                
+                }                
             }
         }
 
@@ -571,6 +627,91 @@ void MonitoringUi::init_ui_thread()
         }
 
         label_hlc_description_long->set_text(list_stream.str().c_str());
+
+        //RTT update - HLC
+        uint64_t hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt = 0;
+        double hlc_missed_rtt_percentage = 0.0;
+        bool hlc_rtt_exists = get_rtt_values("hlc", hlc_current_best_rtt, hlc_current_worst_rtt, hlc_all_time_worst_rtt, hlc_missed_rtt_percentage);
+
+        if (!hlc_rtt_exists)
+        {
+            label_rtt_hlc_short->set_text("HLC RTT (ms): ---");
+            label_rtt_hlc_long->set_text("---");
+        }
+        else
+        {
+            //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
+            std::stringstream rtt_long;
+            rtt_long 
+            << "\tCurrent best / worst: " << static_cast<uint64_t>(hlc_current_best_rtt / 1e6) << " / "
+            << static_cast<uint64_t>(hlc_current_worst_rtt / 1e6) << "\n"
+            << "\tAll-time worst: " << static_cast<uint64_t>(hlc_all_time_worst_rtt / 1e6) << "\n"
+            << "\tMissed (percent): " << static_cast<uint64_t>(hlc_missed_rtt_percentage * 100);
+            label_rtt_hlc_long->set_text(rtt_long.str().c_str());
+
+            std::stringstream rtt_short;
+            rtt_short << "HLC RTT (ms): " << static_cast<uint64_t>(hlc_current_worst_rtt / 1e6);
+            label_rtt_hlc_short->set_text(rtt_short.str().c_str());
+        }
+
+        //RTT update - vehicle
+        uint64_t vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt = 0;
+        double vehicle_missed_rtt_percentage = 0.0;
+        bool vehicle_rtt_exists = get_rtt_values("vehicle", vehicle_current_best_rtt, vehicle_current_worst_rtt, vehicle_all_time_worst_rtt, vehicle_missed_rtt_percentage);
+        if (!vehicle_rtt_exists)
+        {
+            label_rtt_vehicle_short->set_text("Vehicle RTT (ms): ---");
+            label_rtt_vehicle_long->set_text("---");
+        }
+        else
+        {
+            //Possible TODO: Change background color depending on RTT 'quality' / allow different coloring for any of the three entries
+            std::stringstream rtt_long;
+            rtt_long 
+            << "\tCurrent best / worst: " << static_cast<uint64_t>(vehicle_current_best_rtt / 1e6) << " / "
+            << static_cast<uint64_t>(vehicle_current_worst_rtt / 1e6) << "\n"
+            << "\tAll-time worst: " << static_cast<uint64_t>(vehicle_all_time_worst_rtt / 1e6) << "\n"
+            << "\tMissed (percent): " << static_cast<uint64_t>(vehicle_missed_rtt_percentage * 100);
+            label_rtt_vehicle_long->set_text(rtt_long.str().c_str());
+
+            std::stringstream rtt_short;
+            rtt_short << "Vehicle RTT (ms): " << static_cast<uint64_t>(vehicle_current_worst_rtt / 1e6);
+            label_rtt_vehicle_short->set_text(rtt_short.str().c_str());
+        }
+
+        //Update running time of simulation, if it is currently running
+        auto sim_start = sim_start_time.load();
+        if (sim_start > 0)
+        {
+            auto t_diff = cpm::get_time_ns() - sim_start;
+            t_diff /= 1e9; //Convert to seconds
+
+            //Now calculate hours, minutes and seconds
+            auto t_sec = t_diff % 60;
+            auto t_min = t_diff / 60;
+            auto t_hr = t_min / 60;
+            t_min = t_min % 60;
+
+            std::stringstream sim_time_stream;
+            sim_time_stream << "Exp time: ";
+
+            if (t_hr > 0)
+            {
+                sim_time_stream << t_hr << "h ";
+            }
+            if (t_min > 0 || t_hr > 0)
+            {
+                sim_time_stream << t_min << "min ";
+            }
+            sim_time_stream << t_sec << "s";
+
+            label_experiment_time->set_text(sim_time_stream.str().c_str());
+        }
+        else
+        {
+            label_experiment_time->set_text("Exp time: ---");
+        }
+        
     });
 
     run_thread.store(true);
@@ -625,4 +766,20 @@ Gtk::Box* MonitoringUi::get_parent()
 void MonitoringUi::reset_vehicle_view()
 {
     reset_ui_thread();
+}
+
+void MonitoringUi::notify_sim_start()
+{
+    reset_vehicle_view();
+
+    //Timer start (to determine how long the simulation has been running)
+    sim_start_time.store(cpm::get_time_ns());
+}
+
+void MonitoringUi::notify_sim_stop()
+{
+    reset_vehicle_view();
+
+    //Timer reset
+    sim_start_time.store(0);
 }

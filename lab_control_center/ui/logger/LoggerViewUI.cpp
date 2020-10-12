@@ -177,12 +177,10 @@ void LoggerViewUI::on_log_level_changed()
 }
 
 void LoggerViewUI::dispatcher_callback() {
-    if (reset_logs.load())
+    if (reset_logs.exchange(false))
     {
-        log_storage->reset();
         reset_list_store();
         std::cout << "LOGS RESET" << std::endl;
-        reset_logs.store(false);
     }
     else
     {
@@ -444,4 +442,5 @@ Gtk::Widget* LoggerViewUI::get_parent() {
 void LoggerViewUI::reset()
 {
     reset_logs.store(true);
+    log_storage->reset(); //Better reset here, else the 200ms in between reset and potential new logs after calling reset can be problematic
 }

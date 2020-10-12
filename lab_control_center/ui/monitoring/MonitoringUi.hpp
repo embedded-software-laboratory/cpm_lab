@@ -37,12 +37,17 @@
 #include <thread>
 #include <vector>
 
+#include <math.h>
+
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/setup/Deploy.hpp"
 
 #include "TrajectoryInterpolation.hpp"
+
+#include "ui/setup/CrashChecker.hpp"
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
@@ -58,12 +63,19 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
+    Gtk::Label* label_rtt_hlc_short;
+    Gtk::Label* label_rtt_hlc_long;
+    Gtk::Label* label_rtt_vehicle_short;
+    Gtk::Label* label_rtt_vehicle_long;
+    Gtk::Label* label_experiment_time;
     std::shared_ptr<Deploy> deploy_functions;
+    std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
     std::function<std::vector<uint8_t>()> get_hlc_data;
     std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
+    std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values;
     std::function<void()> kill_deployed_applications; 
 
     // Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
@@ -73,10 +85,13 @@ public:
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
-    // Full rows
-    const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
-    // We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
-    const vector<string> rows_restricted = {"ips_dt", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
+    //To measure how long the simulation has been running
+    std::atomic_uint64_t sim_start_time;
+
+    //full rows
+    const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
+    //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
+    const vector<string> rows_restricted = {"ips_dt", "last_msg_state", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
 
     // Indicates the starting time of the last error occurance for each vehicle
     vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
@@ -103,10 +118,26 @@ public:
         std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
         std::function<void()> reset_data_callback,
+        std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values,
         std::function<void()> kill_deployed_applications_callback 
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();
     void reset_vehicle_view();
     void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
+
+    /**
+     * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
+     */
+    void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
+
+    /**
+     * \brief Function to call when the simulation starts, to reset data structures, start timers etc
+     */
+    void notify_sim_start();
+
+    /**
+     * \brief Function to call when the simulation stops, to reset data structures, start timers etc
+     */
+    void notify_sim_stop();
 };

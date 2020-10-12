@@ -127,7 +127,7 @@ public:
      * \param hlc_id The ID of the HLC on which the software shall be deployed -> used to get the IP address
      * \param vehicle_ids One or multiple vehicle IDs, comma-separated, as string - to be passed to the middleware and the script
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
-     * \param script_path Path to the script, including the script name (and possible file ending)
+     * \param script_path Path to the script, including the script name (and possible file ending) - MUST BE ABSOLUTE
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
      * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
@@ -151,13 +151,14 @@ public:
 
     /**
      * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
+     * \param script_started False if middleware+script are not running / should not be checked
      * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
      * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
      * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
      * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
      * \return Empty array if everything is fine, else: string of the crashed module
      */
-    std::vector<std::string> check_for_crashes(bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
+    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     //Used for process forking

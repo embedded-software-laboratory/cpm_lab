@@ -29,6 +29,7 @@
 #include <libxml++-2.6/libxml++/libxml++.h>
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,8 @@
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
+
+#include "LCCErrorLogger.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
@@ -85,9 +88,6 @@ struct Adjacent
 {
     int ref_id = -1;
     DrivingDirection direction;
-
-    //In case it does not exist, not part of specs
-    bool exists = false;
 };
 
 /**
@@ -97,7 +97,7 @@ struct Adjacent
 struct Bound
 {
     std::vector<Point> points; //min. 2
-    std::optional<LineMarking> line_marking;
+    std::optional<LineMarking> line_marking = std::nullopt;
 };
 
 /**
@@ -111,9 +111,6 @@ struct StopLine
     LineMarking line_marking;
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_ref; //only one possible, but easier to handle if nonexistent, trafficlightref
-
-    //In case it does not exist, not part of specs
-    bool exists = false;
 };
 
 /**
@@ -128,15 +125,18 @@ private:
     Bound right_bound;
     std::vector<int> predecessors; //Multiple possible e.g. in case of a fork; laneletref
     std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
-    Adjacent adjacent_left;  //-1 if empty? TODO!
-    Adjacent adjacent_right; //-1 if empty? TODO!
-    StopLine stop_line;
+    std::optional<Adjacent> adjacent_left = std::nullopt; 
+    std::optional<Adjacent> adjacent_right = std::nullopt;
+    std::optional<StopLine> stop_line = std::nullopt;
     LaneletType lanelet_type; //enum class possible
     std::vector<VehicleType> user_one_way; //enum class possible
     std::vector<VehicleType> user_bidirectional; //enum class possible
     std::vector<int> traffic_sign_refs; //trafficsignref
     std::vector<int> traffic_light_refs; //trafficlightref
-    std::optional<double> speed_limit; //From 2018 specs, must not be set
+    std::optional<double> speed_limit = std::nullopt; //From 2018 specs, must not be set
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
     /**
      * \brief This function translates a bound node to Bound
@@ -157,14 +157,14 @@ private:
      * \param node A laneletAdjacentRef node
      * \param name The name of the node
      */
-    Adjacent translate_adjacent(const xmlpp::Node* node, std::string name);
+    std::optional<Adjacent> translate_adjacent(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a stopLine node to StopLine (2020 only)
      * \param node A stopLine node
      * \param name The name of the node
      */
-    StopLine translate_stopline(const xmlpp::Node* node, std::string name);
+    std::optional<StopLine> translate_stopline(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a laneletType node to LaneletType (2020 only)
@@ -189,7 +189,7 @@ private:
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A lanelet node
      */
     Lanelet(const xmlpp::Node* node);
@@ -245,4 +245,22 @@ public:
      * \return Center of the shape
      */
     std::pair<double, double> get_center() override;
+
+    /**
+     * \brief Get center of all points of the lanelet
+     * \return Center of the shape of all points (get_center just takes a look at the two boundary points in the middle of the lanelet)
+     */
+    std::pair<double, double> get_center_of_all_points();
+
+    /**
+     * \brief Get min. and max. x and y value of all points of the lanelet, if such points exist
+     * \return [[min_x, max_x], [min_y, max_y]]
+     */
+    std::optional<std::array<std::array<double, 2>, 2>> get_range_x_y();
+
+    /**
+     * \brief Get the lanelet shape as a polygon
+     * \return Polygon of lanelet shape
+     */
+    std::vector<Point> get_shape();
 };

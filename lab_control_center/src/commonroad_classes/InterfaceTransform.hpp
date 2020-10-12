@@ -28,7 +28,7 @@
 
 /**
  * \class InterfaceTransform
- * \brief This interface requires the deriving classes to implement a transfrom function
+ * \brief This interface requires the deriving classes to implement a transform function
  * It is mainly used for clarity, to define common behaviour
  */
 class InterfaceTransform

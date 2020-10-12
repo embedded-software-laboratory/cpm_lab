@@ -32,26 +32,29 @@
 
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_time_ns.hpp"
 #include "CommonroadObstacle.hpp"
+#include "CommonroadObstacleList.hpp"
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
 /**
  * \class ObstacleAggregator
- * \brief Keeps received data from commonroad obstacles in map that regards multiple messages + timestamps; analogous to TimeSeriesAggregator but for commonroad obstacles
+ * \brief Keeps received data from commonroad obstacles in map that regards multiple messages + timestamps; analogous to TimeSeriesAggregator but for commonroad obstacles; ignores more than 2 seconds old data
  *
 */
 
 class ObstacleAggregator
 {
     //For visualization of commonroad data - store all received data in the map below, use it to get currently relevant data
-    cpm::AsyncReader<CommonroadObstacle> commonroad_obstacle_reader;
-    void commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacle>& samples);
+    cpm::AsyncReader<CommonroadObstacleList> commonroad_obstacle_reader;
+    void commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacleList>& samples);
     std::map<uint8_t, CommonroadObstacle> commonroad_obstacle_data;
     std::mutex commonroad_obstacle_mutex;
 
     uint64_t reset_time = 0; //After a reset, ignore all previous data (->Header) - remember when last reset was called
+    uint64_t timeout = 2e9; //Ignore all data that is more than two seconds old
 
 public:
     /**

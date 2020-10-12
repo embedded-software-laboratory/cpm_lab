@@ -54,7 +54,9 @@ namespace cpm {
         std::string node_id;
         uint64_t current_time;
 
-        bool active = false;
+        std::atomic_bool active;
+        std::atomic_bool cancelled; //In rare cases, stop can be called even before active is set to true; in that case, active alone does not suffice
+        std::mutex join_mutex; //join does not work concurrently
 
         std::thread runner_thread;
         std::function<void(uint64_t t_now)> m_update_callback;
@@ -79,6 +81,7 @@ namespace cpm {
         void start_async (std::function<void(uint64_t t_now)> update_callback, std::function<void()> stop_callback) override;
         void stop() override;
         uint64_t get_time() override;
+        uint64_t get_start_time() override;
     };
 
 }

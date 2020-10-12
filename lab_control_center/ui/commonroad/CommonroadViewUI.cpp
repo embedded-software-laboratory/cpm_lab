@@ -28,48 +28,321 @@
 
 CommonroadViewUI::CommonroadViewUI
     (
-    std::shared_ptr<CommonRoadScenario> _commonroad_scenario
+    std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
+    std::function<void(int, ObstacleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
     ) 
     :
-    commonroad_scenario(_commonroad_scenario)
+    commonroad_scenario(_commonroad_scenario),
+    set_obstacle_manager_obstacle_state(_set_obstacle_manager_obstacle_state)
 {
     builder = Gtk::Builder::create_from_file("ui/commonroad/commonroad.glade");
 
     builder->get_widget("parent", parent);
     builder->get_widget("commonroad_box", commonroad_box);
     builder->get_widget("commonroad_path", commonroad_path);
+    builder->get_widget("entry_time_step_size", entry_time_step_size);
     builder->get_widget("entry_lane_width", entry_lane_width);
     builder->get_widget("entry_translate_x", entry_translate_x);
     builder->get_widget("entry_translate_y", entry_translate_y);
     builder->get_widget("button_choose_commonroad", button_choose_commonroad);
     builder->get_widget("button_load_commonroad", button_load_commonroad);
     builder->get_widget("button_apply_transformation", button_apply_transformation);
+    builder->get_widget("static_obstacles_flowbox", static_obstacles_flowbox);
+    builder->get_widget("dynamic_obstacles_flowbox", dynamic_obstacles_flowbox);
+    builder->get_widget("problem_treeview", problem_treeview);
+    builder->get_widget("problem_scrolled_window", problem_scrolled_window);
+    builder->get_widget("button_load_profile", button_load_profile);
+    builder->get_widget("button_save_profile", button_save_profile);
+    builder->get_widget("button_reset_profile", button_reset_profile);
 
     assert(parent);
     assert(commonroad_box);
     assert(commonroad_path);
+    assert(entry_time_step_size);
     assert(entry_lane_width);
     assert(entry_translate_x);
     assert(entry_translate_y);
     assert(button_choose_commonroad);
     assert(button_load_commonroad);
     assert(button_apply_transformation);
+    assert(static_obstacles_flowbox);
+    assert(dynamic_obstacles_flowbox);
+    assert(problem_treeview);
+    assert(problem_scrolled_window);
+    assert(button_load_profile);
+    assert(button_save_profile);
+    assert(button_reset_profile);
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
-    button_load_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_chosen_file));
+    button_load_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_button_callback));
     button_apply_transformation->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_transformation));
+    button_load_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_transformation_from_profile));
+    button_save_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::store_transform_profile));
+    button_reset_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::reset_current_transform_profile));
 
     //Also, single transformation values can be applied on a single key press within the entry
+    entry_time_step_size->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_time));
     entry_lane_width->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_scale));
     entry_translate_x->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_x));
     entry_translate_y->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_translate_y));
 
     //Information on transformation on hover
+    entry_time_step_size->set_tooltip_text("Set time step size for the simulation. <= 0 means no change desired. Applies w. Return.");
     entry_lane_width->set_tooltip_text("Set min. lane width. <= 0 means no change desired. Also applies w. Return.");
     entry_translate_x->set_tooltip_text("Set x translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     entry_translate_y->set_tooltip_text("Set y translation. 0 means no change desired. Applied after scale change. Also applies w. Return.");
     button_apply_transformation->set_tooltip_text("Permanently apply set transformation to coordinate system. Future transformations are applied relative to new coordinate system.");
+
+    //Set current time step size as initial text for entry
+    std::stringstream current_time_step_size_stream;
+    if (commonroad_scenario)
+    {
+        current_time_step_size_stream << commonroad_scenario->get_time_step_size();
+    }
+    entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
+
+    //Setup for planning problem treeview
+    //Create model for view
+    problem_list_store = Gtk::ListStore::create(problem_record);
+
+    //Use model_record, add it to the view
+    problem_treeview->append_column("Problem ID", problem_record.problem_id);
+    problem_treeview->append_column("Goal Speed", problem_record.problem_goal_speed);
+    problem_treeview->append_column("Goal Time (sec.)", problem_record.problem_goal_time);
+    problem_treeview->set_model(problem_list_store);
+
+    problem_treeview->get_column(0)->set_resizable(true);
+    problem_treeview->get_column(0)->set_expand(true);
+
+    //Create UI thread and register dispatcher callback
+    ui_dispatcher.connect(sigc::mem_fun(*this, &CommonroadViewUI::dispatcher_callback));
+    run_thread.store(true);
+    ui_thread = std::thread(&CommonroadViewUI::update_ui, this);
+
+    //Set tooltip
+    problem_treeview->set_has_tooltip(true);
+    problem_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &CommonroadViewUI::tooltip_callback));
+
+    //Try to load planning problems from current translation, if they exist
+    reload_problems.store(true);
+    //Also load the obstacle list
+    load_obstacle_list.store(true);
+
+    //Set initial text of script path (from previous program execution, if that existed)
+    commonroad_path->set_text(FileChooserUI::get_last_execution_path(config_file_location));
+}
+
+using namespace std::placeholders;
+void CommonroadViewUI::dispatcher_callback() {
+    if (reload_problems.exchange(false))
+    {
+        //Reset time step size
+        std::stringstream current_time_step_size_stream;
+        current_time_step_size_stream << commonroad_scenario->get_time_step_size();
+        entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
+
+        //Get current number of elements
+        size_t count = 0;
+        for (auto iter = problem_list_store->children().begin(); iter != problem_list_store->children().end(); ++iter) {
+            ++count;
+        }
+
+        //Delete them all
+        for (size_t i = 0; i < count; ++i) { 
+            auto iter = problem_list_store->children().begin();
+            problem_list_store->erase(iter);
+        }
+
+        //Load current planning problems
+        for (auto planning_problem_id : commonroad_scenario->get_planning_problem_ids())
+        {
+            //We still check for the existence of the problem, as the file may have been reloaded in between
+            auto planning_problem = commonroad_scenario->get_planning_problem(planning_problem_id);
+            if (!planning_problem.has_value())
+            {
+                break;
+            }
+
+            std::stringstream id_stream; 
+            id_stream << planning_problem_id;
+            Glib::ustring id_ustring(id_stream.str());
+
+            for (auto planning_problem_element : planning_problem->get_planning_problems())
+            {
+                for (auto goal_state : planning_problem_element.goal_states)
+                {
+                    //Get goal speed(s)
+                    std::stringstream goal_stream; 
+
+                    auto goal_velocity = goal_state.get_velocity();
+                    if (goal_velocity.has_value())
+                    {
+                        for (auto it = goal_velocity.value().cbegin(); it != goal_velocity.value().cend(); ++it)
+                        {
+                            goal_stream << " [" << it->first << ", " << it->second << "] ";
+                        }
+                    }
+                    else
+                    {
+                        goal_stream << "Not specified";
+                    }
+
+                    Glib::ustring goal_speed_ustring(goal_stream.str());
+
+                    //Get goal time(s)
+                    goal_stream.str( std::string() );
+                    goal_stream.clear();
+                    auto time_step_size = commonroad_scenario->get_time_step_size();
+
+                    auto goal_time = goal_state.get_time();
+                    if (goal_time.has_value())
+                    {
+                        auto exact_value = goal_time->get_exact_value();
+                        if (exact_value.has_value())
+                        {
+                            goal_stream << exact_value.value() * time_step_size;
+                        }
+
+                        auto interval = goal_time->get_interval();
+                        if (interval.has_value())
+                        {
+                            for (auto it = interval->cbegin(); it != interval->cend(); ++it)
+                            {
+                                goal_stream << " [" << it->first * time_step_size << ", " << it->second * time_step_size << "] ";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        goal_stream << "Not specified";
+                    }
+
+                    Glib::ustring goal_time_ustring(goal_stream.str());
+
+                    Gtk::TreeModel::Row row;
+                    row = *(problem_list_store->append());
+                    
+                    row[problem_record.problem_id] = id_ustring;
+                    row[problem_record.problem_goal_speed] = goal_speed_ustring;
+                    row[problem_record.problem_goal_time] = goal_time_ustring;
+                }
+            }
+        }
+    }
+    if (load_obstacle_list.exchange(false))
+    {
+        //Remove old vehicle toggles
+        for (auto& vehicle_toggle : static_vehicle_toggles)
+        {
+            static_obstacles_flowbox->remove(*(vehicle_toggle->get_parent()->get_parent()));
+        }
+        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+        {
+            dynamic_obstacles_flowbox->remove(*(vehicle_toggle->get_parent()->get_parent()));
+        }
+        static_vehicle_toggles.clear();
+        dynamic_vehicle_toggles.clear();
+
+        
+        //Create vehicle toggles for static and dynamic IDs
+        //Set vehicle toggles to "simulation" by default
+        //Set listener for vehicle toggle state changes
+        for (auto id : commonroad_scenario->get_static_obstacle_ids())
+        {
+            static_vehicle_toggles.emplace_back(std::make_shared<ObstacleToggle>(id));
+        }
+        for (auto& vehicle_toggle : static_vehicle_toggles)
+        {
+            static_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
+            vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
+            vehicle_toggle->set_state(ObstacleToggle::ToggleState::Simulated);
+        }
+
+        for (auto id : commonroad_scenario->get_dynamic_obstacle_ids())
+        {
+            dynamic_vehicle_toggles.emplace_back(std::make_shared<ObstacleToggle>(id));
+        }
+        for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+        {
+            dynamic_obstacles_flowbox->add(*(vehicle_toggle->get_parent()));
+            vehicle_toggle->set_selection_callback(std::bind(&CommonroadViewUI::vehicle_selection_changed, this, _1, _2));
+            vehicle_toggle->set_state(ObstacleToggle::ToggleState::Simulated);
+        }
+    }
+}
+
+void CommonroadViewUI::apply_current_vehicle_selection()
+{
+    for (auto& vehicle_toggle : static_vehicle_toggles)
+    {
+        vehicle_selection_changed(vehicle_toggle->get_id(), vehicle_toggle->get_state());
+    } 
+
+    for (auto& vehicle_toggle : dynamic_vehicle_toggles)
+    {
+        vehicle_selection_changed(vehicle_toggle->get_id(), vehicle_toggle->get_state());
+    }
+}
+
+void CommonroadViewUI::vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state)
+{
+    if(set_obstacle_manager_obstacle_state)
+    {
+        set_obstacle_manager_obstacle_state(static_cast<int>(id), state);
+    }
+}
+
+
+void CommonroadViewUI::update_ui() {
+    while (run_thread.load()) {
+        ui_dispatcher.emit();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+}
+
+bool CommonroadViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+    int cell_x, cell_y = 0;
+    Gtk::TreeModel::Path path;
+    Gtk::TreeViewColumn* column;
+    bool path_exists;
+
+    //Get the current path and column at the selected point
+    if (keyboard_tooltip) {
+        problem_treeview->get_cursor(path, column);
+        path_exists = column != nullptr;
+    }
+    else {
+        int window_x, window_y;
+        problem_treeview->convert_widget_to_bin_window_coords(x, y, window_x, window_y);
+        path_exists = problem_treeview->get_path_at_pos(window_x, window_y, path, column, cell_x, cell_y);
+    }
+
+    if (path_exists) {
+        //Get selected row
+        Gtk::TreeModel::iterator iter = problem_list_store->get_iter(path);
+        Gtk::TreeModel::Row row = *iter;
+
+        //Get tooltip text depending on current column
+        Glib::ustring content_ustring;
+        if (column->get_title() == "Problem ID") {
+            content_ustring = Glib::ustring(row[problem_record.problem_id]);
+        } 
+        else if (column->get_title() == "Goal Speed") {
+            content_ustring = Glib::ustring(row[problem_record.problem_goal_speed]);
+        }
+        else if (column->get_title() == "Goal Time (sec.)") {
+            content_ustring = Glib::ustring(row[problem_record.problem_goal_time]);
+        }
+
+        //Get text at iter
+        tooltip->set_text(content_ustring);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 using namespace std::placeholders;
@@ -86,7 +359,8 @@ void CommonroadViewUI::open_file_explorer()
         file_chooser_window = std::make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&CommonroadViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { xml_filter }
+            std::vector<FileChooserUI::Filter> { xml_filter },
+            config_file_location
         );
     }
     else
@@ -108,6 +382,10 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
 
         //Load chosen file - this function is also used for a button callback and thus does not take the file path as a parameter
         load_chosen_file();
+
+        //Reload/reset shown planning problems
+        reload_problems.store(true);
+        load_obstacle_list.store(true);
     }
 }
 
@@ -142,9 +420,32 @@ void CommonroadViewUI::apply_transformation()
         commonroad_scenario->transform_coordinate_system(lane_width, translate_x, translate_y);
     }
 
-    entry_lane_width->set_text("0.0");
-    entry_translate_x->set_text("0.0");
-    entry_translate_y->set_text("0.0");
+    //Re-enter vehicle selection for obstacle simulation manager
+    apply_current_vehicle_selection();
+
+    entry_lane_width->set_text("");
+    entry_translate_x->set_text("");
+    entry_translate_y->set_text("");
+}
+
+bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
+{
+    if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
+    {
+        //Get desired lane width and translation
+        double new_step_size = string_to_double(std::string(entry_time_step_size->get_text().c_str()), 0.0);
+
+        if (commonroad_scenario)
+        {
+            commonroad_scenario->set_time_step_size(new_step_size);
+        }
+
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
+        return true;
+    }
+    return false;
 }
 
 bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
@@ -159,7 +460,10 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(lane_width, 0.0, 0.0);
         }
 
-        entry_lane_width->set_text("0.0");
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
+        entry_lane_width->set_text("");
 
         return true;
     }
@@ -178,7 +482,10 @@ bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(0.0, translate_x, 0.0);
         }
 
-        entry_translate_x->set_text("0.0");
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
+        entry_translate_x->set_text("");
 
         return true;
     }
@@ -197,13 +504,25 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
             commonroad_scenario->transform_coordinate_system(0.0, 0.0, translate_y);
         }
 
-        entry_translate_y->set_text("0.0");
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
+
+        entry_translate_y->set_text("");
 
         return true;
     }
     return false;
 }
 
+void CommonroadViewUI::load_button_callback()
+{
+    //Load chosen file
+    load_chosen_file();
+
+    //Reload/reset shown planning problems
+    reload_problems.store(true);
+    load_obstacle_list.store(true);
+}
 
 void CommonroadViewUI::load_chosen_file()
 {
@@ -213,7 +532,8 @@ void CommonroadViewUI::load_chosen_file()
     {
         commonroad_scenario->load_file(filepath);
 
-        apply_transformation(); //Apply currently set transformation - TODO: might cause flickering if we do this after loading the file
+        //Re-enter vehicle selection for obstacle simulation manager
+        apply_current_vehicle_selection();
     }
     catch(const std::exception& e)
     {
@@ -255,9 +575,36 @@ void CommonroadViewUI::set_sensitive(bool is_sensitive)
     button_choose_commonroad->set_sensitive(is_sensitive);
     button_load_commonroad->set_sensitive(is_sensitive);
     button_apply_transformation->set_sensitive(is_sensitive);
+    problem_treeview->set_sensitive(is_sensitive);
+    problem_scrolled_window->set_sensitive(is_sensitive);
 }
 
 Gtk::Widget* CommonroadViewUI::get_parent()
 {
     return parent;
+}
+
+//-------------------------------------------------------- YAML / Profile for transformation ------------------------------
+void CommonroadViewUI::load_transformation_from_profile()
+{
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->apply_stored_transformation();
+    }
+}
+
+void CommonroadViewUI::store_transform_profile()
+{
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->store_applied_transformation();
+    }
+}
+
+void CommonroadViewUI::reset_current_transform_profile()
+{
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->reset_stored_transformation();
+    }
 }

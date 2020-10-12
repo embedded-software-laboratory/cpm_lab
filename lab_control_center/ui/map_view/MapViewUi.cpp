@@ -52,12 +52,19 @@ MapViewUi::MapViewUi(
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
     drawingArea->show();
+    
 
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     
     update_dispatcher.connect([&](){ 
+        //Pan depending on key press
+        if (key_up) pan_y += key_move;
+        if (key_down) pan_y -= key_move;
+        if (key_left) pan_x += key_move;
+        if (key_right) pan_x -= key_move;
+
         vehicle_data = this->get_vehicle_data();
         drawingArea->queue_draw(); 
     });
@@ -73,7 +80,10 @@ MapViewUi::MapViewUi(
     drawingArea->add_events(Gdk::BUTTON_PRESS_MASK);
     drawingArea->add_events(Gdk::BUTTON_RELEASE_MASK);
     drawingArea->add_events(Gdk::POINTER_MOTION_MASK);
+    drawingArea->add_events(Gdk::KEY_PRESS_MASK);
+    drawingArea->add_events(Gdk::KEY_RELEASE_MASK);
 
+    drawingArea->set_can_focus(true);
 
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
@@ -103,6 +113,34 @@ MapViewUi::MapViewUi(
         return true; 
     });
 
+    //For moving the area with the arrow keys - the according values are 
+    drawingArea->signal_key_press_event().connect([&] (GdkEventKey* event) {
+        if (event->type == GDK_KEY_PRESS)
+        {
+            //Multiple keys may be pressed at once
+            if (event->keyval == GDK_KEY_Up) key_up = true;
+            if (event->keyval == GDK_KEY_Down) key_down = true;
+            if (event->keyval == GDK_KEY_Left) key_left = true;
+            if (event->keyval == GDK_KEY_Right) key_right = true;
+
+            if (key_up || key_down || key_left || key_right) return true; //Signal was handled
+        }
+        return false; //Propagate signal
+    }, false);
+
+    drawingArea->signal_key_release_event().connect([&] (GdkEventKey* event) {
+        if (event->type == GDK_KEY_RELEASE)
+        {
+            if (event->keyval == GDK_KEY_Up) key_up = false;
+            if (event->keyval == GDK_KEY_Down) key_down = false;
+            if (event->keyval == GDK_KEY_Left) key_left = false;
+            if (event->keyval == GDK_KEY_Right) key_right = false;
+
+            if (key_up || key_down || key_left || key_right) return true; //Signal was handled
+        }
+        return false; //Propagate signal
+    }, false);
+
     drawingArea->signal_button_press_event().connect([&](GdkEventButton* event) {
         if(event->button == 1) mouse_left_button = true;
         if(event->button == 3) mouse_right_button = true;
@@ -110,6 +148,9 @@ MapViewUi::MapViewUi(
         // start path drawing mode
         if(mouse_left_button)
         {
+            //Get focus for key events
+            drawingArea->grab_focus();
+
             path_painting_in_progress_vehicle_id = find_vehicle_id_in_focus();
             if(path_painting_in_progress_vehicle_id >= 0)
             {
@@ -125,6 +166,9 @@ MapViewUi::MapViewUi(
         }
         else if (mouse_right_button)
         {
+            //Get focus for key events
+            drawingArea->grab_focus();
+
             old_event_x = event->x;
             old_event_y = event->y;
         }
@@ -260,8 +304,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
         //Draw map
         if (commonroad_scenario)
         {
-            commonroad_scenario->draw(ctx, 1.0, 0, 0, 0, 0);
-        } 
+            commonroad_scenario->draw(ctx);
+        }
 
         // Draw vehicle focus disk
         if(vehicle_id_in_focus >= 0 && path_painting_in_progress_vehicle_id < 0)
@@ -274,6 +318,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
             );
             ctx->fill();
         }
+
+        draw_lab_boundaries(ctx);
 
         draw_received_trajectory_commands(ctx);
 
@@ -306,6 +352,39 @@ void MapViewUi::draw(const DrawingContext& ctx)
     ctx->restore();
 }
 
+void MapViewUi::draw_lab_boundaries(const DrawingContext& ctx)
+{
+    ctx->save();
+
+    ctx->set_line_width(0.005);
+    ctx->set_source_rgb(77.0/255.0, 147.0/255.0, 215.0/255.0);
+
+    auto lab_bound_x_1 = 0.0;
+    auto lab_bound_x_2 = 4.5;
+    auto lab_bound_y_1 = 0.0;
+    auto lab_bound_y_2 = 4.0;
+
+    //Move to first corner of lab boundaries
+    ctx->move_to(lab_bound_x_1, lab_bound_y_1);
+
+    //Draw lines
+    ctx->line_to(lab_bound_x_1, lab_bound_y_2);
+    ctx->line_to(lab_bound_x_2, lab_bound_y_2);
+    ctx->line_to(lab_bound_x_2, lab_bound_y_1);
+    ctx->line_to(lab_bound_x_1, lab_bound_y_1);
+    ctx->stroke();
+
+    //Show LCC boundaries text
+    ctx->move_to(lab_bound_x_1, lab_bound_y_2);
+    //Flip font
+    Cairo::Matrix font_matrix(0.1, 0.0, 0.0, -0.1, 0.0, 0.0);
+    ctx->set_font_matrix(font_matrix);
+    //Draw text
+    ctx->show_text("IPS boundary");
+
+    ctx->restore();
+}
+
 void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 {
     VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory_command_callback();
@@ -328,14 +407,34 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 
         //We want to output a bit of the past values
         //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
+        //But we only want to do this if not too much time has passed (we are not interested in e.g. 10 second old points)
         int past_length = 3;
-        while (start_trajectory_index > 0 && past_length > 0)
+        auto current_time = cpm::get_time_ns();
+        uint64_t max_age = 1e9; //1 second
+        while (start_trajectory_index > 0 && past_length > 0 
+            && (current_time - trajectory_segment.at(start_trajectory_index - 1).t().nanoseconds()) < max_age) //age check
         {
             --start_trajectory_index;
             --past_length;
         }      
 
-        if(trajectory_segment.size() > 1)
+        //Also perform an age check here and ignore the whole segment if even the newest point is too old
+        auto t_size = trajectory_segment.size();
+        bool trajectory_outdated = true;
+        if (t_size > 1)
+        {
+            auto newest_time = trajectory_segment.at(t_size - 1).t().nanoseconds();
+            if (newest_time > current_time)
+            {
+                trajectory_outdated = false;
+            }
+            else
+            {
+                trajectory_outdated = (current_time - newest_time) >= max_age;
+            }
+        }
+
+        if(t_size > 1 && !trajectory_outdated)
         {
             // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
             // Also, only draw recent data
@@ -668,7 +767,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
-            ctx->get_text_extents(to_string(vehicle_id), extents);
+            ctx->get_text_extents(to_string(static_cast<int>(vehicle_id)), extents); //Need to cast, else uint8_t is interpreted not as number, but as symbol
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(1,1,1);
@@ -691,9 +790,138 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
+void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape)
+{
+    ctx->save();
+    ctx->set_line_width(0.005);
+
+    for (auto circle : shape.circles())
+    {
+        ctx->save();
+
+        //Move to center
+        ctx->move_to(circle.center().x(), circle.center().y());
+
+        //Draw circle
+        ctx->arc(circle.center().x(), circle.center().y(), circle.radius(), 0.0, 2 * M_PI);
+        ctx->stroke();
+
+        ctx->restore();
+    }
+
+    for (auto polygon : shape.polygons())
+    {
+        if (polygon.points().size() < 3)
+        {
+            std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+        }
+        else
+        {
+            ctx->save();
+
+            //Move to first point
+            ctx->move_to(polygon.points().at(0).x(), polygon.points().at(0).y());
+
+            //Draw lines to remaining points
+            for (auto& point : polygon.points())
+            {
+                ctx->line_to(point.x(), point.y());
+            }
+            //Finish polygon by drawing a line to the starting point
+            ctx->line_to(polygon.points().at(0).x(), polygon.points().at(0).y());
+            ctx->fill_preserve();
+            ctx->stroke();
+
+            ctx->restore();
+        }
+    }
+
+    for (auto rectangle : shape.rectangles())
+    {
+        ctx->save();
+
+        //Translate to center of object
+        ctx->translate(rectangle.center().x(), rectangle.center().y());
+
+        //Rotate, if necessary
+        ctx->rotate(rectangle.orientation());
+
+        auto length = rectangle.length();
+        auto width = rectangle.width();
+
+        //Move to first corner from center
+        ctx->move_to((- (length/2)), (- (width/2)));
+
+        //Draw lines
+        ctx->line_to((- (length/2)), (  (width/2)));
+        ctx->line_to((  (length/2)), (  (width/2)));
+        ctx->line_to((  (length/2)), (- (width/2)));
+        ctx->line_to((- (length/2)), (- (width/2)));
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+    }
+
+    //TODO: Improve shape drawing
+    //For example: Color coding instead of longer names (e.g. for (non-)moving objects)
+
+    ctx->restore();
+}
+
+std::pair<double, double> MapViewUi::get_shape_center(CommonroadDDSShape& shape)
+{
+    double x, y = 0.0;
+    double center_count = 0.0;
+
+    for (auto circle : shape.circles())
+    {
+        auto center = circle.center();
+        x += center.x();
+        y += center.y();
+        ++center_count;
+    }
+
+    for (auto polygon : shape.polygons())
+    {
+        if (polygon.points().size() > 0)
+        {
+            double sum_x = 0;
+            double sum_y = 0;
+
+            for (auto point : polygon.points())
+            {
+                sum_x += point.x();
+                sum_y += point.y();
+            }
+            
+            x += sum_x / static_cast<double>(polygon.points().size());
+            y += sum_y / static_cast<double>(polygon.points().size());
+            ++center_count;
+        }
+    }
+
+    for (auto rectangle : shape.rectangles())
+    {
+        x += rectangle.center().x();
+        y += rectangle.center().y();
+        ++center_count;
+    }
+
+    if (center_count > 0)
+    {
+        x /= center_count;
+        y /= center_count;
+    }
+
+    return std::pair<double, double>(x, y);
+}
+
 void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 {
-    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on           
+    //Behavior is currently similar to drawing a vehicle - TODO: Improve this later on    
+    ctx->set_source_rgb(1,.5,.1);
+
     assert(get_obstacle_data);
     for (auto entry : get_obstacle_data())
     {
@@ -706,24 +934,35 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         ctx->translate(x,y);
         ctx->rotate(yaw);
 
-        const double LF = 0.115;
-        const double LR = 0.102;
+        // const double LF = 0.115;
+        // const double LR = 0.102;
         //const double WH = 0.054;
 
         // Draw car image (TODO: Change this later, e.g. to shape)
         ctx->save();
         {
-            const double scale = 0.224/image_object->get_width();
-            ctx->translate( (LF+LR)/2-LR ,0);
-            ctx->scale(scale, scale);
-            ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
-            ctx->set_source(image_object,0,0);
-            ctx->paint();
+            // const double scale = 0.224/image_object->get_width();
+            // ctx->translate( (LF+LR)/2-LR ,0);
+            // ctx->scale(scale, scale);
+            // ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
+            // ctx->set_source(image_object,0,0);
+            // ctx->paint();
+            //Make vehicle a bit transparent if the position is not exact
+            if (! entry.pose_is_exact())
+            {
+                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+            }
+
+            draw_vehicle_shape(ctx, entry.shape());
         }
         ctx->restore();
 
         ctx->save();
         {
+            //Translate to shape center, if position is mostly defined by the shape's positional values
+            auto shape_center = get_shape_center(entry.shape());
+            ctx->translate(shape_center.first, shape_center.second);
+
             //Craft description from object properties
             std::stringstream description_stream;
             if (entry.pose_is_exact())
@@ -770,6 +1009,15 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                     break;
                 case ObstacleType::Train:
                     description_stream << "Train: ";
+                    break;
+                case ObstacleType::ConstructionZone:
+                    description_stream << "Constr: ";
+                    break;
+                case ObstacleType::ParkedVehicle:
+                    description_stream << "Parked: ";
+                    break;
+                case ObstacleType::RoadBoundary:
+                    description_stream << "Boundary: ";
                     break;
                 default:
                     description_stream << "TODO: ";

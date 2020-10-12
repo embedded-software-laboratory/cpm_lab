@@ -28,6 +28,7 @@
 #include "cpm/init.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/RTTTool.hpp"
 
 namespace cpm
 {
