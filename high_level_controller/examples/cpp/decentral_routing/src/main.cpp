@@ -34,6 +34,9 @@
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
+#include "TimeStamp.hpp"
+#include "ReadyStatus.hpp"
+#include "SystemTrigger.hpp"
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
 #include <dds/pub/ddspub.hpp>                   //rti folder
 #include <iostream>
@@ -120,11 +123,68 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().write(3,
             "LaneGraphTrajectoryChanges reader created.");
 
+    // Block for middleware
+    // Maybe use a compiler var to enable/disable SystemTrigger reader?
+    // It is only needed when middleware is enabled
+    // systemTrigger Reader
+    dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
+        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+        cpm::get_topic<SystemTrigger>("systemTrigger")
+    );
+
+    const bool enable_middleware = cpm::cmd_parameter_bool("middleware", false, argc, argv); //variable is set to false 
+    if(enable_middleware) {
+        /* Create reader and writers required for middleware
+        * We are currently not using the middleware to relay vehicle commands,
+        * so middleware is only used to check for ready status
+        */
+        
+        /*TODO: Use Middleware to communicate with vehicle
+         * while preserving ability to test locally
+         */
+
+        // readyStatus writer
+        dds::pub::DataWriter<ReadyStatus> writer_readyStatus
+        (
+            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+            cpm::get_topic<ReadyStatus>("readyStatus")
+        );
+
+
+        TimeStamp timestamp(11111); // Arbitrary timestamp as per ReadyStatus.idl
+        std::string text("hlc_");
+        text.append(std::to_string(vehicle_id));
+        std::cout << text << std::endl;
+        ReadyStatus readyStatus(text, timestamp);
+        // If we have reached this point, we are ready (all writer/readers inited)
+        writer_readyStatus.write(readyStatus);
+
+        // Wait until we receive a SystemTrigger
+        bool break_while = false;
+        while(!break_while) {
+            dds::sub::LoanedSamples<SystemTrigger> samples = reader_systemTrigger.take();
+            for(auto sample : samples) {
+                if (sample.info().valid()) {
+                    std::cout << "Received SystemTrigger, starting" << std::endl;
+                    break_while = true;
+                    break; 
+                }
+            }
+        }
+    }
     /////////////////////////////////Trajectory planner//////////////////////////////////////////
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
     auto timer = cpm::Timer::create("decentral_routing", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
     {
+        // Check for stop condition 
+        dds::sub::LoanedSamples<SystemTrigger> samples = reader_systemTrigger.take();
+        for(auto sample : samples) {
+            if (sample.info().valid()) {
+                //TODO: Act, when we receive a SystemTrigger signal
+                std::cout << "Unhandled SystemTrigger" << std::endl;
+            }
+        }
         planner->set_real_time(t_now);
 
         if(planner->is_started())//will be set to true after fist activation
