@@ -68,6 +68,13 @@
 #include "TypedCommunication.hpp"
 
 using namespace std::placeholders;
+
+/**
+ * \brief This class is responsible for the communication between HLC, middleware and vehicle
+ * These include message forwarding, collecting of vehicle states, timing messages and exchange of commands
+ * For command exchange, we use the specialized class TypedCommunication, because we want to support it for different
+ * command types (e.g. trajectories) which all have the same behaviour
+ */
 class Communication {
     private:
         //For HLC - communication
@@ -96,17 +103,23 @@ class Communication {
         TypedCommunication<VehicleCommandTrajectory> trajectoryCommunication;
         TypedCommunication<VehicleCommandSpeedCurvature> speedCurvatureCommunication;
         TypedCommunication<VehicleCommandDirect> directCommunication;
-
-        //Misc
-        int vehicleID;
     public:
+        /**
+         * \brief Constructor
+         * \param hlcDomainNumber DDS domain number of the communication on the HLC (middleware and script)
+         * \param vehicleStateListTopicName Topic name for vehicle state list messages
+         * \param vehicleTrajectoryTopicName Topic name for trajectory messages
+         * \param vehicleSpeedCurvatureTopicName Topic name for speed curvature messages
+         * \param vehicleDirectTopicName Topic name for vehicle direct messages
+         * \param _timer Required for current real or simulated timing information to check if answers of the HLC / script are received in time
+         * \param vehicle_ids List of vehicle IDs for setup of the readers (ignore other data)
+         */
         Communication(
             int hlcDomainNumber,
             std::string vehicleStateListTopicName,
             std::string vehicleTrajectoryTopicName,
             std::string vehicleSpeedCurvatureTopicName,
             std::string vehicleDirectTopicName,
-            int _vehicleID,
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> vehicle_ids
         ) 
@@ -140,10 +153,9 @@ class Communication {
         ,vehicleObservationTopic(cpm::ParticipantSingleton::Instance(), "vehicleObservation")
         ,vehicleObservationReader(vehicleObservationTopic, vehicle_ids)
 
-        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer)
-        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer)
-        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer)
-        ,vehicleID(_vehicleID)
+        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
+        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
+        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
         {
         }
 
@@ -241,6 +253,9 @@ class Communication {
             hlcStateWriter.write(message);
         }
 
+        /**
+         * \brief Get most recent messages received by the vehicles (vehicle states) w.r.t. t_now
+         */
         std::vector<VehicleState> getLatestVehicleMessages(uint64_t t_now) {
             VehicleState message;
 
@@ -257,6 +272,9 @@ class Communication {
             return states;
         }
 
+        /**
+         * \brief Get most recent messages received by the IPS (vehicle observation) w.r.t. t_now
+         */
         std::vector<VehicleObservation> getLatestVehicleObservationMessages(uint64_t t_now) {
             VehicleObservation message;
 
@@ -273,6 +291,9 @@ class Communication {
             return states;
         }
 
+        /**
+         * \brief Pass system trigger / timing messages from the LCC to the LCC
+         */
         void pass_through_system_trigger(dds::sub::LoanedSamples<SystemTrigger>& samples) {
             for (auto sample : samples) {
                 if (sample.info().valid()) {
@@ -322,5 +343,16 @@ class Communication {
                 usleep(200000);
                 ++wait_cycles;
             }
+        }
+
+        /**
+         * \brief Update the current period start time stored in typed communication for internal checks
+         * \param t_now Current period time, obtained by the cpm timer
+         */
+        void update_period_t_now(uint64_t t_now)
+        {
+            trajectoryCommunication.update_period_t_now(t_now);
+            speedCurvatureCommunication.update_period_t_now(t_now);
+            directCommunication.update_period_t_now(t_now);
         }
 };

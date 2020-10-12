@@ -102,7 +102,6 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
             vehicleTrajectoryTopicName,
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
-            vehicleID,
             timer,
             vehicle_ids
         );
