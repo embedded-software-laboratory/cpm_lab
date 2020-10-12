@@ -39,6 +39,8 @@
 #include "SystemTrigger.hpp"
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
 #include <dds/pub/ddspub.hpp>                   //rti folder
+#include <dds/domain/DomainParticipant.hpp>         // Required for communication with middleware
+#include <dds/core/QosProvider.hpp>             // Required for communication with middleware
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -73,6 +75,7 @@ int main(int argc, char *argv[])
             vehicle_id
     );
 
+
     ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
     std::stringstream vehicle_id_stream;
     vehicle_id_stream << "Started HLC for Vehicle ID: ";
@@ -89,7 +92,20 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().write(3,
             "Planner created");
 
-
+    ////////////// Initialize everything needed for communication with middleware ///////
+    // Create separate DomainParticipant to communicate with middleware
+    const int dds_domain = cpm::cmd_parameter_int("dds_domain", 1, argc, argv);
+    // For comms between middleware and HLC, on the same machine (local)
+    dds::core::QosProvider local_comms_qos_provider("QOS_LOCAL_COMMUNICATION.xml");
+    dds::domain::DomainParticipant local_comms_participant(dds_domain, local_comms_qos_provider.participant_qos());
+    dds::pub::Publisher local_comms_publisher(local_comms_participant);
+    dds::topic::Topic<ReadyStatus> local_comms_ready_topic(
+            local_comms_participant,
+            "readyStatus");
+    dds::pub::DataWriter<ReadyStatus> local_comms_writer_readyStatus(
+            local_comms_publisher,
+            local_comms_ready_topic);
+            
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
     dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
@@ -126,6 +142,7 @@ int main(int argc, char *argv[])
     // Block for middleware
     // Maybe use a compiler var to enable/disable SystemTrigger reader?
     // It is only needed when middleware is enabled
+
     // systemTrigger Reader
     dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
         dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
@@ -152,10 +169,10 @@ int main(int argc, char *argv[])
 
 
         TimeStamp timestamp(11111); // Arbitrary timestamp as per ReadyStatus.idl
-        std::string text("hlc_");
-        text.append(std::to_string(vehicle_id));
-        std::cout << text << std::endl;
-        ReadyStatus readyStatus(text, timestamp);
+        // The middleware expects a message like "hlc_${vehicle_id}", e.g. hlc_1
+        std::string hlc_identification("hlc_");
+        hlc_identification.append(std::to_string(vehicle_id));
+        ReadyStatus readyStatus(hlc_identification, timestamp);
         // If we have reached this point, we are ready (all writer/readers inited)
         writer_readyStatus.write(readyStatus);
 
