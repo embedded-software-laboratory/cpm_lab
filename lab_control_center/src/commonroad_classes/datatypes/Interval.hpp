@@ -157,6 +157,20 @@ public:
         return avgs;
     }
 
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        for (auto interval : intervals)
+        {
+            greater_zero &= (interval.first > 0);
+            greater_zero &= (interval.second > 0);
+
+            if (!greater_zero) break;
+        }
+
+        return greater_zero;
+    }
+
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push

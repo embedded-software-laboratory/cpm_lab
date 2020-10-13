@@ -75,7 +75,7 @@ enum class ObstacleRole {Static, Dynamic};
 enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
-    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane
+    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, EmergencyBraking
 };
 
 /**
@@ -99,10 +99,11 @@ enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, 
  */
 struct Location 
 {
-    std::optional<std::string> country;
-    std::optional<std::string> federal_state;
+    std::optional<std::string> country; //outdated 2020 (removed from spec after some time)
+    std::optional<std::string> federal_state; //outdated 2020
     int gps_latitude = -1;
     int gps_longitude = -1;
+    int geo_name_id = -1;  //new 2020 (added to spec after some time)
     std::optional<std::string> zipcode = std::nullopt;
     std::optional<std::string> name = std::nullopt;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
@@ -133,7 +134,7 @@ private:
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;
-    std::map<int, TrafficLight> traffic_lights; //0..1 in specification is a mistake, see https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+    std::map<int, TrafficLight> traffic_lights; //Was fixed in new 2020 specs, 0..1 in outdated specification was a mistake, see https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
     std::map<int, Intersection> intersections;
     std::map<int, StaticObstacle> static_obstacles;
     std::map<int, DynamicObstacle> dynamic_obstacles;

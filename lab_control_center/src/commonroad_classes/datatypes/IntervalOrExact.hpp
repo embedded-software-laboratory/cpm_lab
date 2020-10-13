@@ -105,6 +105,21 @@ public:
     {
         return interval.has_value();
     }
+
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        if (is_exact())
+        {
+            greater_zero &= (exact.value() > 0);
+        }
+        if(is_interval())
+        {
+            greater_zero &= interval.is_greater_zero();
+        }
+
+        return greater_zero;
+    }
     
     const std::optional<Interval> get_interval()
     {

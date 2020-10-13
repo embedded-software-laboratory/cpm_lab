@@ -38,6 +38,14 @@ StateExact::StateExact(const xmlpp::Node* node)
         if (position_node)
         {
             position = std::optional<Position>{std::in_place, position_node};
+
+            if (! position->is_exact())
+            {
+                std::stringstream error_stream;
+                error_stream << "Position must be exact, in line: ";
+                error_stream << position_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {

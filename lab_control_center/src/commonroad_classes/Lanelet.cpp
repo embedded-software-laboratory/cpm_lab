@@ -249,6 +249,10 @@ LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string
         {
             return LaneletType::Urban;
         }
+        else if (lanelet_type_string.compare("interstate") == 0)
+        {
+            return LaneletType::Interstate;
+        }
         else if (lanelet_type_string.compare("country") == 0)
         {
             return LaneletType::Country;
@@ -292,6 +296,10 @@ LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string
         else if (lanelet_type_string.compare("busStop") == 0)
         {
             return LaneletType::BusStop;
+        }
+        else if (lanelet_type_string.compare("unknown") == 0)
+        {
+            return LaneletType::Unknown;
         }
         else 
         {

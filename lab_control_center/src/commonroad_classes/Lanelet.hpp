@@ -52,7 +52,7 @@
  * \brief Stores lanelet type, as in spec
  */
 enum class LaneletType {
-    Unspecified, Urban, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop
+    Unspecified, Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, Unknown
 };
 
 /**

@@ -63,6 +63,15 @@ GoalState::GoalState(
         if (time_node)
         {
             time = std::optional<IntervalOrExact>(std::in_place, time_node);
+
+            //Time must have a value; make sure that, as specified, the value is greater than zero
+            if (! time.value().is_greater_zero())
+            {
+                std::stringstream error_stream;
+                error_stream << "Time must be greater than zero, in line: ";
+                error_stream << time_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {

@@ -57,7 +57,7 @@ class StateExact : public InterfaceTransform, public InterfaceDraw, public Inter
 {
 private:
     //Commonroad data
-    std::optional<Position> position = std::nullopt; //Exact position!
+    std::optional<Position> position = std::nullopt; //Exact position! Optional bc no default defined
     double orientation;
     double time; //In some parts, this is a double (though it shouldn't be a double here) - double chosen for consistency
     double velocity;

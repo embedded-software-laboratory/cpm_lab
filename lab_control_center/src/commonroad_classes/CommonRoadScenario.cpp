@@ -359,6 +359,7 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
     translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", false); 
     translated_location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.geo_name_id = xml_translation::get_child_child_double(node, "geoNameId", false).value(); //Only required in newer 2020 specs, not in outdated 2020 specs
     translated_location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
     translated_location.name = xml_translation::get_child_child_text(node, "name", false);
 
@@ -480,6 +481,10 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
         else if (node_name.compare("two_lane") == 0)
         {
             scenario_tags.push_back(ScenarioTag::TwoLane);
+        }
+        else if (node_name.compare("emergency_braking") == 0)
+        {
+            scenario_tags.push_back(ScenarioTag::EmergencyBraking);
         }
         else
         {
