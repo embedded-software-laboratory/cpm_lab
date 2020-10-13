@@ -28,8 +28,7 @@
 
 StaticObstacle::StaticObstacle(
     const xmlpp::Node* node,
-    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
     )
 {
     //Warn in case node does not have static obstacle role

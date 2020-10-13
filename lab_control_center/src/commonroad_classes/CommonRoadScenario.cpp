@@ -290,8 +290,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             xml_translation::get_attribute_int(node, "id", true).value(), 
             StaticObstacle(
                 node,
-                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
             )}
         );
     }
@@ -314,8 +313,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
                 xml_translation::get_attribute_int(node, "id", true).value(), 
                 StaticObstacle(
                     node,
-                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                    std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
                 )}
             );
         }
