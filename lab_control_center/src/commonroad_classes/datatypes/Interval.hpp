@@ -184,7 +184,7 @@ public:
      * \param translate_x Currently ignored, must be changed if this is used for position values
      * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         for (auto &interval : intervals)
         {

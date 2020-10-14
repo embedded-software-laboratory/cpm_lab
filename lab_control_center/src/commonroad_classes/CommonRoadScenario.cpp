@@ -522,36 +522,37 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
     if (xml_translation_mutex.try_lock())
     {
         double scale = 1.0;
+        double angle = 0.0;
         if (translate_x != 0.0 || translate_y != 0.0)
         {
             for (auto &lanelet_entry : lanelets)
             {
-                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
+                lanelet_entry.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &static_obstacle : static_obstacles)
             {
-                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+                static_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &dynamic_obstacle : dynamic_obstacles)
             {
-                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+                dynamic_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &planning_problem : planning_problems)
             {
-                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
+                planning_problem.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &traffic_sign : traffic_signs)
             {
-                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
+                traffic_sign.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             } 
 
             for (auto &traffic_light : traffic_lights)
             {
-                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
+                traffic_light.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             } 
 
             //Update center
@@ -560,7 +561,7 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
         }
 
         //Update database entry for transformation
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, translate_x, translate_y);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, translate_x, translate_y, 0.0);
 
         xml_translation_mutex.unlock();
     }
@@ -568,7 +569,7 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
 
 /******************************Interface functions***********************************/
 
-void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
+void CommonRoadScenario::transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) 
 {
     //Do not block the UI if locked, needs to be done again then
     if (xml_translation_mutex.try_lock())
@@ -586,36 +587,36 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
 
         //Scale can be smaller than 0 - in this case, it is simply not applied (functions are still called for translate_x and translate_y)
         double scale = lane_width / min_width;
-        if (scale > 0 || translate_x != 0.0 || translate_y != 0.0)
+        if (scale > 0 || angle > 0 || translate_x != 0.0 || translate_y != 0.0)
         {
             for (auto &lanelet_entry : lanelets)
             {
-                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
+                lanelet_entry.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &static_obstacle : static_obstacles)
             {
-                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+                static_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &dynamic_obstacle : dynamic_obstacles)
             {
-                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
+                dynamic_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &planning_problem : planning_problems)
             {
-                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
+                planning_problem.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             }
 
             for (auto &traffic_sign : traffic_signs)
             {
-                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
+                traffic_sign.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             } 
 
             for (auto &traffic_light : traffic_lights)
             {
-                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
+                traffic_light.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
             } 
 
             //Update center
@@ -629,7 +630,7 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double t
         }
 
         //Update database entry for transformation
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y, angle);
 
         xml_translation_mutex.unlock();
 
@@ -661,7 +662,7 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
     }
 
     //Update database entry for transformation
-    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0);
+    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
 
     lock.unlock();
 
@@ -747,11 +748,11 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
 
 void CommonRoadScenario::apply_stored_transformation()
 {
-    double time_scale, scale, translate_x, translate_y = 0.0;
-    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y);
+    double time_scale, scale, translate_x, translate_y, rotation = 0.0;
+    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y, rotation);
 
     //TODO: Lock translate mutex / do all in one function to make sure that no new scenario is loaded in between?
-    transform_coordinate_system(scale, translate_x, translate_y);
+    transform_coordinate_system(scale, rotation, translate_x, translate_y);
     set_time_step_size(time_scale);
 }
 

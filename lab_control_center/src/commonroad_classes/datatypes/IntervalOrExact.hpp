@@ -115,7 +115,7 @@ public:
         }
         if(is_interval())
         {
-            greater_zero &= interval.is_greater_zero();
+            greater_zero &= interval->is_greater_zero();
         }
 
         return greater_zero;
@@ -161,7 +161,7 @@ public:
      * \param translate_x Currently ignored, must be changed if this is used for position values
      * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         if (exact.has_value())
         {
@@ -174,7 +174,7 @@ public:
 
         if (interval.has_value())
         {
-            interval->transform_coordinate_system(scale, translate_x, translate_y);
+            interval->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 };

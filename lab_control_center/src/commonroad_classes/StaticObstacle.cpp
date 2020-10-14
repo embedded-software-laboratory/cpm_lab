@@ -124,7 +124,7 @@ StaticObstacle::StaticObstacle(
 
 /******************************Interface functions***********************************/
 
-void StaticObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void StaticObstacle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (scale > 0)
     {
@@ -133,12 +133,12 @@ void StaticObstacle::transform_coordinate_system(double scale, double translate_
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
     {
-        initial_state->transform_coordinate_system(scale, translate_x, translate_y);
+        initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 

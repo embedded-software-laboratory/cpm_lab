@@ -96,11 +96,11 @@ StateExact::StateExact(const xmlpp::Node* node)
     std::cout << "\tTime: " << time << std::endl;
 }
 
-void StateExact::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void StateExact::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well

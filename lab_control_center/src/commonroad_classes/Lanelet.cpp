@@ -430,13 +430,13 @@ double Lanelet::get_min_width()
 
 /******************************Interface functions***********************************/
 
-void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Lanelet::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (stop_line.has_value())
     {
         for (auto& point : stop_line->points)
         {
-            point.transform_coordinate_system(scale, translate_x, translate_y);
+            point.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 
@@ -448,12 +448,12 @@ void Lanelet::transform_coordinate_system(double scale, double translate_x, doub
 
     for (auto& point : right_bound.points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& point : left_bound.points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 

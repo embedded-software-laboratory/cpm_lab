@@ -68,13 +68,13 @@ Circle::Circle(const xmlpp::Node* node)
     std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Circle::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Circle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (scale > 0)
     {
         radius *= scale;
     }
-    center->transform_coordinate_system(scale, translate_x, translate_y);
+    center->transform_coordinate_system(scale, angle, translate_x, translate_y);
 }
 
 //Suppress warning for unused parameter (s)

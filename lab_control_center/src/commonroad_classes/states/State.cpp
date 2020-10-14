@@ -100,72 +100,72 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
     return std::optional<IntervalOrExact>();
 }
 
-void State::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void State::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     if (position_z.has_value())
     {
-        position_z->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (position_z_front.has_value())
     {
-        position_z_front->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z_front->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (position_z_rear.has_value())
     {
-        position_z_rear->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z_rear->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (delta_y_front.has_value())
     {
-        delta_y_front->transform_coordinate_system(scale, 0.0, 0.0);
+        delta_y_front->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (delta_y_rear.has_value())
     {
-        delta_y_rear->transform_coordinate_system(scale, 0.0, 0.0);
+        delta_y_rear->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(scale, 0, 0);
+        velocity->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (acceleration.has_value())
     {
-        acceleration->transform_coordinate_system(scale, 0, 0);
+        acceleration->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_y.has_value())
     {
-        velocity_y->transform_coordinate_system(scale, 0, 0);
+        velocity_y->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_y_front.has_value())
     {
-        velocity_y_front->transform_coordinate_system(scale, 0, 0);
+        velocity_y_front->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_y_rear.has_value())
     {
-        velocity_y_rear->transform_coordinate_system(scale, 0, 0);
+        velocity_y_rear->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_z.has_value())
     {
-        velocity_z->transform_coordinate_system(scale, 0, 0);
+        velocity_z->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_z_front.has_value())
     {
-        velocity_z_front->transform_coordinate_system(scale, 0, 0);
+        velocity_z_front->transform_coordinate_system(scale, angle, 0, 0);
     }
     if (velocity_z_rear.has_value())
     {
-        velocity_z_rear->transform_coordinate_system(scale, 0, 0);
+        velocity_z_rear->transform_coordinate_system(scale, angle, 0, 0);
     }
 
     if (scale > 0)
@@ -178,55 +178,55 @@ void State::transform_timing(double time_scale)
 {
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(time_scale, 0, 0);
+        velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (acceleration.has_value())
     {
-        acceleration->transform_coordinate_system(time_scale, 0, 0);
+        acceleration->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_y.has_value())
     {
-        velocity_y->transform_coordinate_system(time_scale, 0, 0);
+        velocity_y->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_y_front.has_value())
     {
-        velocity_y_front->transform_coordinate_system(time_scale, 0, 0);
+        velocity_y_front->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_y_rear.has_value())
     {
-        velocity_y_rear->transform_coordinate_system(time_scale, 0, 0);
+        velocity_y_rear->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_z.has_value())
     {
-        velocity_z->transform_coordinate_system(time_scale, 0, 0);
+        velocity_z->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_z_front.has_value())
     {
-        velocity_z_front->transform_coordinate_system(time_scale, 0, 0);
+        velocity_z_front->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (velocity_z_rear.has_value())
     {
-        velocity_z_rear->transform_coordinate_system(time_scale, 0, 0);
+        velocity_z_rear->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (left_front_wheel_angular_speed.has_value())
     {
-        left_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+        left_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (right_front_wheel_angular_speed.has_value())
     {
-        right_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+        right_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (left_rear_wheel_angular_speed.has_value())
     {
-        left_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+        left_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (right_rear_wheel_angular_speed.has_value())
     {
-        right_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0);
+        right_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (yaw_rate.has_value())
     {
-        yaw_rate->transform_coordinate_system(time_scale, 0, 0);
+        yaw_rate->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     
     //TODO: Scale curvature change as well?

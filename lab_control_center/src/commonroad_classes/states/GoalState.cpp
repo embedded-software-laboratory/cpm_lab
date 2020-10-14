@@ -106,17 +106,17 @@ GoalState::GoalState(
     std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(scale, 0, 0);
+        velocity->transform_coordinate_system(scale, angle, 0, 0);
     }
 
     if (scale > 0)
@@ -129,7 +129,7 @@ void GoalState::transform_timing(double time_scale)
 {
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(time_scale, 0, 0);
+        velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
 }
 

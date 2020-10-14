@@ -194,13 +194,13 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
     }
 }
 
-void TrafficSign::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void TrafficSign::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {    
     for (auto& element : traffic_sign_elements)
     {
         if (element.position)
         {
-            element.position->transform_coordinate_system(scale, translate_x, translate_y);
+            element.position->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 }

@@ -138,18 +138,18 @@ PlanningProblem::PlanningProblem(
     std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void PlanningProblem::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     for (auto& planning_problem : planning_problems)
     {
         if (planning_problem.initial_state.has_value())
         {
-            planning_problem.initial_state->transform_coordinate_system(scale, translate_x, translate_y);
+            planning_problem.initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
 
         for (auto& goal_state : planning_problem.goal_states)
         {
-            goal_state.transform_coordinate_system(scale, translate_x, translate_y);
+            goal_state.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 }

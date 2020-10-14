@@ -240,11 +240,13 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
+     * ORDER: As specified by commonroad: Translate, rotate, scale
      * \param lane_width The min lane width
+     * \param angle The angle with which to rotate around the origin, counter-clockwise, as specified by commonroad
      * \param translate_x Move the coordinate system's origin along the x axis by this value
      * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double lane_width, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main

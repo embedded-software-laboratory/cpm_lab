@@ -70,6 +70,7 @@ private:
     Gtk::Entry* entry_lane_width = nullptr;
     Gtk::Entry* entry_translate_x = nullptr;
     Gtk::Entry* entry_translate_y = nullptr;
+    Gtk::Entry* entry_rotate = nullptr;
     
     //Button to choose commonroad file
     Gtk::Button* button_choose_commonroad = nullptr;
@@ -142,6 +143,7 @@ private:
     bool apply_entry_scale(GdkEventKey* event);
     bool apply_entry_translate_x(GdkEventKey* event);
     bool apply_entry_translate_y(GdkEventKey* event);
+    bool apply_entry_rotate(GdkEventKey* event);
 
     //Config file that stores the previously selected script
     const std::string config_file_location = "./commonroad_file_chooser.config";

@@ -121,26 +121,26 @@ void Position::set_lanelet_get_center_function(std::function<std::pair<double, d
     get_lanelet_center = _get_lanelet_center;
 }
 
-void Position::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Position::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (point.has_value())
     {
-        point->transform_coordinate_system(scale, translate_x, translate_y);
+        point->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& circle : circles)
     {
-        circle.transform_coordinate_system(scale, translate_x, translate_y);
+        circle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& polygon : polygons)
     {
-        polygon.transform_coordinate_system(scale, translate_x, translate_y);
+        polygon.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& rectangle : rectangles)
     {
-        rectangle.transform_coordinate_system(scale, translate_x, translate_y);
+        rectangle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     if (scale > 0)
