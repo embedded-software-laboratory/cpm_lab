@@ -92,6 +92,20 @@ enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation,
 enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem};
 
 /**
+ * \struct Geo Transformation (2020 only)
+ * \brief Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ */
+struct GeoTransformation 
+{
+    //Geo reference was left out, we only deal with additional transformation here
+    //Data from additionalTransformation
+    double x_translation = 0.0;
+    double y_translation = 0.0;
+    double z_rotation = 0.0;
+    double scaling = 1.0; //Must be > 0
+};
+
+/**
  * \struct Location
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs
@@ -103,10 +117,10 @@ struct Location
     std::optional<std::string> federal_state; //outdated 2020
     int gps_latitude = -1;
     int gps_longitude = -1;
-    int geo_name_id = -1;  //new 2020 (added to spec after some time)
+    std::optional<int> geo_name_id = -1;  //new 2020 (added to spec after some time)
     std::optional<std::string> zipcode = std::nullopt;
     std::optional<std::string> name = std::nullopt;
-    //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
+    std::optional<GeoTransformation> geo_transformation = std::nullopt;
     //For 2018 versions, this means that country / location information are missing too
 };
 
@@ -153,9 +167,6 @@ private:
 
     //Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
-
-    //Remember previous scale values
-    double previous_scale = 1.0;
 
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
@@ -209,6 +220,15 @@ private:
     void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
     std::pair<double, double> get_lanelet_center(int id);
 
+    /**
+     * \brief This function is e.g. to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
+     * \param angle The angle with which to rotate around the origin, counter-clockwise, as specified by commonroad
+     * \param scale Scales the whole coordinate system up / down
+     */
+    void transform_coordinate_system_helper(double translate_x, double translate_y, double angle = 0.0, double scale = 1.0);
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -250,13 +270,6 @@ public:
      * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) override;
-
-    /**
-     * \brief This function is used to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
-     * \param translate_x Move the coordinate system's origin along the x axis by this value
-     * \param translate_y Move the coordinate system's origin along the y axis by this value
-     */
-    void transform_coordinate_system(double translate_x, double translate_y);
 
     /**
      * \brief This function is used to draw the data structure that imports this interface

@@ -7,6 +7,14 @@
     <gpsLongitude>11.668307</gpsLongitude>
     <zipcode>12345</zipcode>
     <name>Zamunda-City</name>
+    <geoTransformation>
+      <additionalTransformation>
+        <xTranslation>0.0</xTranslation>
+        <yTranslation>0.0</yTranslation>
+        <zRotation>0.0</zRotation>
+        <scaling>0.05</scaling>
+      </additionalTransformation>
+    </geoTransformation>
   </location>
   <scenarioTags>
     <urban/>

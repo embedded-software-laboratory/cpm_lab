@@ -162,7 +162,7 @@ public:
         bool greater_zero = true;
         for (auto interval : intervals)
         {
-            greater_zero &= (interval.first > 0);
+            greater_zero &= (interval.first >= 0); //Due to sample files, this seems to be allowed to be zero
             greater_zero &= (interval.second > 0);
 
             if (!greater_zero) break;
