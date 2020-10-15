@@ -105,6 +105,8 @@ void CommonRoadScenario::clear_data()
     {
         reset_obstacle_aggregator();
     }
+
+    previous_scale = 1.0;
 }
 
 void CommonRoadScenario::register_obstacle_sim(std::function<void()> _setup, std::function<void()> _reset)
@@ -202,10 +204,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     //Calculate the center of the planning problem
     calculate_center();
 
-    //Automatically center the planning problem
+    //Automatically center the planning problem w.r.t the LCC's coordinate system (origin at (2.25, 2.0))
     if (center_coordinates)
     {
-        transform_coordinate_system(- center.first, - center.second);
+        transform_coordinate_system(- center.first + 2.25, - center.second + 2.0);
     }
 
     //Load new obstacle simulations
@@ -589,6 +591,10 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
         double scale = lane_width / min_width;
         if (scale > 0 || angle > 0 || translate_x != 0.0 || translate_y != 0.0)
         {
+            //We still want the coordinate center to be at the LCC's center, so regard transformations made before, revert them, and apply new center-transformation
+            translate_x += (2.25 / scale) - 2.25;
+            translate_y += (2.0 / scale) - 2.0;
+
             for (auto &lanelet_entry : lanelets)
             {
                 lanelet_entry.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
@@ -621,6 +627,7 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
 
             //Update center
             calculate_center();
+            previous_scale = scale;
         }
         else if (min_width < 0)
         {
@@ -823,8 +830,9 @@ void CommonRoadScenario::calculate_center()
     center.second = (0.5 * y_min) + (0.5 * y_max);
 
     //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
-    center.first -= 2.25;
-    center.second -= 2.0;
+    //Now handled in transform function
+    // center.first -= 2.25;
+    // center.second -= 2.0;
 
     std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }

@@ -154,6 +154,9 @@ private:
     //Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
 
+    //Remember previous scale values
+    double previous_scale = 1.0;
+
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
      * \param node root_node
