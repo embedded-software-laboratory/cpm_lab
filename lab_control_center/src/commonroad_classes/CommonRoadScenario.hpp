@@ -229,6 +229,14 @@ private:
      */
     void transform_coordinate_system_helper(double translate_x, double translate_y, double angle = 0.0, double scale = 1.0);
 
+    /**
+     * \brief Calculates the scale for a given min. lane width
+     * Should only be called within a locked-mutex section
+     * \param min_lane_width Desired min. lane width
+     * \return Scale factor to get the desired lane width, or a value <= 0.0 in case of an error
+     */
+    double get_scale(double min_lane_width);
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function

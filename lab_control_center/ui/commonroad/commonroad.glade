@@ -404,6 +404,39 @@
               </packing>
             </child>
             <child>
+              <object class="GtkLabel" id="label_commonroad_settings2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">center</property>
+                <property name="label" translatable="yes">
+  This button allows you to preview the motion / behaviour of the obstacles:</property>
+                <property name="ellipsize">start</property>
+                <attributes>
+                  <attribute name="style" value="italic"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">11</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_preview">
+                <property name="label" translatable="yes">Start preview</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="valign">center</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">12</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="label_commonroad_settings1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -419,7 +452,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">11</property>
+                <property name="position">13</property>
               </packing>
             </child>
             <child>
@@ -434,7 +467,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">12</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -464,7 +497,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">13</property>
+                <property name="position">15</property>
               </packing>
             </child>
             <child>
@@ -479,7 +512,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">14</property>
+                <property name="position">16</property>
               </packing>
             </child>
             <child>
@@ -509,7 +542,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">15</property>
+                <property name="position">17</property>
               </packing>
             </child>
             <child>
@@ -525,7 +558,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">16</property>
+                <property name="position">18</property>
               </packing>
             </child>
             <child>
@@ -546,7 +579,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">17</property>
+                <property name="position">19</property>
               </packing>
             </child>
           </object>

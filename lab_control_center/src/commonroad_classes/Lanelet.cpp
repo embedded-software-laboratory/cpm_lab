@@ -428,6 +428,44 @@ double Lanelet::get_min_width()
     return min_width;
 }
 
+void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length)
+{
+    if (line_marking.has_value())
+    {
+        //Set or disable dashes
+        if (line_marking.value() == LineMarking::BroadDashed || line_marking.value() == LineMarking::Dashed)
+        {
+            std::vector<double> dashes {dash_length};
+            ctx->set_dash(dashes, 0.0);
+        }
+        else
+        {
+            //Disable dashes
+            std::vector<double> dashes {};
+            ctx->set_dash(dashes, 0.0);
+        }
+        
+        //Set line width
+        if (line_marking.value() == LineMarking::BroadSolid || line_marking.value() == LineMarking::BroadDashed)
+        {
+            ctx->set_line_width(0.03);
+        }
+        else
+        {
+            ctx->set_line_width(0.005);
+        }
+    }
+    else
+    {
+        //Disable dashes
+        std::vector<double> dashes {};
+        ctx->set_dash(dashes, 0.0);
+
+        ctx->set_line_width(0.005);
+    }
+    
+}
+
 /******************************Interface functions***********************************/
 
 void Lanelet::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
@@ -488,6 +526,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
         ctx->begin_new_path();
+        set_boundary_style(ctx, left_bound.line_marking, 0.03);
         ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
         for (auto point : left_bound.points)
         {
@@ -497,6 +536,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
 
         ctx->begin_new_path();
+        set_boundary_style(ctx, right_bound.line_marking, 0.03);
         ctx->move_to(right_bound.points.at(0).get_x() * scale, right_bound.points.at(0).get_y() * scale);
         for (auto point : right_bound.points)
         {
@@ -506,7 +546,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
     }
 
-    //Draw arrows for lanelet orientation
+    //Draw arrows for lanelet orientation (currently disabled)
     //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
     // assert(left_bound.points.size() == right_bound.points.size());
     // size_t arrow_start_pos = 0;
@@ -525,12 +565,22 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     //     ++arrow_end_pos;
     // }
 
+    //Draw stop lines - we already made sure that it consists of two points in translation
+    if (stop_line.has_value())
+    {
+        ctx->begin_new_path();
+        ctx->set_source_rgb(.9,.3,.3);
+        set_boundary_style(ctx, std::optional<LineMarking>{stop_line->line_marking}, 0.03);
+        ctx->move_to(stop_line->points.at(0).get_x() * scale, stop_line->points.at(0).get_y() * scale);
+        ctx->line_to(stop_line->points.at(1).get_x() * scale, stop_line->points.at(1).get_y() * scale);
+        ctx->stroke();
+    }
 
     //TODO: Line markings, stop lines etc
-    if (stop_line.has_value() || speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    if (speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
     {
         std::stringstream error_stream;
-        error_stream << "Line markings, speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
+        error_stream << "Speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
         LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 

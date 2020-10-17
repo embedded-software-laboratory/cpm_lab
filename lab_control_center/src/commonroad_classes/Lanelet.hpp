@@ -186,6 +186,9 @@ private:
      */
     LineMarking translate_line_marking(const xmlpp::Node* line_node);
 
+    //Helper functions
+    void set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length);
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure

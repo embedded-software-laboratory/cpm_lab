@@ -31,6 +31,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/Logging.hpp"
 #include "../../src/commonroad_classes/CommonRoadScenario.hpp"
+#include "ObstacleSimulationManager.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/commonroad/ObstacleToggle.hpp"
 
@@ -58,6 +59,9 @@ private:
     //Shared pointer to modify the current commonroad scenario
     std::shared_ptr<CommonRoadScenario> commonroad_scenario;
 
+    //Shared pointer to start a preview of the scenario movement
+    std::shared_ptr<ObstacleSimulationManager> obstacle_sim_manager;
+
     //Builder and pointer to UI elements
     Glib::RefPtr<Gtk::Builder> builder;
 
@@ -82,6 +86,9 @@ private:
     //Button to apply a transformation set in the UI to the currently loaded scenario permanently
     Gtk::Button* button_apply_transformation = nullptr;
 
+    //Button to preview the movement of the obstacles
+    Gtk::Button* button_preview = nullptr;
+
     //View to set / edit which obstacles should be simulated / shown
     Gtk::FlowBox* static_obstacles_flowbox = nullptr;
     Gtk::FlowBox* dynamic_obstacles_flowbox = nullptr; 
@@ -90,7 +97,6 @@ private:
     std::atomic_bool load_obstacle_list; //When a new scenario was selected, redraw the obstacle lists in the dispatcher
     //Callback function for state changes in the toggles
     void vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state);
-    std::function<void(int, ObstacleToggle::ToggleState state)> set_obstacle_manager_obstacle_state;
 
     /**
      * \brief This function gets called after the simulation manager was reset due to a transformation
@@ -163,6 +169,12 @@ private:
      */
     void reset_current_transform_profile();
 
+    /**
+     * \brief Callback for preview button, enables / disables preview of movement of commonroad obstacles
+     */
+    void preview_clicked();
+    bool preview_enabled = false;
+
 public:
     /**
      * \brief Constructor
@@ -171,7 +183,7 @@ public:
      */
     CommonroadViewUI(
         std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-        std::function<void(int, ObstacleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
+        std::shared_ptr<ObstacleSimulationManager> obstacle_sim_manager
     );
 
     /**
@@ -186,6 +198,9 @@ public:
      * \param is_sensitive True if this sub-window should be responsive to user input, else false
      */
     void set_sensitive(bool is_sensitive);
+
+    //In case the preview is stopped by a simulation start
+    void reset_preview_label();
 
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();

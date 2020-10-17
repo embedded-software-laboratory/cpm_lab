@@ -29,11 +29,11 @@
 CommonroadViewUI::CommonroadViewUI
     (
     std::shared_ptr<CommonRoadScenario> _commonroad_scenario,
-    std::function<void(int, ObstacleToggle::ToggleState state)> _set_obstacle_manager_obstacle_state
+    std::shared_ptr<ObstacleSimulationManager> _obstacle_sim_manager
     ) 
     :
     commonroad_scenario(_commonroad_scenario),
-    set_obstacle_manager_obstacle_state(_set_obstacle_manager_obstacle_state)
+    obstacle_sim_manager(_obstacle_sim_manager)
 {
     builder = Gtk::Builder::create_from_file("ui/commonroad/commonroad.glade");
 
@@ -55,6 +55,7 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("button_load_profile", button_load_profile);
     builder->get_widget("button_save_profile", button_save_profile);
     builder->get_widget("button_reset_profile", button_reset_profile);
+    builder->get_widget("button_preview", button_preview);
 
     assert(parent);
     assert(commonroad_box);
@@ -74,6 +75,7 @@ CommonroadViewUI::CommonroadViewUI
     assert(button_load_profile);
     assert(button_save_profile);
     assert(button_reset_profile);
+    assert(button_preview);
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
@@ -82,6 +84,7 @@ CommonroadViewUI::CommonroadViewUI
     button_load_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::load_transformation_from_profile));
     button_save_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::store_transform_profile));
     button_reset_profile->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::reset_current_transform_profile));
+    button_preview->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::preview_clicked));
 
     //Also, single transformation values can be applied on a single key press within the entry
     entry_time_step_size->signal_key_release_event().connect(sigc::mem_fun(this, &CommonroadViewUI::apply_entry_time));
@@ -291,9 +294,13 @@ void CommonroadViewUI::apply_current_vehicle_selection()
 
 void CommonroadViewUI::vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state)
 {
-    if(set_obstacle_manager_obstacle_state)
+    if (obstacle_sim_manager)
     {
-        set_obstacle_manager_obstacle_state(static_cast<int>(id), state);
+        obstacle_sim_manager->set_obstacle_simulation_state(static_cast<int>(id), state);
+    }
+    else
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in CommonroadViewUI::vehicle_selection_changed - no sim. manager");
     }
 }
 
@@ -636,4 +643,40 @@ void CommonroadViewUI::reset_current_transform_profile()
     {
         commonroad_scenario->reset_stored_transformation();
     }
+}
+
+void CommonroadViewUI::preview_clicked()
+{
+    if (preview_enabled)
+    {
+        //Disable preview
+        button_preview->set_label("Start preview");
+
+        if (obstacle_sim_manager)
+        {
+            obstacle_sim_manager->stop();
+        }
+    }
+    else
+    {
+        //Enable preview
+        button_preview->set_label("Stop preview");
+
+        if (obstacle_sim_manager)
+        {
+            obstacle_sim_manager->start_preview();
+        }
+    }
+
+    if (! obstacle_sim_manager)
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in CommonroadViewUI::preview_clicked - no sim. manager");
+    }
+
+    preview_enabled = !preview_enabled;
+}
+
+void CommonroadViewUI::reset_preview_label()
+{
+    button_preview->set_label("Start preview");
 }

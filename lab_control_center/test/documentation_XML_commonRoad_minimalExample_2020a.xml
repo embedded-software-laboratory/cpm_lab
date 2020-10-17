@@ -82,6 +82,7 @@
         <x>177.0678082208385</x>
         <y>-119.6423879633260</y>
       </point>
+      <lineMarking>broad_dashed</lineMarking>
     </leftBound>
     <rightBound>
       <point>
@@ -96,6 +97,7 @@
         <x>173.5678258508396</x>
         <y>-119.6312789716252</y>
       </point>
+      <lineMarking>broad_dashed</lineMarking>
     </rightBound>
     <predecessor ref="100"/>
     <predecessor ref="90"/>
