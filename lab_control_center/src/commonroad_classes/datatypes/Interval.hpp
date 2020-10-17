@@ -110,11 +110,11 @@ public:
         }
 
         //Test output
-        std::cout << "Interval(s): " << std::endl;
-        for (const auto interval : intervals)
-        {
-            std::cout << "\t" << interval.first << " - " << interval.second << std::endl;
-        }
+        // std::cout << "Interval(s): " << std::endl;
+        // for (const auto interval : intervals)
+        // {
+        //     std::cout << "\t" << interval.first << " - " << interval.second << std::endl;
+        // }
     }
 
     //Getter (no setter, as we only want to set Interval at translation or change it using transform_...)

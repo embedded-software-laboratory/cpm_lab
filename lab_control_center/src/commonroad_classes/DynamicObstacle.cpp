@@ -183,13 +183,13 @@ DynamicObstacle::DynamicObstacle(
     
 
     //Test output
-    std::cout << "Dynamic obstacle:" << std::endl;
-    std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
-    std::cout << "\tOccupancy size: " << occupancy_set.size() << std::endl;
-    std::cout << "\tSignal series size: " << signal_series.size() << std::endl;
-    std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
-    std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
-    std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
+    // std::cout << "Dynamic obstacle:" << std::endl;
+    // std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
+    // std::cout << "\tOccupancy size: " << occupancy_set.size() << std::endl;
+    // std::cout << "\tSignal series size: " << signal_series.size() << std::endl;
+    // std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
+    // std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
+    // std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
 } 
 
 /******************************Interface functions***********************************/

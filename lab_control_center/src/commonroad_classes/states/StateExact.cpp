@@ -86,14 +86,14 @@ StateExact::StateExact(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "StateExact: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity: " << velocity << std::endl;
-    std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
-    std::cout << "\tOrientation: " << orientation << std::endl;
-    std::cout << "\tYaw rate: " << yaw_rate << std::endl;
-    std::cout << "\tSlip angle: " << slip_angle << std::endl;
-    std::cout << "\tTime: " << time << std::endl;
+    // std::cout << "StateExact: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity: " << velocity << std::endl;
+    // std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
+    // std::cout << "\tOrientation: " << orientation << std::endl;
+    // std::cout << "\tYaw rate: " << yaw_rate << std::endl;
+    // std::cout << "\tSlip angle: " << slip_angle << std::endl;
+    // std::cout << "\tTime: " << time << std::endl;
 }
 
 void StateExact::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

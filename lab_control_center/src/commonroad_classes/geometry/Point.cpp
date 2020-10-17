@@ -51,7 +51,7 @@ Point::Point(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
+    // std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
 }
 
 //Suppress warning for unused parameter (s)

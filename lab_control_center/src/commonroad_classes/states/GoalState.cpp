@@ -99,11 +99,11 @@ GoalState::GoalState(
     }
 
     //Test output
-    std::cout << "GoalState: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
-    std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
-    std::cout << "\tTime exists: " << time.has_value() << std::endl;
+    // std::cout << "GoalState: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
+    // std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
+    // std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
 void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

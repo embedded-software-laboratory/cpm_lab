@@ -90,12 +90,12 @@ Position::Position(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Position:" << std::endl;
-    std::cout << "\tPoint exists: " << point.has_value() << std::endl;
-    std::cout << "\tCircle size: " << circles.size() << std::endl;
-    std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
-    std::cout << "\tPolygon size: " << polygons.size() << std::endl;
-    std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
+    // std::cout << "Position:" << std::endl;
+    // std::cout << "\tPoint exists: " << point.has_value() << std::endl;
+    // std::cout << "\tCircle size: " << circles.size() << std::endl;
+    // std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
+    // std::cout << "\tPolygon size: " << polygons.size() << std::endl;
+    // std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
 //Suppress warning for unused parameter (s)

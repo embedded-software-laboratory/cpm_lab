@@ -187,26 +187,26 @@ TrafficSign::TrafficSign(
     
 
     //Test output
-    std::cout << "Traffic sign translated: " << std::endl;
-    std::cout << "\tNumber of elements: " << traffic_sign_elements.size() << std::endl;
-    std::cout << "\tNow iterating..." << std::endl;
-    for (const auto traffic_sign_element : traffic_sign_elements)
-    {
-        std::cout << "\tTraffic sign element:" << std::endl;
-        std::cout << "\t\t Is virtual - size: " << traffic_sign_element.is_virtual.size() << std::endl;
-        std::cout << "\t\t Position has value: " << traffic_sign_element.position.has_value() << std::endl;
-        std::cout << "\t\t Posts:" << std::endl;
-        for (const auto traffic_sign_post : traffic_sign_element.traffic_sign_posts)
-        {
-            std::cout << "\t\t\t Post ID: " << traffic_sign_post.traffic_sign_id << std::endl;
-            std::cout << "\t\t\t Additional values: ";
-            for (const auto additional_value : traffic_sign_post.additional_values)
-            {
-                std::cout << " | " << additional_value;
-            }
-            std::cout << std::endl;
-        }
-    }
+    // std::cout << "Traffic sign translated: " << std::endl;
+    // std::cout << "\tNumber of elements: " << traffic_sign_elements.size() << std::endl;
+    // std::cout << "\tNow iterating..." << std::endl;
+    // for (const auto traffic_sign_element : traffic_sign_elements)
+    // {
+    //     std::cout << "\tTraffic sign element:" << std::endl;
+    //     std::cout << "\t\t Is virtual - size: " << traffic_sign_element.is_virtual.size() << std::endl;
+    //     std::cout << "\t\t Position has value: " << traffic_sign_element.position.has_value() << std::endl;
+    //     std::cout << "\t\t Posts:" << std::endl;
+    //     for (const auto traffic_sign_post : traffic_sign_element.traffic_sign_posts)
+    //     {
+    //         std::cout << "\t\t\t Post ID: " << traffic_sign_post.traffic_sign_id << std::endl;
+    //         std::cout << "\t\t\t Additional values: ";
+    //         for (const auto additional_value : traffic_sign_post.additional_values)
+    //         {
+    //             std::cout << " | " << additional_value;
+    //         }
+    //         std::cout << std::endl;
+    //     }
+    // }
 }
 
 void TrafficSign::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

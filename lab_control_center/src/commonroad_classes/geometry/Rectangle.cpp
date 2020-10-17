@@ -67,10 +67,10 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "Rectangle:" << std::endl;
-    std::cout << "\tLenght, width: " << length << ", " << width << std::endl;
-    std::cout << "\tOrientation set: " << orientation.has_value() << std::endl;
-    std::cout << "\tCenter set: " << center.has_value() << std::endl;
+    // std::cout << "Rectangle:" << std::endl;
+    // std::cout << "\tLenght, width: " << length << ", " << width << std::endl;
+    // std::cout << "\tOrientation set: " << orientation.has_value() << std::endl;
+    // std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
 void Rectangle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

@@ -135,7 +135,7 @@ PlanningProblem::PlanningProblem(
     }
 
     //Test output
-    std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
+    // std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
 void PlanningProblem::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

@@ -95,11 +95,11 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     //example: cycle | position | cycle | cycle -> I cannot tell whether "position" belongs to the first or the second cycle 
     
     //Test output
-    std::cout << "TrafficLight: " << std::endl;
-    std::cout << "\tActive size: " << actives.size() << std::endl;
-    std::cout << "\tPosition size: " << positions.size() << std::endl;
-    std::cout << "\tDirection size: " << directions.size() << std::endl;
-    std::cout << "\tCycle size: " << cycles.size() << std::endl;
+    // std::cout << "TrafficLight: " << std::endl;
+    // std::cout << "\tActive size: " << actives.size() << std::endl;
+    // std::cout << "\tPosition size: " << positions.size() << std::endl;
+    // std::cout << "\tDirection size: " << directions.size() << std::endl;
+    // std::cout << "\tCycle size: " << cycles.size() << std::endl;
 }
 
 Position TrafficLight::translate_position(const xmlpp::Node* position_node)

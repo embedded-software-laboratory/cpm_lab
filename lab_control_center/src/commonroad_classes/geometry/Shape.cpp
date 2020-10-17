@@ -76,10 +76,10 @@ Shape::Shape(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "Shape:" << std::endl;
-    std::cout << "\tCircle size: " << circles.size() << std::endl;
-    std::cout << "\tPolygon size: " << polygons.size() << std::endl;
-    std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
+    // std::cout << "Shape:" << std::endl;
+    // std::cout << "\tCircle size: " << circles.size() << std::endl;
+    // std::cout << "\tPolygon size: " << polygons.size() << std::endl;
+    // std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
 void Shape::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
