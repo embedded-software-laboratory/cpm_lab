@@ -31,6 +31,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -153,6 +154,25 @@ private:
     std::map<int, StaticObstacle> static_obstacles;
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
+
+    //Lanelets may contain traffic sign / light IDs, whereas traffic signs / lights might not contain a position value, but can have that value
+    //Thus, to draw these traffic "symbols", we need to combine the information that we can obtain from lanelet and the symbols
+    //-> We remember the (last) lanelet-ID for each symbol-ID; if the symbol does not have its own location, it can look one up here
+    //As transformations may take place, we cannot store the position, but just a lanelet reference to obtain the current position from there
+    std::map<int, std::pair<int, bool>> lanelet_traffic_sign_positions; //<Sign ID, <Lanelet ID, is_stopline>>
+    std::map<int, std::pair<int, bool>> lanelet_traffic_light_positions; //<Light ID, <Lanelet ID, is_stopline>>
+
+    /**
+     * Function used by a traffic sign to find out if a position was set for it by a lanelet definition
+     * \param id ID of the traffic sign
+     */
+    std::optional<std::pair<double, double>> get_lanelet_sign_position(int id);
+
+    /**
+     * Function used by a traffic light to find out if a position was set for it by a lanelet definition
+     * \param id ID of the traffic light
+     */
+    std::optional<std::pair<double, double>> get_lanelet_light_position(int id);
 
     //Not commonroad
     //Mutex to lock the object while it is being translated from an XML file

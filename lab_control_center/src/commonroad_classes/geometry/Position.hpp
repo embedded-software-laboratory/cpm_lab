@@ -148,7 +148,7 @@ public:
     void to_dds_msg() {} 
 
     //Getters for basic types
-    const std::optional<Point>& get_point() const;
+    std::optional<Point> get_point();
     const std::vector<Circle>& get_circles() const;
     const std::vector<int>& get_lanelet_refs() const;
     const std::vector<Polygon>& get_polygons() const;

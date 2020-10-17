@@ -323,7 +323,7 @@ bool Position::position_is_lanelet_ref()
     return (lanelet_refs.size() > 0) && !(point.has_value()) && (circles.size() == 0) && (polygons.size() == 0) && (rectangles.size() == 0);
 }
 
-const std::optional<Point>& Position::get_point() const
+std::optional<Point> Position::get_point()
 {
     return point;
 }

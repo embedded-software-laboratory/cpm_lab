@@ -194,8 +194,14 @@ public:
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A lanelet node
+     * \param traffic_sign_positions A map in which, during lanelet translation, lanelet ID and if position comes from a stop line are being stored
+     * \param traffic_light_positions A map in which, during lanelet translation, lanelet ID and if position comes from a stop line are being stored
      */
-    Lanelet(const xmlpp::Node* node);
+    Lanelet(
+        const xmlpp::Node* node, 
+        std::map<int, std::pair<int, bool>>& traffic_sign_positions, 
+        std::map<int, std::pair<int, bool>>& traffic_light_positions
+    );
 
     /**
      * \brief Iterate through the bounds, which should form pairs for each point (left and right)
@@ -254,6 +260,12 @@ public:
      * \return Center of the shape of all points (get_center just takes a look at the two boundary points in the middle of the lanelet)
      */
     std::pair<double, double> get_center_of_all_points();
+
+    /**
+     * \brief Get center (positional value) of the stopline, if one exists
+     * \return Center of the stopline
+     */
+    std::optional<std::pair<double, double>> get_stopline_center();
 
     /**
      * \brief Get min. and max. x and y value of all points of the lanelet, if such points exist

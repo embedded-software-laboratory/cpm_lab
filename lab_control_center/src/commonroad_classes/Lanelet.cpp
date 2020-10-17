@@ -26,7 +26,11 @@
 
 #include "commonroad_classes/Lanelet.hpp"
 
-Lanelet::Lanelet(const xmlpp::Node* node)
+Lanelet::Lanelet(
+    const xmlpp::Node* node,
+    std::map<int, std::pair<int, bool>>& traffic_sign_positions, 
+    std::map<int, std::pair<int, bool>>& traffic_light_positions
+)
 {
     //Check if node is of type lanelet
     assert(node->get_name() == "lanelet");
@@ -62,6 +66,28 @@ Lanelet::Lanelet(const xmlpp::Node* node)
         user_bidirectional = translate_users(node, "userBidirectional");
         traffic_sign_refs = translate_refs(node, "trafficSignRef");
         traffic_light_refs = translate_refs(node, "trafficLightRef");
+
+        //Add positional values for each traffic sign / light ref
+        auto lanelet_id = xml_translation::get_attribute_int(node, "id", true).value();
+        if (stop_line.has_value())
+        {
+            for (const auto ref : stop_line->traffic_sign_refs)
+            {
+                traffic_sign_positions[ref] = {lanelet_id, true};
+            }
+            for (const auto ref : stop_line->traffic_light_ref)
+            {
+                traffic_light_positions[ref] = {lanelet_id, true};
+            }
+        }
+        for (const auto ref : traffic_sign_refs)
+        {
+            traffic_sign_positions[ref] = {lanelet_id, false};
+        }
+        for (const auto ref : traffic_light_refs)
+        {
+            traffic_light_positions[ref] = {lanelet_id, false};
+        }
     }
     catch(const SpecificationError& e)
     {
@@ -75,30 +101,30 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "Lanelet ------------------------------" << std::endl;
-    std::cout << "Left bound marking: TODO" << std::endl;
-    std::cout << "Right bound marking: TODO" << std::endl;
+    // std::cout << "Lanelet ------------------------------" << std::endl;
+    // std::cout << "Left bound marking: TODO" << std::endl;
+    // std::cout << "Right bound marking: TODO" << std::endl;
 
-    std::cout << "Predecessors refs: ";
-    for (int ref : predecessors)
-    {
-        std:: cout << "| " << ref;
-    }
-    std::cout << std::endl;
+    // std::cout << "Predecessors refs: ";
+    // for (int ref : predecessors)
+    // {
+    //     std:: cout << "| " << ref;
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "Successor refs: ";
-    for (int ref : successors)
-    {
-        std:: cout << "| " << ref;
-    }
-    std::cout << std::endl;
+    // std::cout << "Successor refs: ";
+    // for (int ref : successors)
+    // {
+    //     std:: cout << "| " << ref;
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
-    std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
+    // std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
+    // std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
 
-    std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
+    // std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
 
-    std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
+    // std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
 }
 
 Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
@@ -635,8 +661,8 @@ std::pair<double, double> Lanelet::get_center()
     size_t vec_size = left_bound.points.size();
     size_t middle_index = static_cast<size_t>(static_cast<double>(vec_size) / 2.0);
 
-    double x = (left_bound.points.at(middle_index).get_x() + right_bound.points.at(middle_index).get_x()) / 2.0;
-    double y = (left_bound.points.at(middle_index).get_y() + right_bound.points.at(middle_index).get_y()) / 2.0;
+    double x = (0.5 * left_bound.points.at(middle_index).get_x() + 0.5 * right_bound.points.at(middle_index).get_x());
+    double y = (0.5 * left_bound.points.at(middle_index).get_y() + 0.5 * right_bound.points.at(middle_index).get_y());
 
     return std::pair<double, double>(x, y);
 }
@@ -658,6 +684,22 @@ std::pair<double, double> Lanelet::get_center_of_all_points()
     }
 
     return std::pair<double, double>(x, y);
+}
+
+std::optional<std::pair<double, double>> Lanelet::get_stopline_center()
+{
+    if (stop_line.has_value())
+    {
+        //We already made sure during translation that Point actually consists of two points
+        return std::optional<std::pair<double, double>>({
+            stop_line->points.at(0).get_x() * 0.5 + stop_line->points.at(1).get_x() * 0.5,
+            stop_line->points.at(0).get_y() * 0.5 + stop_line->points.at(1).get_y() * 0.5
+        });
+    }
+    else
+    {
+        return std::nullopt;
+    }
 }
 
 std::optional<std::array<std::array<double, 2>, 2>> Lanelet::get_range_x_y()

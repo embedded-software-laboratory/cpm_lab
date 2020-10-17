@@ -293,11 +293,11 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node)});
+        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
-        traffic_signs.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficSign(node)});
+        traffic_signs.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficSign(node, std::bind(&CommonRoadScenario::get_lanelet_sign_position, this, _1))});
     }
     else if (node_name.compare("trafficLight") == 0)
     {
@@ -620,6 +620,51 @@ double CommonRoadScenario::get_scale(double min_lane_width)
     if (min_width > 0.0) return min_lane_width / min_width;
     else return 0.0;
 }
+
+std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_sign_position(int id)
+{
+    if (lanelet_traffic_sign_positions.find(id) != lanelet_traffic_sign_positions.end())
+    {
+        auto& entry = lanelet_traffic_sign_positions.at(id);
+        if (entry.second)
+        {
+            //Is stopline entry, lanelet ID must exist (because else it could not have been stored here)
+            return lanelets.at(entry.first).get_stopline_center();
+        }
+        else
+        {
+            //Is normal lanelet entry
+            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_light_position(int id)
+{
+    if (lanelet_traffic_light_positions.find(id) != lanelet_traffic_light_positions.end())
+    {
+        auto& entry = lanelet_traffic_light_positions.at(id);
+        if (entry.second)
+        {
+            //Is stopline entry, lanelet ID must exist (because else it could not have been stored here)
+            return lanelets.at(entry.first).get_stopline_center();
+        }
+        else
+        {
+            //Is normal lanelet entry
+            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
 
 /******************************Interface functions***********************************/
 
