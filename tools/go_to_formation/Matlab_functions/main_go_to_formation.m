@@ -27,18 +27,27 @@ function main_go_to_formation(varargin)
     matlabDomainID = 1;
     
     clc
-    script_directoy = fileparts([mfilename('fullpath') '.m']);
-    cd(script_directoy)
+%     script_directoy = fileparts([mfilename('fullpath') '.m']);
+%     cd(script_directoy)
     
     % Initialize data readers/writers...
-    init_script_path = fullfile('../../../', '*', '/init_script.m');
+%     init_script_path = fullfile('../../../', '*', '/init_script.m');
+    init_script_path = which('init_script.m');
     assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
-    addpath(fileparts(init_script_path));
+%     addpath(fileparts(init_script_path));
     [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
-    cd(script_directoy)
+%     cd(script_directoy)
 
     vehicle_ids = varargin;
-
+    vehicleList = {};
+    
+    for nVehicles = 1:length(vehicle_ids)
+        vehicleList{nVehicles, 1} = strcat('vehicle_', num2str(vehicle_ids{nVehicles}));
+    end
+    
+    speed = 1; % [m/s]
+    isDriving = false; %any vehicle currently driving?
+    
     %% wait for data if read() is used
     stateReader.WaitSet = true;
     stateReader.WaitSetTimeout = 10;
@@ -84,6 +93,7 @@ function main_go_to_formation(varargin)
             break;
         end
     end
+    %% 
 
     if got_stop == false
         while(true)
@@ -111,38 +121,90 @@ function main_go_to_formation(varargin)
             stateSampleCount = 0;
             sampleInfo = DDS.SampleInfo;
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+            save('sample.mat', 'sample')
             
-            %TODO: read out poses of all vehicles online
-            poses_1 = [sample.vehicle_observation_list(1,1).pose.x ...
-                 sample.vehicle_observation_list(1,1).pose.y, ...
-                 sample.vehicle_observation_list(1,2).pose.yaw]
-            poses_2 = [sample.vehicle_observation_list(1,2).pose.x ...
-                 sample.vehicle_observation_list(1,2).pose.y, ...
-                 sample.vehicle_observation_list(1,1).pose.yaw]
-            poses_3 = [sample.vehicle_observation_list(1,3).pose.x ...
-                 sample.vehicle_observation_list(1,3).pose.y, ...
-                 sample.vehicle_observation_list(1,3).pose.yaw]
-             
-            vehicle_1 = sample.state_list(1,1).vehicle_id
-            vehicle_2 = sample.state_list(1,2).vehicle_id
-            vehicle_3 = sample.state_list(1,3).vehicle_id
- 
-
-            % Check if any new message was received (TODO: throw away all messages that were received during computation)
-            if stateSampleCount > 0                
-                disp('Current time:');
-                disp(sample.t_now);
-            
-                % Call the programs to calculate the trajectories of all HLCs
-                if (size(vehicle_ids) > 0)
-                    for i = 1 : length(vehicle_ids)
-                        msg = leader(vehicle_ids{i}, sample.t_now);
-                        trajectoryWriter.write(msg);
-                    end
-                end
+            startPoses = readPoses(sample.vehicle_observation_list);
+            allHomePoses = homePosesFixed;
+            goalPoses = startPoses;
+            vehicleList = fields(startPoses);
+            for nVehicles = 1:length(fields(goalPoses))
+                goalPoses.(vehicleList{nVehicles}) = allHomePoses(nVehicles);
             end
+            
+            isCostMapShown = false;
+            isOccMapShown = false;
+            for nVehicles = 1:length(vehicleList)
+                
+                
+                startPoses = readPoses(sample.vehicle_observation_list);
+                disp(startPoses)
+                %TODO automatic detection of ego vehicle
+                egoVehicle = vehicleList{nVehicles};
+               
+                map = setOccMap(startPoses, egoVehicle);
+                if isOccMapShown == false
+                    show(map)
+                    isOccMapShown = true;
+                end
+                [refPath, Fig] = PlanAndShowRRTPath(startPoses, goalPoses, egoVehicle, map);
+                
+                %Show occupancy grid and path when planner executed
+                %for the first time
+                if isCostMapShown == false
+                    figure(Fig)
+                    isCostMapShown = true;
+                end
+                
+                trajectory_points = pathToTrajectory(refPath, speed);
+    %             
+    %             % Check if any new message was received (TODO: throw away all messages that were received during computation)
+    %             if stateSampleCount > 0                
+    %                 disp('Current time:');
+    %                 disp(sample.t_now);
+
+                 [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                 save('sample.mat', 'sample')
+                 [trjMsg, stufMsg] = trajMessage(trajectory_points, 1, sample.t_now);
+                 trajectoryWriter.write(trjMsg);
+                 isDriving = true;
+                 stop_now = false;
+                 
+                 while(isDriving)
+                     
+                    disp('Checking system trigger for stop signal');
+                    [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
+                    current_time = trigger.next_start().nanoseconds();
+                        if current_time == trigger_stop
+                            disp("Stopping");
+                            stop_now = true;
+                            break;
+                        end
+                                                    
+                     [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                     map = setOccMap(startPoses, egoVehicle);
+                     if checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]) == 1
+                         isDriving = false;
+                     end
+                     trajectoryWriter.write(stufMsg)
+                 end
+                   
+               if stop_now
+                   break;
+               end
+               
+            end
+            
+            if stop_now
+                break;
+            end
+            
         end
-    end
+     end
+             
+            
+       
+     %% 
+ 
 
     disp('Finished');
 
