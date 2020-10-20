@@ -114,9 +114,10 @@ public:
         ctx->set_source_rgb(.2,.1,.1);
         ctx->show_text(text);
 
-        ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-        ctx->set_source_rgb(.1,.1,.1);
-        ctx->show_text(text);
+        //For relief, not that readable
+        // ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+        // ctx->set_source_rgb(.1,.1,.1);
+        // ctx->show_text(text);
 
         ctx->restore();
     }

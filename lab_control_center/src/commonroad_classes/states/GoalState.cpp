@@ -179,7 +179,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     if (draw_configuration->draw_goal_description.load())
     {
         std::stringstream descr_stream;
-        descr_stream << "Goal info - " << std::endl;
+        descr_stream << "Goal info - ";
         if (time.has_value())
         {
             descr_stream << "t (mean): " << time.value().get_mean();

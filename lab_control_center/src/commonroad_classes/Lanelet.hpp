@@ -193,6 +193,8 @@ private:
 
     //Helper functions
     void set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length);
+    std::string to_text(LaneletType lanelet_type);
+    std::string to_text(VehicleType vehicle_type);
 
 public:
     /**

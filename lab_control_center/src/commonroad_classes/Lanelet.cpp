@@ -495,6 +495,97 @@ void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMa
     
 }
 
+std::string Lanelet::to_text(LaneletType lanelet_type)
+{
+    switch (lanelet_type)
+    {
+        case LaneletType::AccessRamp:
+            return "Acc";
+            break;
+        case LaneletType::BicycleLane:
+            return "Bic";
+            break;
+        case LaneletType::BusLane:
+            return "BusL";
+            break;
+        case LaneletType::BusStop:
+            return "BusS";
+            break;
+        case LaneletType::Country:
+            return "Cou";
+            break;
+        case LaneletType::Crosswalk:
+            return "Cro";
+            break;
+        case LaneletType::DriveWay:
+            return "Dri";
+            break;
+        case LaneletType::ExitRamp:
+            return "Ex";
+            break;
+        case LaneletType::Highway:
+            return "Hi";
+            break;
+        case LaneletType::Interstate:
+            return "Int";
+            break;
+        case LaneletType::MainCarriageWay:
+            return "Mai";
+            break;
+        case LaneletType::Sidewalk:
+            return "Sid";
+            break;
+        case LaneletType::Unknown:
+            return "Unk";
+            break;
+        case LaneletType::Unspecified:
+            return "Uns";
+            break;
+        case LaneletType::Urban:
+            return "Ur";
+            break;
+    }
+
+    return "Error";
+}
+
+std::string Lanelet::to_text(VehicleType vehicle_type)
+{
+    switch ((vehicle_type))
+    {
+    case VehicleType::Bicycle:
+        return "Bic";
+        break;
+    case VehicleType::Bus:
+        return "Bus";
+        break;
+    case VehicleType::Car:
+        return "Car";
+        break;
+    case VehicleType::Motorcycle:
+        return "Mot";
+        break;
+    case VehicleType::Pedestrian:
+        return "Ped";
+        break;
+    case VehicleType::PriorityVehicle:
+        return "Pri";
+        break;
+    case VehicleType::Train:
+        return "Tra";
+        break;
+    case VehicleType::Truck:
+        return "Tru";
+        break;
+    case VehicleType::Vehicle:
+        return "Veh";
+        break;
+    }
+
+    return "Error";
+}
+
+
 /******************************Interface functions***********************************/
 
 void Lanelet::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
@@ -608,6 +699,25 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->move_to(stop_line->points.at(0).get_x() * scale, stop_line->points.at(0).get_y() * scale);
         ctx->line_to(stop_line->points.at(1).get_x() * scale, stop_line->points.at(1).get_y() * scale);
         ctx->stroke();
+    }
+
+    //Draw time, velocity description
+    if (draw_configuration->draw_lanelet_types.load())
+    {
+        ctx->save();
+
+        std::stringstream descr_stream;
+        descr_stream << "T: " << to_text(lanelet_type);
+        
+        //Move to lanelet center for text, draw centered around it, rotate by angle of lanelet
+        auto center = get_center();
+        ctx->translate(center.first, center.second);
+        //Calculate lanelet angle (trivial solution used here will not work properly for arcs etc)
+        auto alpha = atan((left_bound.points.rbegin()->get_y() - left_bound.points.at(0).get_y()) / (left_bound.points.rbegin()->get_x() - left_bound.points.at(0).get_x())); //alpha = arctan(dy / dx)
+        
+        draw_text_centered(ctx, 0, 0, alpha, 4, descr_stream.str());
+
+        ctx->restore();
     }
 
     //TODO: Line markings, stop lines etc
