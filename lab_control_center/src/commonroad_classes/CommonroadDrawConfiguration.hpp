@@ -42,4 +42,6 @@ struct CommonroadDrawConfiguration
     std::atomic_bool draw_traffic_lights{false};
     std::atomic_bool draw_lanelet_types{false};
     std::atomic_bool draw_lanelet_orientation{false};
+    std::atomic_bool draw_goal_description{false};
+    std::atomic_bool draw_obstacle_description{false};
 };

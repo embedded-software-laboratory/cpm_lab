@@ -359,7 +359,8 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             PlanningProblem(
                 node,
                 std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1),
+                draw_configuration
             )}
         );
     }

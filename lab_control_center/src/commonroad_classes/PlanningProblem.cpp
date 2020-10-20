@@ -29,7 +29,8 @@
 PlanningProblem::PlanningProblem(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    std::function<std::pair<double, double> (int)> _get_lanelet_center,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     )
 {
     //Check if node is of type planningProblem
@@ -57,7 +58,7 @@ PlanningProblem::PlanningProblem(
             node,
             [&] (const xmlpp::Node* child)
             {
-                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center));
+                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
                 goal_state_lines.push_back(child->get_line());
             },
             "goalState"

@@ -94,6 +94,8 @@ private:
     Gtk::CheckButton* check_traffic_lights;
     Gtk::CheckButton* check_lanelet_types;
     Gtk::CheckButton* check_lanelet_orientation;
+    Gtk::CheckButton* check_goal_description;
+    Gtk::CheckButton* check_obstacle_description;
 
     //View to set / edit which obstacles should be simulated / shown
     Gtk::FlowBox* static_obstacles_flowbox = nullptr;

@@ -458,7 +458,7 @@
                 <property name="can_focus">False</property>
                 <property name="valign">center</property>
                 <property name="min_children_per_line">1</property>
-                <property name="max_children_per_line">4</property>
+                <property name="max_children_per_line">6</property>
                 <child>
                   <object class="GtkFlowBoxChild">
                     <property name="width_request">100</property>
@@ -535,6 +535,64 @@
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <property name="draw_indicator">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="width_request">100</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkFlowBoxChild">
+                        <property name="width_request">100</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">center</property>
+                        <property name="valign">center</property>
+                        <child>
+                          <object class="GtkCheckButton" id="check_goal_description">
+                            <property name="label" translatable="yes">Goal Description</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="halign">center</property>
+                            <property name="valign">center</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="width_request">100</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkFlowBoxChild">
+                        <property name="width_request">100</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="halign">center</property>
+                        <property name="valign">center</property>
+                        <child>
+                          <object class="GtkCheckButton" id="check_obstacle_description">
+                            <property name="label" translatable="yes">Obstacle Description</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="halign">center</property>
+                            <property name="valign">center</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
