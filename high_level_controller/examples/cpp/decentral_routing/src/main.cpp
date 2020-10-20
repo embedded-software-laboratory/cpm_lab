@@ -282,7 +282,7 @@ int main(int argc, char *argv[]) {
                         auto pose = data.pose();
                         int out_edge_index = -1;
                         int out_edge_path_index = -1;
-                        bool matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
+                        matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
                         //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
                         if(matched)
                         {
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
                             );
 
                             // Reset matched, so we don't match the next vehicle
-                            matched = false;
+                            break;
                         }
                         else //Errormessage, if not all vehicles could be matched to the map
                         {
