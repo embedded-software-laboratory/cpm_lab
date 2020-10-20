@@ -154,7 +154,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         for (auto& middle : orientation->get_interval_avg())
         {
             ctx->save();
-            ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+            ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
 
             if(position.has_value())
             {
@@ -165,7 +165,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
 
             //Draw arrow
             double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-            draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
+            draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
             
             ctx->restore();
         }

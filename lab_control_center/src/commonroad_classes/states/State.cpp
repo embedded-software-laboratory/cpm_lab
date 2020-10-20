@@ -275,7 +275,7 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
                 ctx->rotate(middle + local_orientation);
 
                 double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-                draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
+                draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
 
                 ctx->restore();
             }

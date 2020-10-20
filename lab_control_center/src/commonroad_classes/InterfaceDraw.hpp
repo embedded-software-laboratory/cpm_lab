@@ -87,7 +87,7 @@ public:
         ctx->set_line_width(0.03 * scale);
         ctx->move_to(x_1, y_1);
         ctx->line_to(x_2, y_2);
-        ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
+        ctx->line_to(x_2 + 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 - 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2, y_2);
         ctx->fill_preserve();

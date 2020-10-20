@@ -587,10 +587,10 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
         while (arrow_end_pos < left_bound.points.size())
         {
-            double x_1 = (left_bound.points.at(arrow_start_pos).get_x() + right_bound.points.at(arrow_start_pos).get_x()) / 2.0;
-            double y_1 = (left_bound.points.at(arrow_start_pos).get_y() + right_bound.points.at(arrow_start_pos).get_y()) / 2.0;
-            double x_2 = (left_bound.points.at(arrow_end_pos).get_x() + right_bound.points.at(arrow_end_pos).get_x()) / 2.0;
-            double y_2 = (left_bound.points.at(arrow_end_pos).get_y() + right_bound.points.at(arrow_end_pos).get_y()) / 2.0;
+            double x_1 = (0.5 * left_bound.points.at(arrow_start_pos).get_x() + 0.5 * right_bound.points.at(arrow_start_pos).get_x());
+            double y_1 = (0.5 * left_bound.points.at(arrow_start_pos).get_y() + 0.5 * right_bound.points.at(arrow_start_pos).get_y());
+            double x_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_x() + 0.5 * right_bound.points.at(arrow_end_pos).get_x());
+            double y_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_y() + 0.5 * right_bound.points.at(arrow_end_pos).get_y());
 
             draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
 
