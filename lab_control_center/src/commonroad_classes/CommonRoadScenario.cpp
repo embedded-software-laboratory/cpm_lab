@@ -293,7 +293,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions)});
+        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions, draw_configuration)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
@@ -772,15 +772,21 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             planning_problem.second.draw(ctx, scale);
         }
 
-        for (auto &traffic_sign : traffic_signs)
+        if (draw_configuration->draw_traffic_signs.load())
         {
-            traffic_sign.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.draw(ctx, scale);
+            } 
+        }
 
-        for (auto &traffic_light : traffic_lights)
+        if (draw_configuration->draw_traffic_lights.load())
         {
-            traffic_light.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.draw(ctx, scale);
+            } 
+        }
 
         //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
 
@@ -852,6 +858,11 @@ void CommonRoadScenario::reset_stored_transformation()
 
 
 /******************************Getter***********************************/
+
+std::shared_ptr<CommonroadDrawConfiguration> CommonRoadScenario::get_draw_configuration()
+{
+    return draw_configuration;
+}
 
 //This one is private
 void CommonRoadScenario::calculate_center()

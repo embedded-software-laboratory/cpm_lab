@@ -56,6 +56,8 @@
 
 #include "commonroad_classes/CommonRoadTransformation.hpp"
 
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
+
 #include "LCCErrorLogger.hpp"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -187,6 +189,9 @@ private:
 
     //Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
+
+    //Configuration class for what optional parts to draw (gets default-constructed by using {})
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration{std::make_shared<CommonroadDrawConfiguration>()};
 
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
@@ -334,6 +339,12 @@ public:
      * \brief Access to internal YAML transformation profile; Reset changes stored in profile for the current file
      */
     void reset_stored_transformation();
+
+    /**
+     * \brief This getter returns the draw configuration class
+     * By setting values in this class, you can toggle which parts of the selected scenario are supposed to be drawn
+     */
+    std::shared_ptr<CommonroadDrawConfiguration> get_draw_configuration();
 
     //TODO: Getter, by type and by ID, and constructor
     const std::string& get_author();
