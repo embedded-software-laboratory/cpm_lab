@@ -292,6 +292,9 @@ int main(int argc, char *argv[]) {
                                 "Vehicle %d matched.",
                                 int(vehicle_id)
                             );
+
+                            // Reset matched, so we don't match the next vehicle
+                            matched = false;
                         }
                         else //Errormessage, if not all vehicles could be matched to the map
                         {
