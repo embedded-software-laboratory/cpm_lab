@@ -301,7 +301,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node)});
+        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node, std::bind(&CommonRoadScenario::get_lanelet_light_position, this, _1))});
     }
     else if (node_name.compare("intersection") == 0)
     {
