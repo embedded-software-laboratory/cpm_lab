@@ -30,12 +30,6 @@
 #ifndef LANEGRAPHTRAJECTORYCHANGES_IDL
 #define LANEGRAPHTRAJECTORYCHANGES_IDL
 
-struct LaneGraphPosition 
-{
-    unsigned short edge_index;
-    unsigned short edge_path_index;
-};
-
 struct LaneGraphPositionChange
 {
     unsigned short index;

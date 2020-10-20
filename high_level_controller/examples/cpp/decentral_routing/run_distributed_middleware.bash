@@ -65,10 +65,10 @@ do
     # This is a band-aid fix and should be changed
     #tmux new-session -d -s "high_level_controller${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/dev/dev/software/high_level_controller/examples/cpp/decentral_routing/build/;./decentral_routing --node_id=high_level_controller${vehicle_id} --simulated_time=false --vehicle_ids=${vehicle_id} --middleware=true --dds_domain=${DDS_DOMAIN} --dds_initial_peer=${DDS_INITIAL_PEER}  >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt 2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt"
 
-    if $vehicle_id == 1 then
-        gdb --args ./decentral_routing --node_id=high_level_controller${vehicle_id} --simulated_time=false --vehicle_ids=${vehicle_id} --middleware=true --dds_domain=${DDS_DOMAIN} --dds_initial_peer=${DDS_INITIAL_PEER}  >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt 2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt
-    else then
-        ./decentral_routing --node_id=high_level_controller${vehicle_id} --simulated_time=false --vehicle_ids=${vehicle_id} --middleware=true --dds_domain=${DDS_DOMAIN} --dds_initial_peer=${DDS_INITIAL_PEER}  >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt 2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt
+    if [ $vehicle_id -eq 5 ]; then
+        gdb --args ./decentral_routing --node_id=high_level_controller${vehicle_id} --simulated_time=false --vehicle_ids=${vehicle_id} --middleware=true --dds_domain=${DDS_DOMAIN} --dds_initial_peer=${DDS_INITIAL_PEER}
+    else
+        ./decentral_routing --node_id=high_level_controller${vehicle_id} --simulated_time=false --vehicle_ids=${vehicle_id} --middleware=true --dds_domain=${DDS_DOMAIN} --dds_initial_peer=${DDS_INITIAL_PEER}  >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt 2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt&
     fi
     printf "\tStarting high_level_controller${vehicle_id}.\n"
     #sleep 10
