@@ -63,7 +63,7 @@ int main (int argc, char *argv[]) {
     bool wait_for_start = cpm::cmd_parameter_bool("wait_for_start", true, argc, argv);
 
     //Parameter settings via LCC
-    std::cout << "Waiting for parameters set by LCC ..." << std::endl;
+    std::cout << "Waiting for parameter 'middleware_period_ns' set by LCC ..." << std::endl;
     uint64_t period_nanoseconds = cpm::parameter_uint64_t("middleware_period_ns");
 
     //Communication parameters
