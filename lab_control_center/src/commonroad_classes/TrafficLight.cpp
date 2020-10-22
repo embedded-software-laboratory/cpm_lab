@@ -279,23 +279,21 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
             {
                 x = position->first * scale;
                 y = position->second * scale;
+
+                ctx->save();
+                ctx->translate(x, y);
+                draw_traffic_light_symbol(ctx, scale);
+                ctx->restore();
             }
             else
             {
                 //This log causes severe flickering - why? TODO
                 LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-                return;
             }
-
-            ctx->save();
-            ctx->translate(x, y);
-            draw_traffic_light_symbol(ctx, scale);
-            ctx->restore();
         }
         else
         {
             LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-            return;
         }
     }
 

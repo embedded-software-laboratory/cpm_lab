@@ -708,6 +708,11 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
         std::stringstream descr_stream;
         descr_stream << "T: " << to_text(lanelet_type);
+
+        if (speed_limit.has_value())
+        {
+            descr_stream << " | Speed: " << speed_limit.value();
+        }
         
         //Move to lanelet center for text, draw centered around it, rotate by angle of lanelet
         auto center = get_center();
@@ -721,7 +726,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     }
 
     //TODO: Line markings, stop lines etc
-    if (speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    if (user_one_way.size() > 0 || user_bidirectional.size() > 0)
     {
         std::stringstream error_stream;
         error_stream << "Speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
