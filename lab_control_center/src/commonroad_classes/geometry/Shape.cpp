@@ -31,6 +31,8 @@ Shape::Shape(const xmlpp::Node* node)
     //Check if node is of type shape
     assert(node->get_name() == "shape");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020    
@@ -109,25 +111,44 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->set_line_width(0.005);
 
     //TODO: Rotation of combined forms is more complex than just rotation of the parts
+    // for (auto circle : circles)
+    // {
+    //     circle.draw(ctx, scale, 0, 0, 0, local_orientation);
+    // }
+
+    // for (auto polygon : polygons)
+    // {
+    //     polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
+    // }
+
+    // for (auto rectangle : rectangles)
+    // {
+    //     rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
+    // }
+
+    // if (circles.size() + polygons.size() + rectangles.size() > 1)
+    // {
+    //     std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
+    //     //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+    // }
+
+    //Alternative rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
+    auto center = get_center();
+    ctx->translate(center.first * scale, center.second * scale);
+    ctx->rotate(local_orientation);
+    ctx->translate(-1.0 * center.first * scale, -1.0 * center.second * scale);
+
     for (auto circle : circles)
     {
-        circle.draw(ctx, scale, 0, 0, 0, local_orientation);
+        circle.draw(ctx, scale, 0, 0, 0, 0);
     }
-
     for (auto polygon : polygons)
     {
-        polygon.draw(ctx, scale, 0, 0, 0, local_orientation);
+        polygon.draw(ctx, scale, 0, 0, 0, 0);
     }
-
     for (auto rectangle : rectangles)
     {
-        rectangle.draw(ctx, scale, 0, 0, 0, local_orientation);
-    }
-
-    if (circles.size() + polygons.size() + rectangles.size() > 1)
-    {
-        std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
-        //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+        rectangle.draw(ctx, scale, 0, 0, 0, 0);
     }
 
     ctx->restore();
@@ -175,44 +196,80 @@ void Shape::transform_context(const DrawingContext& ctx, double scale)
 {
     //Just move the coordinate system's center to one of the shape's centroids
     //TODO: Find better point than just some random point within a part of the shape
-    if (circles.size() > 0)
+    // if (circles.size() > 0)
+    // {
+    //     auto center = circles.at(0).get_center();
+    //     ctx->translate(center.first * scale, center.second * scale);
+    // }
+    // else if (polygons.size() > 0)
+    // {
+    //     auto center = polygons.at(0).get_center();
+    //     //Center is computed from vertices, type is not std::optional and not const
+    //     ctx->translate(center.first * scale, center.second * scale);
+    // }
+    // else if (rectangles.size() > 0)
+    // {
+    //     auto center = rectangles.at(0).get_center();
+    //     ctx->translate(center.first * scale, center.second * scale);
+    // }
+
+    //TODO: Is the center the best point to choose?
+    auto center = get_center();
+    ctx->translate(center.first * scale, center.second * scale);
+
+    if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
     {
-        auto center = circles.at(0).get_center();
-        ctx->translate(center.first * scale, center.second * scale);
+        std::stringstream error_stream;
+        error_stream << "Cannot transform context when shape position is empty / only lanelet references are used right now, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
-    else if (polygons.size() > 0)
+}
+
+CommonroadDDSShape Shape::to_dds_msg()
+{
+    CommonroadDDSShape dds_shape;
+
+    std::vector<CommonroadDDSCircle> dds_circles;
+    for (auto circle : circles)
     {
-        auto center = polygons.at(0).get_center();
-        //Center is computed from vertices, type is not std::optional and not const
-        ctx->translate(center.first * scale, center.second * scale);
+        dds_circles.push_back(circle.to_dds_msg());
     }
-    else if (rectangles.size() > 0)
+
+    std::vector<CommonroadDDSPolygon> dds_polygons;
+    for (auto polygon : polygons)
     {
-        auto center = rectangles.at(0).get_center();
-        ctx->translate(center.first * scale, center.second * scale);
+        dds_polygons.push_back(polygon.to_dds_msg());
     }
+
+    std::vector<CommonroadDDSRectangle> dds_rectangles;
+    for (auto rectangle : rectangles)
+    {
+        dds_rectangles.push_back(rectangle.to_dds_msg());
+    }
+
+    dds_shape.circles(rti::core::vector<CommonroadDDSCircle>(dds_circles));
+    dds_shape.polygons(rti::core::vector<CommonroadDDSPolygon>(dds_polygons));
+    dds_shape.rectangles(rti::core::vector<CommonroadDDSRectangle>(dds_rectangles));
+
+    return dds_shape;
 }
 
 //********************************************************************************************************************************************
 //Getter
 //********************************************************************************************************************************************
 
-std::optional<double> Shape::get_orientation()
+
+const std::vector<Circle>& Shape::get_circles() const
 {
-    //Get mean orientation from shapes, if they exist
-    double orientation = 0.0;
-    double orientation_count = 0.0;
+    return circles;
+}
 
-    for (auto rectangle : rectangles)
-    {
-        orientation += rectangle.get_orientation().value_or(0.0);
-        ++orientation_count;
-    }
+const std::vector<Polygon>& Shape::get_polygons() const
+{
+    return polygons;
+}
 
-    if (orientation_count > 0)
-    {
-        orientation /= orientation_count;
-    }
-
-    return std::optional<double>(orientation);
+const std::vector<Rectangle>& Shape::get_rectangles() const
+{
+    return rectangles;
 }

@@ -33,6 +33,10 @@
 #include "cpm/get_topic.hpp"
 #include <dds/pub/ddspub.hpp>
 
+/**
+ * \class TrajectoryCommand
+ * \brief Using this class, trajectories from 2D paths can be created and sent to the vehicles
+ */
 class TrajectoryCommand
 {
     std::mutex _mutex;

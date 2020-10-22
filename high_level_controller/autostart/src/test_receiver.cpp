@@ -36,7 +36,7 @@
 
 #include <dds/pub/ddspub.hpp>
 
-#include "ReadyStatus.hpp"
+#include "HLCHello.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -51,8 +51,8 @@ int main (int argc, char *argv[]) {
     cpm::Logging::Instance().set_id("hlc_hello");
 
     //Create DataReader that reads NUC ready messages
-    cpm::AsyncReader<ReadyStatus> reader(
-        [](dds::sub::LoanedSamples<ReadyStatus>& samples){
+    cpm::AsyncReader<HLCHello> reader(
+        [](dds::sub::LoanedSamples<HLCHello>& samples){
             for (auto sample : samples)
             {
                 if(sample.info().valid())
@@ -63,7 +63,7 @@ int main (int argc, char *argv[]) {
             }
         },
         cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<ReadyStatus>("hlc_startup")
+        cpm::get_topic<HLCHello>("hlc_hello")
     );
 
     std::cout << "Press Enter to stop the program" << std::endl;

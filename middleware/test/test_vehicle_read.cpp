@@ -80,7 +80,6 @@ TEST_CASE( "VehicleCommunication_Read" ) {
         vehicleTrajectoryTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicle_ids.at(0),
         timer,
         vehicle_ids);
 

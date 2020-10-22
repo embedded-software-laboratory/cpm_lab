@@ -42,6 +42,7 @@
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/params/ParamViewUI.hpp"
 
+#include "ObstacleSimulationManager.hpp"
 #include "TimerModelRecord.hpp"
 #include "TimerTrigger.hpp"
 
@@ -107,8 +108,19 @@ private:
      */
     std::string get_human_readable_time_diff(uint64_t other_time);
 
+    //Class to simulate obstacles based on the loaded commonroad file
+    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
+
 public:
-    TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger);
+/**
+     * \brief Constructor
+     * \param timerTrigger E.g. to send stop signals
+     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
+     */
+    TimerViewUI(
+        std::shared_ptr<TimerTrigger> timerTrigger,
+        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+    );
     ~TimerViewUI();
     Gtk::Widget* get_parent();
 

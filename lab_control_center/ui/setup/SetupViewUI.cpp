@@ -34,7 +34,7 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-    std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+    std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _on_simulation_start,
@@ -46,7 +46,7 @@ SetupViewUI::SetupViewUI
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
-    get_hlc_ids(_get_hlc_ids),
+    hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
     on_simulation_start(_on_simulation_start),
@@ -111,7 +111,6 @@ SetupViewUI::SetupViewUI
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
         vehicle_toggle->set_selection_callback(std::bind(&SetupViewUI::vehicle_toggle_callback, this, _1, _2));
-
     }
 #ifndef SIMULATION
     // Create labcam
@@ -149,21 +148,23 @@ SetupViewUI::SetupViewUI
 
     //Create upload manager
     upload_manager = std::make_shared<Upload>(
-        _get_hlc_ids,
+        [this] () { return hlc_ready_aggregator->get_hlc_ids_uint8_t(); },
         deploy_functions,
         [this] () { set_sensitive(true); },
         [this] () { button_kill->set_sensitive(true); },
         [this] () { perform_post_kill_cleanup(); }
     );
 
+    //Create crash checker (but don't start it yet, as no simulation is running)
+    crash_checker = std::make_shared<CrashChecker>(
+        deploy_functions,
+        hlc_ready_aggregator,
+        upload_manager
+    );
     both_local_and_remote_deploy.store(false);
 
-    //Create crash checker (but don't start it yet)
-    crash_checker = std::make_shared<CrashChecker>(
-        deploy_functions
-    );
-
     //Set initial text of script path (from previous program execution, if that existed)
+    //We use the default config location here
     script_path->set_text(FileChooserUI::get_last_execution_path());
 
     simulation_running.store(false);
@@ -204,6 +205,7 @@ SetupViewUI::SetupViewUI
                         //Kill simulated vehicle if real vehicle was detected
                         if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
                         {
+                            cpm::Logging::Instance().write(3, "Killing simulated vehicle %i, replaced by real vehicle", static_cast<int>(id));
                             deploy_functions->kill_sim_vehicle(id);
                         }
                     }
@@ -360,7 +362,7 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
 
 void SetupViewUI::ui_dispatch()
 {
-    //Update vehicle toggles for real vehicles or take care of upload window
+    //Update vehicle toggles for real vehicles
     if (update_vehicle_toggles.exchange(false))
     {
         //Update vehicle toggles
@@ -393,6 +395,16 @@ void SetupViewUI::ui_dispatch()
 }
 
 void SetupViewUI::deploy_applications() {
+    //Only allow the simulation to start if there are actually vehicles to control
+    std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
+    auto simulation_possible = vehicle_ids.size() > 0;
+
+    if (!simulation_possible)
+    {
+        cpm::Logging::Instance().write(1, "%s", "LCC Deploy: No vehicles are online, deploy was aborted");
+        return;
+    }
+
     //Grey out UI until kill is clicked
     set_sensitive(false);
     is_deployed.store(true);
@@ -434,22 +446,52 @@ void SetupViewUI::deploy_applications() {
     // Recording
     deploy_functions->deploy_recording();
 
+    //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
+    //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
+    bool file_exists = false;
+    //First make sure that there is anything but spaces in the string
+    std::string filepath_str = script_path->get_text().c_str();
+    if (filepath_str.find_first_not_of(' ') != std::string::npos)
+    {
+        //Now also check if the path actually exists
+        std::experimental::filesystem::path filepath = filepath_str;
+
+        if (std::experimental::filesystem::exists(filepath))
+        {
+            //Update path to absolute path, s.t. deploy remote does not have any problems
+            try
+            {
+                filepath_str = std::experimental::filesystem::absolute(filepath);
+                file_exists = true;
+            }
+            catch(const std::experimental::filesystem::filesystem_error& e)
+            {
+                std::stringstream error_stream;
+                error_stream << "Could not convert given script path to absolute path, error is: " << e.what();
+                cpm::Logging::Instance().write(1, "%s", error_stream.str().c_str());
+            }
+        }
+    }
+
+    std::experimental::filesystem::path filepath = filepath_str;
+    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
+
+    std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
-    if(deploy_remote_toggled)
+    if(deploy_remote_toggled && file_exists)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
 
         //Get current online vehicle and high_level_controller IDs
-        std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
-        if (get_hlc_ids)
+        if (hlc_ready_aggregator)
         {
-            hlc_ids = get_hlc_ids();
+            hlc_ids = hlc_ready_aggregator->get_hlc_ids_uint8_t();
         }
         else 
         {
-            std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
+            cpm::Logging::Instance().write(1, "%s", "No lookup function to get HLC IDs given, cannot deploy on HLCs");
             return;
         }
 
@@ -458,12 +500,14 @@ void SetupViewUI::deploy_applications() {
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
+        remote_hlc_ids = hlc_ids;
+        remote_hlc_ids.erase(remote_hlc_ids.begin() + min_hlc_vehicle, remote_hlc_ids.end());
+
         //Deploy remote
         auto simulated_time = switch_simulated_time->get_active();
-        std::string path = script_path->get_text().c_str();
         std::string params = script_params->get_text().c_str();
 
-        upload_manager->deploy_remote(simulated_time, path, params, hlc_ids, vehicle_ids);
+        upload_manager->deploy_remote(simulated_time, filepath_str, params, hlc_ids, vehicle_ids);
 
         //Now those vehicles that could not be matched are treated as in the local case
         if (vehicle_ids.size() > hlc_ids.size())
@@ -477,7 +521,7 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, script_path->get_text().c_str(), script_params->get_text().c_str());
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
@@ -486,13 +530,19 @@ void SetupViewUI::deploy_applications() {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
         }
     }
+    else if (file_exists)
+    {
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_str, script_params->get_text().c_str());
+    }
     else
     {
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+        cpm::Logging::Instance().write(1, "%s", "Script path is empty or invalid, thus neither script nor middleware could be started");
+        //Possible TODO: Stop in UI immediately (annoying if you want to use commonroad without script, so maybe do not warn at all?)
     }
+    
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(deploy_remote_toggled, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
@@ -590,12 +640,12 @@ void SetupViewUI::perform_post_kill_cleanup()
     reset_timer(switch_simulated_time->get_active(), true);
 
     //TODO: USE ASSERT INSTEAD?
-    //(call all functions that registered for this callback in main)
-    if(on_simulation_stop)
+    //(call all functions that registered for this callback in main) -> callback becomes unnecessary if cleanup was called due to LCC close
+    if(on_simulation_stop && !lcc_closed.load())
     {
         on_simulation_stop();
     }
-    else
+    else if (!on_simulation_stop)
     {
         cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_stop callback missing!");
     }
@@ -707,4 +757,9 @@ void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_ma
 Gtk::Widget* SetupViewUI::get_parent()
 {
     return parent;
+}
+
+std::shared_ptr<CrashChecker> SetupViewUI::get_crash_checker()
+{
+    return crash_checker;
 }

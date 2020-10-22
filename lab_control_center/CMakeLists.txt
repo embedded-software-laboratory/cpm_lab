@@ -49,6 +49,8 @@ include_directories(../mid_level_controller/src)
 set(COMMONROAD
     src/commonroad_classes/CommonRoadScenario.hpp
     src/commonroad_classes/CommonRoadScenario.cpp
+    src/commonroad_classes/CommonRoadTransformation.hpp
+    src/commonroad_classes/CommonRoadTransformation.cpp
     src/commonroad_classes/Crossing.hpp
     src/commonroad_classes/Crossing.cpp
     src/commonroad_classes/DynamicObstacle.hpp
@@ -67,6 +69,7 @@ set(COMMONROAD
     src/commonroad_classes/TrafficSign.cpp
 
     src/commonroad_classes/InterfaceTransform.hpp
+    src/commonroad_classes/InterfaceTransformTime.hpp
     src/commonroad_classes/InterfaceDraw.hpp
     src/commonroad_classes/InterfaceGeometry.hpp
 
@@ -102,6 +105,8 @@ set(COMMONROAD
 
     src/commonroad_classes/SpecificationError.hpp
     src/commonroad_classes/SpecificationError.cpp
+
+    src/commonroad_classes/ObstacleSimulationData.hpp
 )
 
 # labcam
@@ -117,6 +122,8 @@ add_executable(lab_control_center
     src/ObstacleSimulationManager.cpp
     src/ObstacleAggregator.cpp
     src/ObstacleAggregator.hpp
+    src/LCCErrorLogger.hpp
+    src/LCCErrorLogger.cpp
     src/LogLevelSetter.hpp
     src/LogLevelSetter.cpp
     src/LogStorage.hpp
@@ -142,6 +149,9 @@ add_executable(lab_control_center
 
     ui/commonroad/CommonroadViewUI.hpp
     ui/commonroad/CommonroadViewUI.cpp
+    ui/commonroad/ObstacleToggle.hpp
+    ui/commonroad/ObstacleToggle.cpp
+    ui/commonroad/ProblemModelRecord.hpp
     ui/monitoring/MonitoringUi.cpp
     ui/monitoring/MonitoringUi.hpp
     ui/map_view/MapViewUi.cpp
@@ -161,6 +171,9 @@ add_executable(lab_control_center
     ui/timer/TimerViewUI.hpp
     ui/timer/TimerViewUI.cpp
     ui/timer/TimerModelRecord.hpp
+    ui/lcc_errors/LCCErrorViewUI.hpp
+    ui/lcc_errors/LCCErrorViewUI.cpp
+    ui/lcc_errors/LCCErrorModelRecord.hpp
     ui/logger/LoggerViewUI.hpp
     ui/logger/LoggerViewUI.cpp
     ui/logger/LoggerModelRecord.hpp
@@ -176,7 +189,6 @@ add_executable(lab_control_center
     ui/setup/UploadWindow.cpp
     ui/setup/VehicleToggle.hpp
     ui/setup/VehicleToggle.cpp
-
     ui/MainWindow.cpp
     ui/MainWindow.hpp
 
@@ -188,6 +200,8 @@ add_executable(lab_control_center
     src/ParameterServer.hpp
     src/ParameterStorage.cpp
     src/ParameterStorage.hpp
+    src/RTTAggregator.hpp
+    src/RTTAggregator.cpp
     src/TrajectoryCommand.cpp
     src/TrajectoryCommand.hpp
     src/main.cpp
@@ -197,9 +211,9 @@ add_executable(lab_control_center
 
 
 if(NOT SIMULATION)
-    target_link_libraries(lab_control_center cpm yaml-cpp labcamlib ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp stdc++fs labcamlib ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 else()
-    target_link_libraries(lab_control_center cpm yaml-cpp ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
+    target_link_libraries(lab_control_center cpm yaml-cpp stdc++fs ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
 endif()
 
 target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})
@@ -222,13 +236,3 @@ add_executable(VisualizationTest
 )
 
 target_link_libraries(VisualizationTest cpm)
-
-add_executable(CommonRoadTest
-    test/CommonRoadTest.cpp
-
-    ${COMMONROAD}
-)
-
-target_link_libraries(CommonRoadTest cpm ${LibXML++_LIBRARIES} ${GTKMM_LIBRARIES})
-target_include_directories(CommonRoadTest PUBLIC ${GTKMM_INCLUDE_DIRS})
-target_compile_options(CommonRoadTest PUBLIC ${GTKMM_CFLAGS_OTHER})

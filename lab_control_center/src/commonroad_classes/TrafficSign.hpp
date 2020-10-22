@@ -48,6 +48,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -65,12 +67,11 @@ struct TrafficSignPost
  * \struct TrafficSignElement
  * \brief Specifies a traffic sign post
  * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
- * TODO: Look up default values, position must not be specified!
  */
 struct TrafficSignElement
 {
     std::vector<TrafficSignPost> traffic_sign_posts;
-    std::optional<Position> position; //Must be exact according to spec! Ptr because we do not have a default constructor
+    std::optional<Position> position = std::nullopt; //Must be exact according to spec! Ptr because we do not have a default constructor
     std::vector<bool> is_virtual;
 };
 
@@ -88,12 +89,10 @@ private:
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A trafficSign node
      */
     TrafficSign(const xmlpp::Node* node);
-
-    //TODO: Constructor, getter
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -117,4 +116,7 @@ public:
      * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+
+    //Getter
+    const std::vector<TrafficSignElement>& get_traffic_sign_elements() const;
 };

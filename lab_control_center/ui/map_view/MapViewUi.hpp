@@ -87,7 +87,12 @@ class MapViewUi
     double mouse_y = 0;
 
     bool mouse_left_button = false;
-    bool mouse_right_button = false;
+    bool mouse_right_button = false; //The right mouse button or (new) the arrow keys can be used to move the view
+    bool key_up = false;
+    bool key_down = false;
+    bool key_right = false;
+    bool key_left = false;
+    double key_move = 5.0; //Move value during key press, moved each time the dispatcher is called (change for higher / lower speed)
 
     //Used for dragging the view with the right mouse button
     double old_event_x = 0;
@@ -99,6 +104,11 @@ class MapViewUi
 
     void draw_grid(const DrawingContext& ctx);
 
+    /**
+     * \brief Draw the boundaries of the IPS / Lab to allow for fine-tuning the adjustment of commonroad maps, see where vehicle can be put etc.
+     */
+    void draw_lab_boundaries(const DrawingContext& ctx);
+
     void draw_vehicle_past_trajectory(
         const DrawingContext& ctx, 
         const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries
@@ -109,6 +119,11 @@ class MapViewUi
         const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries, 
         uint8_t vehicle_id
     );
+    /**
+     * \brief Draw vehicles that were received in form of commonroad shape messages ('static' vehicles defined by the commonroad file)
+     */
+    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
+    std::pair<double, double> get_shape_center(CommonroadDDSShape& shape);
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
 
