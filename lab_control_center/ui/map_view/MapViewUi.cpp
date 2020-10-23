@@ -389,7 +389,7 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 {
     VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory_command_callback();
 
-
+    ctx->save();
     for(const auto& entry : vehicleTrajectories) 
     {
         //const auto vehicle_id = entry.first;
@@ -401,14 +401,19 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
         
         uint64_t t_now = cpm::get_time_ns();
 
+        ctx->set_line_width(0.01);
+
         // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
         // start from 1 because of i-1
         for (size_t i = 1; i < trajectory_segment.size(); ++i)
         {
             const int n_interp = 20;
-            ctx->set_line_width(0.01);
             
-            for (int interp_step = 0; interp_step <= n_interp; ++interp_step)
+            ctx->begin_new_path();
+            ctx->move_to(trajectory_segment[i-1].px(),
+                         trajectory_segment[i-1].py()
+            );   
+            for (int interp_step = 1; interp_step <= n_interp; ++interp_step)
             {
                 const uint64_t delta_t = 
                         trajectory_segment[i].t().nanoseconds() 
@@ -423,7 +428,9 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
                 );
                 
                 ctx->line_to(interp.position_x,
-                             interp.position_y);
+                             interp.position_y
+                );
+
                 if (t_cur < t_now)
                 {
                     //Color for past segments
@@ -434,12 +441,16 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
                     //Color for current and future segments
                     ctx->set_source_rgb(0,0,0.8);
                 }
+
                 ctx->stroke();
-                ctx->move_to(interp.position_x,interp.position_y);         
+                ctx->move_to(interp.position_x,
+                             interp.position_y
+                );
             }
         }
 
         // Draw trajectory points
+        ctx->begin_new_path();
         for(size_t i = 0; i < trajectory_segment.size(); ++i)
         {
             //Color based on future / current interpolation
@@ -461,6 +472,7 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             ctx->fill();
         }
     }
+    ctx->restore();
 }
 
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
