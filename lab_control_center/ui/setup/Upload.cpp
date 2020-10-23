@@ -93,7 +93,7 @@ void Upload::deploy_remote(
         upload_threads.push_back(std::thread(
             [this] () {
                 usleep(1000000);
-                this->notify_upload_finished(0, true);
+                this->notify_upload_finished(0, true, true); //We do not want upload finished to be set here as well
             }
         ));
         return;
@@ -176,7 +176,7 @@ void Upload::kill_remote()
         upload_threads.push_back(std::thread(
             [this] () {
                 usleep(1000000);
-                this->notify_upload_finished(0, true);
+                this->notify_upload_finished(0, true, true);
             }
         ));
         return;
@@ -196,7 +196,7 @@ void Upload::kill_remote()
                     remote_kill_timeout,
                     std::bind(&Upload::check_if_online, this, hlc_id)
                 );
-                this->notify_upload_finished(hlc_id, kill_worked);
+                this->notify_upload_finished(hlc_id, kill_worked, true);
             }
         ));
     }
@@ -268,7 +268,7 @@ void Upload::ui_dispatch()
     }
 }
 
-void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success)
+void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success, bool is_kill)
 {
     //Just try to join all worker threads here
     std::lock_guard<std::mutex> lock(notify_callback_in_use);
@@ -299,7 +299,7 @@ void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success)
         //Upload was finished
         notify_count = 0;
 
-        upload_done.store(true);
+        if (!is_kill) upload_done.store(true); //Only relevant for deploy, must stay false after kill until next deploy
 
         //Close upload window again, but only after a while
         std::this_thread::sleep_for(std::chrono::seconds(2));

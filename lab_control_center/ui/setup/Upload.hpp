@@ -78,8 +78,9 @@ private:
      * \brief Notify function that gets called by the upload threads when they have finished their work
      * \param hlc_id ID the thread was responsible for
      * \param upload_success Whether the upload was successful
+     * \param is_kill Was added to distinguish between upload and kill, s.t. the system sets "upload done" only to true after deploying, but to false after killing the running programs on the HLC (required for the crash checker)
      */
-    void notify_upload_finished(uint8_t hlc_id, bool upload_success);
+    void notify_upload_finished(uint8_t hlc_id, bool upload_success, bool is_kill = false);
     void join_upload_threads(); //function to join all threads
     bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
     std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
