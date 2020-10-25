@@ -24,20 +24,19 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function [trjMsg, stufMsg] = trajMessage(trajectory_points, vehicle_id, t_now)
+function trjMsg = trajMessage(trajectory_points, vehicle_id, t_start, t_now)
     %% Do not display figures
     set(0,'DefaultFigureVisible','off');
+    if t_start == t_now
+    end
     
     trajectory = VehicleCommandTrajectory;
     trajectory.vehicle_id = uint8(vehicle_id);
     trajectory.header.create_stamp.nanoseconds = t_now;
     trajectory.header.valid_after_stamp.nanoseconds = t_now - 40000000;
-    driven_segment_time = zeros(1,length(trajectory_points));
  
     for nPoints = 1:length(trajectory_points)
-        %nochmam überdenken und anpassen
-        driven_segment_time(nPoints) = trajectory_points(nPoints).t;
-        time = t_now + sum(driven_segment_time);
+        time = t_start + trajectory_points(nPoints).t;
         stamp = TimeStamp;
         stamp.nanoseconds = uint64(time);
         trajectory_points(nPoints).t = stamp;
@@ -46,13 +45,6 @@ function [trjMsg, stufMsg] = trajMessage(trajectory_points, vehicle_id, t_now)
     
     trajectory.trajectory_points = trajectory_points;
     
-    stuffingTraj = VehicleCommandTrajectory;
-    stuffingTraj.vehicle_id = uint8(vehicle_id);
-    stuffingTraj.header.create_stamp.nanoseconds = t_now;
-    stuffingTraj.header.valid_after_stamp.nanoseconds = t_now + 1000000000000;
-    stuffingTraj.trajectory_points = trajectory_points(end);
-    
     % Return msg
     trjMsg = trajectory;
-    stufMsg = stuffingTraj;
 end

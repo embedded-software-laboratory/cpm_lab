@@ -45,7 +45,7 @@ function main_go_to_formation(varargin)
         vehicleList{nVehicles, 1} = strcat('vehicle_', num2str(vehicle_ids{nVehicles}));
     end
     
-    speed = 1; % [m/s]
+    speed = 0.75; % [m/s]
     isDriving = false; %any vehicle currently driving?
     
     %% wait for data if read() is used
@@ -123,6 +123,19 @@ function main_go_to_formation(varargin)
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
             save('sample.mat', 'sample')
             
+            for nVehicles = 1:length(vehicle_ids)
+                stop_now = false;
+                if sample.state_list(1,nVehicles).vehicle_id == 0
+                   disp('Faulty sample. Stopping.')
+                   stop_now = true;
+                   break;
+                end
+            end
+            
+            if stop_now
+                break;
+            end
+            
             startPoses = readPoses(sample.vehicle_observation_list);
             allHomePoses = homePosesFixed;
             goalPoses = startPoses;
@@ -131,15 +144,15 @@ function main_go_to_formation(varargin)
                 goalPoses.(vehicleList{nVehicles}) = allHomePoses(nVehicles);
             end
             
-            isCostMapShown = false;
-            isOccMapShown = false;
+            isCostMapShown = true;
+            isOccMapShown = true;
+            
             for nVehicles = 1:length(vehicleList)
-                
-                
+                                
                 startPoses = readPoses(sample.vehicle_observation_list);
                 disp(startPoses)
-                %TODO automatic detection of ego vehicle
-                egoVehicle = vehicleList{nVehicles};
+                
+                egoVehicle = vehicleList{nVehicles}; %TODO advanced detection of ego vehicle
                
                 map = setOccMap(startPoses, egoVehicle);
                 if isOccMapShown == false
@@ -154,9 +167,10 @@ function main_go_to_formation(varargin)
                     figure(Fig)
                     isCostMapShown = true;
                 end
-                
+%                 
                 trajectory_points = pathToTrajectory(refPath, speed);
-    %             
+                
+    %           
     %             % Check if any new message was received (TODO: throw away all messages that were received during computation)
     %             if stateSampleCount > 0                
     %                 disp('Current time:');
@@ -164,28 +178,39 @@ function main_go_to_formation(varargin)
 
                  [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
                  save('sample.mat', 'sample')
-                 [trjMsg, stufMsg] = trajMessage(trajectory_points, 1, sample.t_now);
+                 t_start = sample.t_now;
+                 trjMsg = trajMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, sample.t_now);
                  trajectoryWriter.write(trjMsg);
+                 
                  isDriving = true;
                  stop_now = false;
+                 t_now = t_start;
                  
-                 while(isDriving)
+                 while(t_now <= t_start + trajectory_points(end).t)
                      
                     disp('Checking system trigger for stop signal');
                     [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
                     current_time = trigger.next_start().nanoseconds();
-                        if current_time == trigger_stop
-                            disp("Stopping");
-                            stop_now = true;
-                            break;
-                        end
+                    if current_time == trigger_stop
+                        disp("Stopping");
+                        stop_now = true;
+                        break;
+                    end
                                                     
-                     [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
-                     map = setOccMap(startPoses, egoVehicle);
-                     if checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]) == 1
-                         isDriving = false;
-                     end
-                     trajectoryWriter.write(stufMsg)
+                    [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                    t_now = sample.t_now;
+%                     currentPoses = readPoses(sample.vehicle_observation_list);
+%                     map = setOccMap(currentPoses, egoVehicle);
+                    occupied = checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]);
+                    disp(occupied)
+                   
+%                     if checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]) == 1
+%                         isDriving = false;
+%                         break;
+%                     end
+                    trjMsg = trajMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, sample.t_now);
+                    trajectoryWriter.write(trjMsg);
+                    
                  end
                    
                if stop_now
