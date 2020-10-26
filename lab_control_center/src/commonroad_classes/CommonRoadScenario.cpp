@@ -552,7 +552,6 @@ void CommonRoadScenario::transform_coordinate_system(double translate_x, double 
             } 
 
             //Update center
-            std::cout << "New center after transformation:" << std::endl;
             calculate_center();
         }
 
@@ -801,11 +800,6 @@ void CommonRoadScenario::calculate_center()
         }
     }
 
-    std::cout << "New x_min: " << x_min << std::endl;
-    std::cout << "New x_max: " << x_max << std::endl;
-    std::cout << "New y_min: " << y_min << std::endl;
-    std::cout << "New y_max: " << y_max << std::endl;
-
     //Set values to zero if no values could be found in any of the lanelets
     if (lanelets.size() == 0 || uninitialized)
     {
@@ -821,8 +815,6 @@ void CommonRoadScenario::calculate_center()
     //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
     center.first -= 2.25;
     center.second -= 2.0;
-
-    std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }
 
 const std::string& CommonRoadScenario::get_author()
