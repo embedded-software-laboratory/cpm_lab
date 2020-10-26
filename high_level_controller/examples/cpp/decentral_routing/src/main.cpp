@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     // Initialize everything needed for communication with middleware
     const int dds_domain = cpm::cmd_parameter_int("dds_domain", 1, argc, argv);
     // QoS for comms between middleware and HLC, on the same machine (local)
-    dds::core::QosProvider local_comms_qos_provider("QOS_LOCAL_COMMUNICATION.xml");
+    dds::core::QosProvider local_comms_qos_provider("./build/QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(dds_domain, local_comms_qos_provider.participant_qos());
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
@@ -157,14 +157,9 @@ int main(int argc, char *argv[]) {
     );
 
     // Reader to get position of vehicle from lab camera; determines start position
-    //dds::sub::DataReader<VehicleObservation> reader_vehicleObservation(
-    //        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
-    //        cpm::get_topic<VehicleObservation>("vehicleObservation")
-    //);
-    
-    cpm::MultiVehicleReader<VehicleObservation> ips_reader(
-        cpm::get_topic<VehicleObservation>("vehicleObservation"),
-        5
+    dds::sub::DataReader<VehicleObservation> reader_vehicleObservation(
+            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
+            cpm::get_topic<VehicleObservation>("vehicleObservation")
     );
 
     // Writer to communicate plans with other vehicles
@@ -269,16 +264,13 @@ int main(int argc, char *argv[]) {
              */
             bool matched = false;
             while(!matched) {
-                //dds::sub::LoanedSamples<VehicleObservation> samples =
-                //    reader_vehicleObservation.take();
-                std::map<uint8_t, VehicleObservation> ips_sample;
-                std::map<uint8_t, uint64_t> ips_sample_age;
-                ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
+                dds::sub::LoanedSamples<VehicleObservation> samples =
+                    reader_vehicleObservation.take();
 
-                for(auto sample:ips_sample)
+                for(auto sample:samples)
                 {
-                    auto data = sample.second;
-                    if( vehicle_id == data.vehicle_id()) {
+                    auto data = sample.data();
+                    if( vehicle_id == data.vehicle_id() && sample.info().valid()) {
                         auto pose = data.pose();
                         int out_edge_index = -1;
                         int out_edge_path_index = -1;
