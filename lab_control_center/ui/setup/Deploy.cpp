@@ -649,14 +649,10 @@ int Deploy::execute_command_get_pid(const char* cmd)
     {
         //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
         setpgid(0, 0);
-
-        //Append to command that the output should not be shown
-        std::stringstream command_stream;
-        command_stream << cmd << " >/dev/null 2>&1";
         
         //Actions to take within the new child process
-        //IMPORTANT: USE chmod u+x for your files, else: permission denied
-        execl("/bin/sh", "bash", "-c", command_stream.str().c_str(), NULL);
+        //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
+        execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
         cpm::Logging::Instance().write(1, "Execl error in Deploy class: %s, for execution of '%s'", std::strerror(errno), cmd);
