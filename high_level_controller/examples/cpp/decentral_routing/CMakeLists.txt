@@ -24,7 +24,7 @@ link_libraries(dl nsl m pthread rt)
 
 add_executable(decentral_routing
     src/main.cpp
-    include/lane_graph_full/lane_graph.hpp
+    include/lane_graph_one_lane/lane_graph.hpp
     src/lane_graph_tools.hpp
     src/lane_graph_tools.cpp
     src/VehicleTrajectoryPlanningState.hpp
