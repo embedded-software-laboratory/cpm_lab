@@ -25,7 +25,7 @@ for i = 1:length(homePoses)
         row = 1 + floor(i/vehicleColumns); % vehicle count in x (=columns)
     end
     homePoses(i).x = vehicleHalfWidth + column * clearance + (column-1) * vehicleWidth ;
-    homePoses(i).y = mapY - (vehicleLength-vehicleRearOverhang) - row * clearance - (row-1) * vehicleLength;
+    homePoses(i).y = mapY - (vehicleLength-vehicleRearOverhang) - row * clearance - (row-1) * vehicleLength * 2;
     homePoses(i).yaw = 90;
     
 end

@@ -12,7 +12,7 @@ vehicleHalfWidth = vehicleWidth/2;
 maxNoVehicles = 20;
 vehicleRows = 3;
 vehicleColumns = ceil(maxNoVehicles/vehicleRows);
-clearance = vehicleHalfWidth; % safety distance vehicle to vehicle and vehicle to map edge [m]
+clearance = vehicleHalfLength; % safety distance vehicle to vehicle and vehicle to map edge [m]
 
 goalPoses = startPoses;
 homePoses = zeros(maxNoVehicles, 3);
@@ -29,7 +29,7 @@ for nHomePoses = 1:maxNoVehicles
         row = 1 + floor(nHomePoses/vehicleColumns); % vehicle count in x (=columns)
     end
     homePoses(nHomePoses, 1) = vehicleHalfWidth + column * clearance + (column-1) * vehicleWidth ;
-    homePoses(nHomePoses, 2) = mapY - (vehicleLength-vehicleRearOverhang) - row * clearance - (row-1) * vehicleLength;
+    homePoses(nHomePoses, 2) = mapY - (vehicleLength-vehicleRearOverhang) - row * clearance - (row-1) * vehicleLength * 3;
 end   
 
 

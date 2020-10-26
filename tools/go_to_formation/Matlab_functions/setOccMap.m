@@ -20,7 +20,6 @@ occval = 1;
 corners = struct;
 
 for nVehicles = 1:length(vehicleList)
-    
     if vehicleList{nVehicles} == egoVehicle
         continue
     end

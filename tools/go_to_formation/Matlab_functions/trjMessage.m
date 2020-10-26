@@ -24,7 +24,7 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function trjMsg = trajMessage(trajectory_points, vehicle_id, t_start, t_now)
+function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now)
     %% Do not display figures
     set(0,'DefaultFigureVisible','off');
     if t_start == t_now
