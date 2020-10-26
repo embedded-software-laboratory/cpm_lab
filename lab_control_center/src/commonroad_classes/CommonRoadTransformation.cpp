@@ -49,7 +49,14 @@ void CommonRoadTransformation::set_scenario_name(std::string scenario_path)
     yaml_transform_profile = YAML::Clone(old_yaml_transform_profile);
 }
 
-void CommonRoadTransformation::load_transformation_from_profile(double& time_scale, double& scale, double& translate_x, double& translate_y)
+double CommonRoadTransformation::floor_small_values(double val)
+{
+    if (val < min_value) return 0.0;
+
+    return val;
+}
+
+void CommonRoadTransformation::load_transformation_from_profile(double& time_scale, double& min_lane_width, double& translate_x, double& translate_y, double& rotation)
 {
     std::lock_guard<std::mutex> lock(yaml_profile_mutex);
 
@@ -59,18 +66,34 @@ void CommonRoadTransformation::load_transformation_from_profile(double& time_sca
         auto profile = old_yaml_transform_profile[current_file_name];
 
         //Make sure that values exist
-        if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key]))
+        if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key] && profile[rotation_key]))
         {
-            cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
+            cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s, setting default values...", current_file_name.c_str(), transformation_file_location.c_str());
+            set_defaults_for_undefined(profile);
         }
     
         //Load values from profile
-        time_scale = profile[time_scale_key].as<double>();
-        scale = profile[scale_key].as<double>();
-        translate_x = profile[translate_x_key].as<double>();
-        translate_y = profile[translate_y_key].as<double>();
-    }
+        std::cout << "Scale before: " << profile[scale_key].as<double>() << std::endl;
+        std::cout << "Scale after: " << floor_small_values(profile[scale_key].as<double>()) << std::endl;
+        time_scale = floor_small_values(profile[time_scale_key].as<double>());
+        min_lane_width = floor_small_values(profile[scale_key].as<double>());
+        translate_x = floor_small_values(profile[translate_x_key].as<double>());
+        translate_y = floor_small_values(profile[translate_y_key].as<double>());
+        rotation = floor_small_values(profile[rotation_key].as<double>());
 
+        //Reset changes that have not been stored
+        yaml_transform_profile = YAML::Clone(old_yaml_transform_profile);
+    }
+    else
+    {
+        //Default values
+        time_scale = 0.0;
+        min_lane_width = 0.0;
+        translate_x = 0.0;
+        translate_y = 0.0;
+        rotation = 0.0;
+    }
+    
     profile_applied.store(true);
 }
 
@@ -87,7 +110,7 @@ void CommonRoadTransformation::store_transform_profile()
     old_yaml_transform_profile = YAML::Clone(yaml_transform_profile);
 }
 
-void CommonRoadTransformation::add_change_to_transform_profile(double time_scale, double scale, double translate_x, double translate_y)
+void CommonRoadTransformation::add_change_to_transform_profile(double time_scale, double min_lane_width, double translate_x, double translate_y, double rotation)
 {
     std::lock_guard<std::mutex> lock(yaml_profile_mutex);
 
@@ -98,26 +121,30 @@ void CommonRoadTransformation::add_change_to_transform_profile(double time_scale
 
         double translate_x_old = 0.0;
         double translate_y_old = 0.0;
+        double rotation_old = 0.0;
 
         //Only regard old values if they have been loaded before
         if (profile && profile_applied.load())
         {
             //Make sure that values exist
-            if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key]))
+            if (! (profile[time_scale_key] && profile[scale_key] && profile[translate_x_key] && profile[translate_y_key] && profile[rotation_key]))
             {
-                cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s", current_file_name.c_str(), transformation_file_location.c_str());
+                cpm::Logging::Instance().write(1, "Commonroad profile not properly defined for %s in %s, setting default values...", current_file_name.c_str(), transformation_file_location.c_str());
+                set_defaults_for_undefined(profile);
             }
 
             //Load old values from profile
-            translate_x_old = profile[translate_x_key].as<double>();
-            translate_y_old = profile[translate_y_key].as<double>();
+            translate_x_old = floor_small_values(profile[translate_x_key].as<double>());
+            translate_y_old = floor_small_values(profile[translate_y_key].as<double>());
+            rotation_old = floor_small_values(profile[rotation_key].as<double>());
         }
 
         //Store values
-        if ( time_scale > 0 ) profile[time_scale_key] = time_scale;
-        if ( scale > 0 ) profile[scale_key] = scale;
-        profile[translate_x_key] = translate_x_old + translate_x;
-        profile[translate_y_key] = translate_y_old + translate_y;
+        if ( time_scale > 0 ) profile[time_scale_key] = floor_small_values(time_scale);
+        if ( min_lane_width > 0 ) profile[scale_key] = floor_small_values(min_lane_width);
+        profile[translate_x_key] = floor_small_values(translate_x_old + translate_x);
+        profile[translate_y_key] = floor_small_values(translate_y_old + translate_y);
+        profile[rotation_key] = floor_small_values(std::fmod((rotation_old + rotation), 2.0 * M_PI)); //Modulo 2*Pi for rotation value
 
         //Now we are in a situation where, if the profile was applied before or not, we now use the same profile as the one stored in the profile node
         //As changes are additive from here on, we need to reuse old values
@@ -147,4 +174,33 @@ void CommonRoadTransformation::reset_current_transform_profile()
 
     //Then store that change
     store_transform_profile();
+}
+
+void CommonRoadTransformation::set_defaults_for_undefined(YAML::Node& profile)
+{
+    
+    if (! (profile[time_scale_key]))
+    {
+        profile[time_scale_key] = 0.0;
+    }
+
+    if (! (profile[scale_key]))
+    {
+        profile[scale_key] = 0.0;
+    }
+
+    if (! (profile[translate_x_key]))
+    {
+        profile[translate_x_key] = 0.0;
+    }
+
+    if (! (profile[translate_y_key]))
+    {
+        profile[translate_y_key] = 0.0;
+    }
+
+    if (! (profile[rotation_key]))
+    {
+        profile[rotation_key] = 0.0;
+    }
 }

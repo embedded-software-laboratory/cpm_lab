@@ -61,10 +61,22 @@ private:
     YAML::Node yaml_transform_profile; //'Working' profile that is immediately changed with each change made by the user ("cache" which might not be used)
     YAML::Node old_yaml_transform_profile; //Remembers state after last save of current setting, s.t. reset to those when loading again is possible without reloading the file
     const std::string time_scale_key = "time_scale";
-    const std::string scale_key = "scale";
+    const std::string scale_key = "min_lane_width";
     const std::string translate_x_key = "translate_x";
     const std::string translate_y_key = "translate_y";
+    const std::string rotation_key = "z_rotation";
     std::atomic_bool profile_applied;
+
+    /**
+     * \brief Helper function to set default values (0.0) for undefined transformation keys (when loading or adding values, for missing values)
+     * Only call w. locked transform mutex & if the profile exists!
+     */ 
+    void set_defaults_for_undefined(YAML::Node& profile);
+
+    /**
+     * \brief Floor the given value to 0 if smaller min_value
+     */
+    double floor_small_values(double val);
 
 public:
     /**
@@ -78,14 +90,16 @@ public:
      */
     void set_scenario_name(std::string scenario_path);
 
+    const double min_value = 1.0e-6;
     /**
-     * \brief Load, if exists, the stored transformation for the current file
+     * \brief Load, if exists, the stored transformation for the current file; values smaller than min_value are set to zero (to avoid values like 6.553e-310)
      * \param time_scale Output, 0.0 if empty, analog to time step size
-     * \param scale Output, 0.0 if empty, analog to lane width
+     * \param min_lane_width Output, 0.0 if empty, analog to lane width
      * \param translate_x Output, 0.0 if empty, translation of coordinates in x direction
      * \param translate_y Output, 0.0 if empty, translation of coordinates in y direction
+     * \param rotation Ouput, 0.0 if empty, rotation of the coordinates around the origin, counter-clockwise
      */   
-    void load_transformation_from_profile(double& time_scale, double& scale, double& translate_x, double& translate_y);
+    void load_transformation_from_profile(double& time_scale, double& min_lane_width, double& translate_x, double& translate_y, double& rotation);
 
     /**
      * \brief Store the transform profile that stores previously used transformations for commonroad scenarios
@@ -93,14 +107,15 @@ public:
     void store_transform_profile();
 
     /**
-     * \brief Function that adds new transformation values for the currently selected file to the transform profile
+     * \brief Function that adds new transformation values for the currently selected file to the transform profile; values smaller than min_value are set to zero (to avoid values like 6.553e-310)
      * Relative to stored change if profile was loaded before, else overwritten
      * \param time_scale Ignored if <= 0.0, analog to time step size
-     * \param scale Ignored if <= 0.0, analog to lane width
-     * \param translate_x Ignored if <= 0.0, translation of coordinates in x direction
-     * \param translate_y Ignored if <= 0.0, translation of coordinates in y direction
+     * \param min_lane_width Ignored if <= 0.0, analog to lane width
+     * \param translate_x Translation of coordinates in x direction
+     * \param translate_y Translation of coordinates in y direction
+     * \param rotation Rotation of the coordinates around the origin, counter-clockwise
      */
-    void add_change_to_transform_profile(double time_scale, double scale, double translate_x, double translate_y);
+    void add_change_to_transform_profile(double time_scale, double min_lane_width, double translate_x, double translate_y, double rotation);
 
     /**
      * \brief Reset transform profile for the currently selected files

@@ -110,11 +110,11 @@ public:
         }
 
         //Test output
-        std::cout << "Interval(s): " << std::endl;
-        for (const auto interval : intervals)
-        {
-            std::cout << "\t" << interval.first << " - " << interval.second << std::endl;
-        }
+        // std::cout << "Interval(s): " << std::endl;
+        // for (const auto interval : intervals)
+        // {
+        //     std::cout << "\t" << interval.first << " - " << interval.second << std::endl;
+        // }
     }
 
     //Getter (no setter, as we only want to set Interval at translation or change it using transform_...)
@@ -157,6 +157,20 @@ public:
         return avgs;
     }
 
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        for (auto interval : intervals)
+        {
+            greater_zero &= (interval.first >= 0); //Due to sample files, this seems to be allowed to be zero
+            greater_zero &= (interval.second > 0);
+
+            if (!greater_zero) break;
+        }
+
+        return greater_zero;
+    }
+
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push
@@ -170,7 +184,7 @@ public:
      * \param translate_x Currently ignored, must be changed if this is used for position values
      * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         for (auto &interval : intervals)
         {

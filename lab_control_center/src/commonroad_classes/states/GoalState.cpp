@@ -29,8 +29,10 @@
 GoalState::GoalState(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-    std::function<std::pair<double, double> (int)> _get_lanelet_center
-    )
+    std::function<std::pair<double, double> (int)> _get_lanelet_center,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
+    ) :
+    draw_configuration(_draw_configuration)
 {
     //2018 and 2020 specs are the same
     //Check if node is of type goal state
@@ -63,6 +65,15 @@ GoalState::GoalState(
         if (time_node)
         {
             time = std::optional<IntervalOrExact>(std::in_place, time_node);
+
+            //Time must have a value; make sure that, as specified, the value is greater than zero
+            if (! time.value().is_greater_zero())
+            {
+                std::stringstream error_stream;
+                error_stream << "Time must be greater than zero, in line: ";
+                error_stream << time_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {
@@ -90,24 +101,24 @@ GoalState::GoalState(
     }
 
     //Test output
-    std::cout << "GoalState: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
-    std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
-    std::cout << "\tTime exists: " << time.has_value() << std::endl;
+    // std::cout << "GoalState: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
+    // std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
+    // std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(scale, 0, 0);
+        velocity->transform_coordinate_system(scale, angle, 0, 0);
     }
 
     if (scale > 0)
@@ -120,12 +131,14 @@ void GoalState::transform_timing(double time_scale)
 {
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(time_scale, 0, 0);
+        velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
 }
 
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    assert(draw_configuration);
+
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
 
@@ -145,7 +158,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         for (auto& middle : orientation->get_interval_avg())
         {
             ctx->save();
-            ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+            ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
 
             if(position.has_value())
             {
@@ -156,50 +169,53 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
 
             //Draw arrow
             double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-            draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
+            draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
             
             ctx->restore();
         }
     }
 
-    //Draw time, velocity
-    std::stringstream descr_stream;
-    descr_stream << "Goal info - " << std::endl;
-    if (time.has_value())
+    //Draw time, velocity description
+    if (draw_configuration->draw_goal_description.load())
     {
-        descr_stream << "t (mean): " << time.value().get_mean();
-    }
-    if (velocity.has_value())
-    {
-        auto velocity_values = velocity.value().get_interval_avg();
-        double sum = 0.0;
-        double cnt = 0.0;
-        for (auto value : velocity_values)
-        {
-            sum += value;
-            cnt += 1;
-        }
-        double avg = 0.0;
-        if (cnt > 0)
-        {
-            avg = sum /cnt;
-        }
-
+        std::stringstream descr_stream;
+        descr_stream << "Goal info - ";
         if (time.has_value())
         {
-            descr_stream << ", v (mean): " << avg;
+            descr_stream << "t (mean): " << time.value().get_mean();
         }
-        else
+        if (velocity.has_value())
         {
-            descr_stream << "v (mean): " << avg;
+            auto velocity_values = velocity.value().get_interval_avg();
+            double sum = 0.0;
+            double cnt = 0.0;
+            for (auto value : velocity_values)
+            {
+                sum += value;
+                cnt += 1;
+            }
+            double avg = 0.0;
+            if (cnt > 0)
+            {
+                avg = sum /cnt;
+            }
+
+            if (time.has_value())
+            {
+                descr_stream << ", v (mean): " << avg;
+            }
+            else
+            {
+                descr_stream << "v (mean): " << avg;
+            }
+        }
+        //Goal information is only shown if a position has been set for the goal
+        if (position.has_value())
+        {
+            position->transform_context(ctx, scale);
+            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
         }
     }
-    if (position.has_value())
-    {
-        position->transform_context(ctx, scale);
-        draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
-    }
-    //Goal information is only shown if a position has been set for the goal
 
     ctx->restore();
 }
