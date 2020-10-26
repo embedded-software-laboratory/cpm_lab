@@ -58,6 +58,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <limits>                           // To get maximum integer value (for stop condition)
 
 // Planner
 #include "VehicleTrajectoryPlanner.hpp"    //sw-folder central routing
@@ -105,6 +106,8 @@ int main(int argc, char *argv[]) {
     // Initialize Planner and constants necessary for planning
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     const uint64_t dt_nanos = 400000000ull;
+    // Definition of time stamp at which to stop
+    const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
     std::unique_ptr<VehicleTrajectoryPlanner> planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
     cpm::Logging::Instance().write(3,
             "Planner created");
@@ -112,7 +115,7 @@ int main(int argc, char *argv[]) {
     // Initialize everything needed for communication with middleware
     const int dds_domain = cpm::cmd_parameter_int("dds_domain", 1, argc, argv);
     // QoS for comms between middleware and HLC, on the same machine (local)
-    dds::core::QosProvider local_comms_qos_provider("./build/QOS_LOCAL_COMMUNICATION.xml");
+    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(dds_domain, local_comms_qos_provider.participant_qos());
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
@@ -193,6 +196,7 @@ int main(int argc, char *argv[]) {
      * Compose and send Ready message
      * ---------------------------------------------------------------------------------
      */
+    // TODO: Why do we need this 5 seconds wait?
     std::this_thread::sleep_for(std::chrono::seconds(5));
     // Create arbitrary timestamp as per ReadyStatus.idl
     TimeStamp timestamp(11111);
@@ -206,14 +210,30 @@ int main(int argc, char *argv[]) {
      * Wait until we receive systemTrigger; then we start
      * ---------------------------------------------------------------------------------
      */
-    bool break_while = false;
-    while(!break_while) {
+    bool got_start = false;
+    while(!got_start) {
         dds::sub::LoanedSamples<SystemTrigger> samples = reader_systemTrigger.take();
         for(auto sample : samples) {
             if (sample.info().valid()) {
-                std::cout << "Received SystemTrigger, starting" << std::endl;
-                break_while = true;
-                break; 
+                uint64_t next_start = sample.data().next_start().nanoseconds();
+                if ( next_start == trigger_stop ) {
+                    std::cout << "Received stop signal" << std::endl;
+                    cpm::Logging::Instance().write(
+                        3,
+                        "HLC of vehicle %s received stop signal",
+                        std::to_string(vehicle_id)
+                    );
+                    // Abort HLC
+                    return 0;
+                } else if ( next_start ) {
+                    std::cout << "Received start signal" << std::endl;
+                    cpm::Logging::Instance().write(
+                        3,
+                        "HLC of vehicle %s received start signal",
+                        std::to_string(vehicle_id)
+                    );
+                    got_start = true;
+                }
             }
         }
     }
@@ -225,14 +245,27 @@ int main(int argc, char *argv[]) {
     auto timer = cpm::Timer::create("decentral_routing", dt_nanos, 0, false, true, simulated_time_enabled); 
     timer->start([&](uint64_t t_now)
     {
+        // Check the systemTrigger Topic for stop signal
         dds::sub::LoanedSamples<SystemTrigger> samples = reader_systemTrigger.take();
-        // Check for stop condition 
         for(auto sample : samples) {
             if (sample.info().valid()) {
-                //TODO: Act, when we receive a SystemTrigger signal
-                std::cout << "Unhandled SystemTrigger" << std::endl;
+                uint64_t next_start = sample.data().next_start().nanoseconds();
+
+                // Stop the HLC when we receive a stop signal
+                // Probably superfluous, since the timer stops by itself on
+                // stop signals.
+                if( next_start == trigger_stop ) {
+                    std::cout << "Received stop signal" << std::endl;
+                    cpm::Logging::Instance().write(
+                        3,
+                        "HLC of vehicle %s received stop signal",
+                        std::to_string(vehicle_id)
+                    );
+                    timer->stop();
+                }
             }
         }
+
         planner->set_real_time(t_now);
 
         if(planner->is_started())//will be set to true after fist activation
@@ -300,6 +333,10 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+            /* -------------------------------------------------------------------------
+             * Finish initializing vehicle when we found its start position
+             * -------------------------------------------------------------------------
+             */
             planner->set_writer(
                 std::make_shared<dds::pub::DataWriter<LaneGraphTrajectoryChanges>>(
                     writer_laneGraphTrajectoryChanges
@@ -317,4 +354,6 @@ int main(int argc, char *argv[]) {
             planner->start();
         }
     });
+
+    return 0;
 }
