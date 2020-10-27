@@ -45,7 +45,7 @@ namespace cpm
             property.set(std::make_pair<std::string, std::string>
                 ("dds.transport.UDPv4.builtin.multicast_enabled", "0"));
 
-            std::vector<std::string> initial_peer_list { "builtin.udpv4://127.0.0.1" };
+            std::vector<std::string> initial_peer_list { "20@builtin.udpv4://127.0.0.1" };
 
             const std::string initial_peer_cfg = cpm::InternalConfiguration::Instance().get_dds_initial_peer();
             if(!initial_peer_cfg.empty())
