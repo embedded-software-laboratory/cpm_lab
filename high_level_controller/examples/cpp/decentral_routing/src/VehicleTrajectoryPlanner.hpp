@@ -29,14 +29,20 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <functional> // For std::placeholder
 #include "cpm/Logging.hpp"
-#include "cpm/ParticipantSingleton.hpp"
 #include <dds/sub/ddssub.hpp>
 #include <dds/pub/ddspub.hpp>
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
 #include "LaneGraphTrajectoryChanges.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
+
+// For testing of AsyncReader
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/AsyncReader.hpp"
+#include "cpm/get_topic.hpp"
+#include <dds/sub/ddssub.hpp>
 
 using std::vector;
 
@@ -46,7 +52,7 @@ class VehicleTrajectoryPlanner
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> previous_vehicles_buffer;
     LaneGraphTrajectory old_lane_graph_trajectory;
     std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer_laneGraphTrajectoryChanges;
-    std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader_laneGraphTrajectoryChanges;
+    std::unique_ptr< cpm::AsyncReader<LaneGraphTrajectoryChanges> > asyncReader_laneGraphTrajectoryChanges;
     bool started = false;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
@@ -55,7 +61,7 @@ class VehicleTrajectoryPlanner
     std::thread planning_thread;
     const uint64_t dt_nanos;
     vector<TrajectoryPoint> trajectory_point_buffer;
-    void read_previous_vehicles();
+    void read_previous_vehicles(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples);
     void apply_timestep();
     vector<LaneGraphTrajectoryChanges> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
     void write_changes( vector<LaneGraphTrajectoryChanges> vector_changes );
@@ -76,7 +82,7 @@ public:
             std::map<uint8_t, std::vector<VehicleCommandTrajectory> > trajectory_samples
     );
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer);
-    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader);
     void start();
+    void process_samples(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples);
 
 };

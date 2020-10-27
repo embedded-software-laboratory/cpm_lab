@@ -172,10 +172,10 @@ int main(int argc, char *argv[]) {
     );
 
     // Reader to receive planned trajectories of other vehicles
-    dds::sub::DataReader<LaneGraphTrajectoryChanges> reader_laneGraphTrajectoryChanges(
-            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
-    );
+    //dds::sub::DataReader<LaneGraphTrajectoryChanges> reader_laneGraphTrajectoryChanges(
+    //        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+    //        cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+    //);
     //std::function<void()> callback_func([planner](dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples){
     //        planner->process_samples(samples);
     //        });
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
                         int out_edge_index = -1;
                         int out_edge_path_index = -1;
                         matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
-                        //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
+                        //if vehicle was found on map, add vehicle to VehicleTrajectoryPlanner
                         if(matched)
                         {
                             planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
@@ -342,12 +342,6 @@ int main(int argc, char *argv[]) {
                     writer_laneGraphTrajectoryChanges
                     )
                 );
-            planner->set_reader(
-                std::make_shared<dds::sub::DataReader<LaneGraphTrajectoryChanges>>(
-                    reader_laneGraphTrajectoryChanges
-                    )
-                );
-            //planner->init_reader(cpm::ParticipantSingleton::Instance());
 
             //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
             //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)

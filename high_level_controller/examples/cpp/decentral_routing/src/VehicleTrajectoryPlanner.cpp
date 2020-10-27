@@ -28,7 +28,18 @@
 
 
 
-VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
+VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){
+    asyncReader_laneGraphTrajectoryChanges = std::unique_ptr<cpm::AsyncReader<LaneGraphTrajectoryChanges> >(
+            new cpm::AsyncReader<LaneGraphTrajectoryChanges>(
+                std::bind(
+                    &VehicleTrajectoryPlanner::read_previous_vehicles,
+                    this,
+                    std::placeholders::_1),
+                cpm::ParticipantSingleton::Instance(),
+                cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+            )
+    );
+}
 
 VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
     if ( planning_thread.joinable() ) planning_thread.join();
@@ -36,8 +47,6 @@ VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
 
 VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64_t t_now)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     VehicleCommandTrajectory vehicleCommandTrajectory;
     vehicleCommandTrajectory.vehicle_id(trajectoryPlan->get_vehicle_id());
     vehicleCommandTrajectory.trajectory_points(
@@ -85,8 +94,6 @@ void VehicleTrajectoryPlanner::start()
             // Priority based collision avoidance: Every vehicle avoids 
             // the 'previous' vehicles, in this example those with a smaller ID.
             bool is_collision_avoidable = false;
-
-            this->read_previous_vehicles();
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
 
@@ -147,34 +154,41 @@ void VehicleTrajectoryPlanner::start()
 
 }
 
-void VehicleTrajectoryPlanner::read_previous_vehicles()
+void VehicleTrajectoryPlanner::read_previous_vehicles(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples)
 {
+    //TODO: Can we maybe receive samples before starting?
+    if(!started){
+        return;
+    }
     assert(started);
 
-    dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples = reader_laneGraphTrajectoryChanges->take();
+    //dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples = reader_laneGraphTrajectoryChanges->take();
     for(auto sample : samples) {
         if (sample.info().valid()) {
             // We ignore everything with lower priorities
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
 
-            // Calculate, which index the timestamp of the received message corresponds to
-            uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
-            size_t index_offset = time_diff / dt_nanos;
-            uint64_t speed_steps_per_time_step = 25;
+            {
+                //TODO: Make t_planning thread safe again
+                // Calculate, which index the timestamp of the received message corresponds to
+                uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
+                size_t index_offset = time_diff / dt_nanos;
+                uint64_t speed_steps_per_time_step = 25;
 
-            //FIXME: After a restart, there temporarily is an unrealistically large offset
-            if(index_offset > 100) {
-                std::cout << "Received data with unfeasible timestamp";
-            }
-            
-            // Save all received change messages that are not in the past already
-            for ( auto change : sample.data().lane_graph_position_changes() ) {
-                if( change.index() - speed_steps_per_time_step*index_offset > 0 ) {
-                    previous_vehicles_buffer[sample.data().vehicle_id()][change.index() - speed_steps_per_time_step*index_offset] =
-                        std::make_pair(
-                            change.lane_graph_position().edge_index(),
-                            change.lane_graph_position().edge_path_index()
-                            );
+                //FIXME: After a restart, there temporarily is an unrealistically large offset
+                if(index_offset > 100) {
+                    std::cout << "Received data with unfeasible timestamp" << std::endl;
+                }
+                
+                // Save all received change messages that are not in the past already
+                for ( auto change : sample.data().lane_graph_position_changes() ) {
+                    if( change.index() - speed_steps_per_time_step*index_offset > 0 ) {
+                        previous_vehicles_buffer[sample.data().vehicle_id()][change.index() - speed_steps_per_time_step*index_offset] =
+                            std::make_pair(
+                                change.lane_graph_position().edge_index(),
+                                change.lane_graph_position().edge_path_index()
+                                );
+                    }
                 }
             }
         }
@@ -285,7 +299,8 @@ void VehicleTrajectoryPlanner::set_writer(
         std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer){
     writer_laneGraphTrajectoryChanges = writer;
 }
-void VehicleTrajectoryPlanner::set_reader(
-        std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectoryChanges> > reader){
-    reader_laneGraphTrajectoryChanges = reader;
+
+void VehicleTrajectoryPlanner::process_samples(
+        dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples){
+    return;
 }
