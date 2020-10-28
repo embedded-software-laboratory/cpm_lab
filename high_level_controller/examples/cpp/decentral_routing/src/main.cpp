@@ -166,14 +166,29 @@ int main(int argc, char *argv[]) {
     );
 
     // Writer to communicate plans with other vehicles
-    dds::pub::DataWriter<LaneGraphTrajectoryChanges> writer_laneGraphTrajectoryChanges(
+    dds::pub::DataWriter<LaneGraphPositionChange> writer_laneGraphPositionChange(
             dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+            cpm::get_topic<LaneGraphPositionChange>("laneGraphPositionChange"),
+            (dds::pub::qos::DataWriterQos()
+                << dds::core::policy::Reliability::Reliable()
+                << dds::core::policy::History::KeepAll()
+                << dds::core::policy::Durability::TransientLocal())
     );
 
-    /* We don't need to create a reader for LaneGraphTrajectoryChanges;
-     * that is done by the planner itself
-     */
+    // Reader to receive planned trajectories of other vehicles
+    dds::sub::DataReader<LaneGraphPositionChange> reader_laneGraphPositionChange(
+            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
+            cpm::get_topic<LaneGraphPositionChange>("laneGraphPositionChange")
+    );
+    //std::function<void()> callback_func([planner](dds::sub::LoanedSamples<LaneGraphPositionChange> samples){
+    //        planner->process_samples(samples);
+    //        });
+    //std::function<void(dds::sub::LoanedSamples<LaneGraphPositionChange>)> callback_func(planner->process_samples);
+    //cpm::AsyncReader<LaneGraphPositionChange> reader_LaneGraphPositionChange(
+    //        callback_func,
+    //        cpm::ParticipantSingleton::Instance(),
+    //        cpm::get_topic<LaneGraphPositionChange>("LaneGraphPositionChange")
+    //);
 
     /* ---------------------------------------------------------------------------------
      * Send/receive initial LaneGraphTrajectories
@@ -267,7 +282,7 @@ int main(int argc, char *argv[]) {
             cpm::Logging::Instance().write(
                 3,
                 "%s, Computation start time: %llu, Computation end time: %llu",
-                std::to_string(static_cast<uint32_t>(vehicle_id)), computation_start_time, computation_end_time
+                std::to_string(vehicle_id), computation_start_time, computation_end_time
             );
             
             writer_vehicleCommandTrajectory.write(command);
@@ -297,7 +312,7 @@ int main(int argc, char *argv[]) {
                         int out_edge_index = -1;
                         int out_edge_path_index = -1;
                         matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
-                        //if vehicle was found on map, add vehicle to VehicleTrajectoryPlanner
+                        //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
                         if(matched)
                         {
                             planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
@@ -326,12 +341,17 @@ int main(int argc, char *argv[]) {
              * Finish initializing vehicle when we found its start position
              * -------------------------------------------------------------------------
              */
-
             planner->set_writer(
-                std::make_shared<dds::pub::DataWriter<LaneGraphTrajectoryChanges>>(
-                    writer_laneGraphTrajectoryChanges
+                std::make_shared<dds::pub::DataWriter<LaneGraphPositionChange>>(
+                    writer_laneGraphPositionChange
                     )
                 );
+            planner->set_reader(
+                std::make_shared<dds::sub::DataReader<LaneGraphPositionChange>>(
+                    reader_laneGraphPositionChange
+                    )
+                );
+            //planner->init_reader(cpm::ParticipantSingleton::Instance());
 
             //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
             //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)

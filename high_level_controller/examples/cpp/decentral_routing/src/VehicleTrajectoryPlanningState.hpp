@@ -33,7 +33,6 @@
 #include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
-#include "LaneGraphTrajectoryChanges.hpp"
 
 using std::vector;
 using std::array;

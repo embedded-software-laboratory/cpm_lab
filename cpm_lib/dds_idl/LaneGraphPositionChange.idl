@@ -27,19 +27,14 @@
 #include "Header.idl"
 #include "LaneGraphTrajectory.idl"
 
-#ifndef LANEGRAPHTRAJECTORYCHANGES_IDL
-#define LANEGRAPHTRAJECTORYCHANGES_IDL
+#ifndef LANEGRAPHPOSITIONCHANGE_IDL
+#define LANEGRAPHPOSITIONCHANGE_IDL
 
 struct LaneGraphPositionChange
 {
-    unsigned short index;
-    LaneGraphPosition lane_graph_position;
-};
-
-struct LaneGraphTrajectoryChanges
-{
     octet vehicle_id; //@key
+    unsigned short index; //@key
     Header header;
-    sequence<LaneGraphPositionChange> lane_graph_position_changes;
+    LaneGraphPosition lane_graph_position;
 };
 #endif
