@@ -389,112 +389,90 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 {
     VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory_command_callback();
 
-
+    ctx->save();
     for(const auto& entry : vehicleTrajectories) 
     {
         //const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
         rti::core::vector<TrajectoryPoint> trajectory_segment = trajectory.trajectory_points();
-        size_t start_trajectory_index = 0; //Keep track of the most recent trajectory index, because we are not interested in (too) old data
-        for (size_t i = 0; i < trajectory_segment.size(); ++i)
+        
+        if(trajectory_segment.size() < 2 ) continue;
+        
+        uint64_t t_now = cpm::get_time_ns();
+
+        ctx->set_line_width(0.01);
+
+        // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+        // start from 1 because of i-1
+        for (size_t i = 1; i < trajectory_segment.size(); ++i)
         {
-            if (trajectory_segment.at(i).t().nanoseconds() < cpm::get_time_ns())
+            const int n_interp = 20;
+            
+            ctx->begin_new_path();
+            ctx->move_to(trajectory_segment[i-1].px(),
+                         trajectory_segment[i-1].py()
+            );   
+            for (int interp_step = 1; interp_step <= n_interp; ++interp_step)
             {
-                start_trajectory_index = i;
+                const uint64_t delta_t = 
+                        trajectory_segment[i].t().nanoseconds() 
+                    - trajectory_segment[i-1].t().nanoseconds();
+
+                const uint64_t t_cur = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds();
+
+                TrajectoryInterpolation interp(
+                    t_cur,
+                    trajectory_segment[i-1],  
+                    trajectory_segment[i]
+                );
+                
+                ctx->line_to(interp.position_x,
+                             interp.position_y
+                );
+
+                if (t_cur < t_now)
+                {
+                    //Color for past segments
+                    ctx->set_source_rgb(0.7,0.7,0.7);
+                }
+                else
+                {
+                    //Color for current and future segments
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+
+                ctx->stroke();
+                ctx->move_to(interp.position_x,
+                             interp.position_y
+                );
             }
-        }  
+        }
 
-        //We want to output a bit of the past values
-        //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
-        //But we only want to do this if not too much time has passed (we are not interested in e.g. 10 second old points)
-        int past_length = 3;
-        auto current_time = cpm::get_time_ns();
-        uint64_t max_age = 1e9; //1 second
-        while (start_trajectory_index > 0 && past_length > 0 
-            && (current_time - trajectory_segment.at(start_trajectory_index - 1).t().nanoseconds()) < max_age) //age check
+        // Draw trajectory points
+        ctx->begin_new_path();
+        for(size_t i = 0; i < trajectory_segment.size(); ++i)
         {
-            --start_trajectory_index;
-            --past_length;
-        }      
-
-        //Also perform an age check here and ignore the whole segment if even the newest point is too old
-        auto t_size = trajectory_segment.size();
-        bool trajectory_outdated = true;
-        if (t_size > 1)
-        {
-            auto newest_time = trajectory_segment.at(t_size - 1).t().nanoseconds();
-            if (newest_time > current_time)
+            //Color based on future / current interpolation
+            uint64_t t_cur = trajectory_segment.at(i).t().nanoseconds();
+            if (t_cur < t_now)
             {
-                trajectory_outdated = false;
+                ctx->set_source_rgb(0.7,0.7,0.7);
             }
             else
             {
-                trajectory_outdated = (current_time - newest_time) >= max_age;
-            }
-        }
-
-        if(t_size > 1 && !trajectory_outdated)
-        {
-            // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
-            // Also, only draw recent data
-            for (int i = start_trajectory_index + 2; i < int(trajectory_segment.size()); ++i)
-            {
-                const int n_interp = 20;
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
-                {
-                    ctx->set_source_rgb(0.4,1.0,0.4);
-                }
-                else
-                {
-                    ctx->set_source_rgb(0,0,0.8);
-                }
-                
-                ctx->move_to(trajectory_segment[i-1].px(), trajectory_segment[i-1].py());
-
-                for (int interp_step = 1; interp_step < n_interp; ++interp_step)
-                {
-                    const uint64_t delta_t = 
-                          trajectory_segment[i].t().nanoseconds() 
-                        - trajectory_segment[i-1].t().nanoseconds();
-
-                    TrajectoryInterpolation interp(
-                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
-                        trajectory_segment[i-1],  
-                        trajectory_segment[i]
-                    );
-                    
-                    ctx->line_to(interp.position_x,interp.position_y);
-                }
-
-                ctx->line_to(trajectory_segment[i].px(), trajectory_segment[i].py());
-                ctx->set_line_width(0.01);
-                ctx->stroke();
+                ctx->set_source_rgb(0,0,0.8);
             }
 
-            // Draw trajectory points
-            for(size_t i = start_trajectory_index + 1; i < trajectory_segment.size(); ++i)
-            {
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
-                {
-                    ctx->set_source_rgb(0.4,1.0,0.4);
-                }
-                else
-                {
-                    ctx->set_source_rgb(0,0,0.8);
-                }
-
-                ctx->arc(
-                    trajectory_segment[i].px(),
-                    trajectory_segment[i].py(),
-                    0.02, 0.0, 2 * M_PI
-                );
-                ctx->fill();
-            }
+            ctx->arc(
+                trajectory_segment[i].px(),
+                trajectory_segment[i].py(),
+                0.02, 0.0, 2 * M_PI
+            );
+            ctx->fill();
         }
     }
+    ctx->restore();
 }
 
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
