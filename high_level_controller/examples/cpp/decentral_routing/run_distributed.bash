@@ -41,6 +41,12 @@ cleanup(){
 
     tmux kill-session -tmiddleware_${vehicle_ids}
 
+    if [ $debug ]; then
+        for vehicle_id in ${vehicle_ids//,/ }
+        do
+            tmux kill-session -tdecentral_routing_${vehicle_id}
+        done
+    fi
     # Kill all children
     kill 0
     printf "Done.\n"
@@ -68,15 +74,18 @@ do
 
     # Special debug option: if debug is enabled, the 5th vehicle will be started directly in gdb
     # This is useful, when the HLC is crashing before we have time to attach a debugger
-    if [ $vehicle_id -eq 5 ] && [ $debug ]; then
-        # This opens a debugger session to be able to set breakpoints etc
-        gdb --args ./decentral_routing \
+    if [  $debug ]; then
+        # This starts every HLC with a debugger attached and in separate tmux sessions
+        # Use e.g. 'tmux attach-session -t decentral_routing_2' to start debugging
+        # HLC 2
+        tmux new-session -d -s "decentral_routing_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/dev/dev/software/high_level_controller/examples/cpp/decentral_routing/build/;\
+            gdb -ex=r --args ./decentral_routing \
             --node_id=high_level_controller${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
             --middleware=true \
             --dds_domain=${DDS_DOMAIN} \
-            --dds_initial_peer=${DDS_INITIAL_PEER}
+            --dds_initial_peer=${DDS_INITIAL_PEER}"
     else
         # This starts the high level controller
         ./decentral_routing \
