@@ -284,6 +284,10 @@ int main(int argc, char *argv[]) {
                 "%s, Computation start time: %llu, Computation end time: %llu",
                 std::to_string(vehicle_id), computation_start_time, computation_end_time
             );
+
+            std::cout << "t_now:" << t_now;
+            std::cout << ";computation_time:" << computation_end_time - computation_start_time;
+            std::cout << std::endl;
             
             writer_vehicleCommandTrajectory.write(command);
         }
@@ -291,6 +295,9 @@ int main(int argc, char *argv[]) {
         {
             cpm::Logging::Instance().write(3,
                     "Preparing to start planner");
+
+            std::cout << "Restarting planner" << std::endl;
+
             // reset planner object
             planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
             planner->set_real_time(t_now);
