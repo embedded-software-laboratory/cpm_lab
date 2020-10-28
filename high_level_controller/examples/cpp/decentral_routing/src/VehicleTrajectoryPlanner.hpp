@@ -57,7 +57,8 @@ class VehicleTrajectoryPlanner
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
     uint64_t t_planning;
-    std::mutex mutex;
+    std::mutex mutex_t_planning;
+    std::mutex mutex_vehicles_buffer;
     std::thread planning_thread;
     const uint64_t dt_nanos;
     vector<TrajectoryPoint> trajectory_point_buffer;
@@ -83,6 +84,4 @@ public:
     );
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer);
     void start();
-    void process_samples(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples);
-
 };

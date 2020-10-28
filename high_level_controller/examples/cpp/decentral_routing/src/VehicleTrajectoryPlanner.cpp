@@ -29,20 +29,11 @@
 
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){
-    asyncReader_laneGraphTrajectoryChanges = std::unique_ptr<cpm::AsyncReader<LaneGraphTrajectoryChanges> >(
-            new cpm::AsyncReader<LaneGraphTrajectoryChanges>(
-                std::bind(
-                    &VehicleTrajectoryPlanner::read_previous_vehicles,
-                    this,
-                    std::placeholders::_1),
-                cpm::ParticipantSingleton::Instance(),
-                cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
-            )
-    );
 }
 
 VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
     if ( planning_thread.joinable() ) planning_thread.join();
+    asyncReader_laneGraphTrajectoryChanges.reset();
 }
 
 VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64_t t_now)
@@ -60,7 +51,7 @@ VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64
 
 void VehicleTrajectoryPlanner::set_real_time(uint64_t t)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex_t_planning);
     t_real_time = t;
 }
 
@@ -77,6 +68,21 @@ void VehicleTrajectoryPlanner::start()
 
     started = true;
 
+    /* Create an AsyncReader to receive LaneGraphTrajectoryChanges from other vehicles
+     * as soon as they are sent.
+     * When we receive them, call read_previous_vehicles
+     */
+    asyncReader_laneGraphTrajectoryChanges = std::unique_ptr<cpm::AsyncReader<LaneGraphTrajectoryChanges> >(
+            new cpm::AsyncReader<LaneGraphTrajectoryChanges>(
+                std::bind(
+                    &VehicleTrajectoryPlanner::read_previous_vehicles,
+                    this,
+                    std::placeholders::_1),
+                cpm::ParticipantSingleton::Instance(),
+                cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
+            )
+    );
+
     cpm::Logging::Instance().write(
             3,
             "Starting VehicleTrajectoryPlanner");
@@ -85,7 +91,7 @@ void VehicleTrajectoryPlanner::start()
         t_planning = 0;
 
         {
-            std::lock_guard<std::mutex> lock(mutex); 
+            std::lock_guard<std::mutex> lock(mutex_t_planning); 
             t_planning = t_real_time;
         }
 
@@ -95,17 +101,21 @@ void VehicleTrajectoryPlanner::start()
             // the 'previous' vehicles, in this example those with a smaller ID.
             bool is_collision_avoidable = false;
 
-            is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
+            {
+                std::lock_guard<std::mutex> lock(mutex_vehicles_buffer);
+                is_collision_avoidable = trajectoryPlan->avoid_collisions(previous_vehicles_buffer);
+            }
 
             if (!is_collision_avoidable){
                 cpm::Logging::Instance().write(1,
                         "Found unavoidable collision");
+                asyncReader_laneGraphTrajectoryChanges.reset();
                 started = false; // end planning
                 break;
             } 
 
             {
-                std::lock_guard<std::mutex> lock(mutex); 
+                std::lock_guard<std::mutex> lock(mutex_t_planning); 
 
                 // Get our current trajectory
                 LaneGraphTrajectory lane_graph_trajectory;
@@ -156,10 +166,6 @@ void VehicleTrajectoryPlanner::start()
 
 void VehicleTrajectoryPlanner::read_previous_vehicles(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples)
 {
-    //TODO: Can we maybe receive samples before starting?
-    if(!started){
-        return;
-    }
     assert(started);
 
     //dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples = reader_laneGraphTrajectoryChanges->take();
@@ -169,7 +175,8 @@ void VehicleTrajectoryPlanner::read_previous_vehicles(dds::sub::LoanedSamples<La
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
 
             {
-                //TODO: Make t_planning thread safe again
+                std::lock_guard<std::mutex> lock_t_planning(mutex_t_planning);
+                std::lock_guard<std::mutex> lock_vehicles_buffer(mutex_vehicles_buffer);
                 // Calculate, which index the timestamp of the received message corresponds to
                 uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
                 size_t index_offset = time_diff / dt_nanos;
@@ -183,6 +190,7 @@ void VehicleTrajectoryPlanner::read_previous_vehicles(dds::sub::LoanedSamples<La
                 // Save all received change messages that are not in the past already
                 for ( auto change : sample.data().lane_graph_position_changes() ) {
                     if( change.index() - speed_steps_per_time_step*index_offset > 0 ) {
+                        //TODO Make previous_vehicles_buffer thread safe
                         previous_vehicles_buffer[sample.data().vehicle_id()][change.index() - speed_steps_per_time_step*index_offset] =
                             std::make_pair(
                                 change.lane_graph_position().edge_index(),
@@ -278,6 +286,8 @@ void VehicleTrajectoryPlanner::write_changes( vector<LaneGraphTrajectoryChanges>
 void VehicleTrajectoryPlanner::apply_timestep() {
     //TODO: 25 is dt_nanos divided by dt_speed_steps_nanos (magic number, needs changing)
     uint64_t offset_per_timestep = 25;
+    
+    std::lock_guard<std::mutex> lock(mutex_vehicles_buffer);
 
     for(auto iter_vehicle = previous_vehicles_buffer.begin(); iter_vehicle != previous_vehicles_buffer.end(); ++iter_vehicle){
         std::map<size_t, std::pair<size_t, size_t>> trajectory = iter_vehicle->second;
@@ -298,9 +308,4 @@ void VehicleTrajectoryPlanner::apply_timestep() {
 void VehicleTrajectoryPlanner::set_writer(
         std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectoryChanges> > writer){
     writer_laneGraphTrajectoryChanges = writer;
-}
-
-void VehicleTrajectoryPlanner::process_samples(
-        dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>& samples){
-    return;
 }

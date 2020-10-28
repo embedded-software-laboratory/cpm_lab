@@ -171,20 +171,9 @@ int main(int argc, char *argv[]) {
             cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
     );
 
-    // Reader to receive planned trajectories of other vehicles
-    //dds::sub::DataReader<LaneGraphTrajectoryChanges> reader_laneGraphTrajectoryChanges(
-    //        dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-    //        cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
-    //);
-    //std::function<void()> callback_func([planner](dds::sub::LoanedSamples<LaneGraphTrajectoryChanges> samples){
-    //        planner->process_samples(samples);
-    //        });
-    //std::function<void(dds::sub::LoanedSamples<LaneGraphTrajectoryChanges>)> callback_func(planner->process_samples);
-    //cpm::AsyncReader<LaneGraphTrajectoryChanges> reader_laneGraphTrajectoryChanges(
-    //        callback_func,
-    //        cpm::ParticipantSingleton::Instance(),
-    //        cpm::get_topic<LaneGraphTrajectoryChanges>("laneGraphTrajectoryChanges")
-    //);
+    /* We don't need to create a reader for LaneGraphTrajectoryChanges;
+     * that is done by the planner itself
+     */
 
     /* ---------------------------------------------------------------------------------
      * Send/receive initial LaneGraphTrajectories
@@ -278,7 +267,7 @@ int main(int argc, char *argv[]) {
             cpm::Logging::Instance().write(
                 3,
                 "%s, Computation start time: %llu, Computation end time: %llu",
-                std::to_string(vehicle_id), computation_start_time, computation_end_time
+                std::to_string(static_cast<uint32_t>(vehicle_id)), computation_start_time, computation_end_time
             );
             
             writer_vehicleCommandTrajectory.write(command);
@@ -337,6 +326,7 @@ int main(int argc, char *argv[]) {
              * Finish initializing vehicle when we found its start position
              * -------------------------------------------------------------------------
              */
+
             planner->set_writer(
                 std::make_shared<dds::pub::DataWriter<LaneGraphTrajectoryChanges>>(
                     writer_laneGraphTrajectoryChanges
