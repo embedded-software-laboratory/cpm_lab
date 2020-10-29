@@ -35,7 +35,6 @@
 #include <dds/pub/ddspub.hpp>
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
-#include "LaneGraphPositionChange.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
 
 using std::vector;
@@ -44,9 +43,8 @@ class VehicleTrajectoryPlanner
 {
     std::shared_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> previous_vehicles_buffer;
-    LaneGraphTrajectory old_lane_graph_trajectory;
-    std::shared_ptr< dds::pub::DataWriter<LaneGraphPositionChange> > writer_laneGraphPositionChange;
-    std::shared_ptr< dds::sub::DataReader<LaneGraphPositionChange> > reader_laneGraphPositionChange;
+    std::shared_ptr< dds::pub::DataWriter<LaneGraphPoint> > writer_laneGraphPoint;
+    std::shared_ptr< dds::sub::DataReader<LaneGraphPoint> > reader_laneGraphPoint;
     bool started = false;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
@@ -57,12 +55,14 @@ class VehicleTrajectoryPlanner
     vector<TrajectoryPoint> trajectory_point_buffer;
     void read_previous_vehicles();
     void apply_timestep();
-    vector<LaneGraphPositionChange> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
-    void write_changes( vector<LaneGraphPositionChange> vector_changes );
+
+    LaneGraphTrajectory old_lane_graph_trajectory;
+    vector<LaneGraphPoint> get_changes(LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new);
+    void write_changes( vector<LaneGraphPoint> vector_changes );
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
-    static constexpr uint64_t msg_max_length = 100; // Maximum length of DDS msg
-    static constexpr uint64_t timesteps_per_planningstep = 25; // For each dt_nanos, each HLC has 25 points planned
+    const uint64_t dt_speed_profile_nanos = 16000000ull;
+    const uint64_t speedsteps_per_timestep;
     
 public:
 
@@ -75,8 +75,8 @@ public:
     void set_other_vehicles(
             std::map<uint8_t, std::vector<VehicleCommandTrajectory> > trajectory_samples
     );
-    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphPositionChange> > writer);
-    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphPositionChange> > reader);
+    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphPoint> > writer);
+    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphPoint> > reader);
     void start();
 
 };

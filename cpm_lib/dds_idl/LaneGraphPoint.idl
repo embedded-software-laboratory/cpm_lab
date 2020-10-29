@@ -25,15 +25,20 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "Header.idl"
-#include "LaneGraphTrajectory.idl"
 
-#ifndef LANEGRAPHPOSITIONCHANGE_IDL
-#define LANEGRAPHPOSITIONCHANGE_IDL
+#ifndef LANEGRAPHPOINT_IDL
+#define LANEGRAPHPOINT_IDL
 
-struct LaneGraphPositionChange
+struct LaneGraphPosition 
+{
+    unsigned short edge_index;
+    unsigned short edge_path_index;
+};
+
+struct LaneGraphPoint 
 {
     octet vehicle_id; //@key
-    unsigned short index; //@key
+    TimeStamp estimated_arrival; //@key
     Header header;
     LaneGraphPosition lane_graph_position;
 };

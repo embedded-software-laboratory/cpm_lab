@@ -25,15 +25,10 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "Header.idl"
+#include "LaneGraphPoint.idl"
 
 #ifndef LANEGRAPHTRAJECTORY_IDL
 #define LANEGRAPHTRAJECTORY_IDL
-
-struct LaneGraphPosition 
-{
-    unsigned short edge_index;
-    unsigned short edge_path_index;
-};
 
 struct LaneGraphTrajectory 
 {

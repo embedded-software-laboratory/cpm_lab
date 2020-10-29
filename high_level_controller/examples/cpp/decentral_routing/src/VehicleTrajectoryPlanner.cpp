@@ -28,7 +28,9 @@
 
 
 
-VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
+VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos)
+    :dt_nanos(dt_nanos),
+    speedsteps_per_timestep(dt_nanos/dt_speed_profile_nanos){}
 
 VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
     if ( planning_thread.joinable() ) planning_thread.join();
@@ -134,7 +136,7 @@ void VehicleTrajectoryPlanner::start()
                     LaneGraphTrajectory old_lane_graph_trajectory;
                 }
 
-                vector<LaneGraphPositionChange> lane_graph_trajectory_changes = get_changes(
+                vector<LaneGraphPoint> lane_graph_trajectory_changes = get_changes(
                         old_lane_graph_trajectory,
                         lane_graph_trajectory
                         );
@@ -168,7 +170,7 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
 {
     assert(started);
 
-    dds::sub::LoanedSamples<LaneGraphPositionChange> samples = reader_laneGraphPositionChange->take();
+    dds::sub::LoanedSamples<LaneGraphPoint> samples = reader_laneGraphPoint->take();
     for(auto sample : samples) {
         if (sample.info().valid()) {
             // We ignore everything with lower priorities
@@ -177,23 +179,23 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
             // Calculate, which index the timestamp of the received message corresponds to
             uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
             size_t index_offset = time_diff / dt_nanos;
-            uint64_t speed_steps_per_time_step = 25;
 
             //FIXME: After a restart, there temporarily is an unrealistically large offset
             if(index_offset > 100) {
                 std::cout << "Received data with unfeasible timestamp";
             }
             
-            auto change = sample.data();
-            uint64_t index_to_use = change.index() - speed_steps_per_time_step*index_offset;
+            LaneGraphPoint point = sample.data();
+            int64_t index_to_use = 
+                (point.estimated_arrival().nanoseconds() - t_planning)/dt_speed_profile_nanos;
             // Save all received change messages that are not in the past already
             // Validate, if the index is realistic
             // FIXME 3000 should not be hardcoded
             if( index_to_use >= 0 && index_to_use <= 3000) {
-                previous_vehicles_buffer[sample.data().vehicle_id()][change.index() - speed_steps_per_time_step*index_offset] =
+                previous_vehicles_buffer[sample.data().vehicle_id()][index_to_use] =
                     std::make_pair(
-                        change.lane_graph_position().edge_index(),
-                        change.lane_graph_position().edge_path_index()
+                        point.lane_graph_position().edge_index(),
+                        point.lane_graph_position().edge_path_index()
                         );
             }
         }
@@ -201,43 +203,42 @@ void VehicleTrajectoryPlanner::read_previous_vehicles()
 }
 
 /*
- * Calculate the LaneGraphPositionChange between two LaneGraphTrajectories
- * and divide it into messages of suitable length.
- * Currently, RTI DDS messages can only contain 100 elements.
+ * Calculate the LaneGraphPosition's that changed between two LaneGraphTrajectories.
+ * Then create LaneGraphPoint's (that include the time where we will reach the
+ * position) from it.
  *
  * This can be changed to not use LaneGraphTrajectory, and then
  * we could delete the LaneGraphTrajectory IDL object type
  */
-vector<LaneGraphPositionChange> VehicleTrajectoryPlanner::get_changes(
+vector<LaneGraphPoint> VehicleTrajectoryPlanner::get_changes(
         LaneGraphTrajectory trajectory_old, LaneGraphTrajectory trajectory_new) {
     
-    vector<LaneGraphPositionChange> result;
+    vector<LaneGraphPoint> result;
+
     
     for(uint64_t i=0; i<N_STEPS_SPEED_PROFILE; i++) {
 
         /* Compare the new planned trajectory with the old planned trajectory,
          * shifted by the amount of speed steps per timestep */
-        if ( i < N_STEPS_SPEED_PROFILE - timesteps_per_planningstep && trajectory_old.lane_graph_positions().size() > 0 ) {
-            LaneGraphPosition pos_old = trajectory_old.lane_graph_positions()[i+timesteps_per_planningstep];
+        if ( i < N_STEPS_SPEED_PROFILE - speedsteps_per_timestep && trajectory_old.lane_graph_positions().size() > 0 ) {
+            LaneGraphPosition pos_old = trajectory_old.lane_graph_positions()[i+speedsteps_per_timestep];
             LaneGraphPosition pos_new = trajectory_new.lane_graph_positions()[i];
 
             if(pos_old != pos_new) {
                 // This is a change to an existing trajectory point
-                LaneGraphPositionChange change;
-                change.index(i);
-                change.lane_graph_position().edge_index(pos_new.edge_index());
-                change.lane_graph_position().edge_path_index(pos_new.edge_path_index());
-                result.push_back(change); 
+                LaneGraphPoint point;
+
+                point.estimated_arrival().nanoseconds(t_planning + i*dt_speed_profile_nanos);
+                point.lane_graph_position(pos_new);
+                result.push_back(point); 
             } 
         } else {
             // This is a newly added trajectory point or trajectory_old is not initialized yet
-            LaneGraphPosition pos_new = trajectory_new.lane_graph_positions()[i];
+            LaneGraphPoint point;
 
-            LaneGraphPositionChange change;
-            change.index(i);
-            change.lane_graph_position().edge_index(pos_new.edge_index());
-            change.lane_graph_position().edge_path_index(pos_new.edge_path_index());
-            result.push_back(change); 
+            point.estimated_arrival().nanoseconds(t_planning + i*dt_speed_profile_nanos);
+            point.lane_graph_position(trajectory_new.lane_graph_positions()[i]);
+            result.push_back(point); 
         }
     }
 
@@ -250,13 +251,13 @@ vector<LaneGraphPositionChange> VehicleTrajectoryPlanner::get_changes(
  * We are publishing only changes instead of the whole trajectory
  * for data size reasons
  */
-void VehicleTrajectoryPlanner::write_changes( vector<LaneGraphPositionChange> vector_changes ) {
+void VehicleTrajectoryPlanner::write_changes( vector<LaneGraphPoint> vector_changes ) {
     for ( uint64_t i = 0; i < vector_changes.size(); i++ ) {
-        LaneGraphPositionChange msg = vector_changes[i];
+        LaneGraphPoint msg = vector_changes[i];
         msg.vehicle_id(trajectoryPlan->get_vehicle_id());
         msg.header().create_stamp().nanoseconds(t_planning);
         msg.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
-        this->writer_laneGraphPositionChange->write(msg);
+        this->writer_laneGraphPoint->write(msg);
     }
 }
 
@@ -285,10 +286,10 @@ void VehicleTrajectoryPlanner::apply_timestep() {
 }
 
 void VehicleTrajectoryPlanner::set_writer(
-        std::shared_ptr< dds::pub::DataWriter<LaneGraphPositionChange> > writer){
-    writer_laneGraphPositionChange = writer;
+        std::shared_ptr< dds::pub::DataWriter<LaneGraphPoint> > writer){
+    writer_laneGraphPoint = writer;
 }
 void VehicleTrajectoryPlanner::set_reader(
-        std::shared_ptr< dds::sub::DataReader<LaneGraphPositionChange> > reader){
-    reader_laneGraphPositionChange = reader;
+        std::shared_ptr< dds::sub::DataReader<LaneGraphPoint> > reader){
+    reader_laneGraphPoint = reader;
 }

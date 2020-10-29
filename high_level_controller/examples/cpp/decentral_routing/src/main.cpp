@@ -44,6 +44,7 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 #include "VehicleStateList.hpp"
+#include "LaneGraphTrajectory.hpp"
 
 // DDS files
 #include <dds/pub/ddspub.hpp>                   //rti folder
@@ -166,32 +167,24 @@ int main(int argc, char *argv[]) {
     );
 
     // Writer to communicate plans with other vehicles
-    dds::pub::DataWriter<LaneGraphPositionChange> writer_laneGraphPositionChange(
+    dds::pub::DataWriter<LaneGraphPoint> writer_laneGraphPoint(
             dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphPositionChange>("laneGraphPositionChange"),
+            cpm::get_topic<LaneGraphPoint>("laneGraphPoint"),
             (dds::pub::qos::DataWriterQos()
                 << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll()
+                //FIXME 3000 should not be hardcoded
+                << dds::core::policy::History::KeepLast(3000)
                 << dds::core::policy::Durability::TransientLocal())
     );
 
     // Reader to receive planned trajectories of other vehicles
-    dds::sub::DataReader<LaneGraphPositionChange> reader_laneGraphPositionChange(
+    dds::sub::DataReader<LaneGraphPoint> reader_laneGraphPoint(
             dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphPositionChange>("laneGraphPositionChange")
+            cpm::get_topic<LaneGraphPoint>("laneGraphPoint")
     );
-    //std::function<void()> callback_func([planner](dds::sub::LoanedSamples<LaneGraphPositionChange> samples){
-    //        planner->process_samples(samples);
-    //        });
-    //std::function<void(dds::sub::LoanedSamples<LaneGraphPositionChange>)> callback_func(planner->process_samples);
-    //cpm::AsyncReader<LaneGraphPositionChange> reader_LaneGraphPositionChange(
-    //        callback_func,
-    //        cpm::ParticipantSingleton::Instance(),
-    //        cpm::get_topic<LaneGraphPositionChange>("LaneGraphPositionChange")
-    //);
 
     /* ---------------------------------------------------------------------------------
-     * Send/receive initial LaneGraphTrajectories
+     * Send/receive initial LaneGraphPoint's
      * ---------------------------------------------------------------------------------
      */
     //TODO
@@ -349,13 +342,13 @@ int main(int argc, char *argv[]) {
              * -------------------------------------------------------------------------
              */
             planner->set_writer(
-                std::make_shared<dds::pub::DataWriter<LaneGraphPositionChange>>(
-                    writer_laneGraphPositionChange
+                std::make_shared<dds::pub::DataWriter<LaneGraphPoint>>(
+                    writer_laneGraphPoint
                     )
                 );
             planner->set_reader(
-                std::make_shared<dds::sub::DataReader<LaneGraphPositionChange>>(
-                    reader_laneGraphPositionChange
+                std::make_shared<dds::sub::DataReader<LaneGraphPoint>>(
+                    reader_laneGraphPoint
                     )
                 );
             //planner->init_reader(cpm::ParticipantSingleton::Instance());
