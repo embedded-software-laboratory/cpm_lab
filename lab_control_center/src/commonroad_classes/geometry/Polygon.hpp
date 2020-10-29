@@ -40,6 +40,10 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -50,6 +54,9 @@ class Polygon : public InterfaceTransform, public InterfaceDraw, public Interfac
 {
 private:
     std::vector<Point> points; //min. 3
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     Polygon(const xmlpp::Node* node);
@@ -82,6 +89,15 @@ public:
      * \return Center of the circle
      */
     std::pair<double, double> get_center() override;
+
+    /**
+     * \brief Const getter for polygon points
+     */
+    const std::vector<Point>& get_points() const;
     
-    void to_dds_msg() {}
+    /**
+     * \brief Translates all relevant parts of the data structure to a DDS object, which is returned
+     * No interface was created for this function because the return type depends on the class
+     */
+    CommonroadDDSPolygon to_dds_msg();
 };

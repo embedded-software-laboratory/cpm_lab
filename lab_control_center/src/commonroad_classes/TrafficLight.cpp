@@ -244,7 +244,7 @@ void TrafficLight::transform_coordinate_system(double scale, double translate_x,
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
-    std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
+    LCCErrorLogger::Instance().log_error("Drawing TrafficLights is currently unsupported");
 
     // for (auto position : positions)
     // {

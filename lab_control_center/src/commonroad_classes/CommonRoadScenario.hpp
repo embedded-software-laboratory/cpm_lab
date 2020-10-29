@@ -53,6 +53,10 @@
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "commonroad_classes/CommonRoadTransformation.hpp"
+
+#include "LCCErrorLogger.hpp"
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO: Put Enums etc inside class definition??
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -95,12 +99,12 @@ enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, 
  */
 struct Location 
 {
-    std::string country;
-    std::string federal_state;
+    std::optional<std::string> country;
+    std::optional<std::string> federal_state;
     int gps_latitude = -1;
     int gps_longitude = -1;
-    std::optional<std::string> zipcode;
-    std::optional<std::string> name;
+    std::optional<std::string> zipcode = std::nullopt;
+    std::optional<std::string> name = std::nullopt;
     //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
     //For 2018 versions, this means that country / location information are missing too
 };
@@ -125,7 +129,7 @@ private:
 
     //Commonroad data
     std::vector<ScenarioTag> scenario_tags; //From 2020 specs
-    std::optional<Location> location;
+    std::optional<Location> location = std::nullopt;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;
@@ -139,6 +143,9 @@ private:
     //Mutex to lock the object while it is being translated from an XML file
     std::mutex xml_translation_mutex;
 
+    //Load / store translation in YAML
+    CommonRoadTransformation yaml_transformation_storage;
+
     //Obstacle simulation callback functions (when new scenario is loaded)
     std::function<void()> setup_obstacle_sim_manager; 
     std::function<void()> reset_obstacle_sim_manager;
@@ -146,7 +153,6 @@ private:
     //Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
 
-    //TODO: Both of these following functions as part of another interface?
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
      * \param node root_node
@@ -188,6 +194,17 @@ private:
      */
     void clear_data();
 
+    /**
+     * Calculate the center (mean position) of the planning problem based on lanelets and obstacles
+     * Only gets re-calculated whenever the problem is transformed or another problem is loaded
+     */
+    void calculate_center();
+    std::pair<double, double> center;
+
+    //Lanelet ref functions
+    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
+    std::pair<double, double> get_lanelet_center(int id);
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -214,18 +231,26 @@ public:
      * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
      * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs
      * \param xml_filepath The path of the XML file that specificies the commonroad scenario
+     * \param center_coordinates Center the coordinates of the scenario automatically
      */
-    void load_file(std::string xml_filepath);
+    void load_file(std::string xml_filepath, bool center_coordinates = true);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The min lane width
+     * \param lane_width The min lane width
      * \param translate_x Move the coordinate system's origin along the x axis by this value
      * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double lane_width, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
+     */
+    void transform_coordinate_system(double translate_x, double translate_y);
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -242,8 +267,6 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
-
     /**
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
      * Due to the different return types for each class, no interface was defined for this function.
@@ -252,6 +275,19 @@ public:
      */
     void to_dds_msg() {}
 
+    /**
+     * \brief Access to internal YAML transformation profile; apply changes stored in profile (again) for the current file
+     */
+    void apply_stored_transformation();
+    /**
+     * \brief Access to internal YAML transformation profile; Store current changes in profile for the current file
+     */
+    void store_applied_transformation();
+    /**
+     * \brief Access to internal YAML transformation profile; Reset changes stored in profile for the current file
+     */
+    void reset_stored_transformation();
+
     //TODO: Getter, by type and by ID, and constructor
     const std::string& get_author();
     const std::string& get_affiliation();
@@ -259,12 +295,22 @@ public:
     const std::string& get_common_road_version();
     const std::string& get_date();
     const std::string& get_source();
+
+    //We need to be able to get and set time_step_size, to change the speed of the simulation
     double get_time_step_size();
+    void set_time_step_size(double new_time_step_size); 
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
     const std::optional<Location> get_location();
 
     std::vector<int> get_dynamic_obstacle_ids();
     std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
+
+    std::vector<int> get_static_obstacle_ids();
+    std::optional<StaticObstacle> get_static_obstacle(int id);
+
+    std::vector<int> get_planning_problem_ids();
+    std::optional<PlanningProblem> get_planning_problem(int id);
+
     std::optional<Lanelet> get_lanelet(int id);
 };

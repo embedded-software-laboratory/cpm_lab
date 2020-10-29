@@ -136,7 +136,7 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 
 
 // Change the own speed profile so as not to collide with the other_vehicles.
-void VehicleTrajectoryPlanningState::avoid_collisions(
+bool VehicleTrajectoryPlanningState::avoid_collisions(
     vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles)
 {
     // TODO termination condition
@@ -160,10 +160,10 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
                 if(laneGraphTools.edge_path_collisions
-                    .at(self_path[i].first)
-                    .at(self_path[i].second)
-                    .at(other_path[i].first)
-                    .at(other_path[i].second))
+                    [self_path[i].first]
+                    [self_path[i].second]
+                    [other_path[i].first]
+                    [other_path[i].second])
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
@@ -178,7 +178,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         }
 
         // stop if there is no collision
-        if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return;
+        if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return true;
 
 
         // fix speed profile to avoid collision
@@ -201,7 +201,11 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
 
         if(idx_speed_reduction < 15)
         {
-            std::cout << "Collision unavoidable between " << int(vehicle_id) << " and " << colliding_vehicle_id << std::endl;
+            cpm::Logging::Instance().write(
+                1,
+                "Collision unavoidable between %d and %d.",
+                int(vehicle_id), colliding_vehicle_id
+            );
 
             for(double spd:speed_profile)
             {
@@ -209,12 +213,12 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             }
             std::cout << std::endl;
 
-            exit(1);
-            return;
+            return false;
         }
 
         set_speed(idx_speed_reduction, reduced_speed);
     }
+    return true;
 }
 
 

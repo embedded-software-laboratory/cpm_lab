@@ -44,6 +44,8 @@
 #include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -55,9 +57,12 @@ class Occupancy : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    std::optional<Shape> shape;
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<Shape> shape = std::nullopt;
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
 
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 public:
     /**
      * \brief Constructor - we do not want the user to be able to set values after the class has been created
@@ -108,7 +113,8 @@ public:
      */
     void to_dds_msg(); 
 
-    //TODO: Getter
+    //Getter
     IntervalOrExact get_time(); //Must exist, throw error if it does not
-    std::optional<double> get_orientation();
+    const std::optional<Shape>& get_shape() const;
+    const std::optional<IntervalOrExact>& get_time() const;
 };

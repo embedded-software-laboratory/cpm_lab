@@ -27,9 +27,13 @@
 #include "TimerViewUI.hpp"
 
 using namespace std::placeholders;
-TimerViewUI::TimerViewUI(std::shared_ptr<TimerTrigger> timerTrigger) :
+TimerViewUI::TimerViewUI(
+    std::shared_ptr<TimerTrigger> timerTrigger,
+    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+    ) :
     timer_trigger(timerTrigger),
-    ui_dispatcher()
+    ui_dispatcher(),
+    obstacle_simulation_manager(_obstacle_simulation_manager)
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -82,10 +86,15 @@ TimerViewUI::~TimerViewUI() {
 }
 
 void TimerViewUI::button_reset_callback() {
+    //Stop obstacle simulation
+    // obstacle_simulation_manager->stop();
+
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
 
     reset_ui();
+
+    timer_trigger->send_stop_signal();
 
     //Delete the old timer, replace it by a new one with the same settings as before
     bool use_simulated_time;
@@ -193,6 +202,9 @@ void TimerViewUI::update_ui() {
 }
 
 void TimerViewUI::button_start_callback() {
+    // //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+    // obstacle_simulation_manager->start();
+
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
@@ -201,6 +213,9 @@ void TimerViewUI::button_start_callback() {
 
 void TimerViewUI::button_stop_callback() {
     timer_trigger->send_stop_signal();
+
+    //Stop obstacle simulation
+    // obstacle_simulation_manager->stop();
 
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);
@@ -218,7 +233,7 @@ std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus respons
             return "(realtime)";
         }
         else if (response == ParticipantStatus::WAITING) {
-            return "WAITING";
+            return "WAITING"; //TODO: For long waiting times with simulated time, one could log the responsible participant ID - on the other hand, this is already shown in the UI in the timer tab
         }
         else if (response == ParticipantStatus::WORKING) {
             return "WORKING";

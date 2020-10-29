@@ -54,14 +54,13 @@ class SignalState : public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
-    //These values are set to false if they do not exist
-    bool horn;
-    bool indicator_left;
-    bool indicator_right;
-    bool braking_lights;
-    bool hazard_warning_lights;
-    bool flashing_blue_lights;
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    std::optional<bool> horn = std::nullopt;
+    std::optional<bool> indicator_left = std::nullopt;
+    std::optional<bool> indicator_right = std::nullopt;
+    std::optional<bool> braking_lights = std::nullopt;
+    std::optional<bool> hazard_warning_lights = std::nullopt;
+    std::optional<bool> flashing_blue_lights = std::nullopt;
 
 public:
     /**
@@ -71,11 +70,10 @@ public:
 
     /**
      * \brief Takes a boolean string node and translates its value to a boolean
-     * TODO: XML translation class instead - then also give a default return value
      * \param node The parent node
      * \param child_name Name of the child node which contains the boolean value
      */
-    bool get_child_bool(const xmlpp::Node* node, std::string child_name);
+    std::optional<bool> get_child_bool(const xmlpp::Node* node, std::string child_name);
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push
@@ -106,5 +104,12 @@ public:
      */
     void to_dds_msg(); 
 
-    //TODO: Getter
+    //Getter
+    const std::optional<IntervalOrExact>& get_time() const;
+    const std::optional<bool>& get_horn() const;
+    const std::optional<bool>& get_indicator_left() const;
+    const std::optional<bool>& get_indicator_right() const;
+    const std::optional<bool>& get_braking_lights() const;
+    const std::optional<bool>& get_hazard_warning_lights() const;
+    const std::optional<bool>& get_flashing_blue_lights() const;
 };

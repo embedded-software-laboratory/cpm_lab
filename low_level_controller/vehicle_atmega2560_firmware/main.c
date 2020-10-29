@@ -85,10 +85,10 @@ int main(void)
 		
 		if(safe_mode_flag) 
 		{
-			spi_mosi_data.vehicle_id = 0;
-			
-			tests_apply(get_tick(), &spi_miso_data, &spi_mosi_data);
-			
+            if ((PINA & 1) == 0) { // test mode
+			    tests_apply(&spi_miso_data, &spi_mosi_data);
+            }
+
 			_delay_ms(1);
 		}
 		else
@@ -135,6 +135,7 @@ int main(void)
 			spi_miso_data.imu_acceleration_forward = imu_acceleration_forward;
 			spi_miso_data.imu_acceleration_left = imu_acceleration_left;
 			spi_miso_data.imu_acceleration_up = imu_acceleration_up;
+			CLEAR_BIT(spi_miso_data.status_flags, 0);
 		}
 		else {
 			SET_BIT(spi_miso_data.status_flags, 0);
@@ -166,7 +167,7 @@ int main(void)
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
-		led_set_state(&spi_mosi_data);
+        led_set_state(spi_mosi_data.vehicle_id);
 	}
 	
 }

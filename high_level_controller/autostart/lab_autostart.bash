@@ -36,7 +36,7 @@ cd /home/guest/
 rm -rf ./dev
 mkdir -p dev/software/cpm_lib
 cd ./dev/software/cpm_lib
-mkdir build
+mkdir -p build
 cp /tmp/software/cpm_library_package/libcpm.so ./build
 cp -R /tmp/software/cpm_library_package/dds_idl_matlab ./
 
@@ -83,7 +83,11 @@ tar -xzvf matlab_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
 # Put the init scripts for Matlab in the correct folder
-cd /home/guest/dev/software/high_level_controller
+cd /home/guest/dev/software
+mkdir high_level_controller
+cd ./high_level_controller
+mkdir examples
+cd ./examples
 mkdir matlab
 cd ./matlab
 cp /tmp/software/matlab_package/init_script.m ./

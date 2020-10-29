@@ -49,16 +49,15 @@
 class IntervalOrExact : public InterfaceTransform
 {
 private:
-    std::optional<Interval> interval;
-    std::optional<double> exact;
+    std::optional<Interval> interval = std::nullopt;
+    std::optional<double> exact = std::nullopt;
 public:
     /**
      * \brief Constructor
      */
     IntervalOrExact(const xmlpp::Node* node)
     {
-        //TODO: Make sure that this is an interval node type
-        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
+        //We do not assert the interval type here, as the name of the node in this case mostly refers to a specific datatype like 'time' or 'orientation', of which there are many throughout the documentation
 
         try
         {

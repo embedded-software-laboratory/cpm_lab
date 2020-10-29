@@ -26,7 +26,10 @@
 
 #include "commonroad_classes/DynamicObstacle.hpp"
 
-DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
+DynamicObstacle::DynamicObstacle(
+    const xmlpp::Node* node,
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
+    )
 {
     //Check if node is of type dynamicObstacle
     assert(node->get_name() == "dynamicObstacle" || node->get_name() == "obstacle");
@@ -35,6 +38,8 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         std::string role_text = xml_translation::get_child_child_text(node, "role", true).value(); //Must exist (2018 specs), else error is thrown
         assert(role_text.compare("dynamic") == 0);
     }
+
+    commonroad_line = node->get_line();
 
     try
     {
@@ -163,6 +168,18 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
     }
+
+    //Set lanelet ref functions for geometry
+    if(initial_state.has_value())
+    {
+        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //initial_state->set_lanelet_get_center_function(_get_lanelet_center);
+    }
+    for (auto& state : trajectory)
+    {
+        state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //state.set_lanelet_get_center_function(_get_lanelet_center);
+    }
     
 
     //Test output
@@ -173,16 +190,12 @@ DynamicObstacle::DynamicObstacle(const xmlpp::Node* node)
     std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
     std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
     std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
-
-    step = 0;
 } 
 
 /******************************Interface functions***********************************/
 
 void DynamicObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-
     if (scale > 0)
     {
         transform_scale *= scale;
@@ -209,6 +222,19 @@ void DynamicObstacle::transform_coordinate_system(double scale, double translate
     }
 }
 
+void DynamicObstacle::transform_timing(double time_scale)
+{
+    if (initial_state.has_value())
+    {
+        initial_state->transform_timing(time_scale);
+    }
+
+    for (auto& state : trajectory)
+    {
+        state.transform_timing(time_scale);
+    }
+}
+
 void DynamicObstacle::draw_shape_with_text(const DrawingContext& ctx, double scale, double local_orientation)
 {
     if (shape.has_value())
@@ -221,7 +247,9 @@ void DynamicObstacle::draw_shape_with_text(const DrawingContext& ctx, double sca
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw dynamic obstacle shape (empty), from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 
@@ -249,104 +277,12 @@ void DynamicObstacle::draw_text(const DrawingContext& ctx, double scale, double 
     ctx->stroke();
 }
 
-//Suppress warning for unused parameter (s)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-void DynamicObstacle::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
+ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
 {
-    // ctx->save();
-
-    // //Perform required translation + rotation
-    // ctx->translate(global_translate_x, global_translate_y);
-    // ctx->rotate(global_orientation);
-
-    // //TODO: Different color / sticker / ... based on type
-    // ctx->set_source_rgb(1.0,0.5,0.0);
-
-    // if (step == 0)
-    // {
-    //     if (initial_state.has_value())
-    //     {
-    //         ctx->save();
-
-    //         initial_state->transform_context(ctx, scale);
-
-    //         draw_shape_with_text(ctx, scale, local_orientation);
-
-    //         ctx->restore();
-    //     }
-    //     else
-    //     {
-    //         std::cerr << "TODO: Better warning // Cannot draw Dynamicbstacle, initial state value is missing" << std::endl;
-    //     }
-    // }
-    // else if (step <= trajectory.size() && trajectory.size() > 0)
-    // {
-    //     ctx->save();
-
-    //     trajectory.at(step - 1).transform_context(ctx, scale);
-
-    //     draw_shape_with_text(ctx, scale, local_orientation);
-
-    //     ctx->restore();
-    // }
-    // else if (step <= occupancy_set.size() && occupancy_set.size() > 0)
-    // {
-    //     //Draw occupancy shape
-    //     ctx->save();
-    //     occupancy_set.at(step - 1).draw(ctx, scale, 0, 0, 0, local_orientation);
-    //     occupancy_set.at(step - 1).transform_context(ctx, scale);
-    //     draw_text(ctx, scale, local_orientation, occupancy_set.at(step - 1).get_center());
-    //     ctx->restore();
-
-    //     //Draw obstacle shape at centroid of occupancy shape
-    //     // ctx->save();
-    //     // occupancy_set.at(step - 1).transform_context(ctx, scale);
-    //     // if (shape.has_value())
-    //     // {
-    //     //     shape->draw(ctx, scale);
-    //     // }
-    //     // else
-    //     // {
-    //     //     std::cerr << "TODO: Better warning // Cannot draw shape at position, no value set for shape" << std::endl;
-    //     // }
-    //     // ctx->restore();
-    // }
-
-    // //Step - 1 is current trajectory index (0 for initial state)
-    // step = step + 1;
-    // if (step > trajectory.size() && trajectory.size() > 0) 
-    // {
-    //     step = 0;
-    // }
-    // else if (step > occupancy_set.size() && occupancy_set.size() > 0)
-    // {
-    //     step = 0;
-    // }
-
-    // ctx->restore();
-}
-#pragma GCC diagnostic pop
-
-void DynamicObstacle::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
-{
-    if(initial_state.has_value())
-    {
-        initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
-
-    for (auto& state : trajectory)
-    {
-        state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
-    }
-}
-
-std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
-{
-    std::vector<CommonTrajectoryPoint> ret_trajectory;
+    ObstacleSimulationData commonroad_trajectory;
 
     //Add initial point
-    CommonTrajectoryPoint initial_point;
+    ObstacleSimulationSegment initial_point;
 
     assert(initial_state.has_value()); //Must exist anyway at this point 
     //Required data must exist, this function may throw an error otherwise
@@ -364,17 +300,19 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
     initial_point.orientation = initial_state->get_orientation_mean();
     //Optional data
     initial_point.velocity = initial_state->get_velocity();
+    if (shape.has_value())
+    {
+        initial_point.shape = shape->to_dds_msg();
+    }
 
-    initial_point.obstacle_type = type;
-
-    ret_trajectory.push_back(initial_point);
+    commonroad_trajectory.trajectory.push_back(initial_point);
 
 
     if (trajectory.size() > 0)
     {
         for (auto& point : trajectory)
         {
-            CommonTrajectoryPoint trajectory_point;
+            ObstacleSimulationSegment trajectory_point;
 
             //Required data must exist, this function may throw an error otherwise
             if (! point.get_position().position_is_lanelet_ref())
@@ -392,29 +330,119 @@ std::vector<CommonTrajectoryPoint> DynamicObstacle::get_trajectory()
             //Optional data
             trajectory_point.velocity = point.get_velocity();
 
-            trajectory_point.obstacle_type = type;
+            //Shape data (never changes for trajectory type)
+            if (shape.has_value())
+            {
+                trajectory_point.shape = shape->to_dds_msg();
+            }
 
-            ret_trajectory.push_back(trajectory_point);
+            commonroad_trajectory.trajectory.push_back(trajectory_point);
         }
     }
     else if (occupancy_set.size() > 0)
     {
         for (auto& point : occupancy_set)
         {
-            CommonTrajectoryPoint trajectory_point;
+            ObstacleSimulationSegment trajectory_point;
+
+            //Either use occupancy or shape, if that exists
+            auto occupancy_shape = point.get_shape();
+            if (occupancy_shape.has_value())
+            {
+                trajectory_point.shape = occupancy_shape->to_dds_msg();   
+            }
+            else if (shape.has_value())
+            {
+                trajectory_point.shape = shape->to_dds_msg();
+            }
 
             //Required data must exist, this function may throw an error otherwise - there is no lanelet ref in occupancy
-            trajectory_point.position = std::optional<std::pair<double, double>>(point.get_center());
             trajectory_point.time = std::optional<IntervalOrExact>(point.get_time());
-            trajectory_point.orientation = point.get_orientation();
+
+            //Point values are given by the shape implicitly
+            //trajectory_point.position = std::optional<std::pair<double, double>>(point.get_center());
+            //trajectory_point.orientation = point.get_orientation(); Is already within shape
+            trajectory_point.position = std::optional<std::pair<double, double>>(std::in_place, 0.0, 0.0);
+            trajectory_point.orientation = std::optional<double>(0.0);
             //Velocity data does not exist in this case
 
             trajectory_point.is_exact = false; //Occupancy values are never exact, because they define an occupied area
-            trajectory_point.obstacle_type = type;
 
-            ret_trajectory.push_back(trajectory_point);
+            commonroad_trajectory.trajectory.push_back(trajectory_point);
         }
     }
+
+    //Translate type to DDS type
+    switch(type)
+    {
+        case ObstacleTypeDynamic::Bicycle:
+            commonroad_trajectory.obstacle_type = ObstacleType::Bicycle;
+            break;
+        case ObstacleTypeDynamic::Bus:
+            commonroad_trajectory.obstacle_type = ObstacleType::Bus;
+            break;
+        case ObstacleTypeDynamic::Car:
+            commonroad_trajectory.obstacle_type = ObstacleType::Car;
+            break;
+        case ObstacleTypeDynamic::Motorcycle:
+            commonroad_trajectory.obstacle_type = ObstacleType::Motorcycle;
+            break;
+        case ObstacleTypeDynamic::Pedestrian:
+            commonroad_trajectory.obstacle_type = ObstacleType::Pedestrian;
+            break;
+        case ObstacleTypeDynamic::PriorityVehicle:
+            commonroad_trajectory.obstacle_type = ObstacleType::PriorityVehicle;
+            break;
+        case ObstacleTypeDynamic::Train:
+            commonroad_trajectory.obstacle_type = ObstacleType::Train;
+            break;
+        case ObstacleTypeDynamic::Truck:
+            commonroad_trajectory.obstacle_type = ObstacleType::Truck;
+            break;
+        case ObstacleTypeDynamic::Unknown:
+            commonroad_trajectory.obstacle_type = ObstacleType::Unknown;
+            break;
+    }
     
-    return ret_trajectory;
+    return commonroad_trajectory;
+}
+
+std::string DynamicObstacle::get_obstacle_type_text()
+{
+    return obstacle_type_text;
+}
+
+ObstacleTypeDynamic DynamicObstacle::get_type()
+{
+    return type;
+}
+
+const std::optional<Shape>& DynamicObstacle::get_shape() const
+{
+    return shape;
+}
+
+const std::optional<State>& DynamicObstacle::get_initial_state() const
+{
+    return initial_state;
+}
+
+const std::optional<SignalState>& DynamicObstacle::get_initial_signal_state() const
+{
+    return initial_signal_state;
+}
+
+const std::vector<State>& DynamicObstacle::get_trajectory() const
+{
+    return trajectory;
+}
+
+const std::vector<Occupancy>& DynamicObstacle::get_occupancy_set() const
+{
+    return occupancy_set;
+}
+
+const std::vector<SignalState>& DynamicObstacle::get_signal_series() const
+{
+    return signal_series;
 }

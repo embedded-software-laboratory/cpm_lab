@@ -106,7 +106,11 @@ int main (int argc, char *argv[]) {
         //Log error if the own ID could not yet be determined
         if (hlc_id == "")
         {
-            cpm::Logging::Instance().write("ID of a NUC could not yet be determined");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ID of a NUC could not yet be determined"
+            );
         }
     }
 
@@ -119,36 +123,64 @@ int main (int argc, char *argv[]) {
     timer->start([&](uint64_t t_now) {
         if (!std::experimental::filesystem::is_directory("/home/guest/dev/software/cpm_lib/dds_idl_matlab"))
         {
-            cpm::Logging::Instance().write("The cpm IDL files for matlab are missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The cpm IDL files for matlab are missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         if (!file_exists("/home/guest/dev/software/cpm_lib/build/libcpm.so"))
         {
-            cpm::Logging::Instance().write("The cpm library is missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The cpm library is missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         if (!file_exists("/home/guest/dev/software/middleware/build/middleware"))
         {
-            cpm::Logging::Instance().write("The middleware executable is missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The middleware executable is missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         if (!file_exists("/home/guest/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml"))
         {
-            cpm::Logging::Instance().write("The middleware QoS file is missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The middleware QoS file is missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         if (!file_exists("/home/guest/dev/software/high_level_controller/init_script.m"))
         {
-            cpm::Logging::Instance().write("The matlab import file is missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The matlab import file is missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         if (!file_exists("/home/guest/dev/software/high_level_controller/QOS_READY_TRIGGER.xml"))
         {
-            cpm::Logging::Instance().write("The matlab QoS file is missing on NUC %s", hlc_id.c_str());
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The matlab QoS file is missing on NUC %s", hlc_id.c_str()
+            );
         }
 
         //This software only is started in case that packages are missing - if none of the conditions above hold, still log a general error message
-        cpm::Logging::Instance().write("Files are missing on NUC %s", hlc_id.c_str());
+        cpm::Logging::Instance().write(
+            1,
+            "%s", 
+            "Files are missing on NUC %s", hlc_id.c_str()   
+        );
     });
 
     #pragma GCC diagnostic pop

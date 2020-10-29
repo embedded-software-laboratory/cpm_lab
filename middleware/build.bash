@@ -1,4 +1,9 @@
 #!/bin/bash
+# exit when any command fails
+set -e
+
+# Get directory of bash script
+BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 mkdir -p build
 
@@ -13,23 +18,24 @@ cmake ..
 make -j$(nproc)
 
 # Publish middleware package via http/apache for the HLCs to download
-if [ ! -d "/var/www/html/nuc" ]; then
-    sudo mkdir -p "/var/www/html/nuc"
-    sudo chmod a+rwx "/var/www/html/nuc"
-fi
-# DIR holds the location of build.bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd $DIR
-rm -rf middleware_package
-mkdir middleware_package
-cp ~/dev/software/middleware/build/middleware ./middleware_package
-cp ~/dev/software/middleware/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
-tar -czf middleware_package.tar.gz middleware_package
-rm -f /var/www/html/nuc/middleware_package.tar.gz
-cp ./middleware_package.tar.gz /var/www/html/nuc
-rm -rf middleware_package
-rm -rf middleware_package.tar.gz
+# This if does not work, must be changed (the package is never created on the main PC, at least with my account (leon), but is created without the if)
+#if [ $SIMULATION == 0 ]; then
+    if [ ! -d "/var/www/html/nuc" ]; then
+        sudo mkdir -p "/var/www/html/nuc"
+        sudo chmod a+rwx "/var/www/html/nuc"
+    fi
+    cd ${BASH_DIR}
+    rm -rf middleware_package
+    mkdir middleware_package
+    cp ${BASH_DIR}/build/middleware ./middleware_package
+    cp ${BASH_DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./middleware_package
+    tar -czf middleware_package.tar.gz middleware_package
+    rm -f /var/www/html/nuc/middleware_package.tar.gz
+    cp ./middleware_package.tar.gz /var/www/html/nuc
+    rm -rf middleware_package
+    rm -rf middleware_package.tar.gz
+#fi
 
 # Perform unittest
-cd ~/dev/software/middleware/build 
+cd ${BASH_DIR}/build 
 ./unittest

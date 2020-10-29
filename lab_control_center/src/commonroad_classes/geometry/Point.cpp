@@ -59,8 +59,9 @@ Point::Point(const xmlpp::Node* node)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 Point::Point(int irrelevant_int)
 {
-    //TODO: Find out default value
+    //This is probably the default value
     //We use this constructor because we do not want a default constructor to exist, but the parameter is actually pointless
+    //If a point value is not given for a datatype where a position is necessary for its interpretation, we interpret this as a sign to use a 'default position' instead
     x = 0.0;
     y = 0.0;
 }
@@ -114,6 +115,16 @@ void Point::draw(const DrawingContext& ctx, double scale, double global_orientat
 }
 #pragma GCC diagnostic pop
 
+CommonroadDDSPoint Point::to_dds_msg()
+{
+    CommonroadDDSPoint point;
+
+    point.x(x);
+    point.y(y);
+
+    return point;
+}
+
 double Point::get_x()
 {
     return x;
@@ -124,7 +135,7 @@ double Point::get_y()
     return y;
 }
 
-double Point::get_z()
+const std::optional<double>& Point::get_z() const
 {
-    return z.value_or(0.0); //TODO: Maybe return as std::optional instead
+    return z;
 }

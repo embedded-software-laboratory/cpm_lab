@@ -47,6 +47,13 @@ SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehi
     const std::vector<double> nodes_cos = std::vector<double>{1.0000e+00,9.9875e-01,1.0000e+00,9.9874e-01,8.7677e-01,8.7680e-01,1.5918e-01,1.5927e-01,0.0000e+00,0.0000e+00,-8.7962e-01,1.5925e-01,-8.7962e-01,-1.0000e+00,-1.0000e+00,4.0366e-05,6.1691e-01,-4.0327e-05,6.1691e-01,9.9874e-01,-1.0000e+00,0.0000e+00,4.0366e-05,1.0000e+00,-4.0327e-05,1.0000e+00,0.0000e+00,-1.0000e+00,9.9875e-01,9.9874e-01,8.7677e-01,8.7680e-01,1.5918e-01,1.5927e-01,0.0000e+00,0.0000e+00,-8.7962e-01,-8.7962e-01,1.5925e-01,-1.0000e+00,-1.0000e+00,6.1691e-01,6.1691e-01,9.9874e-01,0.0000e+00,1.0000e+00,1.0000e+00,0.0000e+00,-9.9875e-01,-1.0000e+00,-9.9874e-01,-1.0000e+00,-8.7677e-01,-8.7680e-01,-1.5918e-01,-1.5927e-01,8.7962e-01,8.7962e-01,-1.5925e-01,-6.1691e-01,-4.0366e-05,-6.1691e-01,4.0327e-05,-9.9874e-01,1.0000e+00,-4.0366e-05,4.0327e-05,1.0000e+00,-9.9875e-01,-9.9874e-01,-8.7677e-01,-8.7680e-01,-1.5918e-01,-1.5927e-01,8.7962e-01,-1.5925e-01,8.7962e-01,-6.1691e-01,-6.1691e-01,-9.9874e-01,};
     const std::vector<double> nodes_sin = std::vector<double>{0.0000e+00,-5.0058e-02,0.0000e+00,-5.0154e-02,-4.8090e-01,-4.8086e-01,-9.8725e-01,-9.8724e-01,-1.0000e+00,-1.0000e+00,-4.7568e-01,-9.8724e-01,-4.7568e-01,-3.4318e-05,3.4305e-05,1.0000e+00,7.8703e-01,1.0000e+00,7.8703e-01,-5.0169e-02,0.0000e+00,1.0000e+00,-1.0000e+00,-3.4318e-05,-1.0000e+00,3.4305e-05,1.0000e+00,0.0000e+00,5.0058e-02,5.0154e-02,4.8090e-01,4.8086e-01,9.8725e-01,9.8724e-01,1.0000e+00,1.0000e+00,4.7568e-01,4.7568e-01,9.8724e-01,3.4318e-05,-3.4305e-05,-7.8703e-01,-7.8703e-01,5.0169e-02,-1.0000e+00,3.4318e-05,-3.4305e-05,-1.0000e+00,-5.0058e-02,0.0000e+00,-5.0154e-02,0.0000e+00,-4.8090e-01,-4.8086e-01,-9.8725e-01,-9.8724e-01,-4.7568e-01,-4.7568e-01,-9.8724e-01,7.8703e-01,1.0000e+00,7.8703e-01,1.0000e+00,-5.0169e-02,0.0000e+00,-1.0000e+00,-1.0000e+00,0.0000e+00,5.0058e-02,5.0154e-02,4.8090e-01,4.8086e-01,9.8725e-01,9.8724e-01,4.7568e-01,9.8724e-01,4.7568e-01,-7.8703e-01,-7.8703e-01,5.0169e-02,};
     const std::vector<double> index_map {2,3,5,7,9,55,53,50,51,69,71,73,35,33,31,29,14,25,62,66,46,40,24,17};  
+
+    //Log error if ID higher than expected with current setup - Current method must be changed anyway
+    if (static_cast<size_t>(vehicle_id) + 1 > index_map.size())
+    {   
+        cpm::Logging::Instance().write(1, "%s", "Vehicle ID too high for current simulation setup!");
+    }
+
     if(starting_position.size() != 3){
         //TODO: Change method, this is not valid for vehicle IDs > 23
         px = nodes_x.at(index_map.at(vehicle_id));
@@ -125,7 +132,8 @@ VehicleState SimulationVehicle::update(
     for (auto const& colli : collisions)
     {
         cpm::Logging::Instance().write(
-            "Collision with vehicle %u at time %llu.", 
+            1,
+            "Warning: Simulation: Collision with vehicle %u at time %llu.", 
             colli.first, colli.second);
     }
     // Erase trajectory points which are older than 0.5 seconds
