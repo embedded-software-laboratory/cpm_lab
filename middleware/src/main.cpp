@@ -177,6 +177,7 @@ int main (int argc, char *argv[]) {
         state_list.state_list(rti_states);
         state_list.vehicle_observation_list(rti_observations);
         state_list.t_now(t_now);
+        state_list.period_ms(period_ms);
 
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);
