@@ -40,6 +40,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
+
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
@@ -138,6 +140,9 @@ private:
     //Remember line in commonroad file for logging
     int commonroad_line = 0;
 
+    //Look up in draw if some parts should be drawn or not
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
+
     /**
      * \brief This function translates a bound node to Bound
      * \param node A bound node
@@ -188,6 +193,8 @@ private:
 
     //Helper functions
     void set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length);
+    std::string to_text(LaneletType lanelet_type);
+    std::string to_text(VehicleType vehicle_type);
 
 public:
     /**
@@ -196,11 +203,13 @@ public:
      * \param node A lanelet node
      * \param traffic_sign_positions A map in which, during lanelet translation, lanelet ID and if position comes from a stop line are being stored
      * \param traffic_light_positions A map in which, during lanelet translation, lanelet ID and if position comes from a stop line are being stored
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     Lanelet(
         const xmlpp::Node* node, 
         std::map<int, std::pair<int, bool>>& traffic_sign_positions, 
-        std::map<int, std::pair<int, bool>>& traffic_light_positions
+        std::map<int, std::pair<int, bool>>& traffic_light_positions,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     );
 
     /**

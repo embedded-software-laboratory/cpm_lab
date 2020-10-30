@@ -87,7 +87,7 @@ public:
         ctx->set_line_width(0.03 * scale);
         ctx->move_to(x_1, y_1);
         ctx->line_to(x_2, y_2);
-        ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
+        ctx->line_to(x_2 + 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 - 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2, y_2);
         ctx->fill_preserve();
@@ -114,9 +114,10 @@ public:
         ctx->set_source_rgb(.2,.1,.1);
         ctx->show_text(text);
 
-        ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-        ctx->set_source_rgb(.1,.1,.1);
-        ctx->show_text(text);
+        //For relief, not that readable
+        // ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+        // ctx->set_source_rgb(.1,.1,.1);
+        // ctx->show_text(text);
 
         ctx->restore();
     }

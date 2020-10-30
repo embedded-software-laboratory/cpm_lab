@@ -56,6 +56,12 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("button_save_profile", button_save_profile);
     builder->get_widget("button_reset_profile", button_reset_profile);
     builder->get_widget("button_preview", button_preview);
+    builder->get_widget("check_traffic_signs", check_traffic_signs);
+    builder->get_widget("check_traffic_lights", check_traffic_lights);
+    builder->get_widget("check_lanelet_types", check_lanelet_types);
+    builder->get_widget("check_lanelet_orientation", check_lanelet_orientation);
+    builder->get_widget("check_goal_description", check_goal_description);
+    builder->get_widget("check_obstacle_description", check_obstacle_description);
 
     assert(parent);
     assert(commonroad_box);
@@ -76,6 +82,12 @@ CommonroadViewUI::CommonroadViewUI
     assert(button_save_profile);
     assert(button_reset_profile);
     assert(button_preview);
+    assert(check_traffic_signs);
+    assert(check_traffic_lights);
+    assert(check_lanelet_types);
+    assert(check_lanelet_orientation);
+    assert(check_goal_description);
+    assert(check_obstacle_description);
 
     //Register button callbacks
     button_choose_commonroad->signal_clicked().connect(sigc::mem_fun(this, &CommonroadViewUI::open_file_explorer));
@@ -100,6 +112,68 @@ CommonroadViewUI::CommonroadViewUI
     entry_translate_y->set_tooltip_text("Set y translation. 0 means no change desired. Applied before scale change. Also applies w. Return.");
     entry_translate_y->set_tooltip_text("Set rotation around z axis, counter-clockwise. Applied before scale change, after transformation (as in commonroad specs). Also applies w. Return.");
     button_apply_transformation->set_tooltip_text("Permanently apply set transformation to coordinate system. Future transformations are applied relative to new coordinate system.");
+
+    //Callbacks for draw toggles
+    check_traffic_signs->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_traffic_signs.store(check_traffic_signs->get_active());
+            }
+        }
+    );
+    check_traffic_lights->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_traffic_lights.store(check_traffic_lights->get_active());
+            }
+        }
+    );
+    check_lanelet_types->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_lanelet_types.store(check_lanelet_types->get_active());
+            }
+        }
+    );
+    check_lanelet_orientation->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_lanelet_orientation.store(check_lanelet_orientation->get_active());
+            }
+        }
+    );
+    check_goal_description->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_goal_description.store(check_goal_description->get_active());
+            }
+        }
+    );
+    check_obstacle_description->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_obstacle_description.store(check_obstacle_description->get_active());
+            }
+        }
+    );
 
     //Set current time step size as initial text for entry
     std::stringstream current_time_step_size_stream;

@@ -115,8 +115,25 @@ private:
     std::vector<TrafficLightCycle> cycles;
     std::vector<int> cycle_lines;
 
+    int id;
+
+    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
+
+    //Helper function that draws a tiny traffic light symbol
+    void draw_traffic_light_symbol(const DrawingContext& ctx, double scale);
+
 public:
-    TrafficLight(const xmlpp::Node* node);
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
+     * \param node A trafficLight node
+     * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
+     */
+    TrafficLight(
+        const xmlpp::Node* node,
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+    );
 
     //Helper functions for better readability
     Position translate_position(const xmlpp::Node* position_node);

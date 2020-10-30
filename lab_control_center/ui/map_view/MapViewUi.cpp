@@ -935,8 +935,10 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         }
         ctx->restore();
 
+        //Draw description
+        assert(commonroad_scenario->get_draw_configuration());
         ctx->save();
-        {
+        if (commonroad_scenario->get_draw_configuration()->draw_obstacle_description.load()) {
             //Translate to shape center, if position is mostly defined by the shape's positional values
             auto shape_center = get_shape_center(entry.shape());
             ctx->translate(shape_center.first, shape_center.second);

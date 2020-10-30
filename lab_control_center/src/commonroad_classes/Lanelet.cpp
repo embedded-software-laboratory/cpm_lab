@@ -29,8 +29,11 @@
 Lanelet::Lanelet(
     const xmlpp::Node* node,
     std::map<int, std::pair<int, bool>>& traffic_sign_positions, 
-    std::map<int, std::pair<int, bool>>& traffic_light_positions
+    std::map<int, std::pair<int, bool>>& traffic_light_positions,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
 )
+    :
+    draw_configuration(_draw_configuration)
 {
     //Check if node is of type lanelet
     assert(node->get_name() == "lanelet");
@@ -492,6 +495,97 @@ void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMa
     
 }
 
+std::string Lanelet::to_text(LaneletType lanelet_type)
+{
+    switch (lanelet_type)
+    {
+        case LaneletType::AccessRamp:
+            return "Acc";
+            break;
+        case LaneletType::BicycleLane:
+            return "Bic";
+            break;
+        case LaneletType::BusLane:
+            return "BusL";
+            break;
+        case LaneletType::BusStop:
+            return "BusS";
+            break;
+        case LaneletType::Country:
+            return "Cou";
+            break;
+        case LaneletType::Crosswalk:
+            return "Cro";
+            break;
+        case LaneletType::DriveWay:
+            return "Dri";
+            break;
+        case LaneletType::ExitRamp:
+            return "Ex";
+            break;
+        case LaneletType::Highway:
+            return "Hi";
+            break;
+        case LaneletType::Interstate:
+            return "Int";
+            break;
+        case LaneletType::MainCarriageWay:
+            return "Mai";
+            break;
+        case LaneletType::Sidewalk:
+            return "Sid";
+            break;
+        case LaneletType::Unknown:
+            return "Unk";
+            break;
+        case LaneletType::Unspecified:
+            return "Uns";
+            break;
+        case LaneletType::Urban:
+            return "Ur";
+            break;
+    }
+
+    return "Error";
+}
+
+std::string Lanelet::to_text(VehicleType vehicle_type)
+{
+    switch ((vehicle_type))
+    {
+    case VehicleType::Bicycle:
+        return "Bic";
+        break;
+    case VehicleType::Bus:
+        return "Bus";
+        break;
+    case VehicleType::Car:
+        return "Car";
+        break;
+    case VehicleType::Motorcycle:
+        return "Mot";
+        break;
+    case VehicleType::Pedestrian:
+        return "Ped";
+        break;
+    case VehicleType::PriorityVehicle:
+        return "Pri";
+        break;
+    case VehicleType::Train:
+        return "Tra";
+        break;
+    case VehicleType::Truck:
+        return "Tru";
+        break;
+    case VehicleType::Vehicle:
+        return "Veh";
+        break;
+    }
+
+    return "Error";
+}
+
+
 /******************************Interface functions***********************************/
 
 void Lanelet::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
@@ -526,6 +620,8 @@ void Lanelet::transform_coordinate_system(double scale, double angle, double tra
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    assert(draw_configuration);
+
     //Current state: Only draw boundaries
     //Local orientation does not really make sense here, so it is ignored
     ctx->save();
@@ -572,24 +668,27 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
     }
 
-    //Draw arrows for lanelet orientation (currently disabled)
-    //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
-    // assert(left_bound.points.size() == right_bound.points.size());
-    // size_t arrow_start_pos = 0;
-    // size_t arrow_end_pos = 1;
-    // ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
-    // while (arrow_end_pos < left_bound.points.size())
-    // {
-    //     double x_1 = (left_bound.points.at(arrow_start_pos).get_x() + right_bound.points.at(arrow_start_pos).get_x()) / 2.0;
-    //     double y_1 = (left_bound.points.at(arrow_start_pos).get_y() + right_bound.points.at(arrow_start_pos).get_y()) / 2.0;
-    //     double x_2 = (left_bound.points.at(arrow_end_pos).get_x() + right_bound.points.at(arrow_end_pos).get_x()) / 2.0;
-    //     double y_2 = (left_bound.points.at(arrow_end_pos).get_y() + right_bound.points.at(arrow_end_pos).get_y()) / 2.0;
 
-    //     draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
+   if (draw_configuration->draw_lanelet_orientation.load()) {
+        //Draw arrows for lanelet orientation
+        //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
+        assert(left_bound.points.size() == right_bound.points.size());
+        size_t arrow_start_pos = 0;
+        size_t arrow_end_pos = 1;
+        ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
+        while (arrow_end_pos < left_bound.points.size())
+        {
+            double x_1 = (0.5 * left_bound.points.at(arrow_start_pos).get_x() + 0.5 * right_bound.points.at(arrow_start_pos).get_x());
+            double y_1 = (0.5 * left_bound.points.at(arrow_start_pos).get_y() + 0.5 * right_bound.points.at(arrow_start_pos).get_y());
+            double x_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_x() + 0.5 * right_bound.points.at(arrow_end_pos).get_x());
+            double y_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_y() + 0.5 * right_bound.points.at(arrow_end_pos).get_y());
 
-    //     ++arrow_start_pos;
-    //     ++arrow_end_pos;
-    // }
+            draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
+
+            ++arrow_start_pos;
+            ++arrow_end_pos;
+        }
+    }
 
     //Draw stop lines - we already made sure that it consists of two points in translation
     if (stop_line.has_value())
@@ -602,8 +701,32 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
     }
 
+    //Draw time, velocity description
+    if (draw_configuration->draw_lanelet_types.load())
+    {
+        ctx->save();
+
+        std::stringstream descr_stream;
+        descr_stream << "T: " << to_text(lanelet_type);
+
+        if (speed_limit.has_value())
+        {
+            descr_stream << " | Speed: " << speed_limit.value();
+        }
+        
+        //Move to lanelet center for text, draw centered around it, rotate by angle of lanelet
+        auto center = get_center();
+        ctx->translate(center.first, center.second);
+        //Calculate lanelet angle (trivial solution used here will not work properly for arcs etc)
+        auto alpha = atan((left_bound.points.rbegin()->get_y() - left_bound.points.at(0).get_y()) / (left_bound.points.rbegin()->get_x() - left_bound.points.at(0).get_x())); //alpha = arctan(dy / dx)
+        
+        draw_text_centered(ctx, 0, 0, alpha, 4, descr_stream.str());
+
+        ctx->restore();
+    }
+
     //TODO: Line markings, stop lines etc
-    if (speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    if (user_one_way.size() > 0 || user_bidirectional.size() > 0)
     {
         std::stringstream error_stream;
         error_stream << "Speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;

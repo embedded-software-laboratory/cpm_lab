@@ -89,6 +89,14 @@ private:
     //Button to preview the movement of the obstacles
     Gtk::Button* button_preview = nullptr;
 
+    //Buttons to toggle views for the scenario
+    Gtk::CheckButton* check_traffic_signs;
+    Gtk::CheckButton* check_traffic_lights;
+    Gtk::CheckButton* check_lanelet_types;
+    Gtk::CheckButton* check_lanelet_orientation;
+    Gtk::CheckButton* check_goal_description;
+    Gtk::CheckButton* check_obstacle_description;
+
     //View to set / edit which obstacles should be simulated / shown
     Gtk::FlowBox* static_obstacles_flowbox = nullptr;
     Gtk::FlowBox* dynamic_obstacles_flowbox = nullptr; 

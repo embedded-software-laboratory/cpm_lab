@@ -235,10 +235,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
 
     //Set up / load (new) data entry for transformation profile
     yaml_transformation_storage.set_scenario_name(xml_filepath);
-    if (center_coordinates)
-    {
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, - center.first + 2.25, - center.second + 2.0, 0.0);
-    }
+    //Change regarding center_coordinate is not stored in the transform profile (it is either done by default at loading or disabled, so it must not be stored as well)
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -293,7 +290,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions)});
+        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions, draw_configuration)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
@@ -301,7 +298,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node)});
+        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node, std::bind(&CommonRoadScenario::get_lanelet_light_position, this, _1))});
     }
     else if (node_name.compare("intersection") == 0)
     {
@@ -359,7 +356,8 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             PlanningProblem(
                 node,
                 std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1),
+                draw_configuration
             )}
         );
     }
@@ -604,6 +602,11 @@ double CommonRoadScenario::get_scale(double min_lane_width)
         cpm::Logging::Instance().write(1, "The lane width value %f of is not allowed (smaller than zero)", min_lane_width);
         min_lane_width = 0.0;
     }
+    
+    if (min_lane_width == 0.0)
+    {
+        return 0.0;
+    }
 
     //Get current min. lane width of lanelets (calculated from point distances)
     double min_width = -1.0;
@@ -675,19 +678,18 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
     {
         double scale = get_scale(lane_width);
 
-        //For the YAML file, only remember translation that was not performed to change coordinates w.r.t. the LCC's center
-        double yaml_translate_x = translate_x;
-        double yaml_translate_y = translate_y;
+        //We want to scale & rotate w.r.t. the current center, which is more intuitive for the user than doing so around the origin
+        calculate_center();
+        auto old_center = center;
+        translate_x -= old_center.first;
+        translate_y -= old_center.second;
 
-        //We still want the coordinate center to be at the LCC's center, so regard transformations made before, revert them, and apply new center-transformation
-        if (scale > 0)
-        {
-            translate_x += (2.25 / scale) - 2.25;
-            translate_y += (2.0 / scale) - 2.0;
-        }
-
-        //Perform transformation
+        //Perform transformation in local coordinate system, then transform back
+        //Update database entry for transformation
         transform_coordinate_system_helper(translate_x, translate_y, angle, scale);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, scale, translate_x, translate_y, angle);
+        transform_coordinate_system_helper(old_center.first, old_center.second, 0.0, 1.0);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, old_center.first, old_center.second, 0.0);
         
         if (scale < 0) //Of course, if lane_width is < 0.0, this error will not appear, but the wrong lane_width value gets reported by get_scale
         {
@@ -695,9 +697,6 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
             error_stream << "Could not transform scenario coordinate system to min lane width - no lanelets defined";
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
-
-        //Update database entry for transformation
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, yaml_translate_x, yaml_translate_y, angle);
 
         xml_translation_mutex.unlock();
 
@@ -772,15 +771,21 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             planning_problem.second.draw(ctx, scale);
         }
 
-        for (auto &traffic_sign : traffic_signs)
+        if (draw_configuration->draw_traffic_signs.load())
         {
-            traffic_sign.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.draw(ctx, scale);
+            } 
+        }
 
-        for (auto &traffic_light : traffic_lights)
+        if (draw_configuration->draw_traffic_lights.load())
         {
-            traffic_light.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.draw(ctx, scale);
+            } 
+        }
 
         //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
 
@@ -816,14 +821,14 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
 void CommonRoadScenario::apply_stored_transformation()
 {
     double time_scale = 0.0;
-    double min_lane_width = 0.0;
+    double scale = 0.0;
     double translate_x = 0.0;
     double translate_y = 0.0;
     double rotation = 0.0;
-    yaml_transformation_storage.load_transformation_from_profile(time_scale, min_lane_width, translate_x, translate_y, rotation);
+    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y, rotation);
 
     std::unique_lock<std::mutex> lock(xml_translation_mutex);
-    transform_coordinate_system_helper(translate_x, translate_y, rotation, get_scale(min_lane_width));
+    transform_coordinate_system_helper(translate_x, translate_y, rotation, scale);
     lock.unlock();
 
     //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
@@ -852,6 +857,11 @@ void CommonRoadScenario::reset_stored_transformation()
 
 
 /******************************Getter***********************************/
+
+std::shared_ptr<CommonroadDrawConfiguration> CommonRoadScenario::get_draw_configuration()
+{
+    return draw_configuration;
+}
 
 //This one is private
 void CommonRoadScenario::calculate_center()
@@ -888,11 +898,6 @@ void CommonRoadScenario::calculate_center()
             }
         }
     }
-
-    // std::cout << "New x_min: " << x_min << std::endl;
-    // std::cout << "New x_max: " << x_max << std::endl;
-    // std::cout << "New y_min: " << y_min << std::endl;
-    // std::cout << "New y_max: " << y_max << std::endl;
 
     //Set values to zero if no values could be found in any of the lanelets
     if (lanelets.size() == 0 || uninitialized)

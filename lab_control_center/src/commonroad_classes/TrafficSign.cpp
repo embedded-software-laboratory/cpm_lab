@@ -236,12 +236,14 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
     {
         double x = 0.0;
         double y = 0.0;
+        bool position_exists = false;
 
         if (element.position.has_value())
         {
             //Position must be exact, this was made sure during translation
             x = element.position->get_point().value().get_x() * scale;
             y = element.position->get_point().value().get_y() * scale;
+            position_exists = true;
 
             std::cout << "using position" << std::endl;
         }
@@ -252,48 +254,46 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
             {
                 x = position->first * scale;
                 y = position->second * scale;
+                position_exists = true;
             }
-            else
+        }
+        
+        if (position_exists)
+        {
+            //Draw test-circle
+            double radius = 0.05;
+            ctx->set_source_rgb(0.6, 0.9, 0.2);
+            ctx->set_line_width(0.005);
+            ctx->move_to(x, y);
+            ctx->begin_new_path();
+            ctx->arc(x, y, radius * scale, 0.0, 2 * M_PI);
+            ctx->close_path();
+            ctx->fill_preserve();
+            ctx->stroke();
+
+            std::stringstream descr_stream;
+            for(auto post : element.traffic_sign_posts)
             {
-                LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-                return;
+                descr_stream << post.traffic_sign_id << " ";
+                if (post.additional_values.size() > 0)
+                {
+                    descr_stream << "( ";
+                    for (auto add_val : post.additional_values)
+                    {
+                        descr_stream << add_val << " ";
+                    }
+                    descr_stream << ")";
+                }
             }
+
+            //Draw IDs
+            ctx->translate(x, y);
+            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
         }
         else
         {
             LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-            return;
         }
-        
-        //Draw test-circle
-        double radius = 0.05;
-        ctx->set_source_rgb(0.6, 0.9, 0.2);
-        ctx->set_line_width(0.005);
-        ctx->move_to(x, y);
-        ctx->begin_new_path();
-        ctx->arc(x, y, radius * scale, 0.0, 2 * M_PI);
-        ctx->close_path();
-        ctx->fill_preserve();
-        ctx->stroke();
-
-        std::stringstream descr_stream;
-        for(auto post : element.traffic_sign_posts)
-        {
-            descr_stream << post.traffic_sign_id << " ";
-            if (post.additional_values.size() > 0)
-            {
-                descr_stream << "( ";
-                for (auto add_val : post.additional_values)
-                {
-                    descr_stream << add_val << " ";
-                }
-                descr_stream << ")";
-            }
-        }
-
-        //Draw IDs
-        ctx->translate(x, y);
-        draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
     }
 
     ctx->restore();
