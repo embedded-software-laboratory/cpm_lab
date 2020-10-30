@@ -63,6 +63,15 @@ GoalState::GoalState(
         if (time_node)
         {
             time = std::optional<IntervalOrExact>(std::in_place, time_node);
+
+            //Time must have a value; make sure that, as specified, the value is greater than zero
+            if (! time.value().is_greater_zero())
+            {
+                std::stringstream error_stream;
+                error_stream << "Time must be greater than zero, in line: ";
+                error_stream << time_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {
@@ -90,24 +99,24 @@ GoalState::GoalState(
     }
 
     //Test output
-    std::cout << "GoalState: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
-    std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
-    std::cout << "\tTime exists: " << time.has_value() << std::endl;
+    // std::cout << "GoalState: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity exists: " << velocity.has_value() << std::endl;
+    // std::cout << "\tOrientation exists: " << orientation.has_value() << std::endl;
+    // std::cout << "\tTime exists: " << time.has_value() << std::endl;
 }
 
-void GoalState::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(scale, 0, 0);
+        velocity->transform_coordinate_system(scale, angle, 0, 0);
     }
 
     if (scale > 0)
@@ -120,7 +129,7 @@ void GoalState::transform_timing(double time_scale)
 {
     if (velocity.has_value())
     {
-        velocity->transform_coordinate_system(time_scale, 0, 0);
+        velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
 }
 

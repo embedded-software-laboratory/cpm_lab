@@ -51,7 +51,7 @@ Point::Point(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
+    // std::cout << "New point created: " << "(" << x << ", " << y << ", " << z.value_or(0) << ")" << std::endl;
 }
 
 //Suppress warning for unused parameter (s)
@@ -74,8 +74,16 @@ Point::Point(double _x, double _y, double _z)
     z = std::optional<double>(_z);
 }
 
-void Point::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Point::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
+    //Translate, rotate, scale as specified for commonroad, in this order
+    x += translate_x;
+    y += translate_y;
+
+    //Rotate
+    rotate_point_around_z(x, y, angle);
+
+    //Scale
     if (scale > 0)
     {
         x *= scale;
@@ -87,9 +95,6 @@ void Point::transform_coordinate_system(double scale, double translate_x, double
             z = std::optional<double>(new_z_value);
         }
     }
-
-    x += translate_x;
-    y += translate_y;
 }
 
 //Suppress warning for unused parameter (s)

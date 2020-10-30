@@ -95,11 +95,11 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     //example: cycle | position | cycle | cycle -> I cannot tell whether "position" belongs to the first or the second cycle 
     
     //Test output
-    std::cout << "TrafficLight: " << std::endl;
-    std::cout << "\tActive size: " << actives.size() << std::endl;
-    std::cout << "\tPosition size: " << positions.size() << std::endl;
-    std::cout << "\tDirection size: " << directions.size() << std::endl;
-    std::cout << "\tCycle size: " << cycles.size() << std::endl;
+    // std::cout << "TrafficLight: " << std::endl;
+    // std::cout << "\tActive size: " << actives.size() << std::endl;
+    // std::cout << "\tPosition size: " << positions.size() << std::endl;
+    // std::cout << "\tDirection size: " << directions.size() << std::endl;
+    // std::cout << "\tCycle size: " << cycles.size() << std::endl;
 }
 
 Position TrafficLight::translate_position(const xmlpp::Node* position_node)
@@ -229,13 +229,13 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
     return cycle;
 }
 
-void TrafficLight::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void TrafficLight::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     for (auto& position : positions)
     {
-        position.transform_coordinate_system(scale, translate_x, translate_y);
+        position.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 

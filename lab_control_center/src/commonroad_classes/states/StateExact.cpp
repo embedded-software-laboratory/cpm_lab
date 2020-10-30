@@ -38,6 +38,14 @@ StateExact::StateExact(const xmlpp::Node* node)
         if (position_node)
         {
             position = std::optional<Position>{std::in_place, position_node};
+
+            if (! position->is_exact())
+            {
+                std::stringstream error_stream;
+                error_stream << "Position must be exact, in line: ";
+                error_stream << position_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {
@@ -78,21 +86,21 @@ StateExact::StateExact(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "StateExact: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity: " << velocity << std::endl;
-    std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
-    std::cout << "\tOrientation: " << orientation << std::endl;
-    std::cout << "\tYaw rate: " << yaw_rate << std::endl;
-    std::cout << "\tSlip angle: " << slip_angle << std::endl;
-    std::cout << "\tTime: " << time << std::endl;
+    // std::cout << "StateExact: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity: " << velocity << std::endl;
+    // std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
+    // std::cout << "\tOrientation: " << orientation << std::endl;
+    // std::cout << "\tYaw rate: " << yaw_rate << std::endl;
+    // std::cout << "\tSlip angle: " << slip_angle << std::endl;
+    // std::cout << "\tTime: " << time << std::endl;
 }
 
-void StateExact::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void StateExact::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     //If all positional values are adjusted, the velocity must be adjusted as well

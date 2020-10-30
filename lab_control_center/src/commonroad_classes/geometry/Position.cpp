@@ -90,12 +90,12 @@ Position::Position(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Position:" << std::endl;
-    std::cout << "\tPoint exists: " << point.has_value() << std::endl;
-    std::cout << "\tCircle size: " << circles.size() << std::endl;
-    std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
-    std::cout << "\tPolygon size: " << polygons.size() << std::endl;
-    std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
+    // std::cout << "Position:" << std::endl;
+    // std::cout << "\tPoint exists: " << point.has_value() << std::endl;
+    // std::cout << "\tCircle size: " << circles.size() << std::endl;
+    // std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
+    // std::cout << "\tPolygon size: " << polygons.size() << std::endl;
+    // std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
 //Suppress warning for unused parameter (s)
@@ -121,26 +121,26 @@ void Position::set_lanelet_get_center_function(std::function<std::pair<double, d
     get_lanelet_center = _get_lanelet_center;
 }
 
-void Position::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Position::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (point.has_value())
     {
-        point->transform_coordinate_system(scale, translate_x, translate_y);
+        point->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& circle : circles)
     {
-        circle.transform_coordinate_system(scale, translate_x, translate_y);
+        circle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& polygon : polygons)
     {
-        polygon.transform_coordinate_system(scale, translate_x, translate_y);
+        polygon.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& rectangle : rectangles)
     {
-        rectangle.transform_coordinate_system(scale, translate_x, translate_y);
+        rectangle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     if (scale > 0)
@@ -323,7 +323,7 @@ bool Position::position_is_lanelet_ref()
     return (lanelet_refs.size() > 0) && !(point.has_value()) && (circles.size() == 0) && (polygons.size() == 0) && (rectangles.size() == 0);
 }
 
-const std::optional<Point>& Position::get_point() const
+std::optional<Point> Position::get_point()
 {
     return point;
 }

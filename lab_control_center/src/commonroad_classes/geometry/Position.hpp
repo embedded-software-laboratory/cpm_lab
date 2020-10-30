@@ -110,7 +110,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -148,7 +148,7 @@ public:
     void to_dds_msg() {} 
 
     //Getters for basic types
-    const std::optional<Point>& get_point() const;
+    std::optional<Point> get_point();
     const std::vector<Circle>& get_circles() const;
     const std::vector<int>& get_lanelet_refs() const;
     const std::vector<Polygon>& get_polygons() const;

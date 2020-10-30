@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
     auto commonroadViewUi = make_shared<CommonroadViewUI>(
         commonroad_scenario,
-        [=](int id, ObstacleToggle::ToggleState state){return obstacle_simulation_manager->set_obstacle_simulation_state(id, state);} 
+        obstacle_simulation_manager 
     );
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
@@ -241,7 +241,9 @@ int main(int argc, char *argv[])
             loggerViewUi->reset();
 
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+            obstacle_simulation_manager->stop(); //In case the preview has been used
             obstacle_simulation_manager->start();
+            commonroadViewUi->reset_preview_label();
 
         }, 
         [=](){

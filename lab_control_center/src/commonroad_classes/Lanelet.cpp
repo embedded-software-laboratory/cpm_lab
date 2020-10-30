@@ -26,7 +26,11 @@
 
 #include "commonroad_classes/Lanelet.hpp"
 
-Lanelet::Lanelet(const xmlpp::Node* node)
+Lanelet::Lanelet(
+    const xmlpp::Node* node,
+    std::map<int, std::pair<int, bool>>& traffic_sign_positions, 
+    std::map<int, std::pair<int, bool>>& traffic_light_positions
+)
 {
     //Check if node is of type lanelet
     assert(node->get_name() == "lanelet");
@@ -62,6 +66,28 @@ Lanelet::Lanelet(const xmlpp::Node* node)
         user_bidirectional = translate_users(node, "userBidirectional");
         traffic_sign_refs = translate_refs(node, "trafficSignRef");
         traffic_light_refs = translate_refs(node, "trafficLightRef");
+
+        //Add positional values for each traffic sign / light ref
+        auto lanelet_id = xml_translation::get_attribute_int(node, "id", true).value();
+        if (stop_line.has_value())
+        {
+            for (const auto ref : stop_line->traffic_sign_refs)
+            {
+                traffic_sign_positions[ref] = {lanelet_id, true};
+            }
+            for (const auto ref : stop_line->traffic_light_ref)
+            {
+                traffic_light_positions[ref] = {lanelet_id, true};
+            }
+        }
+        for (const auto ref : traffic_sign_refs)
+        {
+            traffic_sign_positions[ref] = {lanelet_id, false};
+        }
+        for (const auto ref : traffic_light_refs)
+        {
+            traffic_light_positions[ref] = {lanelet_id, false};
+        }
     }
     catch(const SpecificationError& e)
     {
@@ -75,30 +101,30 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "Lanelet ------------------------------" << std::endl;
-    std::cout << "Left bound marking: TODO" << std::endl;
-    std::cout << "Right bound marking: TODO" << std::endl;
+    // std::cout << "Lanelet ------------------------------" << std::endl;
+    // std::cout << "Left bound marking: TODO" << std::endl;
+    // std::cout << "Right bound marking: TODO" << std::endl;
 
-    std::cout << "Predecessors refs: ";
-    for (int ref : predecessors)
-    {
-        std:: cout << "| " << ref;
-    }
-    std::cout << std::endl;
+    // std::cout << "Predecessors refs: ";
+    // for (int ref : predecessors)
+    // {
+    //     std:: cout << "| " << ref;
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "Successor refs: ";
-    for (int ref : successors)
-    {
-        std:: cout << "| " << ref;
-    }
-    std::cout << std::endl;
+    // std::cout << "Successor refs: ";
+    // for (int ref : successors)
+    // {
+    //     std:: cout << "| " << ref;
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
-    std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
+    // std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
+    // std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
 
-    std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
+    // std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
 
-    std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
+    // std::cout << "Lanelet end --------------------------" << std::endl << std::endl;
 }
 
 Bound Lanelet::translate_bound(const xmlpp::Node* node, std::string name)
@@ -249,6 +275,10 @@ LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string
         {
             return LaneletType::Urban;
         }
+        else if (lanelet_type_string.compare("interstate") == 0)
+        {
+            return LaneletType::Interstate;
+        }
         else if (lanelet_type_string.compare("country") == 0)
         {
             return LaneletType::Country;
@@ -292,6 +322,10 @@ LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string
         else if (lanelet_type_string.compare("busStop") == 0)
         {
             return LaneletType::BusStop;
+        }
+        else if (lanelet_type_string.compare("unknown") == 0)
+        {
+            return LaneletType::Unknown;
         }
         else 
         {
@@ -420,15 +454,53 @@ double Lanelet::get_min_width()
     return min_width;
 }
 
+void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length)
+{
+    if (line_marking.has_value())
+    {
+        //Set or disable dashes
+        if (line_marking.value() == LineMarking::BroadDashed || line_marking.value() == LineMarking::Dashed)
+        {
+            std::vector<double> dashes {dash_length};
+            ctx->set_dash(dashes, 0.0);
+        }
+        else
+        {
+            //Disable dashes
+            std::vector<double> dashes {};
+            ctx->set_dash(dashes, 0.0);
+        }
+        
+        //Set line width
+        if (line_marking.value() == LineMarking::BroadSolid || line_marking.value() == LineMarking::BroadDashed)
+        {
+            ctx->set_line_width(0.03);
+        }
+        else
+        {
+            ctx->set_line_width(0.005);
+        }
+    }
+    else
+    {
+        //Disable dashes
+        std::vector<double> dashes {};
+        ctx->set_dash(dashes, 0.0);
+
+        ctx->set_line_width(0.005);
+    }
+    
+}
+
 /******************************Interface functions***********************************/
 
-void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Lanelet::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (stop_line.has_value())
     {
         for (auto& point : stop_line->points)
         {
-            point.transform_coordinate_system(scale, translate_x, translate_y);
+            point.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 
@@ -440,12 +512,12 @@ void Lanelet::transform_coordinate_system(double scale, double translate_x, doub
 
     for (auto& point : right_bound.points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& point : left_bound.points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -480,6 +552,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
         ctx->begin_new_path();
+        set_boundary_style(ctx, left_bound.line_marking, 0.03);
         ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
         for (auto point : left_bound.points)
         {
@@ -489,6 +562,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
 
         ctx->begin_new_path();
+        set_boundary_style(ctx, right_bound.line_marking, 0.03);
         ctx->move_to(right_bound.points.at(0).get_x() * scale, right_bound.points.at(0).get_y() * scale);
         for (auto point : right_bound.points)
         {
@@ -498,7 +572,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
     }
 
-    //Draw arrows for lanelet orientation
+    //Draw arrows for lanelet orientation (currently disabled)
     //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
     // assert(left_bound.points.size() == right_bound.points.size());
     // size_t arrow_start_pos = 0;
@@ -517,12 +591,22 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     //     ++arrow_end_pos;
     // }
 
+    //Draw stop lines - we already made sure that it consists of two points in translation
+    if (stop_line.has_value())
+    {
+        ctx->begin_new_path();
+        ctx->set_source_rgb(.9,.3,.3);
+        set_boundary_style(ctx, std::optional<LineMarking>{stop_line->line_marking}, 0.03);
+        ctx->move_to(stop_line->points.at(0).get_x() * scale, stop_line->points.at(0).get_y() * scale);
+        ctx->line_to(stop_line->points.at(1).get_x() * scale, stop_line->points.at(1).get_y() * scale);
+        ctx->stroke();
+    }
 
     //TODO: Line markings, stop lines etc
-    if (stop_line.has_value() || speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    if (speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
     {
         std::stringstream error_stream;
-        error_stream << "Line markings, speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
+        error_stream << "Speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
         LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 
@@ -577,8 +661,8 @@ std::pair<double, double> Lanelet::get_center()
     size_t vec_size = left_bound.points.size();
     size_t middle_index = static_cast<size_t>(static_cast<double>(vec_size) / 2.0);
 
-    double x = (left_bound.points.at(middle_index).get_x() + right_bound.points.at(middle_index).get_x()) / 2.0;
-    double y = (left_bound.points.at(middle_index).get_y() + right_bound.points.at(middle_index).get_y()) / 2.0;
+    double x = (0.5 * left_bound.points.at(middle_index).get_x() + 0.5 * right_bound.points.at(middle_index).get_x());
+    double y = (0.5 * left_bound.points.at(middle_index).get_y() + 0.5 * right_bound.points.at(middle_index).get_y());
 
     return std::pair<double, double>(x, y);
 }
@@ -600,6 +684,22 @@ std::pair<double, double> Lanelet::get_center_of_all_points()
     }
 
     return std::pair<double, double>(x, y);
+}
+
+std::optional<std::pair<double, double>> Lanelet::get_stopline_center()
+{
+    if (stop_line.has_value())
+    {
+        //We already made sure during translation that Point actually consists of two points
+        return std::optional<std::pair<double, double>>({
+            stop_line->points.at(0).get_x() * 0.5 + stop_line->points.at(1).get_x() * 0.5,
+            stop_line->points.at(0).get_y() * 0.5 + stop_line->points.at(1).get_y() * 0.5
+        });
+    }
+    else
+    {
+        return std::nullopt;
+    }
 }
 
 std::optional<std::array<std::array<double, 2>, 2>> Lanelet::get_range_x_y()

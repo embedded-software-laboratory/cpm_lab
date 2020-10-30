@@ -31,6 +31,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -75,7 +76,7 @@ enum class ObstacleRole {Static, Dynamic};
 enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
     MultiLane, NoOncomingTraffic, OnComingTraffic, ParallelLanes, RaceTrack, Roundabout, Rural, Simulated, SingeLane, SlipRoad,
-    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane
+    SpeedLimit, TrafficJam, TurnLeft, TurnRight, TwoLane, EmergencyBraking
 };
 
 /**
@@ -92,6 +93,20 @@ enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation,
 enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem};
 
 /**
+ * \struct Geo Transformation (2020 only)
+ * \brief Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ */
+struct GeoTransformation 
+{
+    //Geo reference was left out, we only deal with additional transformation here
+    //Data from additionalTransformation
+    double x_translation = 0.0;
+    double y_translation = 0.0;
+    double z_rotation = 0.0;
+    double scaling = 1.0; //Must be > 0
+};
+
+/**
  * \struct Location
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs
@@ -99,13 +114,14 @@ enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, 
  */
 struct Location 
 {
-    std::optional<std::string> country;
-    std::optional<std::string> federal_state;
+    std::optional<std::string> country; //outdated 2020 (removed from spec after some time)
+    std::optional<std::string> federal_state; //outdated 2020
     int gps_latitude = -1;
     int gps_longitude = -1;
+    std::optional<int> geo_name_id = -1;  //new 2020 (added to spec after some time)
     std::optional<std::string> zipcode = std::nullopt;
     std::optional<std::string> name = std::nullopt;
-    //Geo transformation is left out, the location information itself is already probably only relevant for some part of the UI, not for the simulation itself
+    std::optional<GeoTransformation> geo_transformation = std::nullopt;
     //For 2018 versions, this means that country / location information are missing too
 };
 
@@ -133,11 +149,30 @@ private:
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
     std::map<int, Lanelet> lanelets;
     std::map<int, TrafficSign> traffic_signs;
-    std::map<int, TrafficLight> traffic_lights; //0..1 in specification is a mistake, see https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+    std::map<int, TrafficLight> traffic_lights; //Was fixed in new 2020 specs, 0..1 in outdated specification was a mistake, see https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
     std::map<int, Intersection> intersections;
     std::map<int, StaticObstacle> static_obstacles;
     std::map<int, DynamicObstacle> dynamic_obstacles;
     std::map<int, PlanningProblem> planning_problems;
+
+    //Lanelets may contain traffic sign / light IDs, whereas traffic signs / lights might not contain a position value, but can have that value
+    //Thus, to draw these traffic "symbols", we need to combine the information that we can obtain from lanelet and the symbols
+    //-> We remember the (last) lanelet-ID for each symbol-ID; if the symbol does not have its own location, it can look one up here
+    //As transformations may take place, we cannot store the position, but just a lanelet reference to obtain the current position from there
+    std::map<int, std::pair<int, bool>> lanelet_traffic_sign_positions; //<Sign ID, <Lanelet ID, is_stopline>>
+    std::map<int, std::pair<int, bool>> lanelet_traffic_light_positions; //<Light ID, <Lanelet ID, is_stopline>>
+
+    /**
+     * Function used by a traffic sign to find out if a position was set for it by a lanelet definition
+     * \param id ID of the traffic sign
+     */
+    std::optional<std::pair<double, double>> get_lanelet_sign_position(int id);
+
+    /**
+     * Function used by a traffic light to find out if a position was set for it by a lanelet definition
+     * \param id ID of the traffic light
+     */
+    std::optional<std::pair<double, double>> get_lanelet_light_position(int id);
 
     //Not commonroad
     //Mutex to lock the object while it is being translated from an XML file
@@ -205,6 +240,23 @@ private:
     void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
     std::pair<double, double> get_lanelet_center(int id);
 
+    /**
+     * \brief This function is e.g. to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
+     * \param angle The angle with which to rotate around the origin, counter-clockwise, as specified by commonroad
+     * \param scale Scales the whole coordinate system up / down
+     */
+    void transform_coordinate_system_helper(double translate_x, double translate_y, double angle = 0.0, double scale = 1.0);
+
+    /**
+     * \brief Calculates the scale for a given min. lane width
+     * Should only be called within a locked-mutex section
+     * \param min_lane_width Desired min. lane width
+     * \return Scale factor to get the desired lane width, or a value <= 0.0 in case of an error
+     */
+    double get_scale(double min_lane_width);
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -239,18 +291,13 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
+     * ORDER: As specified by commonroad: Translate, rotate, scale
      * \param lane_width The min lane width
+     * \param angle The angle with which to rotate around the origin, counter-clockwise, as specified by commonroad
      * \param translate_x Move the coordinate system's origin along the x axis by this value
      * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double lane_width, double translate_x, double translate_y) override;
-
-    /**
-     * \brief This function is used to center the imported XML scenario; it does NOT call the obstacle sim functions because they are to be called afterwards in main
-     * \param translate_x Move the coordinate system's origin along the x axis by this value
-     * \param translate_y Move the coordinate system's origin along the y axis by this value
-     */
-    void transform_coordinate_system(double translate_x, double translate_y);
+    void transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
