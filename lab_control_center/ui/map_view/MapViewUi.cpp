@@ -422,37 +422,28 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     for(const auto& entry : visualization_commands) 
     {
         if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
-            && entry.points().size() > 0)
+            && entry.points().size() > 1) 
         {
             const auto& message_points = entry.points();
 
-            //Set beginning point / center of circle
+            //Set beginning point
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
-            if(entry.points().size() == 1)
+            for (size_t i = 1; i < message_points.size(); ++i)
             {
-                //Draw filled circle
-                const auto& radius = entry.size();
-                ctx->arc(message_points.at(0).x(), message_points.at(0).y(), radius, 0.0, 2.0 * M_PI);
-                ctx->fill();
-            }
-            else
-            {
-                //Draw real Line/Polygon otherwise
-                for (size_t i = 1; i < message_points.size(); ++i)
-                {
-                    ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
-                }
+                //const auto& current_point = message_points.at(i);
 
-                //Line from end to beginning point to close the polygon
-                if (entry.type() == VisualizationType::Polygon) {
-                    ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
-                }
+                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+            }  
 
-                ctx->set_line_width(entry.size());
-                ctx->stroke();
+            //Line from end to beginning point to close the polygon
+            if (entry.type() == VisualizationType::Polygon) {
+                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
             }
+
+            ctx->set_line_width(entry.size());
+            ctx->stroke();      
         }
         else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
@@ -464,15 +455,6 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
             ctx->set_font_matrix(font_matrix);
-
-            //Show text centered
-            Cairo::TextExtents ext;
-            ctx->get_text_extents(entry.string_message(), ext);
-
-            double text_offset_x = -ext.width / 2 - ext.x_bearing;
-            double text_offset_y = -ext.height / 2 - ext.y_bearing;
-
-            ctx->move_to(entry.points().at(0).x() + text_offset_x, entry.points().at(0).y() + text_offset_y);
 
             //Draw text
             ctx->show_text(entry.string_message().c_str());
