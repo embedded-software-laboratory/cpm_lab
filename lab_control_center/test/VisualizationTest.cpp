@@ -132,6 +132,27 @@ int main(int argc, char *argv[]) {
     usleep(100000);
 
     std::cout << "Sending visualisation filled circle..." << std::endl;
+    
+    viz_writer.write(viz4);
+
+    // StringMessageCentered
+    Visualization viz5;
+    viz5.id(5);
+    viz5.type(VisualizationType::StringMessageCentered);
+    viz5.time_to_live(10000000000);
+    viz5.size(0.5);
+
+    std::vector<Point2D> viz5_points{ Point2D(1.0, 0.7) };
+    viz5.points(rti::core::vector<Point2D>(viz5_points));
+
+    Color viz5_color(000, 255, 100, 0);
+    viz5.color(viz5_color);
+
+    usleep(100000);
+
+    std::cout << "Sending visualisation centered string..." << std::endl;
+
+    viz_writer.write(viz5);
 
     std::cout << "Shutting down..." << std::endl;
 

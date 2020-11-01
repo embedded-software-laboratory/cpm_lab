@@ -457,12 +457,25 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
                 ctx->stroke();
             }            
         }
-        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+        else if ((entry.type() == VisualizationType::StringMessage       ||
+                  entry.type() == VisualizationType::StringMessageCentered )
+                 && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
 
-            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+            double text_offset_x = 0.0;
+            double text_offset_y = 0.0;
+            if(entry.type() == VisualizationType::StringMessageCentered)
+            {
+                Cairo::TextExtents ext;
+                ctx->get_text_extents(entry.string_message(), ext);
+                text_offset_x = -ext.width/2 - ext.x_bearing;
+                text_offset_y = ext.height/2 + ext.y_bearing;
+            }
+            
+            ctx->move_to(entry.points().at(0).x() + text_offset_x, 
+                         entry.points().at(0).y() + text_offset_y );
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
