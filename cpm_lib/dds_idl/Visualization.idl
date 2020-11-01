@@ -34,7 +34,8 @@ enum VisualizationType
 {
     LineStrips=0,
     Polygon,
-    StringMessage
+    StringMessage,
+    FilledCircle //Center at points[0]
 };
 
 struct Visualization 

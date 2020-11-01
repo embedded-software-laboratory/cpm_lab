@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
 
     dds::pub::DataWriter<Visualization> viz_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<Visualization>("visualization"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable());
 
+    // LineStrips
     Visualization viz;
     viz.id(1);
     viz.type(VisualizationType::LineStrips);
@@ -71,6 +72,7 @@ int main(int argc, char *argv[]) {
 
     viz_writer.write(viz);
 
+    // Polygon
     Visualization viz2;
     viz2.id(2);
     viz2.type(VisualizationType::Polygon);
@@ -92,6 +94,7 @@ int main(int argc, char *argv[]) {
 
     viz_writer.write(viz2);
 
+    // StringMessage
     Visualization viz3;
     viz3.id(3);
     viz3.type(VisualizationType::StringMessage);
@@ -112,6 +115,23 @@ int main(int argc, char *argv[]) {
     std::cout << "Sending visualization string..." << std::endl;
 
     viz_writer.write(viz3);
+
+    // FilledCircle
+    Visualization viz4;
+    viz4.id(4);
+    viz4.type(VisualizationType::FilledCircle);
+    viz4.time_to_live(20000000000);
+    viz4.size(0.3);
+
+    std::vector<Point2D> viz4_points{ Point2D(1.0, 0.7) };
+    viz4.points(rti::core::vector<Point2D>(viz4_points));
+
+    Color viz4_color(100, 255, 100, 0);
+    viz4.color(viz4_color);
+
+    usleep(100000);
+
+    std::cout << "Sending visualisation filled circle..." << std::endl;
 
     std::cout << "Shutting down..." << std::endl;
 
