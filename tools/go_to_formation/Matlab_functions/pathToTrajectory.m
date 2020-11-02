@@ -18,13 +18,14 @@ if length(segmentLengths) ~= length(transitionPoses)-1
 end
 
 
-%First TrajectoryPoint 
+%First trajectory point 
 trajectory_points(1).px = transitionPoses(1, 1);
 trajectory_points(1).py = transitionPoses(1, 2);
 trajectory_points(1).vx = 0;
 trajectory_points(1).vy = 0;
 trajectory_points(1).t  = 2e9; %[ns]
 
+%Second trajectory point
 trajectory_points(2).px = transitionPoses(1, 1);
 trajectory_points(2).py = transitionPoses(1, 2);
 trajectory_points(2).vx = cosd(transitionPoses(1, 3)) * speed;

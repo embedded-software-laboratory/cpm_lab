@@ -51,6 +51,7 @@ function main_go_to_formation(varargin)
     end
        
     speed = 0.75; % [m/s]
+    poseCounter = 1;
 
     %% wait for data if read() is used
     stateReader.WaitSet = true;
@@ -124,13 +125,30 @@ function main_go_to_formation(varargin)
             status = 0;
             stateSampleCount = 0;
             sampleInfo = DDS.SampleInfo;
-                
+%             sampleInfoList = struct;
+%             listIndex = 0;
+%             statusList = [];
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+%             disp(sampleInfo)
+%             disp(stateSampleCount)
+%             listIndex = listIndex + stateSampleCount
+%             sampleInfoList(listIndex) = sampleInfo;
+%             statusList(listIndex) = status;
             t_old = sample.t_now;
             isSampleValid = false;
             
+            % Check if current sample contains data of all vehicles
+            % If not take new samples until valid sample received
             while(isSampleValid == false)
+                
                 [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                %disp(sampleInfo.valid_data)
+                save('invalid_status.mat', 'status')
+                save('invalid_info.mat', 'sampleInfo')
+%                listIndex = listIndex + stateSampleCount
+%                 sampleInfoList(listIndex) = sampleInfo;
+%                 statusList(listIndex) = status;
+                
                 if sample.t_now > t_old  
                     isSampleValid = true;
                     for nVehicles = 1:length(vehicle_ids)
@@ -140,7 +158,7 @@ function main_go_to_formation(varargin)
                     end
                 end
             end
-               
+              
                 
 %             [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
 %             current_time = trigger.next_start().nanoseconds();
@@ -149,8 +167,11 @@ function main_go_to_formation(varargin)
 %                     stop_now = true;
 %                     break;
 %                 end
-%        
+%           
+%             disp(sampleInfo.valid_data)
             save('sample.mat', 'sample')
+            save('valid_status.mat', 'status')
+            save('valid_info.mat', 'sampleInfo')
             
             startPoses = readPoses(sample.vehicle_observation_list);            
             allHomePoses = homePosesFixed;
@@ -163,27 +184,30 @@ function main_go_to_formation(varargin)
             %% Inner Loop fulfilling path planning task for each vehicle
              
             for nVehicles = 1:length(vehicleList)
-                
-                isCostMapShown = false;  
-                  
+                              
                 startPoses = readPoses(sample.vehicle_observation_list);
 %               disp(startPoses)
                 
-                egoVehicle = vehicleList{nVehicles}; %TODO advanced detection of ego vehicle?
+                egoVehicle = vehicleList{nVehicles}; 
                 map = setOccMap(startPoses, egoVehicle);
-                [refPath, Fig] = PlanAndShowRRTPath(startPoses, goalPoses, egoVehicle, map);
-                
-                %Show occupancy grid and path when planner executed
-                %for the first time
-                if isCostMapShown == false
-                    figure(Fig)
-                    isCostMapShown = true;
+                [refPath, Fig, isPathValid] = PlanAndShowRRTPath(startPoses.(egoVehicle), allHomePoses(poseCounter), map);
+                if not(isPathValid) 
+                    continue
                 end
-                
+                Figs(nVehicles) = Fig;
+                save('Figs.mat', 'Figs')
+%                 figure(Fig)
+
                 trajectory_points = pathToTrajectory(refPath, speed);
                 
-                 [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
-                 save('sample.mat', 'sample')
+                [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+     
+%                 disp(stateSampleCount)
+%                 listIndex = listIndex + stateSampleCount
+%                 sampleInfoList(listIndex) = sampleInfo;
+%                 statusList(listIndex) = status;
+                save('sample.mat', 'sample')
+                
                  t_start = sample.t_now;
                  trjMsg = trjMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, sample.t_now);
                  trajectoryWriter.write(trjMsg);
@@ -195,7 +219,7 @@ function main_go_to_formation(varargin)
                  % to follow it (calculated trajectory time)
                  while(t_now <= t_start + trajectory_points(end).t)
                      
-                    disp('Checking system trigger for stop signal');
+                    %disp('Checking system trigger for stop signal');
                     [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
                     current_time = trigger.next_start().nanoseconds();
                     if current_time == trigger_stop
@@ -205,6 +229,8 @@ function main_go_to_formation(varargin)
                     end
                                                     
                     [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                    
+                    
                     t_now = sample.t_now;
                     
 %                     currentPoses = readPoses(sample.vehicle_observation_list);
@@ -220,8 +246,9 @@ function main_go_to_formation(varargin)
                     trjMsg = trjMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, t_now);
                     trajectoryWriter.write(trjMsg);
                     
-                  end
-
+                 end
+                   
+                  poseCounter = poseCounter + 1;
                   if stop_now
                      break;
                   end

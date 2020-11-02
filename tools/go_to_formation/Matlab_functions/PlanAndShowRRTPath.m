@@ -1,4 +1,4 @@
-function [refPath, Fig] = PlanAndShowRRTPath (startPoses, goalPoses, egoVehicle, occMap) %#codegen
+function [refPath, Fig, isPathValid] = PlanAndShowRRTPath (startPose, goalPose, occMap)
 %% Setup of Costmap and Planner Configuration
 
 centerPlacements = [0.25, 0.5, 0.75]; 
@@ -15,9 +15,9 @@ costmap = vehicleCostmap(occMap, 'CollisionChecker', ccConfig);
 
 %% Path Planning
 
-%TODO: replace by input arguments and vehicles pose readout
-startPose = [startPoses.(egoVehicle).x, startPoses.(egoVehicle).y, startPoses.(egoVehicle).yaw];
-goalPose = [goalPoses.(egoVehicle).x, goalPoses.(egoVehicle).y, goalPoses.(egoVehicle).yaw];
+% %TODO: replace by input arguments and vehicles pose readout
+startPose = [startPose.x, startPose.y, startPose.yaw];
+goalPose = [goalPose.x, goalPose.y, goalPose.yaw];
 
 % if(startPoses.(egoVehicle).pose == goalPoses.(egoVehicle))
 %     disp('Vehicle already in goal position')
@@ -28,14 +28,24 @@ planner = pathPlannerRRT(costmap,...
     'MinTurningRadius', 0.4,...
     'ConnectionMethod', 'Dubins');
 
-[refPath] = plan(planner,startPose,goalPose);
+try 
+    [refPath] = plan(planner,startPose,goalPose);
+    isPathValid = checkPathValidity(refPath, costmap);
+    
+    transitionPoses = interpolate(refPath);
+    Fig = figure;
+    plot(planner);
+    hold on
+    scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
+         'DisplayName','Transition Poses')
+    hold off
+catch
+    disp('Not able to plan valid path')
+    isPathValid = false;
+    refPath = 0;
+    Fig = figure;
+    plot(planner);
+end
 
-%% Visualization
 
-transitionPoses = interpolate(refPath);
-Fig = figure;
-plot(planner);
-hold on
-scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
-     'DisplayName','Transition Poses')
-hold off
+end
