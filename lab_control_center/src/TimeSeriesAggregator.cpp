@@ -120,18 +120,22 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 static inline double voltage_to_percent(const double& v)
 {
     // approximate discharge curve with three linear segments,
-    // see tools/linear_discharge.m
-    if (v >= 7.55)
+    // see tools/plot_battery_discharge/linear_discharge.m
+    if (v >= 7.37)
     {
-        return std::min({72.83 * (v-7.55) + 52.66, 100.0});
+        return std::min({(-(8.17-7.37)/150* v +8.17)/8.17*100, 100.0});
     }
-    else if (v >= 7.22)
+    else if (v >= 7.35)
     {
-        return (143.45 * (v-7.22) +  5.33);
+        return ((((7.35-7.37)/(240-190)*v +7.37))/8.17*100);
+    }
+    else if (v >= 7.17)
+    {
+        return ((7.17-7.35)/(300-240)*v +7.35))/8.17*100;
     }
     else
     {
-        return std::max({6.49 * (v-6.4 ), 0.0});
+        return std::max({((6.28-7.16)/(341-300)*v +7.16))/8.17*100, 0.0});
     }
 }
 
