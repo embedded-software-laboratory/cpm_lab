@@ -79,6 +79,13 @@ bool _TimeSeries<T>::has_new_data(double dt) const
 }
 
 template<typename T>
+bool _TimeSeries<T>::has_data() const 
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return ! (values.empty());
+}
+
+template<typename T>
 uint64_t _TimeSeries<T>::get_latest_time() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);

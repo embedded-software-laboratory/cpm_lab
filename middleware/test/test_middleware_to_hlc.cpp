@@ -84,7 +84,6 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
         vehicleTrajectoryTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicleID,
         timer,
         vehicle_ids);
 
@@ -159,7 +158,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
 
         //Get the last response time of the HLC -> Do not send another start signal if it is still calculating a solution
         // -> Print an error message if a period has been missed
-        std::map<uint8_t, uint64_t> lastHLCResponseTimes;
+        std::unordered_map<uint8_t, uint64_t> lastHLCResponseTimes;
         lastHLCResponseTimes = communication->getLastHLCResponseTimes();
         uint64_t lastHLCResponseTime = 0;
         if (lastHLCResponseTimes.find(vehicleID) != lastHLCResponseTimes.end()) {

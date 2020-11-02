@@ -24,22 +24,50 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include <libxml++-2.6/libxml++/libxml++.h>
+#pragma once
 
+/**
+ * \brief This class contains all UI elements that control the desired setup state for one obstacle.
+ * This allows for less redundant UI code.
+ */
+
+#include <cassert>
+#include <gtkmm/builder.h>
+#include <gtkmm.h>
+
+#include <functional>
 #include <iostream>
-#include <vector>
+#include <sstream>
 
-#include "commonroad_classes/CommonRoadScenario.hpp"
-
-int main()
+class ObstacleToggle 
 {
-    std::string filepath_2018 = "/home/cpm-lab/dev/software/lab_control_center/test/C-USA_US101-30_1_T-1.xml";
-    std::string filepath_2020 = "/home/cpm-lab/dev/software/lab_control_center/test/documentation_XML_commonRoad_minimalExample_2020a.xml";
+public:
+    ObstacleToggle(unsigned int _id);
 
-    CommonRoadScenario commonroad_scenario_2018;
-    commonroad_scenario_2018.load_file(filepath_2018);
-    CommonRoadScenario commonroad_scenario_2020;
-    commonroad_scenario_2020.load_file(filepath_2020);
+    enum ToggleState{Simulated, On};
 
-    return 0;
-}
+    //Getter
+    Gtk::Widget* get_parent();
+    ToggleState get_state();
+    unsigned int get_id();
+
+    //Setter
+    void set_state(ToggleState state);
+    void set_selection_callback(std::function<void(unsigned int, ToggleState)> _selection_callback); //If set, callback gets called on state change
+
+private:
+    void on_state_changed();
+    ToggleState current_state;
+
+    Glib::RefPtr<Gtk::Builder> builder;
+
+    Gtk::FlowBox* parent = nullptr;
+
+    Gtk::Label* label = nullptr;
+
+    Gtk::Switch* obstacle_switch = nullptr;
+
+    //Given values
+    unsigned int id;
+    std::function<void(unsigned int, ToggleState)> selection_callback;
+};

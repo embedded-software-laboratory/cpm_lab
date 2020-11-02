@@ -92,3 +92,8 @@ std::optional<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node
 
     return std::optional<int>();
 }
+
+const std::map<int, Incoming>& Intersection::get_incoming_map() const
+{
+    return incoming_map;
+}

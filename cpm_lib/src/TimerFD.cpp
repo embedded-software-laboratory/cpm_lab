@@ -69,6 +69,9 @@ namespace cpm {
 
         //Add Waitset for reader_system_trigger
         waitset += readCondition;
+
+        active.store(false);
+        cancelled.store(false);
     }
 
     void TimerFD::createTimer() {
@@ -135,9 +138,9 @@ namespace cpm {
         ready_status.next_start_stamp(TimeStamp(0));
         ready_status.source_id(node_id);
         
-        //Poll for start signal, send ready signal every 2 seconds until the start signal has been received
+        //Poll for start signal, send ready signal every 2 seconds until the start signal has been received or the thread has been killed
         //Break if stop signal was received
-        while(true) {
+        while(active.load()) {
             writer_ready_status.write(ready_status);
 
             waitset.wait(dds::core::Duration::from_millisecs(2000));
@@ -148,11 +151,14 @@ namespace cpm {
                 }
             }
         }
+
+        //Active is false, just return stop signal here
+        return stop_signal;
     }
 
     void TimerFD::start(std::function<void(uint64_t t_now)> update_callback)
     {
-        if(this->active) {
+        if(active.load()) {
             Logging::Instance().write(
             2,
             "%s", 
@@ -161,7 +167,12 @@ namespace cpm {
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
-        this->active = true;
+        active.store(true);
+        //In the rare case that active was set too early to false in stop / deconstructor: we must check that these have already been called
+        if (cancelled.load())
+        {
+            return;
+        }
 
         m_update_callback = update_callback;
 
@@ -169,9 +180,9 @@ namespace cpm {
         createTimer();
 
         //Send ready signal, wait for start signal
-        uint64_t start_point;
         uint64_t deadline;
         if (wait_for_start) {
+
             start_point = receiveStartTime();
             
             if (start_point == stop_signal) {
@@ -189,7 +200,9 @@ namespace cpm {
             deadline = (((start_point - offset_nanoseconds) / period_nanoseconds) + 1) * period_nanoseconds + offset_nanoseconds;
         }
 
-        while(this->active) {
+        start_point_initialized = true;
+
+        while(active.load()) {
             this->wait();
             if(this->get_time() >= deadline) {
                 if(m_update_callback) m_update_callback(deadline);
@@ -218,7 +231,7 @@ namespace cpm {
                     }
                     else 
                     {
-                        this->active = false;
+                        active.store(false);
                     }
                 }
             }
@@ -261,20 +274,33 @@ namespace cpm {
 
     void TimerFD::stop()
     {
-        active = false;
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
+        active.store(false);
+        
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
     }
 
     TimerFD::~TimerFD()
     {
-        active = false;
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
+        active.store(false);
+        
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
+
         close(timer_fd);
     }
 
@@ -282,6 +308,14 @@ namespace cpm {
     uint64_t TimerFD::get_time()
     {
         return cpm::get_time_ns();
+    }
+
+    uint64_t TimerFD::get_start_time()
+    {
+        //Return 0 if not yet started or stopped before started
+        if (!start_point_initialized) return 0;
+
+        return start_point;
     }
 
     bool TimerFD::received_stop_signal() 

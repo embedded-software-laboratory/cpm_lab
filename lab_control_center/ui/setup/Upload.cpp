@@ -44,6 +44,7 @@ Upload::Upload(
     notify_count = 0;
     participants_available.store(false);
     kill_called.store(false);
+    upload_done.store(false);
 }
 
 Upload::~Upload()
@@ -132,6 +133,8 @@ void Upload::deploy_remote(
 
 void Upload::kill_remote()
 {
+    upload_done.store(false);
+
     std::vector<uint8_t> hlc_ids;
     if (get_hlc_ids)
     {
@@ -291,10 +294,12 @@ void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success)
     thread_count.fetch_sub(1);
     ++notify_count;
 
-    std::cout << thread_count.load() << std::endl;
     if (thread_count.load() == 0)
     {
+        //Upload was finished
         notify_count = 0;
+
+        upload_done.store(true);
 
         //Close upload window again, but only after a while
         std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -326,4 +331,9 @@ bool Upload::check_if_online(uint8_t hlc_id)
     //Check if the HLC is still online (in get_hlc_ids)
     std::vector<uint8_t> hlc_ids = get_hlc_ids();
     return std::find(hlc_ids.begin(), hlc_ids.end(), static_cast<uint8_t>(hlc_id)) != hlc_ids.end();
+}
+
+bool Upload::upload_finished()
+{
+    return upload_done.load();
 }

@@ -111,5 +111,11 @@ namespace cpm
          * \return the current system time in nanoseconds
          */
         virtual uint64_t get_time() = 0;
+
+        /**
+         * \brief Can be used to obtain the time the timer was started
+         * \return The start time of the timer, either received as start signal or from internal start
+         */
+        virtual uint64_t get_start_time() = 0;
     };
 }

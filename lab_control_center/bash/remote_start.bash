@@ -28,7 +28,7 @@ tmux kill-session -t "middleware"
 tmux kill-session -t "script"
 
 
-# Create folder for (error) logs
+# Kill potential previous sessions - DO NOT change these session names, unless you intend to change them in the whole software repo
 rm -rf ~/dev/lcc_script_logs;mkdir -p ~/dev/lcc_script_logs
 
 # Start middleware

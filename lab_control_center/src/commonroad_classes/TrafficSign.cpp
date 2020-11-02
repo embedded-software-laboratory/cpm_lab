@@ -151,6 +151,14 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             },
             "trafficSignElement"
         );
+
+        //Make sure that the translation is not empty
+        if(traffic_sign_elements.size() == 0)
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Is empty: " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
     }
     catch(const SpecificationError& e)
     {
@@ -184,14 +192,10 @@ TrafficSign::TrafficSign(const xmlpp::Node* node)
             std::cout << std::endl;
         }
     }
-
-    //TODO: Warn if number of elements is zero?
 }
 
 void TrafficSign::transform_coordinate_system(double scale, double translate_x, double translate_y)
-{
-    //TODO: Check if that's all
-    
+{    
     for (auto& element : traffic_sign_elements)
     {
         if (element.position)
@@ -206,7 +210,7 @@ void TrafficSign::transform_coordinate_system(double scale, double translate_x, 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
-    std::cerr << "TODO: Better warning // Drawing TrafficSigns is currently unsupported" << std::endl;
+    LCCErrorLogger::Instance().log_error("Drawing TrafficSigns is currently unsupported");
     
     for (auto element : traffic_sign_elements)
     {
@@ -224,3 +228,8 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
     }
 }
 #pragma GCC diagnostic pop
+
+const std::vector<TrafficSignElement>& TrafficSign::get_traffic_sign_elements() const
+{
+    return traffic_sign_elements;
+}

@@ -31,6 +31,8 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     //Check if node is of type lanelet
     assert(node->get_name() == "lanelet");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020
@@ -91,8 +93,8 @@ Lanelet::Lanelet(const xmlpp::Node* node)
     }
     std::cout << std::endl;
 
-    std::cout << "Adjacent left: " << adjacent_left.exists << "(exists), " << adjacent_left.ref_id << " (ID), (TODO: print direction)" << std::endl;
-    std::cout << "Adjacent right: " << adjacent_right.exists << "(exists), " << adjacent_right.ref_id << " (ID), (TODO: print direction)" << std::endl;
+    std::cout << "Adjacent left: " << adjacent_left.has_value() << "(exists)" << std::endl;
+    std::cout << "Adjacent right: " << adjacent_right.has_value() << "(exists)" << std::endl;
 
     std::cout << "Speed limit (2018): " << speed_limit.value_or(-1.0) << std::endl;
 
@@ -158,57 +160,60 @@ std::vector<int> Lanelet::translate_refs(const xmlpp::Node* node, std::string na
     return refs;
 }
 
-Adjacent Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
+std::optional<Adjacent> Lanelet::translate_adjacent(const xmlpp::Node* node, std::string name)
 {
     //Adjacents are optional, so this element might not exist
     const auto adjacent_node = xml_translation::get_child_if_exists(node, name, false);
-    Adjacent adjacent;
 
     if (adjacent_node)
     {
-        adjacent.exists = true;
-        adjacent.ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true).value(); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
+        Adjacent adjacent_obj;
+        auto adjacent = std::optional<Adjacent>(adjacent_obj);
+        
+        adjacent->ref_id = xml_translation::get_attribute_int(adjacent_node, "ref", true).value(); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
     
         std::string direction_string = xml_translation::get_attribute_text(adjacent_node, "drivingDir", true).value(); //See comment above
         if(direction_string.compare("same") == 0)
         {
-            adjacent.direction = DrivingDirection::Same;
+            adjacent->direction = DrivingDirection::Same;
         }
         else if(direction_string.compare("opposite") == 0)
         {
-            adjacent.direction = DrivingDirection::Opposite;
+            adjacent->direction = DrivingDirection::Opposite;
         }
         else {
             std::stringstream error_msg_stream;
             error_msg_stream << "Specified driving direction not part of specs, in line " << adjacent_node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }   
+
+        return adjacent;
     }
 
-    return adjacent;
+    return std::nullopt;
 }
 
-StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
+std::optional<StopLine> Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
 {
     //Stop lines are optional, so this element might not exist
     const auto line_node = xml_translation::get_child_if_exists(node, name, false);
-    StopLine line;
 
     if (line_node)
     {
-        line.exists = true;
+        StopLine line_obj;
+        auto line = std::optional<StopLine>(line_obj);
 
         //Translate line points
         xml_translation::iterate_children(
             line_node, 
             [&] (const xmlpp::Node* child) 
             {
-                stop_line.points.push_back(Point(child));
+                line->points.push_back(Point(child));
             }, 
             "point"
         );
 
-        if (stop_line.points.size() != 2)
+        if (line->points.size() != 2)
         {
             std::stringstream error_msg_stream;
             error_msg_stream << "Specified stop line has too many points, not part of specs, in line " << line_node->get_line();
@@ -219,20 +224,21 @@ StopLine Lanelet::translate_stopline(const xmlpp::Node* node, std::string name)
         const auto line_marking = xml_translation::get_child_if_exists(line_node, "lineMarking", true);
         if (line_marking)
         {
-            line.line_marking = translate_line_marking(line_marking);
+            line->line_marking = translate_line_marking(line_marking);
         }
 
         //Translate refs to traffic signs and traffic lights
-        line.traffic_sign_refs = translate_refs(line_node, "trafficSignRef");
-        line.traffic_light_ref = translate_refs(line_node, "trafficLightRef");
+        line->traffic_sign_refs = translate_refs(line_node, "trafficSignRef");
+        line->traffic_light_ref = translate_refs(line_node, "trafficLightRef");
+
+        return line;
     }
 
-    return line;
+    return std::nullopt;
 }
 
 LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
 {
-    //2020 specs only (TODO: Warn if missing in 2020 XML)
     //get_child_child_text is not used here to be able to show the line where the error occured if the value matches none of the enumeration values
     const auto lanelet_type_node = xml_translation::get_child_if_exists(node, name, false);
     if (lanelet_type_node)
@@ -395,11 +401,7 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
 
 double Lanelet::get_min_width()
 {
-    if (left_bound.points.size() != right_bound.points.size())
-    {
-        //TODO: Replace by assertion, should have failed by exception before
-        std::cerr << "TODO: Better warning // Lanelet bounds (left, right) not of equal size" << std::endl;
-    }
+    assert(left_bound.points.size() == right_bound.points.size());
 
     size_t min_vec_size = std::max(left_bound.points.size(), right_bound.points.size());
 
@@ -422,9 +424,18 @@ double Lanelet::get_min_width()
 
 void Lanelet::transform_coordinate_system(double scale, double translate_x, double translate_y)
 {
-    for (auto& point : stop_line.points)
+    if (stop_line.has_value())
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        for (auto& point : stop_line->points)
+        {
+            point.transform_coordinate_system(scale, translate_x, translate_y);
+        }
+    }
+
+    if (speed_limit.has_value())
+    {
+        auto new_speed_limit = speed_limit.value() * scale;
+        speed_limit = std::optional<double>(new_speed_limit);
     }
 
     for (auto& point : right_bound.points)
@@ -508,6 +519,12 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 
 
     //TODO: Line markings, stop lines etc
+    if (stop_line.has_value() || speed_limit.has_value() || user_one_way.size() > 0 || user_bidirectional.size() > 0)
+    {
+        std::stringstream error_stream;
+        error_stream << "Line markings, speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
+    }
 
     ctx->restore();
 }
@@ -560,8 +577,92 @@ std::pair<double, double> Lanelet::get_center()
     size_t vec_size = left_bound.points.size();
     size_t middle_index = static_cast<size_t>(static_cast<double>(vec_size) / 2.0);
 
-    double x = (left_bound.points.at(middle_index).get_x() - right_bound.points.at(middle_index).get_x()) / 2.0;
-    double y = (left_bound.points.at(middle_index).get_y() - right_bound.points.at(middle_index).get_y()) / 2.0;
+    double x = (left_bound.points.at(middle_index).get_x() + right_bound.points.at(middle_index).get_x()) / 2.0;
+    double y = (left_bound.points.at(middle_index).get_y() + right_bound.points.at(middle_index).get_y()) / 2.0;
 
     return std::pair<double, double>(x, y);
+}
+
+std::pair<double, double> Lanelet::get_center_of_all_points()
+{
+    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    assert(left_bound.points.size() == right_bound.points.size());
+
+    size_t vec_size = left_bound.points.size();
+    
+    double x = 0.0;
+    double y = 0.0;
+    for (size_t index = 0; index < vec_size; ++index)
+    {
+        //Calculate avg iteratively to avoid overflow
+        x += ((left_bound.points.at(index).get_x() + right_bound.points.at(index).get_x()) / 2.0 - x) / (index + 1);
+        y += ((left_bound.points.at(index).get_y() + right_bound.points.at(index).get_y()) / 2.0 - y) / (index + 1);
+    }
+
+    return std::pair<double, double>(x, y);
+}
+
+std::optional<std::array<std::array<double, 2>, 2>> Lanelet::get_range_x_y()
+{
+    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    assert(left_bound.points.size() == right_bound.points.size());
+
+    size_t vec_size = left_bound.points.size();
+
+    //Return empty optional if points are missing
+    if (vec_size == 0)
+    {
+        return std::nullopt;
+    }
+    
+    //Working with numeric limits at start lead to unforseeable behaviour with min and max, thus we now use this approach instead
+    bool uninitialized = true;
+    double x_min, x_max, y_min, y_max;
+    for (size_t index = 0; index < vec_size; ++index)
+    {
+        if (uninitialized)
+        {
+            x_min = left_bound.points.at(index).get_x();
+            y_min = left_bound.points.at(index).get_y();
+            x_max = left_bound.points.at(index).get_x();
+            y_max = left_bound.points.at(index).get_y();
+            uninitialized = false;
+        }
+
+        x_min = std::min(left_bound.points.at(index).get_x(), x_min);
+        y_min = std::min(left_bound.points.at(index).get_y(), y_min);
+        x_max = std::max(left_bound.points.at(index).get_x(), x_max);
+        y_max = std::max(left_bound.points.at(index).get_y(), y_max);
+
+        x_min = std::min(right_bound.points.at(index).get_x(), x_min);
+        y_min = std::min(right_bound.points.at(index).get_y(), y_min);
+        x_max = std::max(right_bound.points.at(index).get_x(), x_max);
+        y_max = std::max(right_bound.points.at(index).get_y(), y_max);
+    }
+
+    std::array<std::array<double, 2>, 2> result;
+    result[0][0] = x_min;
+    result[0][1] = x_max;
+    result[1][0] = y_min;
+    result[1][1] = y_max;
+
+    return result;
+}
+
+
+std::vector<Point> Lanelet::get_shape()
+{
+    std::vector<Point> shape; 
+
+    for (auto point : left_bound.points)
+    {
+        shape.push_back(point);
+    }
+
+    for(auto reverse_it_point = right_bound.points.rbegin(); reverse_it_point != right_bound.points.rend(); ++reverse_it_point)
+    {
+        shape.push_back(*reverse_it_point);
+    }
+
+    return shape;
 }

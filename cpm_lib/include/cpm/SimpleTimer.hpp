@@ -120,6 +120,13 @@ namespace cpm {
          * \return the current system time in milliseconds
          */
         uint64_t get_time() override;
+
+        /**
+         * \brief Can be used to obtain the time the timer was started in nanoseconds
+         * \return The start time of the timer, either received as start signal or from internal start, in nanoseconds OR
+         * 0 if not yet started or stopped before started
+         */
+        uint64_t get_start_time() override;
     };
 
 }
