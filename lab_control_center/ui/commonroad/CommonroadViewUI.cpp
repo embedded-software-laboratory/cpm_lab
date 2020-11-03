@@ -536,6 +536,9 @@ bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
 
+        //Refresh values in planning problem list (e.g. goal speed)
+        reload_problems.store(true);
+
         return true;
     }
     return false;
