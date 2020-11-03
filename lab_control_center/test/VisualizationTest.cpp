@@ -120,10 +120,10 @@ int main(int argc, char *argv[]) {
     Visualization viz4;
     viz4.id(4);
     viz4.type(VisualizationType::FilledCircle);
-    viz4.time_to_live(20000000000);
-    viz4.size(0.3);
+    viz4.time_to_live(4000000000);
+    viz4.size(0.6);
 
-    std::vector<Point2D> viz4_points{ Point2D(1.0, 0.7) };
+    std::vector<Point2D> viz4_points{ Point2D(1.0, 3.0) };
     viz4.points(rti::core::vector<Point2D>(viz4_points));
 
     Color viz4_color(100, 255, 100, 0);
@@ -139,15 +139,16 @@ int main(int argc, char *argv[]) {
     Visualization viz5;
     viz5.id(5);
     viz5.type(VisualizationType::StringMessageCentered);
-    viz5.time_to_live(10000000000);
-    viz5.size(0.5);
+    viz5.time_to_live(6000000000);
+    viz5.size(0.2);
 
-    std::vector<Point2D> viz5_points{ Point2D(1.0, 0.7) };
+    std::vector<Point2D> viz5_points{ Point2D(1.0, 3.0) };
     viz5.points(rti::core::vector<Point2D>(viz5_points));
 
-    Color viz5_color(000, 255, 100, 0);
+    Color viz5_color(0, 0, 0, 0);
     viz5.color(viz5_color);
 
+    viz5.string_message("Centered");
     usleep(100000);
 
     std::cout << "Sending visualisation centered string..." << std::endl;
