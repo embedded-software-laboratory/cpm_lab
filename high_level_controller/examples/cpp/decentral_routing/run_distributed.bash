@@ -83,6 +83,7 @@ do
             --node_id=high_level_controller${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
+            --middleware=true \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}"
     else
@@ -91,6 +92,7 @@ do
             --node_id=high_level_controller${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
+            --middleware=true \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}  \
             >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt \

@@ -85,15 +85,12 @@ RTI Connext user manual.
         -->
         <qos_profile name="LocalCommunicationProfile" base_name="BuiltinQosLibExp::Generic.StrictReliable" is_default_qos="false">
             <participant_qos>
-                <transport_builtin>
-                    <mask>UDPv4</mask>
-                </transport_builtin>
                 <!-- Limit discovery to localhost -->
                 <discovery>
                     <accept_unknown_peers>false</accept_unknown_peers>
                     <initial_peers>
-                        <element>20@localhost</element>
-                        <element>20@TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
+                        <element>40@localhost</element>
+                        <element>40@TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
                     </initial_peers>   
                 </discovery>
             </participant_qos>
