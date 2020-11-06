@@ -63,6 +63,8 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
+    Gtk::Entry* entry_hlc_reboot;
+    Gtk::Button* button_hlc_reboot;
     Gtk::Label* label_rtt_hlc_short;
     Gtk::Label* label_rtt_hlc_long;
     Gtk::Label* label_rtt_vehicle_short;
