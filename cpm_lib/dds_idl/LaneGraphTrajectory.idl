@@ -31,7 +31,7 @@
 
 struct LaneGraphPosition 
 {
-    Timestamp estimated_arrival_time;
+    TimeStamp estimated_arrival_time;
     unsigned short edge_index;
     unsigned short edge_path_index;
 };
