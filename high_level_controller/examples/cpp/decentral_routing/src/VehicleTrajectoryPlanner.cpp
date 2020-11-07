@@ -148,27 +148,27 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             // Reset buffer for this vehicle
             other_vehicles_buffer[sample.data().vehicle_id()].clear();
 
-            // Calculate, which index the timestamp of the received message corresponds to
-            uint64_t time_diff = t_planning - sample.data().header().create_stamp().nanoseconds();
-            size_t index_offset = time_diff / dt_nanos;
-            uint64_t speed_steps_per_time_step = 25;
-
             //FIXME: After a restart, there temporarily is an unrealistically large offset
-            if(index_offset > 100) {
-                std::cout << "Received data with unfeasible timestamp";
-            }
-            
-            unsigned index=0;
-            // Save all received change messages that are not in the past already
+            //if(index_offset > 100) {
+            //    std::cout << "Received data with unfeasible timestamp";
+            //}
+
+            // Save all received positions that are not in the past already
             for ( auto position : sample.data().lane_graph_positions() ) {
-                if( index - speed_steps_per_time_step*index_offset > 0 ) {
-                    other_vehicles_buffer[sample.data().vehicle_id()][index - speed_steps_per_time_step*index_offset] =
+
+                // Check TimeStamp of each Position to see where it fits into our buffer
+                int index_to_use = 
+                    (position.estimated_arrival_time().nanoseconds() - t_planning)
+                    / (dt_nanos/timesteps_per_planningstep);
+
+                // If index_to_use is negative, estimated_arrival_time is in the past
+                if( index_to_use > 0 ) {
+                    other_vehicles_buffer[sample.data().vehicle_id()][index_to_use] =
                         std::make_pair(
                             position.edge_index(),
                             position.edge_path_index()
                             );
                 }
-                ++index;
             }
         }
     }
@@ -182,15 +182,27 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
  */
 void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory ) {
     LaneGraphTrajectory msg;
+
     if(trajectory.lane_graph_positions().size() > msg_max_length) {
+
+        // Write first 100 points to separate vector, to create a shorter msg from it
         std::vector<LaneGraphPosition> shortened_trajectory;
         for( int i=0; i<msg_max_length; i++ ) {
-           shortened_trajectory.push_back(trajectory.lane_graph_positions()[i]); 
+            shortened_trajectory.push_back(trajectory.lane_graph_positions()[i]); 
         }
         msg.lane_graph_positions(shortened_trajectory);
+
     } else {
         msg = trajectory;
     }
+
+    // Add TimeStamp to each point
+    for( int i=0; i<msg.lane_graph_positions().size(); i++ ) {
+        // Calculate, which point in time this index corresponds to
+        uint64_t eta = t_planning + (dt_nanos/timesteps_per_planningstep)*i;
+        msg.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
+    }
+
     
     msg.vehicle_id(trajectoryPlan->get_vehicle_id());
     msg.header().create_stamp().nanoseconds(t_planning);
