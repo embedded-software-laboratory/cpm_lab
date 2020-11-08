@@ -414,6 +414,53 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
+// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
+{
+    // x offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopRight:
+        case StringMessageAnchor::CentreRight:
+        case StringMessageAnchor::BottomRight:
+            // substract bearing twice so the gap between anchor point and text
+            // behaves equally as with a left sided anchor
+            offs_x = -ext.width - 2*ext.x_bearing;
+            break;
+        
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::BottomCenter:
+            
+            offs_x = -ext.width/2 - ext.x_bearing;
+            break;
+        
+        default:
+            offs_x = 0.0;
+    }
+    // y offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopLeft:
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::TopRight:
+            
+            offs_y = ext.y_bearing;
+            break;
+        
+        case StringMessageAnchor::CentreLeft:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::CentreRight:
+            
+            offs_y = ext.height/2 + ext.y_bearing;
+            break;
+        
+        default:
+            offs_y = 0.0;
+    }
+}
+
+
 //Draw all received viz commands on the screen
 void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
     //Get commands
@@ -457,22 +504,18 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
                 ctx->stroke();
             }            
         }
-        else if ((entry.type() == VisualizationType::StringMessage       ||
-                  entry.type() == VisualizationType::StringMessageCentered )
+        else if (entry.type() == VisualizationType::StringMessage
                  && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
 
-            double text_offset_x = 0.0;
-            double text_offset_y = 0.0;
-            if(entry.type() == VisualizationType::StringMessageCentered)
-            {
-                Cairo::TextExtents ext;
-                ctx->get_text_extents(entry.string_message(), ext);
-                text_offset_x = -ext.width/2 - ext.x_bearing;
-                text_offset_y = ext.height/2 + ext.y_bearing;
-            }
+            //Align
+            Cairo::TextExtents ext;
+            ctx->get_text_extents(entry.string_message(), ext);
+            
+            double text_offset_x, text_offset_y;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
             
             ctx->move_to(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
