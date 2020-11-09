@@ -32,6 +32,7 @@
 #include "cpm/MultiVehicleReader.hpp"           //->cpm_lib->include->cpm
 #include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
+#include "cpm/Writer.hpp"
 #include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"   //sw-folder central routing
@@ -81,11 +82,7 @@ int main(int argc, char *argv[])
 
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
     //the reader will read the pose of a vehicle given by its vehicle ID
     cpm::MultiVehicleReader<VehicleObservation> ips_reader(
         cpm::get_topic<VehicleObservation>("vehicleObservation"),

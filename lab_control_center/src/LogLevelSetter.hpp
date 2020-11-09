@@ -29,6 +29,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Writer.hpp"
 #include "dds/pub/DataWriter.hpp"
 
 #include "LogLevel.hpp"
@@ -45,7 +46,7 @@
 class LogLevelSetter {
 private:
     //The writer is set to be transient local and reliable, s.t. a participant that joins the domain after the log level was set can still receive the last set value
-    dds::pub::DataWriter<LogLevel> log_level_writer;
+    cpm::Writer<LogLevel> log_level_writer;
 
     /**
      * \brief The constructor sets up the DDS Writer

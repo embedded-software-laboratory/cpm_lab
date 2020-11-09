@@ -60,6 +60,11 @@ namespace cpm
             {
                 qos << dds::core::policy::Reliability::Reliable();
             }
+            else
+            {
+                //Already implicitly given
+                qos << dds::core::policy::Reliability::BestEffort();
+            }
 
             if (history_keep_all)
             {
@@ -85,7 +90,7 @@ namespace cpm
             //TODO: Integrate qos_xml_file in logic
         }
         
-        void write(T& msg)
+        void write(T msg)
         {
             dds_writer.write(msg);
         }

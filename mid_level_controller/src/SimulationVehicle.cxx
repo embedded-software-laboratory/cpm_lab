@@ -35,9 +35,7 @@ extern "C" {
 
 SimulationVehicle::SimulationVehicle(SimulationIPS& _simulationIPS, uint8_t vehicle_id, vector<double> starting_position)
 :topic_vehiclePoseSimulated(cpm::get_topic<VehicleObservation>("vehiclePoseSimulated"))
-,writer_vehiclePoseSimulated(
-    dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-    topic_vehiclePoseSimulated)
+,writer_vehiclePoseSimulated("vehiclePoseSimulated")
 ,reader_vehiclePoseSimulated(topic_vehiclePoseSimulated, MAX_NUM_VEHICLES)
 ,simulationIPS(_simulationIPS)
 {

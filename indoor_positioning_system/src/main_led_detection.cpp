@@ -40,6 +40,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/Writer.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -75,9 +76,7 @@ uint64_t get_time_ns()
 
 void worker_led_detection()
 {
-
-    auto LED_topic = cpm::get_topic<LedPoints>("ipsLedPoints");
-    dds::pub::DataWriter<LedPoints> LED_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), LED_topic);
+    cpm::Writer<LedPoints> LED_writer("ipsLedPoints");
 
     // Number of points in the previous frame.
     // Used for debug trigger.

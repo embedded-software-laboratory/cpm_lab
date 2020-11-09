@@ -30,13 +30,8 @@
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
-    parameterTopic(cpm::get_topic<Parameter>("parameter")),
     parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
-    writer(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        parameterTopic,
-        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
-    ),
+    writer("parameter", true),
     readerParameterRequest(
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 

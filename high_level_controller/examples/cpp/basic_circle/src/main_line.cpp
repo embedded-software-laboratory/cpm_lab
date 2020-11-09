@@ -30,6 +30,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_time_ns.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
@@ -64,11 +65,7 @@ int main(int argc, char *argv[])
 
 
     // Writer for sending trajectory commands
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
     // Circle trajectory data
     // vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};

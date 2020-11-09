@@ -35,6 +35,7 @@
 #include <mutex>
 #include <thread>
 #include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
 
 struct IpsVisualizationInput
 {
@@ -46,7 +47,7 @@ struct IpsVisualizationInput
 
 class IpsPipeline
 {
-    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation;
+    cpm::Writer<VehicleObservation> writer_vehicleObservation;
 
     std::shared_ptr<UndistortPoints> undistortPointsFn;
     std::shared_ptr<DetectVehicles> detectVehiclesFn;

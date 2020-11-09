@@ -35,6 +35,7 @@
 #include "VehicleState.hpp"
 #include "Visualization.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -50,8 +51,7 @@
 
 class MpcController
 {
-    dds::topic::Topic<Visualization> topic_Visualization;
-    dds::pub::DataWriter<Visualization> writer_Visualization;
+    cpm::Writer<Visualization> writer_Visualization;
     uint8_t vehicle_id;
 
     std::map< std::string, std::vector<casadi_real> > casadi_vars;

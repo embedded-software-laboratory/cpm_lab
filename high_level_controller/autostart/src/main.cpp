@@ -49,6 +49,7 @@
 #include "cpm/RTTTool.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/Writer.hpp"
 
 //To get the IP address
 #include <arpa/inet.h>
@@ -96,11 +97,7 @@ int main (int argc, char *argv[]) {
     std::shared_ptr<cpm::Timer> timer = std::make_shared<cpm::TimerFD>("hlc_timer", callback_period, 0, false);
 
     //Create DataWriter that sends ready messages to the Lab
-    dds::pub::DataWriter<HLCHello> writer_readyMessage
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<HLCHello>("hlc_hello")
-    );
+    cpm::Writer<HLCHello> writer_readyMessage("hlc_hello");
 
     //Wait a bit (10 seconds) for the NUC to get its IP address; the NUCs ID can be read from its IP
     //usleep(10000000);

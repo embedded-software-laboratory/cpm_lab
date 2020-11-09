@@ -48,6 +48,7 @@
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/Writer.hpp"
 
 //To get the IP address
 #include <arpa/inet.h>
@@ -72,7 +73,7 @@ int main (int argc, char *argv[]) {
 
     //Create reader and writer to check HLC answers
     dds::topic::Topic<RemoteProgramCheck> program_check_topic = cpm::get_topic<RemoteProgramCheck>(cpm::ParticipantSingleton::Instance(), "remote_program_check");
-    dds::pub::DataWriter<RemoteProgramCheck> program_check_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), program_check_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
+    cpm::Writer<RemoteProgramCheck> program_check_writer("remote_program_check", true, true);
 
     cpm::AsyncReader<RemoteProgramCheck> program_check_reader(
         [&](dds::sub::LoanedSamples<RemoteProgramCheck>& samples){

@@ -35,6 +35,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleState.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/Logging.hpp"
@@ -70,11 +71,7 @@ int main(int argc, char *argv[])
     );
 
 
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
     std::map<uint8_t, uint8_t> follower_vehicle_id_map;

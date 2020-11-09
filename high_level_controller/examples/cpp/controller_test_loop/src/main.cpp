@@ -37,6 +37,7 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleObservation.hpp"
 #include "test_loop_trajectory.hpp"
 #include "VehicleCommandTrajectory.hpp"
@@ -316,12 +317,7 @@ int main(int argc, char *argv[])
 
 
     // Writer for sending trajectory commands
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
-
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
 

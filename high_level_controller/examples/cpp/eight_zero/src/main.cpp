@@ -29,6 +29,7 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Eight.hpp"
 #include <dds/pub/ddspub.hpp>
@@ -61,11 +62,7 @@ int main(int argc, char *argv[])
 
 
     // Writer for sending trajectory commands
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
     // Initialize 8-Trajectory

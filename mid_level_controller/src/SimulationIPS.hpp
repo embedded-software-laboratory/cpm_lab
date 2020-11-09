@@ -27,18 +27,18 @@
 #pragma once
 #include <dds/pub/ddspub.hpp>
 #include "VehicleObservation.hpp"
+#include "cpm/Writer.hpp"
 #include <list>
+#include <string>
 
 class SimulationIPS
 {
-
-    dds::topic::Topic<VehicleObservation> topic_vehicleObservation;
-    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation;
+    cpm::Writer<VehicleObservation> writer_vehicleObservation;
 
     std::list<VehicleObservation> delay_buffer;
 
 public:
-    SimulationIPS(dds::topic::Topic<VehicleObservation>& _topic_vehicleObservation);
+    SimulationIPS(std::string topic_name);
 
     void update(VehicleObservation simulatedState);
     
