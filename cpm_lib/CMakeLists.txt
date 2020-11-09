@@ -19,6 +19,7 @@ set(SOURCE_CPM
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
     include/cpm/Reader.hpp
+    include/cpm/Writer.hpp
     include/cpm/MultiVehicleReader.hpp
     include/cpm/Timer.hpp
     include/cpm/stamp_message.hpp
@@ -86,6 +87,7 @@ if(NOT BUILD_ARM)
         test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
         test/test_Reader.cpp
+        test/test_Writer.cpp
         test/test_MultiVehicleReader.cpp
         test/test_CommandLineReader.cpp
         test/test_InternalConfiguration.cpp

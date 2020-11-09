@@ -79,7 +79,7 @@ namespace cpm
          * \brief Constructor for a writer which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings
          */
-        Writer(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false, std::string qos_xml_file = "")
+        Writer(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false)
         :dds_writer(dds::pub::Publisher(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), get_qos(reliable, history_keep_all, transient_local))
         { 
             //TODO: Integrate qos_xml_file in logic
