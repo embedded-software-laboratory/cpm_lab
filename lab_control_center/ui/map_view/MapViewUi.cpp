@@ -421,7 +421,7 @@ void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double&
     switch(anchor.underlying())
     {
         case StringMessageAnchor::TopRight:
-        case StringMessageAnchor::CentreRight:
+        case StringMessageAnchor::CenterRight:
         case StringMessageAnchor::BottomRight:
             // substract bearing twice so the gap between anchor point and text
             // behaves equally as with a left sided anchor
@@ -448,9 +448,9 @@ void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double&
             offs_y = ext.y_bearing;
             break;
         
-        case StringMessageAnchor::CentreLeft:
+        case StringMessageAnchor::CenterLeft:
         case StringMessageAnchor::Center:
-        case StringMessageAnchor::CentreRight:
+        case StringMessageAnchor::CenterRight:
             
             offs_y = ext.height/2 + ext.y_bearing;
             break;

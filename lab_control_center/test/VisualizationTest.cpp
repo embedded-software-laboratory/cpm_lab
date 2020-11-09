@@ -149,7 +149,6 @@ int main(int argc, char *argv[]) {
     Color viz5_color(255, 0, 128, 64);
     viz5.color(viz5_color);
 
-    //viz5.string_message_anchor(StringMessageAnchor::BottomLeft);
     viz5.string_message("H - Default alignment");
 
     usleep(100000);
@@ -165,9 +164,9 @@ int main(int argc, char *argv[]) {
     std::cout << "Sending visualization BottomLeft string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
-    viz5.string_message_anchor(StringMessageAnchor::CentreLeft);
+    viz5.string_message_anchor(StringMessageAnchor::CenterLeft);
     usleep(100000);
-    std::cout << "Sending visualization CentreLeft string..." << std::endl;
+    std::cout << "Sending visualization CenterLeft string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::TopLeft);
@@ -185,9 +184,9 @@ int main(int argc, char *argv[]) {
     std::cout << "Sending visualization TopRight string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
-    viz5.string_message_anchor(StringMessageAnchor::CentreRight);
+    viz5.string_message_anchor(StringMessageAnchor::CenterRight);
     usleep(100000);
-    std::cout << "Sending visualization CentreRight string..." << std::endl;
+    std::cout << "Sending visualization CenterRight string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::BottomRight);
