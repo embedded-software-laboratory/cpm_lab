@@ -72,7 +72,6 @@ int main (int argc, char *argv[]) {
     std::map<std::string, bool> middleware_running;
 
     //Create reader and writer to check HLC answers
-    dds::topic::Topic<RemoteProgramCheck> program_check_topic = cpm::get_topic<RemoteProgramCheck>(cpm::ParticipantSingleton::Instance(), "remote_program_check");
     cpm::Writer<RemoteProgramCheck> program_check_writer("remote_program_check", true, true);
 
     cpm::AsyncReader<RemoteProgramCheck> program_check_reader(
@@ -93,7 +92,7 @@ int main (int argc, char *argv[]) {
             }
         },
         cpm::ParticipantSingleton::Instance(),
-        program_check_topic,
+        cpm::get_topic<RemoteProgramCheck>(cpm::ParticipantSingleton::Instance(), "remote_program_check"),
         true,
         false
     );

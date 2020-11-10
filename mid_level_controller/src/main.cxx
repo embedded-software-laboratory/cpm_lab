@@ -95,8 +95,7 @@ int main(int argc, char *argv[])
     cpm::Writer<VehicleState> writer_vehicleState("vehicleState");
 
     std::string topic_vehicleObservation_name = "vehicleObservation";
-    dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), topic_vehicleObservation_name);
-    cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
+    cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(cpm::get_topic<VehicleObservation>(topic_vehicleObservation_name), vehicle_id);
     cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
 
 #ifndef VEHICLE_SIMULATION

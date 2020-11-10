@@ -72,7 +72,6 @@ class SimulationVehicle
     double motor_throttle_history[INPUT_DELAY];
     double steering_servo_history[INPUT_DELAY]; 
 
-    dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
     cpm::Writer<VehicleObservation> writer_vehiclePoseSimulated;
     cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 

@@ -57,7 +57,6 @@ private:
     void handleSingleParamRequest(std::string name);
 
     //Communication
-    dds::topic::Topic<ParameterRequest> parameterRequestTopic;
     cpm::Writer<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 

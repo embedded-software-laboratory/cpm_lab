@@ -30,12 +30,11 @@
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
-    parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
     writer("parameter", true),
     readerParameterRequest(
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
         cpm::ParticipantSingleton::Instance(), 
-        parameterRequestTopic
+        cpm::get_topic<ParameterRequest>("parameterRequest")
     ),
     storage(_storage)
 {
