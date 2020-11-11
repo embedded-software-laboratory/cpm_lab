@@ -44,10 +44,15 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
+
+#include "ObstacleSimulationData.hpp"
+
+#include "LCCErrorLogger.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
@@ -61,37 +66,19 @@
 enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
 /**
- * \struct CommonTrajectoryPoint
- * \brief This class is used as a return type for the trajectory getter
- * It allows to conveniently store all relevant information of each CommonTrajectoryPoint
- */
-struct CommonTrajectoryPoint
-{
-    std::optional<std::pair<double, double>> position; //x, y
-    std::optional<int> lanelet_ref; //Must be set if position is not set
-    std::optional<double> orientation; //yaw
-    std::optional<IntervalOrExact> time; //Must exist, but is not default-constructable -> use optional
-    std::optional<IntervalOrExact> velocity;
-
-    bool is_exact;
-    std::optional<ObstacleTypeDynamic> obstacle_type;
-    //is_moving is set in the simulation part, because it just depends on the overall trajectory size
-};
-
-/**
  * \class DynamicObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a DynamicObstacle specified in an XML file
  */
-class DynamicObstacle : public InterfaceTransform, public InterfaceDraw
+class DynamicObstacle : public InterfaceTransform,public InterfaceTransformTime
 {
 private:
     //Commonroad type
-    std::optional<ObstacleTypeDynamic> type;
+    ObstacleTypeDynamic type;
     std::string obstacle_type_text;
-    std::optional<Shape> shape;
-    std::optional<State> initial_state;
-    std::optional<SignalState> initial_signal_state;
+    std::optional<Shape> shape = std::nullopt;
+    std::optional<State> initial_state = std::nullopt;
+    std::optional<SignalState> initial_signal_state = std::nullopt;
 
     //Choice in specification - thus, only one of these two value will be valid for each object
     std::vector<State> trajectory;
@@ -99,21 +86,23 @@ private:
 
     std::vector<SignalState> signal_series;
 
-    //Non-commonroad data
-    //TODO: Transform to real vehicle representation, this is just to show that movement could be translated properly
-    //Used for drawing
-    size_t step; //Use this to iterate through trajectory (including initial state as well, which is not part of it)
-
     //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (dynamic) obstacle node
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
-    DynamicObstacle(const xmlpp::Node* node);
+    DynamicObstacle(
+        const xmlpp::Node* node,
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -121,37 +110,33 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
-     * \brief This function is used to draw the data structure that imports this interface
-     * If you want to set a color for drawing, perform this action on the context before using the draw function
-     * To change local translation, just transform the coordinate system beforehand
-     * As this does not always work with local orientation (where sometimes the translation in the object must be called before the rotation if performed, to rotate within the object's coordinate system),
-     * local_orientation was added as a parameter
-     * \param ctx A DrawingContext, used to draw on
-     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
-     * \param global_orientation - optional: Rotation that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param global_translate_x - optional: Translation in x-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param global_translate_y - optional: Translation in y-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
      */
-    void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+    void transform_timing(double time_scale) override;
+
+    //No draw function, obstacles are handled by LCC directly via simulation
 
     //Helper function for draw, because this is done multiple times
     void draw_shape_with_text(const DrawingContext& ctx, double scale = 1.0, double local_orientation = 0.0);
     void draw_text(const DrawingContext& ctx, double scale, double local_orientation, std::pair<double, double> center);
 
+    //Getter
     /**
-     * \brief Setter for drawing lanelet references (Can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
-     */
-    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
-
-    //TODO: Getter
-    /**
-     * \brief Returns a trajectory constructed from occupancy or trajectory data
+     * \brief Returns a trajectory constructed from occupancy or trajectory data, and further dynamic obstacle information
      * Throws errors if expected types are missing
      */
-    std::vector<CommonTrajectoryPoint> get_trajectory();
+    ObstacleSimulationData get_obstacle_simulation_data();
+
+    std::string get_obstacle_type_text();
+    ObstacleTypeDynamic get_type();
+    const std::optional<Shape>& get_shape() const;
+    const std::optional<State>& get_initial_state() const;
+    const std::optional<SignalState>& get_initial_signal_state() const;
+    const std::vector<State>& get_trajectory() const;
+    const std::vector<Occupancy>& get_occupancy_set() const;
+    const std::vector<SignalState>& get_signal_series() const;
 };

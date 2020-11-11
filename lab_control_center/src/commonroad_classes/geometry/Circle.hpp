@@ -41,6 +41,8 @@
 #include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -50,8 +52,8 @@
 class Circle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    std::optional<Point> center; //must not be set (then in ??)
-    double radius; //TODO: In constructor: Check if >= 0, must be unsigned
+    std::optional<Point> center = std::nullopt; //must not be set
+    double radius; //In constructor: Check if >= 0, must be unsigned
 
 public:
     Circle(const xmlpp::Node* node);
@@ -62,7 +64,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -85,8 +87,13 @@ public:
      */
     std::pair<double, double> get_center() override;
     
-    void to_dds_msg() {}
+    /**
+     * \brief Translates all relevant parts of the data structure to a DDS object, which is returned
+     * No interface was created for this function because the return type depends on the class
+     */
+    CommonroadDDSCircle to_dds_msg();
 
-    //TODO: Getter
+    //Getter
     const std::optional<Point>& get_center() const;
+    double get_radius();
 };

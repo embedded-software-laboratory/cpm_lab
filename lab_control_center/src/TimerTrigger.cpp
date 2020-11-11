@@ -57,8 +57,31 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
             check_signals_and_send_next_signal();   
 
             //Now only continue if new messages are received
+            //If waiting time gets too long, investigate
+            unsigned int count = 0;
             while(!obtain_new_ready_signals()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                ++count;
+
+                //Each second of waiting, log which participants we are still waiting for
+                if (count > 100)
+                {
+                    count = 0;
+
+                    //Log all participants that are still working or out of sync
+                    std::stringstream id_stream;
+                    std::lock_guard<std::mutex> lock(ready_status_storage_mutex);
+                    std::lock_guard<std::mutex> lock2(simulated_time_mutex);
+                    for (auto& entry : ready_status_storage)
+                    {
+                        if (entry.second.next_timestep <= current_simulated_time)
+                        {
+                            id_stream << " | " << entry.first;
+                        }
+                    }
+
+                    cpm::Logging::Instance().write(2, "Simulated time - Participants that need to answer or are out of sync: %s", id_stream.str().c_str());
+                }
             }   
         }  
     });
@@ -103,6 +126,7 @@ bool TimerTrigger::obtain_new_ready_signals() {
                 } //If an old message is received and the entry in the storage is old as well, the participant is out of sync
                 else if (next_start_request < current_simulated_time && use_simulated_time) {
                     current_participant_status = OUT_OF_SYNC;
+                    cpm::Logging::Instance().write(1, "Participant with id '%s' is out of sync", id);
                 }
                 else if (next_start_request > current_simulated_time && use_simulated_time) {
                     current_participant_status = WAITING;

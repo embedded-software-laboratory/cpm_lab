@@ -83,6 +83,7 @@ void ParameterStorage::loadFile(std::string _filename) {
         std::vector<int32_t> ints;
 
         if (!outer_it->second["value"].IsSequence()) {
+            //Is this really a good idea, or would logging &ignoring the paramter be better in this case?
             throw std::domain_error("The input file is not conformant with the specification - ints must contain sequences");
         }
 
@@ -99,6 +100,7 @@ void ParameterStorage::loadFile(std::string _filename) {
         std::vector<double> doubles;
 
         if (!outer_it->second["value"].IsSequence()) {
+            //Is this really a good idea, or would logging &ignoring the paramter be better in this case?
             throw std::domain_error("The input file is not conformant with the specification - doubles must contain sequences");
         }
 
@@ -431,7 +433,6 @@ void ParameterStorage::delete_parameter(std::string name) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         param_storage.erase(name);
-        std::cout << "Successfully deleted " << name << std::endl;
     }
 }
 

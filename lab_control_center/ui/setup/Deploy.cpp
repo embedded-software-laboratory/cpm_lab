@@ -56,7 +56,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     //Check if old session already exists - if so, kill it
-    kill_session("high_level_controller");
+    kill_session(hlc_session);
 
     if (active_vehicle_ids.size() > 0)
     {
@@ -81,7 +81,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Matlab script
             command 
             << "tmux new-session -d "
-            << "-s \"high_level_controller\" "
+            << "-s \"" << hlc_session << "\" "
             << "'. ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
@@ -93,7 +93,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             //Case: Any executable 
             command 
             << "tmux new-session -d "
-            << "-s \"high_level_controller\" "
+            << "-s \"" << hlc_session << "\" "
             << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=high_level_controller"
@@ -119,13 +119,13 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
         system(command.str().c_str());
 
         //Check if old session already exists - if so, kill it
-        kill_session("middleware");
+        kill_session(middleware_session);
 
         //Generate command
         std::stringstream middleware_command;
         middleware_command 
             << "tmux new-session -d "
-            << "-s \"middleware\" "
+            << "-s \"" << middleware_session << "\" "
             << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
             << " --node_id=middleware"
             << " --simulated_time=" << sim_time_string
@@ -145,8 +145,8 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
 
 void Deploy::kill_local_hlc() 
 {
-    kill_session("high_level_controller");
-    kill_session("middleware");
+    kill_session(hlc_session);
+    kill_session(middleware_session);
 }
 
 void Deploy::deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, bool use_simulated_time) 
@@ -369,13 +369,13 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 void Deploy::deploy_ips() 
 {
     //Check if old session already exists - if so, kill it
-    kill_session("ips_pipeline");
+    kill_session(ips_session);
 
     //Generate command
     std::stringstream command_ips;
     command_ips 
         << "tmux new-session -d "
-        << "-s \"ips_pipeline\" "
+        << "-s \"" << ips_session << "\" "
         << "\"cd ~/dev/software/indoor_positioning_system/;./build/ips_pipeline "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
@@ -386,13 +386,13 @@ void Deploy::deploy_ips()
         << " >~/dev/lcc_script_logs/stdout_ips.txt 2>~/dev/lcc_script_logs/stderr_ips.txt\"";
 
     //Kill previous ips basler session if it still exists
-    kill_session("ips_basler");
+    kill_session(basler_session);
 
     //Generate command
     std::stringstream command_basler;
     command_basler 
         << "tmux new-session -d "
-        << "-s \"ips_basler\" "
+        << "-s \"" << basler_session << "\" "
         << "\"cd ~/dev/software/indoor_positioning_system/;./build/BaslerLedDetection "
         << " --dds_domain=" << cmd_domain_id;
     if (cmd_dds_initial_peer.size() > 0) {
@@ -408,8 +408,8 @@ void Deploy::deploy_ips()
 }
 
 void Deploy::kill_ips() {
-    kill_session("ips_pipeline");
-    kill_session("ips_basler");
+    kill_session(ips_session);
+    kill_session(basler_session);
 }
 
 
@@ -499,6 +499,27 @@ bool Deploy::session_exists(std::string session_id)
     return running_sessions.find(session_id) != std::string::npos;
 }
 
+std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
+{
+    std::vector<std::string> crashed_participants;
+    if ((!(deploy_remote) || has_local_hlc) && script_started)
+    {
+        if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
+        if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
+    }
+    if (lab_mode_on)
+    {
+        if(! session_exists(ips_session)) crashed_participants.push_back("IPS");
+        if(! session_exists(basler_session)) crashed_participants.push_back("Basler LED detection");
+    }
+    if (check_for_recording)
+    {
+        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
+    }
+
+    return crashed_participants;
+}
+
 void Deploy::kill_session(std::string session_id)
 {
     if (session_exists(session_id))
@@ -567,7 +588,8 @@ void Deploy::create_log_folder(std::string name)
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
 {
-    std::cout << "Executing " << cmd << std::endl;
+    cpm::Logging::Instance().write(3, "Executing '%s'", cmd);
+
     //Spawn and manage new process
     int process_id = execute_command_get_pid(cmd);
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -581,17 +603,20 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
 
         if (state == PROCESS_STATE::DONE)
         {
+            cpm::Logging::Instance().write(3, "Success: execution of '%s'", cmd);
             return true;
         }
         else if (state == PROCESS_STATE::ERROR)
         {
             kill_process(process_id);
+            cpm::Logging::Instance().write(2, "Error state in execution of '%s'", cmd);
             return false;
         }
         else if (! is_online())
         {
             //The HLC is no longer online, so abort
             kill_process(process_id);
+            cpm::Logging::Instance().write(2, "No longer online - stopped execution of '%s'", cmd);
             return false;
         }
 
@@ -613,6 +638,7 @@ bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seco
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
     kill_process(process_id);
+    cpm::Logging::Instance().write(2, "Could not execute in time: '%s'", cmd);
     return false;
 }
 
@@ -629,7 +655,7 @@ int Deploy::execute_command_get_pid(const char* cmd)
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
-        std::cerr << "Exec error: " << errno << "!" << std::endl;
+        cpm::Logging::Instance().write(1, "Execl error in Deploy class: %s, for execution of '%s'", std::strerror(errno), cmd);
 
         exit(1);
     }
@@ -642,7 +668,7 @@ int Deploy::execute_command_get_pid(const char* cmd)
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
         //TODO: Change behaviour
-        std::cerr << "There was an error during the creation of a child process for program execution" << std::endl;
+        cpm::Logging::Instance().write(1, "Error in Deploy class: Could not create child process for '%s'", cmd);
         exit(1);
     }
 }

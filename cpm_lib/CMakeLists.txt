@@ -41,6 +41,8 @@ set(SOURCE_CPM
     include/cpm/init.hpp
     include/cpm/get_time_ns.hpp
     src/get_time_ns.cpp
+    include/cpm/RTTTool.hpp
+    src/RTTTool.cpp
 )
 
 
@@ -73,6 +75,7 @@ if(NOT BUILD_ARM)
     add_executable(unittest 
         test/catch.cpp
         test/test_logging.cpp
+        test/test_rtt.cpp
         test/test_parameter.cpp
         test/test_simple_timer.cpp
         test/test_simple_timer_stop.cpp

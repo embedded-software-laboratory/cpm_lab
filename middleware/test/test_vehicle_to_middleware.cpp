@@ -89,7 +89,6 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
             vehicleTrajectoryTopicName,
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
-            vehicleID,
             timer,
             vehicle_ids
         );

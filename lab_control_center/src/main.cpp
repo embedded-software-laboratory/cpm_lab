@@ -43,13 +43,16 @@
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/params/ParamViewUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/lcc_errors/LCCErrorViewUI.hpp"
 #include "ui/logger/LoggerViewUI.hpp"
 #include "ui/setup/SetupViewUI.hpp"
 #include "LogStorage.hpp"
 #include "ParameterServer.hpp"
 #include "ParameterStorage.hpp"
+#include "RTTAggregator.hpp"
 #include "TrajectoryCommand.hpp"
 #include "ui/MainWindow.hpp"
+#include "cpm/RTTTool.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "TimerTrigger.hpp"
@@ -115,6 +118,10 @@ int main(int argc, char *argv[])
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
+    cpm::RTTTool::Instance().activate("lab_control_center");
+
+    //To receive logs as early as possible, and for Logging in main
+    auto logStorage = make_shared<LogStorage>();
 
     //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
     struct sigaction interruptHandler;
@@ -142,11 +149,10 @@ int main(int argc, char *argv[])
     try
     {
         commonroad_scenario->load_file(filepath_2018);
-        //commonroad_scenario->transform_coordinate_system(0.5, 0.0, -4.0);
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cpm::Logging::Instance().write(1, "Could not load initial commonroad scenario, error is: %s", e.what());
     }
 
     auto storage = make_shared<ParameterStorage>(config_file, 32);
@@ -163,13 +169,15 @@ int main(int argc, char *argv[])
     auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
 
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
-    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
-    auto logStorage = make_shared<LogStorage>();
+    auto timerViewUi = make_shared<TimerViewUI>(
+        timerTrigger,
+        obstacle_simulation_manager
+    );
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
-    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>();
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(30); //LISTEN FOR VEHICLE DATA UP TO ID 30
     auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
@@ -189,33 +197,90 @@ int main(int argc, char *argv[])
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
+    auto rtt_aggregator = make_shared<RTTAggregator>();
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
         [=](){return timeSeriesAggregator->get_vehicle_data();}, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_string();},
+        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->reset_all_data();}
+        [=](){return timeSeriesAggregator->reset_all_data();},
+        [=](std::string id, uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt, double& missed_msgs)
+            {
+                return rtt_aggregator->get_rtt(id, c_best_rtt, c_worst_rtt, a_worst_rtt, missed_msgs);
+            },
+        [=](){return setupViewUi->kill_deployed_applications();}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
-    auto commonroadViewUi = make_shared<CommonroadViewUI>(commonroad_scenario);
+    auto commonroadViewUi = make_shared<CommonroadViewUI>(
+        commonroad_scenario,
+        obstacle_simulation_manager 
+    );
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
-        obstacle_simulation_manager,
-        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();}, 
+        hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){return timeSeriesAggregator->reset_all_data();}, 
-        [=](){return obstacleAggregator->reset_all_data();}, 
-        [=](){return trajectoryCommand->stop_all();}, 
-        [=](){return monitoringUi->reset_vehicle_view();}, 
-        [=](){return visualizationCommandsAggregator->reset_visualization_commands();}, 
-        [=](){return loggerViewUi->reset();}, 
+        [=](){
+            //Things to do when the simulation is started
+
+            //Stop RTT measurement
+            rtt_aggregator->stop_measurement();
+
+            //Reset old UI elements (difference to kill: Also reset the Logs)
+            //Kill timer in UI as well, as it should not show invalid information
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->notify_sim_start();
+            visualizationCommandsAggregator->reset_visualization_commands();
+            
+            //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
+            loggerViewUi->reset();
+
+            //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
+            obstacle_simulation_manager->stop(); //In case the preview has been used
+            obstacle_simulation_manager->start();
+            commonroadViewUi->reset_preview_label();
+
+        }, 
+        [=](){
+            //Things to do when the simulation is stopped
+
+            //Stop obstacle simulation
+            obstacle_simulation_manager->stop();
+            
+            //Kill timer in UI as well, as it should not show invalid information
+            //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
+            //Reset all relevant UI parts
+            timeSeriesAggregator->reset_all_data();
+            obstacleAggregator->reset_all_data();
+            trajectoryCommand->stop_all();
+            monitoringUi->notify_sim_stop();
+            visualizationCommandsAggregator->reset_visualization_commands();
+
+            //Restart RTT measurement
+            rtt_aggregator->restart_measurement();
+        },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         argc, 
-        argv);
-    auto tabsViewUi = make_shared<TabsViewUI>(setupViewUi, vehicleManualControlUi, paramViewUi, timerViewUi, loggerViewUi, commonroadViewUi);
+        argv
+    );
+    monitoringUi->register_vehicle_to_hlc_mapping(
+        [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
+    );
+    monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
+    auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
+    auto tabsViewUi = make_shared<TabsViewUI>(
+        setupViewUi, 
+        vehicleManualControlUi, 
+        paramViewUi, 
+        timerViewUi, 
+        lccErrorViewUi,
+        loggerViewUi, 
+        commonroadViewUi);
     auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
 
     //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created

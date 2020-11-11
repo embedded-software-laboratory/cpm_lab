@@ -27,9 +27,19 @@
 #pragma once
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
-#include "commonroad_classes/DynamicObstacle.hpp"
+#include "commonroad_classes/ObstacleSimulationData.hpp"
 
 #include "ObstacleSimulation.hpp"
+
+#include "cpm/Timer.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
+#include "CommonroadObstacleList.hpp"
+#include "VehicleCommandTrajectory.hpp"
+
+#include "ui/commonroad/ObstacleToggle.hpp" //For callback from vehicle toggle: Need enum defined here
+
+#include <map>
 
 /**
  * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
@@ -41,10 +51,22 @@ class ObstacleSimulationManager
 private:
     std::shared_ptr<CommonRoadScenario> scenario; //Data object that can be used to access the obstacle's trajectories
 
-    std::vector<ObstacleSimulation> simulated_obstacles;
+    std::map<int, ObstacleSimulation> simulated_obstacles; //Store obstacles by ID
+    //Simulation state - relevant to decide which data to send for this obstacle (DDS Obstacle / Trajectory / Nothing)
+    std::map<int, ObstacleToggle::ToggleState> simulated_obstacle_states;
+    std::mutex map_mutex;
 
-    double time_step_size;
+    //Timing
     bool use_simulated_time;
+    std::string node_id;
+    uint64_t dt_nanos;
+    uint64_t time_step_size; //Defined by Commonroad scenario, here translated from seconds to nanoseconds
+    std::shared_ptr<cpm::Timer> simulation_timer;
+    std::shared_ptr<cpm::SimpleTimer> standby_timer;
+
+    //DDS
+    dds::pub::DataWriter<CommonroadObstacleList> writer_commonroad_obstacle;
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicle_trajectory;
 
     /**
      * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)
@@ -56,6 +78,33 @@ private:
      */
     void reset();
 
+    //Stop cpm timers, if they are running
+    void stop_timers();
+
+    /**
+     * \brief Create an obstacle simulation object given obstacle simulation data
+     * \param id ID (set in commonroad scenario) of the obstacle
+     * \param data An obstacle simulation data object containing all information relevant for simulating the translated object
+     */
+    void create_obstacle_simulation(int id, ObstacleSimulationData& data);
+
+    //Send initial state of all simulation objects (when sim. is not running, to show initial position in MapView)
+    void send_init_states();
+
+    /**
+     * \brief Compute next states of commonroad obstacles based on the current time and return them; only consider obstacles that are supposed to be simulated by the LCC
+     * \param t_now Current time
+     * \param start_time Time the simulation was started, to compute diff to t_now
+     */
+    std::vector<CommonroadObstacle> compute_all_next_states(uint64_t t_now, uint64_t start_time);
+
+    //Either returns the content of the map or the default value (simulated); does not lock, so lock before calling!
+    ObstacleToggle::ToggleState get_obstacle_simulation_state(int id);
+
+    //Helper functions
+    //Internal helper function that is used both for start() and start_preview()
+    void start_helper(bool wait_for_start_signal, bool simulated_time);
+
 public:
     /**
      * \brief Constructor to set up the simulation object
@@ -63,11 +112,19 @@ public:
      */
     ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool use_simulated_time);
 
+    //Destructor for threads & timer
+    ~ObstacleSimulationManager();
+
     /**
      * \brief Scales the time used in this scenario by scale to a value in nanoseconds
      * \param scale The scale factor
      */
     void set_time_scale(double scale);
+
+    /**
+     * \brief Start the simulation preview, where we do not need a start signal (callback for UI)
+     */
+    void start_preview();
 
     /**
      * \brief Start the simulation (callback for UI)
@@ -78,4 +135,11 @@ public:
      * \brief Stop the simulation (callback for UI)
      */
     void stop();
+
+    /**
+     * \brief Set the simulation state (off, visualized/simulated, trajectory) for an obstacle (default is simulated)
+     * \param id ID of the obstacle in commonroad
+     * \param state New state of the simulation
+     */
+    void set_obstacle_simulation_state(int id, ObstacleToggle::ToggleState state);
 };

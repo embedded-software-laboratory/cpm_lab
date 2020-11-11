@@ -473,7 +473,8 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.curvature) > 50.0)
+        if(fabs(trajectory_interpolation.speed) > 0.1 &&
+           fabs(trajectory_interpolation.curvature) > 50.0)
         {
             cpm::Logging::Instance().write(
                 2,

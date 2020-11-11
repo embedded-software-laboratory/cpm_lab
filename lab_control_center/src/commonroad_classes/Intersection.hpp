@@ -51,11 +51,13 @@
  */
 struct Incoming
 {
-    std::optional<int> incoming_lanelet; //Lanelet ref - must exist, optional in case of faulty XML-file
-    std::optional<int> successors_right; //Lanelet ref
-    std::optional<int> successors_straight; //Lanelet ref
-    std::optional<int> successors_left; //Lanelet ref
-    std::optional<int> is_left_of; //Incoming ref
+    std::optional<int> incoming_lanelet = std::nullopt; //Lanelet ref - must exist, optional in case of faulty XML-file
+    std::optional<int> successors_right = std::nullopt; //Lanelet ref
+    std::optional<int> successors_straight = std::nullopt; //Lanelet ref
+    std::optional<int> successors_left = std::nullopt; //Lanelet ref
+    std::optional<int> is_left_of = std::nullopt; //Incoming ref
+
+    //TODO: Change to vectors
 };
 
 /**
@@ -76,14 +78,11 @@ public:
 
     /**
      * \brief Get attribute value of child of node with name child_name
-     * TODO: Maybe integrate in XMLTranslation
      * \param node The parent node
      * \param child_name Name of the child
      * \param warn Warn if the child or attribute does not exist
      */
     std::optional<int> get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn);
-
-    //TODO: Getter
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push
@@ -105,4 +104,7 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override {} //TODO
 
     #pragma GCC diagnostic pop
+
+    //Getter
+    const std::map<int, Incoming>& get_incoming_map() const;
 };

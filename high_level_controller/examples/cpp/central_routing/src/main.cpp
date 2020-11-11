@@ -101,16 +101,8 @@ int main(int argc, char *argv[])
 
         if(planner->is_started())//will be set to true after fist activation
         {
-            auto computation_start_time = timer->get_time();
             //get trajectory commands from MultiVehicleTrajectoryPlanner with new points for each vehicle ID
             auto commands = planner->get_trajectory_commands(t_now);
-            auto computation_end_time = timer->get_time();
-
-            cpm::Logging::Instance().write(
-                3,
-                "%s, Computation start time: %llu, Computation end time: %llu",
-                vehicle_ids_string.c_str(), computation_start_time, computation_end_time
-            );
             
             for(auto& command:commands)
             {

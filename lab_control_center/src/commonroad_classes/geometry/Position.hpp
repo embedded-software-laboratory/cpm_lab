@@ -48,6 +48,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -57,13 +59,11 @@
 class Position : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    //TODO: Solve below w. inheritance? Or keep it this way? -> Probably easier to keep it this way
-
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
     
     //Exact position (positionExact)
-    std::optional<Point> point;
+    std::optional<Point> point = std::nullopt;
 
     //Inexact position (positionInterval)
     std::vector<Circle> circles;
@@ -73,6 +73,12 @@ private:
 
     //Function to draw lanelet_refs
     std::function<void (int, const DrawingContext&, double, double, double, double)> draw_lanelet_refs;
+
+    //Function to get center of lanelet_ref
+    std::function<std::pair<double, double> (int)> get_lanelet_center;
+
+    //Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     /**
@@ -88,9 +94,15 @@ public:
 
     /**
      * \brief Setter for drawing lanelet references (Position can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _draw_lanelet_refs Function that, given a lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
     void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+
+    /**
+     * \brief Setter for getting lanelet center
+     * \param _get_lanelet_center Function that returns a lanelet center
+     */
+    void set_lanelet_get_center_function(std::function<std::pair<double, double> (int)> _get_lanelet_center);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -98,7 +110,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -135,5 +147,10 @@ public:
     
     void to_dds_msg() {} 
 
-    //TODO: Getter
+    //Getters for basic types
+    std::optional<Point> get_point();
+    const std::vector<Circle>& get_circles() const;
+    const std::vector<int>& get_lanelet_refs() const;
+    const std::vector<Polygon>& get_polygons() const;
+    const std::vector<Rectangle>& get_rectangles() const;
 };

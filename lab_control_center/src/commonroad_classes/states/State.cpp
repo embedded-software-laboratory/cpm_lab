@@ -31,16 +31,13 @@ State::State(const xmlpp::Node* node)
     //Check if node is of type state
     assert(node->get_name() == "state" || node->get_name() == "initialState");
 
+    commonroad_line = node->get_line();
+
     try
     {
         //2018 and 2020
-        //Only these three values are mandatory (TODO: Might have default values though)
-        const auto position_node = xml_translation::get_child_if_exists(node, "position", true);
-        if (position_node)
-        {
-            position = std::optional<Position>{std::in_place, position_node};
-        }
-
+        //Only these three values are mandatory
+        position = std::optional<Position>{std::in_place, xml_translation::get_child_if_exists(node, "position", true)};
         orientation = get_interval(node, "orientation", true);
         time = get_interval(node, "time", true);
 
@@ -103,38 +100,72 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
     return std::optional<IntervalOrExact>();
 }
 
-void State::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void State::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     if (position_z.has_value())
     {
-        position_z->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (position_z_front.has_value())
     {
-        position_z_front->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z_front->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (position_z_rear.has_value())
     {
-        position_z_rear->transform_coordinate_system(scale, 0.0, 0.0);
+        position_z_rear->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (delta_y_front.has_value())
     {
-        delta_y_front->transform_coordinate_system(scale, 0.0, 0.0);
+        delta_y_front->transform_coordinate_system(scale, angle, 0.0, 0.0);
     }
 
     if (delta_y_rear.has_value())
     {
-        delta_y_rear->transform_coordinate_system(scale, 0.0, 0.0);
+        delta_y_rear->transform_coordinate_system(scale, angle, 0.0, 0.0);
+    }
+
+    //If all positional values are adjusted, the velocity must be adjusted as well
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (acceleration.has_value())
+    {
+        acceleration->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_y.has_value())
+    {
+        velocity_y->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_y_front.has_value())
+    {
+        velocity_y_front->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_y_rear.has_value())
+    {
+        velocity_y_rear->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_z.has_value())
+    {
+        velocity_z->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_z_front.has_value())
+    {
+        velocity_z_front->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (velocity_z_rear.has_value())
+    {
+        velocity_z_rear->transform_coordinate_system(scale, angle, 0, 0);
     }
 
     if (scale > 0)
@@ -143,11 +174,71 @@ void State::transform_coordinate_system(double scale, double translate_x, double
     }
 }
 
+void State::transform_timing(double time_scale)
+{
+    if (velocity.has_value())
+    {
+        velocity->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (acceleration.has_value())
+    {
+        acceleration->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_y.has_value())
+    {
+        velocity_y->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_y_front.has_value())
+    {
+        velocity_y_front->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_y_rear.has_value())
+    {
+        velocity_y_rear->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_z.has_value())
+    {
+        velocity_z->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_z_front.has_value())
+    {
+        velocity_z_front->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (velocity_z_rear.has_value())
+    {
+        velocity_z_rear->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (left_front_wheel_angular_speed.has_value())
+    {
+        left_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (right_front_wheel_angular_speed.has_value())
+    {
+        right_front_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (left_rear_wheel_angular_speed.has_value())
+    {
+        left_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (right_rear_wheel_angular_speed.has_value())
+    {
+        right_rear_wheel_angular_speed->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    if (yaw_rate.has_value())
+    {
+        yaw_rate->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+    
+    //TODO: Scale curvature change as well?
+}
+
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     if(!orientation.has_value())
     {
-        std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing state, but should have been set - not drawing this state" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw state bc no orientation was set, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
         return;
     }
 
@@ -174,6 +265,7 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
             {
                 //Draw position
                 ctx->save();
+                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
                 position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
                 ctx->restore();
 
@@ -183,14 +275,16 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
                 ctx->rotate(middle + local_orientation);
 
                 double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-                draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
+                draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
 
                 ctx->restore();
             }
         }
         else
         {
-            std::cerr << "TODO: Better warning // No orientation value (exact or interval) found for drawing" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "No orientation value within one part of the set orientation intervals found for state, from line " << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
     }
 
@@ -221,7 +315,9 @@ void State::transform_context(const DrawingContext& ctx, double scale)
         }
         else
         {
-            std::cerr << "TODO: Better warning // State orientation is an interval - ignoring orientation" << std::endl;
+            std::stringstream error_stream;
+            error_stream << "Orientation from state for rotation of other objects ignored, as it is an interval value" << commonroad_line;
+            LCCErrorLogger::Instance().log_error(error_stream.str());
         }
         
     }
@@ -257,11 +353,171 @@ std::optional<double> State::get_orientation_mean()
     }
     else
     {
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
-std::optional<IntervalOrExact> State::get_velocity()
+std::optional<IntervalOrExact>& State::get_velocity()
 {
     return velocity;
+}
+
+const std::optional<IntervalOrExact>& State::get_orientation() const
+{
+    return orientation;
+}
+
+const std::optional<IntervalOrExact>& State::get_acceleration() const
+{
+    return acceleration;
+}
+
+const std::optional<IntervalOrExact>& State::get_yaw_rate() const
+{
+    return yaw_rate;
+}
+
+const std::optional<IntervalOrExact>& State::get_slip_angle() const
+{
+    return slip_angle;
+}
+
+const std::optional<IntervalOrExact>& State::get_steering_angle() const
+{
+    return steering_angle;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_angle() const
+{
+    return roll_angle;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_rate() const
+{
+    return roll_rate;
+}
+
+const std::optional<IntervalOrExact>& State::get_pitch_angle() const
+{
+    return pitch_angle;
+}
+
+const std::optional<IntervalOrExact>& State::get_pitch_rate() const
+{
+    return pitch_rate;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_y() const
+{
+    return velocity_y;
+}
+
+const std::optional<IntervalOrExact>& State::get_position_z() const
+{
+    return position_z;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_z() const
+{
+    return velocity_z;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_angle_front() const
+{
+    return roll_angle_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_rate_front() const
+{
+    return roll_rate_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_y_front() const
+{
+    return velocity_y_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_position_z_front() const
+{
+    return position_z_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_z_front() const
+{
+    return velocity_z_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_angle_rear() const
+{
+    return roll_angle_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_roll_rate_rear() const
+{
+    return roll_rate_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_y_rear() const
+{
+    return velocity_y_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_position_z_rear() const
+{
+    return position_z_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_velocity_z_rear() const
+{
+    return velocity_z_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_left_front_wheel_angular_speed() const
+{
+    return left_front_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact>& State::get_right_front_wheel_angular_speed() const
+{
+    return right_front_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact>& State::get_left_rear_wheel_angular_speed() const
+{
+    return left_rear_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact>& State::get_right_rear_wheel_angular_speed() const
+{
+    return right_rear_wheel_angular_speed;
+}
+
+const std::optional<IntervalOrExact>& State::get_delta_y_front() const
+{
+    return delta_y_front;
+}
+
+const std::optional<IntervalOrExact>& State::get_delta_y_rear() const
+{
+    return delta_y_rear;
+}
+
+const std::optional<IntervalOrExact>& State::get_curvature() const
+{
+    return curvature;
+}
+
+const std::optional<IntervalOrExact>& State::get_curvature_change() const
+{
+    return curvature_change;
+}
+
+const std::optional<IntervalOrExact>& State::get_jerk() const
+{
+    return jerk;
+}
+
+const std::optional<IntervalOrExact>& State::get_jounce() const
+{
+    return jounce;
 }
