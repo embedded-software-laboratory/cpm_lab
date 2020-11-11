@@ -24,23 +24,22 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "Header.idl"
-#include "Pose2D.idl"
+#pragma once
 
-#ifndef VEHICLECOMMANDPATHTRACKING_IDL
-#define VEHICLECOMMANDPATHTRACKING_IDL
+#include "VehicleCommandPathTracking.hpp"
 
-struct PathPoint 
-{
-    Pose2D pose;
-    double s;           // m
+struct PathInterpolation {
+
+    double s_queried;
+    double position_x;
+    double position_y;
+    double velocity_x;
+    double velocity_y;
+    double acceleration_x;
+    double acceleration_y;
+    double yaw;
+    double speed;
+    double curvature;
+
+    PathInterpolation(const double s_queried, const PathPoint start_point, const PathPoint end_point);
 };
-
-struct VehicleCommandPathTracking
-{
-    octet vehicle_id;   //@key
-    Header header;
-    sequence<PathPoint> path;
-    double speed;       // [m/s]
-};
-#endif

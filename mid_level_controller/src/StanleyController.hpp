@@ -24,23 +24,41 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "Header.idl"
-#include "Pose2D.idl"
+#pragma once
+#include <vector>
+// #include <string>
+// #include <array>
+// #include "VehicleModel.hpp"
+#include "VehicleCommandPathTracking.hpp"
+#include "VehicleState.hpp"
+// #include "Visualization.hpp"
+// #include "cpm/get_topic.hpp"
+// #include <dds/pub/ddspub.hpp>
 
-#ifndef VEHICLECOMMANDPATHTRACKING_IDL
-#define VEHICLECOMMANDPATHTRACKING_IDL
 
-struct PathPoint 
+class StanleyController
 {
-    Pose2D pose;
-    double s;           // m
-};
+    uint8_t vehicle_id;
 
-struct VehicleCommandPathTracking
-{
-    octet vehicle_id;   //@key
-    Header header;
-    sequence<PathPoint> path;
-    double speed;       // [m/s]
+    Pose2D find_reference_pose2d(
+        const std::vector<PathPoint> &path,
+        const double x,
+        const double y,
+        const double yaw
+    );
+
+    std::function<void(double&, double&)> stop_vehicle;
+
+
+public:
+
+    StanleyController(uint8_t vehicle_id, std::function<void(double&, double&)> stop_vehicle);
+
+    double control_steering_servo(
+        const VehicleState &vehicleState,                  
+        const VehicleCommandPathTracking &commandPathTracking
+    );
+
+    void reset_ref_path();
+    
 };
-#endif
