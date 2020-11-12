@@ -24,6 +24,7 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+#pragma once
 
 #include <string>
 #include <memory>
@@ -32,6 +33,23 @@
 
 
 // see https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
+
+
+/**
+ * \class MeasurementData
+ * Just for internal use.
+ */
+class MeasurementData {
+    public:
+        uint64_t start_time = 0;
+        uint64_t end_time = 0;
+        std::shared_ptr<cpm::Timer> timer;
+
+        MeasurementData(std::shared_ptr<cpm::Timer> timer);
+};
+
+
+
 
 /**
  * \class TimeMeasurement.hpp
@@ -75,18 +93,3 @@ class TimeMeasurement {
 
 };
 
-
-
-
-/**
- * \class MeasurementData
- * Just for internal use.
- */
-class MeasurementData {
-    public:
-        uint64_t start_time = 0;
-        uint64_t end_time = 0;
-        std::shared_ptr<cpm::Timer> timer;
-
-        MeasurementData(std::shared_ptr<cpm::Timer> timer);
-};

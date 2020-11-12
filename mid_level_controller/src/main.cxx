@@ -58,6 +58,7 @@ using std::vector;
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
 #include "Controller.hpp"
+#include "TimeMeasurement.hpp"
 
 
 #ifdef VEHICLE_SIMULATION
@@ -165,6 +166,8 @@ int main(int argc, char *argv[])
         //Callback for update signal
         [&](uint64_t t_now) 
         {
+
+            TimeMeasurement::Instance().start("all", update_loop);
 
             //log_fn(__LINE__);
             try 
@@ -303,6 +306,9 @@ int main(int argc, char *argv[])
                 //Decrement the counter
                 stop_counter.store(stop_counter.load() - 1);
             }
+
+            TimeMeasurement::Instance().stop("all");
+            cpm::Logging::Instance().write(3,"%s", TimeMeasurement::Instance().get_str().c_str());
             
             //log_fn(__LINE__);
         },

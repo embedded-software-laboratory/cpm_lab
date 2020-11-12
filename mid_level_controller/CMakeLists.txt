@@ -39,6 +39,8 @@ set(SOURCE_BASE
     src/MpcController.cxx
     src/VehicleModel.hpp
     src/VehicleModel.cxx
+    src/TimeMeasurement.hpp
+    src/TimeMeasurement.cxx
     ../low_level_controller/vehicle_atmega2560_firmware/crc.h
     ../low_level_controller/vehicle_atmega2560_firmware/crc.c
 )

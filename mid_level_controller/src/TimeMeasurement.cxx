@@ -52,24 +52,33 @@ uint64_t TimeMeasurement::stop(std::string name){
     std::map<std::string, MeasurementData>::iterator it = measurements.find(name);
     if (it == measurements.end()){
         // Element not existing. Log warning and return 0.
-        Logging::Instance().write(
+        cpm::Logging::Instance().write(
             2,
             "Warning: Tried to stop a non-existing time measurement by name %s",
-            name
+            name.c_str()
         );
         return 0;
     }
 
-    MeasurementData& data = measurements.at(it).second();
-    data.end_time = data.timer.get_time();
+    MeasurementData& data = it->second;
+    data.end_time = data.timer->get_time();
 
     return data.end_time - data.start_time;
 }
 
 std::string TimeMeasurement::get_str(){
-    std::string res;
+    std::string res = "Time Measurement";
 
-    
+    for (auto const& it : measurements){
+        res += " | " + it.first + ":";
+        if (it.second.end_time == 0){
+            // Measurement not finished
+            res += "not finished";
+        }
+        else {
+            res += std::to_string(it.second.end_time - it.second.start_time);
+        }
+    }
 
     return res;
 }
