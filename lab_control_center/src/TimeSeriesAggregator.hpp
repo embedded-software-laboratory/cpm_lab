@@ -37,6 +37,7 @@
 #include "cpm/get_time_ns.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/MultiVehicleReader.hpp"
+#include "cpm/get_time_ns.hpp"
 
 #include <mutex>
 #include <unordered_map>
@@ -55,8 +56,8 @@ class TimeSeriesAggregator
     VehicleData timeseries_vehicles;
 
     void create_vehicle_timeseries(uint8_t vehicle_id);
-    void handle_new_vehicleState_samples(dds::sub::LoanedSamples<VehicleState>& samples);
-    void handle_new_vehicleObservation_samples(dds::sub::LoanedSamples<VehicleObservation>& samples);
+    void handle_new_vehicleState_samples(std::vector<VehicleState>& samples);
+    void handle_new_vehicleObservation_samples(std::vector<VehicleObservation>& samples);
 
     shared_ptr<cpm::AsyncReader<VehicleState>> vehicle_state_reader;
     shared_ptr<cpm::AsyncReader<VehicleObservation>> vehicle_observation_reader;

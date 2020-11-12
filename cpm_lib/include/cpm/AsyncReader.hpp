@@ -37,6 +37,9 @@
 #include <dds/core/ddscore.hpp>
 #include <rti/core/cond/AsyncWaitSet.hpp>
 
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/get_topic.hpp"
+
 namespace cpm 
 {
     /**
@@ -80,6 +83,12 @@ namespace cpm
          * \param func The callback function provided by the user
          */
         void handler(std::function<void(dds::sub::LoanedSamples<MessageType>&)> func);
+
+        /**
+         * \brief Handler that takes unread samples, copies them to a vector, releases the waitset and calls the callback function provided by the user
+         * \param func The callback function provided by the user
+         */
+        void handler_vec(std::function<void(std::vector<MessageType>&)> func);
     public:
         /**
          * \brief Constructor for the AsynReader. Participant and topic need to be provided by the user, as well as the callback function for the reader.
@@ -104,6 +113,19 @@ namespace cpm
             bool is_transient_local = false
         );
 
+        /**
+         * \brief Constructor for the AsynReader. This constructor is simpler and creates subscriber, topic etc on the cpm domain participant
+         * \param func Callback function that is called by the reader if new data is available. Samples are passed to the function to be processed further.
+         * \param topic_name The name of the topic that is supposed to be used by the reader
+         * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
+         */
+        AsyncReader(
+            std::function<void(std::vector<MessageType>&)> func, 
+            std::string topic_name, 
+            bool is_reliable = false,
+            bool is_transient_local = false
+        );
     };
 
 
@@ -159,7 +181,29 @@ namespace cpm
         waitset.start();
     }
 
+    template<class MessageType> 
+    AsyncReader<MessageType>::AsyncReader(
+        std::function<void(std::vector<MessageType>&)> func, 
+        std::string topic_name, 
+        bool is_reliable,
+        bool is_transient_local
+    )
+    :sub(cpm::ParticipantSingleton::Instance())
+    ,reader(sub, cpm::get_topic<MessageType>(topic_name), get_qos(is_reliable, is_transient_local))
+    ,read_condition(reader)
+    {
+        //Call the callback function whenever any new data is available
+        read_condition.enabled_statuses(dds::core::status::StatusMask::data_available()); 
 
+        //Register the callback function
+        read_condition->handler(std::bind(&AsyncReader::handler_vec, this, func));
+        
+        //Attach the read condition
+        waitset.attach_condition(read_condition);
+        
+        //Start the waitset; from now on, whenever data is received the callback function is called
+        waitset.start();
+    }
 
 
     template<class MessageType> 
@@ -176,5 +220,28 @@ namespace cpm
 
         // Process sample 
         func(samples);
+    }
+
+    template<class MessageType> 
+    void AsyncReader<MessageType>::handler_vec(std::function<void(std::vector<MessageType>&)> func)
+    {
+        // Take all samples This will reset the StatusCondition
+        dds::sub::LoanedSamples<MessageType> samples = reader.take();
+        std::vector<MessageType> samples_vec;
+
+        for (auto sample : samples)
+        {
+            if(sample.info().valid())
+            {
+                samples_vec.push_back(sample.data());
+            }
+        }
+
+        // Release status condition in case other threads can process outstanding
+        // samples
+        waitset.unlock_condition(dds::core::cond::StatusCondition(reader));
+
+        // Process sample 
+        func(samples_vec);
     }
 }

@@ -32,7 +32,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cmath>
+#include <vector>
+
 #include <dds/pub/ddspub.hpp>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
@@ -281,38 +284,33 @@ int main(int argc, char *argv[])
 
     // receive vehicle pose from IPS
     cpm::AsyncReader<VehicleObservation> vehicleObservations_reader(
-        [&](dds::sub::LoanedSamples<VehicleObservation>& samples) {
+        [&](std::vector<VehicleObservation>& samples) {
             std::unique_lock<std::mutex> lock(observation_mutex);
             std::unique_lock<std::mutex> lock2(slot_mutex);
-            for(auto sample : samples) 
+            for(auto& data : samples) 
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    vehicleObservations[data.vehicle_id()] = data;
+                vehicleObservations[data.vehicle_id()] = data;
 
-                    bool vehicle_has_slot = false;
-                    for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
+                bool vehicle_has_slot = false;
+                for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
+                {
+                    if(data.vehicle_id() > 0 && slot_vehicle_ids[slot_idx] == data.vehicle_id())
                     {
-                        if(data.vehicle_id() > 0 && slot_vehicle_ids[slot_idx] == data.vehicle_id())
-                        {
-                            vehicle_has_slot = true;
-                            break;
-                        }
+                        vehicle_has_slot = true;
+                        break;
                     }
-                    if(!vehicle_has_slot) 
+                }
+                if(!vehicle_has_slot) 
+                {
+                    if(std::find(unassigned_vehicle_ids.begin(), unassigned_vehicle_ids.end(), data.vehicle_id()) 
+                        == unassigned_vehicle_ids.end()) 
                     {
-                        if(std::find(unassigned_vehicle_ids.begin(), unassigned_vehicle_ids.end(), data.vehicle_id()) 
-                            == unassigned_vehicle_ids.end()) 
-                        {
-                            unassigned_vehicle_ids.push_back(data.vehicle_id());
-                        }
+                        unassigned_vehicle_ids.push_back(data.vehicle_id());
                     }
                 }
             }
         }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<VehicleObservation>("vehicleObservation")
+        "vehicleObservation"
     );
 
 

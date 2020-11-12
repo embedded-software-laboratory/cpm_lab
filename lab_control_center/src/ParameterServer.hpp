@@ -53,7 +53,7 @@
 class ParameterServer {
 private:    
     //Callback
-    void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
+    void handleParamRequest(std::vector<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);
 
     //Communication

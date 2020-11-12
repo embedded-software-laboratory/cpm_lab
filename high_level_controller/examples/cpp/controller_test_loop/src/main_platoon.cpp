@@ -30,17 +30,21 @@
 #include <map>
 #include <stdlib.h>
 #include <unistd.h>
+#include <vector>
+
 #include <dds/pub/ddspub.hpp>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/Writer.hpp"
-#include "VehicleState.hpp"
-#include "VehicleCommandTrajectory.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+
+#include "VehicleState.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
 
 
@@ -55,19 +59,14 @@ int main(int argc, char *argv[])
     std::map<uint8_t, VehicleState> vehicleStates;
 
     cpm::AsyncReader<VehicleState> vehicleStates_reader(
-        [&](dds::sub::LoanedSamples<VehicleState>& samples) {
+        [&](std::vector<VehicleState>& samples) {
             std::unique_lock<std::mutex> lock(_mutex);
-            for(auto sample : samples) 
+            for(auto& data : samples) 
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    vehicleStates[data.vehicle_id()] = data;
-                }
+                vehicleStates[data.vehicle_id()] = data;
             }
         }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<VehicleState>("vehicleState")
+        "vehicleState"
     );
 
 

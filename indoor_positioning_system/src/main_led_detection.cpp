@@ -41,6 +41,7 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 #include "cpm/Writer.hpp"
+#include "cpm/get_time_ns.hpp"
 #include <dds/pub/ddspub.hpp>
 
 
@@ -66,13 +67,6 @@ bool enable_debug;
 
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
-
-uint64_t get_time_ns()
-{
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
 
 void worker_led_detection()
 {
@@ -109,7 +103,7 @@ void worker_led_detection()
         if( frame->points_x.size() < 3 && n_points_previous >= 3 )
         {
             std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
-            // auto t =  std::to_string(get_time_ns());
+            // auto t =  std::to_string(cpm::get_time_ns());
             // cv::imwrite("debug_" + t + "_raw.png",frame->image);
             // cv::imwrite("debug_" + t + "_thresh.png",img_binary);
         }
@@ -238,14 +232,14 @@ void worker_grab_image()
         GrabResultPtr_t ptrGrabResult;
 
         int frameCount = 0;
-        uint64_t lastFrameReportTime = get_time_ns();
+        uint64_t lastFrameReportTime = cpm::get_time_ns();
 
 
         // The camera counts time in nanoseconds, from an arbitrary starting point.
         // Record the camera and computer clock at the same time.
         // Use the difference to correct the timestamps.
         camera.TimestampLatch();
-        const uint64_t startTime = get_time_ns();
+        const uint64_t startTime = cpm::get_time_ns();
         const int64_t startTicks = camera.TimestampLatchValue.GetValue();
         while(camera.IsGrabbing())
         {
@@ -290,7 +284,7 @@ void worker_grab_image()
                 // report actual FPS
                 if(frameCount % 100 == 0)
                 {
-                    uint64_t now = get_time_ns();
+                    uint64_t now = cpm::get_time_ns();
                     double fps = 100.0/((now - lastFrameReportTime)*1e-9);
                     std::cout << "FPS " << fps << std::endl;
                     lastFrameReportTime = now;

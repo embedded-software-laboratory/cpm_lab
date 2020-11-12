@@ -59,7 +59,7 @@ public:
 
 private:
     //Communication objects and callbacks
-    void log_callback(dds::sub::LoanedSamples<Log>& samples);
+    void log_callback(std::vector<Log>& samples);
     cpm::AsyncReader<Log> log_reader;
     //Only keeps the newest logs, used when not in search-mode
     std::vector<Log> log_buffer; //TODO choose a more useful data structure depending on what is supposed to be done with the Logs
