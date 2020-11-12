@@ -43,8 +43,12 @@ class TimeMeasurement {
     public:
         static TimeMeasurement& Instance();
 
+        // Neccessary deletion of functions when working with singleton pattern
+        TimeMeasurement(TimeMeasurement const&) = delete;
+        void operator=(TimeMeasurement const&)  = delete;
+
         /**
-         * This function starts a measurement.
+         * This function starts a measurement. If there is already a measurment with this name the old data will be overriden.
          * \param name  The name of the measurement. All data for the measurment is saved under this name.
          * \param timer The timer which will be used for this measurement.
          */
@@ -62,14 +66,17 @@ class TimeMeasurement {
          */
         std::string get_str();
 
-    
+
     private:
-        TimeMeasurement();
+        TimeMeasurement(){}
         static TimeMeasurement& instance;
 
         std::map<std::string, MeasurementData> measurements;
 
 };
+
+
+
 
 /**
  * \class MeasurementData
@@ -77,7 +84,9 @@ class TimeMeasurement {
  */
 class MeasurementData {
     public:
-        uint64_t start_time;
-        uint64_t end_time;
+        uint64_t start_time = 0;
+        uint64_t end_time = 0;
         std::shared_ptr<cpm::Timer> timer;
+
+        MeasurementData(std::shared_ptr<cpm::Timer> timer);
 };

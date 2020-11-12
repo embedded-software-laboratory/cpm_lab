@@ -26,5 +26,59 @@
 
 
 #include "TimeMeasurement.hpp"
+#include "cpm/Logging.hpp"
 
 
+TimeMeasurement& TimeMeasurement::Instance(){
+    static TimeMeasurement instance; // see Meyer's Singleton
+    return instance;
+}
+
+
+void TimeMeasurement::start(std::string name, std::shared_ptr<cpm::Timer> timer){
+    std::map<std::string, MeasurementData>::iterator it = measurements.find(name);
+    if (it != measurements.end()){
+        // Already an existing element. Override.
+        measurements.erase(it);
+    }
+
+    // Create new data object and insert it in the map
+    MeasurementData data(timer);
+    measurements.insert(std::pair<std::string, MeasurementData>(name, data));
+}
+
+
+uint64_t TimeMeasurement::stop(std::string name){
+    std::map<std::string, MeasurementData>::iterator it = measurements.find(name);
+    if (it == measurements.end()){
+        // Element not existing. Log warning and return 0.
+        Logging::Instance().write(
+            2,
+            "Warning: Tried to stop a non-existing time measurement by name %s",
+            name
+        );
+        return 0;
+    }
+
+    MeasurementData& data = measurements.at(it).second();
+    data.end_time = data.timer.get_time();
+
+    return data.end_time - data.start_time;
+}
+
+std::string TimeMeasurement::get_str(){
+    std::string res;
+
+    
+
+    return res;
+}
+
+
+
+
+MeasurementData::MeasurementData(std::shared_ptr<cpm::Timer> timer){
+    // Init here or within : ... ?
+    this->timer = timer;
+    this->start_time = timer->get_time();
+}
