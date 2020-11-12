@@ -74,6 +74,11 @@ class TimeMeasurement {
         void start(std::string name, clockid_t clockid);
 
         /**
+         * Same as start above but uses default clockid.
+         */
+        void start(std::string name);
+
+        /**
          * This function stops a measurement.
          * \param name  The name of the measurement which is to be stopped.
          * \return      The result of the measurement.
@@ -85,11 +90,17 @@ class TimeMeasurement {
          */
         std::string get_str();
 
+        /**
+         * Configure the clockid which is used as default when calling start() without specifying the clockid.
+         */
+        void set_default_clockid(clockid_t clockid);
+
 
     private:
         TimeMeasurement(){}
         static TimeMeasurement& instance;
 
+        clockid_t default_clockid = CLOCK_MONOTONIC;
         std::map<std::string, MeasurementData> measurements;
 
 };

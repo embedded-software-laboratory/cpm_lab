@@ -49,6 +49,11 @@ void TimeMeasurement::start(std::string name, clockid_t clockid){
 }
 
 
+void TimeMeasurement::start(std::string name){
+    this->start(name, this->default_clockid);
+}
+
+
 uint64_t TimeMeasurement::stop(std::string name){
     std::map<std::string, MeasurementData>::iterator it = measurements.find(name);
     if (it == measurements.end()){
@@ -75,7 +80,7 @@ std::string TimeMeasurement::get_str(){
         res += " | " + it.first + ":";
         if (it.second.end_time == 0){
             // Measurement not finished
-            res += "not finished";
+            res += std::to_string(cpm::get_time_ns(it.second.clockid) - it.second.start_time) + "(nf)";
         }
         else {
             res += std::to_string(it.second.end_time - it.second.start_time);
@@ -85,6 +90,10 @@ std::string TimeMeasurement::get_str(){
     return res;
 }
 
+
+void TimeMeasurement::set_default_clockid(clockid_t clockid){
+    this->default_clockid = clockid;
+}
 
 
 
