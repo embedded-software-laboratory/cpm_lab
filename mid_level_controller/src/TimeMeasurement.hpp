@@ -29,7 +29,8 @@
 #include <string>
 #include <memory>
 #include <map>
-#include "cpm/Timer.hpp"
+#include <ctime>
+#include "cpm/get_time_ns.hpp"
 
 
 // see https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
@@ -43,9 +44,9 @@ class MeasurementData {
     public:
         uint64_t start_time = 0;
         uint64_t end_time = 0;
-        std::shared_ptr<cpm::Timer> timer;
+        clockid_t clockid;
 
-        MeasurementData(std::shared_ptr<cpm::Timer> timer);
+        MeasurementData(clockid_t clockid);
 };
 
 
@@ -68,9 +69,9 @@ class TimeMeasurement {
         /**
          * This function starts a measurement. If there is already a measurment with this name the old data will be overriden.
          * \param name  The name of the measurement. All data for the measurment is saved under this name.
-         * \param timer The timer which will be used for this measurement.
+         * \param clockid The clockid which will be used for this measurement.
          */
-        void start(std::string name, std::shared_ptr<cpm::Timer> timer);
+        void start(std::string name, clockid_t clockid);
 
         /**
          * This function stops a measurement.

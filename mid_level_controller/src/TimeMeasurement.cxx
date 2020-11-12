@@ -27,6 +27,7 @@
 
 #include "TimeMeasurement.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/get_time_ns.hpp"
 
 
 TimeMeasurement& TimeMeasurement::Instance(){
@@ -35,7 +36,7 @@ TimeMeasurement& TimeMeasurement::Instance(){
 }
 
 
-void TimeMeasurement::start(std::string name, std::shared_ptr<cpm::Timer> timer){
+void TimeMeasurement::start(std::string name, clockid_t clockid){
     std::map<std::string, MeasurementData>::iterator it = measurements.find(name);
     if (it != measurements.end()){
         // Already an existing element. Override.
@@ -43,7 +44,7 @@ void TimeMeasurement::start(std::string name, std::shared_ptr<cpm::Timer> timer)
     }
 
     // Create new data object and insert it in the map
-    MeasurementData data(timer);
+    MeasurementData data(clockid);
     measurements.insert(std::pair<std::string, MeasurementData>(name, data));
 }
 
@@ -61,10 +62,11 @@ uint64_t TimeMeasurement::stop(std::string name){
     }
 
     MeasurementData& data = it->second;
-    data.end_time = data.timer->get_time();
+    data.end_time = cpm::get_time_ns(data.clockid);
 
     return data.end_time - data.start_time;
 }
+
 
 std::string TimeMeasurement::get_str(){
     std::string res = "Time Measurement";
@@ -86,8 +88,8 @@ std::string TimeMeasurement::get_str(){
 
 
 
-MeasurementData::MeasurementData(std::shared_ptr<cpm::Timer> timer){
+MeasurementData::MeasurementData(clockid_t clockid){
     // Init here or within : ... ?
-    this->timer = timer;
-    this->start_time = timer->get_time();
+    this->clockid = clockid;
+    this->start_time = cpm::get_time_ns(clockid);
 }

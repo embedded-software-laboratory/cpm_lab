@@ -28,6 +28,7 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
 #include <string>
 #include <iterator>
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
         [&](uint64_t t_now) 
         {
 
-            TimeMeasurement::Instance().start("all", update_loop);
+            TimeMeasurement::Instance().start("all", CLOCK_REALTIME);
 
             //log_fn(__LINE__);
             try 
