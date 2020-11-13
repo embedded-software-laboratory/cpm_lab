@@ -27,34 +27,34 @@
 #pragma once
 
 /**
- * \class Writer.hpp
- * \brief Creates a DDS Writer that can be used for writing / publishing messages
- * This encapsulation allows for changes e.g. in the participant or QoS without 
- * the need to change the implementation across the whole project
+ * \class ReaderAbstract.hpp
+ * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
+ * Abstraction from different DDS Reader implementations
+ * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
  */
 
-#include <dds/pub/ddspub.hpp>
+#include <dds/sub/ddssub.hpp>
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
 namespace cpm
 {
     template<typename T>
-    class Writer
+    class ReaderAbstract
     {
-        dds::pub::DataWriter<T> dds_writer;
+        dds::sub::DataReader<T> dds_reader;
 
-        Writer(const Writer&) = delete;
-        Writer& operator=(const Writer&) = delete;
-        Writer(const Writer&&) = delete;
-        Writer& operator=(const Writer&&) = delete;
+        ReaderAbstract(const ReaderAbstract&) = delete;
+        ReaderAbstract& operator=(const ReaderAbstract&) = delete;
+        ReaderAbstract(const ReaderAbstract&&) = delete;
+        ReaderAbstract& operator=(const ReaderAbstract&&) = delete;
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
          */
-        dds::pub::qos::DataWriterQos get_qos(bool is_reliable, bool history_keep_all, bool is_transient_local)
+        dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool history_keep_all, bool is_transient_local)
         {
-            auto qos = dds::pub::qos::DataWriterQos();
+            auto qos = dds::sub::qos::DataReaderQos();
 
             if (is_reliable)
             {
@@ -81,34 +81,45 @@ namespace cpm
 
     public:
         /**
-         * \brief Constructor for a writer which is communicating within the ParticipantSingleton
+         * \brief Constructor for a ReaderAbstract which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings
          */
-        Writer(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false)
-        :dds_writer(dds::pub::Publisher(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), get_qos(reliable, history_keep_all, transient_local))
+        ReaderAbstract(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false)
+        :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), get_qos(reliable, history_keep_all, transient_local))
         { 
             
         }
 
         /**
-         * \brief Constructor for a writer that communicates within another domain
+         * \brief Constructor for a ReaderAbstract that communicates within another domain
          * Allows to set the topic name and some QoS settings
          */
-        Writer(
+        ReaderAbstract(
             dds::domain::DomainParticipant & _participant, 
             std::string topic, 
             bool reliable = false, 
             bool history_keep_all = false, 
             bool transient_local = false
         )
-        :dds_writer(dds::pub::Publisher(_participant), cpm::get_topic<T>(_participant, topic), get_qos(reliable, history_keep_all, transient_local))
+        :dds_reader(dds::sub::Subscriber(_participant), cpm::get_topic<T>(_participant, topic), get_qos(reliable, history_keep_all, transient_local))
         { 
             
         }
         
-        void write(T msg)
+        std::vector<T> take()
         {
-            dds_writer.write(msg);
+            auto samples = dds_reader.take();
+            std::vector<T> samples_vec;
+
+            for (auto sample : samples)
+            {
+                if(sample.info().valid())
+                {
+                    samples_vec.push_back(sample.data());
+                }
+            }
+
+            return samples_vec;
         }
     };
 }

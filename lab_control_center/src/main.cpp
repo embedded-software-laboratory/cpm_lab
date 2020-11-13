@@ -27,8 +27,6 @@
 #include "defaults.hpp"
 #include "stdio.h"
 #include <unistd.h>
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include "ObstacleAggregator.hpp"
 #include "TimeSeriesAggregator.hpp"
 #include "HLCReadyAggregator.hpp"

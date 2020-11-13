@@ -31,7 +31,6 @@
 #include "cpm/Timer.hpp"
 #include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 

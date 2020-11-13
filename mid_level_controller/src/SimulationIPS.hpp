@@ -25,7 +25,6 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #pragma once
-#include <dds/pub/ddspub.hpp>
 #include "VehicleObservation.hpp"
 #include "cpm/Writer.hpp"
 #include <list>

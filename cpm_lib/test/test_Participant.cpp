@@ -24,50 +24,47 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#pragma once
-#include "types.hpp"
-#include "UndistortPoints.hpp"
-#include "LedPoints.hpp"
-#include "DetectVehicles.hpp"
-#include "DetectVehicleID.hpp"
-#include "PoseCalculation.hpp"
-#include <memory>
-#include <mutex>
-#include <thread>
+#include "catch.hpp"
+#include "cpm/dds/VehicleState.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Reader.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/stamp_message.hpp"
+
+#include <dds/sub/ddssub.hpp>
+#include <dds/pub/ddspub.hpp>
 #include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
+#include "cpm/ReaderAbstract.hpp"
 
-struct IpsVisualizationInput
-{
-    VehiclePoints identifiedVehicles;
-    std::vector<VehicleObservation> vehicleObservations;
-    FloorPoints floorPoints;
-    VehiclePoints vehiclePoints;
-};
+/**
+ * Tests:
+ * - The cpm reader
+ * - If the reader returns the newest valid sample
+ */
 
-class IpsPipeline
-{
-    cpm::Writer<VehicleObservation> writer_vehicleObservation;
+TEST_CASE( "Participant" ) {
+    cpm::Logging::Instance().set_id("test_participant");
 
-    std::shared_ptr<UndistortPoints> undistortPointsFn;
-    std::shared_ptr<DetectVehicles> detectVehiclesFn;
-    std::shared_ptr<DetectVehicleID> detectVehicleIDfn;
-    std::shared_ptr<PoseCalculation> poseCalculationFn;
+    cpm::Participant participant(5, "../test/QOS_TEST.xml"); //The path depends on from where the program is called
 
-    VehiclePointTimeseries vehiclePointTimeseries;
+    cpm::ReaderAbstract<VehicleState> vehicle_state_reader(participant.get_participant(), "sadfhasdflkasdhf", true, true, true);
 
+    // Test the participant, find out if sample gets received
+    cpm::Writer<VehicleState> vehicle_state_writer(participant.get_participant(), "sadfhasdflkasdhf", true, true, true);
 
-    // Temporary copy, for the visualization in another thread
-    IpsVisualizationInput ipsVisualizationInput_buffer;
-    std::mutex ipsVisualizationInput_buffer_mutex;
-    std::thread visualization_thread;
+    //Send sample
+    VehicleState vehicleState;
+    vehicleState.vehicle_id(99);
+    vehicle_state_writer.write(vehicleState);
 
-    uint64_t t_previous_nanos = 0;
+    //Wait
+    sleep(1);
 
-public:
-    IpsPipeline(const bool enable_visualization);
-    void apply(LedPoints led_points);
-    cv::Mat visualization(const IpsVisualizationInput &input);
-    void visualization_loop();
-    
-    
-};
+    //Receive sample
+    auto samples = vehicle_state_reader.take();
+
+    //Check that sample content is correct
+    REQUIRE( samples.size() == 1 );
+    REQUIRE( samples.begin()->vehicle_id() == 99 );
+}

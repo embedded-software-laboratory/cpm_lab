@@ -39,7 +39,6 @@
 #include "CommonroadObstacle.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
-#include <dds/pub/ddspub.hpp>
 
 
 /**

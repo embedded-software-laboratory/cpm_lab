@@ -37,7 +37,6 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"   //sw-folder central routing
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
-#include <dds/pub/ddspub.hpp>                   //rti folder
 #include <iostream>
 #include <sstream>
 #include <memory>

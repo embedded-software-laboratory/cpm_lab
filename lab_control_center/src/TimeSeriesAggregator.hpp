@@ -26,7 +26,6 @@
 
 #pragma once
 #include "defaults.hpp"
-#include <dds/sub/ddssub.hpp>
 
 #include "VehicleState.hpp"
 #include "VehicleObservation.hpp"

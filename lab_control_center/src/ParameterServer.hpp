@@ -48,7 +48,6 @@
 #include "ParameterWithDescription.hpp"
 
 #include "cpm/AsyncReader.hpp"
-#include <dds/pub/ddspub.hpp>
 
 class ParameterServer {
 private:    

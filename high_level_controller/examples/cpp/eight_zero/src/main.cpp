@@ -32,7 +32,6 @@
 #include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Eight.hpp"
-#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 #include <stdlib.h>

@@ -43,7 +43,6 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_time_ns.hpp"
 #include "cpm/Writer.hpp"
-#include "dds/pub/DataWriter.hpp"
 #include "dds/sub/DataReader.hpp"
 
 #include "ReadyStatus.hpp"

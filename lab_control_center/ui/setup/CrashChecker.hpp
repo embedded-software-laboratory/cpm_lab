@@ -38,8 +38,6 @@
 
 #include "src/HLCReadyAggregator.hpp"
 
-#include <dds/pub/ddspub.hpp>
-
 #include <algorithm>
 #include <atomic>
 #include <array>

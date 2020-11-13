@@ -35,8 +35,6 @@
 #include <vector>
 #include <functional>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "HLCHello.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"

@@ -28,8 +28,6 @@
 #include <iostream>
 #include <thread>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "cpm/init.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"

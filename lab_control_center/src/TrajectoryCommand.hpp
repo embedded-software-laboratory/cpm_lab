@@ -32,7 +32,6 @@
 #include "cpm/TimerFD.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/Writer.hpp"
-#include <dds/pub/ddspub.hpp>
 
 /**
  * \class TrajectoryCommand

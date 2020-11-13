@@ -30,7 +30,6 @@
 #include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Writer.hpp"
-#include "dds/pub/DataWriter.hpp"
 
 #include "LogLevel.hpp"
 

@@ -32,7 +32,6 @@
 #include "cpm/get_time_ns.hpp"
 #include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 

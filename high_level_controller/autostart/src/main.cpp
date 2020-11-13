@@ -37,8 +37,6 @@
 #include <string>
 #include <functional>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "HLCHello.hpp"
 
 #include "cpm/AsyncReader.hpp"

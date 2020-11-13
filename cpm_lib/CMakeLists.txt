@@ -18,7 +18,9 @@ set(SOURCE_CPM
     src/ParameterReceiver.cpp
     include/cpm/ParticipantSingleton.hpp
     src/ParticipantSingleton.cpp
+    include/cpm/Participant.hpp
     include/cpm/Reader.hpp
+    include/cpm/ReaderAbstract.hpp
     include/cpm/Writer.hpp
     include/cpm/MultiVehicleReader.hpp
     include/cpm/Timer.hpp
@@ -86,7 +88,9 @@ if(NOT BUILD_ARM)
         test/test_timer_start_again.cpp
         test/test_timer_simulated.cpp
         test/test_VehicleIDFilteredTopic.cpp
+        test/test_Participant.cpp
         test/test_Reader.cpp
+        test/test_ReaderAbstract.cpp
         test/test_Writer.cpp
         test/test_MultiVehicleReader.cpp
         test/test_CommandLineReader.cpp

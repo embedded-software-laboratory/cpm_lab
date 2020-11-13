@@ -35,8 +35,6 @@
 #include <ios>
 using std::vector;
 
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include <rti/config/Logger.hpp>
 #include <rti/util/util.hpp> // for sleep()
 

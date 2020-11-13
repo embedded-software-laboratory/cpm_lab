@@ -40,8 +40,6 @@
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include <vector>
 
 extern "C" {

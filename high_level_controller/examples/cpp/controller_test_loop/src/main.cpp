@@ -34,8 +34,6 @@
 #include <cmath>
 #include <vector>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"

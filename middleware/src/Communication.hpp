@@ -58,6 +58,10 @@
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/VehicleIDFilteredTopic.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Participant.hpp"
+
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandDirect.hpp"
@@ -78,25 +82,18 @@ using namespace std::placeholders;
 class Communication {
     private:
         //For HLC - communication
-        dds::core::QosProvider local_comm_qos_provider;
-        dds::domain::DomainParticipant hlcParticipant;
-        dds::topic::Topic<VehicleStateList> hlcStateTopic;
-        dds::pub::Publisher pub;
-        dds::pub::DataWriter<VehicleStateList> hlcStateWriter;
-        dds::topic::Topic<ReadyStatus> ready_topic;
-        dds::sub::DataReader<ReadyStatus> hlc_ready_status_reader;
+        cpm::Participant hlcParticipant;
+        cpm::Writer<VehicleStateList> hlcStateWriter;
+        cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
 
         //Timing messages to HLC
-        dds::topic::Topic<SystemTrigger> trigger_topic;
-        dds::pub::DataWriter<SystemTrigger> hlc_system_trigger_writer;
+        cpm::Writer<SystemTrigger> hlc_system_trigger_writer;
         cpm::AsyncReader<SystemTrigger> lcc_system_trigger_reader;
 
         //For Vehicle communication
-        dds::topic::Topic<VehicleState> vehicleStateTopic;
         cpm::MultiVehicleReader<VehicleState> vehicleReader;
 
         //For vehicle observation
-        dds::topic::Topic<VehicleObservation> vehicleObservationTopic;
         cpm::MultiVehicleReader<VehicleObservation> vehicleObservationReader;
 
         //Communication for commands
@@ -123,39 +120,24 @@ class Communication {
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> vehicle_ids
         ) 
-        :local_comm_qos_provider("QOS_LOCAL_COMMUNICATION.xml")
-        ,hlcParticipant(hlcDomainNumber, local_comm_qos_provider.participant_qos())
-        ,hlcStateTopic(hlcParticipant, vehicleStateListTopicName)
-        ,pub(hlcParticipant)
-        ,hlcStateWriter(pub, hlcStateTopic)
-        ,ready_topic(hlcParticipant, "readyStatus")
-        ,hlc_ready_status_reader(
-            dds::sub::Subscriber(hlcParticipant),
-            ready_topic,
-            (dds::sub::qos::DataReaderQos() 
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll()
-                << dds::core::policy::Durability::TransientLocal()))
-        ,trigger_topic(hlcParticipant, "systemTrigger")
-        ,hlc_system_trigger_writer(
-            dds::pub::Publisher(hlcParticipant),
-            trigger_topic,
-            (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
+        :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml")
+        ,hlcStateWriter(hlcParticipant.get_participant(), vehicleStateListTopicName)
+        ,hlc_ready_status_reader(hlcParticipant.get_participant(), "readyStatus", true, true, true)
+
+        ,hlc_system_trigger_writer(hlcParticipant.get_participant(), "systemTrigger", true)
         ,lcc_system_trigger_reader(
             std::bind(&Communication::pass_through_system_trigger, this, _1),
             cpm::ParticipantSingleton::Instance(),
-            cpm::get_topic<SystemTrigger>(cpm::ParticipantSingleton::Instance(), "systemTrigger"),
+            cpm::get_topic<SystemTrigger>("systemTrigger"),
             true)
 
-        ,vehicleStateTopic(cpm::ParticipantSingleton::Instance(), "vehicleState")
-        ,vehicleReader(vehicleStateTopic, vehicle_ids)
+        ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), vehicle_ids)
 
-        ,vehicleObservationTopic(cpm::ParticipantSingleton::Instance(), "vehicleObservation")
-        ,vehicleObservationReader(vehicleObservationTopic, vehicle_ids)
+        ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
 
-        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
-        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
-        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
+        ,trajectoryCommunication(hlcParticipant.get_participant(), vehicleTrajectoryTopicName, _timer, vehicle_ids)
+        ,speedCurvatureCommunication(hlcParticipant.get_participant(), vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
+        ,directCommunication(hlcParticipant.get_participant(), vehicleDirectTopicName, _timer, vehicle_ids)
         {
         }
 
@@ -318,13 +300,11 @@ class Communication {
             //Log if waiting for longer times
             unsigned int wait_cycles = 0;
             while(vehicle_ids_string.size() > 0) {
-                for (auto sample : hlc_ready_status_reader.take()) {
-                    if (sample.info().valid()) {
-                        std::string source_id = sample.data().source_id();
-                        auto pos = std::find(vehicle_ids_string.begin(), vehicle_ids_string.end(), source_id);
-                        if (pos != vehicle_ids_string.end()) {
-                            vehicle_ids_string.erase(pos);
-                        }
+                for (auto data : hlc_ready_status_reader.take()) {
+                    std::string source_id = data.source_id();
+                    auto pos = std::find(vehicle_ids_string.begin(), vehicle_ids_string.end(), source_id);
+                    if (pos != vehicle_ids_string.end()) {
+                        vehicle_ids_string.erase(pos);
                     }
                 }
 
