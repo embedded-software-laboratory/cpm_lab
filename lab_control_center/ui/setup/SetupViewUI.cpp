@@ -451,7 +451,7 @@ void SetupViewUI::deploy_applications() {
 #endif
     
     // Recording
-    deploy_functions->deploy_recording();
+    //deploy_functions->deploy_recording();
 
     //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
     //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
@@ -535,6 +535,14 @@ void SetupViewUI::deploy_applications() {
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
+        }
+
+        // If there are more vehicles than NUCs, deploy local HLCs
+        if( hlc_ids.size() < vehicle_ids.size() ) {
+            // Use the vehicle_ids NOT in use by remote HLCs
+            for ( size_t i=hlc_ids.size(); i < vehicle_ids.size(); ++i ) {
+                deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+            } 
         }
     }
     else if (file_exists)

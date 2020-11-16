@@ -32,9 +32,10 @@ printf "DDS_DOMAIN: ${DDS_DOMAIN}\n"
 . ~/dev/software/lab_control_center/bash/environment_variables_local.bash
 
 # Create QoS settings file for local communications
+touch ./build/QOS_LOCAL_COMMUNICATION.xml
 cat QOS_LOCAL_COMMUNICATION.xml.template \
 | sed -e "s|TEMPLATE_IP|${IP_SELF}|g" \
->./build/QOS_LOCAL_COMMUNICATION.xml
+> ./build/QOS_LOCAL_COMMUNICATION.xml
 
 cleanup(){
     printf "Cleaning up ... "

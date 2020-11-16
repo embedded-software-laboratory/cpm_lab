@@ -149,6 +149,104 @@ void Deploy::kill_local_hlc()
     kill_session(middleware_session);
 }
 
+void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params) 
+{
+    std::string sim_time_string = bool_to_string(use_simulated_time);
+
+    //Check if old session already exists - if so, kill it
+    kill_session("high_level_controller");
+
+    if (active_vehicle_ids.size() > 0)
+    {
+        std::stringstream vehicle_ids_stream;
+        for (size_t index = 0; index < active_vehicle_ids.size() - 1; ++index)
+        {
+            vehicle_ids_stream << active_vehicle_ids.at(index) << ",";
+        }
+        vehicle_ids_stream << active_vehicle_ids.at(active_vehicle_ids.size() - 1);
+
+        //Get script info, generate command
+        std::string script_path_string;
+        std::string script_name_string;
+        get_path_name(script_path, script_path_string, script_name_string);
+        std::stringstream command;
+
+        auto matlab_type_pos = script_name_string.rfind(".m");
+        if (matlab_type_pos != std::string::npos)
+        {
+            script_name_string = script_name_string.substr(0, matlab_type_pos);
+
+            //Case: Matlab script
+            command 
+            << "tmux new-session -d "
+            << "-s \"high_level_controller\" "
+            << "'. ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
+            << "matlab -logfile matlab.log"
+            << " -sd \"" << script_path_string
+            << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
+            << " >~/dev/lcc_script_logs/stdout_hlc.txt 2>~/dev/lcc_script_logs/stderr_hlc.txt'";
+        }
+        else if (script_name_string.find(".") == std::string::npos)
+        {
+            //Case: Any executable 
+            command 
+            << "tmux new-session -d "
+            << "-s \"high_level_controller\" "
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;"
+            << "cd " << script_path_string << ";./" << script_name_string
+            << " --node_id=high_level_controller"
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            command 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        command 
+            << " " << script_params << " >~/dev/lcc_script_logs/stdout_hlc.txt 2>~/dev/lcc_script_logs/stderr_hlc.txt\"";
+        }
+        else 
+        {
+            std::cout << "Warning: Could not run unknown script: Neither matlab nor C++ executable" << std::endl;
+            return;
+        }
+
+        std::cout << command.str() << std::endl;
+
+        //Execute command
+        system(command.str().c_str());
+
+        //Check if old session already exists - if so, kill it
+        kill_session("middleware");
+
+        //Generate command
+        std::stringstream middleware_command;
+        middleware_command 
+            << "tmux new-session -d "
+            << "-s \"middleware\" "
+            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
+            << " --node_id=middleware"
+            << " --simulated_time=" << sim_time_string
+            << " --vehicle_ids=" << vehicle_ids_stream.str()
+            << " --dds_domain=" << cmd_domain_id;
+        if (cmd_dds_initial_peer.size() > 0) {
+            middleware_command 
+                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+        }
+        middleware_command 
+            << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
+
+        //Execute command
+        system(middleware_command.str().c_str());
+    }
+}
+
+void Deploy::kill_separate_local_hlcs() 
+{
+    kill_session("high_level_controller");
+    kill_session("middleware");
+}
+
 void Deploy::deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, bool use_simulated_time) 
 {
     for (const unsigned int id : simulated_vehicle_ids)

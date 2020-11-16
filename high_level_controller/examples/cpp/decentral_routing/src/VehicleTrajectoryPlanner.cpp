@@ -90,6 +90,14 @@ void VehicleTrajectoryPlanner::start()
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
+            std::cout << "TimeStep:" << t_planning << std::endl;
+            for( auto element : other_vehicles_buffer ) {
+                std::cout << element.first << std::endl;
+                for( auto point : element.second ) {
+                    std::cout << point.first << ":" << point.second.first << "," << point.second.second << std::endl; 
+                } 
+            }
+
             if (!is_collision_avoidable){
                 cpm::Logging::Instance().write(1,
                         "Found unavoidable collision");
@@ -129,7 +137,8 @@ void VehicleTrajectoryPlanner::start()
 
             t_planning += dt_nanos;
 
-            while(t_real_time + 6000000000ull < t_planning) usleep(110000);
+            // Sleep until we need to continue planning
+            while(t_real_time + dt_nanos < t_planning) usleep(110000);
         }
     });
 
@@ -156,13 +165,16 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             // Save all received positions that are not in the past already
             for ( auto position : sample.data().lane_graph_positions() ) {
 
-                // Check TimeStamp of each Position to see where it fits into our buffer
+                /* Check TimeStamp of each Position to see where it fits into our buffer
+                   The "... - dt_nanos" follows from practical observations, where
+                   indices were shifted by 1 dt_nanos
+                */
                 int index_to_use = 
-                    (position.estimated_arrival_time().nanoseconds() - t_planning)
+                    (position.estimated_arrival_time().nanoseconds() - t_planning - dt_nanos)
                     / (dt_nanos/timesteps_per_planningstep);
 
                 // If index_to_use is negative, estimated_arrival_time is in the past
-                if( index_to_use > 0 ) {
+                if( index_to_use >= 0 ) {
                     other_vehicles_buffer[sample.data().vehicle_id()][index_to_use] =
                         std::make_pair(
                             position.edge_index(),
