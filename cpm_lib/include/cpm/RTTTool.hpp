@@ -36,10 +36,9 @@
 #include "cpm/get_time_ns.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Writer.hpp"
 
 #include "RoundTripTime.hpp"
-
-#include "dds/pub/DataWriter.hpp"
 
 namespace cpm
 {
@@ -57,8 +56,7 @@ namespace cpm
         RTTTool& operator=(RTTTool &&) = delete;
 
     private:
-        dds::topic::Topic<RoundTripTime> rtt_topic;
-        dds::pub::DataWriter<RoundTripTime> rtt_writer;
+        cpm::Writer<RoundTripTime> rtt_writer;
 
         std::shared_ptr<cpm::AsyncReader<RoundTripTime>> rtt_reader;
 

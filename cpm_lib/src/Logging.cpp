@@ -29,22 +29,17 @@
 namespace cpm {
 
     Logging::Logging() :
-        loggingTopic(cpm::get_topic<Log>(cpm::ParticipantSingleton::Instance(), "log")),
-        logger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), loggingTopic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
+        logger("log", true)
     {
         //Get log level / logging verbosity
         log_level_reader = std::make_shared<cpm::AsyncReader<LogLevel>>(
-            [this](dds::sub::LoanedSamples<LogLevel>& samples){
-                for(auto sample : samples)
+            [this](std::vector<LogLevel>& samples){
+                for(auto& data : samples)
                 {
-                    if(sample.info().valid())
-                    {
-                        log_level.store(sample.data().log_level());
-                    }
+                    log_level.store(data.log_level());
                 }
             },
-            cpm::ParticipantSingleton::Instance(),
-            cpm::get_topic<LogLevel>("logLevel"),
+            "logLevel",
             true,
             true
         );

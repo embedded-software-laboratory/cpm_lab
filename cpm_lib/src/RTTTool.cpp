@@ -1,8 +1,7 @@
 #include "cpm/RTTTool.hpp"
 
 cpm::RTTTool::RTTTool() : 
-    rtt_topic(cpm::get_topic<RoundTripTime>(cpm::ParticipantSingleton::Instance(), "round_trip_time")),
-    rtt_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), rtt_topic)
+    rtt_writer("round_trip_time")
 {
     rtt_measurement_active.store(false);
     rtt_measure_requested.store(false);
@@ -10,41 +9,37 @@ cpm::RTTTool::RTTTool() :
 
     //Create reader that directly answers the messages and stores times of RTT answers
     rtt_reader = std::make_shared<cpm::AsyncReader<RoundTripTime>>(
-        [this](dds::sub::LoanedSamples<RoundTripTime>& samples){
+        [this](std::vector<RoundTripTime>& samples){
             //Ignore any message if the RTT tool was not activated by the user of the library
             if(!rtt_measurement_active.load())
                 return;
 
-            for(auto sample : samples)
+            for(auto& data : samples)
             {
-                if(sample.info().valid())
-                {
-                    auto id = sample.data().source_id();
+                auto id = data.source_id();
 
-                    //Only answer to the RTT request if the program ID is different from the own program ID
-                    if (!(sample.data().is_answer()) && id != program_id)
+                //Only answer to the RTT request if the program ID is different from the own program ID
+                if (!(data.is_answer()) && id != program_id)
+                {
+                    RoundTripTime answer;
+                    answer.count(data.count());
+                    answer.is_answer(true);
+                    answer.source_id(program_id);
+                    rtt_writer.write(answer);
+                }
+                else if (data.is_answer() && rtt_measure_requested.load() && data.count() == rtt_count.load())
+                {
+                    //Store RTT answers if they were requested and match the current request count
+                    std::lock_guard<std::mutex> lock(receive_times_mutex);
+                    if (receive_times.find(id) == receive_times.end())
                     {
-                        RoundTripTime answer;
-                        answer.count(sample.data().count());
-                        answer.is_answer(true);
-                        answer.source_id(program_id);
-                        rtt_writer.write(answer);
+                        receive_times[id] = std::vector<uint64_t>();
                     }
-                    else if (sample.data().is_answer() && rtt_measure_requested.load() && sample.data().count() == rtt_count.load())
-                    {
-                        //Store RTT answers if they were requested and match the current request count
-                        std::lock_guard<std::mutex> lock(receive_times_mutex);
-                        if (receive_times.find(id) == receive_times.end())
-                        {
-                            receive_times[id] = std::vector<uint64_t>();
-                        }
-                        receive_times[id].push_back(cpm::get_time_ns());
-                    }
+                    receive_times[id].push_back(cpm::get_time_ns());
                 }
             }
         },
-        cpm::ParticipantSingleton::Instance(),
-        rtt_topic,
+        "round_trip_time",
         false,
         false
     );

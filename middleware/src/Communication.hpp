@@ -38,16 +38,6 @@
 #include <map>
 #include <algorithm>
 
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/core/QosProvider.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <rti/core/cond/AsyncWaitSet.hpp>
-#include <rti/core/ListenerBinder.hpp>
-#include <dds/dds.hpp>
-#include <dds/sub/DataReaderListener.hpp>
-#include <dds/core/ddscore.hpp>
-
 #include "VehicleState.hpp"
 #include "VehicleStateList.hpp"
 
@@ -127,17 +117,16 @@ class Communication {
         ,hlc_system_trigger_writer(hlcParticipant.get_participant(), "systemTrigger", true)
         ,lcc_system_trigger_reader(
             std::bind(&Communication::pass_through_system_trigger, this, _1),
-            cpm::ParticipantSingleton::Instance(),
-            cpm::get_topic<SystemTrigger>("systemTrigger"),
+            "systemTrigger",
             true)
 
         ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), vehicle_ids)
 
         ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
 
-        ,trajectoryCommunication(hlcParticipant.get_participant(), vehicleTrajectoryTopicName, _timer, vehicle_ids)
-        ,speedCurvatureCommunication(hlcParticipant.get_participant(), vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
-        ,directCommunication(hlcParticipant.get_participant(), vehicleDirectTopicName, _timer, vehicle_ids)
+        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
+        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
+        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
         {
         }
 
@@ -276,11 +265,9 @@ class Communication {
         /**
          * \brief Pass system trigger / timing messages from the LCC to the LCC
          */
-        void pass_through_system_trigger(dds::sub::LoanedSamples<SystemTrigger>& samples) {
-            for (auto sample : samples) {
-                if (sample.info().valid()) {
-                    hlc_system_trigger_writer.write(sample.data());
-                }
+        void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
+            for (auto& sample : samples) {
+                hlc_system_trigger_writer.write(sample);
             }
         }
 

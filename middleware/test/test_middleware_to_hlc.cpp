@@ -49,6 +49,11 @@
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "Parameter.hpp"
 
+#include "cpm/AsyncReader.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
+
 #include "Communication.hpp"
 
 /**
@@ -89,7 +94,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
 
     //HLC Writer
     dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);
-    dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName));
+    cpm::Writer<VehicleCommandSpeedCurvature> hlcWriter(participant, vehicleSpeedCurvatureTopicName);
 
     //Data for checks
     std::vector<uint64_t> hlc_current_round_received;

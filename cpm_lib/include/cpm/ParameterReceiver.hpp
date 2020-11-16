@@ -41,7 +41,7 @@
 #include "cpm/Logging.hpp"
 
 #include "cpm/AsyncReader.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
 
 namespace cpm
 {
@@ -96,14 +96,10 @@ namespace cpm
          * \brief Callback function that handles incoming parameter definitions. Parameters are stored in maps depending on their type and name for later access.
          * \param samples Samples to be processed by the callback function (received messages)
          */
-        void callback(dds::sub::LoanedSamples<Parameter>& samples);
-
-    public:
-        dds::topic::Topic<Parameter> parameterTopic;
-        dds::topic::Topic<ParameterRequest> parameterRequestTopic;
+        void callback(std::vector<Parameter>& samples);
 
     private:
-        dds::pub::DataWriter<ParameterRequest> writer;
+        cpm::Writer<ParameterRequest> writer;
         cpm::AsyncReader<Parameter> subscriber;
     };
 
