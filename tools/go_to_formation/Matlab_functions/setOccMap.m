@@ -1,4 +1,4 @@
-function [map] = setOccMap(vehiclePoses, egoVehicle)
+function [map] = setOccMap(vehicleList, vehiclePoses, egoVehicle)
 
 mapX = 4.5;
 mapY = 4.0;
@@ -15,11 +15,11 @@ vehicleHalfLength = vehicleLength/2;
 vehicleHalfWidth = vehicleWidth/2;
 
 % calculate corners of vehicle
-vehicleList = fields(vehiclePoses);
 occval = 1;
 corners = struct;
 
 for nVehicles = 1:length(vehicleList)
+ 
     if vehicleList{nVehicles} == egoVehicle
         continue
     end

@@ -28,7 +28,7 @@ for nHomePoses = 1:maxNoVehicles
         column = mod(nHomePoses, vehicleColumns);
         row = 1 + floor(nHomePoses/vehicleColumns); % vehicle count in x (=columns)
     end
-    homePoses(nHomePoses, 1) = vehicleHalfWidth + column * clearance + (column-1) * vehicleWidth ;
+    homePoses(nHomePoses, 1) = vehicleWidth + 2 * column * clearance + (column-1) * vehicleWidth ;
     homePoses(nHomePoses, 2) = mapY - (vehicleLength-vehicleRearOverhang) - row * clearance - (row-1) * vehicleLength * 3;
 end   
 

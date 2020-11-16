@@ -28,14 +28,16 @@ function main_go_to_formation(varargin)
     
     clc
     % TODO: clever init script loading
-%     script_directoy = fileparts([mfilename('fullpath') '.m']);
-%     cd(script_directoy)
+    script_directoy = fileparts([mfilename('fullpath') '.m']);
+    cd(script_directoy)
     
     % Initialize data readers/writers...
 %     init_script_path = fullfile('../../../', '*', '/init_script.m');
+%    cd('../../../../')
     init_script_path = which('init_script.m');
-    assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
-%     addpath(fileparts(init_script_path));
+    disp(init_script_path)
+%     assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
+    addpath((init_script_path));
     [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
 %     cd(script_directoy)
 
@@ -43,13 +45,14 @@ function main_go_to_formation(varargin)
     vehicleList = {};
     
     for nVehicles = 1:length(vehicle_ids)
-        if nVehicles < 10
-        vehicleList{1, nVehicles} = strcat('vehicle_0', num2str(vehicle_ids{nVehicles}));
+        current_id = num2str(vehicle_ids{nVehicles});
+        if numel(current_id) < 2
+        vehicleList{1, nVehicles} = strcat('vehicle_0', current_id);
         else
-        vehicleList{1, nVehicles} = strcat('vehicle_', num2str(vehicle_ids{nVehicles}));
+        vehicleList{1, nVehicles} = strcat('vehicle_', current_id);
         end
     end
-       
+        
     speed = 0.75; % [m/s]
     poseCounter = 1;
 
@@ -125,9 +128,6 @@ function main_go_to_formation(varargin)
             status = 0;
             stateSampleCount = 0;
             sampleInfo = DDS.SampleInfo;
-%             sampleInfoList = struct;
-%             listIndex = 0;
-%             statusList = [];
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
 %             disp(sampleInfo)
 %             disp(stateSampleCount)
@@ -142,12 +142,6 @@ function main_go_to_formation(varargin)
             while(isSampleValid == false)
                 
                 [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
-                %disp(sampleInfo.valid_data)
-                save('invalid_status.mat', 'status')
-                save('invalid_info.mat', 'sampleInfo')
-%                listIndex = listIndex + stateSampleCount
-%                 sampleInfoList(listIndex) = sampleInfo;
-%                 statusList(listIndex) = status;
                 
                 if sample.t_now > t_old  
                     isSampleValid = true;
@@ -158,21 +152,7 @@ function main_go_to_formation(varargin)
                     end
                 end
             end
-              
-                
-%             [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
-%             current_time = trigger.next_start().nanoseconds();
-%                 if current_time == trigger_stop
-%                     disp("Stopping");
-%                     stop_now = true;
-%                     break;
-%                 end
-%           
-%             disp(sampleInfo.valid_data)
-            save('sample.mat', 'sample')
-            save('valid_status.mat', 'status')
-            save('valid_info.mat', 'sampleInfo')
-            
+                          
             startPoses = readPoses(sample.vehicle_observation_list);            
             allHomePoses = homePosesFixed;
             goalPoses = startPoses;
@@ -180,81 +160,103 @@ function main_go_to_formation(varargin)
             for nVehicles = 1:length(fields(goalPoses))
                 goalPoses.(vehicleList{nVehicles}) = allHomePoses(nVehicles);
             end
-            
             %% Inner Loop fulfilling path planning task for each vehicle
-             
-            for nVehicles = 1:length(vehicleList)
-                              
-                startPoses = readPoses(sample.vehicle_observation_list);
-%               disp(startPoses)
-                
-                egoVehicle = vehicleList{nVehicles}; 
-                map = setOccMap(startPoses, egoVehicle);
-                [refPath, Fig, isPathValid] = PlanAndShowRRTPath(startPoses.(egoVehicle), allHomePoses(poseCounter), map);
-                if not(isPathValid) 
-                    continue
-                end
-                Figs(nVehicles) = Fig;
-                save('Figs.mat', 'Figs')
-%                 figure(Fig)
+            isFirstRound = true;
+            anyVehicleMovable = true;
+            
+            while isFirstRound || anyVehicleMovable
 
-                trajectory_points = pathToTrajectory(refPath, speed);
-                
-                [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
-     
-%                 disp(stateSampleCount)
-%                 listIndex = listIndex + stateSampleCount
-%                 sampleInfoList(listIndex) = sampleInfo;
-%                 statusList(listIndex) = status;
-                save('sample.mat', 'sample')
-                
-                 t_start = sample.t_now;
-                 trjMsg = trjMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, sample.t_now);
-                 trajectoryWriter.write(trjMsg);
-                 
-                 stop_now = false;
-                 t_now = t_start;
-                 
-                 % Send calculated trajectory as long as it should take vehicle
-                 % to follow it (calculated trajectory time)
-                 while(t_now <= t_start + trajectory_points(end).t)
-                     
-                    %disp('Checking system trigger for stop signal');
-                    [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
-                    current_time = trigger.next_start().nanoseconds();
-                    if current_time == trigger_stop
-                        disp("Stopping");
-                        stop_now = true;
-                        break;
-                    end
-                                                    
-                    [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
-                    
-                    
-                    t_now = sample.t_now;
-                    
-%                     currentPoses = readPoses(sample.vehicle_observation_list);
-%                     map = setOccMap(currentPoses, egoVehicle);
-%                     occupied = checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]);
-%                     disp(occupied)
-                   
-%                     if checkOccupancy(map, [goalPoses.(vehicleList{nVehicles}).x goalPoses.(vehicleList{nVehicles}).y]) == 1
-%                         isDriving = false;
-%                         break;
-%                     end
-
-                    trjMsg = trjMessage(trajectory_points, vehicle_ids{nVehicles}, t_start, t_now);
-                    trajectoryWriter.write(trjMsg);
-                    
-                 end
-                   
-                  poseCounter = poseCounter + 1;
-                  if stop_now
-                     break;
-                  end
-
+            vehicleList = vehicleList(~cellfun(@isempty, vehicleList));%Remove empty elements (= moved vehicles)
+            oldVehicleList = vehicleList;
+            
+            if  isempty(vehicleList)
+                disp('All vehicles in position.')
+                break;
             end
+            
+                for nVehicles = 1:length(vehicleList)
+                    
+                    if nVehicles == length(oldVehicleList)
+                          isFirstRound = false;
+                    end
+                    
+                    startPoses = readPoses(sample.vehicle_observation_list);
+ 
+                    egoVehicle = vehicleList{nVehicles};
+                    disp(strcat('Ego vehicle: ', egoVehicle))
+                        
+                    map = setOccMap(oldVehicleList, startPoses, egoVehicle);
+                    
+                    [refPath, isPathValid] = PlanAndShowRRTPath(startPoses.(egoVehicle), allHomePoses(poseCounter), map);
+                    if not(isPathValid)
+                       if ~isFirstRound && all(ismember(oldVehicleList, vehicleList)) && nVehicles == length(oldVehicleList)
+                          anyVehicleMovable = false;
+                          disp('No vehicle movable.')
+                          stop_now = true;
+                          break;
+                       end
+                       continue
+                    end
+                    
+%                     For debugging and visualization. Uncomment when
+%                     needed.
+%                     save('refPath.mat', 'refPath')
+%                     Figs(nVehicles) = Fig;
+%                     save('Figs.mat', 'Figs')
+                    
+                    trajectory_points = pathToTrajectory(refPath, speed);
 
+                    [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+                    save('sample.mat', 'sample')
+
+                     t_start = sample.t_now;
+                     vehicle_id = extractVehicleID(vehicleList{nVehicles});
+                     trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, sample.t_now);
+                     trajectoryWriter.write(trjMsg);
+
+                     stop_now = false;
+                     t_now = t_start;
+
+                     % Send calculated trajectory as long as it should take vehicle
+                     % to follow it (calculated trajectory time)
+                     while(t_now <= t_start + trajectory_points(end).t)
+
+                        %disp('Checking system trigger for stop signal');
+                        [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
+                        current_time = trigger.next_start().nanoseconds();
+                        if current_time == trigger_stop
+                            disp("Stopping");
+                            stop_now = true;
+                            break;
+                        end
+
+                        [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
+
+                        t_now = sample.t_now;
+                        trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now);
+                        trajectoryWriter.write(trjMsg);
+
+                     end
+                      
+                      vehicleList{nVehicles} = ''; % delete successfully moved vehicle from list
+                      poseCounter = poseCounter + 1;
+                     
+                      if ~isFirstRound && all(ismember(oldVehicleList, vehicleList)) && nVehicles == length(oldVehicleList)
+                          anyVehicleMovable = false;
+                          stop_now = true;
+                          break;
+                      end
+                       
+                      if stop_now
+                         break;
+                      end
+
+                end
+                if stop_now
+                   break;
+                end
+            end %endwhile
+            
             stop_now = true;
             if stop_now
                 break;
