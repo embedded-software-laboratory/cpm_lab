@@ -89,8 +89,8 @@ RTI Connext user manual.
                 <discovery>
                     <accept_unknown_peers>false</accept_unknown_peers>
                     <initial_peers>
-                        <element>40@localhost</element>
-                        <element>40@TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
+                        <element>localhost</element>
+                        <element>TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
                     </initial_peers>   
                 </discovery>
             </participant_qos>
