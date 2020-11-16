@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ ! -d "./build" ]
+then
+    printf "Please run ./build.bash first.\n"
+    exit 1
+fi
+
 if [ $# -eq 0 ]
 then
     printf "Usage (Example):\nCreate Vehicle in LCC first, then:\n./run_distributed.bash --vehicle_ids=1,2,3,4\n"
@@ -11,6 +17,7 @@ do
     case $arg in
         -id*|--vehicle_ids=*)
             vehicle_ids="${arg#*=}"
+            vehicle_array=(${vehicle_ids//,/ })
             shift
             ;;
         --debug)
@@ -29,13 +36,21 @@ done
 printf "vehicle_ids: ${vehicle_ids}\n"
 printf "DDS_DOMAIN: ${DDS_DOMAIN}\n"
 
+if [ ${#vehicle_array[@]} -gt 3 ]
+then
+    printf "Warning: Using more than 3 vehicles during local testing \
+can lead to unexpected results\n"
+    # Reason: RTI DDS Participants only search for 4 other Participants
+    # per domain on a single machine per default.
+fi
+
 . ~/dev/software/lab_control_center/bash/environment_variables_local.bash
 
 # Create QoS settings file for local communications
 touch ./build/QOS_LOCAL_COMMUNICATION.xml
 cat QOS_LOCAL_COMMUNICATION.xml.template \
 | sed -e "s|TEMPLATE_IP|${IP_SELF}|g" \
-> ./build/QOS_LOCAL_COMMUNICATION.xml
+>./build/QOS_LOCAL_COMMUNICATION.xml
 
 cleanup(){
     printf "Cleaning up ... "
@@ -43,7 +58,7 @@ cleanup(){
     tmux kill-session -tmiddleware_${vehicle_ids}
 
     if [ $debug ]; then
-        for vehicle_id in ${vehicle_ids//,/ }
+        for vehicle_id in "${vehicle_array[@]}"
         do
             tmux kill-session -tdecentral_routing_${vehicle_id}
         done
@@ -70,7 +85,7 @@ tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control
 
 printf "Starting HLCs ...\n"
 cd build
-for vehicle_id in ${vehicle_ids//,/ }
+for vehicle_id in "${vehicle_array[@]}"
 do
 
     # Special debug option: if debug is enabled, the 5th vehicle will be started directly in gdb
