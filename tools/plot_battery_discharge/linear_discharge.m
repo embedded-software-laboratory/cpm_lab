@@ -63,13 +63,18 @@ data = [ ... % Time(minutes), voltage
 ];
 
 l1_t1 = 0;
-l1_t2 = 190;
+l1_t2 = 140;
 l1_v1 = 8.17;
-l1_v2 = 7.37;
+l1_v2 = 7.48;
 l1_t = l1_t1:l1_t2;
 l1_v = (l1_v2-l1_v1) / (l1_t2-l1_t1) * (l1_t-l1_t1) + l1_v1;
-%l1_battery= (-(8.17-7.37)/150*v +8.17)/8.17*100;
 
+l5_t1 = 140;
+l5_t2 = 190;
+l5_v1 = 7.48;
+l5_v2 = 7.37;
+l5_t = l5_t1:l5_t2;
+l5_v = (l5_v2-l5_v1) / (l5_t2-l5_t1) * (l5_t-l5_t1) + l5_v1;
 
 l2_t1 = 190;
 l2_t2 = 240;
@@ -77,7 +82,7 @@ l2_v1 = 7.37;
 l2_v2 = 7.35;
 l2_t = l2_t1:l2_t2;
 l2_v = (l2_v2-l2_v1) / (l2_t2-l2_t1) * (l2_t-l2_t1) + l2_v1;
-%l2_battery = ((7.35-7.37)/(240-190)*v +7.37))/8.17*100;
+
 
 l3_t1 = 240;
 l3_t2 = 300;
@@ -85,16 +90,21 @@ l3_v1 = 7.35;
 l3_v2 = 7.17;
 l3_t = l3_t1:l3_t2;
 l3_v = (l3_v2-l3_v1) / (l3_t2-l3_t1) * (l3_t-l3_t1) + l3_v1;
-%l3_battery = ((7.17-7.35)/(300-240)*v +7.35))/8.17*100;
+
 
 l4_t1 = 300;
-l4_t2 = 341;
+l4_t2 = 329;
 l4_v1 = 7.16;
-l4_v2 = 6.28;
+l4_v2 = 6.8;
 l4_t = l4_t1:l4_t2;
 l4_v = (l4_v2-l4_v1) / (l4_t2-l4_t1) * (l4_t-l4_t1) + l4_v1;
-%l4_battery = ((6.28-7.16)/(341-300)*v +7.16))/8.17*100;
 
+l6_t1 = 329;
+l6_t2 = 340;
+l6_v1 = 6.8;
+l6_v2 = 6.3;
+l6_t = l6_t1:l6_t2;
+l6_v = (l6_v2-l6_v1) / (l6_t2-l6_t1) * (l6_t-l6_t1) + l6_v1;
 
 % % 7.55 <= V
 % % l1_battery = @(V) (169-89)/169 / 0.65 * (V-7.55) + 89/169;
@@ -103,6 +113,7 @@ l4_v = (l4_v2-l4_v1) / (l4_t2-l4_t1) * (l4_t-l4_t1) + l4_v1;
 % l2_battery = @(V) 143.45 * (V-7.22) +  5.33;
 % % V < 7.22
 % l3_battery = @(V)   6.49 * (V-6.4 );
+
 
 
 figure(1)
@@ -115,9 +126,11 @@ ylabel('Volt','FontSize',20)
 
 hold on
 plot(l1_t, l1_v)
+plot(l5_t, l5_v)
 plot(l2_t, l2_v)
 plot(l3_t, l3_v)
 plot(l4_t, l4_v)
+plot(l6_t, l6_v)
 % hold off
 
 figure(2)
@@ -129,8 +142,8 @@ grid on
 xlabel('Volt','FontSize',20)
 ylabel('Batterieladung [%]','FontSize',20)
 
-% hold on
-% plot(l1_v, l1_battery(l1_v))
-% plot(l2_v, l2_battery(l2_v))
-% plot(l3_v, l3_battery(l3_v))
-% hold off
+hold on
+plot(l1_v, l1_battery(l1_v))
+plot(l2_v, l2_battery(l2_v))
+plot(l3_v, l3_battery(l3_v))
+hold off
