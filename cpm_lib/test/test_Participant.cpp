@@ -31,8 +31,6 @@
 #include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
 #include "cpm/Writer.hpp"
 #include "cpm/Participant.hpp"
 #include "cpm/ReaderAbstract.hpp"

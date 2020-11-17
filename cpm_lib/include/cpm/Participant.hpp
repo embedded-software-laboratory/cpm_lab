@@ -73,6 +73,17 @@ namespace cpm
         { 
             
         }
+
+        /**
+         * \brief Constructor for a participant 
+         * \param participant A dds participant to be stored in this wrapper function (only for the middleware, replace after eProsima implementation)
+         */
+        Participant(dds::domain::DomainParticipant& participant)
+        :
+            dds_participant(participant)
+        { 
+            
+        }
         
         dds::domain::DomainParticipant& get_participant()
         {

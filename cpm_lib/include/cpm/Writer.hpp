@@ -110,5 +110,14 @@ namespace cpm
         {
             dds_writer.write(msg);
         }
+
+        /**
+         * \brief Returns # of matched writers, needs template parameter for topic type
+         */
+        size_t matched_subscriptions_size()
+        {
+            auto matched_sub = dds::pub::matched_subscriptions<T>(dds_writer);
+            return matched_sub.size();
+        }
     };
 }

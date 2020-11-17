@@ -34,10 +34,6 @@
 #include <vector>
 
 #include "cpm/ParticipantSingleton.hpp"
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/core/ddscore.hpp>
-#include <dds/topic/ddstopic.hpp>
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 

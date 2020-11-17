@@ -33,6 +33,7 @@
 #include <random>
 #include <algorithm>
 #include <thread>
+#include <chrono>
 
 #include <dds/sub/ddssub.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -123,7 +124,7 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         }, vehicleSpeedCurvatureTopicName);
 
         //Sleep for some milliseconds just to make sure that the reader has been initialized properly
-        rti::util::sleep(dds::core::Duration::from_millisecs(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         //Send test data from a virtual HLC - only the round number matters here, which is transmitted using the timestamp value
         //The data is sent to the middleware (-> middleware participant, because of the domain ID), and the middleware should send it to the vehicle
@@ -131,14 +132,14 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         cpm::Writer<VehicleCommandSpeedCurvature> hlcWriter(participant, vehicleSpeedCurvatureTopicName);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
             //Send data and wait
-            rti::util::sleep(dds::core::Duration::from_millisecs(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             VehicleCommandSpeedCurvature curv(vehicleID, Header(TimeStamp(i), TimeStamp(i)), 0, 0);
             hlcWriter.write(curv);
         }
     }
 
     //Perform checks (wait a while before doing so, to make sure that everything has been received)
-    rti::util::sleep(dds::core::Duration::from_millisecs(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::lock_guard<std::mutex> lock(round_numbers_mutex);
     //"Dirty" bugfix: Check if some of the data was received (as sometimes exactly one data point is missing)

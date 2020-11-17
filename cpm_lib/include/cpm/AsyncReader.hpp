@@ -120,6 +120,11 @@ namespace cpm
             bool is_reliable = false,
             bool is_transient_local = false
         );
+
+        /**
+         * \brief Returns # of matched writers
+         */
+        size_t matched_publications_size();
     };
 
     template<class MessageType> 
@@ -192,5 +197,12 @@ namespace cpm
 
         // Process sample 
         func(samples_vec);
+    }
+
+    template<class MessageType> 
+    size_t AsyncReader<MessageType>::matched_publications_size()
+    {
+        auto matched_pub = dds::sub::matched_publications<MessageType>(reader);
+        return matched_pub.size();
     }
 }

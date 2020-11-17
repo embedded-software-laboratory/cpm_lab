@@ -83,7 +83,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
@@ -103,7 +103,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
@@ -123,7 +123,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
@@ -143,7 +143,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
@@ -163,7 +163,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
@@ -183,7 +183,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 

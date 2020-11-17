@@ -31,8 +31,7 @@
 #include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include "cpm/ReaderAbstract.hpp"
 #include "cpm/Writer.hpp"
 
 /**
@@ -44,10 +43,7 @@
 TEST_CASE( "Writer" ) {
     cpm::Logging::Instance().set_id("test_writer");
 
-    auto participant = cpm::ParticipantSingleton::Instance();
-    dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "sadfhasdflkasdhf");
-
-    dds::sub::DataReader<VehicleState> vehicle_state_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), topic_vehicle_state, dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll() << dds::core::policy::Durability::TransientLocal());
+    cpm::ReaderAbstract<VehicleState> vehicle_state_reader("sadfhasdflkasdhf", true, true, true);
 
     // Test the writer, find out if sample gets received
     cpm::Writer<VehicleState> vehicle_state_writer("sadfhasdflkasdhf", true, true, true);
@@ -64,6 +60,6 @@ TEST_CASE( "Writer" ) {
     auto samples = vehicle_state_reader.take();
 
     //Check that sample content is correct
-    REQUIRE( samples.length() == 1 );
-    REQUIRE( samples.begin()->data().vehicle_id() == 99 );
+    REQUIRE( samples.size() == 1 );
+    REQUIRE( samples.begin()->vehicle_id() == 99 );
 }

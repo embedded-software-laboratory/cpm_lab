@@ -32,6 +32,7 @@
 #include <random>
 #include <algorithm>
 #include <thread>
+#include <chrono>
 
 #include <dds/sub/ddssub.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -94,12 +95,10 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         );
 
         //Sleep for some milliseconds just to make sure that the readers have been initialized properly
-        rti::util::sleep(dds::core::Duration::from_millisecs(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         //Send test data from a virtual vehicle - only the round number matters here, which is transmitted using the timestamp value
-        dds::topic::Topic<VehicleState> topic = dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState");
-        dds::pub::Publisher publisher = dds::pub::Publisher(cpm::ParticipantSingleton::Instance());
-        dds::pub::DataWriter<VehicleState> vehicleWriter(publisher, topic);
+        cpm::Writer<VehicleState> vehicleWriter("vehicleState");
         for (uint64_t i = 0; i <= max_rounds; ++i) {
             //Send data (first older data, then newer data - only the newer data should be returned by getLatestVehicleMessage) and wait
             VehicleState state_old;
@@ -107,14 +106,14 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
             state_old.header(Header(TimeStamp(3*i), TimeStamp(3*i)));
             vehicleWriter.write(state_old);
 
-            rti::util::sleep(dds::core::Duration::from_millisecs(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
             VehicleState state_new;
             state_new.vehicle_id(vehicleID);
             state_new.header(Header(TimeStamp(3*i + 1), TimeStamp(3*i + 1)));
             vehicleWriter.write(state_new);
 
-            rti::util::sleep(dds::core::Duration::from_millisecs(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
             //Store the sent and received data for later comparison
             sent_round_numbers.push_back(3*i + 1);

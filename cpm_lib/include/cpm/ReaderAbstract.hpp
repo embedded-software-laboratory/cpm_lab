@@ -121,5 +121,15 @@ namespace cpm
 
             return samples_vec;
         }
+
+        /**
+         * \brief Returns # of matched writers, needs template parameter for topic type
+         */
+        template<typename MessageType>
+        size_t matched_publications_size()
+        {
+            auto matched_pub = dds::sub::matched_publications<MessageType>(dds_reader);
+            return matched_pub.size();
+        }
     };
 }
