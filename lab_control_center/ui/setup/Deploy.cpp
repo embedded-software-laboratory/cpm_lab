@@ -217,7 +217,7 @@ void Deploy::kill_sim_vehicle(unsigned int id)
 void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_seconds) 
 {
     //Kill old reboot threads that are done before adding a new one
-    join_finished_reboot_threads();
+    join_finished_vehicle_reboot_threads();
 
     //Get the IP address from the current vehicle_id (192.168.1.1XX)
     std::stringstream ip_stream;
@@ -233,8 +233,8 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
     //Only create a reboot thread if no such thread already exists
     if (vehicle_reboot_threads.find(vehicle_id) == vehicle_reboot_threads.end())
     {
-        std::unique_lock<std::mutex> lock(reboot_done_mutex);
-        reboot_thread_done[vehicle_id] = false;
+        std::unique_lock<std::mutex> lock(vehicle_reboot_done_mutex);
+        vehicle_reboot_thread_done[vehicle_id] = false;
         lock.unlock();
 
         vehicle_reboot_threads[vehicle_id] = std::thread(
@@ -260,23 +260,100 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                     );
                 }
 
-                std::lock_guard<std::mutex> lock(reboot_done_mutex);
-                reboot_thread_done[vehicle_id] = true;
+                std::lock_guard<std::mutex> lock(vehicle_reboot_done_mutex);
+                vehicle_reboot_thread_done[vehicle_id] = true;
             }
         );
     }
 }
 
-void Deploy::join_finished_reboot_threads()
+void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seconds) 
+{
+    //Kill old reboot threads that are done before adding a new one
+    join_finished_hlc_reboot_threads();
+
+    for (auto hlc_id_uint8_t : hlc_ids)
+    {
+        //Prevents conversion errors to string, because uint8_t tends to get interpreted as a character
+        unsigned int hlc_id = static_cast<unsigned int>(hlc_id_uint8_t);
+
+        //Get the IP address from the current id (192.168.1.2XX)
+        std::stringstream ip_stream;
+        ip_stream << "192.168.1.2";
+        if (hlc_id < 10)
+        {
+            ip_stream << "0";
+        }
+        ip_stream << hlc_id;
+        std::string ip = ip_stream.str();
+
+        std::lock_guard<std::mutex> lock(hlc_reboot_threads_mutex);
+        //Only create a reboot thread if no such thread already exists
+        if (hlc_reboot_threads.find(hlc_id) == hlc_reboot_threads.end())
+        {
+            std::unique_lock<std::mutex> lock(hlc_reboot_done_mutex);
+            hlc_reboot_thread_done[hlc_id] = false;
+            lock.unlock();
+
+            hlc_reboot_threads[hlc_id] = std::thread(
+                [this, hlc_id, ip, timeout_seconds] () {
+                    //Create and send the hlc reboot command
+                    //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
+                    std::stringstream command_reboot_hlc;
+                    command_reboot_hlc 
+                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\"";
+                    bool msg_success = spawn_and_manage_process(command_reboot_hlc.str().c_str(), timeout_seconds, 
+                        [] () { 
+                            //Ignore the check if the HLC is still online
+                            return true; 
+                        }
+                    );
+
+                    if(!msg_success)
+                    {
+                        cpm::Logging::Instance().write(
+                            2, 
+                            "Could not reboot HLC %u (timeout or connection lost)", 
+                            hlc_id
+                        );
+                    }
+
+                    std::lock_guard<std::mutex> lock(hlc_reboot_done_mutex);
+                    hlc_reboot_thread_done[hlc_id] = true;
+                }
+            );
+        }
+    }
+}
+
+void Deploy::join_finished_vehicle_reboot_threads()
 {
     std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
     for (auto thread_ptr = vehicle_reboot_threads.begin(); thread_ptr != vehicle_reboot_threads.end(); /*Do not increment here*/)
     {
-        std::lock_guard<std::mutex> lock(reboot_done_mutex);
-        if (reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
+        std::lock_guard<std::mutex> lock(vehicle_reboot_done_mutex);
+        if (vehicle_reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
         {
             thread_ptr->second.join();
             thread_ptr = vehicle_reboot_threads.erase(thread_ptr);
+        }
+        else
+        {
+            ++thread_ptr;
+        }
+    }
+}
+
+void Deploy::join_finished_hlc_reboot_threads()
+{
+    std::lock_guard<std::mutex> lock(hlc_reboot_threads_mutex);
+    for (auto thread_ptr = hlc_reboot_threads.begin(); thread_ptr != hlc_reboot_threads.end(); /*Do not increment here*/)
+    {
+        std::lock_guard<std::mutex> lock(vehicle_reboot_done_mutex);
+        if (hlc_reboot_thread_done[thread_ptr->first] && thread_ptr->second.joinable())
+        {
+            thread_ptr->second.join();
+            thread_ptr = hlc_reboot_threads.erase(thread_ptr);
         }
         else
         {

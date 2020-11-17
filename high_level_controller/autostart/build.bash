@@ -18,6 +18,7 @@ rm -rf autostart_package
 mkdir autostart_package
 cp ${BASH_DIR}/build/autostart ./autostart_package
 cp ${BASH_DIR}/build/download_error_logger ./autostart_package
+cp ${BASH_DIR}/lab_autostart.bash ./autostart_package # This file will be updated by lab_autostart itself, meaning that an update of that file only takes effect after a NUC restart
 tar -czf autostart_package.tar.gz autostart_package
 rm -f /var/www/html/nuc/autostart_package.tar.gz
 cp ./autostart_package.tar.gz /var/www/html/nuc
