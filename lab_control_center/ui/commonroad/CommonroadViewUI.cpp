@@ -433,6 +433,9 @@ bool CommonroadViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, con
 using namespace std::placeholders;
 void CommonroadViewUI::open_file_explorer()
 {
+    //We do not want the user to interact with the UI while they are choosing a new scenario
+    set_sensitive(false);
+
     //Filter to show only XML files
     FileChooserUI::Filter xml_filter;
     xml_filter.name = "XML";
@@ -472,6 +475,9 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
         reload_problems.store(true);
         load_obstacle_list.store(true);
     }
+
+    //The user is now allowed to interact with the UI again
+    set_sensitive(true);
 }
 
 double CommonroadViewUI::string_to_double(std::string value, double default_value)
@@ -529,6 +535,9 @@ bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
 
         //Re-enter vehicle selection for obstacle simulation manager
         apply_current_vehicle_selection();
+
+        //Refresh values in planning problem list (e.g. goal speed)
+        reload_problems.store(true);
 
         return true;
     }

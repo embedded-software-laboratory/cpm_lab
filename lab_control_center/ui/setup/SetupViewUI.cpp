@@ -322,6 +322,9 @@ void SetupViewUI::switch_diagnosis_set()
 using namespace std::placeholders;
 void SetupViewUI::open_file_explorer()
 {
+    //We do not want the user to interact with the UI while they are choosing a new scenario
+    set_sensitive(false);
+
     //Filter to show only executables / .m files
     FileChooserUI::Filter application_filter;
     application_filter.name = "Application/Matlab";
@@ -358,6 +361,9 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
     {
         script_path->set_text(file_string.c_str());
     }
+
+    //The user is now allowed to interact with the UI again
+    set_sensitive(true);
 }
 
 void SetupViewUI::ui_dispatch()
