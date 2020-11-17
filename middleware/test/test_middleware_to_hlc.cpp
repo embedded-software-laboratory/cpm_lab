@@ -94,6 +94,10 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     //Data for checks
     std::vector<uint64_t> hlc_current_round_received;
     std::vector<bool> timestep_not_missed;
+    bool t_now_correct = true;
+    bool period_ms_correct = true;
+    uint64_t t_now_value = 100;
+    uint64_t period_ms_value = 200;
     
     //Round number: Used by the simulated middleware to count how often its callback was called & by the fake HLC to check if the current count matches the received count number
     std::vector<uint64_t> round_numbers;
@@ -121,6 +125,9 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
                 if (sample.data().state_list().at(0).header().create_stamp().nanoseconds() >= highest_round_value) {
                     highest_round_value = sample.data().state_list().at(0).header().create_stamp().nanoseconds();
                 }
+
+                t_now_correct = sample.data().t_now() == t_now_value;
+                period_ms_correct = sample.data().period_ms() == period_ms_value;
             }
         }
 
@@ -178,6 +185,8 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
             dds::core::vector<VehicleState> rti_state_list(states);
             VehicleStateList state_list;
             state_list.state_list(rti_state_list);
+            state_list.t_now(t_now_value);
+            state_list.period_ms(period_ms_value);
 
             communication->sendToHLC(state_list);
         }
@@ -199,4 +208,8 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     for (bool period_not_missed : timestep_not_missed) {
         CHECK(period_not_missed);
     }
+
+    //Check if t_now and period_ms work
+    CHECK(t_now_correct);
+    CHECK(period_ms_correct);
 }

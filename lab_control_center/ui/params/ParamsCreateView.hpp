@@ -41,6 +41,7 @@
 
 #define MAX_INT32_SYMBOL (2147483647l)
 #define MIN_INT32_SYMBOL (-2147483648l)
+#define MAX_UINT64_SYMBOL (18446744073709551615ull)
 
 /**
  * \brief This class creates a window where params can be changed, deleted or created
@@ -88,6 +89,7 @@ private:
 
     //Helper conversion functions - also used to check data correctness; return false if the argument is invalid
     bool string_to_int(std::string str, int32_t& value);
+    bool string_to_uint64_t(std::string str, uint64_t& value);
     bool string_to_double(std::string str, double& value);
     bool string_to_int_vector(std::string str, std::vector<int32_t>& value);
     bool string_to_double_vector(std::string str, std::vector<double>& value);
