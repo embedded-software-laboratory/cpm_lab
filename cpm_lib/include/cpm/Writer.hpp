@@ -39,6 +39,10 @@
 
 namespace cpm
 {
+    /**
+     * \brief Class Writer
+     * Use this to get a simple writer with a write() function for writing messages
+     */
     template<typename T>
     class Writer
     {

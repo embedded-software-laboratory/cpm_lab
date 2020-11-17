@@ -41,6 +41,10 @@
 
 namespace cpm
 {
+    /**
+     * \brief Class Participant
+     * Use this to get a participant, possibly with some custom QoS settings
+     */
     class Participant
     {
         dds::domain::DomainParticipant dds_participant;

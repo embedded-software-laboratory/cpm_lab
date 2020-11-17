@@ -27,17 +27,24 @@
 #pragma once
 
 #include <dds/sub/ddssub.hpp>
+
 #include <mutex>
 #include <array>
 #include <vector>
 #include <map>
 #include <algorithm>
+
 #include "cpm/ParticipantSingleton.hpp"
 
 #define CPM_READER_RING_BUFFER_SIZE (64)
 
 namespace cpm
 {
+    /**
+     * \brief Class MultiVehicleReader
+     * Use this to get a reader for multiple vehicles that works like "Reader", but checks timestamps in the header for all of the vehicles separately
+     * This reader always acts in the domain of ParticipantSingleton
+     */
     template<typename T>
     class MultiVehicleReader
     {
@@ -68,6 +75,12 @@ namespace cpm
         }
 
     public:
+        /**
+         * \brief Constructor
+         * \param topic the topic of the communication
+         * \param num_vehicles The number of vehicles to monitor / read from (from 1 to num_vehicles)
+         * \return The MultiVehicleReader
+         */
         MultiVehicleReader(dds::topic::Topic<T> topic, int num_of_vehicles) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )
@@ -81,6 +94,12 @@ namespace cpm
             }
         }
 
+        /**
+         * \brief Constructor
+         * \param topic the topic of the communication
+         * \param _vehicle_ids List of vehicles to monitor / read from
+         * \return The MultiVehicleReader
+         */
         MultiVehicleReader(dds::topic::Topic<T> topic, std::vector<uint8_t> _vehicle_ids) : 
             dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll())
         )

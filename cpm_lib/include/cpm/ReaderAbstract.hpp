@@ -39,6 +39,10 @@
 
 namespace cpm
 {
+    /**
+     * \brief Class ReaderAbstract
+     * Use this to get a simple reader with a take() function for reading received messages whenever you want, without considering time stamps etc
+     */
     template<typename T>
     class ReaderAbstract
     {
