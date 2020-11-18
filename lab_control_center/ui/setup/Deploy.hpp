@@ -94,6 +94,7 @@ public:
      * \param script_params Additional script parameters
      */
     void deploy_separate_local_hlcs(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
+    std::vector<unsigned int> deployed_local_hlcs;
 
     /**
      * \brief Deploy all vehicles that were set to be simulated locally, set simulated time (software is started using tmux)

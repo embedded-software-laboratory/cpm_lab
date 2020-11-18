@@ -528,21 +528,13 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
+            deploy_functions->deploy_separate_local_hlcs(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
-        }
-
-        // If there are more vehicles than NUCs, deploy local HLCs
-        if( hlc_ids.size() < vehicle_ids.size() ) {
-            // Use the vehicle_ids NOT in use by remote HLCs
-            for ( size_t i=hlc_ids.size(); i < vehicle_ids.size(); ++i ) {
-                deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
-            } 
         }
     }
     else if (file_exists)
@@ -557,7 +549,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
@@ -629,7 +621,7 @@ void SetupViewUI::kill_deployed_applications() {
         //Also kill potential local HLC
         if (both_local_and_remote_deploy.exchange(false))
         {
-            deploy_functions->kill_local_hlc();
+            deploy_functions->kill_separate_local_hlcs();
         }
     }
     else 
