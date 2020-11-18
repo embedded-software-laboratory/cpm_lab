@@ -78,6 +78,7 @@ if(NOT BUILD_ARM)
     add_executable(unittest 
         test/catch.cpp
         test/test_logging.cpp
+        test/test_AsyncReader.cpp
         test/test_rtt.cpp
         test/test_parameter.cpp
         test/test_simple_timer.cpp

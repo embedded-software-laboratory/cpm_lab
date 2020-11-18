@@ -93,6 +93,7 @@ namespace cpm
     public:
         /**
          * \brief Constructor for the AsynReader. This constructor is simpler and creates subscriber, topic etc on the cpm domain participant
+         * The reader always uses History::KeepAll
          * \param func Callback function that is called by the reader if new data is available. Samples are passed to the function to be processed further.
          * \param topic_name The name of the topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
@@ -107,6 +108,7 @@ namespace cpm
 
         /**
          * \brief Constructor for the AsynReader. This constructor is simpler and creates subscriber, topic etc on the cpm domain participant
+         * The reader always uses History::KeepAll
          * \param func Callback function that is called by the reader if new data is available. Samples are passed to the function to be processed further.
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic_name The name of the topic that is supposed to be used by the reader
