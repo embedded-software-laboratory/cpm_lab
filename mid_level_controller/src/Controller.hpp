@@ -42,7 +42,7 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "MpcController.hpp"
-#include "StanleyController.hpp"
+#include "PathTrackingController.hpp"
 #include "TrajectoryInterpolation.hpp"
 
 extern "C" {
@@ -63,7 +63,7 @@ enum class ControllerState
 class Controller
 {
     MpcController mpcController;
-    StanleyController stanleyController;
+    PathTrackingController pathTrackingController;
 
     std::function<uint64_t()> m_get_time;
 

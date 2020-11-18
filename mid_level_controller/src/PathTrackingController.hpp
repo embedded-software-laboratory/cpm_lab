@@ -26,25 +26,20 @@
 
 #pragma once
 #include <vector>
-// #include <string>
-// #include <array>
-// #include "VehicleModel.hpp"
 #include "VehicleCommandPathTracking.hpp"
 #include "VehicleState.hpp"
 // #include "Visualization.hpp"
 // #include "cpm/get_topic.hpp"
-// #include <dds/pub/ddspub.hpp>
 
 
-class StanleyController
+class PathTrackingController
 {
     uint8_t vehicle_id;
 
-    Pose2D find_reference_pose2d(
+    Pose2D find_reference_pose(
         const std::vector<PathPoint> &path,
         const double x,
-        const double y,
-        const double yaw
+        const double y
     );
 
     std::function<void(double&, double&)> stop_vehicle;
@@ -52,13 +47,10 @@ class StanleyController
 
 public:
 
-    StanleyController(uint8_t vehicle_id, std::function<void(double&, double&)> stop_vehicle);
+    PathTrackingController(uint8_t vehicle_id, std::function<void(double&, double&)> stop_vehicle);
 
     double control_steering_servo(
         const VehicleState &vehicleState,                  
         const VehicleCommandPathTracking &commandPathTracking
     );
-
-    void reset_ref_path();
-    
 };

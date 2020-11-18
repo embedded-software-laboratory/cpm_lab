@@ -24,15 +24,15 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "StanleyController.hpp"
+#include "PathTrackingController.hpp"
 #include <cassert>
 #include <cmath>
 // #include <iostream>
 // #include <sstream>
 // #include "cpm/Logging.hpp"
-// #include "TrajectoryInterpolation.hpp"
+#include "PathInterpolation.hpp"
 
-StanleyController::StanleyController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
+PathTrackingController::PathTrackingController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
 :vehicle_id(vehicle_id)
 ,stop_vehicle(stop_vehicle)
 {
@@ -47,7 +47,7 @@ inline double wrap2pi(const double yaw)
     return yaw_out - M_PI_2;
 }
 
-double StanleyController::control_steering_servo(
+double PathTrackingController::control_steering_servo(
         const VehicleState &vehicleState,                  
         const VehicleCommandPathTracking &commandPathTracking
 )
@@ -63,7 +63,7 @@ double StanleyController::control_steering_servo(
 
     // Find reference point on path
     std::vector<PathPoint> path = commandPathTracking.path();
-    Pose2D ref_pose = find_reference_pose2d(path, x_f, y_f, yaw);
+    Pose2D ref_pose = find_reference_pose(path, x_f, y_f);
 
 
     // compute control errors
@@ -91,15 +91,44 @@ double StanleyController::control_steering_servo(
     return steering_servo;
 }
 
-Pose2D StanleyController::find_reference_pose2d(
+Pose2D PathTrackingController::find_reference_pose(
     const std::vector<PathPoint> &path,
     const double x,
-    const double y,
-    const double yaw
+    const double y
 )
 {
     // Iterate over interpolated path to find point with minimum distance
+    const double ds = 0.1; // [m]
+    assert(path.size() > 1);
+    size_t i_path_point = 0;
+    double s_max = path.back().s();
+    double min_dist = 1e300;
+    Pose2D result;
+    for (double s_query = 0; s_query <= s_max; s_query += ds)
+    {
+        // Advance path points for interpolation if necessary
+        assert( i_path_point < path.size()-1 );
+        if (s_query > path[i_path_point+1].s())
+        {
+            ++i_path_point;
+        }
 
+        // calculate distance to reference path
+        PathInterpolation path_interpolation(
+            s_query, path[i_path_point], path[i_path_point+1]
+        );
+        double dx = x - path_interpolation.position_x;
+        double dy = y - path_interpolation.position_y;
+        double distance = sqrt( dx*dx + dy*dy );
 
-
+        if (distance < min_dist)
+        {
+            min_dist = distance;
+            // update reference pose
+            result.x(path_interpolation.position_x);
+            result.y(path_interpolation.position_y);
+            result.yaw(path_interpolation.yaw);
+        }
+    }
+    return result;
 }

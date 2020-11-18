@@ -39,8 +39,8 @@ set(SOURCE_BASE
     src/casadi_mpc_fn.h
     src/MpcController.hpp
     src/MpcController.cxx
-    src/StanleyController.hpp
-    src/StanleyController.cxx
+    src/PathTrackingController.hpp
+    src/PathTrackingController.cxx
     src/VehicleModel.hpp
     src/VehicleModel.cxx
     ../low_level_controller/vehicle_atmega2560_firmware/crc.h

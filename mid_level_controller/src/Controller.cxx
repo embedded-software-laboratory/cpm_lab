@@ -33,7 +33,7 @@ using namespace std::placeholders;
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
 :mpcController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
-,stanleyController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
+,pathTrackingController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
 ,m_get_time(_get_time)
 ,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
 ,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
@@ -439,7 +439,7 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
             motor_throttle = speed_controller(speed_measured, speed_target);
 
             // Steering: Stanley
-            steering_servo = stanleyController.control_steering_servo(
+            steering_servo = pathTrackingController.control_steering_servo(
                 m_vehicleState,
                 m_vehicleCommandPathTracking
             );
