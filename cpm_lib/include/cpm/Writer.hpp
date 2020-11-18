@@ -87,6 +87,10 @@ namespace cpm
         /**
          * \brief Constructor for a writer which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings
+         * \param topic Name of the topic to write in
+         * \param reliable Set the writer to be reliable (true) or use best effort (false, default)
+         * \param history_keep_all Keep all received messages (true) or not (false, default) (relevant for the reader)
+         * \param transient_local Resent messages sent before a new participant joined to that participant (true) or not (false, default)
          */
         Writer(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false)
         :dds_writer(dds::pub::Publisher(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), get_qos(reliable, history_keep_all, transient_local))
@@ -97,6 +101,11 @@ namespace cpm
         /**
          * \brief Constructor for a writer that communicates within another domain
          * Allows to set the topic name and some QoS settings
+         * \param _participant The domain (participant) in which to write
+         * \param topic Name of the topic to write in
+         * \param reliable Set the writer to be reliable (true) or use best effort (false, default)
+         * \param history_keep_all Keep all received messages (true) or not (false, default) (relevant for the reader)
+         * \param transient_local Resent messages sent before a new participant joined to that participant (true) or not (false, default)
          */
         Writer(
             dds::domain::DomainParticipant & _participant, 

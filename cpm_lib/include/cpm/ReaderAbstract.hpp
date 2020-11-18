@@ -87,6 +87,10 @@ namespace cpm
         /**
          * \brief Constructor for a ReaderAbstract which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings
+         * \param topic Name of the topic to read in
+         * \param reliable Set the reader to be reliable (true) or use best effort (false, default)
+         * \param history_keep_all Keep all received messages (true) or not (false, default)
+         * \param transient_local Receive messages sent before joining (true) or not (false, default)
          */
         ReaderAbstract(std::string topic, bool reliable = false, bool history_keep_all = false, bool transient_local = false)
         :dds_reader(dds::sub::Subscriber(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), get_qos(reliable, history_keep_all, transient_local))
@@ -97,6 +101,11 @@ namespace cpm
         /**
          * \brief Constructor for a ReaderAbstract that communicates within another domain
          * Allows to set the topic name and some QoS settings
+         * \param _participant The domain (participant) in which to read
+         * \param topic Name of the topic to read in
+         * \param reliable Set the reader to be reliable (true) or use best effort (false, default)
+         * \param history_keep_all Keep all received messages (true) or not (false, default)
+         * \param transient_local Receive messages sent before joining (true) or not (false, default)
          */
         ReaderAbstract(
             dds::domain::DomainParticipant & _participant, 
