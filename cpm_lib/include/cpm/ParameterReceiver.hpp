@@ -36,6 +36,7 @@
 #include <map>
 #include <mutex>
 #include <chrono>
+#include <thread>
 
 #include "dds/Parameter.hpp"
 #include "dds/ParameterRequest.hpp"
