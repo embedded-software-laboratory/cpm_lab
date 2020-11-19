@@ -31,5 +31,5 @@ for id in $IDS;
 do
     echo "Retrieve log from vehicle $id"
     sshpass -p "cpmcpmcpm" scp pi@192.168.1.1$id:/tmp/package/Log* log_veh_$id &
-    sleep 1
+    sleep 0.1
 done

@@ -27,7 +27,7 @@ for ip in $IPS;
 do
     echo "Rebooting $ip"
     sshpass -p "cpmcpmcpm" ssh -o StrictHostKeyChecking=no -t -t pi@$ip 'sudo reboot now' &
-    sleep 1
+    sleep 0.1
 done
 
 

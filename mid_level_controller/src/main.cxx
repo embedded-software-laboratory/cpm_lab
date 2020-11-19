@@ -304,7 +304,6 @@ int main(int argc, char *argv[])
                     err_message.c_str());
             }
 
-            cpm::TimeMeasurement::Instance().start("stop_counter");
             //If a stop signal was received, stop the vehicle (was done above, get_control_signals is ignored)
             //Then, wait one second and reset the controller to make sure that old data gets ignored for future commands
             if (stop_counter.load() > 0)
@@ -318,8 +317,6 @@ int main(int argc, char *argv[])
                 //Decrement the counter
                 stop_counter.store(stop_counter.load() - 1);
             }
-
-            cpm::TimeMeasurement::Instance().stop("stop_counter");
 
             // Finish current time measurements
             cpm::TimeMeasurement::Instance().stop("cycle");
