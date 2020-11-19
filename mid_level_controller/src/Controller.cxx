@@ -28,6 +28,7 @@
 #include <iostream>
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/TimeMeasurement.hpp"
 
 using namespace std::placeholders;
 
@@ -427,6 +428,7 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
 void Controller::get_stop_signals(double &out_motor_throttle, double &out_steering_servo) 
 {
+    cpm::TimeMeasurement::Instance().start("get_stop_signals");
     //Init. values
     double steering_servo = 0;
     double speed_target = 0;
@@ -443,11 +445,14 @@ void Controller::get_stop_signals(double &out_motor_throttle, double &out_steeri
 
     out_motor_throttle = motor_throttle;
     out_steering_servo = steering_servo;
+    cpm::TimeMeasurement::Instance().stop("get_stop_signals");
 }
 
 void Controller::reset()
 {
+    cpm::TimeMeasurement::Instance().start("reset_mutex");
     std::lock_guard<std::mutex> lock(command_receive_mutex);
+    cpm::TimeMeasurement::Instance().stop("reset_mutex");
 
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
