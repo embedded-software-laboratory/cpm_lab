@@ -55,11 +55,11 @@ using std::vector;
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/TimeMeasurement.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
 #include "Controller.hpp"
-#include "TimeMeasurement.hpp"
 
 
 #ifdef VEHICLE_SIMULATION
