@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include "cpm/get_topic.hpp"
+#include "cpm/TimeMeasurement.hpp"
 
 namespace cpm {
 
@@ -219,6 +220,7 @@ namespace cpm {
                         "TimerFD: Periods missed: %d", 
                         static_cast<int>(((current_time - deadline) / period_nanoseconds) + 1)
                     );
+                    Logging::Instance().write(1,"%s", TimeMeasurement::Instance().get_str().c_str());
 
                     deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
                 }

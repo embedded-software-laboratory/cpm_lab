@@ -168,8 +168,7 @@ int main(int argc, char *argv[])
         [&](uint64_t t_now) 
         {
 
-            TimeMeasurement::Instance().start("all");
-            TimeMeasurement::Instance().start("all_rt", CLOCK_REALTIME);
+            cpm::TimeMeasurement::Instance().start("cycle");
 
             //log_fn(__LINE__);
             try 
@@ -188,7 +187,7 @@ int main(int argc, char *argv[])
 
                 // Run controller only if no stop signal was received, else do not drive
                 //The controller gets reset at the end of the function, to make sure that before that the vehicle actually gets to stop driving
-                TimeMeasurement::Instance().start("mpc");
+                cpm::TimeMeasurement::Instance().start("mpc");
                 if(stop_counter.load() == 0)
                 {
                     controller.get_control_signals(t_now, motor_throttle, steering_servo);
@@ -197,7 +196,7 @@ int main(int argc, char *argv[])
                 {
                     controller.get_stop_signals(motor_throttle, steering_servo);
                 }
-                TimeMeasurement::Instance().stop("mpc");
+                cpm::TimeMeasurement::Instance().stop("mpc");
 
                 int n_transmission_attempts = 1;
                 int transmission_successful = 1;
@@ -233,14 +232,14 @@ int main(int argc, char *argv[])
                 spi_miso_data_t spi_miso_data;
 
                 //auto t_transfer_start = update_loop->get_time();
-                TimeMeasurement::Instance().start("spi");
+                cpm::TimeMeasurement::Instance().start("spi");
                 spi_transfer(
                     spi_mosi_data,
                     &spi_miso_data,
                     &n_transmission_attempts,
                     &transmission_successful
                 );
-                TimeMeasurement::Instance().stop("spi");
+                cpm::TimeMeasurement::Instance().stop("spi");
                 if (transmission_successful && (spi_miso_data.status_flags & 1)) // IMU status
                 {
                     cpm::Logging::Instance().write(
@@ -257,7 +256,7 @@ int main(int argc, char *argv[])
                 // Process sensor data
                 if(transmission_successful) 
                 {
-                    TimeMeasurement::Instance().start("localization");
+                    cpm::TimeMeasurement::Instance().start("localization");
                     Pose2D new_pose = localization.update(
                         t_now,
                         period_nanoseconds,
@@ -265,7 +264,7 @@ int main(int argc, char *argv[])
                         sample_vehicleObservation, 
                         sample_vehicleObservation_age
                     );
-                    TimeMeasurement::Instance().stop("localization");
+                    cpm::TimeMeasurement::Instance().stop("localization");
                     vehicleState.pose(new_pose);
                     vehicleState.motor_throttle(motor_throttle);
                     vehicleState.steering_servo(steering_servo);
@@ -315,9 +314,17 @@ int main(int argc, char *argv[])
                 stop_counter.store(stop_counter.load() - 1);
             }
 
-            TimeMeasurement::Instance().stop("all");
-            TimeMeasurement::Instance().stop("all_rt");
-            cpm::Logging::Instance().write(3,"%s", TimeMeasurement::Instance().get_str().c_str());
+            // Finish current time measurements
+            cpm::TimeMeasurement::Instance().stop("cycle");
+            if (cpm::TimeMeasurement::Instance().exists("all")){
+                cpm::TimeMeasurement::Instance().stop("all");
+                cpm::TimeMeasurement::Instance().stop("all_rt");
+            }
+            cpm::Logging::Instance().write(3,"%s", cpm::TimeMeasurement::Instance().get_str().c_str());
+
+            // Start measurements which observe also the time between the cycles
+            cpm::TimeMeasurement::Instance().start("all");
+            cpm::TimeMeasurement::Instance().start("all_rt", CLOCK_REALTIME);
             
             //log_fn(__LINE__);
         },
