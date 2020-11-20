@@ -155,7 +155,7 @@ static inline double voltage_to_percent(const double& v)
         {
            // return exception 
         }
-    }
+    
     
 }
 
