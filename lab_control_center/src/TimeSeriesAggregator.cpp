@@ -153,7 +153,7 @@ static inline double voltage_to_percent(const double& v)
     }
     else
         {
-           // return exception 
+           cpm::Logging::Instance().write(3, "no battery voltage measurement available");
         }
     
     
