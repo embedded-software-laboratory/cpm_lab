@@ -71,11 +71,12 @@ middleware_cmd="./middleware \
     --node_id=middleware_${vehicle_ids} \
     --simulated_time=false \
     --vehicle_ids=${vehicle_ids} \
-    --domain_number=${DDS_DOMAIN} \
+    --dds_domain=${DDS_DOMAIN} \
+    --domain_number=1 \
     --dds_initial_peer=${DDS_INITIAL_PEER}  \
     >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
     2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
-tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/dev/dev/software/middleware/build/;${middleware_cmd}"
+tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/cpm/dev/software/middleware/build/;${middleware_cmd}"
 
 printf "Starting HLCs ...\n"
 cd build
@@ -94,6 +95,7 @@ do
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
             --middleware=true \
+	    --middleware_domain=1 \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}"
     else

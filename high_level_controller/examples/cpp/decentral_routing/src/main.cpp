@@ -103,7 +103,6 @@ int main(int argc, char *argv[]) {
 
     // Initialize Planner and constants necessary for planning
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
-    const uint64_t dt_nanos = 400000000ull;
     // Definition of time stamp at which to stop
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
     std::unique_ptr<VehicleTrajectoryPlanner> planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
@@ -111,10 +110,10 @@ int main(int argc, char *argv[]) {
             "Planner created");
 
     // Initialize everything needed for communication with middleware
-    const int dds_domain = cpm::cmd_parameter_int("dds_domain", 1, argc, argv);
+    const int dds_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
     // QoS for comms between middleware and HLC, on the same machine (local)
     dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
-    dds::domain::DomainParticipant local_comms_participant(dds_domain, local_comms_qos_provider.participant_qos());
+    dds::domain::DomainParticipant local_comms_participant(middleware_domain, local_comms_qos_provider.participant_qos());
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
 
@@ -207,6 +206,11 @@ int main(int argc, char *argv[]) {
     /* ---------------------------------------------------------------------------------
      * Wait until we receive systemTrigger; then we start
      * ---------------------------------------------------------------------------------
+     */
+    /* Soll-Verhalten:
+     * - Wir starten erst, wenn eine StateList von der Middleware kommt
+     *   - Wir schicken dann auch erst VehicleTrajectories an die Middleware, wenn eine
+     *   weitere StateList kommt
      */
     bool got_start = false;
     while(!got_start) {
