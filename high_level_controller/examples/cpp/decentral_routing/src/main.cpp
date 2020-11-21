@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
                 // We received a StateList and need to send commands to vehicle now
                 t_now = sample.data().t_now();
 
-                if( sample.data().period_ms()*1e-6 != dt_nanos ) {
+                if( sample.data().period_ms()*1e6 != dt_nanos ) {
                     cpm::Logging::Instance().write(
                             1,
                             "Please set middleware_period_ms to 400ms");
@@ -247,6 +247,7 @@ int main(int argc, char *argv[]) {
                     //FIXME: This probably does not require a loop
                     for(auto vehicle_state : sample.data().state_list())
                     {
+			std::cout << static_cast<uint32_t>(vehicle_state.vehicle_id()) << std::endl;
                         if( vehicle_id == vehicle_state.vehicle_id() ) {
                             auto pose = vehicle_state.pose();
                             int out_edge_index = -1;
@@ -255,33 +256,43 @@ int main(int argc, char *argv[]) {
                             if( !matched ) {
                                 cpm::Logging::Instance().write(1,
                                     "Couldn't find starting position,\
-                                    try moving the vehicle.");
+                                    try moving the vehicle if this persists.");
                                 StopRequest request(vehicle_id);
                                 writer_stopRequest.write(request);
-                                return 1;
-                            }
+                            } else {
 
-                            planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
-                            cpm::Logging::Instance().write(
-                            3,
-                            "Vehicle %d matched.",
-                            int(vehicle_id)
-                            );
+				    planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
+				    cpm::Logging::Instance().write(
+				    3,
+				    "Vehicle %d matched.",
+				    int(vehicle_id)
+				    );
 
-                            //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
-                            //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-                            planner->start();
+				    //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
+				    //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
+				    planner->start();
+			    }
 
-                            auto command = planner->get_trajectory_command(t_now);
-                            writer_vehicleCommandTrajectory.write(command);
                         }
                     }
+			
+		    if( !matched ) {
+			cpm::Logging::Instance().write(1,
+			    "Couldn't find vehicle in\
+			    VehicleStateList.");
+			StopRequest request(vehicle_id);
+			writer_stopRequest.write(request);
+		    }
                 }
 
-                //get trajectory commands from VehicleTrajectoryPlanner with new points
-                auto command = planner->get_trajectory_command(t_now);
+		if( planner->is_started() ) {
+			// Set real time
+			planner->set_real_time(t_now);
+			//get trajectory commands from VehicleTrajectoryPlanner with new points
+			auto command = planner->get_trajectory_command(t_now);
 
-                writer_vehicleCommandTrajectory.write(command);
+			writer_vehicleCommandTrajectory.write(command);
+		}
             }
         }
 
@@ -289,8 +300,12 @@ int main(int argc, char *argv[]) {
         dds::sub::LoanedSamples<SystemTrigger> systemTrigger_samples = reader_systemTrigger.take();
         for(auto sample : systemTrigger_samples) {
             if( sample.info().valid() && 
-                   (sample.data().next_start() == trigger_stop)
+                   (sample.data().next_start().nanoseconds() == trigger_stop)
               ) {
+		cpm::Logging::Instance().write(
+				2,
+				"Received stop signal, stopping"
+				);
                 received_stop = true;
             }
         }

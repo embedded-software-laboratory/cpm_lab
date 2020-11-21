@@ -182,7 +182,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             std::cout << "this:" << std::endl;
             int debug_index = 0;
             for( auto point : get_planned_path() ) {
-                std::cout << point.first << "," << point.second << std::endl; 
+                //std::cout << point.first << "," << point.second << std::endl; 
                 debug_index++;
             } 
             return true;

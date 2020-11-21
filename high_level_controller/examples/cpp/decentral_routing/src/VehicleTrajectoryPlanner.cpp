@@ -92,9 +92,9 @@ void VehicleTrajectoryPlanner::start()
 
             std::cout << "TimeStep:" << t_planning << std::endl;
             for( auto element : other_vehicles_buffer ) {
-                std::cout << element.first << std::endl;
+                //std::cout << element.first << std::endl;
                 for( auto point : element.second ) {
-                    std::cout << point.first << ":" << point.second.first << "," << point.second.second << std::endl; 
+                    //std::cout << point.first << ":" << point.second.first << "," << point.second.second << std::endl; 
                 } 
             }
 
