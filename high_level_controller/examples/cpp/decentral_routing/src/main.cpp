@@ -104,13 +104,14 @@ int main(int argc, char *argv[]) {
     // Initialize Planner and constants necessary for planning
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     // Definition of time stamp at which to stop
+    const uint64_t dt_nanos = 400000000ull;
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
     std::unique_ptr<VehicleTrajectoryPlanner> planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
     cpm::Logging::Instance().write(3,
             "Planner created");
 
     // Initialize everything needed for communication with middleware
-    const int dds_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
+    const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
     // QoS for comms between middleware and HLC, on the same machine (local)
     dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(middleware_domain, local_comms_qos_provider.participant_qos());
