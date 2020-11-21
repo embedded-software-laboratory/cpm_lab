@@ -104,15 +104,20 @@ int main(int argc, char *argv[]) {
     // Initialize Planner and constants necessary for planning
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     // Definition of time stamp at which to stop
-    const uint64_t dt_nanos = 400000000ull;
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
-    std::unique_ptr<VehicleTrajectoryPlanner> planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
-    cpm::Logging::Instance().write(3,
-            "Planner created");
+
+    // Create a dummy planner, so it's initialized
+    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(0));
+    planner->set_real_time(0);
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-    // QoS for comms between middleware and HLC, on the same machine (local)
+
+    // FIXME: Dirty hack to get our QOS settings
+    // Currently we only have the middleware QOS File on the NUC, so we use that
+    std::cout << system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
+
+    // For some reason we cannot access a QOS file outside our working directory
     dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(middleware_domain, local_comms_qos_provider.participant_qos());
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
@@ -157,12 +162,6 @@ int main(int argc, char *argv[]) {
             "vehicleCommandTrajectory")
     );
 
-    // Reader to get position of vehicle from lab camera; determines start position
-    dds::sub::DataReader<VehicleObservation> reader_vehicleObservation(
-            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
-            cpm::get_topic<VehicleObservation>("vehicleObservation")
-    );
-
     // Writer to communicate plans with other vehicles
     dds::pub::DataWriter<LaneGraphTrajectory> writer_laneGraphTrajectory(
             dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
@@ -174,15 +173,6 @@ int main(int argc, char *argv[]) {
             dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
             cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
     );
-    //std::function<void()> callback_func([planner](dds::sub::LoanedSamples<LaneGraphTrajectory> samples){
-    //        planner->process_samples(samples);
-    //        });
-    //std::function<void(dds::sub::LoanedSamples<LaneGraphTrajectory>)> callback_func(planner->process_samples);
-    //cpm::AsyncReader<LaneGraphTrajectory> reader_laneGraphTrajectory(
-    //        callback_func,
-    //        cpm::ParticipantSingleton::Instance(),
-    //        cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    //);
 
     /* ---------------------------------------------------------------------------------
      * Send/receive initial LaneGraphTrajectories
@@ -245,15 +235,16 @@ int main(int argc, char *argv[]) {
      * Start timer
      * ---------------------------------------------------------------------------------
      */
-    auto timer = cpm::Timer::create("decentral_routing", dt_nanos, 0, false, true, simulated_time_enabled); 
-    timer->start([&](uint64_t t_now)
-    {
+    uint64_t t_now = 0;
+    uint64_t dt_nanos = 0;
+    bool stopped = false;
+    while (!stopped) {
         // Check the systemTrigger Topic for stop signal
-        dds::sub::LoanedSamples<SystemTrigger> samples = reader_systemTrigger.take();
-        for(auto sample : samples) {
+	// This might be unnecessary when using the middleware
+        dds::sub::LoanedSamples<SystemTrigger> trigger_samples = reader_systemTrigger.take();
+        for(auto sample : trigger_samples) {
             if (sample.info().valid()) {
                 uint64_t next_start = sample.data().next_start().nanoseconds();
-
                 // Stop the HLC when we receive a stop signal
                 // Probably superfluous, since the timer stops by itself on
                 // stop signals.
@@ -264,99 +255,95 @@ int main(int argc, char *argv[]) {
                         "HLC of vehicle %s received stop signal",
                         std::to_string(vehicle_id)
                     );
-                    timer->stop();
+                    stopped=true;
                 }
             }
         }
 
-        planner->set_real_time(t_now);
+	dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
+	for(auto sample : state_samples) {
+		if( sample.info().valid() ) {
+			t_now = sample.data().t_now();
+			dt_nanos = sample.data().period_ms()*1e6;
+			if(planner->is_started())//will be set to true after fist activation
+			{
+			    planner->set_real_time(t_now);
+			    //get trajectory commands from VehicleTrajectoryPlanner with new points
+			    auto command = planner->get_trajectory_command(t_now);
 
-        if(planner->is_started())//will be set to true after fist activation
-        {
-            auto computation_start_time = timer->get_time();
-            //get trajectory commands from VehicleTrajectoryPlanner with new points
-            auto command = planner->get_trajectory_command(t_now);
-            auto computation_end_time = timer->get_time();
+			    writer_vehicleCommandTrajectory.write(command);
+			    cpm::Logging::Instance().write(
+					    1,
+					    "HLC sent trajectory");
+			}
+			else //prepare to start planner
+			{
+				cpm::Logging::Instance().write(3,
+				    "Preparing to start planner");
+				// reset planner object
+				planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
+				planner->set_real_time(t_now);
 
-            cpm::Logging::Instance().write(
-                3,
-                "%s, Computation start time: %llu, Computation end time: %llu",
-                std::to_string(vehicle_id), computation_start_time, computation_end_time
-            );
-            
-            writer_vehicleCommandTrajectory.write(command);
-        }
-        else //prepare to start planner
-        {
-            cpm::Logging::Instance().write(3,
-                    "Preparing to start planner");
-            // reset planner object
-            planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
-            planner->set_real_time(t_now);
+				/* -------------------------------------------------------------------------
+				* Check for start position of our vehicle
+				* -------------------------------------------------------------------------
+				*/
+				bool matched = false;
+				//FIXME: This probably does not require a loop
+				for(auto vehicle_state : sample.data().state_list())
+				{
+				    if( vehicle_id == vehicle_state.vehicle_id() ) {
+					auto pose = vehicle_state.pose();
+					int out_edge_index = -1;
+					int out_edge_path_index = -1;
+					matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
+					//if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
+					if(matched)
+					{
+					    planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
+					    cpm::Logging::Instance().write(
+						3,
+						"Vehicle %d matched.",
+						int(vehicle_id)
+					    );
+					    /* -------------------------------------------------------------------------
+					     * Finish initializing vehicle when we found its start position
+					     * -------------------------------------------------------------------------
+					     */
+					    planner->set_writer(
+						std::make_shared<dds::pub::DataWriter<LaneGraphTrajectory>>(
+						    writer_laneGraphTrajectory
+						    )
+						);
+					    planner->set_reader(
+						std::make_shared<dds::sub::DataReader<LaneGraphTrajectory>>(
+						    reader_laneGraphTrajectory
+						    )
+						);
 
-            /* -------------------------------------------------------------------------
-             * Check for start position of our vehicle
-             * -------------------------------------------------------------------------
-             */
-            bool matched = false;
-            while(!matched) {
-                dds::sub::LoanedSamples<VehicleObservation> samples =
-                    reader_vehicleObservation.take();
+					    //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
+					    //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
+					    planner->start();
 
-                for(auto sample:samples)
-                {
-                    auto data = sample.data();
-                    if( vehicle_id == data.vehicle_id() && sample.info().valid()) {
-                        auto pose = data.pose();
-                        int out_edge_index = -1;
-                        int out_edge_path_index = -1;
-                        matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
-                        //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
-                        if(matched)
-                        {
-                            planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
-                            cpm::Logging::Instance().write(
-                                3,
-                                "Vehicle %d matched.",
-                                int(vehicle_id)
-                            );
+					    auto command = planner->get_trajectory_command(t_now);
+					    writer_vehicleCommandTrajectory.write(command);
 
-                            // Reset matched, so we don't match the next vehicle
-                            break;
-                        }
-                        else //Errormessage, if not all vehicles could be matched to the map
-                        {
-                            cpm::Logging::Instance().write(
-                                1,
-                                "Error: Vehicle %d not matched.",
-                                int(vehicle_id)
-                            );
-                        }
-                    }
-                }
-            }
-
-            /* -------------------------------------------------------------------------
-             * Finish initializing vehicle when we found its start position
-             * -------------------------------------------------------------------------
-             */
-            planner->set_writer(
-                std::make_shared<dds::pub::DataWriter<LaneGraphTrajectory>>(
-                    writer_laneGraphTrajectory
-                    )
-                );
-            planner->set_reader(
-                std::make_shared<dds::sub::DataReader<LaneGraphTrajectory>>(
-                    reader_laneGraphTrajectory
-                    )
-                );
-            //planner->init_reader(cpm::ParticipantSingleton::Instance());
-
-            //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
-            //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-            planner->start();
-        }
-    });
+					    break;
+					}
+					else //Errormessage, if not all vehicles could be matched to the map
+					{
+					    cpm::Logging::Instance().write(
+						1,
+						"Error: Vehicle %d not matched.",
+						int(vehicle_id)
+					    );
+					}
+				    }
+				}
+			}
+		}
+	}
+    }
 
     return 0;
 }

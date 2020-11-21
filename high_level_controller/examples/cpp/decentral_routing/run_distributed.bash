@@ -71,8 +71,8 @@ middleware_cmd="./middleware \
     --node_id=middleware_${vehicle_ids} \
     --simulated_time=false \
     --vehicle_ids=${vehicle_ids} \
-    --dds_domain=${DDS_DOMAIN} \
     --domain_number=1 \
+    --dds_domain=${DDS_DOMAIN} \
     --dds_initial_peer=${DDS_INITIAL_PEER}  \
     >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
     2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
@@ -105,6 +105,7 @@ do
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
             --middleware=true \
+	    --middleware_domain=1 \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}  \
             >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt \

@@ -138,7 +138,7 @@ void VehicleTrajectoryPlanner::start()
             t_planning += dt_nanos;
 
             // Sleep until we need to continue planning
-            while(t_real_time + dt_nanos < t_planning) usleep(110000);
+            while(t_real_time + 5*dt_nanos < t_planning) usleep(110000);
         }
     });
 
