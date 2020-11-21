@@ -60,7 +60,8 @@ UploadWindow::UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicl
         }
         if (vehicle_ids.size() > hlc_ids.size())
         {
-            label_string << "\n\nWARNING: Less HLCs than selected vehicle IDs available";
+            label_string << "\n\nWARNING: Less HLCs than selected vehicle IDs available, \
+		    some vehicles will be deployed locally.";
         }
     }
     label_upload->set_text(label_string.str().c_str());
