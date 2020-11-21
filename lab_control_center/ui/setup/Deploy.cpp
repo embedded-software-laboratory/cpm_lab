@@ -619,15 +619,18 @@ bool Deploy::session_exists(std::string session_id)
 std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
     std::vector<std::string> crashed_participants;
-    if ((!(deploy_remote) || has_local_hlc) && script_started)
+    if (!deploy_remote && has_local_hlc && script_started)
     {
         if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
-    if ((deploy_remote && has_local_hlc) && script_started)
+    if (deploy_remote && has_local_hlc && script_started)
     {
         for( unsigned int local_hlc : deployed_local_hlcs ) {
-            if(! session_exists(hlc_session+"_"+std::to_string(local_hlc))) crashed_participants.push_back("HLC_"+std::to_string(local_hlc));
+            std::string tmp_session_name = hlc_session+"_"+std::to_string(local_hlc);
+            if(! session_exists(tmp_session_name)){
+		    crashed_participants.push_back(tmp_session_name);
+	    }
         }
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
