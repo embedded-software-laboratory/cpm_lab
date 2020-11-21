@@ -265,6 +265,13 @@ int main(int argc, char *argv[]) {
         if( sample.info().valid() ) {
             t_now = sample.data().t_now();
             dt_nanos = sample.data().period_ms()*1e6;
+
+            if( dt_nanos != 400000000ull ) {
+                cpm::Logging::Instance().write(
+                        1,
+                        "Please set middleware_period_ms to 400ms")
+            }
+
             if(planner->is_started())//will be set to true after fist activation
             {
                 planner->set_real_time(t_now);
@@ -272,9 +279,6 @@ int main(int argc, char *argv[]) {
                 auto command = planner->get_trajectory_command(t_now);
 
                 writer_vehicleCommandTrajectory.write(command);
-                cpm::Logging::Instance().write(
-                        1,
-                        "HLC sent trajectory");
             }
             else //prepare to start planner
             {
