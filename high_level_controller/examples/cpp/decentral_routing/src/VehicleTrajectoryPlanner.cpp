@@ -101,6 +101,7 @@ void VehicleTrajectoryPlanner::start()
             if (!is_collision_avoidable){
                 cpm::Logging::Instance().write(1,
                         "Found unavoidable collision");
+                crashed = true;
                 started = false; // end planning
                 break;
             } 

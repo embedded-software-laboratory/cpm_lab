@@ -46,6 +46,7 @@ class VehicleTrajectoryPlanner
     std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer_laneGraphTrajectory;
     std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
     bool started = false;
+    bool crashed = false;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
     uint64_t t_planning;
@@ -68,6 +69,7 @@ public:
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void set_real_time(uint64_t t);
     bool is_started() {return started;}
+    bool is_crashed() {return crashed;}
     void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
     void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
