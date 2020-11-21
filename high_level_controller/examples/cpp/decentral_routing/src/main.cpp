@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
             if( dt_nanos != 400000000ull ) {
                 cpm::Logging::Instance().write(
                         1,
-                        "Please set middleware_period_ms to 400ms")
+                        "Please set middleware_period_ms to 400ms");
             }
 
             if(planner->is_started())//will be set to true after fist activation
