@@ -37,6 +37,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "CommonroadDDSPlanningProblems.hpp"
+
 /**
  * \class Interval
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
@@ -194,6 +196,27 @@ public:
                 interval.second *= scale;
             }
         }
+    }
+
+    /**
+     * \brief Translate to DDS
+     */
+    CommonroadDDSIntervals to_dds_msg()
+    {
+        CommonroadDDSIntervals dds_interval;
+        
+        std::vector<CommonroadDDSInterval> vector_intervals;
+        for (auto& interval : intervals)
+        {
+            CommonroadDDSInterval dds_interval;
+            dds_interval.interval_start(interval.first);
+            dds_interval.interval_end(interval.second);
+            vector_intervals.push_back(dds_interval);
+        }
+
+        dds_interval.intervals(rti::core::vector<CommonroadDDSInterval>(vector_intervals));
+
+        return dds_interval;
     }
 
     #pragma GCC diagnostic pop

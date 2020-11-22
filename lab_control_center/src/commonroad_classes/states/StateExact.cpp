@@ -205,3 +205,27 @@ double StateExact::get_slip_angle()
 {
     return slip_angle;
 }
+
+CommonroadDDSInitialState StateExact::to_dds_initial_state()
+{
+    CommonroadDDSInitialState initial_state;
+
+    initial_state.position_set(position.has_value());
+    if (position.has_value())
+    {
+        initial_state.position(position->to_dds_point());
+    }
+
+    initial_state.velocity(velocity);
+    initial_state.orientation(orientation);
+    initial_state.yaw_rate(yaw_rate);
+    initial_state.slip_angle(slip_angle);
+
+    initial_state.acceleration_set(acceleration.has_value());
+    if (acceleration.has_value())
+    {
+        initial_state.acceleration(acceleration.value());
+    }
+
+    return initial_state;
+}

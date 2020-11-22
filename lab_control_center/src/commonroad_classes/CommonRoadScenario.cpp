@@ -27,6 +27,8 @@
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
 CommonRoadScenario::CommonRoadScenario()
+:
+    writer_planning_problems("commonroad_dds_planning_problems", true, false, true)
 {
     //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
 
@@ -1073,4 +1075,28 @@ std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
         LCCErrorLogger::Instance().log_error(error_stream.str());
         return {0, 0};
     }
+}
+
+/*****************************************************************************************/
+/******************                 DDS Functions               **************************/
+/*****************************************************************************************/
+
+void CommonRoadScenario::send_planning_problems()
+{
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    std::vector<CommonroadDDSPlanningProblem> vector_problems;
+
+    for (auto& entry : planning_problems)
+    {
+        CommonroadDDSPlanningProblem dds_problem = entry.second.to_dds_msg();
+        dds_problem.id(entry.first);
+        vector_problems.push_back(dds_problem);
+    }
+
+    rti::core::vector<CommonroadDDSPlanningProblem> rti_problems(vector_problems);
+    CommonroadDDSPlanningProblems dds_problems;
+    dds_problems.problems(rti_problems);
+
+    writer_planning_problems.write(dds_problems);
 }

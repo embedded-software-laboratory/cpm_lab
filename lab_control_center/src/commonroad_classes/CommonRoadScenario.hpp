@@ -60,6 +60,9 @@
 
 #include "LCCErrorLogger.hpp"
 
+#include "cpm/Writer.hpp"
+#include "CommonroadDDSPlanningProblems.hpp"
+
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO: Put Enums etc inside class definition??
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -262,6 +265,9 @@ private:
      */
     double get_scale(double min_lane_width);
 
+    //DDS writer to send planning problems
+    cpm::Writer<CommonroadDDSPlanningProblems> writer_planning_problems;
+
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -371,4 +377,12 @@ public:
     std::optional<PlanningProblem> get_planning_problem(int id);
 
     std::optional<Lanelet> get_lanelet(int id);
+
+    /*****************************************************************************************/
+    /******************                 DDS Functions               **************************/
+    /*****************************************************************************************/
+    /**
+     * \brief Send all currently stored planning problems into the network / to the HLCs
+     */
+    void send_planning_problems();
 };

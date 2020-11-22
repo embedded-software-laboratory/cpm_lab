@@ -52,6 +52,8 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "CommonroadDDSPlanningProblems.hpp"
+
 /**
  * \struct PlanningProblemElement
  * \brief Not in specs, but these allow sequences of initialState and several goalStates in PlanningProblem
@@ -120,4 +122,9 @@ public:
 
     //Getter
     const std::vector<PlanningProblemElement>& get_planning_problems() const;
+
+    /**
+     * \brief Translate the planning problem to a DDS msg
+     */
+    CommonroadDDSPlanningProblem to_dds_msg();
 };

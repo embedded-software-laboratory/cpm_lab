@@ -199,3 +199,34 @@ const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problem
 {
     return planning_problems;
 }
+
+CommonroadDDSPlanningProblem PlanningProblem::to_dds_msg()
+{
+    CommonroadDDSPlanningProblem problem;
+    std::vector<CommonroadDDSPlanningProblemElement> problem_elements;
+
+    for (auto& planning_problem : planning_problems)
+    {
+        CommonroadDDSPlanningProblemElement problem_element;
+        if (planning_problem.initial_state.has_value())
+        {
+            problem_element.initial_state(planning_problem.initial_state->to_dds_initial_state());
+        }
+        problem_element.initial_state_set(planning_problem.initial_state.has_value());
+
+        std::vector<CommonroadDDSGoalState> goal_states;
+        for (auto& goal_state : planning_problem.goal_states)
+        { 
+            goal_states.push_back(goal_state.to_dds_msg());
+        }
+        rti::core::vector<CommonroadDDSGoalState> rti_goal_states(goal_states);
+        problem_element.goal_states(rti_goal_states);
+
+        problem_elements.push_back(problem_element);
+    }
+
+    rti::core::vector<CommonroadDDSPlanningProblemElement> rti_problem_elements(problem_elements);
+    problem.planning_problems(rti_problem_elements);
+
+    return problem;
+}

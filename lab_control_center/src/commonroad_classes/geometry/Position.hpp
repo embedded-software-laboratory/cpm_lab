@@ -52,6 +52,8 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "CommonroadDDSPlanningProblems.hpp"
+
 /**
  * \class Position
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
@@ -146,6 +148,16 @@ public:
     void transform_context(const DrawingContext& ctx, double scale = 1.0);
     
     void to_dds_msg() {} 
+    
+    /**
+     * \brief Translate the set position to a position interval
+     */
+    CommonroadDDSPositionInterval to_dds_position_interval();
+
+    /**
+     * \brief Translate the set position to an exact position
+     */
+    CommonroadDDSPoint to_dds_point();
 
     //Getters for basic types
     std::optional<Point> get_point();

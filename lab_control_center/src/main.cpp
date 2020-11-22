@@ -238,6 +238,9 @@ int main(int argc, char *argv[])
             //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
             loggerViewUi->reset();
 
+            //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
+            if(commonroad_scenario) commonroad_scenario->send_planning_problems();
+
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
             obstacle_simulation_manager->start();
