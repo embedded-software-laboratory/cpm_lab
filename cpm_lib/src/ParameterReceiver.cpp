@@ -85,7 +85,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -105,7 +105,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -125,7 +125,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -145,7 +145,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -165,7 +165,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -185,7 +185,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
