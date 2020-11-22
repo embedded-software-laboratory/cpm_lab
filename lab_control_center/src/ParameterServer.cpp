@@ -82,6 +82,15 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
         return;
     }
 
+    uint64_t uint64tParam;
+    if(storage->get_parameter_uint64_t(name, uint64tParam)) {
+        param.type(ParameterType::UInt64);
+        param.value_uint64_t(uint64tParam);
+
+        writer.write(param);
+        return;
+    }
+
     int32_t intParam;
     if(storage->get_parameter_int(name, intParam)) {
         //Create data to send

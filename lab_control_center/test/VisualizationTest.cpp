@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
 
     cpm::Writer<Visualization> viz_writer("visualization", true);
 
+    // LineStrips
     Visualization viz;
     viz.id(1);
     viz.type(VisualizationType::LineStrips);
@@ -70,6 +71,7 @@ int main(int argc, char *argv[]) {
 
     viz_writer.write(viz);
 
+    // Polygon
     Visualization viz2;
     viz2.id(2);
     viz2.type(VisualizationType::Polygon);
@@ -91,6 +93,7 @@ int main(int argc, char *argv[]) {
 
     viz_writer.write(viz2);
 
+    // default StringMessage
     Visualization viz3;
     viz3.id(3);
     viz3.type(VisualizationType::StringMessage);
@@ -111,6 +114,95 @@ int main(int argc, char *argv[]) {
     std::cout << "Sending visualization string..." << std::endl;
 
     viz_writer.write(viz3);
+
+    // FilledCircle (represents fix point of the alligned strings)
+    Visualization viz4;
+    viz4.id(4);
+    viz4.type(VisualizationType::FilledCircle);
+    viz4.time_to_live(11500000000);
+    viz4.size(0.04);
+
+    std::vector<Point2D> viz4_points{ Point2D(1.0, 3.0) };
+    viz4.points(rti::core::vector<Point2D>(viz4_points));
+
+    Color viz4_color(100, 255, 100, 0);
+    viz4.color(viz4_color);
+
+    usleep(100000);
+
+    std::cout << "Sending visualisation filled circle..." << std::endl;
+    
+    viz_writer.write(viz4);
+
+    // StringMessage with alignment
+    Visualization viz5;
+    viz5.id(5);
+    viz5.type(VisualizationType::StringMessage);
+    viz5.time_to_live(1200000000); // 1.5 seconds
+    viz5.size(0.2);
+
+    Point2D point1_5(1.0, 3.0);
+    std::vector<Point2D> viz5_points {point1_5};
+    viz5.points(rti::core::vector<Point2D>(viz5_points));
+
+    Color viz5_color(255, 0, 128, 64);
+    viz5.color(viz5_color);
+
+    viz5.string_message("H - Default alignment");
+
+    usleep(100000);
+
+    std::cout << "Sending visualization string..." << std::endl;
+
+    viz_writer.write(viz5);
+    
+    viz5.string_message("HXH");
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::BottomLeft);
+    usleep(100000);
+    std::cout << "Sending visualization BottomLeft string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::CenterLeft);
+    usleep(100000);
+    std::cout << "Sending visualization CenterLeft string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::TopLeft);
+    usleep(100000);
+    std::cout << "Sending visualization TopLeft string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::TopCenter);
+    usleep(100000);
+    std::cout << "Sending visualization TopCenter string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::TopRight);
+    usleep(100000);
+    std::cout << "Sending visualization TopRight string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::CenterRight);
+    usleep(100000);
+    std::cout << "Sending visualization CenterRight string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::BottomRight);
+    usleep(100000);
+    std::cout << "Sending visualization BottomLeft string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::BottomCenter);
+    usleep(100000);
+    std::cout << "Sending visualization BottomCenter string..." << std::endl;
+    viz_writer.write(viz5);
+    usleep(1000000);
+    viz5.string_message_anchor(StringMessageAnchor::Center);
+    usleep(100000);
+    std::cout << "Sending visualization Center string..." << std::endl;
+    viz_writer.write(viz5);
+    
 
     std::cout << "Shutting down..." << std::endl;
 
