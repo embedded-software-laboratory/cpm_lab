@@ -129,7 +129,7 @@ namespace cpm
          */
         size_t matched_subscriptions_size()
         {
-            auto matched_sub = dds::pub::matched_subscriptions<T>(dds_writer);
+            auto matched_sub = dds::pub::matched_subscriptions(dds_writer);
             return matched_sub.size();
         }
     };

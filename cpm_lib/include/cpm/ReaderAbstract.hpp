@@ -141,7 +141,7 @@ namespace cpm
         template<typename MessageType>
         size_t matched_publications_size()
         {
-            auto matched_pub = dds::sub::matched_publications<MessageType>(dds_reader);
+            auto matched_pub = dds::sub::matched_publications(dds_reader);
             return matched_pub.size();
         }
     };

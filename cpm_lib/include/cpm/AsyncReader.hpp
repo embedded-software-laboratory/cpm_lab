@@ -204,7 +204,7 @@ namespace cpm
     template<class MessageType> 
     size_t AsyncReader<MessageType>::matched_publications_size()
     {
-        auto matched_pub = dds::sub::matched_publications<MessageType>(reader);
+        auto matched_pub = dds::sub::matched_publications(reader);
         return matched_pub.size();
     }
 }
