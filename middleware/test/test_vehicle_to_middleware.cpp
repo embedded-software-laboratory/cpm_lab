@@ -34,13 +34,6 @@
 #include <thread>
 #include <chrono>
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <dds/core/QosProvider.hpp>
-#include <rti/core/cond/AsyncWaitSet.hpp>
-#include <rti/core/ListenerBinder.hpp>
-#include <dds/core/vector.hpp>
-
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
 #include "cpm/ParticipantSingleton.hpp"
