@@ -46,6 +46,13 @@
 
 using std::vector;
 
+
+/*
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
+ * 
+ */
+
+
 int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);

@@ -24,8 +24,10 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 
+//This example is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
+
+#include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 #include "lane_graph_tools.hpp" //sw folder central routing
 
 
@@ -106,6 +108,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     t_elapsed += dt_nanos;
 }
 
+//This function extends the route randomly for the next n indices
 void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
 {
     invariant();
@@ -118,6 +121,7 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     }
 }
 
+//This function gets the trajectory points from the lane graph
 TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 {
     TrajectoryPoint trajectory_point;

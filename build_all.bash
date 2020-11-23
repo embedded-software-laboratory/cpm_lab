@@ -55,6 +55,18 @@ pushd high_level_controller
     pushd examples/cpp/central_routing
         bash build.bash
     popd
+    pushd examples/cpp/basic_circle
+        bash build.bash
+    popd
+    pushd examples/cpp/basic_line
+        bash build.bash
+    popd
+    pushd examples/cpp/diagonal_figure_eight
+        bash build.bash
+    popd
+    pushd examples/cpp/two_vehicles_drive
+        bash build.bash
+    popd
 popd
 
 pushd middleware

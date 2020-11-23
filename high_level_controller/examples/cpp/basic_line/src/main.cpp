@@ -66,27 +66,14 @@ int main(int argc, char *argv[])
     // Writer for sending trajectory commands
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
-    // Circle trajectory data
-    // vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};
-    // vector<double> trajectory_py        = vector<double>{            0,             1,             0,            -1};
-    // vector<double> trajectory_vx        = vector<double>{            0,            -0.5,             0,             0.5};
-    // vector<double> trajectory_vy        = vector<double>{            0.5,             0,            -0.5,             0};
-    // vector<uint64_t> segment_duration = vector<uint64_t>{2*1550000000ull, 2*1550000000ull, 2*1550000000ull, 2*1550000000ull};
-
+  
     vector<double> trajectory_px        = vector<double>{-0.5, 0,  0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0};
     vector<double> trajectory_py        = vector<double>{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     vector<double> trajectory_vx        = vector<double>{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
     vector<double> trajectory_vy        = vector<double>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     vector<uint64_t> segment_duration = vector<uint64_t>{1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull, 1000000000ull};
 
-    /*
-    // Figure eight trajectory data
-    vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
-    vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
-    vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
-    */
+
 
     assert(segment_duration.size() == trajectory_px.size());
     assert(segment_duration.size() == trajectory_py.size());

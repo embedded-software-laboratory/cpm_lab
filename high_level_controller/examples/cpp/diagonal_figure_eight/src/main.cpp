@@ -29,15 +29,15 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
-#include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 
 using std::vector;
 
 /*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Circle+Example
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Diagonal+Figure+Eight+Example
  */
 
 
@@ -45,7 +45,7 @@ using std::vector;
 int main(int argc, char *argv[])
 {
     //Initialize cpm library
-    const std::string node_id = "basic_circle";
+    const std::string node_id = "diagonal_figure_eight";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
@@ -67,31 +67,25 @@ int main(int argc, char *argv[])
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
     //For more information see our documentation about RTI DDS
-    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
+    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
+    (
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
+    );
 
-    // Circle trajectory data
-    //In this section the points on the x and y axis (independently from the map!) are set. 
-    //They are relative to the defined center point defined below as map_center_x and map_center_y
-    vector<double> trajectory_px        = vector<double>{            1,             0,            -1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             1,             0,            -1};
-    //These vecotrs define the speed in x and y direction. Together the define the starting direction from the current trajectory point,
-    // for example: vx = 1 and vy = 1 will lead to a positive diagonal starting vector from the starting point. For more informations see
-    //our documentation website
-    vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
-    vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1570800000ull, 1570800000ull, 1570800000ull, 1570800000ull};
 
-    /*
+
+
     // Figure eight trajectory data
     vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
-    vector<double> trajectory_py        = vector<double>{            0,             0,             0,             0};
+    vector<double> trajectory_py        = vector<double>{           -1,             0,             1,             0};
     //In this figure eight the circles of the eight are not perfectly round but a little streched to show you the impact of the vector (Vx, vy)
     //at the starting point. 
     //Note that also the duration changes accordingly.
-    vector<double> trajectory_vx        = vector<double>{            0,          0.14,             0,         -0.14};
-    vector<double> trajectory_vy        = vector<double>{          1.3,         -1.27,           1.3,         -1.27};
-    vector<uint64_t> segment_duration = vector<uint64_t>{1700000000ull, 1700000000ull, 1700000000ull, 1700000000ull};
-    */
+    vector<double> trajectory_vx        = vector<double>{            0.928,          -0.928,           0.928,         -0.928};
+    vector<double> trajectory_vy        = vector<double>{          -0.928,         0.928,           -0.928,         0.928};
+    vector<uint64_t> segment_duration = vector<uint64_t>{2116000000ull, 2116000000ull, 2116000000ull, 2116000000ull};
+
 
     assert(segment_duration.size() == trajectory_px.size());
     assert(segment_duration.size() == trajectory_py.size());
