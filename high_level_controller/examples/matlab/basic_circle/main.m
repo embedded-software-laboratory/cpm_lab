@@ -25,60 +25,15 @@
 % Author: i11 - Embedded Software, RWTH Aachen University
 
 function main(vehicle_id)
-    matlabDomainID = 1;
+    % Initialize data readers/writers...
+    common_cpm_functions_path = fullfile( ...
+        getenv('HOME'), 'dev/software/high_level_controller/examples/matlab' ...
+    );
+    assert(isfolder(common_cpm_functions_path), 'Missing folder "%s".', common_cpm_functions_path);
+    addpath(common_cpm_functions_path);
     
-    % Import IDL files from cpm library
-    dds_idl_matlab = fullfile('../../../../cpm_lib/dds_idl_matlab/');
-    assert(isfolder(dds_idl_matlab),...
-        'Missing directory "%s".', dds_idl_matlab);
-    assert(~isempty(dir([dds_idl_matlab, '*.m'])),...
-        'No MATLAB IDL-files found in %s', dds_idl_matlab);
-    addpath(dds_idl_matlab)
-
-    % XML files for quality of service settings
-    middleware_local_qos_xml = '../../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
-    assert(isfile(middleware_local_qos_xml),...
-        'Missing middleware local QOS XML "%s"', middleware_local_qos_xml);
-    
-    ready_trigger_qos_xml = '../QOS_READY_TRIGGER.xml';
-    assert(isfile(ready_trigger_qos_xml),...
-        'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
-    
-    setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
-    
-    %% variables for DDS communication
-    % DDS Participant for local communication with middleware
-    matlabParticipant = DDS.DomainParticipant(...
-        'MatlabLibrary::LocalCommunicationProfile',...
-        matlabDomainID);
-    % Infrastructure
-    topic_readyStatus = 'readyStatus';
-    writer_readyStatus = DDS.DataWriter(...
-        DDS.Publisher(matlabParticipant),...
-        'ReadyStatus',...
-        topic_readyStatus,...
-        'TriggerLibrary::ReadyTrigger');
-
-    topic_systemTrigger = 'systemTrigger';
-    reader_systemTrigger = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'SystemTrigger',...
-        topic_systemTrigger,...
-        'TriggerLibrary::ReadyTrigger');
-    trigger_stop = uint64(18446744073709551615);
-
-    % Control
-    topic_vehicleStateList = 'vehicleStateList';
-    reader_vehicleStateList = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'VehicleStateList',...
-        topic_vehicleStateList);
-
-    topic_vehicleCommandTrajectory = 'vehicleCommandTrajectory';
-    writer_vehicleCommandTrajectory = DDS.DataWriter(...
-        DDS.Publisher(matlabParticipant),...
-        'VehicleCommandTrajectory',...
-        topic_vehicleCommandTrajectory);
+    matlabDomainId = 1;
+    [matlabParticipant, reader_vehicleStateList, writer_vehicleCommandTrajectory, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
     
     %% Sync start with infrastructure
     % Send ready signal
@@ -105,18 +60,18 @@ function main(vehicle_id)
     %% Run the HLC
     % Set reader properties
     reader_vehicleStateList.WaitSet = true;
-    reader_vehicleStateList.WaitSetTimeout = 60;
+    reader_vehicleStateList.WaitSetTimeout = 5;
 
     % Define reference trajectory
     reference_trajectory_index = 1;
     reference_trajectory_time = 0;
     map_center_x = 2.25;
     map_center_y = 2.0;
-    trajectory_px    = [         1,          0,         -1,          0] + map_center_x;
-    trajectory_py    = [         0,          1,          0,         -1] + map_center_y;
-    trajectory_vx    = [         0,         -1,          0,          1];
-    trajectory_vy    = [         1,          0,         -1,          0];
-    segment_duration = [1550000000, 1550000000, 1550000000, 1550000000];
+    trajectory_px    = [       1,        0,       -1,        0] + map_center_x;
+    trajectory_py    = [       0,        1,        0,       -1] + map_center_y;
+    trajectory_vx    = [       0,       -1,        0,        1];
+    trajectory_vy    = [       1,        0,       -1,        0];
+    segment_duration = [pi/2*1e9, pi/2*1e9, pi/2*1e9, pi/2*1e9];
     
     while (~got_stop)
         % Read vehicle states
@@ -133,7 +88,7 @@ function main(vehicle_id)
         i_traj_index = reference_trajectory_index;
 
         trajectory_points = [];
-        plan_ahead_time_nanos = 7000000000;
+        plan_ahead_time_nanos = 7000e6;
         while (t_ahead_nanos < plan_ahead_time_nanos)
             the_trajectory_point = TrajectoryPoint;
             the_trajectory_point.t.nanoseconds = uint64(reference_trajectory_time + t_ahead_nanos);
@@ -147,7 +102,7 @@ function main(vehicle_id)
         end
             
         % Send the current trajectory point to the vehicle
-        max_delay_time_nanos = 200000000;
+        max_delay_time_nanos = 200e6;
         vehicle_command_trajectory = VehicleCommandTrajectory;
         vehicle_command_trajectory.vehicle_id = uint8(vehicle_id);
         vehicle_command_trajectory.trajectory_points = trajectory_points;
@@ -174,19 +129,5 @@ function main(vehicle_id)
         
         % Check for stop signal
         [~, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
-    end
-end
-
-function [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop)
-    [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
-    got_stop = false;
-    got_start = false;
-    if sample_count > 0
-        % look at most recent signal with (end)
-        if trigger(end).next_start().nanoseconds() == trigger_stop
-            got_stop = true;
-        else
-            got_start = true;
-        end
     end
 end
