@@ -32,18 +32,10 @@
 #include "TrajectoryInterpolation.hpp"
 
 MpcController::MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
-:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
-,writer_Visualization
-(
-    dds::pub::DataWriter<Visualization>
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        topic_Visualization
-    )
-
-)
-,vehicle_id(_vehicle_id)
-,stop_vehicle(_stop_vehicle)
+:
+    writer_Visualization("visualization")
+    ,vehicle_id(_vehicle_id)
+    ,stop_vehicle(_stop_vehicle)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();

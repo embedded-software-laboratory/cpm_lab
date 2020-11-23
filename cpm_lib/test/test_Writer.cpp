@@ -24,42 +24,42 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#pragma once
-#include "defaults.hpp"
-#include "VehicleCommandTrajectory.hpp"
-#include "cpm/get_time_ns.hpp"
+#include "catch.hpp"
+#include "cpm/dds/VehicleState.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Reader.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/stamp_message.hpp"
+
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Writer.hpp"
 
 /**
- * \brief Data class for storing values & (receive) times to get latest / newest data etc
+ * Tests:
+ * - The cpm reader
+ * - If the reader returns the newest valid sample
  */
-template<typename T>
-class _TimeSeries
-{
-    vector<function<void(_TimeSeries&, uint64_t time, T value)>> new_sample_callbacks;
 
-    vector<uint64_t> times;
-    vector<T> values;
+TEST_CASE( "Writer" ) {
+    cpm::Logging::Instance().set_id("test_writer");
 
-    const string name;
-    const string format;
-    const string unit;
+    cpm::ReaderAbstract<VehicleState> vehicle_state_reader("sadfhasdflkasdhf", true, true, true);
 
-    mutable std::mutex m_mutex;
+    // Test the writer, find out if sample gets received
+    cpm::Writer<VehicleState> vehicle_state_writer("sadfhasdflkasdhf", true, true, true);
 
-public:
+    //Send sample
+    VehicleState vehicleState;
+    vehicleState.vehicle_id(99);
+    vehicle_state_writer.write(vehicleState);
 
-    _TimeSeries(string _name, string _format, string _unit);
-    void push_sample(uint64_t time, T value);
-    string format_value(double value);
-    T get_latest_value() const;
-    uint64_t get_latest_time() const;
-    bool has_new_data(double dt) const;
-    bool has_data() const;
-    string get_name() const {return name;}
-    string get_unit() const {return unit;}
-    vector<T> get_last_n_values(size_t n) const;
+    //Wait
+    sleep(1);
 
-};
+    //Receive sample
+    auto samples = vehicle_state_reader.take();
 
-using TimeSeries = _TimeSeries<double>;
-using TimeSeries_TrajectoryPoint = _TimeSeries<TrajectoryPoint>;
+    //Check that sample content is correct
+    REQUIRE( samples.size() == 1 );
+    REQUIRE( samples.begin()->vehicle_id() == 99 );
+}

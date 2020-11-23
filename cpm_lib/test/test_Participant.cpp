@@ -24,42 +24,45 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#pragma once
-#include "defaults.hpp"
-#include "VehicleCommandTrajectory.hpp"
-#include "cpm/get_time_ns.hpp"
+#include "catch.hpp"
+#include "cpm/dds/VehicleState.hpp"
+#include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Reader.hpp"
+#include "cpm/Logging.hpp"
+#include "cpm/stamp_message.hpp"
+
+#include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
+#include "cpm/ReaderAbstract.hpp"
 
 /**
- * \brief Data class for storing values & (receive) times to get latest / newest data etc
+ * Tests:
+ * - The cpm reader
+ * - If the reader returns the newest valid sample
  */
-template<typename T>
-class _TimeSeries
-{
-    vector<function<void(_TimeSeries&, uint64_t time, T value)>> new_sample_callbacks;
 
-    vector<uint64_t> times;
-    vector<T> values;
+TEST_CASE( "Participant" ) {
+    cpm::Logging::Instance().set_id("test_participant");
 
-    const string name;
-    const string format;
-    const string unit;
+    cpm::Participant participant(5, "../test/QOS_TEST.xml"); //The path depends on from where the program is called
 
-    mutable std::mutex m_mutex;
+    cpm::ReaderAbstract<VehicleState> vehicle_state_reader(participant.get_participant(), "sadfhasdflkasdhf", true, true, true);
 
-public:
+    // Test the participant, find out if sample gets received
+    cpm::Writer<VehicleState> vehicle_state_writer(participant.get_participant(), "sadfhasdflkasdhf", true, true, true);
 
-    _TimeSeries(string _name, string _format, string _unit);
-    void push_sample(uint64_t time, T value);
-    string format_value(double value);
-    T get_latest_value() const;
-    uint64_t get_latest_time() const;
-    bool has_new_data(double dt) const;
-    bool has_data() const;
-    string get_name() const {return name;}
-    string get_unit() const {return unit;}
-    vector<T> get_last_n_values(size_t n) const;
+    //Send sample
+    VehicleState vehicleState;
+    vehicleState.vehicle_id(99);
+    vehicle_state_writer.write(vehicleState);
 
-};
+    //Wait
+    sleep(1);
 
-using TimeSeries = _TimeSeries<double>;
-using TimeSeries_TrajectoryPoint = _TimeSeries<TrajectoryPoint>;
+    //Receive sample
+    auto samples = vehicle_state_reader.take();
+
+    //Check that sample content is correct
+    REQUIRE( samples.size() == 1 );
+    REQUIRE( samples.begin()->vehicle_id() == 99 );
+}

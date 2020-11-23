@@ -28,13 +28,12 @@
 #include <iostream>
 #include <thread>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "cpm/init.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/get_time_ns.hpp"
+#include "cpm/Writer.hpp"
 #include "Color.hpp"
 #include "Visualization.hpp"
 
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Creating visualization sender..." << std::endl;
 
-    dds::pub::DataWriter<Visualization> viz_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<Visualization>("visualization"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable());
+    cpm::Writer<Visualization> viz_writer("visualization", true);
 
     // LineStrips
     Visualization viz;

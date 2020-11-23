@@ -25,13 +25,10 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "catch.hpp"
-#include "cpm/dds/RoundTripTime.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Reader.hpp"
 #include "cpm/Logging.hpp"
-#include "cpm/RTTTool.hpp"
-#include "cpm/stamp_message.hpp"
 #include "cpm/get_topic.hpp"
+
+#include "HLCHello.hpp"
 
 #include <mutex>
 
@@ -39,62 +36,58 @@
 #include "cpm/Writer.hpp"
 
 /**
- * Tests RTTTool
+ * Tests AsyncReader
  * WARNING: No other participant should be running while this test is running, or it will fail 
  * (due to potential answers to RTT requests by other participants in the network)
  */
 
-TEST_CASE( "RTT" ) {
-    cpm::Logging::Instance().set_id("test_rtt");
-    cpm::RTTTool::Instance().activate("test_rtt");
+TEST_CASE( "AsyncReader" ) {
+    cpm::Logging::Instance().set_id("test_async");
 
-    //Create a reader to check if the message would have been received by the RTTTool async reader (it does not answer, because the ID is the same)
-    //Use the reader async
+    //Create a reliable async reader to test
     std::vector<std::string> received_ids;
     std::mutex receive_mutex;
-    cpm::AsyncReader<RoundTripTime> rtt_reader([&](std::vector<RoundTripTime>& samples){
+    cpm::AsyncReader<HLCHello> async_reader([&](std::vector<HLCHello>& samples){
         std::lock_guard<std::mutex> lock(receive_mutex);
         for(auto& data: samples)
         {
             received_ids.push_back(data.source_id());
         }
     },
-    "round_trip_time");
+    "async_reader_test", true, true);
 
-    //Create a writer to simulate a RTT request and check if an answer is received with the above reader
-    cpm::Writer<RoundTripTime> rtt_writer("round_trip_time");
+    //Create a reliable writer to write test msgs to the reader
+    cpm::Writer<HLCHello> test_writer("async_reader_test", true, true, true);
 
     //It usually takes some time for all instances to see each other - wait until then
-    std::cout << "Waiting for DDS entity match in RTT test" << std::endl << "\t";
+    std::cout << "Waiting for DDS entity match in AsyncReader test" << std::endl << "\t";
     bool wait = true;
     while (wait)
     {
         usleep(100000); //Wait 100ms
         std::cout << "." << std::flush;
 
-        if (rtt_writer.matched_subscriptions_size() > 1 && rtt_reader.matched_publications_size() > 1)
+        if (test_writer.matched_subscriptions_size() > 0 && async_reader.matched_publications_size() > 0)
             wait = false;
     }
     std::cout << std::endl;
 
-    //Now perform testing: Require a RTT measurement and then require a fake one where we should actually expect to receive an answer    
-    auto rtt_result = cpm::RTTTool::Instance().measure_rtt();
+    //Now write some test msgs
+    std::vector<std::string> sent_ids{ "a", "testy", "boop@7" };
+    for (auto& id : sent_ids)
+    {
+        HLCHello test_msg;
+        test_msg.source_id(id);
+        test_writer.write(test_msg);
+    }
 
-    //Result should be empty, as the measurement should fail
-    REQUIRE( rtt_result.size() == 0 );
-
-    RoundTripTime fake_request;
-    fake_request.count(100);
-    fake_request.is_answer(false);
-    fake_request.source_id("fake_request");
-    rtt_writer.write(fake_request);
-
-    //Hopefully, all sent data is received within this time
-    usleep(500000);
-
-    //Now make sure that all required data samples were actually received by the RTT reader
+    //Wait a bit, then check if the messages were actually received
+    usleep(100000);
     std::lock_guard<std::mutex> lock(receive_mutex);
-    REQUIRE( std::find(received_ids.begin(), received_ids.end(), "test_rtt") != received_ids.end() );
-    REQUIRE( std::find(received_ids.begin(), received_ids.end(), "fake_request") != received_ids.end() );
-    REQUIRE( received_ids.size() == 3 ); //2x test_rtt (one by measure_rtt(), one by the answer to "fake_request"), 1x "fake_request"
+    for (auto& sent_id : sent_ids)
+    {
+        REQUIRE( std::find(received_ids.begin(), received_ids.end(), sent_id) != received_ids.end() );
+    }
+
+    REQUIRE( received_ids.size() == 3 );
 }

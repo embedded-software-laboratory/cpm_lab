@@ -29,6 +29,8 @@
 #include "cpm/dds/VehicleState.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
+#include "cpm/Writer.hpp"
+
 /**
  * Tests:
  * - The filter for vehicle IDs
@@ -41,7 +43,7 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "my_topic_name");
 
     // One writer for all vehicle state test packages
-    dds::pub::DataWriter<VehicleState> writer_vehicleState(dds::pub::Publisher(participant), topic_vehicle_state);
+    cpm::Writer<VehicleState> writer_vehicleState("my_topic_name");
 
     // Two filters for both vehicles; IDs: 42 and 11 (others are therefore ignored)
     cpm::VehicleIDFilteredTopic<VehicleState> topic_vehicle42_state(topic_vehicle_state, 42);

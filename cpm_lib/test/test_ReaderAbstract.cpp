@@ -27,12 +27,10 @@
 #include "catch.hpp"
 #include "cpm/dds/VehicleState.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Reader.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Writer.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
-
-#include "cpm/Reader.hpp"
-#include "cpm/Writer.hpp"
 
 /**
  * Tests:
@@ -40,42 +38,42 @@
  * - If the reader returns the newest valid sample
  */
 
-TEST_CASE( "Reader" ) {
-    cpm::Logging::Instance().set_id("test_reader");
+TEST_CASE( "ReaderAbstract" ) {
+    cpm::Logging::Instance().set_id("test_readerAbstract");
 
     // sender that sends various samples to the reader
-    cpm::Writer<VehicleState> sample_writer("asldkjfhslakdj");
+    cpm::Writer<VehicleState> sample_writer("asldkjfhslakdj", true, true);
 
     // receiver - the cpm reader that receives the sample sent by the writer above
-    cpm::Reader<VehicleState> reader(cpm::get_topic<VehicleState>("asldkjfhslakdj"));
+    cpm::ReaderAbstract<VehicleState> reader("asldkjfhslakdj", true, true);
 
+    std::vector<double> expected_odometer_values;
 
-    const uint64_t second = 1000000000ull;
-    const uint64_t millisecond = 1000000ull;
-    const uint64_t t0 = 1500000000ull * second;
-    const uint64_t expected_delay = 400 * millisecond;
+    //Wait for reader setup
+    usleep(10000);
 
     // send samples with different time stamps and data
-    for (uint64_t t_now = t0; t_now <= t0 + 10*second; t_now += second)
+    for (size_t i = 0; i < 5; ++i)
     {
         VehicleState vehicleState;
-        vehicleState.odometer_distance( (t_now-t0)/second );
-        vehicleState.vehicle_id(2);
-        cpm::stamp_message(vehicleState, t_now, expected_delay);
+        vehicleState.odometer_distance( static_cast<double>(i) );
+        expected_odometer_values.push_back( static_cast<double>(i) );
         sample_writer.write(vehicleState);
         usleep(10000);
     }
 
     sleep(1);
+    
+    //Read should contain desired data
+    auto samples = reader.take();
+    std::vector<double> received_odometer_values;
+    for (auto& sample : samples)
+    {
+        received_odometer_values.push_back(sample.odometer_distance());
+    }
 
-
-
-    // example read, should contain the newest valid data depending on the value on t_now and the data sent before
-    VehicleState sample;
-    uint64_t sample_age;
-    const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
-    reader.get_sample(t_now, sample, sample_age);
-
-    REQUIRE( sample_age == 900 * millisecond );
-    REQUIRE( sample.odometer_distance() == 4 );
+    for( auto expected_value : expected_odometer_values )
+    {
+        REQUIRE( std::find(received_odometer_values.begin(), received_odometer_values.end(), expected_value) != received_odometer_values.end() );
+    }
 }

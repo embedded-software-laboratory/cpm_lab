@@ -50,7 +50,6 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include "dds/pub/DataWriter.hpp"
 
 #include "src/LogStorage.hpp"
 
