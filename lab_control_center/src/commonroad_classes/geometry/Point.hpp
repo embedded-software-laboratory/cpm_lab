@@ -32,6 +32,8 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "CommonroadDDSShape.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -43,7 +45,7 @@ class Point : public InterfaceTransform, public InterfaceDraw
 private:
     double x;
     double y;
-    std::optional<double> z; //must not be set
+    std::optional<double> z = std::nullopt; //must not be set
 public:
     /**
      * \brief Constructor, set up a point object
@@ -67,7 +69,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -84,10 +86,14 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void to_dds_msg() {}
+    /**
+     * \brief Translates all relevant parts of the data structure to a DDS object, which is returned
+     * No interface was created for this function because the return type depends on the class
+     */
+    CommonroadDDSPoint to_dds_msg();
 
     //Getter
     double get_x();
     double get_y();
-    double get_z();
+    const std::optional<double>& get_z() const;
 };

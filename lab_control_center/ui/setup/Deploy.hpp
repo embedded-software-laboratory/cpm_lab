@@ -107,9 +107,15 @@ public:
      * \brief Kill a single real vehicle using a simple via ssh using sudo reboot - does not work for simulated vehicles started without the LCC
      * \param id of the vehicle, to infer its IP address
      * \param timeout_seconds Timeout in case the IP is not reachable
-     * \return True if the vehicle reboot msg could be sent
      */
     void reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds);
+
+    /**
+     * \brief Reboot all given HLCs, if they are reachable within the timeout
+     * \param ids of the HLCs, to infer the IP addresses
+     * \param timeout_seconds Timeout in case the IP is not reachable
+     */
+    void reboot_hlcs(std::vector<uint8_t> ids, unsigned int timeout_seconds);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
     void deploy_ips();
@@ -127,7 +133,7 @@ public:
      * \param hlc_id The ID of the HLC on which the software shall be deployed -> used to get the IP address
      * \param vehicle_ids One or multiple vehicle IDs, comma-separated, as string - to be passed to the middleware and the script
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
-     * \param script_path Path to the script, including the script name (and possible file ending)
+     * \param script_path Path to the script, including the script name (and possible file ending) - MUST BE ABSOLUTE
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
      * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
@@ -148,6 +154,17 @@ public:
      * \param name name of the log folder
      */
     void create_log_folder(std::string name);
+
+    /**
+     * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
+     * \param script_started False if middleware+script are not running / should not be checked
+     * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
+     * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
+     * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
+     * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
+     * \return Empty array if everything is fine, else: string of the crashed module
+     */
+    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     //Used for process forking
@@ -221,13 +238,26 @@ private:
     void kill_process(int process_id);
 
     // Session name for recording service
-    std::string recording_session = "dds_record";
+    const std::string recording_session = "dds_record";
+
+    const std::string ips_session = "ips_pipeline";
+    const std::string basler_session = "ips_basler";
+    const std::string middleware_session = "middleware";
+    const std::string hlc_session = "high_level_controller";
 
     //To reboot real vehicles
-    std::map<unsigned int, std::thread> vehicle_reboot_threads; //threads that are responsible for uploading scripts to the HLCs, map to have access to vehicle IDs
+    std::map<unsigned int, std::thread> vehicle_reboot_threads; //map to have access to vehicle IDs <-> reboot thread
     std::mutex vehicle_reboot_threads_mutex;
-    std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
-    std::mutex reboot_done_mutex;
+    std::map<unsigned int, bool> vehicle_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex vehicle_reboot_done_mutex;
     //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
-    void join_finished_reboot_threads();
+    void join_finished_vehicle_reboot_threads();
+
+    //To reboot HLCs
+    std::map<unsigned int, std::thread> hlc_reboot_threads; //map to have access to HLC IDs <-> reboot thread
+    std::mutex hlc_reboot_threads_mutex;
+    std::map<unsigned int, bool> hlc_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex hlc_reboot_done_mutex;
+    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    void join_finished_hlc_reboot_threads();
 };

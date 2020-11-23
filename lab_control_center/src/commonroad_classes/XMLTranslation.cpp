@@ -52,7 +52,7 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -74,7 +74,7 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -96,7 +96,7 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -166,7 +166,7 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -188,7 +188,7 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -210,7 +210,7 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         throw;
     }
     catch(...)
@@ -229,7 +229,7 @@ std::optional<std::string> xml_translation::get_child_child_text(const xmlpp::No
         const auto child = xml_translation::get_child_if_exists(node, child_name, throw_error);
 
         if (!child)
-            return std::optional<std::string>();
+            return std::nullopt;
     
         return std::optional<std::string>(xml_translation::get_first_child_text(child));
     }
@@ -241,7 +241,7 @@ std::optional<std::string> xml_translation::get_child_child_text(const xmlpp::No
         }
         else
         {
-            return std::optional<std::string>();
+            return std::nullopt;
         }
         
     }
@@ -257,14 +257,14 @@ std::optional<int> xml_translation::get_child_child_int(const xmlpp::Node* node,
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<int>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -275,7 +275,7 @@ std::optional<int> xml_translation::get_child_child_int(const xmlpp::Node* node,
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -289,14 +289,14 @@ std::optional<unsigned long long> xml_translation::get_child_child_uint(const xm
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<unsigned long long>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -308,7 +308,7 @@ std::optional<unsigned long long> xml_translation::get_child_child_uint(const xm
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to unsigned long long, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -322,14 +322,14 @@ std::optional<double> xml_translation::get_child_child_double(const xmlpp::Node*
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -341,7 +341,7 @@ std::optional<double> xml_translation::get_child_child_double(const xmlpp::Node*
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -357,7 +357,6 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
         }
         else
         {
-            //TODO: Use optional here as well, return optional? 
             if (throw_error)
             {
                 
@@ -365,21 +364,21 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
                 error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double (child missing), line: " << node->get_line();
                 throw SpecificationError(error_msg_stream.str());
             }
-            return std::optional<double>();
+            return std::nullopt;
         }
         
     }
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -391,7 +390,7 @@ std::optional<double> xml_translation::get_child_child_double_exact(const xmlpp:
             error_msg_stream << "Node " << node->get_name() << " - child '" << child_name << "' could not be translated to exact double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -418,7 +417,7 @@ std::optional<std::string> xml_translation::get_attribute_text(const xmlpp::Node
             error_msg_stream << "Node " << node->get_name() << " attribute does not exist ('" << attribute_name << "'), line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<std::string>();
+        return std::nullopt;
     }
 
     return std::optional<std::string>(attribute->get_value());
@@ -434,14 +433,14 @@ std::optional<int> xml_translation::get_attribute_int(const xmlpp::Node* node, s
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<int>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -453,7 +452,7 @@ std::optional<int> xml_translation::get_attribute_int(const xmlpp::Node* node, s
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to int, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -467,14 +466,14 @@ std::optional<unsigned long long> xml_translation::get_attribute_uint(const xmlp
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<unsigned long long>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -486,7 +485,7 @@ std::optional<unsigned long long> xml_translation::get_attribute_uint(const xmlp
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to uint, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -500,14 +499,14 @@ std::optional<double> xml_translation::get_attribute_double(const xmlpp::Node* n
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        //TODO: If desired, add "addInfo" function to error class to provide additional information
+        
         if (throw_error)
         {
             throw;
         }
         else
         {
-            return std::optional<double>();
+            return std::nullopt;
         }
     }
     catch(...)
@@ -519,7 +518,7 @@ std::optional<double> xml_translation::get_attribute_double(const xmlpp::Node* n
             error_msg_stream << "Node " << node->get_name() << " - attribute '" << attribute_name << "' could not be translated to double, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 
@@ -532,7 +531,7 @@ std::optional<int> xml_translation::string_to_int(std::string text)
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to int" << std::endl;
-        return std::optional<int>();
+        return std::nullopt;
     }
 }
 
@@ -545,7 +544,7 @@ std::optional<unsigned long long> xml_translation::string_to_uint(std::string te
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to unsigned long long" << std::endl;
-        return std::optional<unsigned long long>();
+        return std::nullopt;
     }
 }
 
@@ -558,7 +557,7 @@ std::optional<double> xml_translation::string_to_double(std::string text)
     catch(...)
     {
         std::cerr << "TODO: Better warning // Could not translate text to double" << std::endl;
-        return std::optional<double>();
+        return std::nullopt;
     }
 }
 

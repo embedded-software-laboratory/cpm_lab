@@ -31,6 +31,8 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     //Check if node is of type occupancy
     assert(node->get_name() == "occupancy");
 
+    commonroad_line = node->get_line();
+
     try
     {
         const auto shape_node = xml_translation::get_child_if_exists(node, "shape", true);
@@ -43,6 +45,21 @@ Occupancy::Occupancy(const xmlpp::Node* node)
         if (time_node)
         {
             time = std::optional<IntervalOrExact>(std::in_place, time_node);
+            //Time must have a value; make sure that, as specified, the value is greater than zero
+            if (! time.value().is_greater_zero())
+            {
+                std::stringstream error_stream;
+                error_stream << "Time must be greater than zero, in line: ";
+                error_stream << time_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
+        }
+        else
+        {
+            //Time is the only actually required value
+            std::stringstream error_msg_stream;
+            error_msg_stream << "No time node in Occupancy (required by specification) - line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
         }
     }
     catch(const SpecificationError& e)
@@ -57,11 +74,11 @@ Occupancy::Occupancy(const xmlpp::Node* node)
     
 }
 
-void Occupancy::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Occupancy::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, translate_x, translate_y);
+        shape->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -73,7 +90,6 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    //TODO: Include time value
     //Draw shape
     if (shape.has_value())
     {
@@ -81,7 +97,9 @@ void Occupancy::draw(const DrawingContext& ctx, double scale, double global_orie
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot draw occupancy, shape is missing" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot draw occupancy, shape is missing, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 
     ctx->restore();
@@ -96,7 +114,9 @@ void Occupancy::transform_context(const DrawingContext& ctx, double scale)
     }
     else
     {
-        std::cerr << "TODO: Better warning // Cannot transform context with occupancy, shape is missing" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Cannot transform based on occupancy data, shape is missing, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 }
 
@@ -122,11 +142,12 @@ IntervalOrExact Occupancy::get_time()
     return time.value();
 }
 
-std::optional<double> Occupancy::get_orientation()
+const std::optional<Shape>& Occupancy::get_shape() const
 {
-    if (!shape.has_value())
-    {
-        throw SpecificationError("Occupancy should have shape value, but does not");
-    }
-    return shape->get_orientation();
+    return shape;
+}
+
+const std::optional<IntervalOrExact>& Occupancy::get_time() const
+{
+    return time;
 }

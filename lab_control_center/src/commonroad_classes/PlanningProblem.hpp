@@ -42,7 +42,10 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
+
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
@@ -55,7 +58,7 @@
  */
 struct PlanningProblemElement
 {
-    std::optional<StateExact> initial_state;
+    std::optional<StateExact> initial_state = std::nullopt;
     std::vector<GoalState> goal_states;
 };
 
@@ -65,15 +68,26 @@ struct PlanningProblemElement
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a PlanningProblem specified in an XML file
  */
-class PlanningProblem : public InterfaceTransform, public InterfaceDraw
+class PlanningProblem : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
     std::vector<PlanningProblemElement> planning_problems;
 
 public:
-    PlanningProblem(const xmlpp::Node* node);
-
-    //TODO: Getter
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
+     * \param node A planning problem node
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _get_lanelet_center Function that returns a lanelet center
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
+     */
+    PlanningProblem(
+        const xmlpp::Node* node,
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+        std::function<std::pair<double, double> (int)> _get_lanelet_center,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -81,7 +95,13 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     */
+    void transform_timing(double time_scale) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -98,9 +118,6 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    /**
-     * \brief Setter for drawing lanelet references (Can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
-     */
-    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+    //Getter
+    const std::vector<PlanningProblemElement>& get_planning_problems() const;
 };

@@ -28,6 +28,8 @@
 
 #include <gtkmm.h>
 
+#include <string>
+
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 
 /**
@@ -85,11 +87,37 @@ public:
         ctx->set_line_width(0.03 * scale);
         ctx->move_to(x_1, y_1);
         ctx->line_to(x_2, y_2);
-        ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
+        ctx->line_to(x_2 + 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 + 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2 - 0.1 * x_orth_vec * scale - 0.1 * x_back_vec * scale, y_2 - 0.1 * y_orth_vec * scale - 0.1 * y_back_vec * scale);
         ctx->line_to(x_2, y_2);
         ctx->fill_preserve();
         ctx->stroke();
+
+        ctx->restore();
+    }
+
+    void draw_text_centered(const DrawingContext& ctx, double x, double y, double rotation, double font_size, std::string text)
+    {
+        ctx->save();
+
+        ctx->rotate(rotation);
+        const double scale = 0.01;
+        ctx->scale(scale, -scale);
+        ctx->set_font_size(font_size);
+        ctx->move_to(0,0);
+        Cairo::TextExtents extents;
+        ctx->get_text_extents(text, extents);
+
+        ctx->translate(x, y);
+
+        ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
+        ctx->set_source_rgb(.2,.1,.1);
+        ctx->show_text(text);
+
+        //For relief, not that readable
+        // ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
+        // ctx->set_source_rgb(.1,.1,.1);
+        // ctx->show_text(text);
 
         ctx->restore();
     }

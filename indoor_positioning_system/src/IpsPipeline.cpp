@@ -65,7 +65,7 @@ void IpsPipeline::apply(LedPoints led_points)
     if (dt_nanos > 25*1e6)
     {
         cpm::Logging::Instance().write(
-            2,
+            1,
             "Time delta between frames is %.2f ms. Reset tracking...",
             dt_nanos/1e6
         );

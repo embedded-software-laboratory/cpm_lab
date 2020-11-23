@@ -29,6 +29,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <sstream>
@@ -36,12 +37,17 @@
 #include <thread>
 #include <vector>
 
+#include <math.h>
+
 #include "TimeSeries.hpp"
 #include "defaults.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/setup/Deploy.hpp"
 
 #include "TrajectoryInterpolation.hpp"
+
+#include "ui/setup/CrashChecker.hpp"
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
@@ -57,53 +63,83 @@ public:
     Gtk::Button* button_reset_view;
     Gtk::Label* label_hlc_description_short;
     Gtk::Label* label_hlc_description_long;
+    Gtk::Entry* entry_hlc_reboot;
+    Gtk::Button* button_hlc_reboot;
+    Gtk::Label* label_rtt_hlc_short;
+    Gtk::Label* label_rtt_hlc_long;
+    Gtk::Label* label_rtt_vehicle_short;
+    Gtk::Label* label_rtt_vehicle_long;
+    Gtk::Label* label_experiment_time;
     std::shared_ptr<Deploy> deploy_functions;
+    std::shared_ptr<CrashChecker> crash_checker;
     std::function<VehicleData()> get_vehicle_data;
-    std::function<std::vector<std::string>()> get_hlc_data;
+    std::function<std::vector<uint8_t>()> get_hlc_data;
+    std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping;
     std::function<void()> reset_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory;
+    std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values;
+    std::function<void()> kill_deployed_applications; 
 
-    std::string reboot_script = "bash ./bash/reboot_raspberry.bash 192.168.1.1";
-
-    bool restarting[30] = {}; 
-
-    std::vector<std::thread> reboot_threads; //threads that are responsible for rebooting vehicles    
-    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all threads that need to be created have finished their work
-    void notify_reboot_finished(); //notify function that gets called by the threads when they have finished their work
-    std::mutex notify_callback_in_use; //the notify_reboot_finished function should only be accessible by one thread at once, thus use this mutex
-    std::mutex write_reboot_in_use; 
-    void kill_all_threads(); //function to join all threads
-    
-    //Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
-    //Thus: Own timer implementation instead
+    // Before: TimerFD, but this class is stopped by stop signals which might be emitted multiple times by the LCC depending on user interaction
+    // Thus: Own timer implementation instead
     void ui_update_loop();
     Glib::Dispatcher update_dispatcher; //to communicate between thread and GUI
     std::thread ui_thread;
     std::atomic_bool run_thread;
 
+    //To measure how long the simulation has been running
+    std::atomic_uint64_t sim_start_time;
+
     //full rows
-    const vector<string> rows = { "battery_voltage", "battery_level", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
+    const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
-    const vector<string> rows_restricted = {"ips", "ips_dt", "battery_level", "clock_delta", "reference_deviation", "speed"};
+    const vector<string> rows_restricted = {"ips_dt", "last_msg_state", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
+
+    // Indicates the starting time of the last error occurance for each vehicle
+    vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
+
+    // Indicates if an error already triggered a kill 
+    vector<vector<bool> > error_triggered{vector<vector<bool> > (rows_restricted.size(), vector<bool>(30,false))};
     
-    //Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
+    // Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
     void init_ui_thread();
 
-    //This resets the ui thread, to get rid of old vehicle boxes (if the user desires to get rid of them)
+    // This resets the ui thread, to get rid of old vehicle boxes (if the user desires to get rid of them)
     void reset_ui_thread();
 
-    //Called when resetting the ui or when the object gets deleted - kills the currently running thread
+    // Called when resetting the ui or when the object gets deleted - kills the currently running thread
     void stop_ui_thread();
+
+    // Stop vehicles and HLCs 
+    void stop_experiment(std::vector<unsigned int>, std::vector<uint8_t>);
 
 public:
     explicit MonitoringUi(
         std::shared_ptr<Deploy> deploy_functions_callback,  
         std::function<VehicleData()> get_vehicle_data_callback, 
-        std::function<std::vector<std::string>()> get_hlc_data_callback,
+        std::function<std::vector<uint8_t>()> get_hlc_data_callback,
         std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback, 
-        std::function<void()> reset_data_callback
+        std::function<void()> reset_data_callback,
+        std::function<bool(std::string, uint64_t&, uint64_t&, uint64_t&, double&)> get_rtt_values,
+        std::function<void()> kill_deployed_applications_callback 
     );
     ~MonitoringUi();
     Gtk::Box* get_parent();
     void reset_vehicle_view();
+    void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
+
+    /**
+     * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
+     */
+    void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
+
+    /**
+     * \brief Function to call when the simulation starts, to reset data structures, start timers etc
+     */
+    void notify_sim_start();
+
+    /**
+     * \brief Function to call when the simulation stops, to reset data structures, start timers etc
+     */
+    void notify_sim_stop();
 };

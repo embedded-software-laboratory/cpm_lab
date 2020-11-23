@@ -49,6 +49,7 @@ using std::vector;
 #include "cpm/VehicleIDFilteredTopic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"
+#include "cpm/RTTTool.hpp"
 #include "cpm/stamp_message.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
@@ -109,10 +110,14 @@ int main(int argc, char *argv[])
     if (!bcm2835_init())
     {
         printf("bcm2835_init failed. Are you running as root??\n");
+        cpm::Logging::Instance().write(1, "%s", "bcm2835_init failed. Are you running as root??");
         exit(EXIT_FAILURE);
     }
     spi_init();
     const bool allow_simulated_time = false;
+
+    //Enable RTT measurement
+    cpm::RTTTool::Instance().activate("vehicle");
 #else
     // Get vehicle starting position from argv
     vector<double> starting_position = cpm::cmd_parameter_doubles("pose", {0.0}, argc, argv);
@@ -160,9 +165,6 @@ int main(int argc, char *argv[])
         //Callback for update signal
         [&](uint64_t t_now) 
         {
-            //Log control cycle period
-            //For evaluation log of vehicle cycle period
-            cpm::Logging::Instance().write(3, "Control cycle timestamp: %llu", update_loop->get_time());
 
             //log_fn(__LINE__);
             try 
@@ -230,6 +232,14 @@ int main(int argc, char *argv[])
                     &n_transmission_attempts,
                     &transmission_successful
                 );
+                if (transmission_successful && (spi_miso_data.status_flags & 1)) // IMU status
+                {
+                    cpm::Logging::Instance().write(
+                        1,
+                        "%s",
+                        "Data transmission via TWI from IMU failed"
+                    );
+                }
 
                 VehicleState vehicleState = SensorCalibration::convert(spi_miso_data);
                 vehicleState.is_real(true); // Is real, is not simulated

@@ -86,7 +86,7 @@ namespace xml_translation
      * \param node An XML node 
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
-     * \return Pointer to the child node (if it does not exist, returns nullptr
+     * \return Pointer to the child node (if it does not exist, returns nullptr)
      */
     const xmlpp::Node* get_child_if_exists(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 

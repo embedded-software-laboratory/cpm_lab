@@ -74,21 +74,31 @@ private:
     bool called_callback = false;
 
     //Remember last opened file (also in between program executions)
-    static std::string previous_file;
-    static bool file_config_loaded;
-    static const std::string file_dialog_config_location;
+    std::string previous_file = "./";
     static const std::string default_load_path;
+    std::string config_location;
 public:
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
+    /**
+     * \brief Constructor for a file chooser dialog 
+     * \param parent Window parent of the current window, settings this prevents errors / warnings
+     * \param on_close_callback Callback function to get the string of the chosen file and if a file was chosen
+     * \param config_file Configuration file where previous file locations are stored, for the convenience of the user (set relative filepath as well, e.g. "./xy.config")
+     */
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::string config_file = "./file_dialog_open_config.config");
 
     /**
      * \brief Constructor for a file chooser dialog that allows to set filters (bottom right, which items are shown besides folders)
      * For each filter name in filter_name, one or more filters are set using filter_type (first entry in filter name corresponds to first entry in filter_type etc)
+     * \param parent Window parent of the current window, settings this prevents errors / warnings
+     * \param on_close_callback Callback function to get the string of the chosen file and if a file was chosen
+     * \param filters Filters to set for choosing a file, e.g. only YAML files are shown
+     * \param config_file Configuration file where previous file locations are stored, for the convenience of the user (set relative filepath as well, e.g. "./xy.config")
      */
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters);
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters, std::string config_file = "./file_dialog_open_config.config");
 
     /**
      * \brief Returns the previously selected path of last program execution
+     * \param config_file Configuration file where previous file locations are stored, for the convenience of the user (set relative filepath as well, e.g. "./xy.config")
      */
-    static std::string get_last_execution_path();
+    static std::string get_last_execution_path(std::string config_file = "./file_dialog_open_config.config");
 };

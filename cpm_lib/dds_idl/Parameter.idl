@@ -31,6 +31,7 @@ enum ParameterType
     Invalid = 0,
     Bool,
     Int32,
+    UInt64,
     Double,
     String,
     Vector_Int32,
@@ -44,6 +45,7 @@ struct Parameter
 
     // Since weak typing is not supported, we reserve a member for each type.
     boolean value_bool;
+    unsigned long long value_uint64_t;
     sequence<long>   values_int32;
     sequence<double> values_double;
     string value_string;

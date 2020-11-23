@@ -34,16 +34,11 @@ SetupViewUI::SetupViewUI
     (
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
-    std::function<std::vector<uint8_t>()> _get_hlc_ids,
+    std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
-    std::function<void()> _reset_time_series_aggregator,
-    std::function<void()> _reset_obstacle_aggregator,
-    std::function<void()> _reset_trajectories,
-    std::function<void()> _reset_vehicle_view,
-    std::function<void()> _reset_visualization_commands,
-    std::function<void()> _reset_logs,
+    std::function<void()> _on_simulation_start,
+    std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
     unsigned int argc, 
     char *argv[]
@@ -51,16 +46,11 @@ SetupViewUI::SetupViewUI
     :
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
-    obstacle_simulation_manager(_obstacle_simulation_manager),
-    get_hlc_ids(_get_hlc_ids),
+    hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
-    reset_time_series_aggregator(_reset_time_series_aggregator),
-    reset_obstacle_aggregator(_reset_obstacle_aggregator),
-    reset_trajectories(_reset_trajectories),
-    reset_vehicle_view(_reset_vehicle_view),
-    reset_visualization_commands(_reset_visualization_commands),
-    reset_logs(_reset_logs),
+    on_simulation_start(_on_simulation_start),
+    on_simulation_stop(_on_simulation_stop),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
@@ -121,7 +111,6 @@ SetupViewUI::SetupViewUI
     {
         vehicle_flowbox->add(*(vehicle_toggle->get_parent()));
         vehicle_toggle->set_selection_callback(std::bind(&SetupViewUI::vehicle_toggle_callback, this, _1, _2));
-
     }
 #ifndef SIMULATION
     // Create labcam
@@ -134,6 +123,9 @@ SetupViewUI::SetupViewUI
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
+
+    kill_grey_out_running.store(false);
+    undo_kill_grey_out.store(false);
 
     //Extract other relevant parameters from command line
     cmd_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
@@ -153,13 +145,29 @@ SetupViewUI::SetupViewUI
     //Take care of GUI thread and worker thread separately
     update_vehicle_toggles.store(false);
     ui_dispatcher.connect(sigc::mem_fun(*this, &SetupViewUI::ui_dispatch));
-    thread_count.store(0);
-    notify_count = 0;
-    participants_available.store(false);
-    kill_called.store(false);
+
+    //Create upload manager
+    upload_manager = std::make_shared<Upload>(
+        [this] () { return hlc_ready_aggregator->get_hlc_ids_uint8_t(); },
+        deploy_functions,
+        [this] () { set_sensitive(true); },
+        [this] () { button_kill->set_sensitive(true); },
+        [this] () { perform_post_kill_cleanup(); }
+    );
+
+    //Create crash checker (but don't start it yet, as no simulation is running)
+    crash_checker = std::make_shared<CrashChecker>(
+        deploy_functions,
+        hlc_ready_aggregator,
+        upload_manager
+    );
+    both_local_and_remote_deploy.store(false);
 
     //Set initial text of script path (from previous program execution, if that existed)
+    //We use the default config location here
     script_path->set_text(FileChooserUI::get_last_execution_path());
+
+    simulation_running.store(false);
     
     //Regularly check / update which real vehicles are currently turned on, to use them when the experiment is deployed
     is_deployed.store(false);
@@ -197,6 +205,7 @@ SetupViewUI::SetupViewUI
                         //Kill simulated vehicle if real vehicle was detected
                         if (std::find(currently_simulated_vehicles.begin(), currently_simulated_vehicles.end(), id) != currently_simulated_vehicles.end())
                         {
+                            cpm::Logging::Instance().write(3, "Killing simulated vehicle %i, replaced by real vehicle", static_cast<int>(id));
                             deploy_functions->kill_sim_vehicle(id);
                         }
                     }
@@ -211,17 +220,23 @@ SetupViewUI::SetupViewUI
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     });
+
+    lcc_closed.store(false);
 }
 
 SetupViewUI::~SetupViewUI() {
-    //Join all old threads
-    join_upload_threads();
-
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
+    }
+
+    //Kill grey out thread for kill button, if it exists
+    kill_grey_out_running.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
     }
 }
 
@@ -245,17 +260,22 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
 
 //Do the same as in the destructor, because there we do not get the desired results sadly
 void SetupViewUI::on_lcc_close() {
+    lcc_closed.store(true);
     kill_deployed_applications();
     deploy_functions->kill_ips();
-
-    //Join all old threads
-    join_upload_threads();
 
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
     {
         check_real_vehicle_data_thread.join();
+    }
+
+    //Kill grey out thread for kill button, if it exists
+    kill_grey_out_running.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
     }
 
     //Kill simulated vehicles
@@ -302,6 +322,9 @@ void SetupViewUI::switch_diagnosis_set()
 using namespace std::placeholders;
 void SetupViewUI::open_file_explorer()
 {
+    //We do not want the user to interact with the UI while they are choosing a new scenario
+    set_sensitive(false);
+
     //Filter to show only executables / .m files
     FileChooserUI::Filter application_filter;
     application_filter.name = "Application/Matlab";
@@ -323,7 +346,11 @@ void SetupViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create file chooser dialog");
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Main window reference is missing, cannot create file chooser dialog"
+        );
     }
     
 }
@@ -334,15 +361,16 @@ void SetupViewUI::file_explorer_callback(std::string file_string, bool has_file)
     {
         script_path->set_text(file_string.c_str());
     }
+
+    //The user is now allowed to interact with the UI again
+    set_sensitive(true);
 }
 
 void SetupViewUI::ui_dispatch()
 {
-    //Update vehicle toggles for real vehicles or take care of upload window
-    if (update_vehicle_toggles.load())
+    //Update vehicle toggles for real vehicles
+    if (update_vehicle_toggles.exchange(false))
     {
-        update_vehicle_toggles.store(false);
-
         //Update vehicle toggles
         std::lock_guard<std::mutex> lock(active_real_vehicles_mutex);
 
@@ -365,149 +393,54 @@ void SetupViewUI::ui_dispatch()
             }
         }
     }
-    else
+
+    //Kill has a timeout s.t. a kill button can not be "spammed"; grey-out should not be undone though during simulation, because Deploy already has control over when Kill should become sensitive again
+    if (undo_kill_grey_out.exchange(false) && !simulation_running.load())
     {
-        //Take care of upload window etc
-        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-        if (error_msg.size() > 0)
-        {
-            for (auto &msg : error_msg)
-            {
-                upload_window->add_error_message(msg);
-            }
-            error_msg.clear();
-        }
-        else 
-        {
-            //The only current job for ui_dispatch is to close the upload window shown after starting the upload threads, when all threads have been closed
-            //Plus now, kill is not grayed out anymore
-            std::unique_lock<std::mutex> lock(upload_threads_mutex);
-            if (upload_threads.size() != 0 && upload_window)
-            {
-                upload_window->close();
-                button_kill->set_sensitive(true);
-            }
-            lock.unlock();
-
-            //Join all old threads
-            join_upload_threads();
-
-            //If kill caused the UI dispatch, clean up after everything has been killed
-            if (kill_called.load())
-            {
-                perform_post_kill_cleanup();
-                kill_called.store(false);
-            }
-
-            //Free the UI if the upload was not successful
-            if (!participants_available.load())
-            {
-                set_sensitive(true);
-            }
-        }
+        button_kill->set_sensitive(true);
     }
-}
-
-void SetupViewUI::notify_upload_finished(uint8_t hlc_id, bool upload_success)
-{
-    //Just try to join all worker threads here
-    std::lock_guard<std::mutex> lock(notify_callback_in_use);
-
-    //This should never be the case
-    //If this happens, the thread count has been initialized incorrectly
-    if (thread_count.load() == 0)
-    {
-        std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
-    }
-
-    //Trigger error msg if the upload failed
-    if (!upload_success)
-    {
-        std::lock_guard<std::mutex> lock_msg(error_msg_mutex);
-        std::stringstream error_msg_stream;
-        error_msg_stream << "ERROR: Connection or upload failed for HLC ID " << static_cast<int>(hlc_id) << std::endl;
-        error_msg.push_back(error_msg_stream.str());
-        ui_dispatcher.emit();
-    }
-
-    //Also count notify amount s.t one can check if the thread count has been set properly
-    thread_count.fetch_sub(1);
-    ++notify_count;
-
-    std::cout << thread_count.load() << std::endl;
-    if (thread_count.load() == 0)
-    {
-        notify_count = 0;
-
-        //Close upload window again, but only after a while
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        ui_dispatcher.emit();
-    }
-    else 
-    {
-        std::lock_guard<std::mutex> lock(upload_threads_mutex);
-        if (notify_count == upload_threads.size())
-        {
-            std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
-
-            notify_count = 0;
-
-            //Close upload window again, but only after a while
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-            ui_dispatcher.emit();
-        }
-    }
-}
-
-void SetupViewUI::join_upload_threads()
-{
-    //Join all old threads - gets called from destructor, kill and when the last thread finished (in the ui thread dispatcher)
-    std::lock_guard<std::mutex> lock(upload_threads_mutex);
-    for (auto& thread : upload_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-        else 
-        {
-            std::cerr << "Warning: Shutting down with upload thread that cannot be joined" << std::endl;
-        }
-    }
-    upload_threads.clear();
-}
-
-bool SetupViewUI::check_if_online(uint8_t hlc_id)
-{
-    //Check if the HLC is still online (in get_hlc_ids)
-    std::vector<uint8_t> hlc_ids = get_hlc_ids();
-    return std::find(hlc_ids.begin(), hlc_ids.end(), static_cast<uint8_t>(hlc_id)) != hlc_ids.end();
 }
 
 void SetupViewUI::deploy_applications() {
+    //Only allow the simulation to start if there are actually vehicles to control
+    std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
+    auto simulation_possible = vehicle_ids.size() > 0;
+
+    if (!simulation_possible)
+    {
+        cpm::Logging::Instance().write(1, "%s", "LCC Deploy: No vehicles are online, deploy was aborted");
+        return;
+    }
+
     //Grey out UI until kill is clicked
     set_sensitive(false);
     is_deployed.store(true);
 
+    simulation_running.store(true);
+
     //Create log folder for all applications that are started on this machine
     deploy_functions->create_log_folder("lcc_script_logs");
 
-    //Reset old UI elements (difference to kill: Also reset the Logs)
-    //Kill timer in UI as well, as it should not show invalid information
-    //Reset all relevant UI parts
+    //Reset old UI elements etc (call all functions that registered for this callback in main)
     reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)
-    reset_time_series_aggregator();
-    reset_obstacle_aggregator();
-    reset_trajectories();
-    reset_vehicle_view();
-    reset_visualization_commands();
+    if(on_simulation_start)
+    {
+        on_simulation_start();
+    }
+    else
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_start callback missing!");
+    }
     
-    //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
-    reset_logs();
+
+    //Remember these also for crash check thread
+    bool deploy_remote_toggled = switch_deploy_remote->get_active();
+    bool lab_mode_on = switch_lab_mode->get_active();
+    bool labcam_toggled = switch_record_labcam->get_active();
 
     // LabCam
 #ifndef SIMULATION
-    if(switch_record_labcam->get_active() && switch_lab_mode->get_active()){
+    if(lab_mode_on && labcam_toggled){
         std::cerr << "RECORDING LABCAM" << std::endl;
         auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
         labcam->startRecording("/tmp/", ctime(&timenow));
@@ -516,103 +449,161 @@ void SetupViewUI::deploy_applications() {
     }
 
 #endif
-
-    //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    obstacle_simulation_manager->start();
     
     // Recording
     deploy_functions->deploy_recording();
 
+    //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
+    //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
+    bool file_exists = false;
+    //First make sure that there is anything but spaces in the string
+    std::string filepath_str = script_path->get_text().c_str();
+    if (filepath_str.find_first_not_of(' ') != std::string::npos)
+    {
+        //Now also check if the path actually exists
+        std::experimental::filesystem::path filepath = filepath_str;
+
+        if (std::experimental::filesystem::exists(filepath))
+        {
+            //Update path to absolute path, s.t. deploy remote does not have any problems
+            try
+            {
+                filepath_str = std::experimental::filesystem::absolute(filepath);
+                file_exists = true;
+            }
+            catch(const std::experimental::filesystem::filesystem_error& e)
+            {
+                std::stringstream error_stream;
+                error_stream << "Could not convert given script path to absolute path, error is: " << e.what();
+                cpm::Logging::Instance().write(1, "%s", error_stream.str().c_str());
+            }
+        }
+    }
+
+    std::experimental::filesystem::path filepath = filepath_str;
+    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
+
+    std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
-    if(switch_deploy_remote->get_active())
+    if(deploy_remote_toggled && file_exists)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
 
         //Get current online vehicle and high_level_controller IDs
-        std::vector<unsigned int> vehicle_ids = get_vehicle_ids_active();
         std::vector<uint8_t> hlc_ids;
-        if (get_hlc_ids)
+        if (hlc_ready_aggregator)
         {
-            hlc_ids = get_hlc_ids();
+            hlc_ids = hlc_ready_aggregator->get_hlc_ids_uint8_t();
         }
         else 
         {
-            std::cerr << "No lookup function to get HLC IDs given, cannot deploy on HLCs" << std::endl;
+            cpm::Logging::Instance().write(1, "%s", "No lookup function to get HLC IDs given, cannot deploy on HLCs");
             return;
         }
 
-        //Show window indicating that the upload process currently takes place
-        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        if (get_main_window)
-        {
-            upload_window = make_shared<UploadWindow>(get_main_window(), vehicle_ids, hlc_ids);
-        }
-        else
-        {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
-        }
-
-        //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
-        if (hlc_ids.size() == 0 || vehicle_ids.size() == 0)
-        {
-            //Waits a few seconds before the window is closed again 
-            //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
-            participants_available.store(false); //No HLCs available
-            thread_count.store(1);
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this] () {
-                    usleep(3000000);
-                    this->notify_upload_finished(0, true);
-                }
-            ));
-            return;
-        }
-        
         //Match lowest vehicle ID to lowest HLC ID
         std::sort(vehicle_ids.begin(), vehicle_ids.end());
         std::sort(hlc_ids.begin(), hlc_ids.end());
         size_t min_hlc_vehicle = std::min(hlc_ids.size(), vehicle_ids.size());
 
-        //Deploy on each HLC individually, using different threads
-        participants_available.store(true); //HLCs are available
-        thread_count.store(min_hlc_vehicle);
+        remote_hlc_ids = hlc_ids;
+        remote_hlc_ids.erase(remote_hlc_ids.begin() + min_hlc_vehicle, remote_hlc_ids.end());
+
+        //Deploy remote
+        auto simulated_time = switch_simulated_time->get_active();
+        std::string params = script_params->get_text().c_str();
+
+        upload_manager->deploy_remote(simulated_time, filepath_str, params, hlc_ids, vehicle_ids);
+
+        //Now those vehicles that could not be matched are treated as in the local case
+        if (vehicle_ids.size() > hlc_ids.size())
+        {
+            std::vector<uint32_t> local_vehicles;
+            local_vehicles.reserve(vehicle_ids.size() - hlc_ids.size());
+
+            for (size_t i = hlc_ids.size(); i < vehicle_ids.size(); ++i)
+            {
+                local_vehicles.push_back(vehicle_ids.at(i));
+            }
+
+            both_local_and_remote_deploy.store(true);
+            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
+        }
+        //Remember vehicle to HLC mapping
+        std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
         for (size_t i = 0; i < min_hlc_vehicle; ++i)
         {
-            //Deploy on high_level_controller with given vehicle id(s)
-            std::stringstream vehicle_id_stream;
-            vehicle_id_stream << vehicle_ids.at(i);
-
-            //Create variables for the thread
-            unsigned int hlc_id = static_cast<unsigned int>(hlc_ids.at(i));
-            std::string vehicle_string = vehicle_id_stream.str();
-
-            //Create thread
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this, hlc_id, vehicle_string] () {
-                    bool deploy_worked = deploy_functions->deploy_remote_hlc(
-                        hlc_id, 
-                        vehicle_string, 
-                        switch_simulated_time->get_active(), 
-                        script_path->get_text().c_str(), 
-                        script_params->get_text().c_str(), 
-                        remote_deploy_timeout,
-                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
-                    );
-                    this->notify_upload_finished(hlc_id, deploy_worked);
-                }
-            ));
+            vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
         }
+    }
+    else if (file_exists)
+    {
+        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_str, script_params->get_text().c_str());
     }
     else
     {
-        deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), script_path->get_text().c_str(), script_params->get_text().c_str());
+        cpm::Logging::Instance().write(1, "%s", "Script path is empty or invalid, thus neither script nor middleware could be started");
+        //Possible TODO: Stop in UI immediately (annoying if you want to use commonroad without script, so maybe do not warn at all?)
     }
+    
+
+    //Start performing crash checks for deployed applications
+    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+}
+
+std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
+{
+    std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    return { simulation_running.load(), vehicle_to_hlc_map };
 }
 
 void SetupViewUI::kill_deployed_applications() {
+    //Make sure that this button cannot be "spammed"
+    std::unique_lock<std::mutex> lock(kill_button_mutex);
+    button_kill->set_sensitive(false);
+    kill_grey_out_running.store(true);
+    undo_kill_grey_out.store(false);
+    if (kill_grey_out_thread.joinable())
+    {
+        kill_grey_out_thread.join();
+    }
+    kill_grey_out_thread = std::thread(
+        [&] ()
+        {
+            int count = 0;
+            //Wait for 3 seconds, be interruptible on class destruction
+            while(count < 30 && kill_grey_out_running.load())
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ++count;
+            }
+
+            //Undo button grey-out
+            undo_kill_grey_out.store(true);
+            ui_dispatcher.emit();
+        }
+    );
+    lock.unlock();
+    
+    //Kill button functionality if no simulation was performed before
+    if (! simulation_running.load())
+    {
+        //Do only a part of the logic below
+        deploy_functions->stop_vehicles(get_vehicle_ids_active());
+        perform_post_kill_cleanup(); //Even this part is not really required
+
+        return;
+    }
+
+    //Kill crash check first, or else we get undesired error messages
+    crash_checker->stop_checking();
+    //Remember mapping
+    std::unique_lock<std::mutex> lock_map(vehicle_to_hlc_mutex);
+    vehicle_to_hlc_map.clear();
+    simulation_running.store(false);
+    lock_map.unlock();
+
 
     // Stop LabCam
 #ifndef SIMULATION
@@ -621,52 +612,16 @@ void SetupViewUI::kill_deployed_applications() {
 
     is_deployed.store(false);
 
-    //Kill scripts locally or remotely
-    if(switch_deploy_remote->get_active())
+    //Kill scripts locally or remotely - do not perform remote kill (with new UI window creations etc) if the whole lcc is in the process of being destructed
+    if(switch_deploy_remote->get_active() && !lcc_closed.load())
     {
-        std::vector<uint8_t> hlc_ids;
-        if (get_hlc_ids)
-        {
-            hlc_ids = get_hlc_ids();
-        }
-        else 
-        {
-            std::cerr << "No lookup function to get HLC IDs given, cannot kill on HLCs" << std::endl;
-            return;
-        }
+        //Performs post_kill_cleanup after remote kill
+        upload_manager->kill_remote();
 
-        //Show window indicating that the upload process currently takes place
-        //An error message is shown if no HLC is online - in that case, take additional action here as well: Just show the window and deploy nothing
-        if (get_main_window)
+        //Also kill potential local HLC
+        if (both_local_and_remote_deploy.exchange(false))
         {
-            upload_window = make_shared<UploadWindow>(get_main_window(), std::vector<unsigned int>(), hlc_ids);
-            upload_window->set_text("Killing on remote HLCs...");
-        }
-        else
-        {
-            cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create upload dialog");
-        }
-        
-        //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
-        kill_called.store(true);
-
-
-        //If a HLC went offline in between, we assume that it crashed and thus just use this script on all remaining running HLCs
-        thread_count.store(hlc_ids.size());
-        for (const auto& hlc_id : hlc_ids)
-        {
-            //Create thread
-            std::lock_guard<std::mutex> lock(upload_threads_mutex);
-            upload_threads.push_back(std::thread(
-                [this, hlc_id] () {
-                    bool kill_worked = deploy_functions->kill_remote_hlc(
-                        hlc_id, 
-                        remote_kill_timeout,
-                        std::bind(&SetupViewUI::check_if_online, this, hlc_id)
-                    );
-                    this->notify_upload_finished(hlc_id, kill_worked);
-                }
-            ));
+            deploy_functions->kill_local_hlc();
         }
     }
     else 
@@ -683,22 +638,24 @@ void SetupViewUI::kill_deployed_applications() {
     //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
     //But only if threads are used, so only in case of remote deployment
     //For local deployment, perform_post_kill_cleanup is called directly
+
 }
 
 void SetupViewUI::perform_post_kill_cleanup()
 {
-    //Stop obstacle simulation
-    obstacle_simulation_manager->stop();
-    
-    //Kill timer in UI as well, as it should not show invalid information
-    //TODO: Reset Logs? They might be interesting even after the simulation was stopped, so that should be done separately/never (there's a log limit)/at start?
-    //Reset all relevant UI parts
+    //Reset old UI elements etc
     reset_timer(switch_simulated_time->get_active(), true);
-    reset_time_series_aggregator();
-    reset_obstacle_aggregator();
-    reset_trajectories();
-    reset_vehicle_view();
-    reset_visualization_commands();
+
+    //TODO: USE ASSERT INSTEAD?
+    //(call all functions that registered for this callback in main) -> callback becomes unnecessary if cleanup was called due to LCC close
+    if(on_simulation_stop && !lcc_closed.load())
+    {
+        on_simulation_stop();
+    }
+    else if (!on_simulation_stop)
+    {
+        cpm::Logging::Instance().write(1, "%s", "Error in SetupViewUI: on_simulation_stop callback missing!");
+    }
 
     //Undo grey out
     set_sensitive(true);
@@ -773,10 +730,15 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
 void SetupViewUI::select_all_vehicles_sim()
 {
+    auto real_vehicles = get_vehicle_ids_real();
     for (auto& vehicle_toggle : vehicle_toggles)
     {
-        vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
-        deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        auto real_ptr = std::find(real_vehicles.begin(), real_vehicles.end(), vehicle_toggle->get_id());
+        if (real_ptr == real_vehicles.end())
+        {
+            vehicle_toggle->set_state(VehicleToggle::ToggleState::Simulated);
+            deploy_functions->deploy_sim_vehicle(vehicle_toggle->get_id(), switch_simulated_time->get_active());
+        }
     }
 }
 
@@ -795,9 +757,16 @@ void SetupViewUI::select_no_vehicles()
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
 {
     get_main_window = _get_main_window;
+    upload_manager->set_main_window_callback(_get_main_window);
+    crash_checker->set_main_window_callback(_get_main_window);
 }
 
 Gtk::Widget* SetupViewUI::get_parent()
 {
     return parent;
+}
+
+std::shared_ptr<CrashChecker> SetupViewUI::get_crash_checker()
+{
+    return crash_checker;
 }

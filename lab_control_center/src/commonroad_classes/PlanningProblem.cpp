@@ -26,7 +26,12 @@
 
 #include "PlanningProblem.hpp"
 
-PlanningProblem::PlanningProblem(const xmlpp::Node* node)
+PlanningProblem::PlanningProblem(
+    const xmlpp::Node* node,
+    std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+    std::function<std::pair<double, double> (int)> _get_lanelet_center,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
+    )
 {
     //Check if node is of type planningProblem
     assert(node->get_name() == "planningProblem");
@@ -53,7 +58,7 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
             node,
             [&] (const xmlpp::Node* child)
             {
-                goal_states.push_back(GoalState(child));
+                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
                 goal_state_lines.push_back(child->get_line());
             },
             "goalState"
@@ -123,24 +128,45 @@ PlanningProblem::PlanningProblem(const xmlpp::Node* node)
         }
     }
 
+    //Set lanelet_ref functions
+    for (auto& planning_prob : planning_problems)
+    {
+        planning_prob.initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+        //planning_prob.initial_state->set_lanelet_get_center_function(_get_lanelet_center);
+    }
+
     //Test output
-    std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
+    // std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void PlanningProblem::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-
     for (auto& planning_problem : planning_problems)
     {
         if (planning_problem.initial_state.has_value())
         {
-            planning_problem.initial_state->transform_coordinate_system(scale, translate_x, translate_y);
+            planning_problem.initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
 
         for (auto& goal_state : planning_problem.goal_states)
         {
-            goal_state.transform_coordinate_system(scale, translate_x, translate_y);
+            goal_state.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
+    }
+}
+
+void PlanningProblem::transform_timing(double time_scale)
+{
+    for (auto& planning_problem : planning_problems)
+    {
+        if (planning_problem.initial_state.has_value())
+        {
+            planning_problem.initial_state->transform_timing(time_scale);
+        }
+
+        for (auto& goal_state : planning_problem.goal_states)
+        {
+            goal_state.transform_timing(time_scale);
         }
     }
 }
@@ -169,14 +195,7 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
     ctx->restore();
 }
 
-void PlanningProblem::set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs)
+const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problems() const
 {
-    for (auto& planning_prob : planning_problems)
-    {
-        planning_prob.initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-        for (auto& goal_state : planning_prob.goal_states)
-        {
-            goal_state.set_lanelet_ref_draw_function(_draw_lanelet_refs);
-        }
-    }
+    return planning_problems;
 }

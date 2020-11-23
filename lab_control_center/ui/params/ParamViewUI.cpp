@@ -223,7 +223,11 @@ void ParamViewUI::open_param_create_window() {
     } 
     else if (!get_main_window)
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param create dialog");
+        cpm::Logging::Instance().write(
+            1,
+            "%s", 
+            "ERROR: Main window reference is missing, cannot create param create dialog"
+        );
     }
 }
 
@@ -247,7 +251,11 @@ void ParamViewUI::open_param_edit_window() {
             }
             else if (!get_main_window)
             {
-                cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param edit dialog");
+                cpm::Logging::Instance().write(
+                    1,
+                    "%s", 
+                    "ERROR: Main window reference is missing, cannot create param edit dialog"
+                );
             }
         }
         else {

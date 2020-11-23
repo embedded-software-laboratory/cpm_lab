@@ -46,6 +46,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
@@ -77,7 +79,7 @@ struct TrafficCycleElement
 struct TrafficLightCycle
 {
     std::vector<TrafficCycleElement> cycle_elements;
-    std::optional<unsigned int> time_offset;
+    std::optional<unsigned int> time_offset = std::nullopt;
 };
 
 /**
@@ -88,7 +90,7 @@ struct TrafficLightElement
 {
     //Commonroad types
     TrafficLightCycle cycle;
-    std::optional<Position> position; //TODO: Position is specified as being always exact
+    std::optional<Position> position = std::nullopt; //TODO: Position is specified as being always exact
     Direction direction;
     bool is_active; //Probably defaults to true, as it must not occur
 };
@@ -113,8 +115,25 @@ private:
     std::vector<TrafficLightCycle> cycles;
     std::vector<int> cycle_lines;
 
+    int id;
+
+    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
+
+    //Helper function that draws a tiny traffic light symbol
+    void draw_traffic_light_symbol(const DrawingContext& ctx, double scale);
+
 public:
-    TrafficLight(const xmlpp::Node* node);
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
+     * \param node A trafficLight node
+     * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
+     */
+    TrafficLight(
+        const xmlpp::Node* node,
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+    );
 
     //Helper functions for better readability
     Position translate_position(const xmlpp::Node* position_node);
@@ -130,7 +149,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface

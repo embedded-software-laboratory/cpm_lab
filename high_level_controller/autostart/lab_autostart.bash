@@ -53,6 +53,9 @@ tar -xzvf autostart_package.tar.gz
 # Copy the autostart error logging software in the autostart folder, s.t. it can be started even if it is not available in a new package
 cp /tmp/software/autostart_package/download_error_logger /home/guest/autostart
 
+# Also replace the current lab_autostart bash file with the updated one; this will, of course, not be applied until the next restart
+cp /tmp/software/autostart_package/lab_autostart.bash /home/guest/autostart
+
 # Get the middleware & QoS
 out=$(wget http://192.168.1.249/nuc/middleware_package.tar.gz)
 if [ $? -ne 0 ]; then
@@ -83,7 +86,11 @@ tar -xzvf matlab_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
 # Put the init scripts for Matlab in the correct folder
-cd /home/guest/dev/software/high_level_controller
+cd /home/guest/dev/software
+mkdir high_level_controller
+cd ./high_level_controller
+mkdir examples
+cd ./examples
 mkdir matlab
 cd ./matlab
 cp /tmp/software/matlab_package/init_script.m ./
@@ -92,4 +99,4 @@ cp /tmp/software/matlab_package/QOS_READY_TRIGGER.xml ./
 cd ~
 
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
-/tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
+/tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER  &> ~/autostart/log.log 

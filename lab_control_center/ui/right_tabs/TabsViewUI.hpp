@@ -36,6 +36,7 @@
 #include "ui/params/ParamViewUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
 #include "ui/logger/LoggerViewUI.hpp"
+#include "ui/lcc_errors/LCCErrorViewUI.hpp"
 #include "ui/setup/SetupViewUI.hpp"
 
 class TabsViewUI {
@@ -45,6 +46,7 @@ private:
     std::shared_ptr<VehicleManualControlUi> vehicle_manual_control_ui;
     std::shared_ptr<ParamViewUI> param_view_ui;
     std::shared_ptr<TimerViewUI> timer_view_ui;
+    std::shared_ptr<LCCErrorViewUI> lcc_error_view_ui;
     std::shared_ptr<LoggerViewUI> logger_view_ui;
     std::shared_ptr<CommonroadViewUI> commonroad_view_ui;
     Gtk::Notebook* right_notebook;
@@ -55,6 +57,7 @@ public:
         std::shared_ptr<VehicleManualControlUi> vehicleManualControlUi, 
         std::shared_ptr<ParamViewUI> paramViewUI, 
         std::shared_ptr<TimerViewUI> timerViewUi, 
+        std::shared_ptr<LCCErrorViewUI> lccErrorViewUi, 
         std::shared_ptr<LoggerViewUI> loggerViewUi,
         std::shared_ptr<CommonroadViewUI> commonroadViewUi
     );

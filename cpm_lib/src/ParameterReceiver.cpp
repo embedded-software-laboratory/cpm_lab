@@ -39,6 +39,10 @@ namespace cpm
         return ParameterReceiver::Instance().parameter_bool(parameter_name);
     }
 
+    uint64_t parameter_uint64_t(std::string parameter_name) {
+        return ParameterReceiver::Instance().parameter_uint64_t(parameter_name);
+    }
+
     int32_t parameter_int(std::string parameter_name) {
         return ParameterReceiver::Instance().parameter_int(parameter_name);
     }
@@ -80,12 +84,36 @@ namespace cpm
         while (param_bool.find(parameter_name) == param_bool.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
 
         bool retValue = param_bool.at(parameter_name);
+        s_lock.unlock();
+        return retValue;
+    }
+
+    uint64_t ParameterReceiver::parameter_uint64_t(std::string parameter_name) {
+        std::unique_lock<std::mutex> s_lock(param_uint64_t_mutex); 
+
+        while (param_uint64_t.find(parameter_name) == param_uint64_t.end()) {
+            s_lock.unlock();
+            requestParam(parameter_name);
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
+            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            s_lock.lock();
+        }
+
+        uint64_t retValue = param_uint64_t.at(parameter_name);
         s_lock.unlock();
         return retValue;
     }
@@ -96,7 +124,11 @@ namespace cpm
         while (param_int.find(parameter_name) == param_int.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -112,7 +144,11 @@ namespace cpm
         while (param_double.find(parameter_name) == param_double.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -128,7 +164,11 @@ namespace cpm
         while (param_string.find(parameter_name) == param_string.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -144,7 +184,11 @@ namespace cpm
         while (param_ints.find(parameter_name) == param_ints.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -160,7 +204,11 @@ namespace cpm
         while (param_doubles.find(parameter_name) == param_doubles.end()) {
             s_lock.unlock();
             requestParam(parameter_name);
-            Logging::Instance().write("Waiting for parameter %s ...", parameter_name.c_str());
+            Logging::Instance().write(
+                2,
+                "Waiting for parameter %s ...", 
+                parameter_name.c_str()
+            );
             rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
             s_lock.lock();
         }
@@ -196,6 +244,10 @@ namespace cpm
                 else if (parameter.type() == ParameterType::Bool) {
                     std::lock_guard<std::mutex> u_lock(param_bool_mutex);
                     param_bool[parameter.name()] = parameter.value_bool();
+                }
+                else if (parameter.type() == ParameterType::UInt64) {
+                    std::lock_guard<std::mutex> u_lock(param_uint64_t_mutex);
+                    param_uint64_t[parameter.name()] = parameter.value_uint64_t();
                 }
                 else if (parameter.type() == ParameterType::Vector_Int32) {
                     std::lock_guard<std::mutex> u_lock(param_ints_mutex);

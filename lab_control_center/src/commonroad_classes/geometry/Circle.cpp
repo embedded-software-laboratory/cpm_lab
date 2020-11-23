@@ -35,6 +35,11 @@ Circle::Circle(const xmlpp::Node* node)
     {
         radius = xml_translation::get_child_child_double(node, "radius", true).value(); //mandatory, error thrown if nonexistant, so we can use .value() here
 
+        if (radius < 0)
+        {
+            throw SpecificationError(std::string("Could not translate Circle - radius is smaller than zero"));
+        }
+
         //Get point value, which must not be specified
         const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
         if (point_node)
@@ -58,18 +63,18 @@ Circle::Circle(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Circle:" << std::endl;
-    std::cout << "\tRadius: " << radius << std::endl;
-    std::cout << "\tCenter set: " << center.has_value() << std::endl;
+    // std::cout << "Circle:" << std::endl;
+    // std::cout << "\tRadius: " << radius << std::endl;
+    // std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Circle::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Circle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (scale > 0)
     {
         radius *= scale;
     }
-    center->transform_coordinate_system(scale, translate_x, translate_y);
+    center->transform_coordinate_system(scale, angle, translate_x, translate_y);
 }
 
 //Suppress warning for unused parameter (s)
@@ -111,7 +116,26 @@ std::pair<double, double> Circle::get_center()
     }
 }
 
+CommonroadDDSCircle Circle::to_dds_msg()
+{
+    CommonroadDDSCircle circle;
+
+    if (center.has_value())
+    {
+        circle.center(center->to_dds_msg());
+    }
+
+    circle.radius(radius);
+
+    return circle;
+}
+
 const std::optional<Point>& Circle::get_center() const
 {
     return center;
+}
+
+double Circle::get_radius()
+{
+    return radius;
 }

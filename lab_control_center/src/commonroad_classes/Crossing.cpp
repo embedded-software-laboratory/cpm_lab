@@ -71,11 +71,11 @@ Crossing::Crossing(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Crossing: " << std::endl;
-    std::cout << "\tLanelet references: ";
-    for (const auto ref : crossing_lanelets)
-    {
-        std::cout << " | " << ref;
-    }
-    std::cout << std::endl;
+    // std::cout << "Crossing: " << std::endl;
+    // std::cout << "\tLanelet references: ";
+    // for (const auto ref : crossing_lanelets)
+    // {
+    //     std::cout << " | " << ref;
+    // }
+    // std::cout << std::endl;
 }

@@ -33,11 +33,15 @@
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/RTTTool.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/setup/CrashChecker.hpp"
 #include "ui/setup/Deploy.hpp"
-#include "ui/setup/VehicleToggle.hpp"
+#include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
+#include "ui/setup/VehicleToggle.hpp"
 
 #ifndef SIMULATION
     #include "labcam/LabCamIface.hpp"
@@ -47,6 +51,7 @@
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -55,6 +60,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 /**
@@ -119,6 +125,13 @@ private:
     unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
     unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
 
+    //To remember last kill button press - s.t. it can't be spammed (would not be beneficial / can lead to crashes)
+    std::mutex kill_button_mutex;
+    std::thread kill_grey_out_thread;
+    std::atomic_bool kill_grey_out_running;
+    std::atomic_bool undo_kill_grey_out;
+    const uint64_t kill_timeout = 3e9; //3 seconds
+
     // Interface to LabCam
 #ifndef SIMULATION
     LabCamIface* labcam;
@@ -127,11 +140,8 @@ private:
     //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
 
-    //Class to simulate obstacles based on the loaded commonroad file
-    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
-
-    //Function to get a list of all currently online HLCs
-    std::function<std::vector<uint8_t>()> get_hlc_ids;
+    //Class to get a list of all currently online HLCs and if script / middleware are running on them
+    std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
 
     //Function to get IDs of real vehicles (and simulated ones) which are currently active
     std::function<VehicleData()> get_vehicle_data;
@@ -143,40 +153,23 @@ private:
 
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
     std::function<void(bool, bool)> reset_timer;
-    std::function<void()> reset_time_series_aggregator;
-    std::function<void()> reset_obstacle_aggregator;
-    std::function<void()> reset_trajectories;
-    std::function<void()> reset_vehicle_view;
-    std::function<void()> reset_visualization_commands;
-    std::function<void()> reset_logs;
+    std::function<void()> on_simulation_start;
+    std::function<void()> on_simulation_stop;
     std::function<void(bool)> set_commonroad_tab_sensitive;
 
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
 
+    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    void ui_dispatch(); //dispatcher callback for the UI thread
+
+    std::atomic_bool both_local_and_remote_deploy; //True if in remote deployment local HLC had to be started for additional vehicles
+
     //Loading window while HLC scripts are being updated
     //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
-    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
-    std::vector<std::thread> upload_threads; //threads that are responsible for uploading scripts to the HLCs
-    std::mutex upload_threads_mutex;
-    std::shared_ptr<UploadWindow> upload_window; //window that shows an upload message
-    void ui_dispatch(); //dispatcher callback for the UI thread
-    /**
-     * \brief Notify function that gets called by the upload threads when they have finished their work
-     * \param hlc_id ID the thread was responsible for
-     * \param upload_success Whether the upload was successful
-     */
-    void notify_upload_finished(uint8_t hlc_id, bool upload_success);
-    void join_upload_threads(); //function to join all threads
-    bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
-    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
-    size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
-    std::mutex notify_callback_in_use; //the notify_upload_finished function should only be accessible by one thread at once, thus use this mutex
-    std::atomic_bool participants_available; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
-    //Horrible way to log an error message, because the UI cannot be accessed directly - if error_msg.size() > 0, emit just triggers that an error msg is added
-    std::mutex error_msg_mutex;
-    std::vector<std::string> error_msg;
-    std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
+    std::shared_ptr<Upload> upload_manager;
+    //Watcher thread that checks if the locally deployed programs still run - else, an error message is displayed
+    std::shared_ptr<CrashChecker> crash_checker;
     void perform_post_kill_cleanup();
 
     //IPS switch callback (-> lab mode)
@@ -187,7 +180,7 @@ private:
 
     //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
     void deploy_applications();
-    void kill_deployed_applications();
+    std::atomic_bool lcc_closed; //If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down
 
     //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
     std::vector<unsigned int> get_vehicle_ids_active();
@@ -209,37 +202,34 @@ private:
     void select_all_vehicles_sim();
     void select_no_vehicles();
 
+    //For vehicle to HLC mapping
+    std::atomic_bool simulation_running;
+    std::mutex vehicle_to_hlc_mutex;
+    std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
+
 public:
+    void kill_deployed_applications();
     /**
      * \brief Constructor
+     * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
-     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
-     * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _hlc_ready_aggregator Get all IDs of currently active HLCs for correct remote deployment, get currently running scripts etc
      * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
-     * \param _reset_time_series_aggregator Reset received vehicle data
-     * \param _reset_obstacle_aggregator Reset received obstacle data
-     * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
-     * \param _reset_vehicle_view Reset list of connected vehicles
-     * \param _reset_visualization_commands Reset all visualization commands that were sent before
-     * \param _reset_logs Reset all logs that were sent before
+     * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
+     * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
     SetupViewUI(
-        std::shared_ptr<Deploy> deploy_functions, 
+        std::shared_ptr<Deploy> _deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
-        std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
         std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
-        std::function<void()> _reset_time_series_aggregator,
-        std::function<void()> _reset_obstacle_aggregator,
-        std::function<void()> _reset_trajectories,
-        std::function<void()> _reset_vehicle_view,
-        std::function<void()> _reset_visualization_commands,
-        std::function<void()> _reset_logs,
+        std::function<void()> _on_simulation_start,
+        std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
         unsigned int argc, 
         char *argv[]
@@ -258,10 +248,15 @@ public:
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
 
+    //This is subject to change, as the setup ui will be restructured soon
+    //Returns: True if a simulation is running and in that case a map with mappings from vehicle ID to HLC ID
+    std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
     /**
      * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
      * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill
      * the according programs
      */
     void on_lcc_close();
+
+    std::shared_ptr<CrashChecker> get_crash_checker();
 };

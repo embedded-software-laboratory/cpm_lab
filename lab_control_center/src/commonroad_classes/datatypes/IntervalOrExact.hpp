@@ -49,16 +49,15 @@
 class IntervalOrExact : public InterfaceTransform
 {
 private:
-    std::optional<Interval> interval;
-    std::optional<double> exact;
+    std::optional<Interval> interval = std::nullopt;
+    std::optional<double> exact = std::nullopt;
 public:
     /**
      * \brief Constructor
      */
     IntervalOrExact(const xmlpp::Node* node)
     {
-        //TODO: Make sure that this is an interval node type
-        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
+        //We do not assert the interval type here, as the name of the node in this case mostly refers to a specific datatype like 'time' or 'orientation', of which there are many throughout the documentation
 
         try
         {
@@ -106,6 +105,21 @@ public:
     {
         return interval.has_value();
     }
+
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        if (is_exact())
+        {
+            greater_zero &= (exact.value() > 0);
+        }
+        if(is_interval())
+        {
+            greater_zero &= interval->is_greater_zero();
+        }
+
+        return greater_zero;
+    }
     
     const std::optional<Interval> get_interval()
     {
@@ -147,7 +161,7 @@ public:
      * \param translate_x Currently ignored, must be changed if this is used for position values
      * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         if (exact.has_value())
         {
@@ -160,7 +174,7 @@ public:
 
         if (interval.has_value())
         {
-            interval->transform_coordinate_system(scale, translate_x, translate_y);
+            interval->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 };

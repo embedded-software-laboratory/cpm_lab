@@ -79,6 +79,7 @@ public:
      * \param info description of the parameter's purpose
      */
     void set_parameter_bool(std::string name, bool value, std::string info = "");
+    void set_parameter_uint64_t(std::string name, uint64_t value, std::string info = "");
     void set_parameter_int(std::string name, int32_t value, std::string info = "");
     void set_parameter_double(std::string name, double value, std::string info = "");
     void set_parameter_string(std::string name, std::string value, std::string info = "");
@@ -94,6 +95,7 @@ public:
      * \return true if the parameter exists
      */
     bool get_parameter_bool(std::string name, bool& value);
+    bool get_parameter_uint64_t(std::string name, uint64_t& value);
     bool get_parameter_int(std::string name, int32_t& value);
     bool get_parameter_double(std::string name, double& value);
     bool get_parameter_string(std::string name, std::string& value);
@@ -111,6 +113,7 @@ public:
      * \brief List all existing parameter names of that type
      */
     std::vector<std::string> list_bool();
+    std::vector<std::string> list_uint64_t();
     std::vector<std::string> list_int();
     std::vector<std::string> list_double();
     std::vector<std::string> list_string();
