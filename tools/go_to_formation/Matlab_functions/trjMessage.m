@@ -25,10 +25,9 @@
 % Author: i11 - Embedded Software, RWTH Aachen University
 
 function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now)
-    %% Do not display figures
+
     set(0,'DefaultFigureVisible','off');
-    if t_start == t_now
-    end
+    %TODO: if t_start == t_now no new message has to be created.
     
     trajectory = VehicleCommandTrajectory;
     trajectory.vehicle_id = uint8(vehicle_id);

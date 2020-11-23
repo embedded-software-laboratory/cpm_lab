@@ -8,7 +8,7 @@ map = occupancyMap(mapX, mapY, resolution);
 mat = zeros(mapY * resolution, mapX * resolution);
 setOccupancy(map, [0 0], mat)
 
-%% 
+%% Calculate corners and edges of vehicles from pose
 vehicleLength = 0.2200;
 vehicleWidth= 0.1070;
 vehicleHalfLength = vehicleLength/2;
@@ -34,7 +34,7 @@ for nVehicles = 1:length(vehicleList)
     corners.(vehicleList{nVehicles}).y(3,1) = vehiclePoses.(vehicleList{nVehicles}).y - sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength + cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
     corners.(vehicleList{nVehicles}).y(4,1) = vehiclePoses.(vehicleList{nVehicles}).y - sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength - cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
     
-    %calculate rays along corners of vehicles
+    %calculate vehicle edges as rays along corners
     for i = 1:4
         if i < 4
         [endpoints,midpoints] = raycast(map, [corners.(vehicleList{nVehicles}).x(i) corners.(vehicleList{nVehicles}).y(i)],...
