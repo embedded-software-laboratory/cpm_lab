@@ -114,9 +114,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     //To detect deviations from the required message frequency
     timeseries_vehicles[vehicle_id]["last_msg_state"] = make_shared<TimeSeries>(
-    "Last VehicleState", "%ull", "ms");
+    "VehicleState age", "%ull", "ms");
     timeseries_vehicles[vehicle_id]["last_msg_observation"] = make_shared<TimeSeries>(
-    "Last VehicleObservation", "%ull", "ms");
+    "VehicleObservation age", "%ull", "ms");
 
 }
 
