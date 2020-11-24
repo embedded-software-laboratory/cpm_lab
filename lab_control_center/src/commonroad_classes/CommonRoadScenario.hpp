@@ -265,9 +265,6 @@ private:
      */
     double get_scale(double min_lane_width);
 
-    //DDS writer to send planning problems
-    cpm::Writer<CommonroadDDSPlanningProblems> writer_planning_problems;
-
 public:
     /**
      * \brief The constructor itself just creates the data-storing object. It is filled with data using the load_file function
@@ -383,6 +380,7 @@ public:
     /*****************************************************************************************/
     /**
      * \brief Send all currently stored planning problems into the network / to the HLCs
+     * \param writer_planning_problems DDS writer to send planning problems
      */
-    void send_planning_problems();
+    void send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSPlanningProblemElement>> writer_planning_problems);
 };

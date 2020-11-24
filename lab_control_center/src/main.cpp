@@ -58,6 +58,9 @@
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
+#include "cpm/Writer.hpp"
+#include "CommonroadDDSPlanningProblems.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
@@ -214,14 +217,30 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         obstacle_simulation_manager 
     );
+
+    //Writer to send planning problems translated from commonroad to HLCs
+    //As it is transient local, we need to reset the writer before each simulation start
+
+    std::cout << "Loaded QoS profiles: " << std::endl;
+    for (const auto str : dds::core::QosProvider("QOS_PLANNING_PROBLEM.xml")->qos_profile_libraries())
+    {
+        std::cout << str << std::endl;
+    }
+
+    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSPlanningProblemElement>>("commonroad_dds_planning_problems", "QOS_PLANNING_PROBLEM.xml", "PlanningProblemLibrary::PlanningProblemProfile");
+
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
         hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){
+        [&](){
             //Things to do when the simulation is started
+
+            //Reset writer for planning problems (used down below), as it is transient local and we do not want to pollute the net with outdated data
+            writer_planning_problems.reset();
+            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSPlanningProblemElement>>("commonroad_dds_planning_problems", "QOS_PLANNING_PROBLEM.xml", "PlanningProblemLibrary::PlanningProblemProfile");
 
             //Stop RTT measurement
             rtt_aggregator->stop_measurement();
@@ -239,7 +258,7 @@ int main(int argc, char *argv[])
             loggerViewUi->reset();
 
             //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
-            if(commonroad_scenario) commonroad_scenario->send_planning_problems();
+            if(commonroad_scenario) commonroad_scenario->send_planning_problems(writer_planning_problems);
 
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
