@@ -63,7 +63,15 @@ TEST_CASE( "GoalToHLCCommunication" ) {
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
+
+    //Ignore warning that vehicleID is unused
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-variable"
+
     int vehicleID = 0; 
+    
+    #pragma GCC diagnostic pop
+    
     std::vector<uint8_t> vehicle_ids = { 0 };
 
     //Timer parameters
