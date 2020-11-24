@@ -97,7 +97,7 @@ namespace cpm
          * \param func Callback function that is called by the reader if new data is available. Samples are passed to the function to be processed further.
          * \param topic_name The name of the topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
-         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable and keep all
          */
         AsyncReader(
             std::function<void(std::vector<MessageType>&)> func, 
@@ -113,7 +113,7 @@ namespace cpm
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic_name The name of the topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
-         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable and keep all
          */
         AsyncReader(
             std::function<void(std::vector<MessageType>&)> func,

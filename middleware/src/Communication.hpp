@@ -52,6 +52,7 @@
 #include "cpm/ReaderAbstract.hpp"
 #include "cpm/Participant.hpp"
 
+#include "CommonroadDDSGoalState.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandDirect.hpp"
@@ -79,6 +80,10 @@ class Communication {
         //Timing messages to HLC
         cpm::Writer<SystemTrigger> hlc_system_trigger_writer;
         cpm::AsyncReader<SystemTrigger> lcc_system_trigger_reader;
+
+        //Goal states to HLC
+        cpm::Writer<CommonroadDDSGoalState> hlc_goal_state_writer;
+        cpm::AsyncReader<CommonroadDDSGoalState> lcc_goal_state_reader;
 
         //For Vehicle communication
         cpm::MultiVehicleReader<VehicleState> vehicleReader;
@@ -119,6 +124,12 @@ class Communication {
             std::bind(&Communication::pass_through_system_trigger, this, _1),
             "systemTrigger",
             true)
+
+        ,hlc_goal_state_writer(hlcParticipant.get_participant(), "commonroad_dds_goal_states", true, true, true)
+        ,lcc_goal_state_reader(
+            std::bind(&Communication::pass_through_goal_states, this, _1),
+            "commonroad_dds_goal_states",
+            true, true)
 
         ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), vehicle_ids)
 
@@ -268,6 +279,15 @@ class Communication {
         void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
             for (auto& sample : samples) {
                 hlc_system_trigger_writer.write(sample);
+            }
+        }
+
+        /**
+         * \brief Pass goal states from the LCC to the LCC
+         */
+        void pass_through_goal_states(std::vector<CommonroadDDSGoalState>& samples) {
+            for (auto& sample : samples) {
+                hlc_goal_state_writer.write(sample);
             }
         }
 

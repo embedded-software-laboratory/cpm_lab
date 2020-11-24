@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 
     //Writer to send planning problems translated from commonroad to HLCs
     //As it is transient local, we need to reset the writer before each simulation start
-    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_planning_problems", true, true, true);
+    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
 
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 
             //Reset writer for planning problems (used down below), as it is transient local and we do not want to pollute the net with outdated data
             writer_planning_problems.reset();
-            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_planning_problems", true, true, true);
+            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
 
             //Stop RTT measurement
             rtt_aggregator->stop_measurement();
