@@ -76,7 +76,7 @@ middleware_cmd="./middleware \
     --dds_initial_peer=${DDS_INITIAL_PEER}  \
     >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
     2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
-tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/cpm/dev/software/middleware/build/;${middleware_cmd}"
+tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
 
 printf "Starting HLCs ...\n"
 cd build

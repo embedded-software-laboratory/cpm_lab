@@ -214,3 +214,74 @@ void LaneGraphTools::move_along_route(
         std::endl;*/
     }
 }
+
+size_t LaneGraphTools::distance_along_route(
+    vector<size_t> route_edge_indices, 
+    size_t start_edge_index, 
+    size_t start_edge_path_index,
+    size_t end_edge_index, 
+    size_t end_edge_path_index
+    ) const
+{
+    //assert(route_edge_indices.size() >= 2);
+    //assert(route_edge_indices[0] == start_edge_index);
+    //assert(route_edge_indices.back() == end_edge_index);
+
+    //size_t delta_s = 0; // purely temporarily to make it compilable
+    //size_t total_distance = 0; // meters
+    //size_t route_index = 0;
+
+    //while(1)
+    //{
+    //    // Do we need to go to the next edge?
+    //    const double remaining_distance_current_edge = 
+    //        edges_s[edge_index][n_edge_path_nodes-1] - edges_s[edge_index][edge_path_index];
+
+    //    if(remaining_distance_current_edge > delta_s)
+    //    {
+    //        // We are on the final edge
+    //        // Advance path nodes until delta_s is zero
+    //        while(1)
+    //        {
+    //            if(edge_path_index >= n_edge_path_nodes-1) break;
+    //            const double step_length = edges_s[edge_index][edge_path_index+1] - edges_s[edge_index][edge_path_index];
+    //            if(delta_s < step_length) break;
+    //            delta_s -= step_length;
+    //            edge_path_index++;
+    //        }
+    //        return;
+    //    }
+    //    else
+    //    {
+    //        // Need to go to the next edge
+    //        delta_s -= remaining_distance_current_edge;
+    //        route_index++;
+    //        assert(route_index < route_edge_indices.size());
+    //        edge_index = route_edge_indices.at(route_index);
+    //        edge_path_index = 0;
+    //    }
+
+    //    /*std::cout <<
+    //    "  route_index " << route_index <<
+    //    "  remaining_distance_current_edge " << remaining_distance_current_edge <<
+    //    "  delta_s " << delta_s <<
+    //    "  edge_index " << edge_index <<
+    //    "  edge_path_index " << edge_path_index <<
+    //    std::endl;*/
+    //}
+    return 0;
+}
+
+/*
+ * Given two (edge_index, edge_path_index) pairs, this returns a vector of
+ * n evenly spaced in-between points (n = interpolation_points).
+ * The edge_indices must be directly connected on the lane_graph
+ */
+vector<std::pair<size_t, size_t>> LaneGraphTools::interpolate_route(
+    std::pair<size_t, size_t> indices1,
+    std::pair<size_t, size_t> indices2,
+    int interpolation_points) const
+{
+    vector<std::pair<size_t, size_t>> vector;
+    return vector;
+}

@@ -180,19 +180,9 @@ int main(int argc, char *argv[]) {
     );
 
     /* ---------------------------------------------------------------------------------
-     * Compose and send Ready message
+     * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    // TODO: Why do we need this 5 seconds wait?
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    // Create arbitrary timestamp as per ReadyStatus.idl
-    TimeStamp timestamp(11111);
-    // The middleware expects a message like "hlc_${vehicle_id}", e.g. hlc_1
-    std::string hlc_identification("hlc_");
-    hlc_identification.append(std::to_string(vehicle_id));
-    ReadyStatus readyStatus(hlc_identification, timestamp);
-    writer_readyStatus.write(readyStatus);
-
     /* Soll-Verhalten:
      *   - Wir starten erst, wenn eine StateList von der Middleware kommt
      *   - Wir schicken dann auch erst VehicleTrajectories an die Middleware, wenn eine
@@ -211,6 +201,20 @@ int main(int argc, char *argv[]) {
         reader_laneGraphTrajectory
         )
     );
+
+    /* ---------------------------------------------------------------------------------
+     * Compose and send Ready message
+     * ---------------------------------------------------------------------------------
+     */
+    // TODO: Why do we need this 5 seconds wait?
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    // Create arbitrary timestamp as per ReadyStatus.idl
+    TimeStamp timestamp(11111);
+    // The middleware expects a message like "hlc_${vehicle_id}", e.g. hlc_1
+    std::string hlc_identification("hlc_");
+    hlc_identification.append(std::to_string(vehicle_id));
+    ReadyStatus readyStatus(hlc_identification, timestamp);
+    writer_readyStatus.write(readyStatus);
 
     bool received_stop = false;
     uint64_t t_now;

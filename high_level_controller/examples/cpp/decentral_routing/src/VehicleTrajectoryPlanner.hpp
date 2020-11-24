@@ -57,6 +57,7 @@ class VehicleTrajectoryPlanner
     void read_other_vehicles();
     void apply_timestep();
     void write_trajectory( LaneGraphTrajectory trajectory );
+    void interpolate_other_vehicles_buffer();
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     static constexpr uint64_t msg_max_length = 100; // Maximum length of DDS msg

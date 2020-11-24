@@ -87,6 +87,7 @@ void VehicleTrajectoryPlanner::start()
             bool is_collision_avoidable = false;
 
             this->read_other_vehicles();
+            this->interpolate_other_vehicles_buffer();
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
@@ -188,39 +189,72 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 }
 
 /*
- * Publish changes to the planned trajectory to DDS
- * 
- * We are publishing only changes instead of the whole trajectory
- * for data size reasons
+ * Publish the planned trajectory to DDS
  */
 void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory ) {
-    LaneGraphTrajectory msg;
-
-    if(trajectory.lane_graph_positions().size() > msg_max_length) {
-
-        // Write first 100 points to separate vector, to create a shorter msg from it
-        std::vector<LaneGraphPosition> shortened_trajectory;
-        for( int i=0; i<msg_max_length; i++ ) {
-            shortened_trajectory.push_back(trajectory.lane_graph_positions()[i]); 
-        }
-        msg.lane_graph_positions(shortened_trajectory);
-
-    } else {
-        msg = trajectory;
-    }
 
     // Add TimeStamp to each point
-    for( int i=0; i<msg.lane_graph_positions().size(); i++ ) {
+    for( int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
         // Calculate, which point in time this index corresponds to
         uint64_t eta = t_planning + (dt_nanos/timesteps_per_planningstep)*i;
-        msg.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
+        trajectory.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
     }
 
+    LaneGraphTrajectory msg;
+    std::vector<LaneGraphPosition> shortened_trajectory;
+    
+    int current_edge_index = -1;
+    LaneGraphPosition current_position;
+
+    for( int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
+        current_position = trajectory.lane_graph_positions()[i];
+
+        // Only send each edge_index once
+        if( current_position.edge_index() != current_edge_index ) {
+            shortened_trajectory.push_back(current_position);
+            current_edge_index = current_position.edge_index();
+        }
+        // Don't create oversize messages
+        if( shortened_trajectory.size() >= msg_max_length ) {
+            break;
+        }
+    }
+
+    msg.lane_graph_positions(shortened_trajectory);
     
     msg.vehicle_id(trajectoryPlan->get_vehicle_id());
     msg.header().create_stamp().nanoseconds(t_planning);
     msg.header().valid_after_stamp().nanoseconds(t_planning + 1000000000ull);
     this->writer_laneGraphTrajectory->write(msg);
+}
+
+//TODO: Don't just blindly increase edge_path_index, but look at
+// next edge_index, and fill the gaps
+void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer() {
+
+    size_t edge_index = 0;
+    size_t edge_path_index = 0;
+
+    // We have to interpolate for each vehicle
+    for( auto &vehicle : other_vehicles_buffer ) {
+        auto &vehicle_buffer = vehicle.second;
+
+        // Loop over every index in our own planning buffer
+        for( size_t i=0; i<N_STEPS_SPEED_PROFILE; i++ ) {
+
+            // Buffer is sparse at the beginning, so we check if this index exists
+            if( vehicle_buffer.count(i) ) {
+                edge_index = vehicle_buffer.at(i).first;
+                edge_path_index = vehicle_buffer.at(i).second;
+            } else {
+                edge_path_index = edge_path_index + 3;
+                vehicle_buffer.emplace(i, std::make_pair(
+                        edge_index,
+                        edge_path_index
+                        ));
+            }
+        }
+    }
 }
 
 void VehicleTrajectoryPlanner::set_writer(

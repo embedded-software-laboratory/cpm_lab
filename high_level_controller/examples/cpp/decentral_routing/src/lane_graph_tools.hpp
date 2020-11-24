@@ -40,6 +40,11 @@ public:
     bool map_match_pose(Pose2D pose, int &out_edge_index, int &out_edge_path_index) const;
     vector<size_t> find_subsequent_edges(int edge_index) const;
     void move_along_route(vector<size_t> route_edge_indices, size_t &edge_index, size_t &edge_path_index, double &delta_s) const;
+    size_t distance_along_route(vector<size_t> route_edge_indices, size_t start_edge_index, size_t start_edge_path_index, size_t end_edge_index, size_t end_edge_path_index) const;
+    vector<std::pair<size_t, size_t>> interpolate_route(
+            std::pair<size_t, size_t> indices1,
+            std::pair<size_t, size_t> indices2,
+            int interpolation_points) const;
 };
 
 
