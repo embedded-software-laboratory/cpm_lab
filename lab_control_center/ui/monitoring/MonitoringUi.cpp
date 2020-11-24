@@ -203,7 +203,7 @@ void MonitoringUi::init_ui_thread()
                     {
                         //This is not part of the time series data, so we need a special case for this
                         //Show if the NUC with the ID of the vehicle is online (= sends data from autostart program to LCC)
-                        label->set_text("NUC connected");
+                        label->set_text("Remote HLC [y/n]");
                     }
                     else 
                     {
@@ -284,7 +284,7 @@ void MonitoringUi::init_ui_thread()
                             if (current_mapping.second.find(vehicle_id) == current_mapping.second.end())
                             {
                                 //Was not matched
-                                label->set_text("Not matched");
+                                label->set_text("no");
                                 label->get_style_context()->add_class("warn");
                             }
                             else
@@ -299,7 +299,7 @@ void MonitoringUi::init_ui_thread()
 
                                 if (!nuc_crashed && !program_crashed)
                                 {
-                                    label->set_text("Online");
+                                    label->set_text("yes");
                                     label->get_style_context()->add_class("ok");
                                     if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
                                     if(error_triggered[0][0]) error_triggered[0][0] = false; 
@@ -356,7 +356,7 @@ void MonitoringUi::init_ui_thread()
                         else
                         {
                             //No simulation
-                            label->set_text("Not matched");
+                            label->set_text("no");
                             label->get_style_context()->add_class("ok");
                         }
                     }
