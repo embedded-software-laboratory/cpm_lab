@@ -64,7 +64,7 @@ struct CommonroadDDSGoalState {
 
     //ID to relate to planning problem and position in list planning problems and of goal states in planning problems in a single planning problem definition
     //We could not send the whole planning problem due to size issues because of the sequences used
-    long planning_problem_id;
+    long planning_problem_id; //@key
     long planning_problem_pos;
     long goal_state_pos;
 };
