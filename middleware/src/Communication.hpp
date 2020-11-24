@@ -37,6 +37,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <atomic>
+#include <mutex>
 
 #include "VehicleState.hpp"
 #include "VehicleStateList.hpp"
@@ -76,6 +78,7 @@ class Communication {
         cpm::Participant hlcParticipant;
         cpm::Writer<VehicleStateList> hlcStateWriter;
         cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
+        std::atomic_bool all_hlc_online{false}; //Remember if all HLCs are online (checked by main using wait_for_hlc_ready_msg)
 
         //Timing messages to HLC
         cpm::Writer<SystemTrigger> hlc_system_trigger_writer;
@@ -83,7 +86,9 @@ class Communication {
 
         //Goal states to HLC
         cpm::Writer<CommonroadDDSGoalState> hlc_goal_state_writer;
+        std::mutex hlc_goal_state_writer_mutex;
         cpm::AsyncReader<CommonroadDDSGoalState> lcc_goal_state_reader;
+        std::vector<CommonroadDDSGoalState> buffered_goal_states; //Before all HLCs have come online, remember goal states received so far
 
         //For Vehicle communication
         cpm::MultiVehicleReader<VehicleState> vehicleReader;
@@ -286,8 +291,18 @@ class Communication {
          * \brief Pass goal states from the LCC to the LCC
          */
         void pass_through_goal_states(std::vector<CommonroadDDSGoalState>& samples) {
+            std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
             for (auto& sample : samples) {
-                hlc_goal_state_writer.write(sample);
+                //Online forward if HLCs are online, else buffer
+                if (all_hlc_online.load())
+                {
+                    hlc_goal_state_writer.write(sample);
+                }
+                else 
+                {
+                    //Sending these samples is triggered from within the wait function
+                    buffered_goal_states.push_back(sample);
+                }
             }
         }
 
@@ -330,6 +345,17 @@ class Communication {
                 usleep(200000);
                 ++wait_cycles;
             }
+
+            //Tell other parts of the program that they can now regard the HLCs as being online / able to receive
+            all_hlc_online.store(true);
+            //Flush data that was received before the HLCs were online that is not periodical and could have been sent before
+            std::cout << "\t... sending buffered goal states to all HLCs" << std::endl; //Additional console log info after "Waiting for HLC..." in main (serves debugging purposes)
+            std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
+            for (auto& sample : buffered_goal_states)
+            {
+                hlc_goal_state_writer.write(sample);
+            }
+            buffered_goal_states.clear();
         }
 
         /**
