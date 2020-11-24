@@ -59,7 +59,7 @@
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
 #include "cpm/Writer.hpp"
-#include "CommonroadDDSPlanningProblems.hpp"
+#include "CommonroadDDSGoalState.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -220,14 +220,7 @@ int main(int argc, char *argv[])
 
     //Writer to send planning problems translated from commonroad to HLCs
     //As it is transient local, we need to reset the writer before each simulation start
-
-    std::cout << "Loaded QoS profiles: " << std::endl;
-    for (const auto str : dds::core::QosProvider("QOS_PLANNING_PROBLEM.xml")->qos_profile_libraries())
-    {
-        std::cout << str << std::endl;
-    }
-
-    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSPlanningProblemElement>>("commonroad_dds_planning_problems", "QOS_PLANNING_PROBLEM.xml", "PlanningProblemLibrary::PlanningProblemProfile");
+    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_planning_problems", true, true, true);
 
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
@@ -240,7 +233,7 @@ int main(int argc, char *argv[])
 
             //Reset writer for planning problems (used down below), as it is transient local and we do not want to pollute the net with outdated data
             writer_planning_problems.reset();
-            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSPlanningProblemElement>>("commonroad_dds_planning_problems", "QOS_PLANNING_PROBLEM.xml", "PlanningProblemLibrary::PlanningProblemProfile");
+            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_planning_problems", true, true, true);
 
             //Stop RTT measurement
             rtt_aggregator->stop_measurement();

@@ -48,8 +48,6 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
-#include "CommonroadDDSPlanningProblems.hpp"
-
 /**
  * \class StateExact
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
@@ -125,11 +123,6 @@ public:
      * TODO: Change return type to whatever the name of the IDL type is
      */
     void to_dds_msg() {}
-
-    /**
-     * \brief Translate to initial state DDS representation
-     */
-    CommonroadDDSInitialState to_dds_initial_state();
 
     //Getter
     const std::optional<Position>& get_position() const;

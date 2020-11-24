@@ -61,7 +61,7 @@
 #include "LCCErrorLogger.hpp"
 
 #include "cpm/Writer.hpp"
-#include "CommonroadDDSPlanningProblems.hpp"
+#include "CommonroadDDSGoalState.hpp"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO: Put Enums etc inside class definition??
@@ -382,5 +382,5 @@ public:
      * \brief Send all currently stored planning problems into the network / to the HLCs
      * \param writer_planning_problems DDS writer to send planning problems
      */
-    void send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSPlanningProblemElement>> writer_planning_problems);
+    void send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems);
 };

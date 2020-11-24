@@ -37,7 +37,7 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
-#include "CommonroadDDSPlanningProblems.hpp"
+#include "CommonroadDDSGoalState.hpp"
 
 /**
  * \class Interval
@@ -200,8 +200,9 @@ public:
 
     /**
      * \brief Translate to DDS
+     * \param ratio Relevant to translate e.g. time information to actual time
      */
-    CommonroadDDSIntervals to_dds_msg()
+    CommonroadDDSIntervals to_dds_msg(double ratio = 1.0)
     {
         CommonroadDDSIntervals dds_interval;
         
@@ -209,8 +210,8 @@ public:
         for (auto& interval : intervals)
         {
             CommonroadDDSInterval dds_interval;
-            dds_interval.interval_start(interval.first);
-            dds_interval.interval_end(interval.second);
+            dds_interval.interval_start(interval.first * ratio);
+            dds_interval.interval_end(interval.second * ratio);
             vector_intervals.push_back(dds_interval);
         }
 

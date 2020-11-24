@@ -200,33 +200,20 @@ const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problem
     return planning_problems;
 }
 
-CommonroadDDSPlanningProblem PlanningProblem::to_dds_msg()
+std::vector<CommonroadDDSGoalState> PlanningProblem::get_dds_goal_states(double time_step_size)
 {
-    CommonroadDDSPlanningProblem problem;
-    std::vector<CommonroadDDSPlanningProblemElement> problem_elements;
+    std::vector<CommonroadDDSGoalState> goal_states;
 
-    for (auto& planning_problem : planning_problems)
+    for (size_t planning_pos = 0; planning_pos < planning_problems.size(); ++planning_pos)
     {
-        CommonroadDDSPlanningProblemElement problem_element;
-        if (planning_problem.initial_state.has_value())
-        {
-            problem_element.initial_state(planning_problem.initial_state->to_dds_initial_state());
-        }
-        problem_element.initial_state_set(planning_problem.initial_state.has_value());
-
-        std::vector<CommonroadDDSGoalState> goal_states;
-        for (auto& goal_state : planning_problem.goal_states)
+        for (size_t goal_pos = 0; goal_pos < planning_problems.at(planning_pos).goal_states.size(); ++ goal_pos)
         { 
-            goal_states.push_back(goal_state.to_dds_msg());
+            auto dds_goal_state = planning_problems.at(planning_pos).goal_states.at(goal_pos).to_dds_msg(time_step_size);
+            dds_goal_state.goal_state_pos(goal_pos);
+            dds_goal_state.planning_problem_pos(planning_pos);
+            goal_states.push_back(dds_goal_state);
         }
-        rti::core::vector<CommonroadDDSGoalState> rti_goal_states(goal_states);
-        problem_element.goal_states(rti_goal_states);
-
-        problem_elements.push_back(problem_element);
     }
 
-    rti::core::vector<CommonroadDDSPlanningProblemElement> rti_problem_elements(problem_elements);
-    problem.planning_problems(rti_problem_elements);
-
-    return problem;
+    return goal_states;
 }

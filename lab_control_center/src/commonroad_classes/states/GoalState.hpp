@@ -51,7 +51,7 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
-#include "CommonroadDDSPlanningProblems.hpp"
+#include "CommonroadDDSGoalState.hpp"
 
 /**
  * \class GoalState
@@ -118,8 +118,9 @@ public:
 
     /**
      * \brief Convert to DDS representation
+     * \param time_step_size Relevant to translate time information to actual time
      */
-    CommonroadDDSGoalState to_dds_msg();
+    CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
     //Getter
     const std::optional<IntervalOrExact>& get_time() const;

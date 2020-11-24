@@ -240,14 +240,14 @@ const std::optional<Interval>& GoalState::get_velocity() const
     return velocity;
 }
 
-CommonroadDDSGoalState GoalState::to_dds_msg()
+CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
 {
     CommonroadDDSGoalState goal_state;
 
     goal_state.time_set(time.has_value());
     if(time.has_value())
     {
-        goal_state.time(time->to_dds_interval());
+        goal_state.time(time->to_dds_interval(time_step_size));
     }
 
     std::vector<CommonroadDDSPositionInterval> positions;
