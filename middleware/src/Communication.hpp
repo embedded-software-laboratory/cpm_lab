@@ -279,7 +279,7 @@ class Communication {
         }
 
         /**
-         * \brief Pass system trigger / timing messages from the LCC to the LCC
+         * \brief Pass system trigger / timing messages from the LCC to the HLCs
          */
         void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
             for (auto& sample : samples) {
@@ -288,7 +288,7 @@ class Communication {
         }
 
         /**
-         * \brief Pass goal states from the LCC to the LCC
+         * \brief Pass goal states from the LCC to the HLCs
          */
         void pass_through_goal_states(std::vector<CommonroadDDSGoalState>& samples) {
             std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
