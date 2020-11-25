@@ -48,6 +48,12 @@ namespace cpm {
      */
     bool parameter_bool(std::string parameter_name);
     /**
+     * \brief retrieve the value of a uint64_t parameter
+     * \param parameter_name the name of the parameter
+     * \return the value of the parameter with the given name
+     */
+    uint64_t parameter_uint64_t(std::string parameter_name);
+    /**
      * \brief retrieve the value of an int parameter
      * \param parameter_name the name of the parameter
      * \return the value of the parameter with the given name

@@ -55,6 +55,12 @@ struct ParameterWithDescription {
             value_stream << param.parameter_data.values_int32().at(0);
             value = value_stream.str();
         }
+        else if (param.parameter_data.type() == ParameterType::UInt64) {
+            type = "UInt64 (/Timestamp)";
+            std::stringstream value_stream;
+            value_stream << param.parameter_data.value_uint64_t();
+            value = value_stream.str();
+        }
         else if (param.parameter_data.type() == ParameterType::Double) {
             type = "Double";
             std::stringstream value_stream;

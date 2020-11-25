@@ -491,6 +491,53 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
+// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
+{
+    // x offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopRight:
+        case StringMessageAnchor::CenterRight:
+        case StringMessageAnchor::BottomRight:
+            // substract bearing twice so the gap between anchor point and text
+            // behaves equally as with a left sided anchor
+            offs_x = -ext.width - 2*ext.x_bearing;
+            break;
+        
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::BottomCenter:
+            
+            offs_x = -ext.width/2 - ext.x_bearing;
+            break;
+        
+        default:
+            offs_x = 0.0;
+    }
+    // y offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopLeft:
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::TopRight:
+            
+            offs_y = ext.y_bearing;
+            break;
+        
+        case StringMessageAnchor::CenterLeft:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::CenterRight:
+            
+            offs_y = ext.height/2 + ext.y_bearing;
+            break;
+        
+        default:
+            offs_y = 0.0;
+    }
+}
+
+
 //Draw all received viz commands on the screen
 void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
     //Get commands
@@ -498,8 +545,10 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
     for(const auto& entry : visualization_commands) 
     {
-        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
-            && entry.points().size() > 1) 
+        if ((entry.type() == VisualizationType::LineStrips || 
+             entry.type() == VisualizationType::Polygon    ||
+             entry.type() == VisualizationType::FilledCircle )
+            && entry.points().size() > 0)
         {
             const auto& message_points = entry.points();
 
@@ -507,27 +556,46 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
-            for (size_t i = 1; i < message_points.size(); ++i)
+            if(entry.type() == VisualizationType::FilledCircle)
             {
-                //const auto& current_point = message_points.at(i);
-
-                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
-            }  
-
-            //Line from end to beginning point to close the polygon
-            if (entry.type() == VisualizationType::Polygon) {
-                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                const auto& radius = entry.size();
+                ctx->arc(message_points.at(0).x(), message_points.at(0).y(), radius, 0.0, 2.0 * M_PI);
+                ctx->fill(); // replaces stroke()
             }
-
-            ctx->set_line_width(entry.size());
-            ctx->stroke();      
+            else if(entry.points().size() < 2) // type definitely is LineStrips or Polygon
+            {
+                cpm::Logging::Instance().write(1, "%s", "WARNING: Visualisation of Polygon or LineStrips with < 2 points");
+            }
+            else
+            {
+                for (size_t i = 1; i < message_points.size(); ++i)
+                {
+                    ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+                }
+                //Line from end to beginning point to close the polygon
+                if (entry.type() == VisualizationType::Polygon) {
+                    ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                }
+                
+                ctx->set_line_width(entry.size());
+                ctx->stroke();
+            }            
         }
-        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+        else if (entry.type() == VisualizationType::StringMessage
+                 && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
 
-            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+            //Align
+            Cairo::TextExtents ext;
+            ctx->get_text_extents(entry.string_message(), ext);
+            
+            double text_offset_x, text_offset_y;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
+            
+            ctx->move_to(entry.points().at(0).x() + text_offset_x, 
+                         entry.points().at(0).y() + text_offset_y );
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);

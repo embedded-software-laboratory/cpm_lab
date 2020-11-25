@@ -164,6 +164,11 @@ int main (int argc, char *argv[]) {
         hello_msg.middleware_running(session_exists("middleware"));
 
         writer_readyMessage.write(hello_msg);
+
+        if (dds::pub::matched_subscriptions(writer_readyMessage).size() == 0)
+        {
+            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id);
+        }
     },
     [](){
         //Ignore stop signals

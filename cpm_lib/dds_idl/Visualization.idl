@@ -34,7 +34,21 @@ enum VisualizationType
 {
     LineStrips=0,
     Polygon,
-    StringMessage
+    StringMessage,
+    FilledCircle //Center at points[0]
+};
+
+enum StringMessageAnchor
+{
+    BottomLeft=0,
+    BottomCenter,
+    BottomRight,
+    CenterLeft,
+    Center,
+    CenterRight,
+    TopLeft,
+    TopCenter,
+    TopRight
 };
 
 struct Visualization 
@@ -48,6 +62,7 @@ struct Visualization
     sequence<Point2D> points;
     double size; //Line width in pixels or text size in pt
     string string_message;
+    StringMessageAnchor string_message_anchor; //Align
 
     Color color;
 };

@@ -54,6 +54,8 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("box_buttons", box_buttons);
     builder->get_widget("label_hlc_description_short", label_hlc_description_short);
     builder->get_widget("label_hlc_description_long", label_hlc_description_long);
+    builder->get_widget("entry_hlc_reboot", entry_hlc_reboot);
+    builder->get_widget("button_hlc_reboot", button_hlc_reboot);
     builder->get_widget("label_rtt_hlc_short", label_rtt_hlc_short);
     builder->get_widget("label_rtt_hlc_long", label_rtt_hlc_long);
     builder->get_widget("label_rtt_vehicle_short", label_rtt_vehicle_short);
@@ -67,6 +69,8 @@ MonitoringUi::MonitoringUi(
     assert(box_buttons);
     assert(label_hlc_description_short);
     assert(label_hlc_description_long);
+    assert(entry_hlc_reboot);
+    assert(button_hlc_reboot);
     assert(label_rtt_hlc_short);
     assert(label_rtt_hlc_long);
     assert(label_rtt_vehicle_short);
@@ -80,6 +84,57 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
+
+    //Register the button callback for rebooting the HLCs and tell the user how to use the input with a tooltip
+    entry_hlc_reboot->set_tooltip_text("Enter * for all, else comma-separated list (e.g. 1, 5, 8)");
+    button_hlc_reboot->signal_clicked().connect(
+        [this] {
+            //Call reboot depending on text in entry for HLC IDs
+            std::string hlc_to_reboot = entry_hlc_reboot->get_text();
+            bool conversion_valid = true;
+
+            //Perform conversion to list of ints or just regard all HLCs if * is part of the string
+            std::vector<uint8_t> hlc_ids;
+            if (hlc_to_reboot.find("*") != std::string::npos)
+            {
+                hlc_ids = get_hlc_data();
+            }
+            else
+            {
+                std::stringstream id_stream(hlc_to_reboot);
+                std::string single_id;
+                while (std::getline(id_stream, single_id, ',')) {
+                    try {
+                        int id = std::stoi(single_id);
+
+                        //Go to catch if the ID is not within the valid domain
+                        if (id < 0 || id > 255) throw std::domain_error("HLC ID is invalid"); //Gets ignored on purpose
+
+                        //Store ID
+                        hlc_ids.push_back(static_cast<uint8_t>(id));
+                    }
+                    catch (...) {
+                        entry_hlc_reboot->get_style_context()->add_class("error");
+                        entry_hlc_reboot->set_text("");
+                        conversion_valid = false;
+                        break;
+                    }
+                }
+            }
+
+            //Reboot the desired HLCs if the conversion worked (timeout: 3 seconds)
+            if (conversion_valid)
+            {
+                deploy_functions->reboot_hlcs(hlc_ids, 3);
+            }
+        }
+    );
+    entry_hlc_reboot->signal_changed().connect(
+        [this] {
+            //Remove "error" color again (in case it has been set)
+            entry_hlc_reboot->get_style_context()->remove_class("error");
+        }
+    );
 
     //Store start time of simulation when simulation is running - this is the default value (uninitialized)
     sim_start_time.store(0);
