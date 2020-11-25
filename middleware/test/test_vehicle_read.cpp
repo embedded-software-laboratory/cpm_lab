@@ -31,9 +31,7 @@
 #include <random>
 #include <thread>
 #include <vector>
-
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include <chrono>
 
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
@@ -96,10 +94,8 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     });
 
     //Send random data from two vehicle dummies to the Middleware
-    dds::pub::DataWriter<VehicleState> vehicle_0_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
-    dds::pub::DataWriter<VehicleState> vehicle_1_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
+    cpm::Writer<VehicleState> vehicle_0_writer("vehicleState");
+    cpm::Writer<VehicleState> vehicle_1_writer("vehicleState");
 
     for (int stamp_number = 0; stamp_number <= testMessagesAmount; ++stamp_number) {
         //Create random variable
@@ -121,7 +117,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
 
 		vehicle_0_writer.write(first_vehicle_state);
         vehicle_1_writer.write(second_vehicle_state);
-		rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(sensor_period)));
+		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(sensor_period)));
     }
 
     timer->stop();

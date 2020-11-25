@@ -34,6 +34,7 @@
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include "CommonroadObstacleList.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
@@ -65,8 +66,8 @@ private:
     std::shared_ptr<cpm::SimpleTimer> standby_timer;
 
     //DDS
-    dds::pub::DataWriter<CommonroadObstacleList> writer_commonroad_obstacle;
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicle_trajectory;
+    cpm::Writer<CommonroadObstacleList> writer_commonroad_obstacle;
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicle_trajectory;
 
     /**
      * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)

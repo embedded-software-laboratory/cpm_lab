@@ -34,8 +34,6 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include "cpm/VehicleIDFilteredTopic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Reader.hpp"

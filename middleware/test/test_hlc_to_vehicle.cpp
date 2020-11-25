@@ -33,6 +33,7 @@
 #include <random>
 #include <algorithm>
 #include <thread>
+#include <chrono>
 
 #include <dds/sub/ddssub.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -49,6 +50,11 @@
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleStateList.hpp"
 #include "Parameter.hpp"
+
+#include "cpm/AsyncReader.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
 
 #include "Communication.hpp"
 
@@ -108,48 +114,32 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
 
         //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. 
         //In this function, round numbers are stored - the number of each round should be received.
-        dds::sub::DataReader<VehicleCommandSpeedCurvature> vehicleReader(
-            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()),
-            dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(cpm::ParticipantSingleton::Instance(),
-            vehicleSpeedCurvatureTopicName
-        ));
-        dds::core::cond::StatusCondition readCondition(vehicleReader);
-        rti::core::cond::AsyncWaitSet waitset;
-        readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
-        readCondition->handler([&] {
-            dds::sub::LoanedSamples<VehicleCommandSpeedCurvature> samples = vehicleReader.take();
-            waitset.unlock_condition(dds::core::cond::StatusCondition(vehicleReader));
-
+        cpm::AsyncReader<VehicleCommandSpeedCurvature> vehicleReader([&] (std::vector<VehicleCommandSpeedCurvature>& samples)
+        {
             // Store received data for later checks
             std::lock_guard<std::mutex> lock(round_numbers_mutex);
-            for (auto sample : samples) {
-                if (sample.info().valid()) {
-                    received_round_numbers.push_back(sample.data().header().create_stamp().nanoseconds());
-                }
+            for (auto& data : samples) {
+                    received_round_numbers.push_back(data.header().create_stamp().nanoseconds());
             }
-        });
-        waitset.attach_condition(readCondition);
-        waitset.start();
+        }, vehicleSpeedCurvatureTopicName);
 
         //Sleep for some milliseconds just to make sure that the reader has been initialized properly
-        rti::util::sleep(dds::core::Duration::from_millisecs(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         //Send test data from a virtual HLC - only the round number matters here, which is transmitted using the timestamp value
         //The data is sent to the middleware (-> middleware participant, because of the domain ID), and the middleware should send it to the vehicle
-        dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);    
-        dds::topic::Topic<VehicleCommandSpeedCurvature> topic = dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName);
-        dds::pub::Publisher publisher = dds::pub::Publisher(participant);
-        dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(publisher, topic);
+        dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);
+        cpm::Writer<VehicleCommandSpeedCurvature> hlcWriter(participant, vehicleSpeedCurvatureTopicName);
         for (uint64_t i = 0; i <= max_rounds; ++i) {
             //Send data and wait
-            rti::util::sleep(dds::core::Duration::from_millisecs(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             VehicleCommandSpeedCurvature curv(vehicleID, Header(TimeStamp(i), TimeStamp(i)), 0, 0);
             hlcWriter.write(curv);
         }
     }
 
     //Perform checks (wait a while before doing so, to make sure that everything has been received)
-    rti::util::sleep(dds::core::Duration::from_millisecs(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::lock_guard<std::mutex> lock(round_numbers_mutex);
     //"Dirty" bugfix: Check if some of the data was received (as sometimes exactly one data point is missing)

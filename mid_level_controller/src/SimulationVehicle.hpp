@@ -34,13 +34,12 @@
 #include "cpm/MultiVehicleReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/stamp_message.hpp"
+#include "cpm/Writer.hpp"
 #include "geometry.hpp"
 #include "VehicleModel.hpp"
 #include "VehicleObservation.hpp"
 #include "VehicleState.hpp"
 #include "SimulationIPS.hpp"
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include <vector>
 
 extern "C" {
@@ -71,8 +70,7 @@ class SimulationVehicle
     double motor_throttle_history[INPUT_DELAY];
     double steering_servo_history[INPUT_DELAY]; 
 
-    dds::topic::Topic<VehicleObservation> topic_vehiclePoseSimulated;
-    dds::pub::DataWriter<VehicleObservation> writer_vehiclePoseSimulated;
+    cpm::Writer<VehicleObservation> writer_vehiclePoseSimulated;
     cpm::MultiVehicleReader<VehicleObservation> reader_vehiclePoseSimulated;
 
     SimulationIPS& simulationIPS;

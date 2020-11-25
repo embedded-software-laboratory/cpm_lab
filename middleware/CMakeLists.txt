@@ -35,6 +35,7 @@ target_link_libraries(middleware cpm)
 
 add_executable(unittest 
     test/catch.cpp
+    test/test_goals_to_hlc.cpp
     test/test_hlc_to_vehicle.cpp
     test/test_vehicle_to_middleware.cpp
     test/test_middleware_to_hlc.cpp

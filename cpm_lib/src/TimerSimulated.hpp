@@ -33,6 +33,8 @@
 #include "SystemTrigger.hpp"
 
 #include "cpm/exceptions.hpp"
+#include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 
 #include <thread>
 #include <string>
@@ -47,9 +49,7 @@ namespace cpm {
     {
         uint64_t period_nanoseconds; 
         uint64_t offset_nanoseconds;
-        dds::topic::Topic<ReadyStatus> ready_topic;
-        dds::topic::Topic<SystemTrigger> trigger_topic;
-        dds::pub::DataWriter<ReadyStatus> writer_ready_status;
+        cpm::Writer<ReadyStatus> writer_ready_status;
         dds::sub::DataReader<SystemTrigger> reader_system_trigger;
         std::string node_id;
         uint64_t current_time;

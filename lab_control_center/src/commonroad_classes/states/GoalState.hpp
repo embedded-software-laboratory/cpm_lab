@@ -51,6 +51,8 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "CommonroadDDSGoalState.hpp"
+
 /**
  * \class GoalState
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
@@ -60,7 +62,7 @@ class GoalState : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double; Can only be defined as interval according to spec, not changed yet due to necessary changes elsewhere
     std::optional<Position> position = std::nullopt; //Must not be defined 
     std::optional<Interval> orientation = std::nullopt; //Must not be defined
     std::optional<Interval> velocity = std::nullopt; //Must not be defined
@@ -114,7 +116,11 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void to_dds_msg() {} 
+    /**
+     * \brief Convert to DDS representation
+     * \param time_step_size Relevant to translate time information to actual time
+     */
+    CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
     //Getter
     const std::optional<IntervalOrExact>& get_time() const;

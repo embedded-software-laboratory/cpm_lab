@@ -199,3 +199,21 @@ const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problem
 {
     return planning_problems;
 }
+
+std::vector<CommonroadDDSGoalState> PlanningProblem::get_dds_goal_states(double time_step_size)
+{
+    std::vector<CommonroadDDSGoalState> goal_states;
+
+    for (size_t planning_pos = 0; planning_pos < planning_problems.size(); ++planning_pos)
+    {
+        for (size_t goal_pos = 0; goal_pos < planning_problems.at(planning_pos).goal_states.size(); ++ goal_pos)
+        { 
+            auto dds_goal_state = planning_problems.at(planning_pos).goal_states.at(goal_pos).to_dds_msg(time_step_size);
+            dds_goal_state.goal_state_pos(goal_pos);
+            dds_goal_state.planning_problem_pos(planning_pos);
+            goal_states.push_back(dds_goal_state);
+        }
+    }
+
+    return goal_states;
+}

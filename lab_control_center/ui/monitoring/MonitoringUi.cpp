@@ -203,7 +203,7 @@ void MonitoringUi::init_ui_thread()
                     {
                         //This is not part of the time series data, so we need a special case for this
                         //Show if the NUC with the ID of the vehicle is online (= sends data from autostart program to LCC)
-                        label->set_text("NUC connected");
+                        label->set_text("Remote HLC [y/n]");
                     }
                     else 
                     {
@@ -284,7 +284,7 @@ void MonitoringUi::init_ui_thread()
                             if (current_mapping.second.find(vehicle_id) == current_mapping.second.end())
                             {
                                 //Was not matched
-                                label->set_text("Not matched");
+                                label->set_text("no");
                                 label->get_style_context()->add_class("warn");
                             }
                             else
@@ -299,7 +299,7 @@ void MonitoringUi::init_ui_thread()
 
                                 if (!nuc_crashed && !program_crashed)
                                 {
-                                    label->set_text("Online");
+                                    label->set_text("yes");
                                     label->get_style_context()->add_class("ok");
                                     if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
                                     if(error_triggered[0][0]) error_triggered[0][0] = false; 
@@ -316,12 +316,12 @@ void MonitoringUi::init_ui_thread()
                                     if(error_timestamps[0][0] == 0) 
                                     {
                                         // set error timestamp  
-                                        error_timestamps[0][0] = clock_gettime_nanoseconds(); 
+                                        error_timestamps[0][0] = cpm::get_time_ns(); 
                                         continue;
                                     }
 
                                     // an error occured before - do nothing if the error is not older than a threshold
-                                    if(clock_gettime_nanoseconds()-error_timestamps[0][0]<500000000) continue;
+                                    if(cpm::get_time_ns()-error_timestamps[0][0]<500000000) continue;
                                     
                                     if(!error_triggered[0][0])
                                     {
@@ -356,7 +356,7 @@ void MonitoringUi::init_ui_thread()
                         else
                         {
                             //No simulation
-                            label->set_text("Not matched");
+                            label->set_text("no");
                             label->get_style_context()->add_class("ok");
                         }
                     }
@@ -394,12 +394,12 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
 
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -435,11 +435,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -471,11 +471,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
 
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -507,11 +507,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<2000000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<2000000000) continue;
 
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -593,9 +593,9 @@ void MonitoringUi::init_ui_thread()
                                         trajectory_segment[j]
                                     );
                                     
-                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
+                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-cpm::get_time_ns() < dt)
                                     {
-                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
+                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-cpm::get_time_ns(); 
                                         current_px = interp->position_x;
                                         current_py = interp->position_y;
                                     }
@@ -613,11 +613,11 @@ void MonitoringUi::init_ui_thread()
                                 if(error_timestamps[i][vehicle_id] == 0) 
                                 {
                                     // set error timestamp  
-                                    error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                    error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                     continue;
                                 }
                                 // an error occured before - do nothing if the error is not older than a threshold
-                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<200000000) continue;
+                                if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<200000000) continue;
 
                                 if(!error_triggered[i][vehicle_id])
                                 {

@@ -30,9 +30,10 @@
 
 #include <thread>
 
+#include "cpm/Writer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
-#include <dds/pub/ddspub.hpp>
+
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <dds/topic/ddstopic.hpp>
@@ -63,9 +64,7 @@ TEST_CASE( "SimpleTimer functionality" ) {
     uint64_t starting_time = timer.get_time() + 2000000000;
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        cpm::get_topic<SystemTrigger>("systemTrigger"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    cpm::Writer<SystemTrigger> timer_system_trigger_writer("systemTrigger", true);
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<ReadyStatus>("readyStatus"),
