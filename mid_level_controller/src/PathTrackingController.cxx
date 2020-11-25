@@ -42,9 +42,9 @@ PathTrackingController::PathTrackingController(uint8_t _vehicle_id, std::functio
 // Wrap angle in radians to [-pi pi]
 inline double wrap2pi(const double yaw)
 {
-    double yaw_out = fmod(yaw + M_PI_2, M_PI);
-    if (yaw_out < 0) yaw_out += M_PI;
-    return yaw_out - M_PI_2;
+    double yaw_out = fmod(yaw + M_PI, 2.0*M_PI);
+    if (yaw_out < 0) yaw_out += 2.0*M_PI;
+    return yaw_out - M_PI;
 }
 
 double PathTrackingController::control_steering_servo(
