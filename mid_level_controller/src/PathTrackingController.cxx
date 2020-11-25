@@ -98,7 +98,7 @@ Pose2D PathTrackingController::find_reference_pose(
 )
 {
     // Iterate over interpolated path to find point with minimum distance
-    const double ds = 0.1; // [m]
+    const double ds = 0.01; // [m]
     assert(path.size() > 1);
     size_t i_path_point = 0;
     double s_max = path.back().s();
