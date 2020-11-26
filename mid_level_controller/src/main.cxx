@@ -206,9 +206,10 @@ int main(int argc, char *argv[])
                 memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
                 
                 // Convert actuator input to low level controller units
-                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
                 spi_mosi_data.motor_mode = motor_mode;
+                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+                // servo allows a range of 2400 (see servo_timer.c)
+                spi_mosi_data.servo_command = int16_t(steering_servo * (-1200.0));
 
                 // vehicle ID for LED flashing 
                 spi_mosi_data.vehicle_id = static_cast<uint8_t>(vehicle_id);
