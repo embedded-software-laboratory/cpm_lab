@@ -87,7 +87,6 @@ void VehicleTrajectoryPlanner::start()
             bool is_collision_avoidable = false;
 
             this->read_other_vehicles();
-            this->interpolate_other_vehicles_buffer();
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
@@ -163,6 +162,10 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             //if(index_offset > 100) {
             //    std::cout << "Received data with unfeasible timestamp";
             //}
+            
+            int prev_buffer_index = -1;
+            int prev_edge_index = -1;
+            int prev_edge_path_index = -1;
 
             // Save all received positions that are not in the past already
             for ( auto position : sample.data().lane_graph_positions() ) {
@@ -171,18 +174,32 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                    The "... - dt_nanos" follows from practical observations, where
                    indices were shifted by 1 dt_nanos
                 */
-                int index_to_use = 
+                int index = 
                     (position.estimated_arrival_time().nanoseconds() - t_planning - dt_nanos)
                     / (dt_nanos/timesteps_per_planningstep);
 
                 // If index_to_use is negative, estimated_arrival_time is in the past
-                if( index_to_use >= 0 ) {
-                    other_vehicles_buffer[sample.data().vehicle_id()][index_to_use] =
+                if( index >= 0 ) {
+                    other_vehicles_buffer[sample.data().vehicle_id()][index] =
                         std::make_pair(
                             position.edge_index(),
                             position.edge_path_index()
                             );
                 }
+
+                // If the prev_... vars are set, interpolate using them
+                if( prev_edge_index >= 0 ) {
+                    interpolate_other_vehicles_buffer(
+                            sample.data().vehicle_id(),
+                            prev_buffer_index, prev_edge_index, prev_edge_path_index,
+                            index, position.edge_index(), position.edge_path_index()
+                            );
+                }
+
+                prev_buffer_index = index;
+                prev_edge_index = position.edge_index();
+                prev_edge_path_index = position.edge_path_index();
+                
             }
         }
     }
@@ -228,34 +245,48 @@ void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory 
     this->writer_laneGraphTrajectory->write(msg);
 }
 
-//TODO: Don't just blindly increase edge_path_index, but look at
-// next edge_index, and fill the gaps
-void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer() {
+/*
+ * Fills in points between two points on the Lane Graph.
+ * This naively assumes a fixed speed, equidistant edge_paths-Points
+ * and assumes that we are interpolating between two adjacent edges.
+ */
+void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer(
+        uint8_t vehicle_id,
+        int buffer_index_1, int edge_index_1, int edge_path_index_1,
+        int buffer_index_2, int edge_index_2, int edge_path_index_2) {
 
-    size_t edge_index = 0;
-    size_t edge_path_index = 0;
+    //FIXME: This is a constant in geometry.hpp
+    int edge_paths_per_edge = 25;
 
-    // We have to interpolate for each vehicle
-    for( auto &vehicle : other_vehicles_buffer ) {
-        auto &vehicle_buffer = vehicle.second;
+    int delta_edge_path = edge_paths_per_edge - edge_path_index_1 + edge_path_index_2;
+    int delta_index = buffer_index_2 - buffer_index_1;
+    double step_size = delta_edge_path/delta_index;
+    
+    // Either start from one past buffer_index_1, or from 0
+    for( int i = std::max(buffer_index_1+1, 0); i<buffer_index_2; i++ ) {
+        int edge_path_to_insert = edge_path_index_1 +
+            int(step_size*(i-buffer_index_1+1));
+        int edge_to_insert;
 
-        // Loop over every index in our own planning buffer
-        for( size_t i=0; i<N_STEPS_SPEED_PROFILE; i++ ) {
-
-            // Buffer is sparse at the beginning, so we check if this index exists
-            if( vehicle_buffer.count(i) ) {
-                edge_index = vehicle_buffer.at(i).first;
-                edge_path_index = vehicle_buffer.at(i).second;
-            } else {
-                edge_path_index = edge_path_index + 3;
-                vehicle_buffer.emplace(i, std::make_pair(
-                        edge_index,
-                        edge_path_index
-                        ));
-            }
+        /* Interpolation starts on edge_index_1
+         * and ends on edge_index_2
+         * Here we differentiate those
+         */
+        if( edge_path_to_insert < edge_paths_per_edge ) {
+            edge_to_insert = edge_index_1;
+        } else {
+            edge_path_to_insert = edge_path_to_insert - edge_paths_per_edge;
+            edge_to_insert = edge_index_1;
         }
+
+        other_vehicles_buffer[vehicle_id][i] =
+            std::make_pair(
+                    edge_to_insert,
+                    edge_path_to_insert
+                    );
     }
 }
+
 
 void VehicleTrajectoryPlanner::set_writer(
         std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
