@@ -358,7 +358,6 @@ void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
 
 void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle, double &out_steering_servo) 
 {
-    // cpm::TimeMeasurement::Instance().start("mpc_start");
     receive_commands(t_now);
 
     update_remote_parameters();
@@ -378,8 +377,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
 
         state = ControllerState::Stop;
     }
-    // cpm::TimeMeasurement::Instance().stop("mpc_start");
-    // cpm::TimeMeasurement::Instance().start("mpc_switch");
 
     switch(state) {
 
@@ -421,7 +418,6 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         }
         break;
     }
-    // cpm::TimeMeasurement::Instance().stop("mpc_switch");
 
     motor_throttle = fmax(-1.0, fmin(1.0, motor_throttle));
     steering_servo = fmax(-1.0, fmin(1.0, steering_servo));
@@ -452,9 +448,7 @@ void Controller::get_stop_signals(double &out_motor_throttle, double &out_steeri
 
 void Controller::reset()
 {
-    //cpm::TimeMeasurement::Instance().start("reset_mutex");
     std::lock_guard<std::mutex> lock(command_receive_mutex);
-    //cpm::TimeMeasurement::Instance().stop("reset_mutex");
 
     cpm::TimeMeasurement::Instance().start("reset_reader");
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));

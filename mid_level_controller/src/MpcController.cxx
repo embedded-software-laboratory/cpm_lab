@@ -182,7 +182,6 @@ void MpcController::update(
     double &out_steering_servo
 )
 {
-    cpm::TimeMeasurement::Instance().start("mpc_up_start");
     battery_voltage_lowpass_filtered += 0.1 * (vehicleState.battery_voltage() - battery_voltage_lowpass_filtered);
 
     const VehicleState vehicleState_predicted_start = delay_compensation_prediction(vehicleState);
@@ -205,9 +204,6 @@ void MpcController::update(
     assert(mpc_reference_trajectory_x.size() == MPC_prediction_steps);
     assert(mpc_reference_trajectory_y.size() == MPC_prediction_steps);
 
-    cpm::TimeMeasurement::Instance().stop("mpc_up_start");
-    //cpm::TimeMeasurement::Instance().start("mpc_opt");
-
     optimize_control_inputs(
         vehicleState_predicted_start,
         mpc_reference_trajectory_x,
@@ -215,8 +211,6 @@ void MpcController::update(
         out_motor_throttle, 
         out_steering_servo
     );
-
-    //cpm::TimeMeasurement::Instance().stop("mpc_opt");
 
     // shift output history, save new output
     for (int i = 1; i < MPC_DELAY_COMPENSATION_STEPS; ++i)

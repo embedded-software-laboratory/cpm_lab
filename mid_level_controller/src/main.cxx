@@ -256,7 +256,6 @@ int main(int argc, char *argv[])
                 // Process sensor data
                 if(transmission_successful) 
                 {
-                    //cpm::TimeMeasurement::Instance().start("localization");
                     Pose2D new_pose = localization.update(
                         t_now,
                         period_nanoseconds,
@@ -264,7 +263,6 @@ int main(int argc, char *argv[])
                         sample_vehicleObservation, 
                         sample_vehicleObservation_age
                     );
-                    //cpm::TimeMeasurement::Instance().stop("localization");
                     vehicleState.pose(new_pose);
                     vehicleState.motor_throttle(motor_throttle);
                     vehicleState.steering_servo(steering_servo);
@@ -286,13 +284,11 @@ int main(int argc, char *argv[])
                     );
                 }
 
-                //cpm::TimeMeasurement::Instance().start("loc_reset");
                 if(loop_count == 25)
                 {
                     localization.reset();
                 }
                 loop_count++;
-                //cpm::TimeMeasurement::Instance().stop("loc_reset");
             }
             catch(const dds::core::Exception& e)
             {
@@ -320,22 +316,11 @@ int main(int argc, char *argv[])
 
             // Finish current time measurements
             cpm::TimeMeasurement::Instance().stop("cycle");
-            // if (cpm::TimeMeasurement::Instance().exists("all")){
-            //     cpm::TimeMeasurement::Instance().stop("all");
-            //     cpm::TimeMeasurement::Instance().stop("all_rt");
-            // }
-            std::cout << cpm::TimeMeasurement::Instance().get_str().c_str() << std::endl;
-            cpm::Logging::Instance().write(3,"%s", cpm::TimeMeasurement::Instance().get_str().c_str());
-
-            // Start measurements which observe also the time between the cycles
-            // cpm::TimeMeasurement::Instance().start("all");
-            // cpm::TimeMeasurement::Instance().start("all_rt", CLOCK_REALTIME);
             
             //log_fn(__LINE__);
         },
     //Callback for stop signal
         [&](){
-            cpm::TimeMeasurement::Instance().start("stop");
             //Clear all recent commands and make the vehicle stop immediately, and prevent receiving new data for a limited amount of time
             //Define x empty runs before the reset
             stop_counter.store(STOP_STEPS); //50Hz -> pause for one second
@@ -345,8 +330,6 @@ int main(int argc, char *argv[])
                 3,
                 "Received stop %s",
                 "signal");
-
-            cpm::TimeMeasurement::Instance().stop("stop");
         }
     );
     
