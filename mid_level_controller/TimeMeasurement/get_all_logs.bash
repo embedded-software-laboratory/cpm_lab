@@ -22,7 +22,7 @@ IDS=$'
 19
 20'
 
-folder=$(date +%Y_%m_%d_%k_%M_%S)
+folder=$(date +%Y_%m_%d_%H_%M_%S)
 mkdir $folder
 
 cd $folder
