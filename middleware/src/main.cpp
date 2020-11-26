@@ -34,9 +34,6 @@
 #include <sstream>
 #include <string>
 #include <functional>
-#include <dds/core/QosProvider.hpp>
-
-#include <dds/sub/ddssub.hpp>
 
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
@@ -56,11 +53,16 @@ int main (int argc, char *argv[]) {
     //Initial parameters that can partially be set in the command line
     //Timer parameters
     std::string node_id = cpm::cmd_parameter_string("node_id", "middleware", argc, argv);
-    uint64_t period_nanoseconds = cpm::cmd_parameter_uint64_t("period_nanoseconds", 250000000, argc, argv);
     uint64_t offset_nanoseconds = cpm::cmd_parameter_uint64_t("offset_nanoseconds", 1, argc, argv);
+    //uint64_t period_nanoseconds = cpm::cmd_parameter_uint64_t("period_nanoseconds", 250000000, argc, argv);
     bool simulated_time_allowed = true;
     bool simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     bool wait_for_start = cpm::cmd_parameter_bool("wait_for_start", true, argc, argv);
+
+    //Parameter settings via LCC
+    std::cout << "Waiting for parameter 'middleware_period_ms' set by LCC ..." << std::endl;
+    uint64_t period_ms = cpm::parameter_uint64_t("middleware_period_ms");
+    uint64_t period_nanoseconds = period_ms * 1e6;
 
     //Communication parameters
     int hlcDomainNumber = cpm::cmd_parameter_int("domain_number", 1, argc, argv); 
@@ -81,10 +83,12 @@ int main (int argc, char *argv[]) {
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     std::cout << "DEBUG: - configuration" << std::endl
-        << "Node ID: " << node_id
-        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv)
-        << "Simulated time: " << simulated_time
-        << "Wait for start: " << wait_for_start;
+        << "Node ID: " << node_id << std::endl
+        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv) << std::endl
+        << "Simulated time: " << simulated_time << std::endl
+        << "Wait for start: " << wait_for_start << std::endl
+        << "Period (ns): " << period_nanoseconds << std::endl;
+
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
     std::vector<uint8_t> unsigned_vehicle_ids;
@@ -170,6 +174,7 @@ int main (int argc, char *argv[]) {
         state_list.state_list(rti_states);
         state_list.vehicle_observation_list(rti_observations);
         state_list.t_now(t_now);
+        state_list.period_ms(period_ms);
 
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);

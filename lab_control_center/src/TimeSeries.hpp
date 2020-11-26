@@ -27,6 +27,7 @@
 #pragma once
 #include "defaults.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "cpm/get_time_ns.hpp"
 
 /**
  * \brief Data class for storing values & (receive) times to get latest / newest data etc

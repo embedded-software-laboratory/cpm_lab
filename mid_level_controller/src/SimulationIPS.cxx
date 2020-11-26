@@ -34,9 +34,9 @@
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 static inline double frand_sym() { return frand()*2-1; }
 
-SimulationIPS::SimulationIPS(dds::topic::Topic<VehicleObservation>& _topic_vehicleObservation)
-:topic_vehicleObservation(_topic_vehicleObservation)
-,writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), topic_vehicleObservation)
+SimulationIPS::SimulationIPS(std::string topic_name)
+:
+    writer_vehicleObservation(topic_name)
 {
     
 }

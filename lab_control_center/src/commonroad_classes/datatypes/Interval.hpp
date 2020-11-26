@@ -37,6 +37,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "CommonroadDDSGoalState.hpp"
+
 /**
  * \class Interval
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
@@ -194,6 +196,28 @@ public:
                 interval.second *= scale;
             }
         }
+    }
+
+    /**
+     * \brief Translate to DDS
+     * \param ratio Relevant to translate e.g. time information to actual time
+     */
+    CommonroadDDSIntervals to_dds_msg(double ratio = 1.0)
+    {
+        CommonroadDDSIntervals dds_interval;
+        
+        std::vector<CommonroadDDSInterval> vector_intervals;
+        for (auto& interval : intervals)
+        {
+            CommonroadDDSInterval dds_interval;
+            dds_interval.interval_start(interval.first * ratio);
+            dds_interval.interval_end(interval.second * ratio);
+            vector_intervals.push_back(dds_interval);
+        }
+
+        dds_interval.intervals(rti::core::vector<CommonroadDDSInterval>(vector_intervals));
+
+        return dds_interval;
     }
 
     #pragma GCC diagnostic pop

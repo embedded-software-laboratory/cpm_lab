@@ -35,13 +35,17 @@
 #include <vector>
 #include <map>
 #include <mutex>
+#include <chrono>
+#include <thread>
+
+#include <unistd.h> //For usleep; Change to sleep_for is possible as soon as the ARM Build supports C++11
 
 #include "dds/Parameter.hpp"
 #include "dds/ParameterRequest.hpp"
 #include "cpm/Logging.hpp"
 
 #include "cpm/AsyncReader.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
 
 namespace cpm
 {
@@ -58,6 +62,7 @@ namespace cpm
 
         //Provide access similar to the interface
         bool parameter_bool(std::string parameter_name);
+        uint64_t parameter_uint64_t(std::string parameter_name);
         int32_t parameter_int(std::string parameter_name);
         double parameter_double(std::string parameter_name);
         std::string parameter_string(std::string parameter_name);
@@ -72,6 +77,7 @@ namespace cpm
 
         //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
         std::map<std::string, bool> param_bool;
+        std::map<std::string, uint64_t> param_uint64_t;
         std::map<std::string, int32_t> param_int;
         std::map<std::string, double> param_double;
         std::map<std::string, std::string> param_string;
@@ -80,6 +86,7 @@ namespace cpm
 
         //Mutex for each map
         std::mutex param_bool_mutex;
+        std::mutex param_uint64_t_mutex;
         std::mutex param_int_mutex;
         std::mutex param_double_mutex;
         std::mutex param_string_mutex;
@@ -96,14 +103,10 @@ namespace cpm
          * \brief Callback function that handles incoming parameter definitions. Parameters are stored in maps depending on their type and name for later access.
          * \param samples Samples to be processed by the callback function (received messages)
          */
-        void callback(dds::sub::LoanedSamples<Parameter>& samples);
-
-    public:
-        dds::topic::Topic<Parameter> parameterTopic;
-        dds::topic::Topic<ParameterRequest> parameterRequestTopic;
+        void callback(std::vector<Parameter>& samples);
 
     private:
-        dds::pub::DataWriter<ParameterRequest> writer;
+        cpm::Writer<ParameterRequest> writer;
         cpm::AsyncReader<Parameter> subscriber;
     };
 

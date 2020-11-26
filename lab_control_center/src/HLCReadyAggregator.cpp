@@ -29,46 +29,41 @@
 //The reader callback is initialized in the init list of the constructor; store all IDs in a map together with the current time in nanoseconds
 HLCReadyAggregator::HLCReadyAggregator() :
     async_hlc_reader(
-        [&](dds::sub::LoanedSamples<HLCHello>& samples){
+        [&](std::vector<HLCHello>& samples){
             //Lock the mutex for thread-safe access
             std::lock_guard<std::mutex> lock(hlc_list_mutex);
 
             //Store new IDs / update receive time
             //Checks for on-/offline NUCs are performed in get_hlc_ids_string, which is called regularly by the UI
-            for (auto sample : samples)
+            for (auto& data : samples)
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    auto id_string = data.source_id();
-                    //Convert ID to uint8_t
-                    try {
-                        int id_int = std::stoi(id_string);
-                        if (id_int < 0 || id_int > 255)
-                        {
-                            throw std::runtime_error("HLC ID is too small / too large");
-                        }
-
-                        uint8_t id_uint8 = static_cast<uint8_t>(id_int);
-                        
-                        hlc_map[id_uint8] = cpm::get_time_ns();
-
-                        //Store whether the programs on the HLC are currently running (with a small risk that the order of msgs is not correct)
-                        hlc_script_running[id_uint8] = data.script_running();
-                        hlc_middleware_running[id_uint8] = data.middleware_running();
-                    }
-                    catch (const std::runtime_error& err)
+                auto id_string = data.source_id();
+                //Convert ID to uint8_t
+                try {
+                    int id_int = std::stoi(id_string);
+                    if (id_int < 0 || id_int > 255)
                     {
-                        cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string, err.what());
+                        throw std::runtime_error("HLC ID is too small / too large");
                     }
-                    catch (...) {
-                        cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string);
-                    }
+
+                    uint8_t id_uint8 = static_cast<uint8_t>(id_int);
+                    
+                    hlc_map[id_uint8] = cpm::get_time_ns();
+
+                    //Store whether the programs on the HLC are currently running (with a small risk that the order of msgs is not correct)
+                    hlc_script_running[id_uint8] = data.script_running();
+                    hlc_middleware_running[id_uint8] = data.middleware_running();
+                }
+                catch (const std::runtime_error& err)
+                {
+                    cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string, err.what());
+                }
+                catch (...) {
+                    cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string);
                 }
             }
         },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<HLCHello>("hlc_hello"))
+        "hlc_hello")
 {
 }
 
@@ -104,7 +99,7 @@ std::vector<uint8_t> HLCReadyAggregator::get_hlc_ids_uint8_t()
         }
         else
         {
-            cpm::Logging::Instance().write(1, "HLC / NUC crashed / now offline / missed online message: %s", std::to_string(static_cast<int>(iterator->first)));
+            cpm::Logging::Instance().write(1, "HLC / NUC crashed / now offline / missed online message: %s", std::to_string(static_cast<int>(iterator->first)).c_str());
             iterator = hlc_map.erase(iterator);
         }
         

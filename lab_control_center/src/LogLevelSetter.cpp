@@ -27,11 +27,7 @@
 #include "LogLevelSetter.hpp"
 
 LogLevelSetter::LogLevelSetter() :
-    log_level_writer(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<LogLevel>(cpm::ParticipantSingleton::Instance(), "logLevel"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll() << dds::core::policy::Durability::TransientLocal())
-    )
+    log_level_writer("logLevel", true, true, true)
 {
     
 }

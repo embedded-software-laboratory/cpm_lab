@@ -62,9 +62,6 @@ using std::int64_t;
 using std::uint64_t;
 
 
-uint64_t clock_gettime_nanoseconds();
-
-
 // from https://stackoverflow.com/a/26221725
 template<typename ... Args>
 string string_format( const std::string& format, Args ... args )

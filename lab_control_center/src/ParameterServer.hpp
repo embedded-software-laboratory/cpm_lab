@@ -44,21 +44,19 @@
 #include "ParameterRequest.hpp"
 #include "ParameterStorage.hpp"
 #include "cpm/ParticipantSingleton.hpp"
+#include "cpm/Writer.hpp"
 #include "ParameterWithDescription.hpp"
 
 #include "cpm/AsyncReader.hpp"
-#include <dds/pub/ddspub.hpp>
 
 class ParameterServer {
 private:    
     //Callback
-    void handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples);
+    void handleParamRequest(std::vector<ParameterRequest>& samples);
     void handleSingleParamRequest(std::string name);
 
     //Communication
-    dds::topic::Topic<Parameter> parameterTopic;
-    dds::topic::Topic<ParameterRequest> parameterRequestTopic;
-    dds::pub::DataWriter<Parameter> writer;
+    cpm::Writer<Parameter> writer;
     cpm::AsyncReader<ParameterRequest> readerParameterRequest;
 
     std::thread delayed_init_param_thread;

@@ -34,14 +34,11 @@
 #include <fstream>
 #include <thread>
 #include <vector>
-
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/core/ddscore.hpp>
-#include <dds/topic/ddstopic.hpp>
+#include <chrono>
 
 #include "Log.hpp"
 
+#include "cpm/ReaderAbstract.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
 TEST_CASE( "Logging" ) {
@@ -52,10 +49,10 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().set_id(id);
 
     //Create logging logs_reader
-    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "log"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
+    cpm::ReaderAbstract<Log> logs_reader("log", true, true);
 
     //Sleep 100ms to make sure that the logger reader is ready to receive messages
-    rti::util::sleep(dds::core::Duration::from_millisecs(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
@@ -84,7 +81,7 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
-    rti::util::sleep(dds::core::Duration::from_millisecs(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     //Write second message to Logger
     std::stringstream stream;
@@ -92,7 +89,7 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().write("%s", stream.str().c_str());
     stream.clear();
 
-    rti::util::sleep(dds::core::Duration::from_millisecs(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     //Write C-style message
     cpm::Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
@@ -128,11 +125,9 @@ TEST_CASE( "Logging" ) {
     //Get listener data to check if it logs were received via DDS
     std::vector<std::string> listener_content;
     std::string thread_id;
-    for (auto sample : logs_reader.take()) {
-        if (sample.info().valid()) {
-            listener_content.push_back(sample.data().content());
-            thread_id = sample.data().id();
-        }
+    for (auto& data : logs_reader.take()) {
+        listener_content.push_back(data.content());
+        thread_id = data.id();
     }
 
     //Compare thread content (received messages) with desired content (order irrelevant)
