@@ -95,17 +95,12 @@ int main(int argc, char *argv[])
     // DDS setup
     auto& participant = cpm::ParticipantSingleton::Instance();
 
-    // setup QoS for data writers
-    dds::pub::qos::DataWriterQos writer_qos;
-    dds::core::policy::Reliability be = dds::core::policy::Reliability::BestEffort();
-    writer_qos << be.max_blocking_time(dds::core::Duration::from_millisecs(10));
-
     dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
 
     dds::pub::DataWriter<VehicleState> writer_vehicleState(
         dds::pub::Publisher(participant), 
         topic_vehicleState, 
-        writer_qos
+        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()
     );
 
     dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), "vehicleObservation");
