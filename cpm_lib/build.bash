@@ -32,8 +32,7 @@ make -C $DIR/build -j$(nproc) && $DIR/build/unittest
 cd $DIR
 
 # Publish cpm_library package via http/apache for the HLCs to download
-# This if does not work, must be changed (the package is never created on the main PC, at least with my account (leon), but is created without the if)
-# if [ $SIMULATION == 0 ]; then
+if [ -z $SIMULATION ]; then
     if [ ! -d "/var/www/html/nuc" ]; then
         sudo mkdir -p "/var/www/html/nuc"
         sudo chmod a+rwx "/var/www/html/nuc"
@@ -42,4 +41,4 @@ cd $DIR
     tar -czf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
     rm -f /var/www/html/nuc/cpm_library_package.tar.gz
     mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc
-# fi
+fi

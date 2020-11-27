@@ -2,26 +2,9 @@
 # exit when any command fails
 set -e
 
-simulation=0
-
-#Get command line arguments
-for arg in "$@"
-do
-    case $arg in
-        -s|--simulation)
-        simulation=1
-        shift # Remove --simulation from processing
-        ;;
-        *)
-        shift # Remove generic argument from processing
-        ;;
-    esac
-done
-
 mkdir -p build_arm
 mkdir -p build_arm_sim
 mkdir -p build_x64_sim
-
 
 # Build for simulation on desktop
 pushd build_x64_sim
@@ -29,8 +12,7 @@ cmake .. -DBUILD_ARM=OFF -DBUILD_SIMULATION=ON
 make -j$(nproc)
 popd
 
-if [ $simulation == 0 ]
-then
+if [ -z $SIMULATION ]; then
     # Build for simulation on Raspberry
     pushd build_arm_sim
     cmake .. -DBUILD_ARM=ON -DBUILD_SIMULATION=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
