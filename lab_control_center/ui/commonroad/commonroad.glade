@@ -59,63 +59,85 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button_load_commonroad">
-                <property name="label">(Re)Load</property>
+              <object class="GtkFlowBox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image_position">right</property>
-                <property name="always_show_image">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">start</property>
+                <property name="min_children_per_line">1</property>
+                <property name="max_children_per_line">4</property>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkButton" id="button_load_commonroad">
+                        <property name="label">(Re)Load</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image_position">right</property>
+                        <property name="always_show_image">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkButton" id="button_load_profile">
+                        <property name="label">Load saved transformation</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image_position">right</property>
+                        <property name="always_show_image">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkButton" id="button_save_profile">
+                        <property name="label">Save transformation</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image_position">right</property>
+                        <property name="always_show_image">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBoxChild">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkButton" id="button_reset_profile">
+                        <property name="label">Reset saved transformation</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="image_position">right</property>
+                        <property name="always_show_image">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button_load_profile">
-                <property name="label">Load saved transformation</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image_position">right</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">4</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button_save_profile">
-                <property name="label">Save transformation</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image_position">right</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">5</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button_reset_profile">
-                <property name="label">Reset saved transformation</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image_position">right</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">6</property>
+                <property name="fill">False</property>
+                <property name="position">7</property>
               </packing>
             </child>
             <child>
@@ -157,7 +179,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">7</property>
+                <property name="position">8</property>
               </packing>
             </child>
             <child>
@@ -166,26 +188,24 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">
-  Transform Settings</property>
+                <property name="label" translatable="yes">  Transform Settings</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">8</property>
+                <property name="position">9</property>
               </packing>
             </child>
             <child>
               <object class="GtkFlowBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="valign">start</property>
                 <property name="margin_left">16</property>
                 <property name="max_children_per_line">3</property>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
-                    <property name="height_request">80</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">start</property>
@@ -232,8 +252,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
-                    <property name="height_request">80</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">start</property>
@@ -280,8 +298,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
-                    <property name="height_request">80</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">start</property>
@@ -328,55 +344,43 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
-                    <property name="height_request">80</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="halign">start</property>
+                    <property name="valign">center</property>
                     <child>
-                      <object class="GtkFlowBoxChild">
-                        <property name="width_request">100</property>
-                        <property name="height_request">80</property>
+                      <object class="GtkBox" id="box_lane_width2">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="halign">start</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">center</property>
                         <property name="valign">center</property>
                         <child>
-                          <object class="GtkBox" id="box_lane_width2">
+                          <object class="GtkLabel" id="label_rotate">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="halign">center</property>
-                            <property name="valign">center</property>
-                            <child>
-                              <object class="GtkLabel" id="label_rotate">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="margin_left">4</property>
-                                <property name="margin_right">4</property>
-                                <property name="label" translatable="yes">Rotate (origin)</property>
-                                <property name="width_chars">15</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkEntry" id="entry_rotate">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="valign">center</property>
-                                <property name="placeholder_text" translatable="yes">0.0</property>
-                                <property name="input_purpose">number</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Rotate (origin)</property>
+                            <property name="width_chars">15</property>
                           </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="entry_rotate">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="valign">center</property>
+                            <property name="placeholder_text" translatable="yes">0.0</property>
+                            <property name="input_purpose">number</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
                         </child>
                       </object>
                     </child>
@@ -385,8 +389,8 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">9</property>
+                <property name="fill">False</property>
+                <property name="position">10</property>
               </packing>
             </child>
             <child>
@@ -400,7 +404,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">10</property>
+                <property name="position">11</property>
               </packing>
             </child>
             <child>
@@ -419,7 +423,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">11</property>
+                <property name="position">12</property>
               </packing>
             </child>
             <child>
@@ -433,7 +437,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">12</property>
+                <property name="position">13</property>
               </packing>
             </child>
             <child>
@@ -442,14 +446,13 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">
-  Show the following elements:</property>
+                <property name="label" translatable="yes">  Show the following elements:</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">13</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -461,7 +464,6 @@
                 <property name="max_children_per_line">6</property>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -481,7 +483,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -501,7 +502,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -521,7 +521,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -541,7 +540,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -570,7 +568,6 @@
                 </child>
                 <child>
                   <object class="GtkFlowBoxChild">
-                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="halign">center</property>
@@ -601,7 +598,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">14</property>
+                <property name="position">15</property>
               </packing>
             </child>
             <child>
@@ -610,8 +607,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">
-  Create trajectories instead of simulated obstacles for the following IDs:</property>
+                <property name="label" translatable="yes">  Create trajectories instead of simulated obstacles for the following IDs:</property>
                 <property name="ellipsize">start</property>
                 <attributes>
                   <attribute name="style" value="italic"/>
@@ -620,7 +616,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">15</property>
+                <property name="position">16</property>
               </packing>
             </child>
             <child>
@@ -635,11 +631,12 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">16</property>
+                <property name="position">17</property>
               </packing>
             </child>
             <child>
               <object class="GtkScrolledWindow" id="window_dynamic_obstacles">
+                <property name="height_request">100</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="vexpand">True</property>
@@ -665,7 +662,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">17</property>
+                <property name="position">18</property>
               </packing>
             </child>
             <child>
@@ -680,11 +677,12 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">18</property>
+                <property name="position">19</property>
               </packing>
             </child>
             <child>
               <object class="GtkScrolledWindow" id="window_static_obstacles">
+                <property name="height_request">100</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="vexpand">True</property>
@@ -710,7 +708,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">19</property>
+                <property name="position">20</property>
               </packing>
             </child>
             <child>
@@ -719,23 +717,24 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">
-  Planning Problems</property>
+                <property name="label" translatable="yes">  Planning Problems</property>
                 <property name="ellipsize">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">20</property>
+                <property name="position">21</property>
               </packing>
             </child>
             <child>
               <object class="GtkScrolledWindow" id="problem_scrolled_window">
+                <property name="height_request">100</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
                 <child>
                   <object class="GtkTreeView" id="problem_treeview">
+                    <property name="height_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <child internal-child="selection">
@@ -747,7 +746,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">21</property>
+                <property name="position">22</property>
               </packing>
             </child>
           </object>
