@@ -36,9 +36,9 @@ done
 printf "vehicle_ids: ${vehicle_ids}\n"
 printf "DDS_DOMAIN: ${DDS_DOMAIN}\n"
 
-if [ ${#vehicle_array[@]} -gt 3 ]
+if [ ${#vehicle_array[@]} -gt 5 ]
 then
-    printf "Warning: Using more than 3 vehicles during local testing \
+    printf "Warning: Using more than 5 vehicles during local testing \
 can lead to unexpected results\n"
     # Reason: RTI DDS Participants only search for 4 other Participants
     # per domain on a single machine per default.
@@ -49,14 +49,12 @@ fi
 cleanup(){
     printf "Cleaning up ... "
 
-    tmux kill-session -tmiddleware_${vehicle_ids}
+    for vehicle_id in "${vehicle_array[@]}"
+    do
+        tmux kill-session -t decentral_routing_${vehicle_id}
+        tmux kill-session -t middleware_${vehicle_id}
+    done
 
-    if [ $debug ]; then
-        for vehicle_id in "${vehicle_array[@]}"
-        do
-            tmux kill-session -tdecentral_routing_${vehicle_id}
-        done
-    fi
     # Kill all children
     kill 0
     printf "Done.\n"
@@ -64,24 +62,23 @@ cleanup(){
 trap cleanup EXIT
 
 sleep 3
-
-# Start middleware
-printf "Starting Middleware ...\n"
-middleware_cmd="./middleware \
-    --node_id=middleware_${vehicle_ids} \
-    --simulated_time=false \
-    --vehicle_ids=${vehicle_ids} \
-    --domain_number=1 \
-    --dds_domain=${DDS_DOMAIN} \
-    --dds_initial_peer=${DDS_INITIAL_PEER}  \
-    >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
-    2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
-tmux new-session -d -s "middleware_${vehicle_ids}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
-
-printf "Starting HLCs ...\n"
 cd build
 for vehicle_id in "${vehicle_array[@]}"
 do
+
+    # Start middleware
+    middleware_cmd="./middleware \
+        --node_id=middleware_${vehicle_id} \
+        --simulated_time=false \
+        --vehicle_ids=${vehicle_id} \
+        --domain_number=${vehicle_id} \
+        --dds_domain=${DDS_DOMAIN} \
+        --dds_initial_peer=${DDS_INITIAL_PEER}  \
+        >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
+        2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
+    tmux new-session -d -s "middleware_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
+    printf "\tStarting middleware_${vehicle_id} ...\n"
+
 
     # Special debug option: if debug is enabled, the 5th vehicle will be started directly in gdb
     # This is useful, when the HLC is crashing before we have time to attach a debugger
@@ -95,23 +92,23 @@ do
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
             --middleware=true \
-	    --middleware_domain=1 \
+	    --middleware_domain=${vehicle_id} \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}"
     else
         # This starts the high level controller
         ./decentral_routing \
-            --node_id=high_level_controller${vehicle_id} \
+            --node_id=high_level_controller_${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
             --middleware=true \
-	    --middleware_domain=1 \
+	    --middleware_domain=${vehicle_id} \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}  \
             >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt \
             2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt&
     fi
-    printf "\tStarting high_level_controller${vehicle_id}.\n"
+    printf "\tStarting high_level_controller_${vehicle_id}.\n"
 done
 printf "Done.\n\n"
 

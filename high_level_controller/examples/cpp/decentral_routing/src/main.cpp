@@ -178,6 +178,14 @@ int main(int argc, char *argv[]) {
             dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
             cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
     );
+    
+    
+    //FIXME: This should be replaced by a request to LCC
+    // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
+    dds::pub::DataWriter<SystemTrigger> writer_systemTrigger(
+            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+            cpm::get_topic<SystemTrigger>("systemTrigger")
+    );
 
     /* ---------------------------------------------------------------------------------
      * Create planner object
@@ -306,11 +314,14 @@ int main(int argc, char *argv[]) {
             if( sample.info().valid() && 
                    (sample.data().next_start().nanoseconds() == trigger_stop)
               ) {
-		cpm::Logging::Instance().write(
+            cpm::Logging::Instance().write(
 				2,
 				"Received stop signal, stopping"
 				);
                 received_stop = true;
+                TimeStamp timestamp(trigger_stop);
+                SystemTrigger stop_trigger(timestamp);
+                writer_systemTrigger.write(stop_trigger);
             }
         }
     }

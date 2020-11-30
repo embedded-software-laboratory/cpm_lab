@@ -149,14 +149,14 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 {
     assert(started);
 
+    // Clear previous buffer
+    other_vehicles_buffer.clear();
+
     dds::sub::LoanedSamples<LaneGraphTrajectory> samples = reader_laneGraphTrajectory->take();
     for(auto sample : samples) {
         if (sample.info().valid()) {
             // We ignore everything with lower priorities
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
-
-            // Reset buffer for this vehicle
-            other_vehicles_buffer[sample.data().vehicle_id()].clear();
 
             //FIXME: After a restart, there temporarily is an unrealistically large offset
             //if(index_offset > 100) {
