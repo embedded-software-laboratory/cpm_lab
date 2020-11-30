@@ -53,6 +53,7 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+#include "ui/setup/CrashChecker.hpp"
 
 class TimerViewUI {
 private:
@@ -110,6 +111,9 @@ private:
     //Class to simulate obstacles based on the loaded commonroad file
     std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
 
+    //Stop checking for crashes if the timer is stopped
+    std::shared_ptr<CrashChecker> crash_checker;
+
 public:
 /**
      * \brief Constructor
@@ -122,6 +126,11 @@ public:
     );
     ~TimerViewUI();
     Gtk::Widget* get_parent();
+
+    /**
+     * \brief Checker needs to be set up in SetupView, but the crash checker can also be killed by a simple timer stop or reset
+     */
+    void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
 
     /**
      * \brief Reset function - this function is called whenever the timer type is changed, 

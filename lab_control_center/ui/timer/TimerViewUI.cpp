@@ -89,6 +89,10 @@ void TimerViewUI::button_reset_callback() {
     //Stop obstacle simulation
     // obstacle_simulation_manager->stop();
 
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
+
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
 
@@ -212,6 +216,10 @@ void TimerViewUI::button_start_callback() {
 }
 
 void TimerViewUI::button_stop_callback() {
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
+
     timer_trigger->send_stop_signal();
 
     //Stop obstacle simulation
@@ -278,4 +286,9 @@ std::string TimerViewUI::get_human_readable_time_diff(uint64_t other_time) {
 
 Gtk::Widget* TimerViewUI::get_parent() {
     return parent;
+}
+
+void TimerViewUI::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
 }
