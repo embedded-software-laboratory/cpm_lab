@@ -394,8 +394,9 @@ void SetupViewUI::ui_dispatch()
         }
     }
 
-    //Kill has a timeout s.t. a kill button can not be "spammed"; grey-out should not be undone though during simulation, because Deploy already has control over when Kill should become sensitive again
-    if (undo_kill_grey_out.exchange(false) && !simulation_running.load())
+    //Kill has a timeout s.t. a kill button can not be "spammed"
+    //But: grey-out should not be undone during remote simulation, because Deploy then already has control over when Kill should become sensitive again
+    if (undo_kill_grey_out.exchange(false) && !(simulation_running.load() && switch_deploy_remote->get_active()))
     {
         button_kill->set_sensitive(true);
     }
