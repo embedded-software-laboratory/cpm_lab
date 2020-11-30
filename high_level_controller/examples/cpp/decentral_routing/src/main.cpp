@@ -68,7 +68,6 @@ using std::vector;
 int main(int argc, char *argv[]) {   
 
     // Read command line arguments
-    const bool simulated_time_enabled = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
 
     cpm::init(argc, argv);

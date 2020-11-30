@@ -90,14 +90,6 @@ void VehicleTrajectoryPlanner::start()
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
-            std::cout << "TimeStep:" << t_planning << std::endl;
-            for( auto element : other_vehicles_buffer ) {
-                //std::cout << element.first << std::endl;
-                for( auto point : element.second ) {
-                    //std::cout << point.first << ":" << point.second.first << "," << point.second.second << std::endl; 
-                } 
-            }
-
             if (!is_collision_avoidable){
                 cpm::Logging::Instance().write(1,
                         "Found unavoidable collision");
@@ -211,7 +203,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory ) {
 
     // Add TimeStamp to each point
-    for( int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
+    for( unsigned int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
         // Calculate, which point in time this index corresponds to
         uint64_t eta = t_planning + (dt_nanos/timesteps_per_planningstep)*i;
         trajectory.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
@@ -223,7 +215,7 @@ void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory 
     int current_edge_index = -1;
     LaneGraphPosition current_position;
 
-    for( int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
+    for( unsigned int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
         current_position = trajectory.lane_graph_positions()[i];
 
         // Only send each edge_index once
@@ -246,7 +238,7 @@ void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory 
 }
 
 /*
- * Fills in points between two points on the Lane Graph.
+ * Fills in points between two points on the Lane Graph in our other_vehicles_buffer.
  * This naively assumes a fixed speed, equidistant edge_paths-Points
  * and assumes that we are interpolating between two adjacent edges.
  */
@@ -262,21 +254,20 @@ void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer(
     int delta_index = buffer_index_2 - buffer_index_1;
     double step_size = delta_edge_path/delta_index;
     
-    // Either start from one past buffer_index_1, or from 0
+    // Either start from one past buffer_index_1, or from 0 (buffer_index could be <0)
     for( int i = std::max(buffer_index_1+1, 0); i<buffer_index_2; i++ ) {
-        int edge_path_to_insert = edge_path_index_1 +
-            int(step_size*(i-buffer_index_1+1));
-        int edge_to_insert;
+        int edge_path_to_insert = edge_path_index_1+int(step_size*(i-buffer_index_1+1));
 
         /* Interpolation starts on edge_index_1
-         * and ends on edge_index_2
-         * Here we differentiate those
+         * and ends on edge_index_2.
+         * Here we differentiate both cases.
          */
+        int edge_to_insert;
         if( edge_path_to_insert < edge_paths_per_edge ) {
             edge_to_insert = edge_index_1;
         } else {
             edge_path_to_insert = edge_path_to_insert - edge_paths_per_edge;
-            edge_to_insert = edge_index_1;
+            edge_to_insert = edge_index_2;
         }
 
         other_vehicles_buffer[vehicle_id][i] =
