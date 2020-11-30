@@ -62,8 +62,9 @@ class VehicleTrajectoryPlanner
             int buffer_index_2, int edge_2, int edge_index_2);
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
-    static constexpr uint64_t msg_max_length = 100; // Maximum length of DDS msg
-    static constexpr uint64_t timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 25 points planned
+    static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
+    static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
+    static constexpr int timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 25 points planned
     
 public:
 

@@ -104,20 +104,24 @@ int main(int argc, char *argv[]) {
     // Initialize Planner and constants necessary for planning
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     uint64_t dt_nanos = 400000000ull; // Needs to match period of planner
-    // Definition of time stamp at which to stop
-    const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
 
+    // SystemTrigger msg that means "stop" (as defined in SystemTrigger.idl)
+    const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
+    TimeStamp timestamp_stop(trigger_stop);
+    SystemTrigger stop_trigger(timestamp_stop);
+
+    // FIXME: Dirty hack to get our QOS settings
+    // On the NUC we only have the QOS File for the middleware
+    // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
+    system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-
-    // FIXME: Dirty hack to get our QOS settings
-    // Currently we only have the middleware QOS File on the NUC, so we use that
-    std::cout << system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
-
-    // For some reason we cannot access a QOS file outside our working directory
     dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
-    dds::domain::DomainParticipant local_comms_participant(middleware_domain, local_comms_qos_provider.participant_qos());
+    dds::domain::DomainParticipant local_comms_participant(
+            middleware_domain,
+            local_comms_qos_provider.participant_qos()
+    );
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
 
@@ -125,7 +129,7 @@ int main(int argc, char *argv[]) {
      * Create readers and writers for communication with middleware
      * ---------------------------------------------------------------------------------
      */
-    // These QoS Settings are taken from the QOS_READY_TRIGGER.xml used in matlab
+    // These QoS Settings are taken from the QOS_READY_TRIGGER.xml used in matlab example
     dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
             local_comms_publisher,
             cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
@@ -144,7 +148,7 @@ int main(int argc, char *argv[]) {
                 << dds::core::policy::History::KeepAll())
     );
 
-    // This reader might be unnecessary; gets other vehicles' states from middleware
+    // VehicleStateList is our timing signal from the middleware
     dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
             local_comms_subscriber,
             cpm::get_topic<VehicleStateList>(
@@ -161,11 +165,15 @@ int main(int argc, char *argv[]) {
     );
 
     // Writer to send a StopRequest to LCC (in case of failure)
+    // Currently not implemented in LCC
     dds::pub::DataWriter<StopRequest> writer_stopRequest(
             dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
             cpm::get_topic<StopRequest>("stopRequest")
     );
 
+    /* 
+     * Reader/Writers for comms between vehicles directly
+     */
     // Writer to communicate plans with other vehicles
     dds::pub::DataWriter<LaneGraphTrajectory> writer_laneGraphTrajectory(
             dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
@@ -223,28 +231,37 @@ int main(int argc, char *argv[]) {
     ReadyStatus readyStatus(hlc_identification, timestamp);
     writer_readyStatus.write(readyStatus);
 
-    bool received_stop = false;
+    /* ---------------------------------------------------------------------------------
+     * main loop to regularly send commands
+     * ---------------------------------------------------------------------------------
+     */
+    bool stop = false;
     uint64_t t_now;
-    while( !(received_stop || planner->is_crashed()) ) {
+    // This loop could be replaced by an AsyncReader with callback for the VehicleStateList
+    while( !stop ) {
 
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
 
-                // We received a StateList and need to send commands to vehicle now
+                // We received a StateList, which is our timing signal
+                // to send commands to vehicle
                 t_now = sample.data().t_now();
 
+                // middleware period needs to be manually set to 400ms
+                // on parameter server
                 if( sample.data().period_ms()*1e6 != dt_nanos ) {
                     cpm::Logging::Instance().write(
                             1,
-                            "Please set middleware_period_ms to 400ms");
+                            "Error: middleware_period_ms needs to be 400ms");
                     StopRequest request(vehicle_id);
                     writer_stopRequest.write(request);
+                    writer_systemTrigger.write(stop_trigger);
                     return 1;
                 }
 
-                if(!planner->is_started())//will be set to true after fist activation
-                {
+                // The first time we receive a sample, we need to start the planner
+                if(!planner->is_started()) {
                     cpm::Logging::Instance().write(3,
                         "Preparing to start planner");
                     // Set real time
@@ -255,10 +272,10 @@ int main(int argc, char *argv[]) {
                     * ----------------------------------------------------------------------
                     */
                     bool matched = false;
-                    //FIXME: This probably does not require a loop
+                    // This probably does not require a loop,
+                    // we just need to find the one VehicleState with our vehicle_id
                     for(auto vehicle_state : sample.data().state_list())
                     {
-			std::cout << static_cast<uint32_t>(vehicle_state.vehicle_id()) << std::endl;
                         if( vehicle_id == vehicle_state.vehicle_id() ) {
                             auto pose = vehicle_state.pose();
                             int out_edge_index = -1;
@@ -270,40 +287,47 @@ int main(int argc, char *argv[]) {
                                     try moving the vehicle if this persists.");
                                 StopRequest request(vehicle_id);
                                 writer_stopRequest.write(request);
+                                //writer_systemTrigger.write(stop_trigger);
                             } else {
 
-				    planner->set_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(vehicle_id, out_edge_index, out_edge_path_index));
-				    cpm::Logging::Instance().write(
-				    3,
-				    "Vehicle %d matched.",
-				    int(vehicle_id)
-				    );
+                                planner->set_vehicle(
+                                        std::make_shared<VehicleTrajectoryPlanningState>(
+                                            vehicle_id,
+                                            out_edge_index,
+                                            out_edge_path_index
+                                        )
+                                );
+                                cpm::Logging::Instance().write(
+                                        3,
+                                        "Vehicle %d matched.",
+                                        int(vehicle_id)
+                                );
 
-				    //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
-				    //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-				    planner->start();
-			    }
-
+                                //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
+                                //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
+                                planner->start();
+                            }
                         }
                     }
-			
-		    if( !matched ) {
-			cpm::Logging::Instance().write(1,
-			    "Couldn't find vehicle in\
-			    VehicleStateList.");
-			StopRequest request(vehicle_id);
-			writer_stopRequest.write(request);
-		    }
+
+                    if( !matched ) {
+                        cpm::Logging::Instance().write(1,
+                            "Couldn't find vehicle in \
+                            VehicleStateList.");
+                        StopRequest request(vehicle_id);
+                        writer_stopRequest.write(request);
+                        //writer_systemTrigger.write(stop_trigger);
+                    }
                 }
 
-		if( planner->is_started() ) {
-			// Set real time
-			planner->set_real_time(t_now);
-			//get trajectory commands from VehicleTrajectoryPlanner with new points
-			auto command = planner->get_trajectory_command(t_now);
-
-			writer_vehicleCommandTrajectory.write(command);
-		}
+                // If we received a StateList and are already started, get commands
+                if( planner->is_started() ) {
+                    // Set real time
+                    planner->set_real_time(t_now);
+                    //get trajectory commands from VehicleTrajectoryPlanner with new points
+                    auto command = planner->get_trajectory_command(t_now);
+                    writer_vehicleCommandTrajectory.write(command);
+                }
             }
         }
 
@@ -313,15 +337,17 @@ int main(int argc, char *argv[]) {
             if( sample.info().valid() && 
                    (sample.data().next_start().nanoseconds() == trigger_stop)
               ) {
-            cpm::Logging::Instance().write(
-				2,
-				"Received stop signal, stopping"
-				);
-                received_stop = true;
-                TimeStamp timestamp(trigger_stop);
-                SystemTrigger stop_trigger(timestamp);
-                writer_systemTrigger.write(stop_trigger);
+                cpm::Logging::Instance().write(
+                    2,
+                    "Received stop signal, stopping"
+                    );
+                    stop = true;
             }
+        }
+
+        if( planner->is_crashed() ) {
+            stop = true;
+            writer_systemTrigger.write(stop_trigger);
         }
     }
 

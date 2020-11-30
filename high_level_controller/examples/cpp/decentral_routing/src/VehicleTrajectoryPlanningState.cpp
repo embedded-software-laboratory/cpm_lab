@@ -157,7 +157,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             {
                 // It's possible that we don't have data for this index
                 // We will skip it, which is unsafe, but our only option right now
-                if( other_path.count(i) == 0 ) { continue; }
+                if( other_path.count(i) == 0 ) { };//continue; }
 
                 if(laneGraphTools.edge_path_collisions
                     [self_path[i].first]
@@ -203,11 +203,11 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         const double reduced_speed = fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed);
 
         std::cout << 
-        "Collision detected t:" << earliest_collision__speed_profile_index << 
-        "  self id: " << int(vehicle_id) << 
-        "  other id: " << colliding_vehicle_id << 
-        "  Speed reduction,  t: " << idx_speed_reduction  << 
-        "  spd: " << reduced_speed << std::endl;
+            "Collision detected t:" << earliest_collision__speed_profile_index << 
+            "  self id: " << int(vehicle_id) << 
+            "  other id: " << colliding_vehicle_id << 
+            "  Speed reduction,  t: " << idx_speed_reduction  << 
+            "  spd: " << reduced_speed << std::endl;
 
         if(idx_speed_reduction < 15)
         {
@@ -286,6 +286,9 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     return result;
 }
 
+/*
+ * Write our planned path into a LaneGraphTrajectory object
+ */
 void VehicleTrajectoryPlanningState::get_lane_graph_positions(
         LaneGraphTrajectory *lane_graph_trajectory)
 {

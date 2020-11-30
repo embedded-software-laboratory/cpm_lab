@@ -86,6 +86,7 @@ void VehicleTrajectoryPlanner::start()
             // the 'previous' vehicles, in this example those with a smaller ID.
             bool is_collision_avoidable = false;
 
+            // Read LaneGraphTrajectory messages and write them into our buffer
             this->read_other_vehicles();
 
             is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
@@ -105,7 +106,7 @@ void VehicleTrajectoryPlanner::start()
                 LaneGraphTrajectory lane_graph_trajectory;
                 trajectoryPlan->get_lane_graph_positions(
                         &lane_graph_trajectory
-                        );
+                );
 
                 write_trajectory(lane_graph_trajectory);
 
@@ -131,6 +132,8 @@ void VehicleTrajectoryPlanner::start()
             t_planning += dt_nanos;
 
             // Sleep until we need to continue planning
+            // Increasing t_real_time + x means that a longer
+            // VehicleCommandTrajectory is sent to vehicle
             while(t_real_time + 5*dt_nanos < t_planning) usleep(110000);
         }
     });
@@ -141,7 +144,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 {
     assert(started);
 
-    // Clear previous buffer
+    // Clear buffer from previous timestep
     other_vehicles_buffer.clear();
 
     dds::sub::LoanedSamples<LaneGraphTrajectory> samples = reader_laneGraphTrajectory->take();
@@ -149,11 +152,6 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         if (sample.info().valid()) {
             // We ignore everything with lower priorities
             if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
-
-            //FIXME: After a restart, there temporarily is an unrealistically large offset
-            //if(index_offset > 100) {
-            //    std::cout << "Received data with unfeasible timestamp";
-            //}
             
             int prev_buffer_index = -1;
             int prev_edge_index = -1;
@@ -162,10 +160,9 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             // Save all received positions that are not in the past already
             for ( auto position : sample.data().lane_graph_positions() ) {
 
-                /* Check TimeStamp of each Position to see where it fits into our buffer
-                   The "... - dt_nanos" follows from practical observations, where
-                   indices were shifted by 1 dt_nanos
-                */
+                // Check TimeStamp of each Position to see where it fits into our buffer
+                // The "... - dt_nanos" follows from practical observations, where
+                // indices were shifted by 1 dt_nanos
                 int index = 
                     (position.estimated_arrival_time().nanoseconds() - t_planning - dt_nanos)
                     / (dt_nanos/timesteps_per_planningstep);
@@ -176,18 +173,20 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                         std::make_pair(
                             position.edge_index(),
                             position.edge_path_index()
-                            );
+                        );
                 }
 
                 // If the prev_... vars are set, interpolate using them
+                // We cannot interpolate if there is just one point in the buffer
                 if( prev_edge_index >= 0 ) {
                     interpolate_other_vehicles_buffer(
                             sample.data().vehicle_id(),
                             prev_buffer_index, prev_edge_index, prev_edge_path_index,
                             index, position.edge_index(), position.edge_path_index()
-                            );
+                    );
                 }
 
+                // Remember these for interpolation
                 prev_buffer_index = index;
                 prev_edge_index = position.edge_index();
                 prev_edge_path_index = position.edge_path_index();
@@ -246,9 +245,6 @@ void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer(
         uint8_t vehicle_id,
         int buffer_index_1, int edge_index_1, int edge_path_index_1,
         int buffer_index_2, int edge_index_2, int edge_path_index_2) {
-
-    //FIXME: This is a constant in geometry.hpp
-    int edge_paths_per_edge = 25;
 
     int delta_edge_path = edge_paths_per_edge - edge_path_index_1 + edge_path_index_2;
     int delta_index = buffer_index_2 - buffer_index_1;
