@@ -30,23 +30,20 @@
 #include "cpm/MultiVehicleReader.hpp"
 #include "cpm/stamp_message.hpp"
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 
 #include <vector>
 #include <map>
 
 TEST_CASE( "MultiVehicleReader" ) {
-
-    auto participant = cpm::ParticipantSingleton::Instance();
-    dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "asldkjfhslakdj");
-
+    
     // sender
-    dds::pub::DataWriter<VehicleState> writer(dds::pub::Publisher(participant), topic_vehicle_state);
+    cpm::Writer<VehicleState> writer("asldkjfhslakdj");
 
     // receiver
     std::vector<uint8_t> vehicle_ids{1, 3, 7};
-    cpm::MultiVehicleReader<VehicleState> reader(topic_vehicle_state, vehicle_ids);
+    cpm::MultiVehicleReader<VehicleState> reader(cpm::get_topic<VehicleState>("asldkjfhslakdj"), vehicle_ids);
 
 
     const uint64_t second = 1000000000ull;

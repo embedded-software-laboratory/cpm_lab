@@ -239,3 +239,33 @@ const std::optional<Interval>& GoalState::get_velocity() const
 {
     return velocity;
 }
+
+CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
+{
+    CommonroadDDSGoalState goal_state;
+
+    goal_state.time_set(time.has_value());
+    if(time.has_value())
+    {
+        goal_state.time(time->to_dds_interval(time_step_size));
+    }
+
+    std::vector<CommonroadDDSPositionInterval> positions;
+    std::vector<CommonroadDDSIntervals> orientations;
+    std::vector<CommonroadDDSIntervals> velocities; 
+
+    if (position.has_value())
+    {
+        positions.push_back(position->to_dds_position_interval());
+    }
+    if (orientation.has_value())
+    {
+        orientations.push_back(orientation->to_dds_msg());
+    }
+    if (velocity.has_value())
+    {
+        velocities.push_back(velocity->to_dds_msg());
+    }
+
+    return goal_state;
+}

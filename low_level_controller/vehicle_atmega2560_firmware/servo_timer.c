@@ -50,18 +50,18 @@ static uint8_t consecutive_servo_center_command_count = 0;
 /* 
  * servo enable on pin PD7
  * servo pwm range:
- * 2000: negative limit
+ * 1800: negative limit which the servo can recognize
  * 3000: middle
- * 4000: positive limit
+ * 4200: positive limit which the servo can recognize
  */
 void set_servo_pwm(uint16_t pwm) {	
 	// cap command above servo command positive limit
-	if(pwm > 4000) {
-		pwm = 4000;
+	if(pwm > 4200) {
+		pwm = 4200;
 	}
 	// cap command below servo command negative limit
-	else if (pwm < 2000) {
-		pwm = 2000;
+	else if (pwm < 1800) {
+		pwm = 1800;
 	}
 	
 	OCR3C = pwm;

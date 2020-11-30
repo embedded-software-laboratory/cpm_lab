@@ -134,13 +134,15 @@ bool LabCam::startRecordingImpl(){
 	    GstElement *convert;
 	    GstElement *sink;
 	    GstElement *x264enc;
+	    GstElement *avimux;
 
 	    convert = gst_element_factory_make("videoconvert", "converter");
 	    x264enc = gst_element_factory_make("x264enc", "h264encoder");
+	    avimux = gst_element_factory_make("avimux", "muxer");
 	    sink = gst_element_factory_make("filesink", "videosink"); // depending on your platform, you may have to use some alternative here, like ("autovideosink", "sink")
 
 	    std::stringstream filename_stream;
-	    filename_stream << path_ << "/" << file_name_ << ".mp4";
+	    filename_stream << path_ << "/" << file_name_ << ".avi";
 
 	    g_object_set(G_OBJECT(sink), "location", filename_stream.str().c_str(), NULL);
 
@@ -148,8 +150,8 @@ bool LabCam::startRecordingImpl(){
 	    if (!sink){ cout << "Could not make sink" << endl; return false; }
 	    
 	    // add and link the pipeline elements
-	    gst_bin_add_many(GST_BIN(pipeline), source, convert, x264enc, sink, NULL);
-	    if(!gst_element_link_many(source, convert, x264enc, sink, NULL)){
+	    gst_bin_add_many(GST_BIN(pipeline), source, convert, x264enc, avimux, sink, NULL);
+	    if(!gst_element_link_many(source, convert, x264enc, avimux, sink, NULL)){
 	        std::cout << "FAILED: gst_element_link_many(source, convert, x264enc, sink, NULL)" << std::endl;
 	        return false;
 	    } 

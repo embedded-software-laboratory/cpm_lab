@@ -394,8 +394,9 @@ void SetupViewUI::ui_dispatch()
         }
     }
 
-    //Kill has a timeout s.t. a kill button can not be "spammed"; grey-out should not be undone though during simulation, because Deploy already has control over when Kill should become sensitive again
-    if (undo_kill_grey_out.exchange(false) && !simulation_running.load())
+    //Kill has a timeout s.t. a kill button can not be "spammed"
+    //But: grey-out should not be undone during remote simulation, because Deploy then already has control over when Kill should become sensitive again
+    if (undo_kill_grey_out.exchange(false) && !(simulation_running.load() && switch_deploy_remote->get_active()))
     {
         button_kill->set_sensitive(true);
     }
@@ -480,8 +481,10 @@ void SetupViewUI::deploy_applications() {
         }
     }
 
-    std::experimental::filesystem::path filepath = filepath_str;
-    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
+    //Also check if an empty string was passed - in this case, we only want to start the middleware
+    //We only do this in case of local deployment (e.g. for debug purposes of locally running programs) - 
+    //  for remote deployment, we require a valid script to be set
+    bool start_middleware_without_hlc = (filepath_str.size() == 0);
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
@@ -537,7 +540,7 @@ void SetupViewUI::deploy_applications() {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
         }
     }
-    else if (file_exists)
+    else if (file_exists || start_middleware_without_hlc)
     {
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_str, script_params->get_text().c_str());
     }
@@ -549,7 +552,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()

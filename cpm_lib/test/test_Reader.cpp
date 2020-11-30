@@ -31,9 +31,8 @@
 #include "cpm/Logging.hpp"
 #include "cpm/stamp_message.hpp"
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
 #include "cpm/Reader.hpp"
+#include "cpm/Writer.hpp"
 
 /**
  * Tests:
@@ -44,14 +43,11 @@
 TEST_CASE( "Reader" ) {
     cpm::Logging::Instance().set_id("test_reader");
 
-    auto participant = cpm::ParticipantSingleton::Instance();
-    dds::topic::Topic<VehicleState> topic_vehicle_state(participant, "asldkjfhslakdj");
-
     // sender that sends various samples to the reader
-    dds::pub::DataWriter<VehicleState> sample_writer(dds::pub::Publisher(participant), topic_vehicle_state);
+    cpm::Writer<VehicleState> sample_writer("asldkjfhslakdj");
 
     // receiver - the cpm reader that receives the sample sent by the writer above
-    cpm::Reader<VehicleState> reader(topic_vehicle_state);
+    cpm::Reader<VehicleState> reader(cpm::get_topic<VehicleState>("asldkjfhslakdj"));
 
 
     const uint64_t second = 1000000000ull;

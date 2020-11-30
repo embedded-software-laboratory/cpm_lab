@@ -727,6 +727,8 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
         planning_problem.second.transform_timing(time_scale);
     }
 
+    //Time values themselves will currently still be defined w.r.t. time steps, so they need to be multiplied with time step size to obtain the actual time value
+
     //Update database entry for transformation
     yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
 
@@ -1072,5 +1074,29 @@ std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
         error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
         LCCErrorLogger::Instance().log_error(error_stream.str());
         return {0, 0};
+    }
+}
+
+/*****************************************************************************************/
+/******************                 DDS Functions               **************************/
+/*****************************************************************************************/
+
+void CommonRoadScenario::send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems)
+{
+    assert(writer_planning_problems);
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    //Due to the size of each planning problem (contains again list of planning problems which contains lists of goal states)
+    //we had to break things apart in order for DDS messages to still work without causing errors
+    //We thus send each goal state individually, and augment them with information about the ID of the problem they are associated with,
+    //the position in the list of planning problems within that problem, and the position in the list of goal states within the inner
+    //planning problems
+    for (auto& entry : planning_problems)
+    {
+        for (auto& goal_state : entry.second.get_dds_goal_states(time_step_size))
+        {
+            goal_state.planning_problem_id(static_cast<int32_t>(entry.first));
+            writer_planning_problems->write(goal_state);
+        }   
     }
 }

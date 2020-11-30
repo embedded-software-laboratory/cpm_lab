@@ -34,9 +34,6 @@
 #include <sstream>
 #include <string>
 #include <functional>
-#include <dds/core/QosProvider.hpp>
-
-#include <dds/sub/ddssub.hpp>
 
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"

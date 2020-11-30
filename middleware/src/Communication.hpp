@@ -37,16 +37,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/core/QosProvider.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <rti/core/cond/AsyncWaitSet.hpp>
-#include <rti/core/ListenerBinder.hpp>
-#include <dds/dds.hpp>
-#include <dds/sub/DataReaderListener.hpp>
-#include <dds/core/ddscore.hpp>
+#include <atomic>
+#include <mutex>
 
 #include "VehicleState.hpp"
 #include "VehicleStateList.hpp"
@@ -58,6 +50,11 @@
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/VehicleIDFilteredTopic.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Participant.hpp"
+
+#include "CommonroadDDSGoalState.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandDirect.hpp"
@@ -78,25 +75,25 @@ using namespace std::placeholders;
 class Communication {
     private:
         //For HLC - communication
-        dds::core::QosProvider local_comm_qos_provider;
-        dds::domain::DomainParticipant hlcParticipant;
-        dds::topic::Topic<VehicleStateList> hlcStateTopic;
-        dds::pub::Publisher pub;
-        dds::pub::DataWriter<VehicleStateList> hlcStateWriter;
-        dds::topic::Topic<ReadyStatus> ready_topic;
-        dds::sub::DataReader<ReadyStatus> hlc_ready_status_reader;
+        cpm::Participant hlcParticipant;
+        cpm::Writer<VehicleStateList> hlcStateWriter;
+        cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
+        std::atomic_bool all_hlc_online{false}; //Remember if all HLCs are online (checked by main using wait_for_hlc_ready_msg)
 
         //Timing messages to HLC
-        dds::topic::Topic<SystemTrigger> trigger_topic;
-        dds::pub::DataWriter<SystemTrigger> hlc_system_trigger_writer;
+        cpm::Writer<SystemTrigger> hlc_system_trigger_writer;
         cpm::AsyncReader<SystemTrigger> lcc_system_trigger_reader;
 
+        //Goal states to HLC
+        cpm::Writer<CommonroadDDSGoalState> hlc_goal_state_writer;
+        std::mutex hlc_goal_state_writer_mutex;
+        cpm::AsyncReader<CommonroadDDSGoalState> lcc_goal_state_reader;
+        std::vector<CommonroadDDSGoalState> buffered_goal_states; //Before all HLCs have come online, remember goal states received so far
+
         //For Vehicle communication
-        dds::topic::Topic<VehicleState> vehicleStateTopic;
         cpm::MultiVehicleReader<VehicleState> vehicleReader;
 
         //For vehicle observation
-        dds::topic::Topic<VehicleObservation> vehicleObservationTopic;
         cpm::MultiVehicleReader<VehicleObservation> vehicleObservationReader;
 
         //Communication for commands
@@ -123,35 +120,25 @@ class Communication {
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> vehicle_ids
         ) 
-        :local_comm_qos_provider("QOS_LOCAL_COMMUNICATION.xml")
-        ,hlcParticipant(hlcDomainNumber, local_comm_qos_provider.participant_qos())
-        ,hlcStateTopic(hlcParticipant, vehicleStateListTopicName)
-        ,pub(hlcParticipant)
-        ,hlcStateWriter(pub, hlcStateTopic)
-        ,ready_topic(hlcParticipant, "readyStatus")
-        ,hlc_ready_status_reader(
-            dds::sub::Subscriber(hlcParticipant),
-            ready_topic,
-            (dds::sub::qos::DataReaderQos() 
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll()
-                << dds::core::policy::Durability::TransientLocal()))
-        ,trigger_topic(hlcParticipant, "systemTrigger")
-        ,hlc_system_trigger_writer(
-            dds::pub::Publisher(hlcParticipant),
-            trigger_topic,
-            (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
+        :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml")
+        ,hlcStateWriter(hlcParticipant.get_participant(), vehicleStateListTopicName)
+        ,hlc_ready_status_reader(hlcParticipant.get_participant(), "readyStatus", true, true, true)
+
+        ,hlc_system_trigger_writer(hlcParticipant.get_participant(), "systemTrigger", true)
         ,lcc_system_trigger_reader(
             std::bind(&Communication::pass_through_system_trigger, this, _1),
-            cpm::ParticipantSingleton::Instance(),
-            cpm::get_topic<SystemTrigger>(cpm::ParticipantSingleton::Instance(), "systemTrigger"),
+            "systemTrigger",
             true)
 
-        ,vehicleStateTopic(cpm::ParticipantSingleton::Instance(), "vehicleState")
-        ,vehicleReader(vehicleStateTopic, vehicle_ids)
+        ,hlc_goal_state_writer(hlcParticipant.get_participant(), "commonroad_dds_goal_states", true, true, true)
+        ,lcc_goal_state_reader(
+            std::bind(&Communication::pass_through_goal_states, this, _1),
+            "commonroad_dds_goal_states",
+            true, true)
 
-        ,vehicleObservationTopic(cpm::ParticipantSingleton::Instance(), "vehicleObservation")
-        ,vehicleObservationReader(vehicleObservationTopic, vehicle_ids)
+        ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), vehicle_ids)
+
+        ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
 
         ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
         ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
@@ -292,12 +279,29 @@ class Communication {
         }
 
         /**
-         * \brief Pass system trigger / timing messages from the LCC to the LCC
+         * \brief Pass system trigger / timing messages from the LCC to the HLCs
          */
-        void pass_through_system_trigger(dds::sub::LoanedSamples<SystemTrigger>& samples) {
-            for (auto sample : samples) {
-                if (sample.info().valid()) {
-                    hlc_system_trigger_writer.write(sample.data());
+        void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
+            for (auto& sample : samples) {
+                hlc_system_trigger_writer.write(sample);
+            }
+        }
+
+        /**
+         * \brief Pass goal states from the LCC to the HLCs
+         */
+        void pass_through_goal_states(std::vector<CommonroadDDSGoalState>& samples) {
+            std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
+            for (auto& sample : samples) {
+                //Online forward if HLCs are online, else buffer
+                if (all_hlc_online.load())
+                {
+                    hlc_goal_state_writer.write(sample);
+                }
+                else 
+                {
+                    //Sending these samples is triggered from within the wait function
+                    buffered_goal_states.push_back(sample);
                 }
             }
         }
@@ -318,13 +322,11 @@ class Communication {
             //Log if waiting for longer times
             unsigned int wait_cycles = 0;
             while(vehicle_ids_string.size() > 0) {
-                for (auto sample : hlc_ready_status_reader.take()) {
-                    if (sample.info().valid()) {
-                        std::string source_id = sample.data().source_id();
-                        auto pos = std::find(vehicle_ids_string.begin(), vehicle_ids_string.end(), source_id);
-                        if (pos != vehicle_ids_string.end()) {
-                            vehicle_ids_string.erase(pos);
-                        }
+                for (auto data : hlc_ready_status_reader.take()) {
+                    std::string source_id = data.source_id();
+                    auto pos = std::find(vehicle_ids_string.begin(), vehicle_ids_string.end(), source_id);
+                    if (pos != vehicle_ids_string.end()) {
+                        vehicle_ids_string.erase(pos);
                     }
                 }
 
@@ -343,6 +345,17 @@ class Communication {
                 usleep(200000);
                 ++wait_cycles;
             }
+
+            //Tell other parts of the program that they can now regard the HLCs as being online / able to receive
+            all_hlc_online.store(true);
+            //Flush data that was received before the HLCs were online that is not periodical and could have been sent before
+            std::cout << "\t... sending buffered goal states to all HLCs" << std::endl; //Additional console log info after "Waiting for HLC..." in main (serves debugging purposes)
+            std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
+            for (auto& sample : buffered_goal_states)
+            {
+                hlc_goal_state_writer.write(sample);
+            }
+            buffered_goal_states.clear();
         }
 
         /**

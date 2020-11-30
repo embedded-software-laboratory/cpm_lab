@@ -74,7 +74,7 @@ T _TimeSeries<T>::get_latest_value() const
 template<typename T>
 bool _TimeSeries<T>::has_new_data(double dt) const 
 {
-    const uint64_t age = double(clock_gettime_nanoseconds() - get_latest_time());
+    const uint64_t age = double(cpm::get_time_ns() - get_latest_time());
     return age/1e9 < dt;
 }
 

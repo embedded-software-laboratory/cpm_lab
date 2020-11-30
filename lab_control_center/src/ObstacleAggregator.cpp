@@ -31,8 +31,7 @@ using namespace std::placeholders;
 ObstacleAggregator::ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scenario) :
     commonroad_obstacle_reader(
         std::bind(&ObstacleAggregator::commonroad_obstacle_receive_callback, this, _1), 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<CommonroadObstacleList>("commonroadObstacle")
+        "commonroadObstacle"
     )
 {
     scenario->register_obstacle_aggregator(
@@ -43,37 +42,35 @@ ObstacleAggregator::ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scena
     );
 }
 
-void ObstacleAggregator::commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacleList>& samples)
+void ObstacleAggregator::commonroad_obstacle_receive_callback(std::vector<CommonroadObstacleList>& samples)
 {
     std::lock_guard<std::mutex> lock(commonroad_obstacle_mutex);
 
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            //We do not use a reference to the data structure, because we need to make copies at this point (data belongs to the DDS entity)
-            for (auto obstacle : sample.data().commonroad_obstacle_list())
+    for (auto& data : samples) {
+        //We do not use a reference to the data structure, because we need to make copies at this point (data belongs to the DDS entity)
+        for (auto& obstacle : data.commonroad_obstacle_list())
+        {
+            //Ignore if data is older than last reset -> continue to next data point then
+            //@Max: Ist das okay so?
+            if (obstacle.header().create_stamp().nanoseconds() < reset_time)
             {
-                //Ignore if data is older than last reset -> continue to next data point then
-                //@Max: Ist das okay so?
-                if (obstacle.header().create_stamp().nanoseconds() < reset_time)
-                {
-                    cpm::Logging::Instance().write(2, "%s", "Received outdated obstacle data (likely event in case of reset)");
-                    continue;
-                }
+                cpm::Logging::Instance().write(2, "%s", "Received outdated obstacle data (likely event in case of reset)");
+                continue;
+            }
 
-                if (commonroad_obstacle_data.find(obstacle.vehicle_id()) != commonroad_obstacle_data.end())
-                {
-                    //Older obstacle value already exists, keep the newer one - this simple form is sufficient here, create and valid after should be the same
-                    if(commonroad_obstacle_data[obstacle.vehicle_id()].header().create_stamp().nanoseconds() < obstacle.header().create_stamp().nanoseconds())
-                    {
-                        //Store the new obstacle
-                        commonroad_obstacle_data[obstacle.vehicle_id()] = obstacle;
-                    }
-                }
-                else
+            if (commonroad_obstacle_data.find(obstacle.vehicle_id()) != commonroad_obstacle_data.end())
+            {
+                //Older obstacle value already exists, keep the newer one - this simple form is sufficient here, create and valid after should be the same
+                if(commonroad_obstacle_data[obstacle.vehicle_id()].header().create_stamp().nanoseconds() < obstacle.header().create_stamp().nanoseconds())
                 {
                     //Store the new obstacle
                     commonroad_obstacle_data[obstacle.vehicle_id()] = obstacle;
                 }
+            }
+            else
+            {
+                //Store the new obstacle
+                commonroad_obstacle_data[obstacle.vehicle_id()] = obstacle;
             }
         }
     }
