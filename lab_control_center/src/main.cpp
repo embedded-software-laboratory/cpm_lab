@@ -195,6 +195,7 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return timeSeriesAggregator->get_vehicle_path_tracking_commands();},
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );

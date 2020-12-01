@@ -54,6 +54,10 @@ TimeSeriesAggregator::TimeSeriesAggregator(uint8_t max_vehicle_id)
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
         vehicle_ids
     );
+    vehicle_commandPathTracking_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandPathTracking>>(
+        cpm::get_topic<VehicleCommandPathTracking>("vehicleCommandPathTracking"),
+        vehicle_ids
+    );
 }
 
 
@@ -256,12 +260,26 @@ VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
     return trajectory_sample;
 }
 
+VehiclePathTracking TimeSeriesAggregator::get_vehicle_path_tracking_commands() {
+    VehiclePathTracking path_tracking_sample;
+    std::map<uint8_t, uint64_t> path_tracking_sample_age;
+    vehicle_commandPathTracking_reader->get_samples(cpm::get_time_ns(), path_tracking_sample, path_tracking_sample_age);
+
+    //TODO: Could check for age of each sample by looking at the header & log if received path tracking commands are outdated
+
+    return path_tracking_sample;
+}
+
 void TimeSeriesAggregator::reset_all_data()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     timeseries_vehicles.clear();
     vehicle_commandTrajectory_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandTrajectory>>(
         cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"),
+        vehicle_ids
+    );
+    vehicle_commandPathTracking_reader = make_shared<cpm::MultiVehicleReader<VehicleCommandPathTracking>>(
+        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandPathTracking"),
         vehicle_ids
     );
 }
