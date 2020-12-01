@@ -160,12 +160,16 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             // Save all received positions that are not in the past already
             for ( auto position : sample.data().lane_graph_positions() ) {
 
+
                 // Check TimeStamp of each Position to see where it fits into our buffer
-                // The "... - dt_nanos" follows from practical observations, where
-                // indices were shifted by 1 dt_nanos
                 int index = 
-                    (position.estimated_arrival_time().nanoseconds() - t_planning - dt_nanos)
-                    / (dt_nanos/timesteps_per_planningstep);
+                    ((long long) position.estimated_arrival_time().nanoseconds() - (long long) t_planning)
+                    / ((long long) dt_nanos/timesteps_per_planningstep);
+
+                // We sometimes get unrealistic indices, which we don't want to use
+                if( index < -100 ) {
+                    continue;
+                }
 
                 // If index_to_use is negative, estimated_arrival_time is in the past
                 if( index >= 0 ) {
@@ -202,10 +206,13 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory ) {
 
     // Add TimeStamp to each point
+
     for( unsigned int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
         // Calculate, which point in time this index corresponds to
         uint64_t eta = t_planning + (dt_nanos/timesteps_per_planningstep)*i;
         trajectory.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
+
+        auto position = trajectory.lane_graph_positions()[i];
     }
 
     LaneGraphTrajectory msg;

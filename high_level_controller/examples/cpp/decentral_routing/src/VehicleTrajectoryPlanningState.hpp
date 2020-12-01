@@ -37,7 +37,7 @@
 using std::vector;
 using std::array;
 
-#define N_STEPS_SPEED_PROFILE (500)
+#define N_STEPS_SPEED_PROFILE (1000)
 
 
 

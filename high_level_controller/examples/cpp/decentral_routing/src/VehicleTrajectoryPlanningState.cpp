@@ -157,7 +157,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
             {
                 // It's possible that we don't have data for this index
                 // We will skip it, which is unsafe, but our only option right now
-                if( other_path.count(i) == 0 ) { };//continue; }
+                if( other_path.count(i) == 0 ) { continue; }
 
                 if(laneGraphTools.edge_path_collisions
                     [self_path[i].first]
