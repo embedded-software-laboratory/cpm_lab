@@ -62,6 +62,7 @@ class MapViewUi
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
     Cairo::RefPtr<Cairo::ImageSurface> image_object;
     Cairo::RefPtr<Cairo::ImageSurface> image_map;
+    Cairo::RefPtr<Cairo::ImageSurface> image_labcam;
     VehicleData vehicle_data;
 
     //For visualization of commonroad data get from data storage object via callback
@@ -109,6 +110,7 @@ class MapViewUi
     void draw(const DrawingContext& ctx);
 
     void draw_grid(const DrawingContext& ctx);
+    void draw_labcam(const DrawingContext& ctx);
 
     /**
      * \brief Draw the boundaries of the IPS / Lab to allow for fine-tuning the adjustment of commonroad maps, see where vehicle can be put etc.

@@ -61,6 +61,7 @@ MapViewUi::MapViewUi(
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
     //image_arrow = Cairo::ImageSurface::create_from_png("ui/map_view/arrow.png");
+    image_labcam = Cairo::ImageSurface::create_from_png("ui/map_view/labcam.png");
     
     update_dispatcher.connect([&](){ 
         //Pan depending on key press
@@ -207,8 +208,8 @@ MapViewUi::MapViewUi(
         mouse_x =  (cos(-rotation)*event_x - sin(-rotation)*event_y) + rotation_fixpoint_x;
         mouse_y =  (sin(-rotation)*event_x + cos(-rotation)*event_y) + rotation_fixpoint_y;
 
-        vehicle_id_in_focus = find_vehicle_id_in_focus();
 
+        vehicle_id_in_focus = find_vehicle_id_in_focus();
 
         // if in path drawing mode
         if(mouse_left_button && !path_painting_in_progress.empty())
@@ -289,11 +290,6 @@ int MapViewUi::find_vehicle_id_in_focus()
 
         if(!vehicle_timeseries.at("pose_x")->has_new_data(1.0)) continue;
 
-        std::cout << "mouse_x: " << mouse_x << std::endl;
-        std::cout << "veh_x:   " << vehicle_timeseries.at("pose_x")->get_latest_value() << std::endl;
-        std::cout << "mouse_y: " << mouse_y << std::endl;
-        std::cout << "veh_y:   " << vehicle_timeseries.at("pose_y")->get_latest_value() << std::endl;
-
         double dx = mouse_x - vehicle_timeseries.at("pose_x")->get_latest_value();
         double dy = mouse_y - vehicle_timeseries.at("pose_y")->get_latest_value();
 
@@ -340,6 +336,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
         }
 
         draw_lab_boundaries(ctx);
+
+        draw_labcam(ctx);
 
         draw_received_trajectory_commands(ctx);
 
@@ -782,6 +780,22 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
     }
     ctx->restore();
 }
+
+
+void MapViewUi::draw_labcam(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        const double scale = 0.1/image_labcam->get_width();
+        ctx->translate(-0.1,1.95);
+        ctx->rotate(M_PI / 2);
+        ctx->scale(scale, scale);
+        ctx->set_source(image_labcam,0,0);
+        ctx->paint();
+    }
+    ctx->restore();
+}
+
 
 void MapViewUi::draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
 {
