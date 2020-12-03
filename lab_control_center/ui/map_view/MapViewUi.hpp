@@ -52,6 +52,7 @@ class MapViewUi
 {
     shared_ptr<TrajectoryCommand> trajectoryCommand;
     shared_ptr<CommonRoadScenario> commonroad_scenario;
+    Gtk::Fixed container;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
@@ -82,7 +83,11 @@ class MapViewUi
     double zoom = 175;
     double pan_x = 100;
     double pan_y = 730;
-    double rotation = 40 * M_PI / 180; //[rad]
+    double rotation = 0; //[rad]
+
+    // point, which doesn't change when rotating (corresponds to map center)
+    const double rotation_fixpoint_x = 2.25;
+    const double rotation_fixpoint_y = 2;
 
     double mouse_x = 0;
     double mouse_y = 0;
@@ -148,4 +153,9 @@ public:
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
     Gtk::DrawingArea* get_parent();
+
+    /**
+     * \brief rotates the map view by rotate [deg] counterclockwise
+     */
+    void rotate_by(double rotation);
 };

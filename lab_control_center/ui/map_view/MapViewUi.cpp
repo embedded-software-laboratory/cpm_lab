@@ -50,7 +50,9 @@ MapViewUi::MapViewUi(
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 ,get_obstacle_data(_get_obstacle_data)
 {
+    //container = new Gtk::Fixed();
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
+    //container.put(drawingArea, 0,0);
     drawingArea->set_double_buffered();
     drawingArea->show();
     
@@ -58,6 +60,7 @@ MapViewUi::MapViewUi(
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
+    //image_arrow = Cairo::ImageSurface::create_from_png("ui/map_view/arrow.png");
     
     update_dispatcher.connect([&](){ 
         //Pan depending on key press
@@ -196,11 +199,13 @@ MapViewUi::MapViewUi(
     });
 
     drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
-        // Transform mouse-event from canvas coordinates into world coordinates
-        double event_x = (event->x - pan_x) / zoom;
-        double event_y = (event->y - pan_y) / zoom;
-        mouse_x =  (cos(rotation)*event_x - sin(rotation)*event_y);
-        mouse_y = -(sin(rotation)*event_x + cos(rotation)*event_y);
+        // Transform mouse-event from canvas coordinates into world coordinates by reversing all steps done while drawing (compare (*))
+        // Rotation around z-axis corresponds to the following matrix multiplication [x'] = [cos(a) -sin(a)] * [x]
+        //                                                                           [y']   [sin(a)  cos(a)]   [y]
+        double event_x =  ((event->x - pan_x) / zoom) - rotation_fixpoint_x;
+        double event_y = -((event->y - pan_y) / zoom) - rotation_fixpoint_y;
+        mouse_x =  (cos(-rotation)*event_x - sin(-rotation)*event_y) + rotation_fixpoint_x;
+        mouse_y =  (sin(-rotation)*event_x + cos(-rotation)*event_y) + rotation_fixpoint_y;
 
         vehicle_id_in_focus = find_vehicle_id_in_focus();
 
@@ -284,6 +289,11 @@ int MapViewUi::find_vehicle_id_in_focus()
 
         if(!vehicle_timeseries.at("pose_x")->has_new_data(1.0)) continue;
 
+        std::cout << "mouse_x: " << mouse_x << std::endl;
+        std::cout << "veh_x:   " << vehicle_timeseries.at("pose_x")->get_latest_value() << std::endl;
+        std::cout << "mouse_y: " << mouse_y << std::endl;
+        std::cout << "veh_y:   " << vehicle_timeseries.at("pose_y")->get_latest_value() << std::endl;
+
         double dx = mouse_x - vehicle_timeseries.at("pose_x")->get_latest_value();
         double dy = mouse_y - vehicle_timeseries.at("pose_y")->get_latest_value();
 
@@ -300,10 +310,15 @@ int MapViewUi::find_vehicle_id_in_focus()
 void MapViewUi::draw(const DrawingContext& ctx)
 {
     ctx->save();
-    {
+    {   
+        // transforming (*)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
+        
+        // rotate mapview without changing the center of the map
+        ctx->translate(rotation_fixpoint_x,rotation_fixpoint_y);
         ctx->rotate(rotation);
+        ctx->translate(-rotation_fixpoint_x,-rotation_fixpoint_y);       
 
         //draw_grid(ctx);
         //Draw map
@@ -1103,4 +1118,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 Gtk::DrawingArea* MapViewUi::get_parent()
 {
     return drawingArea;
+}
+
+
+void MapViewUi::rotate_by(double rotation) {
+    this->rotation = std::fmod(this->rotation + (rotation * M_PI / 180), 2*M_PI);
 }
