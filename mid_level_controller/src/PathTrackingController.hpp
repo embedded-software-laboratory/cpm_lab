@@ -32,15 +32,15 @@
 // #include "cpm/get_topic.hpp"
 
 
+Pose2D find_reference_pose(
+    const std::vector<PathPoint> &path,
+    const double x,
+    const double y
+);
+
 class PathTrackingController
 {
     uint8_t vehicle_id;
-
-    Pose2D find_reference_pose(
-        const std::vector<PathPoint> &path,
-        const double x,
-        const double y
-    );
 
     std::function<void(double&, double&)> stop_vehicle;
 

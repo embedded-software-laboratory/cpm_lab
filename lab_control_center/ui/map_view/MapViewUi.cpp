@@ -32,6 +32,14 @@
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
 
+#include "PathInterpolation.hpp"
+#include "PathInterpolation.cxx"
+
+#include "PathTrackingController.hpp"
+#include "PathTrackingController.cxx"
+
+#include "VehicleCommandPathTracking.hpp"
+
 #include <stdio.h>
 
 using namespace std::placeholders; //For std::bind
@@ -488,28 +496,12 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
     ctx->save();
     for(const auto& entry : vehiclePathTracking) 
     {
-        //const auto vehicle_id = entry.first;
-        const auto& pathTracking = entry.second;
+        const auto vehicle_id = entry.first;
+        const auto& command = entry.second;
 
-        rti::core::vector<PathPoint> path = pathTracking.path();
-
-
-        ctx->begin_new_path();
-        for (size_t i = 0; i < path.size(); i++) {
-            Pose2D pose = path.at(i).pose();
-            std::cout << "path tracking: " << i << " (" << pose.x() << ", " << pose.y() << ")" << std::endl;
-
-            ctx->set_source_rgb(0.8,0.8,0);
-
-            ctx->arc(
-                pose.x(),
-                pose.y(),
-                0.05, 0.0, 2 * M_PI
-            );
-            ctx->fill();
-        }
+        rti::core::vector<PathPoint> path = command.path();
         
-        /*if(trajectory_segment.size() < 2 ) continue;
+        if(path.size() < 2 ) continue;
         
         uint64_t t_now = cpm::get_time_ns();
 
@@ -517,73 +509,75 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
 
         // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
         // start from 1 because of i-1
-        for (size_t i = 1; i < trajectory_segment.size(); ++i)
+        for (size_t i = 1; i < path.size(); ++i)
         {
             const int n_interp = 20;
             
             ctx->begin_new_path();
-            ctx->move_to(trajectory_segment[i-1].px(),
-                         trajectory_segment[i-1].py()
+            ctx->move_to(path[i-1].pose().x(),
+                         path[i-1].pose().y()
             );   
-            for (int interp_step = 1; interp_step <= n_interp; ++interp_step)
+
+            double start = path[i-1].s();
+            double end = path[i].s();
+            double ds = (end - start) / n_interp;
+
+            for (double s_query = start; s_query <= end; s_query += ds)
             {
-                const uint64_t delta_t = 
-                        trajectory_segment[i].t().nanoseconds() 
-                    - trajectory_segment[i-1].t().nanoseconds();
-
-                const uint64_t t_cur = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds();
-
-                TrajectoryInterpolation interp(
-                    t_cur,
-                    trajectory_segment[i-1],  
-                    trajectory_segment[i]
+                // calculate distance to reference path
+                PathInterpolation path_interpolation(
+                    s_query, path[i-1], path[i]
                 );
                 
-                ctx->line_to(interp.position_x,
-                             interp.position_y
+                ctx->line_to(path_interpolation.position_x,
+                             path_interpolation.position_y
                 );
 
-                if (t_cur < t_now)
-                {
-                    //Color for past segments
-                    ctx->set_source_rgb(0.7,0.7,0.7);
-                }
-                else
-                {
-                    //Color for current and future segments
-                    ctx->set_source_rgb(0,0,0.8);
-                }
+                ctx->set_source_rgb(0,0.8,0.8);
 
                 ctx->stroke();
-                ctx->move_to(interp.position_x,
-                             interp.position_y
+                ctx->move_to(path_interpolation.position_x,
+                             path_interpolation.position_y
                 );
             }
         }
 
         // Draw trajectory points
         ctx->begin_new_path();
-        for(size_t i = 0; i < trajectory_segment.size(); ++i)
+        for(size_t i = 0; i < path.size(); ++i)
         {
-            //Color based on future / current interpolation
-            uint64_t t_cur = trajectory_segment.at(i).t().nanoseconds();
-            if (t_cur < t_now)
-            {
-                ctx->set_source_rgb(0.7,0.7,0.7);
-            }
-            else
-            {
-                ctx->set_source_rgb(0,0,0.8);
-            }
+            ctx->set_source_rgb(0,0.8,0.8);
 
             ctx->arc(
-                trajectory_segment[i].px(),
-                trajectory_segment[i].py(),
+                path[i].pose().x(),
+                path[i].pose().y(),
                 0.02, 0.0, 2 * M_PI
             );
             ctx->fill();
-        }*/
+        }
+
+        // Draw reference position
+        ctx->begin_new_path();
+        const auto& vehicle_timeseries = vehicle_data.at(vehicle_id);
+        const double pose_x = vehicle_timeseries.at("pose_x")->get_latest_value();
+        const double pose_y = vehicle_timeseries.at("pose_y")->get_latest_value();
+
+        Pose2D ref_pose = find_reference_pose(
+            path,
+            pose_x,
+            pose_y
+        );
+
+        ctx->set_source_rgb(0,0.5,0.5);
+
+        ctx->arc(
+            ref_pose.x(),
+            ref_pose.y(),
+            0.02, 0.0, 2 * M_PI
+        );
+        ctx->fill();
     }
+
     ctx->restore();
 }
 
