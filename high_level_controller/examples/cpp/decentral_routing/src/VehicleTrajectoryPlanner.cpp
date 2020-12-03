@@ -211,8 +211,6 @@ void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory 
         // Calculate, which point in time this index corresponds to
         uint64_t eta = t_planning + (dt_nanos/timesteps_per_planningstep)*i;
         trajectory.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
-
-        auto position = trajectory.lane_graph_positions()[i];
     }
 
     LaneGraphTrajectory msg;
