@@ -28,6 +28,7 @@
 #include <cassert>
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
+#include <math.h>
 
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
@@ -195,8 +196,11 @@ MapViewUi::MapViewUi(
     });
 
     drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
-        mouse_x = (event->x - pan_x) / zoom;
-        mouse_y = -(event->y - pan_y) / zoom;
+        // Transform mouse-event from canvas coordinates into world coordinates
+        double event_x = (event->x - pan_x) / zoom;
+        double event_y = (event->y - pan_y) / zoom;
+        mouse_x =  (cos(rotation)*event_x - sin(rotation)*event_y);
+        mouse_y = -(sin(rotation)*event_x + cos(rotation)*event_y);
 
         vehicle_id_in_focus = find_vehicle_id_in_focus();
 
@@ -299,6 +303,7 @@ void MapViewUi::draw(const DrawingContext& ctx)
     {
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
+        ctx->rotate(rotation);
 
         //draw_grid(ctx);
         //Draw map
@@ -809,7 +814,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
         {
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
@@ -1075,7 +1080,7 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;

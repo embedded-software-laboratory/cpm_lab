@@ -82,6 +82,7 @@ class MapViewUi
     double zoom = 175;
     double pan_x = 100;
     double pan_y = 730;
+    double rotation = 40 * M_PI / 180; //[rad]
 
     double mouse_x = 0;
     double mouse_y = 0;
