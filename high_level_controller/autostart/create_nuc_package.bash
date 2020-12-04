@@ -11,7 +11,7 @@ BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Publish NUC package via http/apache for the HLCs to download
 
 
-cd /tmp
+cd /${BASH_DIR}
 rm -rf matlab_package
 mkdir matlab_package
 cp ${BASH_DIR}/../examples/matlab/init_script.m ./matlab_package
