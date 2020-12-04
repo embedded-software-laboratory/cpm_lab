@@ -30,7 +30,7 @@ exit 0
 # -------------------------------------------------------
 # -------------------------------------------------------
 
-#!/bin/sh
+#!/bin/bash
 
 # First, set a wrong date (for testing purposes)
 date +%T -s "14:14:00"
@@ -51,11 +51,14 @@ service ntp restart
 # We tell the script that we are finished with the clock sync
 # It is sufficient to just create a pipe here - we will check for its existence
 # in the other script using -p
-nuc_ntp_pipe=nuc_ntp_pipe
-nuc_lab_pipe=nuc_lab_pipe
+nuc_ntp_pipe=/tmp/nuc_ntp_pipe
+nuc_lab_pipe=/tmp/nuc_lab_pipe
 
-mkfifo $nuc_ntp_pipe
-mkfifo $nuc_lab_pipe
+mkfifo /tmp/nuc_ntp_pipe
+mkfifo /tmp/nuc_lab_pipe
+
+chmod a+rwx /tmp/nuc_ntp_pipe
+chmod a+rwx /tmp/nuc_lab_pipe
 
 # delete the named pipe on exit
 trap "rm $nuc_ntp_pipe $nuc_lab_pipe" EXIT
@@ -82,8 +85,8 @@ exit 0
 # The clock sync is performed in rc.local of the sudo user
 # We communicate via pipes, alternatively starting this script as another user would have been possible as well
 # Check for existing pipe, wait until it has been created
-nuc_ntp_pipe=nuc_ntp_pipe
-nuc_lab_pipe=nuc_lab_pipe
+nuc_ntp_pipe=/tmp/nuc_ntp_pipe
+nuc_lab_pipe=/tmp/nuc_lab_pipe
 
 while [[ ! (-p $nuc_ntp_pipe && -p $nuc_lab_pipe ) ]]; do
         sleep 1
