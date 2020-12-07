@@ -62,82 +62,78 @@ void VehicleTrajectoryPlanner::set_vehicle(std::shared_ptr<VehicleTrajectoryPlan
     trajectoryPlan = vehicle;
 }
 
-void VehicleTrajectoryPlanner::start()
+void VehicleTrajectoryPlanner::plan(uint64_t t)
 {
-    assert(!started);
+    t_real_time = t;
+    if(!started) {
+        t_planning = t_real_time;
+    }
 
     started = true;
+    // Read LaneGraphTrajectory messages and write them into our buffer
+    // TODO: This method could block until we have the right responses
+    cpm::Logging::Instance().write(1,
+            "Planner %d waiting to start planning %lu",
+            trajectoryPlan->get_vehicle_id(),
+            t_real_time
+            );
+    this->read_other_vehicles();
+    cpm::Logging::Instance().write(1,
+            "Planner %d starting planning %lu",
+            trajectoryPlan->get_vehicle_id(),
+            t_real_time
+            );
 
-    cpm::Logging::Instance().write(
-            3,
-            "Starting VehicleTrajectoryPlanner");
+    while(t_planning < t_real_time + planning_horizont*dt_nanos)
+    {
+        // Priority based collision avoidance: Every vehicle avoids 
+        // the 'previous' vehicles, in this example those with a smaller ID.
+        bool is_collision_avoidable = false;
 
-    planning_thread = std::thread([this](){
-        t_planning = 0;
+        is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
+        if (!is_collision_avoidable){
+            cpm::Logging::Instance().write(1,
+                    "Found unavoidable collision");
+            crashed = true;
+            started = false; // end planning
+            break;
+        } 
+
+
+        if(t_start == 0)
         {
-            std::lock_guard<std::mutex> lock(mutex); 
-            t_planning = t_real_time;
+            t_start = t_real_time + 2000000000ull;
+            auto trajectory_point = trajectoryPlan->get_trajectory_point();
+            trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
+            trajectory_point_buffer.push_back(trajectory_point);
         }
 
-        while(1)
+        while(trajectory_point_buffer.size() > 50)
         {
-            // Priority based collision avoidance: Every vehicle avoids 
-            // the 'previous' vehicles, in this example those with a smaller ID.
-            bool is_collision_avoidable = false;
-
-            // Read LaneGraphTrajectory messages and write them into our buffer
-            this->read_other_vehicles();
-
-            is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
-
-            if (!is_collision_avoidable){
-                cpm::Logging::Instance().write(1,
-                        "Found unavoidable collision");
-                crashed = true;
-                started = false; // end planning
-                break;
-            } 
-
-            {
-                std::lock_guard<std::mutex> lock(mutex); 
-
-                // Get our current trajectory
-                LaneGraphTrajectory lane_graph_trajectory;
-                trajectoryPlan->get_lane_graph_positions(
-                        &lane_graph_trajectory
-                );
-
-                write_trajectory(lane_graph_trajectory);
-
-                if(t_start == 0)
-                {
-                    t_start = t_real_time + 2000000000ull;
-                    auto trajectory_point = trajectoryPlan->get_trajectory_point();
-                    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_real_time);
-                    trajectory_point_buffer.push_back(trajectory_point);
-                }
-
-                while(trajectory_point_buffer.size() > 50)
-                {
-                    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
-                }
-                auto trajectory_point = trajectoryPlan->get_trajectory_point();
-                trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
-                trajectory_point_buffer.push_back(trajectory_point);
-            }
-
-            trajectoryPlan->apply_timestep(dt_nanos);
-
-            t_planning += dt_nanos;
-
-            // Sleep until we need to continue planning
-            // Increasing t_real_time + x means that a longer
-            // VehicleCommandTrajectory is sent to vehicle
-            while(t_real_time + 5*dt_nanos < t_planning) usleep(110000);
+            trajectory_point_buffer.erase(trajectory_point_buffer.begin());
         }
-    });
+        auto trajectory_point = trajectoryPlan->get_trajectory_point();
+        trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
+        trajectory_point_buffer.push_back(trajectory_point);
 
+        trajectoryPlan->apply_timestep(dt_nanos);
+
+        t_planning += dt_nanos;
+    }
+
+    // Get our current trajectory
+    LaneGraphTrajectory lane_graph_trajectory;
+    trajectoryPlan->get_lane_graph_positions(
+            &lane_graph_trajectory
+    );
+
+    cpm::Logging::Instance().write(1,
+            "Planner %d finished planning",
+            trajectoryPlan->get_vehicle_id()
+            );
+
+    write_trajectory(lane_graph_trajectory);
 }
 
 void VehicleTrajectoryPlanner::read_other_vehicles()
@@ -145,58 +141,83 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     assert(started);
 
     // Clear buffer from previous timestep
+    // FIXME: read_other_vehicles is executed more than once per timestep.
+    // We probably should clear the buffer each time
     other_vehicles_buffer.clear();
 
-    dds::sub::LoanedSamples<LaneGraphTrajectory> samples = reader_laneGraphTrajectory->take();
-    for(auto sample : samples) {
-        if (sample.info().valid()) {
-            // We ignore everything with lower priorities
-            if (sample.data().vehicle_id() >= trajectoryPlan->get_vehicle_id()){ continue; }
-            
-            int prev_buffer_index = -1;
-            int prev_edge_index = -1;
-            int prev_edge_path_index = -1;
+    vector<bool> checklist = comm_graph[trajectoryPlan->get_vehicle_id()-1];
+    bool still_waiting = true;
 
-            // Save all received positions that are not in the past already
-            for ( auto position : sample.data().lane_graph_positions() ) {
-
-
-                // Check TimeStamp of each Position to see where it fits into our buffer
-                int index = 
-                    ((long long) position.estimated_arrival_time().nanoseconds() - (long long) t_planning)
-                    / ((long long) dt_nanos/timesteps_per_planningstep);
-
-                // We sometimes get unrealistic indices, which we don't want to use
-                if( index < -100 ) {
+    while( still_waiting ) {
+        dds::sub::LoanedSamples<LaneGraphTrajectory> samples = reader_laneGraphTrajectory->take();
+        for(auto sample : samples) {
+            std::cout << "Header:" << sample.data().header().create_stamp().nanoseconds() << std::endl;
+            std::cout << "Expect:" <<t_real_time << std::endl;
+            if (sample.info().valid() &&
+                    // Check if this is actually a new message
+                    // Diese if-Bedingung verhindert, dass Fahrzeug 2 & 3 starten
+                    // Grund: Wir verpassen anscheinend die erste Nachricht von Fahrzeug 1
+                    sample.data().header().create_stamp().nanoseconds() == t_real_time) {
+                // We ignore everything not in our comm_graph
+                if ( !checklist.at(sample.data().vehicle_id()-1) ){
                     continue;
+                } else {
+                    checklist[sample.data().vehicle_id()-1] = false;
                 }
-
-                // If index_to_use is negative, estimated_arrival_time is in the past
-                if( index >= 0 ) {
-                    other_vehicles_buffer[sample.data().vehicle_id()][index] =
-                        std::make_pair(
-                            position.edge_index(),
-                            position.edge_path_index()
-                        );
-                }
-
-                // If the prev_... vars are set, interpolate using them
-                // We cannot interpolate if there is just one point in the buffer
-                if( prev_edge_index >= 0 ) {
-                    interpolate_other_vehicles_buffer(
-                            sample.data().vehicle_id(),
-                            prev_buffer_index, prev_edge_index, prev_edge_path_index,
-                            index, position.edge_index(), position.edge_path_index()
-                    );
-                }
-
-                // Remember these for interpolation
-                prev_buffer_index = index;
-                prev_edge_index = position.edge_index();
-                prev_edge_path_index = position.edge_path_index();
                 
+                int prev_buffer_index = -1;
+                int prev_edge_index = -1;
+                int prev_edge_path_index = -1;
+
+                // Save all received positions that are not in the past already
+                for ( auto position : sample.data().lane_graph_positions() ) {
+
+
+                    // Check TimeStamp of each Position to see where it fits into our buffer
+                    int index = 
+                        ((long long) position.estimated_arrival_time().nanoseconds() - (long long) t_planning)
+                        / ((long long) dt_nanos/timesteps_per_planningstep);
+
+                    // We sometimes get unrealistic indices, which we don't want to use
+                    if( index < -100 ) {
+                        continue;
+                    }
+
+                    // If index_to_use is negative, estimated_arrival_time is in the past
+                    if( index >= 0 ) {
+                        other_vehicles_buffer[sample.data().vehicle_id()][index] =
+                            std::make_pair(
+                                position.edge_index(),
+                                position.edge_path_index()
+                            );
+                    }
+
+                    // If the prev_... vars are set, interpolate using them
+                    // We cannot interpolate if there is just one point in the buffer
+                    if( prev_edge_index >= 0 ) {
+                        interpolate_other_vehicles_buffer(
+                                sample.data().vehicle_id(),
+                                prev_buffer_index, prev_edge_index, prev_edge_path_index,
+                                index, position.edge_index(), position.edge_path_index()
+                        );
+                    }
+
+                    // Remember these for interpolation
+                    prev_buffer_index = index;
+                    prev_edge_index = position.edge_index();
+                    prev_edge_path_index = position.edge_path_index();
+                    
+                }
             }
         }
+
+        still_waiting = false;
+        for ( bool entry : checklist ) {
+            if( entry ) {
+                still_waiting = true;
+            }
+        }
+
     }
 }
 
@@ -279,6 +300,10 @@ void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer(
     }
 }
 
+void VehicleTrajectoryPlanner::set_comm_graph(
+        vector<vector<bool>> matrix) {
+    comm_graph = matrix;
+}
 
 void VehicleTrajectoryPlanner::set_writer(
         std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){

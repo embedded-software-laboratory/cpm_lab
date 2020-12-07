@@ -198,11 +198,6 @@ int main(int argc, char *argv[]) {
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    /* Soll-Verhalten:
-     *   - Wir starten erst, wenn eine StateList von der Middleware kommt
-     *   - Wir schicken dann auch erst VehicleTrajectories an die Middleware, wenn eine
-     *   weitere StateList kommt
-     */
     auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
 
     // Set reader/writers of planner so it can communicate with other planners
@@ -216,6 +211,16 @@ int main(int argc, char *argv[]) {
         reader_laneGraphTrajectory
         )
     );
+    /* ---------------------------------------------------------------------------------
+     * Communication graph: Which other HLCs do we have to wait for?
+     * ---------------------------------------------------------------------------------
+     */
+    // This graphs gives the priorities, as well as the order of planning
+    std::vector<std::vector<bool>> comm_graph = {
+        {0, 0, 0}, // Vehicle 1 waits for noone
+        {1, 0, 0}, // Vehicle 2 waits for vehicle 1
+        {1, 1, 0} // Vehicle 3 waits for vehicle 1 and 2. noone waits for 3
+    }; 
 
     /* ---------------------------------------------------------------------------------
      * Compose and send Ready message
@@ -264,8 +269,6 @@ int main(int argc, char *argv[]) {
                 if(!planner->is_started()) {
                     cpm::Logging::Instance().write(3,
                         "Preparing to start planner");
-                    // Set real time
-                    planner->set_real_time(t_now);
 
                     /* ---------------------------------------------------------------------
                     * Check for start position of our vehicle
@@ -297,23 +300,25 @@ int main(int argc, char *argv[]) {
                                             out_edge_path_index
                                         )
                                 );
+                                planner->set_comm_graph(comm_graph);
                                 cpm::Logging::Instance().write(
-                                        3,
+                                        1,
                                         "Vehicle %d matched.",
                                         int(vehicle_id)
                                 );
 
                                 //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
                                 //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-                                planner->start();
+                                planner->plan(t_now);
+
+                                // Problem: We are waiting for this method to return, but this method could block indefinitely
                             }
                         }
                     }
 
                     if( !matched ) {
                         cpm::Logging::Instance().write(1,
-                            "Couldn't find vehicle in \
-                            VehicleStateList.");
+                            "Couldn't find vehicle in VehicleStateList.");
                         StopRequest request(vehicle_id);
                         writer_stopRequest.write(request);
                         //writer_systemTrigger.write(stop_trigger);
@@ -323,7 +328,7 @@ int main(int argc, char *argv[]) {
                 // If we received a StateList and are already started, get commands
                 if( planner->is_started() ) {
                     // Set real time
-                    planner->set_real_time(t_now);
+                    planner->plan(t_now);
                     //get trajectory commands from VehicleTrajectoryPlanner with new points
                     auto command = planner->get_trajectory_command(t_now);
                     writer_vehicleCommandTrajectory.write(command);

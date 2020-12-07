@@ -53,7 +53,9 @@ class VehicleTrajectoryPlanner
     std::mutex mutex;
     std::thread planning_thread;
     const uint64_t dt_nanos;
+    const int planning_horizont = 5;
     vector<TrajectoryPoint> trajectory_point_buffer;
+    vector<vector<bool>> comm_graph;
     void read_other_vehicles();
     void apply_timestep();
     void write_trajectory( LaneGraphTrajectory trajectory );
@@ -75,8 +77,9 @@ public:
     bool is_started() {return started;}
     bool is_crashed() {return crashed;}
     void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+    void set_comm_graph(vector<vector<bool>> matrix);
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
     void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
-    void start();
+    void plan(uint64_t t_real_time);
 
 };
