@@ -26,21 +26,18 @@
 
 #include "Header.idl"
 
-#ifndef LANEGRAPHTRAJECTORY_IDL
-#define LANEGRAPHTRAJECTORY_IDL
+/*
+ * This signal is used when multiple vehicles are planning in parallel, to signify
+ * if there is a collision with the previously sent trajectories or not.
+ */
+#ifndef PLANNINGCONFIRMATION_IDL
+#define PLANNINGCONFIRMATION_IDL
 
-struct LaneGraphPosition 
-{
-    TimeStamp estimated_arrival_time;
-    unsigned short edge_index;
-    unsigned short edge_path_index;
-};
-
-struct LaneGraphTrajectory 
+struct PlanningConfirmation
 {
     octet vehicle_id; //@key
-    Header header;
-    unsigned short attempt;
-    sequence<LaneGraphPosition> lane_graph_positions;
+    TimeStamp timestep;
+    unsigned short counter;
+    bool collision;
 };
 #endif
