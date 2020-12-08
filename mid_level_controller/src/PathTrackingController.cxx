@@ -33,10 +33,14 @@
 #include "PathInterpolation.hpp"
 
 PathTrackingController::PathTrackingController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
-:vehicle_id(vehicle_id)
-,stop_vehicle(stop_vehicle)
-{
-}
+:
+    writer_Visualization(
+        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
+        cpm::get_topic<Visualization>("visualization"),
+        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
+    vehicle_id(vehicle_id),
+    stop_vehicle(stop_vehicle)
+{}
 
 
 // Wrap angle in radians to [-pi pi]
@@ -74,6 +78,27 @@ double PathTrackingController::control_steering_servo(
     
     double e = d_x*tHat_y - d_y*tHat_x;
     double psi = wrap2pi(ref_pose.yaw() - yaw);
+
+
+    // send reference pose as virtualisation
+    Visualization vis;
+    vis.id(vehicle_id);
+    vis.type(VisualizationType::LineStrips);
+    vis.time_to_live(25000000ull);
+    vis.size(0.03);
+    vis.color().r(255);
+    vis.color().g(0);
+    vis.color().b(240);
+
+    const double vis_length = 0.4;
+
+    vis.points().resize(2);
+    vis.points().at(0).x(ref_pose.x());
+    vis.points().at(0).y(ref_pose.y());
+    vis.points().at(1).x(ref_pose.x() + tHat_x * vis_length * vehicleState.speed());
+    vis.points().at(1).y(ref_pose.y() + tHat_y * vis_length * vehicleState.speed());
+
+    writer_Visualization.write(vis);
 
 
     // control law for steering servo

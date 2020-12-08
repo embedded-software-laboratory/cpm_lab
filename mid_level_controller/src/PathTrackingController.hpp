@@ -28,8 +28,9 @@
 #include <vector>
 #include "VehicleCommandPathTracking.hpp"
 #include "VehicleState.hpp"
-// #include "Visualization.hpp"
-// #include "cpm/get_topic.hpp"
+#include "Visualization.hpp"
+#include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 
 
 Pose2D find_reference_pose(
@@ -38,15 +39,16 @@ Pose2D find_reference_pose(
     const double y
 );
 
+
 class PathTrackingController
 {
+    dds::pub::DataWriter<Visualization> writer_Visualization;
     uint8_t vehicle_id;
 
     std::function<void(double&, double&)> stop_vehicle;
 
 
 public:
-
     PathTrackingController(uint8_t vehicle_id, std::function<void(double&, double&)> stop_vehicle);
 
     double control_steering_servo(
