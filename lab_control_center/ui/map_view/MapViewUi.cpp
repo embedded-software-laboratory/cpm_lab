@@ -555,27 +555,6 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
             );
             ctx->fill();
         }
-
-        // Draw reference position
-        ctx->begin_new_path();
-        const auto& vehicle_timeseries = vehicle_data.at(vehicle_id);
-        const double pose_x = vehicle_timeseries.at("pose_x")->get_latest_value();
-        const double pose_y = vehicle_timeseries.at("pose_y")->get_latest_value();
-
-        Pose2D ref_pose = find_reference_pose(
-            path,
-            pose_x,
-            pose_y
-        );
-
-        ctx->set_source_rgb(0,0.5,0.5);
-
-        ctx->arc(
-            ref_pose.x(),
-            ref_pose.y(),
-            0.02, 0.0, 2 * M_PI
-        );
-        ctx->fill();
     }
 
     ctx->restore();
