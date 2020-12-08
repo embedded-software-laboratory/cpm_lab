@@ -33,12 +33,6 @@
 #include "cpm/Writer.hpp"
 
 
-Pose2D find_reference_pose(
-    const std::vector<PathPoint> &path,
-    const double x,
-    const double y
-);
-
 
 class PathTrackingController
 {
@@ -49,6 +43,12 @@ class PathTrackingController
 
 
 public:
+    Pose2D find_reference_pose(
+        const std::vector<PathPoint> &path,
+        const double x,
+        const double y
+    );
+
     PathTrackingController(uint8_t vehicle_id, std::function<void(double&, double&)> stop_vehicle);
 
     double control_steering_servo(

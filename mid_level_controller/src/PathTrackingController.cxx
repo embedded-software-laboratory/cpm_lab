@@ -116,7 +116,7 @@ double PathTrackingController::control_steering_servo(
     return steering_servo;
 }
 
-Pose2D find_reference_pose(
+Pose2D PathTrackingController::find_reference_pose(
     const std::vector<PathPoint> &path,
     const double x,
     const double y
