@@ -601,6 +601,9 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
         }
         else if (entry.type() == VisualizationType::StringMessage
                  && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            
+            ctx->save();
+            // ctx->rotate(-rotation);
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
@@ -609,11 +612,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             Cairo::TextExtents ext;
             ctx->get_text_extents(entry.string_message(), ext);
             
-            double text_offset_x, text_offset_y;
-            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
-            
+            // Firstly, compute text offset neglecting the current map view rotation.
+            // Secondly, apply rotation matrix to text_offset so that offset is correclty applied dependent on the map view rotation.
+            double text_offset_left, text_offset_right;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_left, text_offset_right);
+            double text_offset_x = (cos(-rotation)*text_offset_left - sin(-rotation)*text_offset_right);
+            double text_offset_y = (sin(-rotation)*text_offset_left + cos(-rotation)*text_offset_right);
+
+            // Move to the correct position and rotate so that text is shown horizontally
             ctx->move_to(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
+            ctx->rotate(-rotation);
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
@@ -621,6 +630,8 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
             //Draw text
             ctx->show_text(entry.string_message().c_str());
+
+            ctx->restore();
         }
     }
 }
