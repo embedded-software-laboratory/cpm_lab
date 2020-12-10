@@ -21,15 +21,13 @@ IDS=$'
 18
 19'
 
-folder=$(date +%Y_%m_%d_%H_%M_%S)
-mkdir $folder
-
-cd $folder
+folder="logs/$(date +%Y_%m_%d_%H_%M_%S)"
+mkdir -p $folder
 
 for id in $IDS;
 do
     echo "Retrieve log from vehicle $id"
-    sshpass -p "cpmcpmcpm" scp pi@192.168.1.1$id:/tmp/package/Log* log_veh_$id &
+    sshpass -p "cpmcpmcpm" scp pi@192.168.1.1$id:/tmp/package/Log* $folder/log_veh_$id &
     sleep 0.1
 done
 
