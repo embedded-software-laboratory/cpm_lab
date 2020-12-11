@@ -90,12 +90,12 @@ Position::Position(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Position:" << std::endl;
-    std::cout << "\tPoint exists: " << point.has_value() << std::endl;
-    std::cout << "\tCircle size: " << circles.size() << std::endl;
-    std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
-    std::cout << "\tPolygon size: " << polygons.size() << std::endl;
-    std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
+    // std::cout << "Position:" << std::endl;
+    // std::cout << "\tPoint exists: " << point.has_value() << std::endl;
+    // std::cout << "\tCircle size: " << circles.size() << std::endl;
+    // std::cout << "\tLanelet ref size: " << lanelet_refs.size() << std::endl;
+    // std::cout << "\tPolygon size: " << polygons.size() << std::endl;
+    // std::cout << "\tRectangle size: " << rectangles.size() << std::endl;
 }
 
 //Suppress warning for unused parameter (s)
@@ -121,26 +121,26 @@ void Position::set_lanelet_get_center_function(std::function<std::pair<double, d
     get_lanelet_center = _get_lanelet_center;
 }
 
-void Position::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Position::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (point.has_value())
     {
-        point->transform_coordinate_system(scale, translate_x, translate_y);
+        point->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& circle : circles)
     {
-        circle.transform_coordinate_system(scale, translate_x, translate_y);
+        circle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& polygon : polygons)
     {
-        polygon.transform_coordinate_system(scale, translate_x, translate_y);
+        polygon.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& rectangle : rectangles)
     {
-        rectangle.transform_coordinate_system(scale, translate_x, translate_y);
+        rectangle.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     if (scale > 0)
@@ -323,7 +323,7 @@ bool Position::position_is_lanelet_ref()
     return (lanelet_refs.size() > 0) && !(point.has_value()) && (circles.size() == 0) && (polygons.size() == 0) && (rectangles.size() == 0);
 }
 
-const std::optional<Point>& Position::get_point() const
+std::optional<Point> Position::get_point()
 {
     return point;
 }
@@ -346,4 +346,55 @@ const std::vector<Polygon>& Position::get_polygons() const
 const std::vector<Rectangle>& Position::get_rectangles() const
 {
     return rectangles;
+}
+
+CommonroadDDSPositionInterval Position::to_dds_position_interval()
+{
+    //Throw error if conversion is invalid because of position type
+    if (is_exact())
+    {
+        throw std::runtime_error("Position cannot be translated to DDS Interval, is exact");
+    }
+
+    CommonroadDDSPositionInterval position_interval;
+
+    std::vector<CommonroadDDSCircle> vector_circles;
+    std::vector<CommonroadDDSPolygon> vector_polygons;
+    std::vector<CommonroadDDSRectangle> vector_rectangles;
+    std::vector<int32_t> vector_lanelet_refs;
+
+    for (auto& circle : circles)
+    {
+        vector_circles.push_back(circle.to_dds_msg());
+    }
+    for (auto& polygon : polygons)
+    {
+        vector_polygons.push_back(polygon.to_dds_msg());
+    }
+    for (auto& rectangle : rectangles)
+    {
+        vector_rectangles.push_back(rectangle.to_dds_msg());
+    }
+    for (auto& lanelet_ref : lanelet_refs)
+    {
+        vector_lanelet_refs.push_back(static_cast<int32_t>(lanelet_ref));
+    }
+
+    position_interval.circles(rti::core::vector<CommonroadDDSCircle>(vector_circles));
+    position_interval.polygons(rti::core::vector<CommonroadDDSPolygon>(vector_polygons));
+    position_interval.rectangles(rti::core::vector<CommonroadDDSRectangle>(vector_rectangles));
+    position_interval.lanelet_refs(rti::core::vector<int32_t>(vector_lanelet_refs));
+
+    return position_interval;
+}
+
+CommonroadDDSPoint Position::to_dds_point()
+{
+    //Throw error if conversion is invalid because of position type
+    if (!is_exact())
+    {
+        throw std::runtime_error("Position cannot be translated to DDS Point, is interval");
+    }
+
+    return point->to_dds_msg();
 }

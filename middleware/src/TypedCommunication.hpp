@@ -40,16 +40,6 @@
 #include <cassert>
 #include <type_traits>
 
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/core/QosProvider.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <rti/core/cond/AsyncWaitSet.hpp>
-#include <rti/core/ListenerBinder.hpp>
-#include <dds/dds.hpp>
-#include <dds/sub/DataReaderListener.hpp>
-#include <dds/core/ddscore.hpp>
-
 #include "Header.hpp"
 #include "VehicleState.hpp"
 #include "VehicleCommandDirect.hpp"
@@ -61,6 +51,8 @@
 #include "cpm/Reader.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/VehicleIDFilteredTopic.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
 
 using namespace std::placeholders;
 
@@ -73,12 +65,10 @@ using namespace std::placeholders;
 template<class MessageType> class TypedCommunication {
     private:
         //For HLC - communication
-        dds::topic::Topic<MessageType> hlcCommandTopic;
         cpm::AsyncReader<MessageType> hlcCommandReader;
 
         //For Vehicle communication
-        dds::topic::Topic<MessageType> vehicleCommandTopic;
-        dds::pub::DataWriter<MessageType> vehicleWriter;
+        cpm::Writer<MessageType> vehicleWriter;
 
         //Real time: Last receive time of HLC message (To check for violation of period) for each HLC ID
         //Simulated time: last response time should match the current time
@@ -93,66 +83,64 @@ template<class MessageType> class TypedCommunication {
         std::atomic<uint64_t> current_period_start{0}; //in ns
 
         //Handler for commands received by the HLC
-        void handler(dds::sub::LoanedSamples<MessageType>& samples)
+        void handler(std::vector<MessageType>& samples)
         {
             // Process sample 
-            for (auto sample : samples) {
-                if (sample.info().valid()) {
-                    uint64_t receive_timestamp = timer->get_time();
+            for (auto& data : samples) {
+                uint64_t receive_timestamp = timer->get_time();
 
-                    //First send the data to the vehicle
-                    sendToVehicle(sample.data());
+                //First send the data to the vehicle
+                sendToVehicle(data);
 
-                    //Then update the last response time of the HLC that sent the data
-                    std::lock_guard<std::mutex> lock(map_mutex);
-                    lastHLCResponseTimes[sample.data().vehicle_id()] = receive_timestamp;
+                //Then update the last response time of the HLC that sent the data
+                std::lock_guard<std::mutex> lock(map_mutex);
+                lastHLCResponseTimes[data.vehicle_id()] = receive_timestamp;
 
-                    //This might be problematic, but if we perform checks before sending the message then this 
-                    //might lead to a violation of timing boundaries
+                //This might be problematic, but if we perform checks before sending the message then this 
+                //might lead to a violation of timing boundaries
 
-                    //Then check if the sent data was plausible -> TODO? 
-                    // - Check if the valid after time is correct - TODO: Make sure that header() exists?
-                    //sample.data().header().valid_after_stamp().nanoseconds()
+                //Then check if the sent data was plausible -> TODO? 
+                // - Check if the valid after time is correct - TODO: Make sure that header() exists?
+                //data.header().valid_after_stamp().nanoseconds()
 
-                    //1. Make sure that the set vehicle ID is valid (assertion of field done in constructor)
-                    auto set_id = sample.data().vehicle_id();
-                    if(std::find(vehicle_ids.begin(), vehicle_ids.end(), set_id) == vehicle_ids.end())
-                    {
-                        //ID should not have been sent, print warning
-                        cpm::Logging::Instance().write(
-                            1,
-                            "Middleware received vehicle ID %i from HLC script - ID was not set to be used!",
-                            static_cast<int>(set_id)
-                        );
-                    }
-
-                    //2. Make sure that the creation timestamp is consistent with the current timing
-                    auto header_create_stamp = sample.data().header().create_stamp().nanoseconds();
-                    auto current_time = cpm::get_time_ns();
-                    //  a) If the stamp is newer than the current time, then the timing function in the HLC script 
-                    //     must be wrong - after all, it runs on the same machine, so the same clock is being used
-                    if (header_create_stamp > current_time)
-                    {
-                        cpm::Logging::Instance().write(
-                            1,
-                            "Middleware (ID %i) received creation stamp from HLC script that lies in the future - this must be a mistake",
-                            static_cast<int>(set_id)
-                        );
-                    }
-                    //  b) If the stamp is older than the beginning of the current period, than the HLC script took too long
-                    //     Missed periods are also checked in Communication, but only in terms of an absolute time diff
-                    if (header_create_stamp < current_period_start.load())
-                    {
-                        cpm::Logging::Instance().write(
-                            1,
-                            "Middleware (ID %i): Received HLC message missed the current period",
-                            static_cast<int>(set_id)
-                        );
-                    }
-
-                    //Perform type specific checks (like amount of trajectory points for trajectory data)
-                    type_specific_msg_check(sample.data());
+                //1. Make sure that the set vehicle ID is valid (assertion of field done in constructor)
+                auto set_id = data.vehicle_id();
+                if(std::find(vehicle_ids.begin(), vehicle_ids.end(), set_id) == vehicle_ids.end())
+                {
+                    //ID should not have been sent, print warning
+                    cpm::Logging::Instance().write(
+                        1,
+                        "Middleware received vehicle ID %i from HLC script - ID was not set to be used!",
+                        static_cast<int>(set_id)
+                    );
                 }
+
+                //2. Make sure that the creation timestamp is consistent with the current timing
+                auto header_create_stamp = data.header().create_stamp().nanoseconds();
+                auto current_time = cpm::get_time_ns();
+                //  a) If the stamp is newer than the current time, then the timing function in the HLC script 
+                //     must be wrong - after all, it runs on the same machine, so the same clock is being used
+                if (header_create_stamp > current_time)
+                {
+                    cpm::Logging::Instance().write(
+                        1,
+                        "Middleware (ID %i) received creation stamp from HLC script that lies in the future - this must be a mistake",
+                        static_cast<int>(set_id)
+                    );
+                }
+                //  b) If the stamp is older than the beginning of the current period, than the HLC script took too long
+                //     Missed periods are also checked in Communication, but only in terms of an absolute time diff
+                if (header_create_stamp < current_period_start.load())
+                {
+                    cpm::Logging::Instance().write(
+                        1,
+                        "Middleware (ID %i): Received HLC message missed the current period",
+                        static_cast<int>(set_id)
+                    );
+                }
+
+                //Perform type specific checks (like amount of trajectory points for trajectory data)
+                type_specific_msg_check(data);
             }
         }
 
@@ -179,18 +167,14 @@ template<class MessageType> class TypedCommunication {
          * \param _vehicle_ids List of IDs the Middleware and HLC are responsible for
          */
         TypedCommunication(
-            dds::domain::DomainParticipant& hlcParticipant,
+            cpm::Participant& hlcParticipant,
             std::string vehicleCommandTopicName,
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> _vehicle_ids
         )
-        :hlcCommandTopic(hlcParticipant, vehicleCommandTopicName)
-        ,hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, hlcCommandTopic)
-        ,vehicleCommandTopic(cpm::ParticipantSingleton::Instance(), vehicleCommandTopicName)
-        ,vehicleWriter(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-            vehicleCommandTopic,
-            (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()))
+        :
+        hlcCommandReader(std::bind(&TypedCommunication::handler, this, _1), hlcParticipant, vehicleCommandTopicName)
+        ,vehicleWriter(vehicleCommandTopicName)
         ,timer(_timer)
         ,lastHLCResponseTimes()
         ,vehicle_ids(_vehicle_ids)

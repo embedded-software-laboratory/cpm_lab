@@ -31,20 +31,18 @@
 TimeSeriesAggregator::TimeSeriesAggregator(uint8_t max_vehicle_id)
 {
     vehicle_state_reader = make_shared<cpm::AsyncReader<VehicleState>>(
-        [this](dds::sub::LoanedSamples<VehicleState>& samples){
+        [this](std::vector<VehicleState>& samples){
             handle_new_vehicleState_samples(samples);
         },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<VehicleState>("vehicleState")
+        "vehicleState"
     );
 
 
     vehicle_observation_reader = make_shared<cpm::AsyncReader<VehicleObservation>>(
-        [this](dds::sub::LoanedSamples<VehicleObservation>& samples){
+        [this](std::vector<VehicleObservation>& samples){
             handle_new_vehicleObservation_samples(samples);
         },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<VehicleObservation>("vehicleObservation")
+        "vehicleObservation"
     );
 
     //Set vehicle IDs to listen to in the aggregator
@@ -116,9 +114,9 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
     //To detect deviations from the required message frequency
     timeseries_vehicles[vehicle_id]["last_msg_state"] = make_shared<TimeSeries>(
-    "Last VehicleState", "%ull", "ms");
+    "VehicleState age", "%ull", "ms");
     timeseries_vehicles[vehicle_id]["last_msg_observation"] = make_shared<TimeSeries>(
-    "Last VehicleObservation", "%ull", "ms");
+    "VehicleObservation age", "%ull", "ms");
 
 }
 
@@ -160,47 +158,43 @@ static inline double voltage_to_percent(const double& v)
 }
 
 
-void TimeSeriesAggregator::handle_new_vehicleState_samples(dds::sub::LoanedSamples<VehicleState>& samples)
+void TimeSeriesAggregator::handle_new_vehicleState_samples(std::vector<VehicleState>& samples)
 {
     std::lock_guard<std::mutex> lock(_mutex); 
-    const uint64_t now = clock_gettime_nanoseconds();
-    for(auto sample : samples)
+    const uint64_t now = cpm::get_time_ns();
+    for(auto& state : samples)
     {
-        if(sample.info().valid())
+        if(timeseries_vehicles.count(state.vehicle_id()) == 0)
         {
-            VehicleState state = sample.data();
-            if(timeseries_vehicles.count(state.vehicle_id()) == 0)
-            {
-                create_vehicle_timeseries(state.vehicle_id());
-            }
-            timeseries_vehicles[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
-            timeseries_vehicles[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
-            timeseries_vehicles[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());
-            timeseries_vehicles[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
-            timeseries_vehicles[state.vehicle_id()]["battery_level"]            ->push_sample(now, voltage_to_percent(state.battery_voltage()));
-            timeseries_vehicles[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(int64_t(now)- int64_t(state.header().create_stamp().nanoseconds()))/1e6 );
-            timeseries_vehicles[state.vehicle_id()]["odometer_distance"]        ->push_sample(now, state.odometer_distance());
-            timeseries_vehicles[state.vehicle_id()]["imu_acceleration_forward"] ->push_sample(now, state.imu_acceleration_forward());
-            timeseries_vehicles[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
-            timeseries_vehicles[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
-            timeseries_vehicles[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
-            timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, state.is_real());
-            // initialize reference deviation, since no reference is available at start 
-            timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
-            timeseries_vehicles[state.vehicle_id()]["ips_dt"]                   ->push_sample(now, static_cast<double>(1e-6*state.IPS_update_age_nanoseconds()));
-            //To detect deviations from the required message frequency
-            timeseries_vehicles[state.vehicle_id()]["last_msg_state"]           ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
-
-            //Check for deviation from expected update frequency once, reset if deviation was detected
-            auto it = last_vehicle_state_time.find(state.vehicle_id());
-            if (it != last_vehicle_state_time.end())
-            {
-                check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
-            }
-
-            //Set (first time) or update the value for this ID
-            last_vehicle_state_time[state.vehicle_id()] = now;
+            create_vehicle_timeseries(state.vehicle_id());
         }
+        timeseries_vehicles[state.vehicle_id()]["pose_x"]                   ->push_sample(now, state.pose().x());
+        timeseries_vehicles[state.vehicle_id()]["pose_y"]                   ->push_sample(now, state.pose().y());
+        timeseries_vehicles[state.vehicle_id()]["pose_yaw"]                 ->push_sample(now, state.pose().yaw());
+        timeseries_vehicles[state.vehicle_id()]["speed"]                    ->push_sample(now, state.speed());
+        timeseries_vehicles[state.vehicle_id()]["battery_level"]            ->push_sample(now, voltage_to_percent(state.battery_voltage()));
+        timeseries_vehicles[state.vehicle_id()]["clock_delta"]              ->push_sample(now, double(int64_t(now)- int64_t(state.header().create_stamp().nanoseconds()))/1e6 );
+        timeseries_vehicles[state.vehicle_id()]["odometer_distance"]        ->push_sample(now, state.odometer_distance());
+        timeseries_vehicles[state.vehicle_id()]["imu_acceleration_forward"] ->push_sample(now, state.imu_acceleration_forward());
+        timeseries_vehicles[state.vehicle_id()]["imu_acceleration_left"]    ->push_sample(now, state.imu_acceleration_left());
+        timeseries_vehicles[state.vehicle_id()]["battery_voltage"]          ->push_sample(now, state.battery_voltage());
+        timeseries_vehicles[state.vehicle_id()]["motor_current"]            ->push_sample(now, state.motor_current());
+        timeseries_vehicles[state.vehicle_id()]["is_real"]                  ->push_sample(now, state.is_real());
+        // initialize reference deviation, since no reference is available at start 
+        timeseries_vehicles[state.vehicle_id()]["reference_deviation"]      ->push_sample(now, 0.0);
+        timeseries_vehicles[state.vehicle_id()]["ips_dt"]                   ->push_sample(now, static_cast<double>(1e-6*state.IPS_update_age_nanoseconds()));
+        //To detect deviations from the required message frequency
+        timeseries_vehicles[state.vehicle_id()]["last_msg_state"]           ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
+
+        //Check for deviation from expected update frequency once, reset if deviation was detected
+        auto it = last_vehicle_state_time.find(state.vehicle_id());
+        if (it != last_vehicle_state_time.end())
+        {
+            check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
+        }
+
+        //Set (first time) or update the value for this ID
+        last_vehicle_state_time[state.vehicle_id()] = now;
     }
 }
 
@@ -222,45 +216,41 @@ void TimeSeriesAggregator::check_for_deviation(uint64_t t_now, std::unordered_ma
 }
 
 void TimeSeriesAggregator::handle_new_vehicleObservation_samples(
-    dds::sub::LoanedSamples<VehicleObservation>& samples
+    std::vector<VehicleObservation>& samples
 )
 {
     std::lock_guard<std::mutex> lock(_mutex); 
-    const uint64_t now = clock_gettime_nanoseconds();
-    for(auto sample : samples)
+    const uint64_t now = cpm::get_time_ns();
+    for(auto& state : samples)
     {
-        if(sample.info().valid())
+        if(timeseries_vehicles.count(state.vehicle_id()) == 0)
         {
-            VehicleObservation state = sample.data();
-            if(timeseries_vehicles.count(state.vehicle_id()) == 0)
-            {
-                create_vehicle_timeseries(state.vehicle_id());
-            }
-            timeseries_vehicles[state.vehicle_id()]["ips_x"]  ->push_sample(now, state.pose().x());
-            timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
-            timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
-            // timeseries to check if any IPS data are available, push any data 
-            //timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
-            //To detect deviations from the required message frequency
-            timeseries_vehicles[state.vehicle_id()]["last_msg_observation"] ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
-
-            //Check for long intervals without new information - TODO: WHICH VALUE MAKES SENSE HERE?
-            auto it = last_vehicle_observation_time.find(state.vehicle_id());
-            if (it != last_vehicle_observation_time.end())
-            {
-                //Currently: Only warn if no new observation sample has been received for over a second - TODO
-                check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
-            }
-
-            //Set (first time) or update the value for this ID
-            last_vehicle_observation_time[state.vehicle_id()] = now;
+            create_vehicle_timeseries(state.vehicle_id());
         }
+        timeseries_vehicles[state.vehicle_id()]["ips_x"]  ->push_sample(now, state.pose().x());
+        timeseries_vehicles[state.vehicle_id()]["ips_y"]  ->push_sample(now, state.pose().y());
+        timeseries_vehicles[state.vehicle_id()]["ips_yaw"]->push_sample(now, state.pose().yaw());
+        // timeseries to check if any IPS data are available, push any data 
+        //timeseries_vehicles[state.vehicle_id()]["ips"]    ->push_sample(now, true);
+        //To detect deviations from the required message frequency
+        timeseries_vehicles[state.vehicle_id()]["last_msg_observation"] ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
+
+        //Check for long intervals without new information - TODO: WHICH VALUE MAKES SENSE HERE?
+        auto it = last_vehicle_observation_time.find(state.vehicle_id());
+        if (it != last_vehicle_observation_time.end())
+        {
+            //Currently: Only warn if no new observation sample has been received for over a second - TODO
+            check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
+        }
+
+        //Set (first time) or update the value for this ID
+        last_vehicle_observation_time[state.vehicle_id()] = now;
     }
 }
 
 VehicleData TimeSeriesAggregator::get_vehicle_data() {
     std::lock_guard<std::mutex> lock(_mutex); 
-    const uint64_t now = clock_gettime_nanoseconds();
+    const uint64_t now = cpm::get_time_ns();
 
     //--------------------------------------------------------------------------- CHECKS ------------------------------------
     //This function is called regularly in the UI, so we make sure that everything is checked regularly just by putting the tests in here as well

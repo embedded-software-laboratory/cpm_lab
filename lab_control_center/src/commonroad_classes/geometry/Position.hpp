@@ -52,6 +52,8 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "CommonroadDDSGoalState.hpp"
+
 /**
  * \class Position
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
@@ -110,7 +112,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -146,9 +148,19 @@ public:
     void transform_context(const DrawingContext& ctx, double scale = 1.0);
     
     void to_dds_msg() {} 
+    
+    /**
+     * \brief Translate the set position to a position interval
+     */
+    CommonroadDDSPositionInterval to_dds_position_interval();
+
+    /**
+     * \brief Translate the set position to an exact position
+     */
+    CommonroadDDSPoint to_dds_point();
 
     //Getters for basic types
-    const std::optional<Point>& get_point() const;
+    std::optional<Point> get_point();
     const std::vector<Circle>& get_circles() const;
     const std::vector<int>& get_lanelet_refs() const;
     const std::vector<Polygon>& get_polygons() const;

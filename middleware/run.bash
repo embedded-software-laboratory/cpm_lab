@@ -12,4 +12,4 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 # Start screen for middleware; detach and start middleware
 cd ./build
-./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_ids} --dds_domain=21 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
+./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_ids} --dds_domain=$DDS_DOMAIN --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}

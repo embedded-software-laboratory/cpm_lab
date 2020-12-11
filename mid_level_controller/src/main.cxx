@@ -35,8 +35,6 @@
 #include <ios>
 using std::vector;
 
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include <rti/config/Logger.hpp>
 #include <rti/util/util.hpp> // for sleep()
 
@@ -54,6 +52,7 @@ using std::vector;
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/Writer.hpp"
 
 #include "SensorCalibration.hpp"
 #include "Localization.hpp"
@@ -91,18 +90,10 @@ int main(int argc, char *argv[])
     cpm::Logging::Instance().set_id("vehicle_raspberry_" + std::to_string(vehicle_id));
 
     // DDS setup
-    auto& participant = cpm::ParticipantSingleton::Instance();
+    cpm::Writer<VehicleState> writer_vehicleState("vehicleState");
 
-    dds::topic::Topic<VehicleState> topic_vehicleState (participant, "vehicleState");
-
-    dds::pub::DataWriter<VehicleState> writer_vehicleState(
-        dds::pub::Publisher(participant), 
-        topic_vehicleState, 
-        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::BestEffort()
-    );
-
-    dds::topic::Topic<VehicleObservation> topic_vehicleObservation(cpm::ParticipantSingleton::Instance(), "vehicleObservation");
-    cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(topic_vehicleObservation, vehicle_id);
+    std::string topic_vehicleObservation_name = "vehicleObservation";
+    cpm::VehicleIDFilteredTopic<VehicleObservation> topic_vehicleObservationFiltered(cpm::get_topic<VehicleObservation>(topic_vehicleObservation_name), vehicle_id);
     cpm::Reader<VehicleObservation> reader_vehicleObservation(topic_vehicleObservationFiltered);
 
 #ifndef VEHICLE_SIMULATION
@@ -124,7 +115,7 @@ int main(int argc, char *argv[])
     if(starting_position.size() != 1 && starting_position.size() != 3) {
         starting_position = {0.0};
     }
-    SimulationIPS simulationIPS(topic_vehicleObservation);
+    SimulationIPS simulationIPS(topic_vehicleObservation_name);
     SimulationVehicle simulationVehicle(simulationIPS, vehicle_id, starting_position);
     const bool allow_simulated_time = true;
 #endif
@@ -215,9 +206,10 @@ int main(int argc, char *argv[])
                 memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
                 
                 // Convert actuator input to low level controller units
-                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
                 spi_mosi_data.motor_mode = motor_mode;
+                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+                // servo allows a range of 2400 (see servo_timer.c)
+                spi_mosi_data.servo_command = int16_t(steering_servo * (-1200.0));
 
                 // vehicle ID for LED flashing 
                 spi_mosi_data.vehicle_id = static_cast<uint8_t>(vehicle_id);

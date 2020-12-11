@@ -44,10 +44,14 @@
 #include "commonroad_classes/InterfaceTransform.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
+
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
+
+#include "CommonroadDDSGoalState.hpp"
 
 /**
  * \class GoalState
@@ -58,7 +62,7 @@ class GoalState : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double
+    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double; Can only be defined as interval according to spec, not changed yet due to necessary changes elsewhere
     std::optional<Position> position = std::nullopt; //Must not be defined 
     std::optional<Interval> orientation = std::nullopt; //Must not be defined
     std::optional<Interval> velocity = std::nullopt; //Must not be defined
@@ -66,16 +70,21 @@ private:
     //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
 
+    //Look up in draw if some parts should be drawn or not
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
+
 public:
     /**
      * \brief Constructor, set up a goalstate object
      * \param node Goal state node to translate
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
         const xmlpp::Node* node,
         std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-        std::function<std::pair<double, double> (int)> _get_lanelet_center
+        std::function<std::pair<double, double> (int)> _get_lanelet_center,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     );
 
     /**
@@ -84,7 +93,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
@@ -107,7 +116,11 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
-    void to_dds_msg() {} 
+    /**
+     * \brief Convert to DDS representation
+     * \param time_step_size Relevant to translate time information to actual time
+     */
+    CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
     //Getter
     const std::optional<IntervalOrExact>& get_time() const;

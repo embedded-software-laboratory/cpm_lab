@@ -32,9 +32,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <functional>
-
-#include <dds/pub/ddspub.hpp>
 
 #include "HLCHello.hpp"
 
@@ -52,18 +51,13 @@ int main (int argc, char *argv[]) {
 
     //Create DataReader that reads NUC ready messages
     cpm::AsyncReader<HLCHello> reader(
-        [](dds::sub::LoanedSamples<HLCHello>& samples){
-            for (auto sample : samples)
+        [](std::vector<HLCHello>& samples){
+            for (auto& data : samples)
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    std::cout << "Received: " << data << std::endl;
-                }
+                std::cout << "Received: " << data << std::endl;
             }
         },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<HLCHello>("hlc_hello")
+        "hlc_hello"
     );
 
     std::cout << "Press Enter to stop the program" << std::endl;

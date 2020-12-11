@@ -30,8 +30,8 @@ ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadS
 :
 scenario(_scenario),
 use_simulated_time(_use_simulated_time),
-writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacleList>("commonroadObstacle")),
-writer_vehicle_trajectory(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
+writer_commonroad_obstacle("commonroadObstacle"),
+writer_vehicle_trajectory("vehicleCommandTrajectory")
 {
     //Set up cpm values (cpm init has already been done before)
     node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter
@@ -222,12 +222,12 @@ void ObstacleSimulationManager::set_time_scale(double scale)
 }
 #pragma GCC diagnostic pop
 
-void ObstacleSimulationManager::start()
+void ObstacleSimulationManager::start_helper(bool wait_for_start_signal, bool simulated_time)
 {
     stop_timers();
 
     //Create simulation_timer here, if we do it at reset we might accidentally receive stop signals in between (-> unusable then)
-    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, true, true, use_simulated_time);
+    simulation_timer = cpm::Timer::create(node_id, dt_nanos, 0, wait_for_start_signal, true, simulated_time);
 
     std::cout << std::endl << std::endl << "--------- Set time step size to: " << time_step_size << std::endl << std::endl;
 
@@ -251,6 +251,16 @@ void ObstacleSimulationManager::start()
             }
         }
     });
+}
+
+void ObstacleSimulationManager::start_preview()
+{
+    start_helper(false, false);
+}
+
+void ObstacleSimulationManager::start()
+{
+    start_helper(true, use_simulated_time);
 }
 
 void ObstacleSimulationManager::stop()

@@ -85,6 +85,17 @@ public:
      */
     void deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
 
+    //Specific local deploy functions with 1 HLC per vehicle ID
+    /**
+     * \brief Start the middleware once and the given Matlab/C++ script using tmux and a system call for each vehicle ID; pass parameters: domain id, initial peer, simulated time, vehicle id
+     * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
+     * \param active_vehicle_ids All vehicle IDs that are in use in this run, no matter if real or simulated
+     * \param script_path Path to the script, including the script name (and possible file ending)
+     * \param script_params Additional script parameters
+     */
+    void deploy_separate_local_hlcs(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
+    std::vector<unsigned int> deployed_local_hlcs;
+
     /**
      * \brief Deploy all vehicles that were set to be simulated locally, set simulated time (software is started using tmux)
      */
@@ -100,6 +111,7 @@ public:
     void stop_vehicles(std::vector<unsigned int> vehicle_ids);
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
+    void kill_separate_local_hlcs();
     void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
     void kill_sim_vehicle(unsigned int id);
 
@@ -107,9 +119,15 @@ public:
      * \brief Kill a single real vehicle using a simple via ssh using sudo reboot - does not work for simulated vehicles started without the LCC
      * \param id of the vehicle, to infer its IP address
      * \param timeout_seconds Timeout in case the IP is not reachable
-     * \return True if the vehicle reboot msg could be sent
      */
     void reboot_real_vehicle(unsigned int id, unsigned int timeout_seconds);
+
+    /**
+     * \brief Reboot all given HLCs, if they are reachable within the timeout
+     * \param ids of the HLCs, to infer the IP addresses
+     * \param timeout_seconds Timeout in case the IP is not reachable
+     */
+    void reboot_hlcs(std::vector<uint8_t> ids, unsigned int timeout_seconds);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
     void deploy_ips();
@@ -240,10 +258,18 @@ private:
     const std::string hlc_session = "high_level_controller";
 
     //To reboot real vehicles
-    std::map<unsigned int, std::thread> vehicle_reboot_threads; //threads that are responsible for uploading scripts to the HLCs, map to have access to vehicle IDs
+    std::map<unsigned int, std::thread> vehicle_reboot_threads; //map to have access to vehicle IDs <-> reboot thread
     std::mutex vehicle_reboot_threads_mutex;
-    std::map<unsigned int, bool> reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
-    std::mutex reboot_done_mutex;
+    std::map<unsigned int, bool> vehicle_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex vehicle_reboot_done_mutex;
     //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
-    void join_finished_reboot_threads();
+    void join_finished_vehicle_reboot_threads();
+
+    //To reboot HLCs
+    std::map<unsigned int, std::thread> hlc_reboot_threads; //map to have access to HLC IDs <-> reboot thread
+    std::mutex hlc_reboot_threads_mutex;
+    std::map<unsigned int, bool> hlc_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    std::mutex hlc_reboot_done_mutex;
+    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    void join_finished_hlc_reboot_threads();
 };

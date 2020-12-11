@@ -87,12 +87,10 @@ public:
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (static) obstacle node
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
-     * \param _get_lanelet_center Function that returns a lanelet center
      */
     StaticObstacle(
         const xmlpp::Node* node,
-        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-        std::function<std::pair<double, double> (int)> _get_lanelet_center
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
     );
 
     /**
@@ -101,7 +99,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed

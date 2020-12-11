@@ -199,13 +199,32 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
 
     lock.unlock();
 
+    //Apply transformation from location, if that exists
+    if (location.has_value())
+    {
+        if (location->geo_transformation.has_value())
+        {
+            lock.lock();
+            transform_coordinate_system_helper(
+                location->geo_transformation->x_translation,
+                location->geo_transformation->y_translation,
+                location->geo_transformation->z_rotation,
+                location->geo_transformation->scaling
+            );
+            lock.unlock();
+        }
+    }
+
     //Calculate the center of the planning problem
     calculate_center();
 
-    //Automatically center the planning problem
+    //Automatically center the planning problem w.r.t the LCC's coordinate system (origin at (2.25, 2.0))
+    //This "default" transformation is not explicitly stored in the YAML file
     if (center_coordinates)
     {
-        transform_coordinate_system(- center.first, - center.second);
+        lock.lock();
+        transform_coordinate_system_helper(- center.first + 2.25, - center.second + 2.0);
+        lock.unlock();
     }
 
     //Load new obstacle simulations
@@ -216,6 +235,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
 
     //Set up / load (new) data entry for transformation profile
     yaml_transformation_storage.set_scenario_name(xml_filepath);
+    //Change regarding center_coordinate is not stored in the transform profile (it is either done by default at loading or disabled, so it must not be stored as well)
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -270,15 +290,15 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
     }
     else if (node_name.compare("lanelet") == 0)
     {
-        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node)});
+        lanelets.insert({xml_translation::get_attribute_int(node, "id", true).value(), Lanelet(node, lanelet_traffic_sign_positions, lanelet_traffic_light_positions, draw_configuration)});
     }
     else if (node_name.compare("trafficSign") == 0)
     {
-        traffic_signs.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficSign(node)});
+        traffic_signs.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficSign(node, std::bind(&CommonRoadScenario::get_lanelet_sign_position, this, _1))});
     }
     else if (node_name.compare("trafficLight") == 0)
     {
-        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node)});
+        traffic_lights.insert({xml_translation::get_attribute_int(node, "id", true).value(), TrafficLight(node, std::bind(&CommonRoadScenario::get_lanelet_light_position, this, _1))});
     }
     else if (node_name.compare("intersection") == 0)
     {
@@ -290,8 +310,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             xml_translation::get_attribute_int(node, "id", true).value(), 
             StaticObstacle(
                 node,
-                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
             )}
         );
     }
@@ -314,8 +333,7 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
                 xml_translation::get_attribute_int(node, "id", true).value(), 
                 StaticObstacle(
                     node,
-                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                    std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                    std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
                 )}
             );
         }
@@ -338,7 +356,8 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             PlanningProblem(
                 node,
                 std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6),
-                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1)
+                std::bind(&CommonRoadScenario::get_lanelet_center, this, _1),
+                draw_configuration
             )}
         );
     }
@@ -361,8 +380,26 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
     translated_location.federal_state = xml_translation::get_child_child_text(node, "federalState", false); 
     translated_location.gps_latitude = xml_translation::get_child_child_double(node, "gpsLatitude", true).value(); //If no value: Error is thrown anyway (set to true)
     translated_location.gps_longitude = xml_translation::get_child_child_double(node, "gpsLongitude", true).value(); //If no value: Error is thrown anyway (set to true)
+    translated_location.geo_name_id = xml_translation::get_child_child_double(node, "geoNameId", false); //Only required in newer 2020 specs, not in outdated 2020 specs
     translated_location.zipcode = xml_translation::get_child_child_text(node, "zipcode", false);
     translated_location.name = xml_translation::get_child_child_text(node, "name", false);
+
+    //Partially translate geo transformation, if it exists (we ignore geo reference)
+    auto geo_transformation = xml_translation::get_child_if_exists(node, "geoTransformation", false);
+    if (geo_transformation)
+    {
+        auto additional_transformation = xml_translation::get_child_if_exists(geo_transformation, "additionalTransformation", false);
+        if (additional_transformation)
+        {
+            GeoTransformation g_trans;
+            g_trans.x_translation = xml_translation::get_child_child_double(additional_transformation, "xTranslation", true).value();
+            g_trans.y_translation = xml_translation::get_child_child_double(additional_transformation, "yTranslation", true).value();
+            g_trans.z_rotation = xml_translation::get_child_child_double(additional_transformation, "zRotation", true).value();
+            g_trans.scaling = xml_translation::get_child_child_double(additional_transformation, "scaling", true).value();
+
+            translated_location.geo_transformation = std::optional<GeoTransformation>(g_trans);
+        }
+    }
 
     location = std::optional<Location>(translated_location);
 
@@ -483,6 +520,10 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
         {
             scenario_tags.push_back(ScenarioTag::TwoLane);
         }
+        else if (node_name.compare("emergency_braking") == 0)
+        {
+            scenario_tags.push_back(ScenarioTag::EmergencyBraking);
+        }
         else
         {
             std::stringstream error_stream;
@@ -513,120 +554,149 @@ ObstacleRole CommonRoadScenario::get_obstacle_role(const xmlpp::Node* node)
     }
 }
 
-void CommonRoadScenario::transform_coordinate_system(double translate_x, double translate_y) 
+void CommonRoadScenario::transform_coordinate_system_helper(double translate_x, double translate_y, double angle, double scale) 
 {
-    //Do not block the UI if locked, needs to be done again then
-    if (xml_translation_mutex.try_lock())
+    if (scale > 0 || angle > 0 || translate_x != 0.0 || translate_y != 0.0)
     {
-        double scale = 1.0;
-        if (translate_x != 0.0 || translate_y != 0.0)
+        for (auto &lanelet_entry : lanelets)
         {
-            for (auto &lanelet_entry : lanelets)
-            {
-                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &static_obstacle : static_obstacles)
-            {
-                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &dynamic_obstacle : dynamic_obstacles)
-            {
-                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &planning_problem : planning_problems)
-            {
-                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &traffic_sign : traffic_signs)
-            {
-                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
-            } 
-
-            for (auto &traffic_light : traffic_lights)
-            {
-                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
-            } 
-
-            //Update center
-            std::cout << "New center after transformation:" << std::endl;
-            calculate_center();
+            lanelet_entry.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
 
-        //Update database entry for transformation
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, translate_x, translate_y);
+        for (auto &static_obstacle : static_obstacles)
+        {
+            static_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
 
-        xml_translation_mutex.unlock();
+        for (auto &dynamic_obstacle : dynamic_obstacles)
+        {
+            dynamic_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
+
+        for (auto &planning_problem : planning_problems)
+        {
+            planning_problem.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
+
+        for (auto &traffic_sign : traffic_signs)
+        {
+            traffic_sign.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        } 
+
+        for (auto &traffic_light : traffic_lights)
+        {
+            traffic_light.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        } 
+
+        //Update center
+        calculate_center();
+    }
+
+    //We do not update the yaml transformation storage here
+}
+
+double CommonRoadScenario::get_scale(double min_lane_width)
+{
+    if (min_lane_width < 0.0)
+    {
+        cpm::Logging::Instance().write(1, "The lane width value %f of is not allowed (smaller than zero)", min_lane_width);
+        min_lane_width = 0.0;
+    }
+    
+    if (min_lane_width == 0.0)
+    {
+        return 0.0;
+    }
+
+    //Get current min. lane width of lanelets (calculated from point distances)
+    double min_width = -1.0;
+    for (auto lanelet : lanelets)
+    {
+        double new_min_width = lanelet.second.get_min_width();
+        if (min_width < 0.0 || new_min_width < min_width)
+        {
+            min_width = new_min_width;
+        }
+    }
+
+    //Scale can be smaller than 0 - in this case, it is simply not applied (functions are still called for translate_x and translate_y)
+    if (min_width > 0.0) return min_lane_width / min_width;
+    else return 0.0;
+}
+
+std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_sign_position(int id)
+{
+    if (lanelet_traffic_sign_positions.find(id) != lanelet_traffic_sign_positions.end())
+    {
+        auto& entry = lanelet_traffic_sign_positions.at(id);
+        if (entry.second)
+        {
+            //Is stopline entry, lanelet ID must exist (because else it could not have been stored here)
+            return lanelets.at(entry.first).get_stopline_center();
+        }
+        else
+        {
+            //Is normal lanelet entry
+            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
+        }
+    }
+    else
+    {
+        return std::nullopt;
     }
 }
 
+std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_light_position(int id)
+{
+    if (lanelet_traffic_light_positions.find(id) != lanelet_traffic_light_positions.end())
+    {
+        auto& entry = lanelet_traffic_light_positions.at(id);
+        if (entry.second)
+        {
+            //Is stopline entry, lanelet ID must exist (because else it could not have been stored here)
+            return lanelets.at(entry.first).get_stopline_center();
+        }
+        else
+        {
+            //Is normal lanelet entry
+            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+
 /******************************Interface functions***********************************/
 
-void CommonRoadScenario::transform_coordinate_system(double lane_width, double translate_x, double translate_y) 
+void CommonRoadScenario::transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) 
 {
     //Do not block the UI if locked, needs to be done again then
     if (xml_translation_mutex.try_lock())
     {
-        //Get current min. lane width of lanelets (calculated from point distances)
-        double min_width = -1.0;
-        for (auto lanelet : lanelets)
-        {
-            double new_min_width = lanelet.second.get_min_width();
-            if (min_width < 0.0 || new_min_width < min_width)
-            {
-                min_width = new_min_width;
-            }
-        }
+        double scale = get_scale(lane_width);
 
-        //Scale can be smaller than 0 - in this case, it is simply not applied (functions are still called for translate_x and translate_y)
-        double scale = lane_width / min_width;
-        if (scale > 0 || translate_x != 0.0 || translate_y != 0.0)
-        {
-            for (auto &lanelet_entry : lanelets)
-            {
-                lanelet_entry.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
+        //We want to scale & rotate w.r.t. the current center, which is more intuitive for the user than doing so around the origin
+        calculate_center();
+        auto old_center = center;
+        translate_x -= old_center.first;
+        translate_y -= old_center.second;
 
-            for (auto &static_obstacle : static_obstacles)
-            {
-                static_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &dynamic_obstacle : dynamic_obstacles)
-            {
-                dynamic_obstacle.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &planning_problem : planning_problems)
-            {
-                planning_problem.second.transform_coordinate_system(scale, translate_x, translate_y);
-            }
-
-            for (auto &traffic_sign : traffic_signs)
-            {
-                traffic_sign.second.transform_coordinate_system(scale, translate_x, translate_y);
-            } 
-
-            for (auto &traffic_light : traffic_lights)
-            {
-                traffic_light.second.transform_coordinate_system(scale, translate_x, translate_y);
-            } 
-
-            //Update center
-            calculate_center();
-        }
-        else if (min_width < 0)
+        //Perform transformation in local coordinate system, then transform back
+        //Update database entry for transformation
+        transform_coordinate_system_helper(translate_x, translate_y, angle, scale);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, scale, translate_x, translate_y, angle);
+        transform_coordinate_system_helper(old_center.first, old_center.second, 0.0, 1.0);
+        yaml_transformation_storage.add_change_to_transform_profile(0.0, 0.0, old_center.first, old_center.second, 0.0);
+        
+        if (scale < 0) //Of course, if lane_width is < 0.0, this error will not appear, but the wrong lane_width value gets reported by get_scale
         {
             std::stringstream error_stream;
             error_stream << "Could not transform scenario coordinate system to min lane width - no lanelets defined";
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
-
-        //Update database entry for transformation
-        yaml_transformation_storage.add_change_to_transform_profile(0.0, lane_width, translate_x, translate_y);
 
         xml_translation_mutex.unlock();
 
@@ -657,8 +727,10 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
         planning_problem.second.transform_timing(time_scale);
     }
 
+    //Time values themselves will currently still be defined w.r.t. time steps, so they need to be multiplied with time step size to obtain the actual time value
+
     //Update database entry for transformation
-    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0);
+    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
 
     lock.unlock();
 
@@ -701,15 +773,21 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             planning_problem.second.draw(ctx, scale);
         }
 
-        for (auto &traffic_sign : traffic_signs)
+        if (draw_configuration->draw_traffic_signs.load())
         {
-            traffic_sign.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_sign : traffic_signs)
+            {
+                traffic_sign.second.draw(ctx, scale);
+            } 
+        }
 
-        for (auto &traffic_light : traffic_lights)
+        if (draw_configuration->draw_traffic_lights.load())
         {
-            traffic_light.second.draw(ctx, scale);
-        } 
+            for (auto &traffic_light : traffic_lights)
+            {
+                traffic_light.second.draw(ctx, scale);
+            } 
+        }
 
         //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
 
@@ -744,11 +822,28 @@ void CommonRoadScenario::draw_lanelet_ref(int lanelet_ref, const DrawingContext&
 
 void CommonRoadScenario::apply_stored_transformation()
 {
-    double time_scale, scale, translate_x, translate_y = 0.0;
-    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y);
+    double time_scale = 0.0;
+    double scale = 0.0;
+    double translate_x = 0.0;
+    double translate_y = 0.0;
+    double rotation = 0.0;
+    yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y, rotation);
 
-    //TODO: Lock translate mutex / do all in one function to make sure that no new scenario is loaded in between?
-    transform_coordinate_system(scale, translate_x, translate_y);
+    std::unique_lock<std::mutex> lock(xml_translation_mutex);
+    transform_coordinate_system_helper(translate_x, translate_y, rotation, scale);
+    lock.unlock();
+
+    //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
+    if (reset_obstacle_sim_manager)
+    {
+        reset_obstacle_sim_manager();
+    }
+    if (setup_obstacle_sim_manager)
+    {
+        setup_obstacle_sim_manager();
+    }
+
+    std::cout << "Transform worked" << std::endl;
     set_time_step_size(time_scale);
 }
 
@@ -764,6 +859,11 @@ void CommonRoadScenario::reset_stored_transformation()
 
 
 /******************************Getter***********************************/
+
+std::shared_ptr<CommonroadDrawConfiguration> CommonRoadScenario::get_draw_configuration()
+{
+    return draw_configuration;
+}
 
 //This one is private
 void CommonRoadScenario::calculate_center()
@@ -801,11 +901,6 @@ void CommonRoadScenario::calculate_center()
         }
     }
 
-    std::cout << "New x_min: " << x_min << std::endl;
-    std::cout << "New x_max: " << x_max << std::endl;
-    std::cout << "New y_min: " << y_min << std::endl;
-    std::cout << "New y_max: " << y_max << std::endl;
-
     //Set values to zero if no values could be found in any of the lanelets
     if (lanelets.size() == 0 || uninitialized)
     {
@@ -819,10 +914,11 @@ void CommonRoadScenario::calculate_center()
     center.second = (0.5 * y_min) + (0.5 * y_max);
 
     //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
-    center.first -= 2.25;
-    center.second -= 2.0;
+    //Now handled in transform function
+    // center.first -= 2.25;
+    // center.second -= 2.0;
 
-    std::cout << "New center: " << center.first << ", " << center.second << std::endl;
+    // std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }
 
 const std::string& CommonRoadScenario::get_author()
@@ -978,5 +1074,29 @@ std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
         error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
         LCCErrorLogger::Instance().log_error(error_stream.str());
         return {0, 0};
+    }
+}
+
+/*****************************************************************************************/
+/******************                 DDS Functions               **************************/
+/*****************************************************************************************/
+
+void CommonRoadScenario::send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems)
+{
+    assert(writer_planning_problems);
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    //Due to the size of each planning problem (contains again list of planning problems which contains lists of goal states)
+    //we had to break things apart in order for DDS messages to still work without causing errors
+    //We thus send each goal state individually, and augment them with information about the ID of the problem they are associated with,
+    //the position in the list of planning problems within that problem, and the position in the list of goal states within the inner
+    //planning problems
+    for (auto& entry : planning_problems)
+    {
+        for (auto& goal_state : entry.second.get_dds_goal_states(time_step_size))
+        {
+            goal_state.planning_problem_id(static_cast<int32_t>(entry.first));
+            writer_planning_problems->write(goal_state);
+        }   
     }
 }

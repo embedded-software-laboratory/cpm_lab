@@ -183,18 +183,18 @@ DynamicObstacle::DynamicObstacle(
     
 
     //Test output
-    std::cout << "Dynamic obstacle:" << std::endl;
-    std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
-    std::cout << "\tOccupancy size: " << occupancy_set.size() << std::endl;
-    std::cout << "\tSignal series size: " << signal_series.size() << std::endl;
-    std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
-    std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
-    std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
+    // std::cout << "Dynamic obstacle:" << std::endl;
+    // std::cout << "\tTrajectory size: " << trajectory.size() << std::endl;
+    // std::cout << "\tOccupancy size: " << occupancy_set.size() << std::endl;
+    // std::cout << "\tSignal series size: " << signal_series.size() << std::endl;
+    // std::cout << "\tObstacle type (text, before translation to enum): " << obstacle_type_text << std::endl;
+    // std::cout << "\tInitial state exists (it should): " << initial_state.has_value() << std::endl;
+    // std::cout << "\tShape exists (it should): " << shape.has_value() << std::endl;
 } 
 
 /******************************Interface functions***********************************/
 
-void DynamicObstacle::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void DynamicObstacle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     if (scale > 0)
     {
@@ -203,22 +203,22 @@ void DynamicObstacle::transform_coordinate_system(double scale, double translate
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
     {
-        initial_state->transform_coordinate_system(scale, translate_x, translate_y);
+        initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& state : trajectory)
     {
-        state.transform_coordinate_system(scale, translate_x, translate_y);
+        state.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 
     for (auto& occupancy : occupancy_set)
     {
-        occupancy.transform_coordinate_system(scale, translate_x, translate_y);
+        occupancy.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 

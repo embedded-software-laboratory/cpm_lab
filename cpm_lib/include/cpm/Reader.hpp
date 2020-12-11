@@ -46,13 +46,20 @@
  */
 
 #include <dds/sub/ddssub.hpp>
+
 #include <iterator>
 #include <mutex>
 #include <vector>
+
 #include "cpm/ParticipantSingleton.hpp"
 
 namespace cpm
 {
+    /**
+     * \brief Class Reader
+     * Use this to get a reader that regards timestamps in the header for you and gets you the newest valid sample regarding the current time
+     * This reader always acts in the domain of ParticipantSingleton
+     */
     template<typename T>
     class Reader
     {

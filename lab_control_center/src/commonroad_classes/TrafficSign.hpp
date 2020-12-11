@@ -29,6 +29,7 @@
 #include <libxml++-2.6/libxml++/libxml++.h>
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -85,14 +86,22 @@ class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
     std::vector<TrafficSignElement> traffic_sign_elements;
+    int id;
+
+    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
 
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A trafficSign node
+     * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
      */
-    TrafficSign(const xmlpp::Node* node);
+    TrafficSign(
+        const xmlpp::Node* node,
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
@@ -100,7 +109,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface

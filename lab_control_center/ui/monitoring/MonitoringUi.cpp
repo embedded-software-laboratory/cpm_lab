@@ -54,6 +54,8 @@ MonitoringUi::MonitoringUi(
     builder->get_widget("box_buttons", box_buttons);
     builder->get_widget("label_hlc_description_short", label_hlc_description_short);
     builder->get_widget("label_hlc_description_long", label_hlc_description_long);
+    builder->get_widget("entry_hlc_reboot", entry_hlc_reboot);
+    builder->get_widget("button_hlc_reboot", button_hlc_reboot);
     builder->get_widget("label_rtt_hlc_short", label_rtt_hlc_short);
     builder->get_widget("label_rtt_hlc_long", label_rtt_hlc_long);
     builder->get_widget("label_rtt_vehicle_short", label_rtt_vehicle_short);
@@ -67,6 +69,8 @@ MonitoringUi::MonitoringUi(
     assert(box_buttons);
     assert(label_hlc_description_short);
     assert(label_hlc_description_long);
+    assert(entry_hlc_reboot);
+    assert(button_hlc_reboot);
     assert(label_rtt_hlc_short);
     assert(label_rtt_hlc_long);
     assert(label_rtt_vehicle_short);
@@ -80,6 +84,57 @@ MonitoringUi::MonitoringUi(
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
     button_reset_view->signal_clicked().connect(sigc::mem_fun(this, &MonitoringUi::reset_ui_thread));
+
+    //Register the button callback for rebooting the HLCs and tell the user how to use the input with a tooltip
+    entry_hlc_reboot->set_tooltip_text("Enter * for all, else comma-separated list (e.g. 1, 5, 8)");
+    button_hlc_reboot->signal_clicked().connect(
+        [this] {
+            //Call reboot depending on text in entry for HLC IDs
+            std::string hlc_to_reboot = entry_hlc_reboot->get_text();
+            bool conversion_valid = true;
+
+            //Perform conversion to list of ints or just regard all HLCs if * is part of the string
+            std::vector<uint8_t> hlc_ids;
+            if (hlc_to_reboot.find("*") != std::string::npos)
+            {
+                hlc_ids = get_hlc_data();
+            }
+            else
+            {
+                std::stringstream id_stream(hlc_to_reboot);
+                std::string single_id;
+                while (std::getline(id_stream, single_id, ',')) {
+                    try {
+                        int id = std::stoi(single_id);
+
+                        //Go to catch if the ID is not within the valid domain
+                        if (id < 0 || id > 255) throw std::domain_error("HLC ID is invalid"); //Gets ignored on purpose
+
+                        //Store ID
+                        hlc_ids.push_back(static_cast<uint8_t>(id));
+                    }
+                    catch (...) {
+                        entry_hlc_reboot->get_style_context()->add_class("error");
+                        entry_hlc_reboot->set_text("");
+                        conversion_valid = false;
+                        break;
+                    }
+                }
+            }
+
+            //Reboot the desired HLCs if the conversion worked (timeout: 3 seconds)
+            if (conversion_valid)
+            {
+                deploy_functions->reboot_hlcs(hlc_ids, 3);
+            }
+        }
+    );
+    entry_hlc_reboot->signal_changed().connect(
+        [this] {
+            //Remove "error" color again (in case it has been set)
+            entry_hlc_reboot->get_style_context()->remove_class("error");
+        }
+    );
 
     //Store start time of simulation when simulation is running - this is the default value (uninitialized)
     sim_start_time.store(0);
@@ -148,7 +203,7 @@ void MonitoringUi::init_ui_thread()
                     {
                         //This is not part of the time series data, so we need a special case for this
                         //Show if the NUC with the ID of the vehicle is online (= sends data from autostart program to LCC)
-                        label->set_text("NUC connected");
+                        label->set_text("Remote HLC [y/n]");
                     }
                     else 
                     {
@@ -229,7 +284,7 @@ void MonitoringUi::init_ui_thread()
                             if (current_mapping.second.find(vehicle_id) == current_mapping.second.end())
                             {
                                 //Was not matched
-                                label->set_text("Not matched");
+                                label->set_text("no");
                                 label->get_style_context()->add_class("warn");
                             }
                             else
@@ -244,7 +299,7 @@ void MonitoringUi::init_ui_thread()
 
                                 if (!nuc_crashed && !program_crashed)
                                 {
-                                    label->set_text("Online");
+                                    label->set_text("yes");
                                     label->get_style_context()->add_class("ok");
                                     if(error_timestamps[0][0] != 0) error_timestamps[0][0] = 0;
                                     if(error_triggered[0][0]) error_triggered[0][0] = false; 
@@ -261,12 +316,12 @@ void MonitoringUi::init_ui_thread()
                                     if(error_timestamps[0][0] == 0) 
                                     {
                                         // set error timestamp  
-                                        error_timestamps[0][0] = clock_gettime_nanoseconds(); 
+                                        error_timestamps[0][0] = cpm::get_time_ns(); 
                                         continue;
                                     }
 
                                     // an error occured before - do nothing if the error is not older than a threshold
-                                    if(clock_gettime_nanoseconds()-error_timestamps[0][0]<500000000) continue;
+                                    if(cpm::get_time_ns()-error_timestamps[0][0]<500000000) continue;
                                     
                                     if(!error_triggered[0][0])
                                     {
@@ -301,7 +356,7 @@ void MonitoringUi::init_ui_thread()
                         else
                         {
                             //No simulation
-                            label->set_text("Not matched");
+                            label->set_text("no");
                             label->get_style_context()->add_class("ok");
                         }
                     }
@@ -339,12 +394,12 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
 
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -380,11 +435,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -416,11 +471,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
 
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -452,11 +507,11 @@ void MonitoringUi::init_ui_thread()
                             if(error_timestamps[i][vehicle_id] == 0) 
                             {
                                 // set error timestamp  
-                                error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                 continue;
                             }
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<2000000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<2000000000) continue;
 
                             if(!error_triggered[i][vehicle_id])
                             {
@@ -538,9 +593,9 @@ void MonitoringUi::init_ui_thread()
                                         trajectory_segment[j]
                                     );
                                     
-                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds() < dt)
+                                    if((delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-cpm::get_time_ns() < dt)
                                     {
-                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-clock_gettime_nanoseconds(); 
+                                        dt = (delta_t * interp_step) / n_interp + trajectory_segment[j-1].t().nanoseconds()-cpm::get_time_ns(); 
                                         current_px = interp->position_x;
                                         current_py = interp->position_y;
                                     }
@@ -558,11 +613,11 @@ void MonitoringUi::init_ui_thread()
                                 if(error_timestamps[i][vehicle_id] == 0) 
                                 {
                                     // set error timestamp  
-                                    error_timestamps[i][vehicle_id] = clock_gettime_nanoseconds(); 
+                                    error_timestamps[i][vehicle_id] = cpm::get_time_ns(); 
                                     continue;
                                 }
                                 // an error occured before - do nothing if the error is not older than a threshold
-                                if(clock_gettime_nanoseconds()-error_timestamps[i][vehicle_id]<200000000) continue;
+                                if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<200000000) continue;
 
                                 if(!error_triggered[i][vehicle_id])
                                 {

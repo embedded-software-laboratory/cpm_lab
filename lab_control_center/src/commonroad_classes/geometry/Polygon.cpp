@@ -62,15 +62,15 @@ Polygon::Polygon(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Polygon:" << std::endl;
-    std::cout << "\tPoints: " << points.size() << std::endl;
+    // std::cout << "Polygon:" << std::endl;
+    // std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
-void Polygon::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Polygon::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     for (auto& point : points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 

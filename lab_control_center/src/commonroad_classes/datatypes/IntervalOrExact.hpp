@@ -105,6 +105,21 @@ public:
     {
         return interval.has_value();
     }
+
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        if (is_exact())
+        {
+            greater_zero &= (exact.value() > 0);
+        }
+        if(is_interval())
+        {
+            greater_zero &= interval->is_greater_zero();
+        }
+
+        return greater_zero;
+    }
     
     const std::optional<Interval> get_interval()
     {
@@ -146,7 +161,7 @@ public:
      * \param translate_x Currently ignored, must be changed if this is used for position values
      * \param translate_y Currently ignored, must be changed if this is used for position values
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         if (exact.has_value())
         {
@@ -159,7 +174,22 @@ public:
 
         if (interval.has_value())
         {
-            interval->transform_coordinate_system(scale, translate_x, translate_y);
+            interval->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
+    }
+
+    /**
+     * \brief Translate to DDS interval, if not exact
+     * \param ratio Relevant to translate e.g. time information to actual time
+     */
+    CommonroadDDSIntervals to_dds_interval(double ratio = 1.0)
+    {
+        //Throw error if conversion is invalid because of interval type
+        if (!interval.has_value())
+        {
+            throw std::runtime_error("IntervalOrExact cannot be translated to DDS Interval, is exact");
+        }
+
+        return interval->to_dds_msg(ratio);
     }
 };

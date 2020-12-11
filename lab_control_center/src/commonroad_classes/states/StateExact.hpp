@@ -57,7 +57,7 @@ class StateExact : public InterfaceTransform, public InterfaceDraw, public Inter
 {
 private:
     //Commonroad data
-    std::optional<Position> position = std::nullopt; //Exact position!
+    std::optional<Position> position = std::nullopt; //Exact position! Optional bc no default defined
     double orientation;
     double time; //In some parts, this is a double (though it shouldn't be a double here) - double chosen for consistency
     double velocity;
@@ -80,7 +80,7 @@ public:
      * This scale value is used for the whole coordinate system
      * \param scale The factor by which to transform all number values related to position
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed

@@ -49,7 +49,7 @@ class ObstacleAggregator
 {
     //For visualization of commonroad data - store all received data in the map below, use it to get currently relevant data
     cpm::AsyncReader<CommonroadObstacleList> commonroad_obstacle_reader;
-    void commonroad_obstacle_receive_callback(dds::sub::LoanedSamples<CommonroadObstacleList>& samples);
+    void commonroad_obstacle_receive_callback(std::vector<CommonroadObstacleList>& samples);
     std::map<uint8_t, CommonroadObstacle> commonroad_obstacle_data;
     std::mutex commonroad_obstacle_mutex;
 

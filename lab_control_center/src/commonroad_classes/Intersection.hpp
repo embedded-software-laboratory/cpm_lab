@@ -56,6 +56,8 @@ struct Incoming
     std::optional<int> successors_straight = std::nullopt; //Lanelet ref
     std::optional<int> successors_left = std::nullopt; //Lanelet ref
     std::optional<int> is_left_of = std::nullopt; //Incoming ref
+
+    //TODO: Change to vectors
 };
 
 /**

@@ -34,6 +34,7 @@
 #include "cpm/Timer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include "CommonroadObstacleList.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
@@ -65,8 +66,8 @@ private:
     std::shared_ptr<cpm::SimpleTimer> standby_timer;
 
     //DDS
-    dds::pub::DataWriter<CommonroadObstacleList> writer_commonroad_obstacle;
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicle_trajectory;
+    cpm::Writer<CommonroadObstacleList> writer_commonroad_obstacle;
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicle_trajectory;
 
     /**
      * \brief Function that sets up the obstacle simulation based on the currently set scenario (callback for scenario)
@@ -101,6 +102,10 @@ private:
     //Either returns the content of the map or the default value (simulated); does not lock, so lock before calling!
     ObstacleToggle::ToggleState get_obstacle_simulation_state(int id);
 
+    //Helper functions
+    //Internal helper function that is used both for start() and start_preview()
+    void start_helper(bool wait_for_start_signal, bool simulated_time);
+
 public:
     /**
      * \brief Constructor to set up the simulation object
@@ -116,6 +121,11 @@ public:
      * \param scale The scale factor
      */
     void set_time_scale(double scale);
+
+    /**
+     * \brief Start the simulation preview, where we do not need a start signal (callback for UI)
+     */
+    void start_preview();
 
     /**
      * \brief Start the simulation (callback for UI)

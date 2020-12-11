@@ -30,17 +30,10 @@
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
-    parameterTopic(cpm::get_topic<Parameter>("parameter")),
-    parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
-    writer(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        parameterTopic,
-        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
-    ),
+    writer("parameter", true),
     readerParameterRequest(
         std::bind(&ParameterServer::handleParamRequest, this, _1), 
-        cpm::ParticipantSingleton::Instance(), 
-        parameterRequestTopic
+        "parameterRequest"
     ),
     storage(_storage)
 {
@@ -70,11 +63,9 @@ void ParameterServer::resend_param_callback(std::string name) {
     handleSingleParamRequest(name);
 }
 
-void ParameterServer::handleParamRequest(dds::sub::LoanedSamples<ParameterRequest>& samples) {
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            handleSingleParamRequest(sample.data().name());
-        }
+void ParameterServer::handleParamRequest(std::vector<ParameterRequest>& samples) {
+    for (auto& data : samples) {
+        handleSingleParamRequest(data.name());
     }
 }
 
@@ -86,6 +77,15 @@ void ParameterServer::handleSingleParamRequest(std::string name) {
     if(storage->get_parameter_bool(name, boolParam)) {
         param.type(ParameterType::Bool);
         param.value_bool(boolParam);
+
+        writer.write(param);
+        return;
+    }
+
+    uint64_t uint64tParam;
+    if(storage->get_parameter_uint64_t(name, uint64tParam)) {
+        param.type(ParameterType::UInt64);
+        param.value_uint64_t(uint64tParam);
 
         writer.write(param);
         return;

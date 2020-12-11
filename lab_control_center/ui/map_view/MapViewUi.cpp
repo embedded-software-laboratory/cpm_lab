@@ -389,112 +389,90 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
 {
     VehicleTrajectories vehicleTrajectories = get_vehicle_trajectory_command_callback();
 
-
+    ctx->save();
     for(const auto& entry : vehicleTrajectories) 
     {
         //const auto vehicle_id = entry.first;
         const auto& trajectory = entry.second;
 
         rti::core::vector<TrajectoryPoint> trajectory_segment = trajectory.trajectory_points();
-        size_t start_trajectory_index = 0; //Keep track of the most recent trajectory index, because we are not interested in (too) old data
-        for (size_t i = 0; i < trajectory_segment.size(); ++i)
+        
+        if(trajectory_segment.size() < 2 ) continue;
+        
+        uint64_t t_now = cpm::get_time_ns();
+
+        ctx->set_line_width(0.01);
+
+        // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+        // start from 1 because of i-1
+        for (size_t i = 1; i < trajectory_segment.size(); ++i)
         {
-            if (trajectory_segment.at(i).t().nanoseconds() < cpm::get_time_ns())
+            const int n_interp = 20;
+            
+            ctx->begin_new_path();
+            ctx->move_to(trajectory_segment[i-1].px(),
+                         trajectory_segment[i-1].py()
+            );   
+            for (int interp_step = 1; interp_step <= n_interp; ++interp_step)
             {
-                start_trajectory_index = i;
+                const uint64_t delta_t = 
+                        trajectory_segment[i].t().nanoseconds() 
+                    - trajectory_segment[i-1].t().nanoseconds();
+
+                const uint64_t t_cur = (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds();
+
+                TrajectoryInterpolation interp(
+                    t_cur,
+                    trajectory_segment[i-1],  
+                    trajectory_segment[i]
+                );
+                
+                ctx->line_to(interp.position_x,
+                             interp.position_y
+                );
+
+                if (t_cur < t_now)
+                {
+                    //Color for past segments
+                    ctx->set_source_rgb(0.7,0.7,0.7);
+                }
+                else
+                {
+                    //Color for current and future segments
+                    ctx->set_source_rgb(0,0,0.8);
+                }
+
+                ctx->stroke();
+                ctx->move_to(interp.position_x,
+                             interp.position_y
+                );
             }
-        }  
+        }
 
-        //We want to output a bit of the past values
-        //Thus, the user can see some of the sent old points as well (which might e.g. be relevant for debugging)
-        //But we only want to do this if not too much time has passed (we are not interested in e.g. 10 second old points)
-        int past_length = 3;
-        auto current_time = cpm::get_time_ns();
-        uint64_t max_age = 1e9; //1 second
-        while (start_trajectory_index > 0 && past_length > 0 
-            && (current_time - trajectory_segment.at(start_trajectory_index - 1).t().nanoseconds()) < max_age) //age check
+        // Draw trajectory points
+        ctx->begin_new_path();
+        for(size_t i = 0; i < trajectory_segment.size(); ++i)
         {
-            --start_trajectory_index;
-            --past_length;
-        }      
-
-        //Also perform an age check here and ignore the whole segment if even the newest point is too old
-        auto t_size = trajectory_segment.size();
-        bool trajectory_outdated = true;
-        if (t_size > 1)
-        {
-            auto newest_time = trajectory_segment.at(t_size - 1).t().nanoseconds();
-            if (newest_time > current_time)
+            //Color based on future / current interpolation
+            uint64_t t_cur = trajectory_segment.at(i).t().nanoseconds();
+            if (t_cur < t_now)
             {
-                trajectory_outdated = false;
+                ctx->set_source_rgb(0.7,0.7,0.7);
             }
             else
             {
-                trajectory_outdated = (current_time - newest_time) >= max_age;
-            }
-        }
-
-        if(t_size > 1 && !trajectory_outdated)
-        {
-            // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
-            // Also, only draw recent data
-            for (int i = start_trajectory_index + 2; i < int(trajectory_segment.size()); ++i)
-            {
-                const int n_interp = 20;
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
-                {
-                    ctx->set_source_rgb(0.4,1.0,0.4);
-                }
-                else
-                {
-                    ctx->set_source_rgb(0,0,0.8);
-                }
-                
-                ctx->move_to(trajectory_segment[i-1].px(), trajectory_segment[i-1].py());
-
-                for (int interp_step = 1; interp_step < n_interp; ++interp_step)
-                {
-                    const uint64_t delta_t = 
-                          trajectory_segment[i].t().nanoseconds() 
-                        - trajectory_segment[i-1].t().nanoseconds();
-
-                    TrajectoryInterpolation interp(
-                        (delta_t * interp_step) / n_interp + trajectory_segment[i-1].t().nanoseconds(),  
-                        trajectory_segment[i-1],  
-                        trajectory_segment[i]
-                    );
-                    
-                    ctx->line_to(interp.position_x,interp.position_y);
-                }
-
-                ctx->line_to(trajectory_segment[i].px(), trajectory_segment[i].py());
-                ctx->set_line_width(0.01);
-                ctx->stroke();
+                ctx->set_source_rgb(0,0,0.8);
             }
 
-            // Draw trajectory points
-            for(size_t i = start_trajectory_index + 1; i < trajectory_segment.size(); ++i)
-            {
-                //Color based on future / past interpolation
-                if (trajectory_segment[i-1].t().nanoseconds() < cpm::get_time_ns())
-                {
-                    ctx->set_source_rgb(0.4,1.0,0.4);
-                }
-                else
-                {
-                    ctx->set_source_rgb(0,0,0.8);
-                }
-
-                ctx->arc(
-                    trajectory_segment[i].px(),
-                    trajectory_segment[i].py(),
-                    0.02, 0.0, 2 * M_PI
-                );
-                ctx->fill();
-            }
+            ctx->arc(
+                trajectory_segment[i].px(),
+                trajectory_segment[i].py(),
+                0.02, 0.0, 2 * M_PI
+            );
+            ctx->fill();
         }
     }
+    ctx->restore();
 }
 
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
@@ -513,6 +491,53 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
+// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
+{
+    // x offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopRight:
+        case StringMessageAnchor::CenterRight:
+        case StringMessageAnchor::BottomRight:
+            // substract bearing twice so the gap between anchor point and text
+            // behaves equally as with a left sided anchor
+            offs_x = -ext.width - 2*ext.x_bearing;
+            break;
+        
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::BottomCenter:
+            
+            offs_x = -ext.width/2 - ext.x_bearing;
+            break;
+        
+        default:
+            offs_x = 0.0;
+    }
+    // y offset
+    switch(anchor.underlying())
+    {
+        case StringMessageAnchor::TopLeft:
+        case StringMessageAnchor::TopCenter:
+        case StringMessageAnchor::TopRight:
+            
+            offs_y = ext.y_bearing;
+            break;
+        
+        case StringMessageAnchor::CenterLeft:
+        case StringMessageAnchor::Center:
+        case StringMessageAnchor::CenterRight:
+            
+            offs_y = ext.height/2 + ext.y_bearing;
+            break;
+        
+        default:
+            offs_y = 0.0;
+    }
+}
+
+
 //Draw all received viz commands on the screen
 void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) {
     //Get commands
@@ -520,8 +545,10 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
     for(const auto& entry : visualization_commands) 
     {
-        if ((entry.type() == VisualizationType::LineStrips || entry.type() == VisualizationType::Polygon) 
-            && entry.points().size() > 1) 
+        if ((entry.type() == VisualizationType::LineStrips || 
+             entry.type() == VisualizationType::Polygon    ||
+             entry.type() == VisualizationType::FilledCircle )
+            && entry.points().size() > 0)
         {
             const auto& message_points = entry.points();
 
@@ -529,27 +556,46 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->move_to(message_points.at(0).x(), message_points.at(0).y());
 
-            for (size_t i = 1; i < message_points.size(); ++i)
+            if(entry.type() == VisualizationType::FilledCircle)
             {
-                //const auto& current_point = message_points.at(i);
-
-                ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
-            }  
-
-            //Line from end to beginning point to close the polygon
-            if (entry.type() == VisualizationType::Polygon) {
-                ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                const auto& radius = entry.size();
+                ctx->arc(message_points.at(0).x(), message_points.at(0).y(), radius, 0.0, 2.0 * M_PI);
+                ctx->fill(); // replaces stroke()
             }
-
-            ctx->set_line_width(entry.size());
-            ctx->stroke();      
+            else if(entry.points().size() < 2) // type definitely is LineStrips or Polygon
+            {
+                cpm::Logging::Instance().write(1, "%s", "WARNING: Visualisation of Polygon or LineStrips with < 2 points");
+            }
+            else
+            {
+                for (size_t i = 1; i < message_points.size(); ++i)
+                {
+                    ctx->line_to(message_points.at(i).x(), message_points.at(i).y());
+                }
+                //Line from end to beginning point to close the polygon
+                if (entry.type() == VisualizationType::Polygon) {
+                    ctx->line_to(message_points.at(0).x(), message_points.at(0).y());
+                }
+                
+                ctx->set_line_width(entry.size());
+                ctx->stroke();
+            }            
         }
-        else if (entry.type() == VisualizationType::StringMessage && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+        else if (entry.type() == VisualizationType::StringMessage
+                 && entry.string_message().size() > 0 && entry.points().size() >= 1) {
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
 
-            ctx->move_to(entry.points().at(0).x(), entry.points().at(0).y());
+            //Align
+            Cairo::TextExtents ext;
+            ctx->get_text_extents(entry.string_message(), ext);
+            
+            double text_offset_x, text_offset_y;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
+            
+            ctx->move_to(entry.points().at(0).x() + text_offset_x, 
+                         entry.points().at(0).y() + text_offset_y );
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
@@ -957,8 +1003,10 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         }
         ctx->restore();
 
+        //Draw description
+        assert(commonroad_scenario->get_draw_configuration());
         ctx->save();
-        {
+        if (commonroad_scenario->get_draw_configuration()->draw_obstacle_description.load()) {
             //Translate to shape center, if position is mostly defined by the shape's positional values
             auto shape_center = get_shape_center(entry.shape());
             ctx->translate(shape_center.first, shape_center.second);

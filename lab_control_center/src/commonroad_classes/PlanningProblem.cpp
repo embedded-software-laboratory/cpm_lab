@@ -29,7 +29,8 @@
 PlanningProblem::PlanningProblem(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
-    std::function<std::pair<double, double> (int)> _get_lanelet_center
+    std::function<std::pair<double, double> (int)> _get_lanelet_center,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     )
 {
     //Check if node is of type planningProblem
@@ -57,7 +58,7 @@ PlanningProblem::PlanningProblem(
             node,
             [&] (const xmlpp::Node* child)
             {
-                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center));
+                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
                 goal_state_lines.push_back(child->get_line());
             },
             "goalState"
@@ -135,21 +136,21 @@ PlanningProblem::PlanningProblem(
     }
 
     //Test output
-    std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
+    // std::cout << "Translated Planning Problems: " << planning_problems.size() << std::endl;
 }
 
-void PlanningProblem::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void PlanningProblem::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     for (auto& planning_problem : planning_problems)
     {
         if (planning_problem.initial_state.has_value())
         {
-            planning_problem.initial_state->transform_coordinate_system(scale, translate_x, translate_y);
+            planning_problem.initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
 
         for (auto& goal_state : planning_problem.goal_states)
         {
-            goal_state.transform_coordinate_system(scale, translate_x, translate_y);
+            goal_state.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
 }
@@ -197,4 +198,22 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
 const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problems() const
 {
     return planning_problems;
+}
+
+std::vector<CommonroadDDSGoalState> PlanningProblem::get_dds_goal_states(double time_step_size)
+{
+    std::vector<CommonroadDDSGoalState> goal_states;
+
+    for (size_t planning_pos = 0; planning_pos < planning_problems.size(); ++planning_pos)
+    {
+        for (size_t goal_pos = 0; goal_pos < planning_problems.at(planning_pos).goal_states.size(); ++ goal_pos)
+        { 
+            auto dds_goal_state = planning_problems.at(planning_pos).goal_states.at(goal_pos).to_dds_msg(time_step_size);
+            dds_goal_state.goal_state_pos(goal_pos);
+            dds_goal_state.planning_problem_pos(planning_pos);
+            goal_states.push_back(dds_goal_state);
+        }
+    }
+
+    return goal_states;
 }
