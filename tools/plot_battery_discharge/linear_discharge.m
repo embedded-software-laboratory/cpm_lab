@@ -135,9 +135,3 @@ plot(data(:,2), abs(data(:,1)-max_time)/max_time*100)
 grid on
 xlabel('Volt','FontSize',20)
 ylabel('Batterieladung [%]','FontSize',20)
-
-% hold on
-% plot(l1_v, l1_battery(l1_v))
-% plot(l2_v, l2_battery(l2_v))
-% plot(l3_v, l3_battery(l3_v))
-% hold off
