@@ -38,6 +38,6 @@ struct PlanningConfirmation
     octet vehicle_id; //@key
     TimeStamp timestep;
     unsigned short counter;
-    boolean collision;
+    bool collision;
 };
 #endif
