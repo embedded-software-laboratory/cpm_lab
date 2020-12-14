@@ -40,7 +40,6 @@ struct LaneGraphTrajectory
 {
     octet vehicle_id; //@key
     Header header;
-    unsigned short attempt;
     sequence<LaneGraphPosition> lane_graph_positions;
 };
 #endif
