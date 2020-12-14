@@ -31,8 +31,6 @@ add_executable(decentral_routing
     src/VehicleTrajectoryPlanningState.cpp
     src/VehicleTrajectoryPlanner.hpp
     src/VehicleTrajectoryPlanner.cpp
-    src/InterVehicleComms.cpp
-    src/InterVehicleComms.hpp
 )
 target_include_directories(decentral_routing PUBLIC
     include/lane_graph_full)
