@@ -58,6 +58,8 @@ struct CommonroadDDSPositionInterval {
 struct CommonroadDDSGoalState {
     CommonroadDDSIntervals time;
     boolean time_set; //If false, ignore time
+    boolean has_exact_position; //Ignore values in exact_position if this is false
+    CommonroadDDSPoint exact_position; //Not part of the specs in the documentation, but nice to have
     sequence<CommonroadDDSPositionInterval> positions;
     sequence<CommonroadDDSIntervals> orientations;
     sequence<CommonroadDDSIntervals> velocities; 

@@ -256,7 +256,17 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
 
     if (position.has_value())
     {
-        positions.push_back(position->to_dds_position_interval());
+        goal_state.has_exact_position(position->is_exact());
+
+        //The original commonroad specification only uses position intervals here, but we also support exact positions
+        if (position->is_exact())
+        {
+            goal_state.exact_position(position->to_dds_point());
+        }
+        else
+        {
+            positions.push_back(position->to_dds_position_interval());
+        }
     }
     if (orientation.has_value())
     {
@@ -266,6 +276,10 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
     {
         velocities.push_back(velocity->to_dds_msg());
     }
+
+    goal_state.positions(positions);
+    goal_state.orientations(orientations);
+    goal_state.velocities(velocities);
 
     return goal_state;
 }
