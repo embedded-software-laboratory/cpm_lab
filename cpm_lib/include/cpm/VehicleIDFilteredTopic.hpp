@@ -26,18 +26,17 @@
 
 #pragma once
 
-/**
- * \class VehicleIDFilteredTopic.hpp
- * Creates a DDS Topic that filters all incoming 
- * messages so that only samples with the given 
- * vehicle_id are processed further.
- */
-
 #include <dds/pub/ddspub.hpp>
 #include <dds/sub/ddssub.hpp>
 
 namespace cpm
 {
+    /**
+     * \class VehicleIDFilteredTopic
+     * Creates a DDS Topic that filters all incoming 
+     * messages so that only samples with the given 
+     * vehicle_id are processed further.
+     */
     template<typename T>
     struct VehicleIDFilteredTopic : public dds::topic::ContentFilteredTopic<T>
     {

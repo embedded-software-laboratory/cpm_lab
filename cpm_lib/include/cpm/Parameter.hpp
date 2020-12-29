@@ -27,7 +27,7 @@
 #pragma once
 
 /**
- * \class Parameter.hpp
+ * \file Parameter.hpp
  * \brief This interface can be used to receive/request parameter definitions of different types
  * Parameters can be set during runtime using the parameter 
  * server. All values set are sent to all participants that 

@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
+ * \file main.cpp
  * \brief This file includes a mechanism for a NUC to tell the LCC that an error occured (not all files are there that should have been published by the master PC)
  * -> This software is compiled "self-contained", it includes the cpm library (static linking) rather than linking to it dynamically
  * -> This software already should be installed on the NUCs, in the same folder as lab_autostart.bash 

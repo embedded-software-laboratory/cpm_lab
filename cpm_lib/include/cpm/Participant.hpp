@@ -26,12 +26,6 @@
 
 #pragma once
 
-/**
- * \class Participant.hpp
- * \brief Creates a DDS Participant, use this for abstraction
- * Also allows for loading .xml QoS files
- */
-
 #include <dds/core/QosProvider.hpp>
 #include <dds/dds.hpp>
 #include <dds/core/ddscore.hpp>
@@ -42,8 +36,9 @@
 namespace cpm
 {
     /**
-     * \brief Class Participant
-     * Use this to get a participant, possibly with some custom QoS settings
+     * \class Participant
+     * \brief Creates a DDS Participant, use this for abstraction
+     * Also allows for loading .xml QoS files
      */
     class Participant
     {

@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \class Logging.hpp
- * \brief This class can be used to log all relevant information or errors during runtime. These information are transmitted to the lab_control_center.
- */
-
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -52,6 +47,10 @@
 #include "cpm/Writer.hpp"
 
 namespace cpm {
+    /**
+     * \class Logging
+     * \brief This class can be used to log all relevant information or errors during runtime. These information are transmitted to the lab_control_center.
+     */
     class Logging {
         Logging(Logging const&) = delete;
         Logging(Logging&&) = delete; 

@@ -26,10 +26,6 @@
 
 #pragma once
 
-/**
- * \class Communication.hpp
- * \brief This class holds all readers and writers required for the middleware and provides access to them
- */
 #include <string>
 #include <sstream>
 #include <functional>
@@ -67,7 +63,8 @@
 using namespace std::placeholders;
 
 /**
- * \brief This class is responsible for the communication between HLC, middleware and vehicle
+ * \class Communication
+ * \brief This class holds all readers and writers required for the middleware and provides access to them
  * These include message forwarding, collecting of vehicle states, timing messages and exchange of commands
  * For command exchange, we use the specialized class TypedCommunication, because we want to support it for different
  * command types (e.g. trajectories) which all have the same behaviour

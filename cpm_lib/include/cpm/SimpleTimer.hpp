@@ -34,19 +34,17 @@
 
 #include <cmath>
 
-/**
- * \class SimpleTimer.hpp
- * This class calls a callback function periodically 
- * based on TimerFD. The given period (in milliseconds) is broken down in intervals of 50ms, to be able
- * to stop the timer rather quickly when stop() is called. The given period in milliseconds might thus be rounded up accordingly. 
- * This timer is neither intended to work with simulated time,
- * nor is it exact enough to be real-time capable. Use this e.g. for timing in the GUI or other non-critical
- * timing tasks only!
- * This timer listens to the stop signal if m_stop_callback is not set
- */
-
 namespace cpm {
-
+    /**
+     * \class SimpleTimer
+     * This class calls a callback function periodically 
+     * based on TimerFD. The given period (in milliseconds) is broken down in intervals of 50ms, to be able
+     * to stop the timer rather quickly when stop() is called. The given period in milliseconds might thus be rounded up accordingly. 
+     * This timer is neither intended to work with simulated time,
+     * nor is it exact enough to be real-time capable. Use this e.g. for timing in the GUI or other non-critical
+     * timing tasks only!
+     * This timer listens to the stop signal if m_stop_callback is not set
+     */
     class SimpleTimer : public cpm::Timer
     {
         std::shared_ptr<cpm::TimerFD> internal_timer;

@@ -26,13 +26,6 @@
 
 #pragma once
 
-/**
- * \class ReaderAbstract.hpp
- * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
- * Abstraction from different DDS Reader implementations
- * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
- */
-
 #include <dds/sub/ddssub.hpp>
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -40,8 +33,10 @@
 namespace cpm
 {
     /**
-     * \brief Class ReaderAbstract
-     * Use this to get a simple reader with a take() function for reading received messages whenever you want, without considering time stamps etc
+     * \class ReaderAbstract
+     * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
+     * Abstraction from different DDS Reader implementations
+     * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
      */
     template<typename T>
     class ReaderAbstract

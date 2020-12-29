@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \class Communication.hpp
- * \brief This class can be used to create all readers and writers required for the middleware whose type can change, e.g. if instead of the trajectory the speed + curvature are used as commands
- * WARNING: There is no error handling for incompatible types
- */
 #include <optional>
 #include <string>
 #include <functional>
@@ -57,10 +52,12 @@
 using namespace std::placeholders;
 
 /**
- * \brief This class is responsible for handling "any" message type (via templating) which can 
- * be received by the HLC script and must be forwarded to the vehicle
- * It also checks these messages for consistency and remembers when they were received (simulated or real time)
+ * \class TypedCommunication
+ * \brief This class can be used to create all readers and writers required for the middleware whose type can change, 
+ * e.g. if instead of the trajectory the speed + curvature are used as commands
+ * It also checks some messages for consistency and remembers when they were received (simulated or real time)
  * for further checks in main
+ * WARNING: There is no error handling for incompatible types
  */
 template<class MessageType> class TypedCommunication {
     private:

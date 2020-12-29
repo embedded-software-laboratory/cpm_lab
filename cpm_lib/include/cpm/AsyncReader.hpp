@@ -41,14 +41,17 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/Participant.hpp"
 
+/**
+ * \file AsyncReader.hpp
+ */
+
 namespace cpm 
 {
     /**
-     * \class AsyncReader.hpp
+     * \class AsyncReader
      * \brief This class is a wrapper for a data reader that uses an AsyncWaitSet to call a callback function whenever any new data is available
      * Template: Class of the message objects, depending on which IDL file is used
      */ 
-
     template<class MessageType> 
     class AsyncReader
     {

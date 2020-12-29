@@ -27,7 +27,7 @@
 #pragma once
 
 /**
- * \class stamp_message.hpp
+ * \file stamp_message.hpp
  * \brief This interface provides a method that can be used to 
  * set a time stamp for a sample (for creation and validity)
  */

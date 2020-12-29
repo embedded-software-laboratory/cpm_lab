@@ -46,20 +46,18 @@
 
 #include <atomic>
 
-/**
- * \class TimerFD.hpp
- * This class calls a callback function periodically 
- * based the system clock. The calls are synchronized in both frequency 
- * and phase to the clock.
- * This class should be used if a 'simple' timed callback is required. 
- * Whereas Timer.hpp relies on e.g. a parameter server to check if 
- * simulated time is used or not, directly using TimerFD allows to create
- * timed callbacks for methods that use the system clock independent on 
- * the run (real or simulated). This could be GUI tools, periodic tasks etc... 
- */
-
 namespace cpm {
-
+    /**
+     * \class TimerFD
+     * This class calls a callback function periodically 
+     * based the system clock. The calls are synchronized in both frequency 
+     * and phase to the clock.
+     * This class should be used if a 'simple' timed callback is required. 
+     * Whereas Timer.hpp relies on e.g. a parameter server to check if 
+     * simulated time is used or not, directly using TimerFD allows to create
+     * timed callbacks for methods that use the system clock independent on 
+     * the run (real or simulated). This could be GUI tools, periodic tasks etc... 
+     */
     class TimerFD : public cpm::Timer
     {
         uint64_t period_nanoseconds; 

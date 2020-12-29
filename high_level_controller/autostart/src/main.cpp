@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
+ * \file main.cpp
  * \brief This file includes a mechanism for a NUC to tell the LCC that it is online 
  * (should be called on NUC startup by a startup script, see lab_autostart.bash)
  * It is also used to check if the scripts started remotely are (still) running
