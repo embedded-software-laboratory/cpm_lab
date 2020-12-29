@@ -13,3 +13,5 @@ I used EXCLUDE to exclude bcm2835.h, as it contains its own mainpage
 
 Graphviz needs to be installed as well
 (so: apt install doxygen graphviz)
+
+TODO: Use \brief more often, add definitions for modules for LCC UI, Commonroad, IPS etc.
