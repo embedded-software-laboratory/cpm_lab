@@ -26,6 +26,11 @@
 
 #include "ObstacleSimulation.hpp"
 
+/**
+ * \file ObstacleSimulation.cpp
+ * \ingroup lcc
+ */
+
 ObstacleSimulation::ObstacleSimulation(ObstacleSimulationData _trajectory, int _id)
 :
 trajectory(_trajectory)

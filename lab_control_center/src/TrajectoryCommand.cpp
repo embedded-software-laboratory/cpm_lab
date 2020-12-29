@@ -26,6 +26,11 @@
 
 #include "TrajectoryCommand.hpp"
 
+/**
+ * \file TrajectoryCommand.cpp
+ * \ingroup lcc
+ */
+
 const uint64_t dt_nanos = 100000000ull;
 
 TrajectoryCommand::TrajectoryCommand()

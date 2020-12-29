@@ -34,6 +34,10 @@
 #include "VehicleCommandTrajectory.hpp"
 #include <functional>
 
+/**
+ * \brief Class for controlling a vehicle with a joystick
+ * \ingroup lcc
+ */
 class VehicleManualControl
 {
     dds::domain::DomainParticipant& participant;

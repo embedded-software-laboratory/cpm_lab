@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \class ParameterStorage
- * \brief This class can be used in combination with yaml files and the parameter server. Do not confuse this class with the class in the cpm lib! That class is used on the client's side.
- */
-
 #include "ParameterWithDescription.hpp"
 
 #include <yaml-cpp/yaml.h>
@@ -43,6 +38,11 @@
 #include <fstream>
 #include <exception>
 
+/**
+ * \class ParameterStorage
+ * \brief This class can be used in combination with yaml files and the parameter server. Do not confuse this class with the class in the cpm lib! That class is used on the client's side.
+ * \ingroup lcc
+ */
 class ParameterStorage {
 public:
     //Constructor

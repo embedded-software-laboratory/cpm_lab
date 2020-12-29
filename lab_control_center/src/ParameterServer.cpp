@@ -27,6 +27,11 @@
 #include "ParameterServer.hpp"
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file ParameterServer.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 
 ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):

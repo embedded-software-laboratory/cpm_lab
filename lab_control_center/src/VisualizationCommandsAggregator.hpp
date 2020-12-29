@@ -43,8 +43,8 @@
 
 /**
  * \brief This class is used as storage to aggregate all visualization commands received by the LCC (which are drawn in MapViewUi)
+ * \ingroup lcc
  */
-
 class VisualizationCommandsAggregator {
 private:
     /**

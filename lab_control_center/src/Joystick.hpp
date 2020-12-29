@@ -28,7 +28,11 @@
 
 #include "defaults.hpp"
 
-
+/**
+ * \class Joystick
+ * \brief Class for joystick controls 
+ * \ingroup lcc
+ */
 class Joystick {
 
     uint8_t joystick_buttons[256] = {};

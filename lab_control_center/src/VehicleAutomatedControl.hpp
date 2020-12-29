@@ -41,6 +41,7 @@
  * 
  * 
  * TODO: UNUSED CLASS - this class can probably be deleted, as proper vehicle stopping is now part of the stop signal??
+ * \ingroup lcc
  */
 class VehicleAutomatedControl
 {

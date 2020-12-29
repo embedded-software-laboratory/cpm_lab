@@ -45,6 +45,7 @@
  * \class ObstacleSimulation
  * \brief Nested class responsible for simulating a single obstacle
  * Objects of this class have access to the writer / other members, e.g. the writer
+ * \ingroup lcc
  */
 class ObstacleSimulation
 {

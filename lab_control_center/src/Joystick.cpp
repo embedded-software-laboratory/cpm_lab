@@ -34,6 +34,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+/**
+ * \file Joystick.cpp
+ * \ingroup lcc
+ */
 
 Joystick::Joystick(string device_file) {
     js_fd = open(device_file.c_str(), O_RDONLY | O_NONBLOCK);

@@ -42,9 +42,8 @@
 /**
  * \class ObstacleAggregator
  * \brief Keeps received data from commonroad obstacles in map that regards multiple messages + timestamps; analogous to TimeSeriesAggregator but for commonroad obstacles; ignores more than 2 seconds old data
- *
+ * \ingroup lcc
 */
-
 class ObstacleAggregator
 {
     //For visualization of commonroad data - store all received data in the map below, use it to get currently relevant data

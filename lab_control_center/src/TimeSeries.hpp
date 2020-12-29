@@ -31,6 +31,7 @@
 
 /**
  * \brief Data class for storing values & (receive) times to get latest / newest data etc
+ * \ingroup lcc
  */
 template<typename T>
 class _TimeSeries

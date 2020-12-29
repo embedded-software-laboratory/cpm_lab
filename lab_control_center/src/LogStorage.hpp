@@ -51,6 +51,7 @@
 
 /**
  * \brief Used to receive and store Log messages (cpm::Logging) from all participants in the current domain
+ * \ingroup lcc
  */
 class LogStorage {
 public:

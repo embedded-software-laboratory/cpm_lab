@@ -28,6 +28,11 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
+/**
+ * \file TimeSeriesAggregator.cpp
+ * \ingroup lcc
+ */
+
 TimeSeriesAggregator::TimeSeriesAggregator(uint8_t max_vehicle_id)
 {
     vehicle_state_reader = make_shared<cpm::AsyncReader<VehicleState>>(

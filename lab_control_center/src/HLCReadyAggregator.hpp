@@ -44,6 +44,7 @@
  * \brief This class collects all the HLCHello messages sent by the HLCs (NUCs) to present the GUI user the NUCs (/IDs) that are currently online
  * This class can also be used to just retrieve the currently available IDs for distribution of scripts on several NUCs
  * Furthermore, the messages also include information about the currently running script & middleware (if running or not), which can also be retreived
+ * \ingroup lcc
  */
 class HLCReadyAggregator
 {

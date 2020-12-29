@@ -36,6 +36,7 @@
 /**
  * \class TrajectoryCommand
  * \brief Using this class, trajectories from 2D paths can be created and sent to the vehicles
+ * \ingroup lcc
  */
 class TrajectoryCommand
 {

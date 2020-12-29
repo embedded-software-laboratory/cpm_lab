@@ -46,6 +46,7 @@
  * \brief This class simulates a traffic participant / obstacle logic based on the obstacle type(s) defined in a commonroad scenario
  * It sends trajectories/... defined in the scenario (which may define position, time, velocity...)
  * These are received by either a real vehicle or a special simulated participant, that also gets a starting position etc
+ * \ingroup lcc
  */
 class ObstacleSimulationManager
 {

@@ -48,7 +48,7 @@ using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 /**
  * \class TimeSeriesAggregator
  * \brief Keeps received data from vehicles and vehicle trajectories in map with custom data structure that regards multiple messages + timestamps
- *
+ * \ingroup lcc
 */
 class TimeSeriesAggregator
 {

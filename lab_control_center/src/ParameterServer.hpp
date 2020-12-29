@@ -26,11 +26,6 @@
 
 #pragma once
 
-/*
- * ParameterServer.hpp
- * Server that distributes parameter values. This server uses ParameterStorage to store its values.
-*/
-
 #include <chrono>
 #include <string>
 #include <thread>
@@ -49,6 +44,11 @@
 
 #include "cpm/AsyncReader.hpp"
 
+/**
+ * \class ParameterServer
+ * Server that distributes parameter values. This server uses ParameterStorage to store its values.
+ * \ingroup lcc
+*/
 class ParameterServer {
 private:    
     //Callback

@@ -26,6 +26,11 @@
 
 #include "TimerTrigger.hpp"
 
+/**
+ * \file TimerTrigger.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),

@@ -26,6 +26,11 @@
 
 #include "VisualizationCommandsAggregator.hpp"
 
+/**
+ * \file VisualizationCommandsAggregator.cpp
+ * \ingroup lcc
+ */
+
 VisualizationCommandsAggregator::VisualizationCommandsAggregator() 
 {
     viz_reader = make_shared<cpm::AsyncReader<Visualization>>(

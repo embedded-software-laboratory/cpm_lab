@@ -48,10 +48,20 @@
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
+/**
+ * \enum ParticipantStatus
+ * \brief Possible status of a participant
+ * \ingroup lcc
+ */
 enum ParticipantStatus {
     WAITING, OUT_OF_SYNC, WORKING, REALTIME
 };
 
+/**
+ * \struct TimerData
+ * \brief Data definition for timing related data
+ * \ingroup lcc
+ */
 struct TimerData {
     uint64_t next_timestep;
     uint64_t last_message_receive_stamp;
@@ -62,6 +72,7 @@ struct TimerData {
  * \brief TimerTrigger is responsible for:
  * - Realtime: Sending start & stop signals to start / stop the simulation
  * - Simulated time: Managing timing for all participants with simulated time steps
+ * \ingroup lcc
  */
 class TimerTrigger {
 private:

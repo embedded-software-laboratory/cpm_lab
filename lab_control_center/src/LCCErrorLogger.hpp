@@ -20,6 +20,7 @@
  * \brief LCCErrorLogger is a Singleton class that is used throughout the LCC to log error messages that would else be shown in the console, which might not be directly related to the simulation
  * (For this reason, cpm::Logging is not used)
  * It is e.g. used in some CommonRoad drawing classes to log errors when draw() is called but some conditions are not fulfilled
+ * \ingroup lcc
  */
 class LCCErrorLogger {
     LCCErrorLogger(LCCErrorLogger const&) = delete;

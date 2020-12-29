@@ -29,6 +29,11 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file VehicleManualControl.cpp
+ * \ingroup lcc
+ */
+
 #define AXIS_THROTTLE (5)
 #define AXIS_BRAKE (2)
 #define AXIS_STEERING (0)

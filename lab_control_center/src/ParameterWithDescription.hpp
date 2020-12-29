@@ -34,8 +34,8 @@
 
 /**
  * \brief To be used with ParameterStorage, to save parameter information as well as their description 
+ * \ingroup lcc
  */ 
-
 struct ParameterWithDescription {
     Parameter parameter_data;
     std::string parameter_description;
