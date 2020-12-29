@@ -25,9 +25,10 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
- * \brief This class includes the main function and is mainly responsible for the initialization of the middleware
+ * \file main.cpp
+ * \brief This file includes the middleware's main function and is mainly responsible for the initialization of the middleware
  * Params etc are documented in the cpm lab documentation
+ * \ingroup middleware
  */
 
 #include <memory>
@@ -45,6 +46,10 @@
 
 #include "Communication.hpp"
 
+/**
+ * \brief The Middleware's main function
+ * \ingroup middleware
+ */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);

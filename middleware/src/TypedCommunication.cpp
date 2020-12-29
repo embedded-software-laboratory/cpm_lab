@@ -1,5 +1,10 @@
 #include "TypedCommunication.hpp"
 
+/**
+ * \file TypedCommunication.cpp
+ * \ingroup middleware
+ */
+
 template<> void TypedCommunication<VehicleCommandTrajectory>::type_specific_msg_check(VehicleCommandTrajectory msg)
 {
     auto set_id = msg.vehicle_id();

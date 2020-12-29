@@ -47,6 +47,7 @@ namespace cpm
      * which replies to every round trip time message received immediately with the current program's logging ID
      * 
      * It can also be used to measure the round trip time
+     * \ingroup cpmlib
      */
     class RTTTool
     {

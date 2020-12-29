@@ -45,6 +45,13 @@
 
 namespace cpm {
 
+    /**
+     * \class TimerSimulated
+     * This class calls a callback function periodically 
+     * based on a simulated clock. The calls are synchronized in both frequency 
+     * and phase to the clock. Time is not 'real', but given by a central timing instance (e.g. the LCC)
+     * \ingroup cpmlib
+     */
     class TimerSimulated : public cpm::Timer
     {
         uint64_t period_nanoseconds; 

@@ -39,6 +39,7 @@ namespace cpm
      * \class Participant
      * \brief Creates a DDS Participant, use this for abstraction
      * Also allows for loading .xml QoS files
+     * \ingroup cpmlib
      */
     class Participant
     {

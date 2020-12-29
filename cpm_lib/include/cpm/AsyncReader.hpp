@@ -51,6 +51,7 @@ namespace cpm
      * \class AsyncReader
      * \brief This class is a wrapper for a data reader that uses an AsyncWaitSet to call a callback function whenever any new data is available
      * Template: Class of the message objects, depending on which IDL file is used
+     * \ingroup cpmlib
      */ 
     template<class MessageType> 
     class AsyncReader

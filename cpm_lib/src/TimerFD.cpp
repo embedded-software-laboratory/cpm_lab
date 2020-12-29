@@ -36,6 +36,11 @@
 #include <stdint.h>
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file TimerFD.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
     TimerFD::TimerFD(

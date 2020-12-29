@@ -44,6 +44,7 @@ namespace cpm {
      * nor is it exact enough to be real-time capable. Use this e.g. for timing in the GUI or other non-critical
      * timing tasks only!
      * This timer listens to the stop signal if m_stop_callback is not set
+     * \ingroup cpmlib
      */
     class SimpleTimer : public cpm::Timer
     {

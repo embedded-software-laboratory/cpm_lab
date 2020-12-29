@@ -37,6 +37,7 @@ namespace cpm
      * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
      * Abstraction from different DDS Reader implementations
      * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
+     * \ingroup cpmlib
      */
     template<typename T>
     class ReaderAbstract

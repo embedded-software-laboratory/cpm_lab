@@ -44,6 +44,7 @@ namespace cpm
      * \brief Class MultiVehicleReader
      * Use this to get a reader for multiple vehicles that works like "Reader", but checks timestamps in the header for all of the vehicles separately
      * This reader always acts in the domain of ParticipantSingleton
+     * \ingroup cpmlib
      */
     template<typename T>
     class MultiVehicleReader

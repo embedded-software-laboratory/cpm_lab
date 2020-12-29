@@ -54,6 +54,7 @@ namespace cpm
      * to the current system time. Once the Reader is 
      * created, it can be used anytime to retrieve the 
      * newest valid sample, if one exist.
+     * \ingroup cpmlib
      */
     template<typename T>
     class Reader

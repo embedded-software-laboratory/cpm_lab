@@ -50,6 +50,7 @@ namespace cpm {
     /**
      * \class Logging
      * \brief This class can be used to log all relevant information or errors during runtime. These information are transmitted to the lab_control_center.
+     * \ingroup cpmlib
      */
     class Logging {
         Logging(Logging const&) = delete;

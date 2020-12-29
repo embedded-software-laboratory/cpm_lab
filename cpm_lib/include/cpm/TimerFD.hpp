@@ -57,6 +57,7 @@ namespace cpm {
      * simulated time is used or not, directly using TimerFD allows to create
      * timed callbacks for methods that use the system clock independent on 
      * the run (real or simulated). This could be GUI tools, periodic tasks etc... 
+     * \ingroup cpmlib
      */
     class TimerFD : public cpm::Timer
     {

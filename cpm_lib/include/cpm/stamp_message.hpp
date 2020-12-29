@@ -44,6 +44,7 @@ namespace cpm
      * \param message the sample whose header needs to be set
      * \param t_now the current system time in nanoseconds
      * \param expected_delay the amount of nanoseconds before the sample becomes valid (starting at t_now)
+     * \ingroup cpmlib
      */
     template<typename T>
     void stamp_message(T& message, uint64_t t_now, uint64_t expected_delay)

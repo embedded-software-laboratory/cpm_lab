@@ -58,6 +58,7 @@ using namespace std::placeholders;
  * It also checks some messages for consistency and remembers when they were received (simulated or real time)
  * for further checks in main
  * WARNING: There is no error handling for incompatible types
+ * \ingroup middleware
  */
 template<class MessageType> class TypedCommunication {
     private:

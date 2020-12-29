@@ -1,5 +1,10 @@
 #include "cpm/RTTTool.hpp"
 
+/**
+ * \file RTTTool.cpp
+ * \ingroup cpmlib
+ */
+
 cpm::RTTTool::RTTTool() : 
     rtt_writer("round_trip_time")
 {

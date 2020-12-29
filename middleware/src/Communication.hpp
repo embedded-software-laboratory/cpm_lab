@@ -68,6 +68,7 @@ using namespace std::placeholders;
  * These include message forwarding, collecting of vehicle states, timing messages and exchange of commands
  * For command exchange, we use the specialized class TypedCommunication, because we want to support it for different
  * command types (e.g. trajectories) which all have the same behaviour
+ * \ingroup middleware
  */
 class Communication {
     private:

@@ -43,6 +43,7 @@ namespace cpm
      * \brief Creates a DDS Writer that can be used for writing / publishing messages
      * This encapsulation allows for changes e.g. in the participant or QoS without 
      * the need to change the implementation across the whole project
+     * \ingroup cpmlib
      */
     template<typename T>
     class Writer

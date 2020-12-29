@@ -43,6 +43,7 @@ namespace cpm
      * communication in another domain or QoS settings for the 
      * participant (instead of QoS settings for reader / writer / ...) 
      * are required, use this participant.
+     * \ingroup cpmlib
      */
     class ParticipantSingleton
     {
