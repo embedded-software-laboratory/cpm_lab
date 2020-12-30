@@ -32,6 +32,7 @@
  * \class InterfaceGeometry
  * \brief This interface requires the deriving classes to implement a transfrom function
  * It is mainly used for clarity, to define common behaviour
+ * \ingroup lcc_commonroad
  */
 class InterfaceGeometry
 {

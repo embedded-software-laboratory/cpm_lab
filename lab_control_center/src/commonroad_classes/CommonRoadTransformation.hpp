@@ -46,6 +46,7 @@
 
 /**
  * \brief Used to remember transformations for files during execution, if saved, and to save / load those in between executions using YAML
+ * \ingroup lcc_commonroad
  */
 class CommonRoadTransformation
 {

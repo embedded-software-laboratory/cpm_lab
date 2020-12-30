@@ -35,6 +35,7 @@
  * in the scenario, when drawing. Some "sub"-classes of the scenario, like lanelet, might have direct access to this
  * file, for easier data sharing
  * We use atomic bool because access from different parts of the program is allowed and desired
+ * \ingroup lcc_commonroad
  */
 struct CommonroadDrawConfiguration
 {

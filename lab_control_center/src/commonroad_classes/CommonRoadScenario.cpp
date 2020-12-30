@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
+/**
+ * \file CommonRoadScenario.cpp
+ * \ingroup lcc_commonroad
+ */
+
 CommonRoadScenario::CommonRoadScenario()
 {
     //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?

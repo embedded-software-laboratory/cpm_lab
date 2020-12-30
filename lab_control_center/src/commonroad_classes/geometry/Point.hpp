@@ -39,6 +39,7 @@
 /**
  * \class Point
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+ * \ingroup lcc_commonroad
  */
 class Point : public InterfaceTransform, public InterfaceDraw
 {

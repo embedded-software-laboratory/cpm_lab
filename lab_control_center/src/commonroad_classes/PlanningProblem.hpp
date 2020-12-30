@@ -57,6 +57,7 @@
 /**
  * \struct PlanningProblemElement
  * \brief Not in specs, but these allow sequences of initialState and several goalStates in PlanningProblem
+ * \ingroup lcc_commonroad
  */
 struct PlanningProblemElement
 {
@@ -69,6 +70,7 @@ struct PlanningProblemElement
  * \class PlanningProblem
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a PlanningProblem specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class PlanningProblem : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {

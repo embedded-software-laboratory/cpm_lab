@@ -17,3 +17,4 @@ Graphviz needs to be installed as well
 (so: apt install doxygen graphviz)
 
 TODO: Use \brief more often, add definitions for modules for LCC UI, Commonroad, IPS etc.
+TODO: Some things in commonroad do not seem to be parsed properly

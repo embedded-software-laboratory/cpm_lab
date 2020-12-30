@@ -58,6 +58,7 @@
  * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic - Throw an error in case of wrong (dynamic) types if role was set to static
  * We do not need to store "role", as we already have two different classes for that
+ * \ingroup lcc_commonroad
  */
 enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary};
 
@@ -65,6 +66,7 @@ enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBou
  * \class StaticObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a StaticObstacle specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class StaticObstacle : public InterfaceTransform, public InterfaceTransformTime
 {

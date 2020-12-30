@@ -26,6 +26,11 @@
 
 #include "XMLTranslation.hpp"
 
+/**
+ * \file XMLTranslation.cpp
+ * \ingroup lcc_commonroad
+ */
+
 
 std::string xml_translation::get_node_text(const xmlpp::Node* node)
 {

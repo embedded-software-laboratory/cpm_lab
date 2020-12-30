@@ -57,6 +57,7 @@
  * \struct TrafficSignPost
  * \brief Specifies a traffic sign element
  * The commonroad XML file specifies specific string values, this restriction is not applied here (for simplicity)
+ * \ingroup lcc_commonroad
  */
 struct TrafficSignPost
 {
@@ -68,6 +69,7 @@ struct TrafficSignPost
  * \struct TrafficSignElement
  * \brief Specifies a traffic sign post
  * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
+ * \ingroup lcc_commonroad
  */
 struct TrafficSignElement
 {
@@ -81,6 +83,7 @@ struct TrafficSignElement
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic sign specified in an XML file
  * 2020 only! (Not specified in 2018 specs)
+ * \ingroup lcc_commonroad
  */
 class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {

@@ -53,18 +53,21 @@
 /**
  * \enum class TrafficLightColor
  * \brief Specifies a traffic light color, as in commonroad
+ * \ingroup lcc_commonroad
  */
 enum class TrafficLightColor {Red, RedYellow, Yellow, Green};
 
 /**
  * \enum class Direction
  * \brief Specifies a direction, as in commonroad
+ * \ingroup lcc_commonroad
  */
 enum class Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRight, All};
 
 /**
  * \struct TrafficCycleElement
  * \brief Specifies a single light cycle, as in commonroad
+ * \ingroup lcc_commonroad
  */
 struct TrafficCycleElement
 {
@@ -75,6 +78,7 @@ struct TrafficCycleElement
 /**
  * \struct TrafficLightCycle
  * \brief Specifies a full light cycle, as in commonroad
+ * \ingroup lcc_commonroad
  */
 struct TrafficLightCycle
 {
@@ -85,6 +89,7 @@ struct TrafficLightCycle
 /**
  * \struct TrafficLightElement
  * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
+ * \ingroup lcc_commonroad
  */
 struct TrafficLightElement
 {
@@ -99,6 +104,7 @@ struct TrafficLightElement
  * \class TrafficLight
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic light specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class TrafficLight : public InterfaceTransform, public InterfaceDraw
 {

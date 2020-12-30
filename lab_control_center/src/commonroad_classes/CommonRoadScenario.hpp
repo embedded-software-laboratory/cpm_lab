@@ -63,20 +63,22 @@
 #include "cpm/Writer.hpp"
 #include "CommonroadDDSGoalState.hpp"
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///////////////////////////////////////////////
 //TODO: Put Enums etc inside class definition??
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///////////////////////////////////////////////
 
 /**
- * \enum ObstacleType
+ * \enum ObstacleRole
  * \brief Obstacle types according to spec, for 2018 specs Obstacle
+ * \ingroup lcc_commonroad
  */
 enum class ObstacleRole {Static, Dynamic};
 
 /**
- * \enum class ScenarioTag
+ * \enum ScenarioTag
  * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type
  * From 2020 specs
+ * \ingroup lcc_commonroad
  */
 enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
@@ -85,21 +87,24 @@ enum class ScenarioTag {
 };
 
 /**
- * \enum Attributes
+ * \enum Attribute
  * \brief Expected attributes of this class according to specs; WARNING: Due to conformance to 2018-specs (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2018b.xsd) some things are redundant
+ * \ingroup lcc_commonroad
  */
 enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags};
 
 /**
- * \enum Elements
+ * \enum Element
  * \brief Expected elements of this class according to specs
  * Obstacle: From 2018 specs
+ * \ingroup lcc_commonroad
  */
 enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem};
 
 /**
- * \struct Geo Transformation (2020 only)
- * \brief Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ * \struct GeoTransformation
+ * \brief (2020 only) Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ * \ingroup lcc_commonroad
  */
 struct GeoTransformation 
 {
@@ -116,6 +121,7 @@ struct GeoTransformation
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs
  * Initial values in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct Location 
 {
@@ -134,6 +140,7 @@ struct Location
  * \class CommonRoadScenario
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a commonroad scenario specified in an XML file, which is loaded once and then replaced by more efficient C++ access methods (instead of parsing the XML over and over again)
+ * \ingroup lcc_commonroad
  */
 class CommonRoadScenario : public InterfaceTransform, public InterfaceDraw
 {

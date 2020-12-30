@@ -52,6 +52,7 @@
 /**
  * \enum class LaneletType
  * \brief Stores lanelet type, as in spec
+ * \ingroup lcc_commonroad
  */
 enum class LaneletType {
     Unspecified, Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, Unknown
@@ -60,6 +61,7 @@ enum class LaneletType {
 /**
  * \enum class VehicleType
  * \brief Stores lanelet type, as in spec
+ * \ingroup lcc_commonroad
  */
 enum class VehicleType {
     Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train
@@ -68,6 +70,7 @@ enum class VehicleType {
 /**
  * \enum class DrivingDirection
  * \brief Stores driving direction, used by Adjacent
+ * \ingroup lcc_commonroad
  */
 enum class DrivingDirection {
     Same, Opposite
@@ -76,6 +79,7 @@ enum class DrivingDirection {
 /**
  * \enum class LineMarking
  * \brief Holds all line marking types defined by the specification, used by Bound
+ * \ingroup lcc_commonroad
  */
 enum class LineMarking {
     Dashed, Solid, BroadDashed, BroadSolid
@@ -85,6 +89,7 @@ enum class LineMarking {
  * \struct Adjacent
  * \brief Holds information on adjacent road tiles and their driving direction
  * Initial values in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct Adjacent
 {
@@ -95,6 +100,7 @@ struct Adjacent
 /**
  * \struct Bound
  * \brief Bound of a lanelet, defined by points and marking, e.g. dashed if adjacent to another lanelet
+ * \ingroup lcc_commonroad
  */
 struct Bound
 {
@@ -106,6 +112,7 @@ struct Bound
  * \struct StopLine
  * \brief Defines position of a stop line on the lanelet (w. possible reference to traffic signs etc)
  * Initial value in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct StopLine
 {
@@ -119,6 +126,7 @@ struct StopLine
  * \class Lanelet
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store Lanelets specified in the XML file (segments of a lane, with references to following and adjacent lanes)
+ * \ingroup lcc_commonroad
  */
 class Lanelet : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {

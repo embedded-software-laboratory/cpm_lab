@@ -38,10 +38,11 @@
 #include "commonroad_classes/SpecificationError.hpp"
 
 /**
- * This is a utility namespace
+ * \namespace xml_translation
+ * \brief This is a utility namespace
  * It includes functions that are used for XML Translation throughout the commonroad_classes folder
+ * \ingroup lcc_commonroad
  */
-
 namespace xml_translation
 {
     //**********************************************************************
@@ -53,6 +54,7 @@ namespace xml_translation
      * Then, it gets its content in form of a string
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
      * \return A string containing the content of the TextNode, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::string get_node_text(const xmlpp::Node* node);
 
@@ -61,6 +63,7 @@ namespace xml_translation
      * Then, it gets its content in form of an int, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
      * \return An int containing the content of the TextNode, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     int get_node_int(const xmlpp::Node* node);
 
@@ -69,6 +72,7 @@ namespace xml_translation
      * Then, it gets its content in form of an int, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
      * \return An unsigned long long value containing the content of the TextNode, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     unsigned long long get_node_uint(const xmlpp::Node* node);
 
@@ -77,6 +81,7 @@ namespace xml_translation
      * Then, it gets its content in form of an double, if that is possible, or else 
      * \param node An XML node, assumed to be of type TextNode (which must not be checked by the user)
      * \return A double value containing the content of the TextNode, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     double get_node_double(const xmlpp::Node* node);
 
@@ -87,6 +92,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Pointer to the child node (if it does not exist, returns nullptr)
+     * \ingroup lcc_commonroad
      */
     const xmlpp::Node* get_child_if_exists(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -97,6 +103,7 @@ namespace xml_translation
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \return A string containing the content, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::string get_first_child_text(const xmlpp::Node* node);
 
@@ -107,6 +114,7 @@ namespace xml_translation
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \return An int containing the content, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     int get_first_child_int(const xmlpp::Node* node);
 
@@ -117,6 +125,7 @@ namespace xml_translation
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \return A uint containing the content, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     unsigned long long get_first_child_uint(const xmlpp::Node* node);
 
@@ -127,6 +136,7 @@ namespace xml_translation
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
      * \return A double containing the content, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     double get_first_child_double(const xmlpp::Node* node);
 
@@ -137,6 +147,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<std::string> get_child_child_text(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -147,6 +158,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<int> get_child_child_int(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -157,6 +169,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<unsigned long long> get_child_child_uint(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -167,6 +180,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<double> get_child_child_double(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -178,6 +192,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node of type exact, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<double> get_child_child_double_exact(const xmlpp::Node* node, std::string child_name, bool throw_error = false);
 
@@ -193,6 +208,7 @@ namespace xml_translation
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
      * \return A string containing the content of the Element, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<std::string> get_attribute_text(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
@@ -204,6 +220,7 @@ namespace xml_translation
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
      * \return An int containing the content of the Element, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<int> get_attribute_int(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
@@ -215,6 +232,7 @@ namespace xml_translation
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
      * \return An unsigned long long value containing the content of the Element, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<unsigned long long> get_attribute_uint(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
@@ -226,6 +244,7 @@ namespace xml_translation
      * \param attribute_name Name of the attribute of which to get the value
      * \param throw_error Optional parameter, throw_error / throw error if the attribute does not exists only if desired (it might not be required by specs)
      * \return An double value containing the content of the Element, or an empty optional value, if no error is thrown
+     * \ingroup lcc_commonroad
      */
     std::optional<double> get_attribute_double(const xmlpp::Node* node, std::string attribute_name, bool throw_error = false);
 
@@ -238,6 +257,7 @@ namespace xml_translation
      * Transforms the string to an int, (if desired) if no transformation is possible
      * \param text A string that represents an int value
      * \return The int value of the string, or an empty optional value
+     * \ingroup lcc_commonroad
      */
     std::optional<int> string_to_int(std::string text);
 
@@ -246,6 +266,7 @@ namespace xml_translation
      * Transforms the string to an unsigned long long, (if desired) if no transformation is possible
      * \param text A string that represents an unsigned long long value
      * \return The unsigned long long value of the string, or an empty optional value
+     * \ingroup lcc_commonroad
      */
     std::optional<unsigned long long> string_to_uint(std::string text);
 
@@ -254,6 +275,7 @@ namespace xml_translation
      * Transforms the string to an double, (if desired) if no transformation is possible
      * \param text A string that represents an double value
      * \return The double value of the string, or an empty optional value
+     * \ingroup lcc_commonroad
      */
     std::optional<double> string_to_double(std::string text);
 
@@ -268,6 +290,7 @@ namespace xml_translation
      * \param node An XML node 
      * \param node_function Function that takes a node 
      * \param child_name Expected name of the child node - optional, return all if not set
+     * \ingroup lcc_commonroad
      */
     void iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name);
 
@@ -280,6 +303,7 @@ namespace xml_translation
      * \param node_function Function that takes an attribute
      * \param node_name Expected name of the node
      * \param attribute_name Expected name of the attribute
+     * \ingroup lcc_commonroad
      */
     void iterate_elements_with_attribute(const xmlpp::Node* node, std::function<void (std::string)> attribute_function, std::string node_name, std::string attribute_name);
 }

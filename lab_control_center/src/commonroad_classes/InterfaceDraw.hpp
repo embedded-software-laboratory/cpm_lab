@@ -36,6 +36,7 @@ using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
  * \class InterfaceDraw
  * \brief This interface requires the deriving classes to implement a draw function
  * It is mainly used for clarity, to define common behaviour
+ * \ingroup lcc_commonroad
  */
 class InterfaceDraw
 {

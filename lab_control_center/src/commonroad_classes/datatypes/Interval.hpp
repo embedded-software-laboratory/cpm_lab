@@ -43,6 +43,7 @@
  * \class Interval
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
  * It should also make other classes that use this type more readable.
+ * \ingroup lcc_commonroad
  */
 class Interval : public InterfaceTransform
 {

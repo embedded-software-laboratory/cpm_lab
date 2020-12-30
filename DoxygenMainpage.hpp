@@ -24,6 +24,7 @@
  * You can find out more about the LCC's UI here: \ref lcc_ui
  * 
  * \subsection lcc_commonroad_section LCC Commonroad
+ * You can find out more about the LCC's Commonroad files here: \ref lcc_commonroad
  * 
  * \subsection ips_section IPS
  * 
@@ -60,5 +61,12 @@
 /**
  * \defgroup lcc_ui
  * These files are part of the LCC UI files. The LCC is a graphical program for simulation and control within the Lab.
+ * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
+ */
+
+/**
+ * \defgroup lcc_commonroad
+ * These files are part of the LCC Commonroad files, for parsing and displaying commonroad data. (Except for some additional classes in LCC UI)
+ * The LCC is a graphical program for simulation and control within the Lab.
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
  */

@@ -26,6 +26,11 @@
 
 #include "PlanningProblem.hpp"
 
+/**
+ * \file PlanningProblem.cpp
+ * \ingroup lcc_commonroad
+ */
+
 PlanningProblem::PlanningProblem(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,

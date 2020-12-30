@@ -9,13 +9,17 @@
 #include "CommonroadObstacle.hpp"
 
 /**
- * The structs defined in this class are used by StaticObstacle and DynamicObstacle to summarize all data relevant for a simulation in one object which can then be easily used by the obstacle simulation
+ * \file ObstacleSimulationData.hpp
+ * \brief The structs defined in this class are used by StaticObstacle and DynamicObstacle to summarize all data relevant for 
+ * a simulation in one object which can then be easily used by the obstacle simulation
+ * \ingroup lcc_commonroad
  */
 
 /**
- * \struct CommonTrajectoryPoint
+ * \struct ObstacleSimulationSegment
  * \brief This class is used as a part of the return type for the trajectory getter
  * It allows to conveniently store all relevant information of each CommonTrajectoryPoint
+ * \ingroup lcc_commonroad
  */
 struct ObstacleSimulationSegment
 {
@@ -32,9 +36,10 @@ struct ObstacleSimulationSegment
 };
 
 /**
- * \struct CommonroadTrajectory
+ * \struct ObstacleSimulationData
  * \brief This class is used as a return type for the trajectory getter
  * It allows to conveniently store all relevant information of the dynamic obstacle
+ * \ingroup lcc_commonroad
  */
 struct ObstacleSimulationData
 {

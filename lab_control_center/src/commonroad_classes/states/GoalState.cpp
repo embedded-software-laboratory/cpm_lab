@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/GoalState.hpp"
 
+/**
+ * \file GoalState.cpp
+ * \ingroup lcc_commonroad
+ */
+
 GoalState::GoalState(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,

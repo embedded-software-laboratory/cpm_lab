@@ -62,6 +62,7 @@
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic
  * Nonetheless, we should only use the dynamic types here, also according to 2018 specs (We throw an error if a wrong (static) type is used)
  * We do not need to store "role", as we already have two different classes for that
+ * \ingroup lcc_commonroad
  */
 enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
 
@@ -69,6 +70,7 @@ enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, P
  * \class DynamicObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a DynamicObstacle specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class DynamicObstacle : public InterfaceTransform,public InterfaceTransformTime
 {

@@ -29,6 +29,7 @@
 /**
  * \class InterfaceTransformTime
  * \brief This interface requires the deriving classes to implement a transform function for timing
+ * \ingroup lcc_commonroad
  */
 class InterfaceTransformTime
 {
