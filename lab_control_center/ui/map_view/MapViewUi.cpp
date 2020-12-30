@@ -32,6 +32,11 @@
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
 
+/**
+ * \file MapViewUi.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(

@@ -43,6 +43,11 @@
 #include <sstream>
 #include <functional>
 
+/**
+ * \class ParamViewUI
+ * \brief UI class of the LCC to show and change / delete parameters that are sent to other participants via DDS (mostly for initialization)
+ * \ingroup lcc_ui
+ */
 class ParamViewUI {
 private:
     //Storage for all parameters

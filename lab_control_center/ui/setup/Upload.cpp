@@ -26,6 +26,11 @@
 
 #include "Upload.hpp"
 
+/**
+ * \file Upload.cpp
+ * \ingroup lcc_ui
+ */
+
 Upload::Upload(
         std::function<std::vector<uint8_t>()> _get_hlc_ids,
         std::shared_ptr<Deploy> _deploy_functions,

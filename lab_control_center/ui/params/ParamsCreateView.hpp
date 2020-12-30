@@ -44,7 +44,8 @@
 #define MAX_UINT64_SYMBOL (18446744073709551615ull)
 
 /**
- * \brief This class creates a window where params can be changed, deleted or created
+ * \brief LCC UI class that creates a window where params can be changed, deleted or created
+ * \ingroup lcc_ui
  */
 class ParamsCreateView {
 private:

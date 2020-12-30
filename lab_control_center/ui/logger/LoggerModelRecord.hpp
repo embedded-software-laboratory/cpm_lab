@@ -29,6 +29,11 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+/**
+ * \class LoggerModelRecord
+ * \brief A GTK Tree...Record for storing log ID, content and timestamp
+ * \ingroup lcc_ui
+ */
 class LoggerModelRecord : public Gtk::TreeModelColumnRecord {
 public:
   LoggerModelRecord() { 

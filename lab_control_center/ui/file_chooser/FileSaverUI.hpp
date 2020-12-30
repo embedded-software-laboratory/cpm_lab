@@ -39,6 +39,11 @@
 #include <string>
 #include <vector>
 
+/**
+ * \class FileSaverUI
+ * \brief A UI class for a file saver dialog
+ * \ingroup lcc_ui
+ */
 class FileSaverUI {
 private:
     Glib::RefPtr<Gtk::Builder> params_create_builder;

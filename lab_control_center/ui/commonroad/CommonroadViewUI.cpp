@@ -26,6 +26,11 @@
 
 #include "CommonroadViewUI.hpp"
 
+/**
+ * \file CommonroadViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 CommonroadViewUI::CommonroadViewUI
     (
     std::shared_ptr<CommonRoadScenario> _commonroad_scenario,

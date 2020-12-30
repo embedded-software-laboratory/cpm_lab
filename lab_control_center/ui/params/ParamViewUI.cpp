@@ -26,6 +26,11 @@
 
 #include "ParamViewUI.hpp"
 
+/**
+ * \file ParamViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, int _float_precision) :
     parameter_storage(_parameter_storage),
     float_precision(_float_precision)

@@ -48,6 +48,11 @@ using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 
+/**
+ * \class MapViewUi
+ * \brief UI class for showing the map view of the LCC, including vehicles, map, trajectories and visualization commands
+ * \ingroup lcc_ui
+ */
 class MapViewUi
 {
     shared_ptr<TrajectoryCommand> trajectoryCommand;

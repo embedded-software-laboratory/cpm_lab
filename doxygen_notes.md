@@ -11,6 +11,8 @@ USE_MDFILE_AS_MAINPAGE can also be used instead of the current DoxygenMainpage.h
 
 I used EXCLUDE to exclude bcm2835.h, as it contains its own mainpage
 
+SORT_BRIEF_DOCS was set to YES by me - even though this also changes the class list, it is irritating to see functions in a group overview in a non-alphabetical order, so I changed that
+
 Graphviz needs to be installed as well
 (so: apt install doxygen graphviz)
 

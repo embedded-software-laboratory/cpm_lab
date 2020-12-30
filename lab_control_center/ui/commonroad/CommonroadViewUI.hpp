@@ -52,6 +52,7 @@
 /**
  * \brief This UI class is responsible for the Commonroad Tab in the LCC
  * It is used to load a commonroad file (and resize / transform it, if necessary)
+ * \ingroup lcc_ui
  */
 class CommonroadViewUI
 {

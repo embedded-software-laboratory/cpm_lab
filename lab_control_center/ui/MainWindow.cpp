@@ -26,6 +26,11 @@
 
 #include "MainWindow.hpp"
 
+/**
+ * \file MainWindow.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 MainWindow::MainWindow(

@@ -37,6 +37,11 @@
 #include "ui/file_chooser/FileSaverUI.hpp"
 
 
+/**
+ * \class MainWindow
+ * \brief LCC UI "top" class that contains all other UI elements
+ * \ingroup lcc_ui
+ */
 class MainWindow
 {
 private:

@@ -68,6 +68,8 @@
  * It is used to 
  * 1) Set the variables required to start a local / distributed lab run, e.g. selection of a script + parameters, usage of the IPS in lab mode etc
  * 2) Run the selected script + vehicles (real and simulated possible) either on the current machine or on the lab's HLCs
+ * 3) Reboot real vehicles
+ * \ingroup lcc_ui
  */
 class SetupViewUI
 {

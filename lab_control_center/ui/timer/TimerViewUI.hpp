@@ -55,6 +55,12 @@
 
 #include "ui/setup/CrashChecker.hpp"
 
+/**
+ * \class TimerViewUI
+ * \brief LCC UI class that shows the timer (simulated or real) and allows to start / stop / restart it. 
+ * All currently online participants that use the timer are shown as well
+ * \ingroup lcc_ui
+ */
 class TimerViewUI {
 private:
     Glib::RefPtr<Gtk::Builder> ui_builder;

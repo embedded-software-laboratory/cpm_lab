@@ -3,6 +3,11 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+/**
+ * \class ProblemModelRecord
+ * \brief A GTK Tree...Record to store a planning problem ID, goal speed and goal time
+ * \ingroup lcc_ui
+ */
 class ProblemModelRecord : public Gtk::TreeModelColumnRecord {
 public:
   ProblemModelRecord() {

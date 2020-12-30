@@ -36,6 +36,7 @@
 /**
  * \brief This window shows a message during the upload process to the HLCs
  * Important: This window is also shown when no upload is taking place, to tell the user that the upload failed because their vehicle choice / the HLC count was zero
+ * \ingroup lcc_ui
  */
 class UploadWindow {
 private:

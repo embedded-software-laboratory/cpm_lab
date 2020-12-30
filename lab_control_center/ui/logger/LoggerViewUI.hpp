@@ -54,8 +54,9 @@
 #include "src/LogStorage.hpp"
 
 /**
- * \brief Class for the Logs Tab in the LCC. Show most recent logs (->max_log_amount), is connected to LogStorage & allows for search in more than most_recent_logs
+ * \brief UI Class for the Logs Tab in the LCC. Show most recent logs (->max_log_amount), is connected to LogStorage & allows for search in more than most_recent_logs
  * using Regex, allows to set the log_level for the whole domain
+ * \ingroup lcc_ui
  */
 class LoggerViewUI {
 private:

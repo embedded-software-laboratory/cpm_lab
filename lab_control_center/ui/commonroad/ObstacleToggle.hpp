@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \brief This class contains all UI elements that control the desired setup state for one obstacle.
- * This allows for less redundant UI code.
- */
-
 #include <cassert>
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -39,6 +34,11 @@
 #include <iostream>
 #include <sstream>
 
+/**
+ * \brief This class contains all UI elements that control the desired setup state for one obstacle.
+ * This allows for less redundant UI code.
+ * \ingroup lcc_ui
+ */
 class ObstacleToggle 
 {
 public:

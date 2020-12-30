@@ -21,8 +21,8 @@
 #include "LCCErrorLogger.hpp"
 
 /**
- * \brief Class for the Logs Tab in the LCC. Show most recent logs (->max_log_amount), is connected to LogStorage & allows for search in more than most_recent_logs
- * using Regex, allows to set the log_level for the whole domain
+ * \brief UI Class for the internal Errors that occured within the LCC, mostly Commonroad-related, that do not lead to crashes and are shown to the user
+ * \ingroup lcc_ui
  */
 class LCCErrorViewUI {
 private:

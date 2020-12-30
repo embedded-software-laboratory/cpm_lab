@@ -26,6 +26,11 @@
 
 #include "FileChooserUI.hpp"
 
+/**
+ * \file FileChooserUI.cpp
+ * \ingroup lcc_ui
+ */
+
 //Init static previous_file
 const std::string FileChooserUI::default_load_path = "../high_level_controller/examples/cpp/central_routing/build/central_routing";
 

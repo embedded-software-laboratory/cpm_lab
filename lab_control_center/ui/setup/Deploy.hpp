@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \brief Namespace for deploy / kill templates (bash commands)
- * Was removed from SetupViewUI because this function should in our opinion not be responsible for these actions
- */
-
 #include <atomic>
 #include <array>
 #include <cassert>
@@ -58,6 +53,7 @@
 
 /**
  * \brief This class is responsible for managing deployment of HLC and vehicle scripts / programs and other participants that are launched from the LCC
+ * \ingroup lcc_ui
  */
 class Deploy 
 {

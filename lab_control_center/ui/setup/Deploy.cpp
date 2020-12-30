@@ -26,6 +26,11 @@
 
 #include "Deploy.hpp"
 
+/**
+ * \file Deploy.cpp
+ * \ingroup lcc_ui
+ */
+
 Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle) :
     cmd_domain_id(_cmd_domain_id),
     cmd_dds_initial_peer(_cmd_dds_initial_peer),

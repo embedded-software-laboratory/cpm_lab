@@ -31,7 +31,11 @@
 #include "VehicleManualControl.hpp"
 
 
-
+/**
+ * \class VehicleManualControlUi
+ * \brief UI class for controlling the vehicle manually (choose vehicle, use Joystick / Gamepad)
+ * \ingroup lcc_ui
+ */
 class VehicleManualControlUi
 {
     Glib::RefPtr<Gtk::Builder> builder;

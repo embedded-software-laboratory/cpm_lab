@@ -29,6 +29,11 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 
+/**
+ * \class ParamModelRecord
+ * \brief A LCC UI GTK Tree...Record for storing the name, type, value and additional information of a parameter
+ * \ingroup lcc_ui
+ */
 class ParamModelRecord : public Gtk::TreeModelColumnRecord {
 public:
   ParamModelRecord() { 

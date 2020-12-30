@@ -55,6 +55,7 @@
 /**
  * \brief This class is responsible for checking if background tasks that are supposed to be running are still running - else, a warning is displayed
  * It also reports wrong script/program locations set in the LCC for the main script
+ * \ingroup lcc_ui
  */
 class CrashChecker
 {

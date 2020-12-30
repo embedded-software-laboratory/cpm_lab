@@ -39,6 +39,11 @@
 #include "ui/lcc_errors/LCCErrorViewUI.hpp"
 #include "ui/setup/SetupViewUI.hpp"
 
+/**
+ * \class TabsViewUI
+ * \brief LCC UI class for tabs on the right side, which hold most of the pages of the UI, e.g. params, commonroad or the timer
+ * \ingroup lcc_ui
+ */
 class TabsViewUI {
 private:
     Glib::RefPtr<Gtk::Builder> tabs_builder;

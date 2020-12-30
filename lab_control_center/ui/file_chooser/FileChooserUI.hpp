@@ -40,6 +40,11 @@
 #include <string>
 #include <vector>
 
+/**
+ * \class FileChooserUI
+ * \brief A UI class for a file chooser dialog
+ * \ingroup lcc_ui
+ */
 class FileChooserUI {
 public:
     //Filter struct for defining Filters for the file chooser dialog (such as: only show files of type .m, .exe etc...)

@@ -26,11 +26,6 @@
 
 #pragma once
 
-/**
- * \brief This class contains all UI elements that control the desired setup state for one vehicle.
- * This allows for less redundant UI code.
- */
-
 #include <cassert>
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -42,6 +37,11 @@
 #include <sstream>
 #include <thread>
 
+/**
+ * \brief This class contains all UI elements that control the desired setup state for one vehicle (to turn it off, start it or reboot a real vehicle)
+ * This allows for less redundant UI code.
+ * \ingroup lcc_ui
+ */
 class VehicleToggle 
 {
 public:

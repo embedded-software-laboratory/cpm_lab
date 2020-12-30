@@ -26,6 +26,11 @@
 
 #include "ParamsCreateView.hpp"
 
+/**
+ * \file ParamsCreateView.cpp
+ * \ingroup lcc_ui
+ */
+
 ParamsCreateView::ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),

@@ -52,6 +52,12 @@
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
 
+/**
+ * \class MonitoringUi
+ * \brief UI class for the monitoring part on the bottom of the LCC's UI, below the map view. Shows detailed vehicle information (i.e. battery etc.), RTT info, 
+ * currently connected NUCs, reboot options for the NUCs
+ * \ingroup lcc_ui
+ */
 class MonitoringUi
 {
 public:
