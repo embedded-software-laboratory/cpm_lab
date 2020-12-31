@@ -36,6 +36,7 @@
  * You can find out more about the Vehicle files here: \ref vehicle
  * 
  * \subsection autostart_section Autostart
+ * You can find out more about the Autostart files here: \ref autostart
  */
 
 //Namespace definitions
@@ -111,4 +112,19 @@
  * The vehicle also uses the Broadcom library, which is described here: \ref broadcom_page
  * 
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle
+ */
+
+/**
+ * \defgroup autostart
+ * This program is supposed to be set up as an autostart program for the HLC.
+ * 
+ * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
+ */
+
+/**
+ * \defgroup error_logger
+ * \ingroup autostart
+ * This program is also used in context with autostart, which is supposed to be set up as an autostart program for the HLC.
+ * 
+ * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
  */

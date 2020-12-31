@@ -24,13 +24,6 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/**
- * \file main.cpp
- * \brief This file includes a mechanism for a NUC to tell the LCC that an error occured (not all files are there that should have been published by the master PC)
- * -> This software is compiled "self-contained", it includes the cpm library (static linking) rather than linking to it dynamically
- * -> This software already should be installed on the NUCs, in the same folder as lab_autostart.bash 
- */
-
 #include <experimental/filesystem>
 #include <functional>
 #include <memory>
@@ -52,11 +45,23 @@
 #include <ifaddrs.h>
 #include <stdio.h>
 
+/**
+ * \brief This function uses C++'s filesystem library to check if a file exists
+ * \ingroup error_logger
+ */
 bool file_exists(const std::string &filename)
 {
     return std::experimental::filesystem::exists(filename.c_str());
 }
 
+/**
+ * \brief Main function of the error logger that checks for missing autostart-related files on the NUC
+ * 
+ * This file includes a mechanism for a NUC to tell the LCC that an error occured (not all files are there that should have been published by the master PC)
+ * -> This software is compiled "self-contained", it includes the cpm library (static linking) rather than linking to it dynamically
+ * -> This software already should be installed on the NUCs, in the same folder as lab_autostart.bash 
+ * \ingroup error_logger
+ */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);

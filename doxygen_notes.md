@@ -2,7 +2,7 @@ Settings:
 
 INPUT
 RECURSIVE
-FILE_PATTERNS
+FILE_PATTERNS (added .bash)
 GENERATE_TREEVIEW
 
 Set EXTRACT_ALL to YES if you want undocumented files to appear in the documentation as well
@@ -16,8 +16,11 @@ SORT_BRIEF_DOCS was set to YES by me - even though this also changes the class l
 Graphviz needs to be installed as well
 (so: apt install doxygen graphviz)
 
+The file output is set to ../doxygen, maybe the folder must be generated first (~/dev/doxygen)
+
 TODO: Use \brief more often, add definitions for modules for LCC UI, Commonroad, IPS etc.
 - LCC Labcam korrekt dokumentieren (zurzeit: Nur Gerüst)
 - IPS korrekt dokumentieren (zurzeit: Nur Gerüst)
 - In IPS: Main functions entweder nicht dokumentieren oder anders benennen (Doxygen kann nicht mit gleichen Funktionsnamen umgehen)
 - Vehicle korrekt dokumentieren (zurzeit: Nur Gerüst)
+- Further .bash files? 
