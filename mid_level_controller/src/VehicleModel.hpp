@@ -28,6 +28,11 @@
 #include <vector>
 #include <cmath>
 
+/**
+ * \class VehicleModel
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class VehicleModel
 {
     public:

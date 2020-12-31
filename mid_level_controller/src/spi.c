@@ -33,6 +33,11 @@
 #include "spi.h"
 #include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 
+/**
+ * \file spi.c
+ * \ingroup vehicle
+ */
+
 static bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
     uint16_t mosi_CRC = spi_miso_data.CRC;
     spi_miso_data.CRC = 0;

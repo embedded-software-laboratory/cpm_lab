@@ -27,6 +27,11 @@
 #include "DetectVehicleID.hpp"
 #include <iostream>
 
+/**
+ * \file DetectVehicleID.cpp
+ * \ingroup ips
+ */
+
 DetectVehicleID::DetectVehicleID(
     std::vector<uint8_t> _identification_LED_period_ticks,
     std::vector<uint8_t> _identification_LED_enabled_ticks

@@ -33,6 +33,11 @@ using std::vector;
 #define VEHICLE_HALF_LENGTH (0.11)
 #define VEHICLE_HALF_WIDTH (0.054)
 
+/**
+ * \struct PathNode
+ * \brief TODO
+ * \ingroup vehicle
+ */
 struct PathNode
 {
     double x;
@@ -44,6 +49,10 @@ struct PathNode
     :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
 };
 
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
 static inline double min_distance_vehicle_to_points
 (
     PathNode vehicle,
@@ -68,7 +77,10 @@ static inline double min_distance_vehicle_to_points
     return min_distance;
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
 static inline double min_distance_vehicle_to_vehicle(PathNode vehicleA, PathNode vehicleB)
 {
     const vector<double> cornersA_x

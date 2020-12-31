@@ -30,6 +30,11 @@
 #include "cpm/Logging.hpp"
 #include "types.hpp"
 
+/**
+ * \class DetectVehicleID
+ * \brief TODO
+ * \ingroup ips
+ */
 class DetectVehicleID
 {
     const std::vector<uint8_t> identification_LED_period_ticks;

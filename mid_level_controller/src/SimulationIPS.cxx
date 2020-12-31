@@ -30,6 +30,11 @@
 #include <stdlib.h>
 #include <cmath>
 
+/**
+ * \file SimulationIPS.cxx
+ * \ingroup vehicle
+ */
+
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 static inline double frand_sym() { return frand()*2-1; }

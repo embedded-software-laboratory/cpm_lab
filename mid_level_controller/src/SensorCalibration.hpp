@@ -33,6 +33,11 @@ extern "C" {
 #include "spi.h"
 }
 
+/**
+ * \class SensorCalibration
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class SensorCalibration {
 
 public:

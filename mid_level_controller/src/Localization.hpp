@@ -30,6 +30,11 @@
 #include "VehicleObservation.hpp"
 #include <cassert>
 
+/**
+ * \struct LocalizationState
+ * \brief TODO
+ * \ingroup vehicle
+ */
 struct LocalizationState
 {
     uint64_t t = 0;
@@ -42,6 +47,11 @@ struct LocalizationState
 
 #define LOCALIZATION_BUFFER_SIZE (512)
 
+/**
+ * \class Localization
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class Localization
 {
     /*

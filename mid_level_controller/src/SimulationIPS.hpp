@@ -30,6 +30,11 @@
 #include <list>
 #include <string>
 
+/**
+ * \class SimulationIPS
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class SimulationIPS
 {
     cpm::Writer<VehicleObservation> writer_vehicleObservation;

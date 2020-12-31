@@ -33,6 +33,11 @@
 #include <opencv2/core.hpp>
 #include "cpm/Logging.hpp"
 
+/**
+ * \class DetectVehicles
+ * \brief TODO
+ * \ingroup ips
+ */
 class DetectVehicles
 {
 public:

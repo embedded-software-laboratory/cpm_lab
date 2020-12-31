@@ -18,3 +18,6 @@ Graphviz needs to be installed as well
 
 TODO: Use \brief more often, add definitions for modules for LCC UI, Commonroad, IPS etc.
 - LCC Labcam korrekt dokumentieren (zurzeit: Nur Gerüst)
+- IPS korrekt dokumentieren (zurzeit: Nur Gerüst)
+- In IPS: Main functions entweder nicht dokumentieren oder anders benennen (Doxygen kann nicht mit gleichen Funktionsnamen umgehen)
+- Vehicle korrekt dokumentieren (zurzeit: Nur Gerüst)

@@ -30,14 +30,22 @@
 #include <cstdint>
 #include <opencv2/core.hpp>
 
-
+/**
+ * \struct FloorPoints
+ * \brief TODO
+ * \ingroup ips
+ */
 struct FloorPoints
 {
     uint64_t timestamp;
     std::vector<cv::Point2d> points; // LED points in floor coordinates (meters)
 };
 
-
+/**
+ * \struct VehiclePointSet
+ * \brief TODO
+ * \ingroup ips
+ */
 struct VehiclePointSet
 {
     int id = 0;
@@ -49,6 +57,11 @@ struct VehiclePointSet
     cv::Point2d back_right;
 };
 
+/**
+ * \struct VehiclePoints
+ * \brief TODO
+ * \ingroup ips
+ */
 struct VehiclePoints
 {
     uint64_t timestamp;

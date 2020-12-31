@@ -26,6 +26,11 @@
 
 #include "DetectVehicles.hpp"
 
+/**
+ * \file DetectVehicles.cpp
+ * \ingroup ips
+ */
+
 static inline double length(cv::Point2d p)
 {
     return sqrt(p.dot(p));

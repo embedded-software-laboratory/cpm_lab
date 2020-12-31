@@ -29,6 +29,11 @@
 
 #define N_POSE_CALIBRATION_TERMS (5)
 
+/**
+ * \file PoseCalculation.cpp
+ * \ingroup ips
+ */
+
 
 PoseCalculation::PoseCalculation()
 :calibration_px({1.0033,     0.0,   0.0792,      0.0,     0.0})

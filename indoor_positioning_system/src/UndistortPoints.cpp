@@ -27,6 +27,10 @@
 #include "UndistortPoints.hpp"
 #include <cassert>
 
+/**
+ * \file UndistortPoints.cpp
+ * \ingroup ips
+ */
 
 #define N_CALIBRATION_TERMS (15)
 

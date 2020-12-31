@@ -47,6 +47,11 @@ extern "C" {
 
 #define TRAJECTORY_TRACKING_STATISTICS_BUFFER_SIZE 1500
 
+/**
+ * \enum ControllerState
+ * \brief TODO
+ * \ingroup vehicle
+ */
 enum class ControllerState
 {
     Stop,
@@ -55,6 +60,11 @@ enum class ControllerState
     Trajectory
 };
 
+/**
+ * \class Controller
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class Controller
 {
     MpcController mpcController;

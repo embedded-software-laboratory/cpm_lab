@@ -29,6 +29,11 @@
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
 
+/**
+ * \file Controller.cxx
+ * \ingroup vehicle
+ */
+
 using namespace std::placeholders;
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)

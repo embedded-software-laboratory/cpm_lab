@@ -28,6 +28,11 @@
 #include "types.hpp"
 #include "VehicleObservation.hpp"
 
+/**
+ * \class PoseCalculation
+ * \brief TODO
+ * \ingroup ips
+ */
 class PoseCalculation
 {
     std::vector<double> calibration_px;

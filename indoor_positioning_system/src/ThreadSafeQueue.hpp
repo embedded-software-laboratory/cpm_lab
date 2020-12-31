@@ -30,6 +30,11 @@
 #include <mutex>
 #include <queue>
 
+/**
+ * \class ThreadSafeQueue
+ * \brief TODO
+ * \ingroup ips
+ */
 template <typename T>
 class ThreadSafeQueue
 {

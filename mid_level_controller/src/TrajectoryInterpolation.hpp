@@ -28,6 +28,11 @@
 
 #include "VehicleCommandTrajectory.hpp"
 
+/**
+ * \struct TrajectoryInterpolation
+ * \brief TODO
+ * \ingroup vehicle
+ */
 struct TrajectoryInterpolation {
 
     double t_now;

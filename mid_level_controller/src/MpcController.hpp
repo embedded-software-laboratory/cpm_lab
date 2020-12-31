@@ -47,7 +47,11 @@
 
 #define MPC_DELAY_COMPENSATION_STEPS (3)
 
-
+/**
+ * \class MpcController
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class MpcController
 {
     cpm::Writer<Visualization> writer_Visualization;

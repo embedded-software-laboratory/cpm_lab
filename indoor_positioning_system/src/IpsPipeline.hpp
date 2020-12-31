@@ -36,6 +36,11 @@
 #include <thread>
 #include "cpm/Writer.hpp"
 
+/**
+ * \struct IpsVisualizationInput
+ * \brief TODO
+ * \ingroup ips
+ */
 struct IpsVisualizationInput
 {
     VehiclePoints identifiedVehicles;
@@ -44,6 +49,11 @@ struct IpsVisualizationInput
     VehiclePoints vehiclePoints;
 };
 
+/**
+ * \class IpsPipeline
+ * \brief TODO
+ * \ingroup ips
+ */
 class IpsPipeline
 {
     cpm::Writer<VehicleObservation> writer_vehicleObservation;

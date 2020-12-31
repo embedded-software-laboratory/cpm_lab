@@ -51,6 +51,11 @@ extern "C" {
 
 static inline double frand() { return (double(rand()))/RAND_MAX; }
 
+/**
+ * \class SimulationVehicle
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class SimulationVehicle
 {
     // TODO load parameters via DDS parameters

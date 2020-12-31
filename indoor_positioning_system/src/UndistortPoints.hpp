@@ -28,6 +28,11 @@
 #include "types.hpp"
 #include "LedPoints.hpp"
 
+/**
+ * \class UndistortPoints
+ * \brief TODO
+ * \ingroup ips
+ */
 class UndistortPoints
 {
 
