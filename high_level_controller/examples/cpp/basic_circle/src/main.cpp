@@ -41,7 +41,10 @@ using std::vector;
  */
 
 
-
+/**
+ * \brief TODO
+ * \ingroup basic_line
+ */
 int main(int argc, char *argv[])
 {
     //Initialize cpm library

@@ -24,3 +24,4 @@ TODO: Use \brief more often, add definitions for modules for LCC UI, Commonroad,
 - In IPS: Main functions entweder nicht dokumentieren oder anders benennen (Doxygen kann nicht mit gleichen Funktionsnamen umgehen)
 - Vehicle korrekt dokumentieren (zurzeit: Nur Gerüst)
 - Further .bash files? 
+- Should I include the cpp examples as well?

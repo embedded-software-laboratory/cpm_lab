@@ -825,6 +825,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ./cpm_lib/ \
                          ./high_level_controller/autostart/ \
+                         ./high_level_controller/examples/ \
                          ./indoor_positioning_system/ \
                          ./lab_control_center/ \
                          ./low_level_controller \

@@ -35,6 +35,14 @@
  * \subsection vehicle_section Vehicle
  * You can find out more about the Vehicle files here: \ref vehicle
  * 
+ * Furthermore, the vehicle's low-level ATMEGA implementation part can be found here: \ref low_level_controller
+ * 
+ * \subsection tools_section Additional tools
+ * Additional tools e.g. for camera calibration can be found in \ref tools
+ * 
+ * \subsection examples_section HLC Examples
+ * HLC example programs, additional information can be found in \ref examples
+ * 
  * \subsection autostart_section Autostart
  * You can find out more about the Autostart files here: \ref autostart
  */
@@ -43,6 +51,25 @@
 /**
  * \namespace cpm
  * \brief A namespace that contains all cpm lib functions and classes. See \ref cpmlib.
+ */
+
+//Folder definitions
+/**
+ * \dir ./low_level_controller
+ * \brief Folder that contains the low level controller software for the real vehicle's ATMEGA
+ * \ingroup low_level_controller
+ */
+
+/**
+ * \dir ./tools
+ * \brief Folder that contains additional Lab Tools
+ * \ingroup tools
+ */
+
+/**
+ * \dir ./high_level_controller/examples
+ * \brief Folder that contains examples for HLC programs
+ * \ingroup examples
  */
 
 // Group definitions
@@ -112,6 +139,7 @@
  * The vehicle also uses the Broadcom library, which is described here: \ref broadcom_page
  * 
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle
+ * and in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup
  */
 
 /**
@@ -127,4 +155,28 @@
  * This program is also used in context with autostart, which is supposed to be set up as an autostart program for the HLC.
  * 
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
+ */
+
+/**
+ * \defgroup low_level_controller
+ * These files are to be used on the real vehicle's ATMEGA, see https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup
+ */
+
+/**
+ * \defgroup tools
+ * These files are additional tools to be used in the Lab.
+ */
+
+/**
+ * \defgroup examples
+ * These files are example files for High Level Controllers that control one or more vehicle(s).
+ * 
+ * The programs can be very simple, e.g. making a vehicle drive a circle, or include more logic, i.e. to let multiple vehicles
+ * drive more complex trajectories while avoiding collisions.
+ */
+
+/**
+ * \defgroup basic_line
+ * \ingroup examples
+ * This is a basic line-following program for a vehicle.
  */
