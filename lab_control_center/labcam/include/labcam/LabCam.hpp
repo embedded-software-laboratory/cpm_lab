@@ -30,6 +30,11 @@
 #include "CInstantCameraAppSrc.h"
 #include <gst/gst.h>
 
+
+/**
+ * \brief TODO
+ * \ingroup lcc_labcam
+ */
 class LabCam {
 	public:
 		typedef enum {

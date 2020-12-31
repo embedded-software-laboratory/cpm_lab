@@ -30,6 +30,10 @@
 
 class LabCam;
 
+/**
+ * \brief TODO
+ * \ingroup lcc_labcam
+ */
 class LabCamIface {
 	private:
 		LabCam* impl_;

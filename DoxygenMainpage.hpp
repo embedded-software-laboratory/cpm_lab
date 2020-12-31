@@ -26,6 +26,9 @@
  * \subsection lcc_commonroad_section LCC Commonroad
  * You can find out more about the LCC's Commonroad files here: \ref lcc_commonroad
  * 
+ * \subsection lcc_labcam_section LCC Labcam
+ * You can find out more about the LCC's Labcam files here: \ref lcc_labcam
+ * 
  * \subsection ips_section IPS
  * 
  * \subsection vehicle_section Vehicle
@@ -67,6 +70,16 @@
 /**
  * \defgroup lcc_commonroad
  * These files are part of the LCC Commonroad files, for parsing and displaying commonroad data. (Except for some additional classes in LCC UI)
+ * The LCC is a graphical program for simulation and control within the Lab.
+ * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
+ */
+
+/**
+ * \defgroup lcc_labcam
+ * These files are part of the LCC Labcam files, for using the cam in the lab (if it is not used in simulated mode).
+ * 
+ * There is a Readme for setup: \ref LabcamReadme
+ * 
  * The LCC is a graphical program for simulation and control within the Lab.
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
  */
