@@ -54,7 +54,7 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum class ObstacleTypeStatic
+ * \enum ObstacleTypeStatic
  * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic - Throw an error in case of wrong (dynamic) types if role was set to static
  * We do not need to store "role", as we already have two different classes for that

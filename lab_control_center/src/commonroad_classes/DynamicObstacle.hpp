@@ -57,7 +57,7 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum class ObstacleTypeDynamic
+ * \enum ObstacleTypeDynamic
  * \brief Specifies dynamic obstacle types, as in commonroad, NotInSpec for types that should not exist
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic
  * Nonetheless, we should only use the dynamic types here, also according to 2018 specs (We throw an error if a wrong (static) type is used)

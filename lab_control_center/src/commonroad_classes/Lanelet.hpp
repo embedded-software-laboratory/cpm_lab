@@ -50,7 +50,7 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum class LaneletType
+ * \enum LaneletType
  * \brief Stores lanelet type, as in spec
  * \ingroup lcc_commonroad
  */
@@ -59,7 +59,7 @@ enum class LaneletType {
 };
 
 /**
- * \enum class VehicleType
+ * \enum VehicleType
  * \brief Stores lanelet type, as in spec
  * \ingroup lcc_commonroad
  */
@@ -68,7 +68,7 @@ enum class VehicleType {
 };
 
 /**
- * \enum class DrivingDirection
+ * \enum DrivingDirection
  * \brief Stores driving direction, used by Adjacent
  * \ingroup lcc_commonroad
  */
@@ -77,7 +77,7 @@ enum class DrivingDirection {
 };
 
 /**
- * \enum class LineMarking
+ * \enum LineMarking
  * \brief Holds all line marking types defined by the specification, used by Bound
  * \ingroup lcc_commonroad
  */
