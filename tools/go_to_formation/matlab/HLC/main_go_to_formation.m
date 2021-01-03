@@ -109,14 +109,14 @@ function main_go_to_formation(varargin)
 
             disp('Waiting for data');
             sample = VehicleStateList;
-            [sample, ~, ~, ~] = stateReader.take();
+            [sample, ~, ~, ~] = stateReader.take(sample);
             t_old = sample.t_now;
             isSampleValid = false;
             
             % Check if current sample contains data of all vehicles.
             % If not take new sample until data of all vehicles have been received.
             while ~isSampleValid
-                [sample, ~, ~,~] = stateReader.take();
+                [sample, ~, ~,~] = stateReader.take(sample);
                 if sample.t_now > t_old  
                     isSampleValid = true;
                     for nVehicles = 1:length(vehicle_ids)
@@ -128,7 +128,8 @@ function main_go_to_formation(varargin)
             end
             
             % Set up static inputs for path planning task.
-            startPoses = readPoses(sample.vehicle_observation_list);            
+            startPoses = readPoses(sample.vehicle_observation_list);  
+            save('test_poses.mat', 'sample')
             allHomePoses = homePosesFixed;
             goalPoses = startPoses;
             vehicleList = fields(startPoses);
@@ -181,7 +182,7 @@ function main_go_to_formation(varargin)
 
                     trajectory_points = pathToTrajectory(refPath, speed);
 
-                    [sample, ~, ~, ~] = stateReader.take();
+                    [sample, ~, ~, ~] = stateReader.take(sample);
 
                     t_start = sample.t_now;
                     vehicle_name = strsplit(vehicleList{nVehicles}, '_');
