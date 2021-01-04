@@ -1,4 +1,4 @@
-function [map] = setOccMap(vehicleList, vehiclePoses, egoVehicle)
+function [map] = setOccMap(vehiclePoses, egoVehicleId)
 
 mapX = 4.5;
 mapY = 4.0;
@@ -16,33 +16,46 @@ vehicleHalfWidth = vehicleWidth/2;
 
 % calculate corners of vehicle
 occval = 1;
-corners = struct;
+corners = struct('corners_x', zeros(4,1), 'corners_y', zeros(4,1));
+isVehicleDeployed = true;
+maxNoVehicles = 20;
+midpoints = zeros(1,20);
 
-for nVehicles = 1:length(vehicleList)
- 
-    if vehicleList{nVehicles} == egoVehicle
+for nVehicles = 1:maxNoVehicles
+    
+    % All vehicles not actually deployed are ignored.
+    % Passing of all theoretically deployable vehicles necessary for
+    % automatic code generation from matlab.
+    if vehiclePoses(nVehicles).pose.x == 0 &&...
+       vehiclePoses(nVehicles).pose.y == 0 &&...
+       vehiclePoses(nVehicles).pose.yaw == 0
+       
+       isVehicleDeployed = false;
+    end
+
+    if vehiclePoses(nVehicles).vehicle_id == egoVehicleId || ~isVehicleDeployed
         continue
     end
     
-    corners.(vehicleList{nVehicles}).x(1,1) = vehiclePoses.(vehicleList{nVehicles}).x + cosd(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength + sind(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).x(2,1) = vehiclePoses.(vehicleList{nVehicles}).x + cosd(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength - sind(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).x(3,1) = vehiclePoses.(vehicleList{nVehicles}).x - cosd(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength - sind(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).x(4,1) = vehiclePoses.(vehicleList{nVehicles}).x - cosd(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength + sind(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_x(1) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_x(2) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_x(3) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_x(4) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
     
-    corners.(vehicleList{nVehicles}).y(1,1) = vehiclePoses.(vehicleList{nVehicles}).y + sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength - cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).y(2,1) = vehiclePoses.(vehicleList{nVehicles}).y + sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength + cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).y(3,1) = vehiclePoses.(vehicleList{nVehicles}).y - sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength + cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
-    corners.(vehicleList{nVehicles}).y(4,1) = vehiclePoses.(vehicleList{nVehicles}).y - sind(vehiclePoses.(vehicleList{nVehicles}).yaw) * vehicleHalfLength - cosd(vehiclePoses.(vehicleList{nVehicles}).yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_y(1) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_y(2) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_y(3) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+    corners(nVehicles).corners_y(4) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
     
     %calculate vehicle edges as rays along corners
     for i = 1:4
         if i < 4
-        [~,midpoints] = raycast(map, [corners.(vehicleList{nVehicles}).x(i) corners.(vehicleList{nVehicles}).y(i)],...
-                                             [corners.(vehicleList{nVehicles}).x(i+1) corners.(vehicleList{nVehicles}).y(i+1)]);
+        [~,midpoints] = raycast(map, [corners(nVehicles).corners_x(i) corners(nVehicles).corners_y(i)],...
+                                     [corners(nVehicles).corners_x(i+1) corners(nVehicles).corners_y(i+1)]);
                                      
         else
-        [~,midpoints] = raycast(map, [corners.(vehicleList{nVehicles}).x(4) corners.(vehicleList{nVehicles}).y(4)],...
-                                             [corners.(vehicleList{nVehicles}).x(1) corners.(vehicleList{nVehicles}).y(1)]); 
+        [~,midpoints] = raycast(map, [corners(nVehicles).corners_x(4) corners(nVehicles).corners_y(4)],...
+                                     [corners(nVehicles).corners_x(1) corners(nVehicles).corners_y(1)]); 
         end
         setOccupancy(map,midpoints,occval,"grid");
     end

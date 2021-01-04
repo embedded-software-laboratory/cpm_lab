@@ -8,14 +8,16 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
     intermittingPoses = interpolate(refPath,lengths); 
     transitionPoses = interpolate(refPath);
  
-    trajectory_points = repmat(TrajectoryPoint, length(transitionPoses), 1);
     %% Calculate path lengths between transition and intermitting poses
-    transSegmentLengths = [];
-    allSegmentLength = [];
-    % TODO: does preallocation save time?
+    transSegmentLengths = zeros(100, 1);
+    allSegmentLengths = zeros(length(intermittingPoses)+1, 1);
+    lastIndex = 0;
     for nPathSegments = 1:length(refPath.PathSegments)
-        transSegmentLengths = vertcat(transSegmentLengths, nonzeros(refPath.PathSegments(1,nPathSegments).MotionLengths));
+        motionLengths = nonzeros(refPath.PathSegments(1, nPathSegments).MotionLengths);
+        transSegmentLengths(lastIndex+1:lastIndex+length(motionLengths), 1) = motionLengths;
+        lastIndex = find(transSegmentLengths, 1, 'last');
     end
+    transSegmentLengths = nonzeros(transSegmentLengths);
     transPathLengths = cumsum(transSegmentLengths);
     
     checkPose = ismember(intermittingPoses, transitionPoses);
@@ -33,10 +35,11 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
         end
     end
 
-    allSegmentLengths(end+1) = transPathLengths(end);
+    allSegmentLengths(end) = transPathLengths(end);
 
     %% Set trajectory points from transition and intermitting poses
     %TODO: smoothing of start and stop process.
+     trajectory_points = repmat(TrajectoryPoint, length(allSegmentLengths)+1, 1);
     
     %First trajectory point 
     trajectory_points(1).px = intermittingPoses(1, 1);
@@ -63,7 +66,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
     end
 
     %Last TrajectoryPoint - correct home position guaranteed?
-    trajectory_points(end+1).px = intermittingPoses(end, 1);
+    trajectory_points(end).px = intermittingPoses(end, 1);
     trajectory_points(end).py = intermittingPoses(end, 2);
     trajectory_points(end).vx = 0;
     trajectory_points(end).vy = 0;
