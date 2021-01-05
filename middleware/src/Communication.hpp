@@ -56,6 +56,7 @@
 
 #include "CommonroadDDSGoalState.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandPathTracking.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandDirect.hpp"
 #include "ReadyStatus.hpp"
@@ -98,6 +99,7 @@ class Communication {
 
         //Communication for commands
         TypedCommunication<VehicleCommandTrajectory> trajectoryCommunication;
+        TypedCommunication<VehicleCommandPathTracking> pathTrackingCommunication;
         TypedCommunication<VehicleCommandSpeedCurvature> speedCurvatureCommunication;
         TypedCommunication<VehicleCommandDirect> directCommunication;
     public:
@@ -106,6 +108,7 @@ class Communication {
          * \param hlcDomainNumber DDS domain number of the communication on the HLC (middleware and script)
          * \param vehicleStateListTopicName Topic name for vehicle state list messages
          * \param vehicleTrajectoryTopicName Topic name for trajectory messages
+         * \param vehiclePathTrackingTopicName Topic name for path tracking messages
          * \param vehicleSpeedCurvatureTopicName Topic name for speed curvature messages
          * \param vehicleDirectTopicName Topic name for vehicle direct messages
          * \param _timer Required for current real or simulated timing information to check if answers of the HLC / script are received in time
@@ -115,6 +118,7 @@ class Communication {
             int hlcDomainNumber,
             std::string vehicleStateListTopicName,
             std::string vehicleTrajectoryTopicName,
+            std::string vehiclePathTrackingTopicName,
             std::string vehicleSpeedCurvatureTopicName,
             std::string vehicleDirectTopicName,
             std::shared_ptr<cpm::Timer> _timer,
@@ -141,6 +145,7 @@ class Communication {
         ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
 
         ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
+        ,pathTrackingCommunication(hlcParticipant, vehiclePathTrackingTopicName, _timer, vehicle_ids)
         ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
         ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
         {

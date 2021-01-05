@@ -48,3 +48,8 @@ template<> void TypedCommunication<VehicleCommandTrajectory>::type_specific_msg_
         );
     }
 }
+
+template<> void TypedCommunication<VehicleCommandPathTracking>::type_specific_msg_check(VehicleCommandPathTracking msg)
+{
+
+}
