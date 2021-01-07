@@ -63,7 +63,8 @@ HLCReadyAggregator::HLCReadyAggregator() :
                 }
             }
         },
-        "hlc_hello")
+        "hlc_hello",
+        true)
 {
 }
 
