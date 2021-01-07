@@ -5,6 +5,11 @@ RECURSIVE
 FILE_PATTERNS (added .bash)
 GENERATE_TREEVIEW
 
+PROJECT_NAME
+PROJECT_BRIEF
+PROJECT_LOGO
+OUTPUT_DIRECTORY
+
 Set EXTRACT_ALL to YES if you want undocumented files to appear in the documentation as well
 
 USE_MDFILE_AS_MAINPAGE can also be used instead of the current DoxygenMainpage.hpp
