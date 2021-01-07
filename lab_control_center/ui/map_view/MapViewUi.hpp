@@ -52,6 +52,7 @@ class MapViewUi
 {
     shared_ptr<TrajectoryCommand> trajectoryCommand;
     shared_ptr<CommonRoadScenario> commonroad_scenario;
+    Gtk::Fixed container;
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
@@ -61,6 +62,7 @@ class MapViewUi
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
     Cairo::RefPtr<Cairo::ImageSurface> image_object;
     Cairo::RefPtr<Cairo::ImageSurface> image_map;
+    Cairo::RefPtr<Cairo::ImageSurface> image_labcam;
     VehicleData vehicle_data;
 
     //For visualization of commonroad data get from data storage object via callback
@@ -82,6 +84,11 @@ class MapViewUi
     double zoom = 175;
     double pan_x = 100;
     double pan_y = 730;
+    double rotation = 0; //[rad]
+
+    // point, which doesn't change when rotating (corresponds to map center)
+    const double rotation_fixpoint_x = 2.25;
+    const double rotation_fixpoint_y = 2;
 
     double mouse_x = 0;
     double mouse_y = 0;
@@ -103,6 +110,7 @@ class MapViewUi
     void draw(const DrawingContext& ctx);
 
     void draw_grid(const DrawingContext& ctx);
+    void draw_labcam(const DrawingContext& ctx);
 
     /**
      * \brief Draw the boundaries of the IPS / Lab to allow for fine-tuning the adjustment of commonroad maps, see where vehicle can be put etc.
@@ -147,4 +155,9 @@ public:
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
     Gtk::DrawingArea* get_parent();
+
+    /**
+     * \brief rotates the map view by rotate [deg] counterclockwise
+     */
+    void rotate_by(double rotation);
 };
