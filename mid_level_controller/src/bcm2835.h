@@ -7,7 +7,7 @@
    $Id: bcm2835.h,v 1.24 2018/08/27 20:45:57 mikem Exp mikem $
 */
 
-/*! \page broadcom_page C library for Broadcom BCM 2835 as used in Raspberry Pi
+/*! \mainpage C library for Broadcom BCM 2835 as used in Raspberry Pi
   
   This is a C library for Raspberry Pi (RPi). It provides access to 
   GPIO and other IO functions on the Broadcom BCM 2835 chip, as used in the RaspberryPi,
