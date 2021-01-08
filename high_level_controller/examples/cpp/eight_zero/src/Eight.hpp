@@ -31,7 +31,11 @@
 
 using std::vector;
 
-
+/**
+ * \struct Waypoint
+ * \brief TODO
+ * \ingroup eight_zero
+ */
 struct Waypoint
 {
     int index;
@@ -46,7 +50,11 @@ struct Waypoint
     bool operator<(const Waypoint other) const;
 };
 
-
+/**
+ * \class Eight
+ * \brief TODO
+ * \ingroup eight_zero
+ */
 class Eight
 {
     std::multimap<Waypoint, Waypoint> next;

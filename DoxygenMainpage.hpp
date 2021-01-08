@@ -176,7 +176,57 @@
  */
 
 /**
- * \defgroup basic_line
+ * \defgroup cpp_examples
  * \ingroup examples
+ * C++ examples
+ */
+
+/**
+ * \defgroup basic_circle
+ * \ingroup cpp_examples
+ * This is a basic circle-following program for a vehicle.
+ */
+
+/**
+ * \defgroup basic_line
+ * \ingroup cpp_examples
  * This is a basic line-following program for a vehicle.
+ */
+
+//WARNING: Sub-groups are defined in the include files, to distinguish the different lane-graphs, so mind that before changing this group definition
+/**
+ * \defgroup central_routing
+ * \ingroup cpp_examples
+ * In this scenario, multiple vehicles drive on the Lab map following trajectories by a central routing mechanism that makes sure that the vehicles don't crash.
+ */
+
+/**
+ * \defgroup controller_test_loop
+ * \ingroup cpp_examples
+ * TODO
+ */
+
+/**
+ * \defgroup diagonal_figure_eight
+ * \ingroup cpp_examples
+ * TODO
+ */
+
+/**
+ * \defgroup eight_zero
+ * \ingroup cpp_examples
+ * TODO
+ */
+
+/**
+ * \defgroup two_vehicles_drive
+ * \ingroup cpp_examples
+ * TODO
+ */
+
+//WARNING: Sub-groups are defined in the Doxygen_description.hpp in the matlab examples folder
+/**
+ * \defgroup matlab
+ * \ingroup examples
+ * Matlab examples
  */

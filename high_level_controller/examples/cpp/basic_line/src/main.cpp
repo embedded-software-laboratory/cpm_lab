@@ -37,14 +37,26 @@
 
 using std::vector;
 
-/*
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/basic_line/build.bash
+ * \brief Build script for basic_line
+ * \ingroup basic_line
+ */
+
+/**
+ * \file high_level_controller/examples/cpp/basic_line/run.bash
+ * \brief Run script for basic_line
+ * \ingroup basic_line
+ */
+
+/**
+ * \brief Main function of the basic_line scenario
  * Read this before you start:
  *     Vehicle Commands: http://cpm-lab.embedded.rwth-aachen.de:8090/display/CLD/Vehicle+Commands
  *     Timer:            http://cpm-lab.embedded.rwth-aachen.de:8090/pages/viewpage.action?pageId=2293786
+ * \ingroup basic_line
  */
-
-
-
 int main(int argc, char *argv[])
 {
     const std::string node_id = "basic_line";

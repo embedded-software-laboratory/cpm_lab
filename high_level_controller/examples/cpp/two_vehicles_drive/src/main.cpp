@@ -36,11 +36,24 @@
 
 using std::vector;
 
-/*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?spaceKey=CLD&title=Two+Vehicles+Drive
- * 
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/two_vehicles_drive/build.bash
+ * \brief Build script for two_vehicles_drive
+ * \ingroup two_vehicles_drive
  */
 
+/**
+ * \file high_level_controller/examples/cpp/two_vehicles_drive/run.bash
+ * \brief Run script for two_vehicles_drive
+ * \ingroup two_vehicles_drive
+ */
+
+/**
+ * \brief Main function of the two_vehicles_drive scenario
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?spaceKey=CLD&title=Two+Vehicles+Drive
+ * \ingroup two_vehicles_drive
+ */
 int main(int argc, char *argv[])
 {
     //Initialize cpm library

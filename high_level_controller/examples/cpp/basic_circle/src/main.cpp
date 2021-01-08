@@ -36,14 +36,23 @@
 
 using std::vector;
 
-/*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Circle+Example
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/basic_circle/build.bash
+ * \brief Build script for basic_circle
+ * \ingroup basic_circle
  */
 
+/**
+ * \file high_level_controller/examples/cpp/basic_circle/run.bash
+ * \brief Run script for basic_circle
+ * \ingroup basic_circle
+ */
 
 /**
- * \brief TODO
- * \ingroup basic_line
+ * \brief Main function of the basic_circle scenario
+ * This tutorial is also described in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Circle+Example
+ * \ingroup basic_circle
  */
 int main(int argc, char *argv[])
 {

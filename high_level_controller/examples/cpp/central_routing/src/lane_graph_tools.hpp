@@ -30,7 +30,11 @@
 #include <vector>
 using std::vector;
 
-
+/**
+ * \class LaneGraphTools
+ * \brief TODO
+ * \ingroup central_routing
+ */
 class LaneGraphTools : public LaneGraph
 {
     std::vector<std::vector<double>> edges_s;

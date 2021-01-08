@@ -41,7 +41,23 @@
 using std::vector;
 
 
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/eight_zero/build.bash
+ * \brief Build script for eight_zero
+ * \ingroup eight_zero
+ */
 
+/**
+ * \file high_level_controller/examples/cpp/eight_zero/run.bash
+ * \brief Run script for eight_zero
+ * \ingroup eight_zero
+ */
+
+/**
+ * \brief Main function of the eight_zero scenario
+ * \ingroup eight_zero
+ */
 int main(int argc, char *argv[])
 {
     const std::string node_id = "eight_zero";

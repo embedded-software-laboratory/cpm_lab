@@ -46,6 +46,30 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/controller_test_loop/build.bash
+ * \brief Build script for controller_test_loop
+ * \ingroup controller_test_loop
+ */
+
+/**
+ * \file high_level_controller/examples/cpp/controller_test_loop/run.bash
+ * \brief TODO
+ * \ingroup controller_test_loop
+ */
+
+/**
+ * \file high_level_controller/examples/cpp/controller_test_loop/run_platoon.bash
+ * \brief TODO
+ * \ingroup controller_test_loop
+ */
+
+/**
+ * \class TrajectoryIndex
+ * \brief TODO
+ * \ingroup controller_test_loop
+ */
 class TrajectoryIndex
 {
 private:
@@ -242,6 +266,11 @@ public:
     }
 };
 
+
+/**
+ * \brief Main function of the controller_test_loop scenario
+ * \ingroup controller_test_loop
+ */
 int main(int argc, char *argv[])
 {
     cpm::init(argc, argv);

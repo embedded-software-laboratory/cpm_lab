@@ -44,7 +44,11 @@
 #include "VehicleState.hpp"
 #include "VehicleCommandTrajectory.hpp"
 
-
+/**
+ * \file main_platoon.cpp
+ * \brief TODO. Contains the other main function (without subgroups, Doxygen only includes one)
+ * \ingroup controller_test_loop
+ */
 
 int main(int argc, char *argv[])
 {

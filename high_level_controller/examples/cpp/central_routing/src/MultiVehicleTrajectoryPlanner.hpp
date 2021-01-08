@@ -33,7 +33,11 @@
 #include "VehicleTrajectoryPlanningState.hpp"
 using std::vector;
 
-
+/**
+ * \class MultiVehicleTrajectoryPlanner
+ * \brief TODO
+ * \ingroup central_routing
+ */
 class MultiVehicleTrajectoryPlanner
 {
     std::map<uint8_t, std::shared_ptr<VehicleTrajectoryPlanningState> > trajectoryPlans;

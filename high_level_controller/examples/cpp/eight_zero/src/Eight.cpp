@@ -33,7 +33,10 @@
 #define NUMBER_EIGHT_POINTS 8
 // The number of trajectory points in the trajectory-vectors describing the eight only.
 
-
+/**
+ * \file Eight.cpp
+ * \ingroup eight_zero
+ */
 
 typedef std::pair<Waypoint, Waypoint> pWW ;
 

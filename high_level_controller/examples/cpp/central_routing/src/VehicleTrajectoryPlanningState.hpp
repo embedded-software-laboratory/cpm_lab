@@ -38,7 +38,11 @@ using std::array;
 #define N_STEPS_SPEED_PROFILE (3000)
 
 
-
+/**
+ * \class VehicleTrajectoryPlanningState
+ * \brief TODO
+ * \ingroup central_routing
+ */
 class VehicleTrajectoryPlanningState
 {
     uint8_t vehicle_id = 0;

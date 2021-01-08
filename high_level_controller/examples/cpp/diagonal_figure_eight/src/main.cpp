@@ -36,12 +36,24 @@
 
 using std::vector;
 
-/*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Diagonal+Figure+Eight+Example
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/diagonal_figure_eight/build.bash
+ * \brief Build script for diagonal_figure_eight
+ * \ingroup diagonal_figure_eight
  */
 
+/**
+ * \file high_level_controller/examples/cpp/diagonal_figure_eight/run.bash
+ * \brief Run script for diagonal_figure_eight
+ * \ingroup diagonal_figure_eight
+ */
 
-
+/**
+ * \brief Main function of the diagonal_figure_eight scenario
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Diagonal+Figure+Eight+Example
+ * \ingroup diagonal_figure_eight
+ */
 int main(int argc, char *argv[])
 {
     //Initialize cpm library

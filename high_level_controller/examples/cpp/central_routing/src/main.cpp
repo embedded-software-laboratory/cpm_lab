@@ -46,13 +46,24 @@
 
 using std::vector;
 
-
-/*
- * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
- * 
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/central_routing/build.bash
+ * \brief Build script for central_routing
+ * \ingroup central_routing
  */
 
+/**
+ * \file high_level_controller/examples/cpp/central_routing/run.bash
+ * \brief Run script for central_routing
+ * \ingroup central_routing
+ */
 
+/**
+ * \brief Main function of the central_routing scenario
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
+ * \ingroup central_routing
+ */
 int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);

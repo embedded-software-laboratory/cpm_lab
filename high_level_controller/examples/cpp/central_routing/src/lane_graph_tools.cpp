@@ -28,6 +28,11 @@
 #include "geometry.hpp"
 #include <future>
 
+/**
+ * \file lane_graph_tools.cpp
+ * \ingroup central_routing
+ */
+
 const LaneGraphTools laneGraphTools;
 
 LaneGraphTools::LaneGraphTools()
