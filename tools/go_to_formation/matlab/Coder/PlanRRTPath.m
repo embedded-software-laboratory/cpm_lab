@@ -1,19 +1,6 @@
-function [refPath, isPathValid, planner] = PlanRRTPath (startPose, goalPose, occMap)
-    %% Setup of Costmap and Planner Configuration
-
-    centerPlacements = [0.25, 0.5, 0.75]; 
-    vehLength = 0.22;
-    vehicleDims = vehicleDimensions(vehLength,0.107, 0.07,...
-        'FrontOverhang', 0.04,...
-        'RearOverhang',0.03);
-    inflationRadius = 0;
-    ccConfig = inflationCollisionChecker(vehicleDims, ...
-        'CenterPlacements',centerPlacements,'InflationRadius',inflationRadius);
-
-    costmap = vehicleCostmap(occMap, 'CollisionChecker', ccConfig);
-
+function [refPath, isPathValid, planner] = PlanRRTPath (startPose, goalPose, costmap)
     %% Path Planning
-
+        
     startPose = [startPose.x, startPose.y, startPose.yaw];
     goalPose = [goalPose.x, goalPose.y, goalPose.yaw];
 

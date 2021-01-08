@@ -8,8 +8,8 @@ function [trajectory_points, refPath, planner] = planTrajectory(vehicleIdList, v
         end
     end  
                 
-    map = setOccMap(vehiclePoses, egoVehicleId);
-    [refPath, isPathValid, planner] = PlanRRTPath(vehiclePoses(egoVehicleIndex).pose, goalPose, map);
+    costmap = setCostmap(vehiclePoses, egoVehicleId);
+    [refPath, isPathValid, planner] = PlanRRTPath(vehiclePoses(egoVehicleIndex).pose, goalPose, costmap);
 
     if isPathValid
         trajectory_points = pathToTrajectory(refPath, speed);
