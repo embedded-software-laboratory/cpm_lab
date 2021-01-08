@@ -20,14 +20,13 @@
  * \subsection lcc_section LCC
  * You can find out more about the LCC here: \ref lcc
  * 
- * \subsection lcc_ui_section LCC UI
  * You can find out more about the LCC's UI here: \ref lcc_ui
  * 
- * \subsection lcc_commonroad_section LCC Commonroad
  * You can find out more about the LCC's Commonroad files here: \ref lcc_commonroad
  * 
- * \subsection lcc_labcam_section LCC Labcam
  * You can find out more about the LCC's Labcam files here: \ref lcc_labcam
+ * 
+ * You can find out more about the LCC' Bash and further files here: \ref lcc_further
  * 
  * \subsection ips_section IPS
  * You can find out more about the IPS files here: \ref ips
@@ -40,11 +39,12 @@
  * \subsection tools_section Additional tools
  * Additional tools e.g. for camera calibration can be found in \ref tools
  * 
- * \subsection examples_section HLC Examples
+ * \subsection hlc_section HLC
  * HLC example programs, additional information can be found in \ref examples
  * 
- * \subsection autostart_section Autostart
  * You can find out more about the Autostart files here: \ref autostart
+ * 
+ * Further bash scripts are described in \ref hlc_bash
  */
 
 //Namespace definitions
@@ -123,6 +123,14 @@
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
  */
 
+//WARNING: The file Doxygen_lcc_file_descriptions includes further group definitions based on this definition
+/**
+ * \defgroup lcc_further
+ * These files are part of the LCC Bash and other files, for starting/setting up the Lab and for remote Deployment.
+ * 
+ * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
+ */
+
 /**
  * \defgroup ips
  * These files are part of the Indoor Positioning System Software, which is used in combination with a camera to track the vehicles in the Lab,
@@ -140,6 +148,11 @@
  * 
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle
  * and in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup
+ */
+
+/**
+ * \defgroup hlc_bash
+ * Includes HLC Bash Scripts
  */
 
 /**

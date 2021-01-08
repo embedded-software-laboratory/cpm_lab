@@ -2,7 +2,7 @@ Settings:
 
 INPUT
 RECURSIVE
-FILE_PATTERNS (added .bash)
+FILE_PATTERNS (added .bash, .xml, .yaml, .glade)
 GENERATE_TREEVIEW
 EXTRACT_STATIC (set to YES)
 

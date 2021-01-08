@@ -132,6 +132,13 @@ void exit_handler() {
 
 /**
  * Main function of the LCC
+ * Command line arguments:
+ * --dds_domain
+ * --logging_id
+ * --dds_initial_peer
+ * --simulated_time
+ * --number_of_vehicles (default 20, set how many vehicles can max. be selected in the UI)
+ * --config_file (default parameters.yaml)
  * \ingroup lcc
  */
 int main(int argc, char *argv[])
