@@ -22,6 +22,7 @@ function [costmap] = setCostmap(vehiclePoses, egoVehicleId)
     costval = 1;
     isVehicleDeployed = true;
     maxNoVehicles = 20;
+    corners = zeros(4,2);
 
     for nVehicles = 1:maxNoVehicles
 
@@ -39,17 +40,17 @@ function [costmap] = setCostmap(vehiclePoses, egoVehicleId)
             continue
         end
 
-        vehiclePoses(nVehicles).corners(1,1) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(2,1) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(3,1) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(4,1) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(1,1) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(2,1) = vehiclePoses(nVehicles).pose.x + cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(3,1) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(4,1) = vehiclePoses(nVehicles).pose.x - cosd(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + sind(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
 
-        vehiclePoses(nVehicles).corners(1,2) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(2,2) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(3,2) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
-        vehiclePoses(nVehicles).corners(4,2) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(1,2) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(2,2) = vehiclePoses(nVehicles).pose.y + sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(3,2) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength + cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
+        corners(4,2) = vehiclePoses(nVehicles).pose.y - sind(vehiclePoses(nVehicles).pose.yaw) * vehicleHalfLength - cosd(vehiclePoses(nVehicles).pose.yaw)* vehicleHalfWidth;
         
-        setCosts(costmap, [vehiclePoses(nVehicles).corners(:,1) vehiclePoses(nVehicles).corners(:,2)], costval)
+        setCosts(costmap, [corners(:,1) corners(:,2)], costval)
         setCosts(costmap, [vehiclePoses(nVehicles).pose.x vehiclePoses(nVehicles).pose.y], costval)
 
     end  

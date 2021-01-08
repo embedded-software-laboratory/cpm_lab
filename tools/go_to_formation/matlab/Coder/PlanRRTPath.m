@@ -1,4 +1,4 @@
-function [refPath, isPathValid, planner] = PlanRRTPath (startPose, goalPose, costmap)
+function [refPath, isPathValid] = PlanRRTPath (startPose, goalPose, costmap)
     %% Path Planning
         
     startPose = [startPose.x, startPose.y, startPose.yaw];

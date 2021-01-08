@@ -12,14 +12,14 @@ for missingVehicles = 4:20
     startPoses(missingVehicles).pose = Pose2D;
 end
 
-[trajectory_points,refPath,planner] = planTrajectory(maxVehicleIdList, startPoses, goalPoses(1), egoVehicleId, speed);
+[trajectory_points, isPathValid] = planTrajectory(maxVehicleIdList, startPoses, goalPoses(1), egoVehicleId, speed);
 %% Visualization
-
-Fig = 1;
-transitionPoses = interpolate(refPath);
-figure(Fig);
-plot(planner);
-hold on
-scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
-     'DisplayName','Transition Poses')
-hold off
+% 
+% Fig = 1;
+% transitionPoses = interpolate(refPath);
+% figure(Fig);
+% plot(planner);
+% hold on
+% scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
+%      'DisplayName','Transition Poses')
+% hold off
