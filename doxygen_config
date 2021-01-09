@@ -831,7 +831,8 @@ INPUT                  = ./cpm_lib/ \
                          ./mid_level_controller \
                          ./middleware \
                          ./tools/ \
-                         ./DoxygenMainpage.hpp
+                         ./ \
+                         ./LICENSE
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -910,7 +911,7 @@ FILE_PATTERNS          = *.bash \
                          *.yaml \
                          *.glade \
                          *.css \
-                         *.template
+                         *.template 
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -927,8 +928,7 @@ RECURSIVE              = YES
 
 EXCLUDE                =    mid_level_controller/src/bcm2835.h \
                             lab_control_center/labcam/Readme.md \
-                            tools/vehicle_dynamics_identification_and_mpc/readme.md \
-                            ./Readme.md
+                            tools/vehicle_dynamics_identification_and_mpc/readme.md 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

@@ -1,6 +1,6 @@
 Settings:
 
-INPUT
+INPUT (currently redundant, as ./ is given in the end; only ./LICENSE is relevant additionally, because else the file without ending would not be included due to the set file patterns)
 RECURSIVE
 FILE_PATTERNS (added .bash, .xml, .yaml, .glade, .css, .template)
 GENERATE_TREEVIEW

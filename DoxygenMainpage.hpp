@@ -1,4 +1,9 @@
 //Main page design
+//Also: Most of the group definitions can be found here
+//Most file descriptions are placed in according Doxygen....hpp files in the according directories
+//Descriptions for the top directory can be found in Doxygen_software_files.hpp
+
+
 /** \mainpage CPM Lab Software
  * 
  * \section intro Introduction
@@ -9,6 +14,11 @@
  * 
  * Please refer to the official Confluence documentation https://cpm.embedded.rwth-aachen.de/doc/
  * for a detailed explanation of the usage and ideas behind these files
+ * 
+ * \section setup_section Setup Files
+ * The setup of the CPM Lab Software is explained in detail in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Setup
+ * 
+ * Setup files, mostly bash scripts, are shortly described in \ref software_files
  * 
  * \section projects Software Projects
  * \subsection middleware_section Middleware
@@ -73,6 +83,11 @@
  */
 
 // Group definitions
+/**
+ * \defgroup software_files
+ * These files are part of the top directory and mostly belong to the overall project setup
+ */
+
 /**
  * \defgroup middleware
  * These files are part of the Middleware. 
@@ -189,6 +204,7 @@
  * These files are to be used on the real vehicle's ATMEGA, see https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup
  */
 
+//Subgroups for this group are defined in the according folders in tools, where file descriptions are placed as well
 /**
  * \defgroup tools
  * These files are additional tools to be used in the Lab.
