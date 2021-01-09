@@ -150,6 +150,13 @@
  * and in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup
  */
 
+//This group is used in Doxygen_mlc_file_descriptions.hpp
+/**
+ * \defgroup vehicle_files
+ * \brief Additional files for the vehicle software, e.g. Bash scripts
+ * \ingroup vehicle
+ */
+
 /**
  * \defgroup hlc_bash
  * Includes HLC Bash Scripts

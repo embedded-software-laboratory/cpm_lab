@@ -223,4 +223,10 @@
  * \brief Layout for the timer tab, where timing information can be seen and the timer can be (re)started and stopped
  * \ingroup lcc_ui_files
  */
+
+/**
+ * \file ./ui/style.css
+ * \brief Some custom CSS definitions for the LCC's UI
+ * \ingroup lcc_ui_files
+ */
 ////////////////////////////////////////////////////////////////////////////////////
