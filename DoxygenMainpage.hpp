@@ -81,6 +81,13 @@
  * The Middleware relies on QOS_LOCAL_COMMUNICATION.xml - without this configuration file next to the executable, local configuration is not configured properly
  */
 
+//This group is used in Doxygen_middleware_file_descriptions.hpp
+/**
+ * \defgroup middleware_files
+ * \brief Additional files for the middleware software, e.g. Bash scripts
+ * \ingroup middleware
+ */
+
 /**
  * \defgroup cpmlib
  * These files are all part of the CPM Library. The library was written to be used by all other programs that require DDS, timing or some other

@@ -59,9 +59,12 @@
 #include "Communication.hpp"
 
 /**
- * Tests if data sent by a virtual HLC is received by a virtual vehicle, therefore if TypedCommunication receives and sends the data as required
+ * \test Tests communication from simulated HLC to simulated vehicle
+ * 
+ * Tests if data sent by a virtual HLC is received by a virtual vehicle, 
+ * therefore if TypedCommunication receives and sends the data as required
+ * \ingroup middleware
  */
-
 TEST_CASE( "HLCToVehicleCommunication" ) {
     //Set different domain ID than 1 for the domain of the vehicle
     std::vector<char*> argv;
