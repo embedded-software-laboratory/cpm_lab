@@ -36,6 +36,7 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
+#include "CouplingGraph.hpp"
 
 using std::vector;
 
@@ -56,7 +57,13 @@ class VehicleTrajectoryPlanner
     const uint64_t dt_nanos;
     const int planning_horizont = 5;
     vector<TrajectoryPoint> trajectory_point_buffer;
-    vector<vector<bool>> comm_graph;
+    CouplingGraph coupling_graph;
+ 
+    // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
+    static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
+    static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
+    static constexpr int timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 5 points planned
+
     void read_other_vehicles();
     void apply_timestep();
     void write_trajectory( LaneGraphTrajectory trajectory );
@@ -64,14 +71,7 @@ class VehicleTrajectoryPlanner
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
- 
-    // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
-    static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
-    static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
-    static constexpr int timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 5 points planned
-    
-    // Debugging methods
-    void debug_writeOutReceivedTrajectories();
+    void debug_writeOutReceivedTrajectories(); // Debugging method
     
 public:
 
@@ -81,7 +81,7 @@ public:
     bool is_started() {return started;}
     bool is_crashed() {return crashed;}
     void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
-    void set_comm_graph(vector<vector<bool>> matrix);
+    void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
     void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
     std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time);

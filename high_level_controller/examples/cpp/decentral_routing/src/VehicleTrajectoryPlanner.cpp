@@ -104,18 +104,12 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     trajectory_point_buffer.push_back(trajectory_point);
 
     // Limits size of our trajectory_point_buffer
+    // However, atm the buffer only has 1-2 entries anyway
+    // If this leads to problems during testing, changes might be needed
     while(trajectory_point_buffer.size() > 50)
     {
         trajectory_point_buffer.erase(trajectory_point_buffer.begin());
     }
-
-    if(stopFlag) {
-        isStopped = true;
-        return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
-    }
-    cpm::Logging::Instance().write(1,
-            "Finished planning part"
-            );
 
     // Get our current trajectory
     LaneGraphTrajectory lane_graph_trajectory;
@@ -123,13 +117,13 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
             &lane_graph_trajectory
     );
 
+    // Advance trajectoryPlanningState by 1 timestep
+    trajectoryPlan->apply_timestep(dt_nanos);
+
     if(stopFlag) {
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
-
-    // Advance trajectoryPlanningState by 1 timestep
-    trajectoryPlan->apply_timestep(dt_nanos);
 
     // Publish our planned trajectory with other vehicles
     write_trajectory(lane_graph_trajectory);
@@ -159,7 +153,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     other_vehicles_buffer.clear();
 
     // Checklist to check, which messages we need to wait for
-    vector<bool> checklist = comm_graph[trajectoryPlan->get_vehicle_id()-1];
+    std::set<uint8_t> checklist = coupling_graph.getPreviousVehicles(trajectoryPlan->get_vehicle_id());
 
     bool still_waiting = true;
     while( still_waiting && !stopFlag) {
@@ -169,12 +163,14 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             uint64_t t_message = data.header().create_stamp().nanoseconds();
 
             if (sample.info().valid() && t_message == t_real_time) {
-                if ( !checklist.at(data.vehicle_id()-1) ){
+                auto posInChecklist =
+                    std::find(checklist.begin(), checklist.end(), data.vehicle_id());
+                if ( posInChecklist == checklist.end() ){
                     // Ignore message if the vehicle is not in our checklist
                     continue;
                 } else {
                     // If vehicle is in our checklist, remove/"check" it after receiving a message
-                    checklist[data.vehicle_id()-1] = false;
+                    checklist.erase(posInChecklist);
                 }
                 
                 int prev_buffer_index = -1;
@@ -228,12 +224,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         }
 
         // Check if we finished our checklist; if yes: exit loop
-        still_waiting = false;
-        for ( bool entry : checklist ) {
-            if( entry ) {
-                still_waiting = true;
-            }
-        }
+        if( checklist.size() == 0 ) { still_waiting = false; }
 
     }
 }
@@ -329,14 +320,6 @@ void VehicleTrajectoryPlanner::interpolate_other_vehicles_buffer(
                     edge_path_to_insert
                     );
     }
-}
-
-/*
- * comm_graph is for determining the order of planning
- */
-void VehicleTrajectoryPlanner::set_comm_graph(
-        vector<vector<bool>> matrix) {
-    comm_graph = matrix;
 }
 
 void VehicleTrajectoryPlanner::set_writer(

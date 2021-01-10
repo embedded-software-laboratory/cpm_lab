@@ -78,11 +78,10 @@ public:
     void get_lane_graph_positions(LaneGraphTrajectory *lane_graph_trajectory);
     TrajectoryPoint get_trajectory_point();
     void apply_timestep(uint64_t dt_nanos);
+    void debug_writeOutOwnTrajectory(); // Debugging method
 
     // Change the own speed profile so as not to collide with the other_vehicles.
     bool avoid_collisions(std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles);
     uint8_t get_vehicle_id(){return vehicle_id;}
 
-    // Debugging method
-    void debug_writeOutOwnTrajectory();
 };

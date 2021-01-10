@@ -27,6 +27,7 @@
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
+#include "CouplingGraph.hpp"
 
 // CPM Wrappers and functions
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
@@ -216,12 +217,8 @@ int main(int argc, char *argv[]) {
      * ---------------------------------------------------------------------------------
      */
     // This graphs gives the priorities, as well as the order of planning
-    std::vector<std::vector<bool>> comm_graph = {
-        {0, 0, 0}, // Vehicle 1 waits for noone
-        {1, 0, 0}, // Vehicle 2 waits for vehicle 1
-        {1, 1, 0} // Vehicle 3 waits for vehicle 1 and 2. noone waits for 3
-    }; 
-    planner->set_comm_graph(comm_graph);
+    CouplingGraph coupling_graph({1,2,3,4,5});
+    planner->set_coupling_graph(coupling_graph);
 
     /* ---------------------------------------------------------------------------------
      * Compose and send Ready message
@@ -253,11 +250,17 @@ int main(int argc, char *argv[]) {
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
-
+                
                 // We received a StateList, which is our timing signal
                 // to send commands to vehicle
                 new_vehicleStateList = true;
                 vehicleStateList = sample.data();
+
+                std::cout << "StateList at " << vehicleStateList.t_now() << ":";
+                for(auto vehicleState : vehicleStateList.state_list()){
+                    std::cout << "<" << static_cast<uint32_t>(vehicleState.vehicle_id()) << ">";
+                }
+                std::cout << std::endl;
 
                 // middleware period needs to be manually set to 400ms
                 // on parameter server, else we don't start
