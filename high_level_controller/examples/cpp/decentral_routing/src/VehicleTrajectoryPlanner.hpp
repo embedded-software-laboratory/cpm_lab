@@ -47,9 +47,10 @@ class VehicleTrajectoryPlanner
     std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
     bool started = false;
     bool crashed = false;
+    bool volatile stopFlag = false;
+    bool volatile isStopped = true;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
-    uint64_t t_planning;
     std::mutex mutex;
     std::thread planning_thread;
     const uint64_t dt_nanos;
@@ -62,17 +63,20 @@ class VehicleTrajectoryPlanner
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
+    VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
     static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
     static constexpr int timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 5 points planned
     
+    // Debugging methods
+    void debug_writeOutReceivedTrajectories();
+    
 public:
 
     VehicleTrajectoryPlanner(uint64_t dt_nanos);
     ~VehicleTrajectoryPlanner();
-    VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void set_real_time(uint64_t t);
     bool is_started() {return started;}
     bool is_crashed() {return crashed;}
@@ -80,6 +84,8 @@ public:
     void set_comm_graph(vector<vector<bool>> matrix);
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
     void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
-    void plan(uint64_t t_real_time);
+    std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time);
+    void stop();
+    void start(){started = true;};
 
 };

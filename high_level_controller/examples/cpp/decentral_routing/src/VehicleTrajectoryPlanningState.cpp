@@ -311,3 +311,14 @@ void VehicleTrajectoryPlanningState::get_lane_graph_positions(
 
     lane_graph_trajectory->lane_graph_positions(lane_graph_positions);
 }
+
+void VehicleTrajectoryPlanningState::debug_writeOutOwnTrajectory() {
+    std::cout << "Vehicle " << static_cast<uint32_t>(vehicle_id) << std::endl;
+    int index = 0;
+    for(auto point : get_planned_path()) {
+        std::cout << index << ", "; 
+        std::cout << point.first << ", "; 
+        std::cout << point.second << std::endl; 
+        index++;
+    }
+}

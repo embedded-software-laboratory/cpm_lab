@@ -82,4 +82,7 @@ public:
     // Change the own speed profile so as not to collide with the other_vehicles.
     bool avoid_collisions(std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles);
     uint8_t get_vehicle_id(){return vehicle_id;}
+
+    // Debugging method
+    void debug_writeOutOwnTrajectory();
 };
