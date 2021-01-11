@@ -106,6 +106,9 @@ int main(int argc, char *argv[]) {
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     uint64_t dt_nanos = 400000000ull; // Needs to match period of planner
 
+    // SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
+    const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
+
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
