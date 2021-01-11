@@ -31,6 +31,7 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
     /*Set up communication*/
     ready_status_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<ReadyStatus>("readyStatus"), dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()),
+    stop_request_reader([this](std::vector<StopRequest>& samples){stop_request_callback(samples);}, "stopRequest"),
     system_trigger_writer("systemTrigger", true)
 {    
     current_simulated_time = 0;
@@ -91,6 +92,16 @@ TimerTrigger::~TimerTrigger() {
     timer_running.store(false);
     if(next_signal_thread.joinable()) {
         next_signal_thread.join();
+    }
+}
+
+void TimerTrigger::stop_request_callback(std::vector<StopRequest>& samples){
+    for(auto sample:samples) {
+        cpm::Logging::Instance().write(1,
+                "Vehicle %d sent StopRequest",
+                sample.vehicle_id()
+            );
+        send_stop_signal();
     }
 }
 

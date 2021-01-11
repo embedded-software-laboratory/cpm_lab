@@ -106,11 +106,6 @@ int main(int argc, char *argv[]) {
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     uint64_t dt_nanos = 400000000ull; // Needs to match period of planner
 
-    // SystemTrigger msg that means "stop" (as defined in SystemTrigger.idl)
-    const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
-    TimeStamp timestamp_stop(trigger_stop);
-    SystemTrigger stop_trigger(timestamp_stop);
-
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
@@ -188,13 +183,6 @@ int main(int argc, char *argv[]) {
     );
     
     
-    //FIXME: This should be replaced by a request to LCC
-    // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
-    dds::pub::DataWriter<SystemTrigger> writer_systemTrigger(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<SystemTrigger>("systemTrigger")
-    );
-
     /* ---------------------------------------------------------------------------------
      * Create planner object
      * ---------------------------------------------------------------------------------
@@ -270,7 +258,6 @@ int main(int argc, char *argv[]) {
                             "Fatal Error: middleware_period_ms needs to be 400ms");
                     StopRequest request(vehicle_id);
                     writer_stopRequest.write(request);
-                    writer_systemTrigger.write(stop_trigger);
                     return 1;
                 }
             }
@@ -377,7 +364,8 @@ int main(int argc, char *argv[]) {
         // Check if the planner encountered a problem
         if( planner->is_crashed() ) {
             stop = true;
-            writer_systemTrigger.write(stop_trigger);
+            StopRequest request(vehicle_id);
+            writer_stopRequest.write(request);
         }
 
         // Rate limit main while loop to 10-times per dt_nanos
