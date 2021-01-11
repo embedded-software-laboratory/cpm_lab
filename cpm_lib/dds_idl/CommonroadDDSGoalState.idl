@@ -34,40 +34,62 @@
 #include "Header.idl"
 #include "CommonroadDDSShape.idl"
 
-//An interval with which inexact positions can be provided
-//If intervals or exact values are possible, intervals with the same start and end value are being provided
+/**
+ * \struct CommonroadDDSInterval
+ * \brief An interval with which inexact positions can be provided.
+ * If intervals or exact values are possible, intervals with the same start and end value are being provided.
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSInterval {
-    double interval_start;
-    double interval_end;
+    double interval_start; //!< First value of the interval
+    double interval_end; //!< Last value of the interval
 };
 
-//Interval defintion
+/**
+ * \struct CommonroadDDSIntervals
+ * \brief Commonroad interval defintion
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSIntervals {
-    sequence<CommonroadDDSInterval> intervals;
+    sequence<CommonroadDDSInterval> intervals; //!< List of intervals
 };
 
-//An exact or inexact position definition
+/**
+ * \struct CommonroadDDSPositionInterval
+ * \brief Commonroad inexact (combined from shapes for a position area) position definition
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSPositionInterval {
-    sequence<CommonroadDDSCircle> circles;
-    sequence<CommonroadDDSPolygon> polygons;
-    sequence<CommonroadDDSRectangle> rectangles;
-    sequence<long> lanelet_refs; //These should rather not be used, because lanelets are currently not being transmitted to the HLCs
+    sequence<CommonroadDDSCircle> circles; //!< List of circles within which the position could lie
+    sequence<CommonroadDDSPolygon> polygons; //!< List of polygons within which the position could lie
+    sequence<CommonroadDDSRectangle> rectangles; //!< List of rectangles within which the position could lie
+    sequence<long> lanelet_refs; //!< These should rather not be used, because lanelets are currently not being transmitted to the HLCs
 };
 
-//A single commonroad goal state
+/**
+ * \struct CommonroadDDSGoalState
+ * \brief A single commonroad goal state
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSGoalState {
-    CommonroadDDSIntervals time;
-    boolean time_set; //If false, ignore time
-    boolean has_exact_position; //Ignore values in exact_position if this is false
-    CommonroadDDSPoint exact_position; //Not part of the specs in the documentation, but nice to have
-    sequence<CommonroadDDSPositionInterval> positions;
-    sequence<CommonroadDDSIntervals> orientations;
-    sequence<CommonroadDDSIntervals> velocities; 
+    CommonroadDDSIntervals time; //!< Time (interval) when the goal state should be reached, can be undefined (see time_set)
+    boolean time_set; //!< If false, ignore time
+    boolean has_exact_position; //!< Ignore values in exact_position if this is false, and use positions instead
+    CommonroadDDSPoint exact_position; //!< Exact position of the goal state, as a point. Not part of the specs in the documentation, but nice to have
+    sequence<CommonroadDDSPositionInterval> positions; //!< Inexact position of the goal state, can be undefined
+    sequence<CommonroadDDSIntervals> orientations; //!< Possible orientation values within the goal state, can be undefined
+    sequence<CommonroadDDSIntervals> velocities; //!< Possible velocity values when the goal state is reached, can be undefined
 
-    //ID to relate to planning problem and position in list planning problems and of goal states in planning problems in a single planning problem definition
+    //IDs to relate to planning problem and position in list planning problems and of goal states in planning problems in a single planning problem definition
     //We could not send the whole planning problem due to size issues because of the sequences used
+
+    //! Part of the ID of the goal state: ID of the planning problem
     long planning_problem_id; //@key
+
+    //! Part of the ID of the goal state: Place within the list of planning "sub"-problems with the same ID
     long planning_problem_pos; //@key
+
+    //! Part of the ID of the goal state: Place within the list of goal states within a planning "sub"-problem
     long goal_state_pos; //@key
 };
 

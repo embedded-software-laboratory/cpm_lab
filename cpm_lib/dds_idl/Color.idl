@@ -26,11 +26,17 @@
 
 #ifndef COLOR_IDL
 #define COLOR_IDL
+
+/**
+ * \struct Color
+ * \brief A color
+ * \ingroup cpmlib_idl
+ */
 struct Color 
 {
-    octet a;
-    octet r;
-    octet g;
-    octet b;
+    octet a; //!< Alpha, between 0 and 255
+    octet r; //!< Red, between 0 and 255
+    octet g; //!< Green, between 0 and 255
+    octet b; //!< Blue, between 0 and 255
 };
 #endif
