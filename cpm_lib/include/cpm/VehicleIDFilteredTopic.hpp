@@ -33,7 +33,7 @@ namespace cpm
 {
     /**
      * \class VehicleIDFilteredTopic
-     * Creates a DDS Topic that filters all incoming 
+     * \brief Creates a DDS Topic that filters all incoming 
      * messages so that only samples with the given 
      * vehicle_id are processed further.
      * \ingroup cpmlib

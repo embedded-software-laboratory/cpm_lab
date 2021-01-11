@@ -33,14 +33,14 @@
 namespace cpm
 {
     /**
-     * Stop symbol sent by the Timing Instance, e.g. the LCC, to indicate that the timer should be stopped (max uint64_t value)
+     * \brief Stop symbol sent by the Timing Instance, e.g. the LCC, to indicate that the timer should be stopped (max uint64_t value)
      * \ingroup cpmlib
      */
     constexpr uint64_t TRIGGER_STOP_SYMBOL = (0xffffffffffffffffull);
 
     /**
      * \class Timer
-     * This class calls a callback function periodically 
+     * \brief This class calls a callback function periodically 
      * based on either the system clock or a simulated 
      * clock. The calls are synchronized in both frequency 
      * and phase to the clock.

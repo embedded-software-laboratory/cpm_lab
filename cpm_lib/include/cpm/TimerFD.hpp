@@ -49,7 +49,7 @@
 namespace cpm {
     /**
      * \class TimerFD
-     * This class calls a callback function periodically 
+     * \brief This class calls a callback function periodically 
      * based the system clock. The calls are synchronized in both frequency 
      * and phase to the clock.
      * This class should be used if a 'simple' timed callback is required. 

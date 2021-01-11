@@ -45,7 +45,7 @@
 namespace cpm
 {
     /**
-    * Singleton that receives and stores constants, e.g. for configuration
+    * \brief Singleton that receives and stores constants, e.g. for configuration
     * Is used by to get data for the user (requests data from the param server or uses stored data if available)
     * \ingroup cpmlib
     */

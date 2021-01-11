@@ -46,7 +46,7 @@
 
 /**
  * \class ParameterServer
- * Server that distributes parameter values. This server uses ParameterStorage to store its values.
+ * \brief Server that distributes parameter values. This server uses ParameterStorage to store its values.
  * \ingroup lcc
 */
 class ParameterServer {

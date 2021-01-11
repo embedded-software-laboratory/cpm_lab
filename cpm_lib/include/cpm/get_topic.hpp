@@ -35,7 +35,7 @@
 namespace cpm
 {
     /**
-     * Always use this function to create a DDS topic that 
+     * \brief Always use this function to create a DDS topic that 
      * is supposed to be used by more than one class: In RTI DDS, 
      * a topic can only be created once for each domain participant. 
      * Thus, if multiple classes need to use the same topic at some 

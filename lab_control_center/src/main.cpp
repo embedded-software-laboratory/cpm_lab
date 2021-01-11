@@ -77,7 +77,7 @@ using namespace std::placeholders;
 std::shared_ptr<SetupViewUI> setupViewUi;
 
 /**
- * Function to deploy cloud discovery (to help participants discover each other)
+ * \brief Function to deploy cloud discovery (to help participants discover each other)
  * \ingroup lcc
  */
 void deploy_cloud_discovery() {
@@ -86,7 +86,7 @@ void deploy_cloud_discovery() {
 }
 
 /**
- * Function to kill cloud discovery
+ * \brief Function to kill cloud discovery
  * \ingroup lcc
  */
 void kill_cloud_discovery() {
@@ -99,7 +99,7 @@ void kill_cloud_discovery() {
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /**
- * Interrup handler of the LCC
+ * \brief Interrup handler of the LCC
  * \ingroup lcc
  */
 void interrupt_handler(int s) {
@@ -117,7 +117,7 @@ void interrupt_handler(int s) {
 #pragma GCC diagnostic pop
 
 /**
- * Exit handler of the LCC
+ * \brief Exit handler of the LCC
  * \ingroup lcc
  */
 void exit_handler() {
@@ -131,7 +131,7 @@ void exit_handler() {
 }
 
 /**
- * Main function of the LCC
+ * \brief Main function of the LCC
  * Command line arguments:
  * --dds_domain
  * --logging_id

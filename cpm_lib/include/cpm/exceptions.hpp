@@ -30,7 +30,7 @@
 
 namespace cpm {
     /**
-     * Small error class for the timer
+     * \brief Small error class for the timer
      * \ingroup cpmlib
      */
     class ErrorTimerStart: public std::runtime_error {    

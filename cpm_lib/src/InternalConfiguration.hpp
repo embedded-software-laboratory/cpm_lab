@@ -31,7 +31,7 @@ namespace cpm
 {
     /**
      * \class InternalConfiguration
-     * This class sets up the DDS domain, logging ID and DDS initial peer
+     * \brief This class sets up the DDS domain, logging ID and DDS initial peer
      * \ingroup cpmlib
      */
     class InternalConfiguration
