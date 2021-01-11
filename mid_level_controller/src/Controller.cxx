@@ -28,6 +28,7 @@
 #include <iostream>
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/TimeMeasurement.hpp"
 
 using namespace std::placeholders;
 
@@ -449,9 +450,11 @@ void Controller::reset()
 {
     std::lock_guard<std::mutex> lock(command_receive_mutex);
 
+    cpm::TimeMeasurement::Instance().start("reset_reader");
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
     reader_CommandTrajectory.reset(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
+    cpm::TimeMeasurement::Instance().stop("reset_reader");
 
     //Set current state to stop until new commands are received
     state = ControllerState::Stop;
