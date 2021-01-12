@@ -147,8 +147,8 @@ int main (int argc, char *argv[]) {
     std::shared_ptr<Communication> communication = std::make_shared<Communication>(
         hlcDomainNumber,
         vehicleStateListTopicName,
-        vehiclePathTrackingTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,
