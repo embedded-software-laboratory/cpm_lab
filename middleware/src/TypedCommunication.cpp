@@ -73,12 +73,10 @@ template<> void TypedCommunication<VehicleCommandPathTracking>::type_specific_ms
     }
 
     //3. Make sure consecutive path points have increasing s
-    for (
-        auto first = msg.path().begin(), second = ++first; 
-        second != msg.path().end(); 
-        first++, second++)
+    for (int i = 0; i < path_length - 1; i++)
     {
-        if (second->s() <= first->s()) {
+        int j = i + 1;
+        if (msg.path().at(j).s() <= msg.path().at(i).s()) {
             cpm::Logging::Instance().write(
                 1,
                 "Middleware (ID %i): HLC script sent invalid path points, s must be increasing",
