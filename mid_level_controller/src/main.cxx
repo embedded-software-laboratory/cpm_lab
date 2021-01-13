@@ -28,6 +28,7 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
 #include <string>
 #include <iterator>
@@ -52,6 +53,7 @@ using std::vector;
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/TimeMeasurement.hpp"
 #include "cpm/Writer.hpp"
 
 #include "SensorCalibration.hpp"
@@ -157,6 +159,8 @@ int main(int argc, char *argv[])
         [&](uint64_t t_now) 
         {
 
+            cpm::TimeMeasurement::Instance().start("cycle");
+
             //log_fn(__LINE__);
             try 
             {
@@ -174,6 +178,7 @@ int main(int argc, char *argv[])
 
                 // Run controller only if no stop signal was received, else do not drive
                 //The controller gets reset at the end of the function, to make sure that before that the vehicle actually gets to stop driving
+                cpm::TimeMeasurement::Instance().start("mpc");
                 if(stop_counter.load() == 0)
                 {
                     controller.get_control_signals(t_now, motor_throttle, steering_servo);
@@ -182,6 +187,7 @@ int main(int argc, char *argv[])
                 {
                     controller.get_stop_signals(motor_throttle, steering_servo);
                 }
+                cpm::TimeMeasurement::Instance().stop("mpc");
 
                 int n_transmission_attempts = 1;
                 int transmission_successful = 1;
@@ -206,9 +212,10 @@ int main(int argc, char *argv[])
                 memset(&spi_mosi_data, 0, sizeof(spi_mosi_data_t));
                 
                 // Convert actuator input to low level controller units
-                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
-                spi_mosi_data.servo_command = int16_t(steering_servo * (-1000.0));
                 spi_mosi_data.motor_mode = motor_mode;
+                spi_mosi_data.motor_pwm = int16_t(fabs(motor_throttle) * 400.0);
+                // servo allows a range of 2400 (see servo_timer.c)
+                spi_mosi_data.servo_command = int16_t(steering_servo * (-1200.0));
 
                 // vehicle ID for LED flashing 
                 spi_mosi_data.vehicle_id = static_cast<uint8_t>(vehicle_id);
@@ -217,12 +224,14 @@ int main(int argc, char *argv[])
                 spi_miso_data_t spi_miso_data;
 
                 //auto t_transfer_start = update_loop->get_time();
+                cpm::TimeMeasurement::Instance().start("spi");
                 spi_transfer(
                     spi_mosi_data,
                     &spi_miso_data,
                     &n_transmission_attempts,
                     &transmission_successful
                 );
+                cpm::TimeMeasurement::Instance().stop("spi");
                 if (transmission_successful && (spi_miso_data.status_flags & 1)) // IMU status
                 {
                     cpm::Logging::Instance().write(
@@ -254,7 +263,9 @@ int main(int argc, char *argv[])
                     cpm::stamp_message(vehicleState, t_now, 60000000ull);
 
                     controller.update_vehicle_state(vehicleState);
+                    cpm::TimeMeasurement::Instance().start("write_veh_state");
                     writer_vehicleState.write(vehicleState);
+                    cpm::TimeMeasurement::Instance().stop("write_veh_state");
                 }
                 else 
                 {
@@ -294,6 +305,9 @@ int main(int argc, char *argv[])
                 //Decrement the counter
                 stop_counter.store(stop_counter.load() - 1);
             }
+
+            // Finish current time measurements
+            cpm::TimeMeasurement::Instance().stop("cycle");
             
             //log_fn(__LINE__);
         },

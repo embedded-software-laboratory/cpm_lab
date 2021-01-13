@@ -286,6 +286,7 @@ int main(int argc, char *argv[])
         [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
     monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
+    timerViewUi->register_crash_checker(setupViewUi->get_crash_checker());
     auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
     auto tabsViewUi = make_shared<TabsViewUI>(
         setupViewUi, 

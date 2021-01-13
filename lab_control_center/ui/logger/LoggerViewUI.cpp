@@ -41,6 +41,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("logs_search_entry", logs_search_entry);
     ui_builder->get_widget("logs_search_type", logs_search_type);
     ui_builder->get_widget("log_level_combobox", log_level_combobox);
+    ui_builder->get_widget("label_log_status", label_log_status);
 
     assert(parent);
     assert(logs_treeview);
@@ -50,6 +51,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     assert(logs_search_entry);
     assert(logs_search_type);
     assert(log_level_combobox);
+    assert(label_log_status);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
@@ -170,9 +172,14 @@ void LoggerViewUI::on_log_level_changed()
     //Set the new log level
     LogLevelSetter::Instance().set_log_level(log_level.load());
 
+    //Lines for the UI dispatcher:
+
     //Reset the list - abuse the search_reset boolean notation to make sure that also old entries are reloaded...
     //... this time considering the new log level
     search_reset.store(true);
+    //Also display log warnings depending on the set log level
+    log_level_changed.store(true);
+
     ui_dispatcher.emit();
 }
 
@@ -233,6 +240,27 @@ void LoggerViewUI::dispatcher_callback() {
     //TODO: 
     // - More elegant solution for "searching...?"
     // - Search is never refreshed automatically - refresh button?
+
+    //Update entry that warns about high log levels depending on the current level, if it was changed
+    if (log_level_changed.exchange(false))
+    {
+        switch (log_level.load())
+        {
+        case 0:
+        case 1:
+            label_log_status->set_text("-");
+            break;
+        case 2:
+            label_log_status->set_text("Level 2: More messages are sent, this may lead to delays depending on the number of participants.");
+            break;
+        case 3:
+            label_log_status->set_text("Level 3: Much more messages are sent. The network may get overloaded quickly depending on the number of participants.");
+            break;
+        default:
+            label_log_status->set_text("Selecting higher log levels may lead to more messages sent within the network and thus to a possible overload.");
+            break;
+        }
+    }
 }
 
 //Suppress warning for unused parameter

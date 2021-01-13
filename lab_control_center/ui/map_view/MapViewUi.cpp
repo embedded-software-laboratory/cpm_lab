@@ -28,6 +28,7 @@
 #include <cassert>
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
+#include <math.h>
 
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
@@ -56,7 +57,9 @@ MapViewUi::MapViewUi(
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 ,get_obstacle_data(_get_obstacle_data)
 {
+    //container = new Gtk::Fixed();
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
+    //container.put(drawingArea, 0,0);
     drawingArea->set_double_buffered();
     drawingArea->show();
     
@@ -64,6 +67,8 @@ MapViewUi::MapViewUi(
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
+    //image_arrow = Cairo::ImageSurface::create_from_png("ui/map_view/arrow.png");
+    image_labcam = Cairo::ImageSurface::create_from_png("ui/map_view/labcam.png");
     
     update_dispatcher.connect([&](){ 
         //Pan depending on key press
@@ -202,11 +207,16 @@ MapViewUi::MapViewUi(
     });
 
     drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
-        mouse_x = (event->x - pan_x) / zoom;
-        mouse_y = -(event->y - pan_y) / zoom;
+        // Transform mouse-event from canvas coordinates into world coordinates by reversing all steps done while drawing (compare (*))
+        // Rotation around z-axis corresponds to the following matrix multiplication [x'] = [cos(a) -sin(a)] * [x]
+        //                                                                           [y']   [sin(a)  cos(a)]   [y]
+        double event_x =  ((event->x - pan_x) / zoom) - rotation_fixpoint_x;
+        double event_y = -((event->y - pan_y) / zoom) - rotation_fixpoint_y;
+        mouse_x =  (cos(-rotation)*event_x - sin(-rotation)*event_y) + rotation_fixpoint_x;
+        mouse_y =  (sin(-rotation)*event_x + cos(-rotation)*event_y) + rotation_fixpoint_y;
+
 
         vehicle_id_in_focus = find_vehicle_id_in_focus();
-
 
         // if in path drawing mode
         if(mouse_left_button && !path_painting_in_progress.empty())
@@ -303,9 +313,15 @@ int MapViewUi::find_vehicle_id_in_focus()
 void MapViewUi::draw(const DrawingContext& ctx)
 {
     ctx->save();
-    {
+    {   
+        // transforming (*)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
+        
+        // rotate mapview without changing the center of the map
+        ctx->translate(rotation_fixpoint_x,rotation_fixpoint_y);
+        ctx->rotate(rotation);
+        ctx->translate(-rotation_fixpoint_x,-rotation_fixpoint_y);       
 
         //draw_grid(ctx);
         //Draw map
@@ -327,6 +343,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
         }
 
         draw_lab_boundaries(ctx);
+
+        draw_labcam(ctx);
 
         draw_received_trajectory_commands(ctx);
 
@@ -663,6 +681,9 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
         }
         else if (entry.type() == VisualizationType::StringMessage
                  && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            
+            ctx->save();
+            // ctx->rotate(-rotation);
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
@@ -671,11 +692,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             Cairo::TextExtents ext;
             ctx->get_text_extents(entry.string_message(), ext);
             
-            double text_offset_x, text_offset_y;
-            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
-            
+            // Firstly, compute text offset neglecting the current map view rotation.
+            // Secondly, apply rotation matrix to text_offset so that offset is correclty applied dependent on the map view rotation.
+            double text_offset_left, text_offset_right;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_left, text_offset_right);
+            double text_offset_x = (cos(-rotation)*text_offset_left - sin(-rotation)*text_offset_right);
+            double text_offset_y = (sin(-rotation)*text_offset_left + cos(-rotation)*text_offset_right);
+
+            // Move to the correct position and rotate so that text is shown horizontally
             ctx->move_to(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
+            ctx->rotate(-rotation);
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
@@ -683,6 +710,8 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
             //Draw text
             ctx->show_text(entry.string_message().c_str());
+
+            ctx->restore();
         }
     }
 }
@@ -843,6 +872,22 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
     ctx->restore();
 }
 
+
+void MapViewUi::draw_labcam(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        const double scale = 0.1/image_labcam->get_width();
+        ctx->translate(-0.1,1.95);
+        ctx->rotate(M_PI / 2);
+        ctx->scale(scale, scale);
+        ctx->set_source(image_labcam,0,0);
+        ctx->paint();
+    }
+    ctx->restore();
+}
+
+
 void MapViewUi::draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
 {
     vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
@@ -889,7 +934,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
         {
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
@@ -1155,7 +1200,7 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
@@ -1178,4 +1223,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 Gtk::DrawingArea* MapViewUi::get_parent()
 {
     return drawingArea;
+}
+
+
+void MapViewUi::rotate_by(double rotation) {
+    this->rotation = std::fmod(this->rotation + (rotation * M_PI / 180), 2*M_PI);
 }
