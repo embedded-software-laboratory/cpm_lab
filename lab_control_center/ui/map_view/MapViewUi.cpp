@@ -35,11 +35,6 @@
 #include "PathInterpolation.hpp"
 #include "PathInterpolation.cxx"
 
-#include "PathTrackingController.hpp"
-#include "PathTrackingController.cxx"
-
-#include "VehicleCommandPathTracking.hpp"
-
 #include <stdio.h>
 
 using namespace std::placeholders; //For std::bind
@@ -496,14 +491,11 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
     ctx->save();
     for(const auto& entry : vehiclePathTracking) 
     {
-        const auto vehicle_id = entry.first;
         const auto& command = entry.second;
 
         rti::core::vector<PathPoint> path = command.path();
         
         if(path.size() < 2 ) continue;
-        
-        uint64_t t_now = cpm::get_time_ns();
 
         ctx->set_line_width(0.01);
 
@@ -545,7 +537,7 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
             }
         }
 
-        // Draw trajectory points
+        // Draw path points
         ctx->begin_new_path();
         for(size_t i = 0; i < path.size(); ++i)
         {

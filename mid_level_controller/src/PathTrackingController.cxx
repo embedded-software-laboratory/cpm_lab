@@ -27,19 +27,11 @@
 #include "PathTrackingController.hpp"
 #include <cassert>
 #include <cmath>
-// #include <iostream>
-// #include <sstream>
-// #include "cpm/Logging.hpp"
 #include "PathInterpolation.hpp"
 
-PathTrackingController::PathTrackingController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
-:
-    writer_Visualization(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        cpm::get_topic<Visualization>("visualization"),
-        dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
-    vehicle_id(vehicle_id),
-    stop_vehicle(stop_vehicle)
+PathTrackingController::PathTrackingController(uint8_t vehicle_id)
+    :writer_Visualization("visualization")
+    ,vehicle_id(vehicle_id)
 {}
 
 
@@ -95,8 +87,8 @@ double PathTrackingController::control_steering_servo(
     vis.points().resize(2);
     vis.points().at(0).x(ref_pose.x());
     vis.points().at(0).y(ref_pose.y());
-    vis.points().at(1).x(ref_pose.x() + tHat_y * vis_length * vehicleState.speed());
-    vis.points().at(1).y(ref_pose.y() + -tHat_x * vis_length * vehicleState.speed());
+    vis.points().at(1).x(ref_pose.x() + tHat_y * vis_length);
+    vis.points().at(1).y(ref_pose.y() + -tHat_x * vis_length);
 
     writer_Visualization.write(vis);
 
