@@ -521,9 +521,12 @@ void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
             double start = path[i-1].s();
             double end = path[i].s();
             double ds = (end - start) / n_interp;
+            double s_query = start;
 
-            for (double s_query = start; s_query <= end; s_query += ds)
+            for (int j = 0; j < n_interp; j++)
             {
+                s_query += ds;
+
                 // calculate distance to reference path
                 PathInterpolation path_interpolation(
                     s_query, path[i-1], path[i]

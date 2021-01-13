@@ -86,17 +86,17 @@ double PathTrackingController::control_steering_servo(
     vis.type(VisualizationType::LineStrips);
     vis.time_to_live(25000000ull);
     vis.size(0.03);
-    vis.color().r(255);
-    vis.color().g(0);
-    vis.color().b(240);
+    vis.color().r(0);
+    vis.color().g(204);
+    vis.color().b(204);
 
-    const double vis_length = 0.4;
+    const double vis_length = 0.12;
 
     vis.points().resize(2);
     vis.points().at(0).x(ref_pose.x());
     vis.points().at(0).y(ref_pose.y());
-    vis.points().at(1).x(ref_pose.x() + tHat_x * vis_length * vehicleState.speed());
-    vis.points().at(1).y(ref_pose.y() + tHat_y * vis_length * vehicleState.speed());
+    vis.points().at(1).x(ref_pose.x() + tHat_y * vis_length * vehicleState.speed());
+    vis.points().at(1).y(ref_pose.y() + -tHat_x * vis_length * vehicleState.speed());
 
     writer_Visualization.write(vis);
 

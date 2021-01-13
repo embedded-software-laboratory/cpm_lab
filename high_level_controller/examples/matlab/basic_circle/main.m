@@ -33,7 +33,7 @@ function main(vehicle_id)
     addpath(common_cpm_functions_path);
     
     matlabDomainId = 1;
-    [matlabParticipant, reader_vehicleStateList, writer_vehicleCommandTrajectory, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
+    [matlabParticipant, reader_vehicleStateList, writer_vehicleCommandTrajectory, ~, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
     
     %% Sync start with infrastructure
     % Send ready signal
