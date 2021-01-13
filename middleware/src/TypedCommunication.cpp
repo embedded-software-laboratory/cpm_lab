@@ -73,9 +73,9 @@ template<> void TypedCommunication<VehicleCommandPathTracking>::type_specific_ms
     }
 
     //3. Make sure consecutive path points have increasing s
-    for (int i = 0; i < path_length - 1; i++)
+    for (std::size_t i = 0; i < path_length - 2; i++)
     {
-        int j = i + 1;
+        std::size_t j = i + 1;
         if (msg.path().at(j).s() <= msg.path().at(i).s()) {
             cpm::Logging::Instance().write(
                 1,
