@@ -1,7 +1,7 @@
 //Doxygen software group and file descriptions for camera calibration
 
 /**
- * \defgroup plot_battery_discharge
+ * \defgroup plot_battery_discharge Plot Battery Discharge
  * \brief Includes matlab files for these plots
  * \ingroup tools
  */

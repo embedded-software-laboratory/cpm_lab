@@ -5,7 +5,7 @@
 #include <vector>
 
 /**
- * \defgroup lane_graph_outer_circle
+ * \defgroup lane_graph_outer_circle Lane Graph Outer Circle
  * \ingroup central_routing
  * TODO
  */

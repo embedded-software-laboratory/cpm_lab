@@ -5,7 +5,7 @@
 #include <vector>
 
 /**
- * \defgroup s_150_jahre_rwth_szenario
+ * \defgroup s_150_jahre_rwth_szenario 150 Jahre RWTH Szenario
  * \ingroup central_routing
  * TODO
  */

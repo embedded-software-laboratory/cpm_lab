@@ -1,7 +1,7 @@
 //Doxygen software group and file descriptions for camera calibration
 
 /**
- * \defgroup reference_trajectory_test
+ * \defgroup reference_trajectory_test Reference Trajectory Test
  * \brief TODO
  * \ingroup tools
  */

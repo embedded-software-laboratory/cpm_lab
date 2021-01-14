@@ -33,7 +33,7 @@
 
 //////////////////////////////////////////////
 /**
- * \defgroup basic_circle_matlab
+ * \defgroup basic_circle_matlab Basic Circle Matlab Example
  * \ingroup matlab
  */
 /**
@@ -46,7 +46,7 @@
 
 //////////////////////////////////////////////
 /**
- * \defgroup direct_control_matlab
+ * \defgroup direct_control_matlab Direct Control Matlab Example
  * \ingroup matlab
  */
 /**
@@ -59,7 +59,7 @@
 
 //////////////////////////////////////////////
 /**
- * \defgroup leader_follower_matlab
+ * \defgroup leader_follower_matlab Leader Follower Matlab Example
  * \ingroup matlab
  */
 /**
@@ -90,7 +90,7 @@
 
 //////////////////////////////////////////////
 /**
- * \defgroup platoon_matlab
+ * \defgroup platoon_matlab Platoon Matlab Example
  * \ingroup matlab
  */
 /**

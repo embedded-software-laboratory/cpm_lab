@@ -58,7 +58,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // BASH FILES
 /**
- * \defgroup lcc_bash
+ * \defgroup lcc_bash LCC Bash Files
  * \brief LCC file descriptions for files in ./bash (for local & remote deployment & vehicle reboot)
  * \ingroup lcc_further
  */
@@ -117,7 +117,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // UI FILES
 /**
- * \defgroup lcc_ui_files
+ * \defgroup lcc_ui_files LCC UI Files
  * \brief Short description for the .glade UI files
  * \ingroup lcc_further
  */

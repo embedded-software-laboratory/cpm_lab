@@ -1,7 +1,7 @@
 //Doxygen software group and file descriptions for camera calibration
 
 /**
- * \defgroup vehicle_dynamics_identification_and_mpc
+ * \defgroup vehicle_dynamics_identification_and_mpc Vehicle Dynamics Identification and MPC
  * \brief TODO
  * \ingroup tools
  */

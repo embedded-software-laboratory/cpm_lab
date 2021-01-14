@@ -31,7 +31,7 @@
 #include <vector>
 
 /**
- * \defgroup lane_graph_one_lane
+ * \defgroup lane_graph_one_lane Lane Graph With One Lane
  * \ingroup central_routing
  * TODO
  */

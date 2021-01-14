@@ -1,7 +1,7 @@
 //Doxygen software group and file descriptions for camera calibration
 
 /**
- * \defgroup camera_calibration
+ * \defgroup camera_calibration Camera Calibration
  * \brief Camera calibration matlab files, and points in calibration_points.csv
  * \ingroup tools
  */
