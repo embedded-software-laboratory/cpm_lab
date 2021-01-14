@@ -59,13 +59,53 @@ namespace cpm
         ParameterReceiver& operator=(ParameterReceiver const&) = delete;
         ParameterReceiver& operator=(ParameterReceiver &&) = delete;
 
-        //Provide access similar to the interface
+        /**
+         * \brief Access function to get a boolean parameter via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         bool parameter_bool(std::string parameter_name);
+
+        /**
+         * \brief Access function to get a uin64_t parameter via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         uint64_t parameter_uint64_t(std::string parameter_name);
+
+        /**
+         * \brief Access function to get an int32_t parameter via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         int32_t parameter_int(std::string parameter_name);
+
+        /**
+         * \brief Access function to get a double parameter via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         double parameter_double(std::string parameter_name);
+
+        /**
+         * \brief Access function to get a string parameter via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         std::string parameter_string(std::string parameter_name);
+
+        /**
+         * \brief Access function to get a list of int32_t parameter values via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         std::vector<int32_t> parameter_ints(std::string parameter_name);
+
+        /**
+         * \brief Access function to get a list of double parameter values via cpm::parameter_... functions
+         * \param parameter_name the name of the parameter
+         * \return the value of the parameter with the given name
+         */
         std::vector<double> parameter_doubles(std::string parameter_name);
 
     private:

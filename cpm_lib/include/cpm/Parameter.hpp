@@ -35,6 +35,7 @@
  * made up of a parameter name, a parameter type and the value 
  * of the parameter. This interface can be used to  
  * request the current definition of a paramter. 
+ * \ingroup cpmlib
  */
 
 #include <string>

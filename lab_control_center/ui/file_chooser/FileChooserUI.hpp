@@ -47,7 +47,11 @@
  */
 class FileChooserUI {
 public:
-    //Filter struct for defining Filters for the file chooser dialog (such as: only show files of type .m, .exe etc...)
+    /**
+     * \struct Filter
+     * \brief Filter struct for defining Filters for the file chooser dialog (such as: only show files of type .m, .exe etc...)
+     * \ingroup lcc_ui
+     */
     struct Filter 
     {
         std::string name;

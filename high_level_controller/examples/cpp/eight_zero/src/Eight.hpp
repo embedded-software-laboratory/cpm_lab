@@ -38,15 +38,28 @@ using std::vector;
  */
 struct Waypoint
 {
+    //! TODO
     int index;
 
-    // The "normal" eight trajectory is extended by one path connecting the two topmost points
-    // and by one connecting the two lowermost points. If one of these paths is used the
-    // direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
-    // must change the sign which is done by this variable:
+    /**
+     * \brief The "normal" eight trajectory is extended by one path connecting the two topmost points
+     * and by one connecting the two lowermost points. If one of these paths is used the
+     * direction in which the vehicle follows the 8-trajectory changes. Thus, all velocities
+     * must change the sign which is done by this variable:
+     */
     int direction;
 
+    /**
+     * \brief Constructor TODO
+     * \param index TODO
+     * \param direction TODO
+     */
     Waypoint(int index, int direction);
+
+    /**
+     * \brief TODO
+     * \param other TODO
+     */
     bool operator<(const Waypoint other) const;
 };
 
@@ -73,9 +86,24 @@ class Eight
 
 
 public:
+    /**
+     * \brief Constructor TODO
+     */
     Eight();
+    
+    /**
+     * \brief TODO
+     */
     TrajectoryPoint get_trajectoryPoint();
+
+    /**
+     * \brief TODO
+     */
     uint64_t get_segment_duration();
+
+    /**
+     * \brief TODO
+     */
     void move_forward();
 };
 

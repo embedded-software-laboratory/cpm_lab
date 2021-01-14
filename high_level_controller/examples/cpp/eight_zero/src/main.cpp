@@ -56,6 +56,8 @@ using std::vector;
 
 /**
  * \brief Main function of the eight_zero scenario
+ * \param argc Command line param
+ * \param argv Command line param
  * \ingroup eight_zero
  */
 int main(int argc, char *argv[])

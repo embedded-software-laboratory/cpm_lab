@@ -911,7 +911,9 @@ FILE_PATTERNS          = *.bash \
                          *.yaml \
                          *.glade \
                          *.css \
-                         *.template 
+                         *.template  \
+                         *.config \
+                         *.sh
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -935,6 +937,10 @@ EXCLUDE                =    mid_level_controller/src/bcm2835.h \
                             indoor_positioning_system/test/catch.cpp \
                             middleware/test/catch.hpp \
                             middleware/test/catch.cpp \
+                            high_level_controller/autostart/autostart_package \
+                            middleware/test/catch.cpp \
+                            cpm_lib/cpm_library_package \
+                            middleware/middleware_package \
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

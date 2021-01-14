@@ -52,6 +52,8 @@ using std::vector;
 /**
  * \brief Main function of the two_vehicles_drive scenario
  * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?spaceKey=CLD&title=Two+Vehicles+Drive
+ * \param argc Command line argument
+ * \param argv Command line argument
  * \ingroup two_vehicles_drive
  */
 int main(int argc, char *argv[])

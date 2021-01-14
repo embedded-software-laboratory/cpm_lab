@@ -85,6 +85,9 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Function to get the internally stored DDS-representation of the participant
+         */
         dds::domain::DomainParticipant& get_participant()
         {
             return dds_participant;

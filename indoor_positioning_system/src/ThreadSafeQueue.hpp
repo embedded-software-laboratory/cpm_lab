@@ -40,24 +40,21 @@ class ThreadSafeQueue
 {
 
 private:
-    /**
-        queue which stores the elements
-    */
+    //! queue which stores the elements
     std::queue<T> queue_;
 
-    /**
-        lock for the queue
-    */
+    //! lock for the queue
     std::mutex mutex_;
 
-    /**
-        conditional variable for the queue
-    */
+    //! conditional variable for the queue
     std::condition_variable cond_;
 
 
 public:
 
+    /**
+     * \brief TODO
+     */
     T pop()
     {
         std::unique_lock<std::mutex> mlock(mutex_);
@@ -71,6 +68,10 @@ public:
         return item;
     }
 
+    /**
+     * \brief TODO
+     * \param item
+     */
     void pop(T& item)
     {
         std::unique_lock<std::mutex> mlock(mutex_);
@@ -83,6 +84,10 @@ public:
         queue_.pop();
     }
 
+    /**
+     * \brief TODO
+     * \param item
+     */
     void push(const T& item)
     {
         std::unique_lock<std::mutex> mlock(mutex_);
@@ -91,6 +96,10 @@ public:
         cond_.notify_one();
     }
 
+    /**
+     * \brief TODO
+     * \param item
+     */
     void push(T&& item)
     {
         std::unique_lock<std::mutex> mlock(mutex_);

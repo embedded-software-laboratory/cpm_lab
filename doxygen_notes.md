@@ -5,7 +5,7 @@ Settings:
 
 INPUT (currently redundant, as ./ is given in the end; only ./LICENSE is relevant additionally, because else the file without ending would not be included due to the set file patterns)
 RECURSIVE
-FILE_PATTERNS (added .bash, .xml, .yaml, .glade, .css, .template)
+FILE_PATTERNS (added .bash, .xml, .yaml, .glade, .css, .template, .config, .sh)
 GENERATE_TREEVIEW
 EXTRACT_STATIC (set to YES)
 
@@ -24,7 +24,7 @@ Set EXTRACT_ALL to YES if you want undocumented files to appear in the documenta
 
 USE_MDFILE_AS_MAINPAGE can also be used instead of the current DoxygenMainpage.hpp - currently: NO
 
-EXCLUDE to exclude bcm2835.h, as it contains its own mainpage, as well as the catch.hpp/cpp files, and most .md files
+EXCLUDE to exclude bcm2835.h, as it contains its own mainpage, as well as the catch.hpp/cpp files, and most .md files, and most package files
 
 SORT_BRIEF_DOCS was set to YES by me - even though this also changes the class list, it is irritating to see functions in a group overview in a non-alphabetical order, so I changed that
 

@@ -51,6 +51,9 @@ namespace cpm
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
+         * \param is_reliable Set the QoS to best effort / reliable
+         * \param history_keep_all Set the QoS to keep the whole history / only the last message
+         * \param is_transient_local Set the QoS to (not) be transient local
          */
         dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool history_keep_all, bool is_transient_local)
         {
@@ -115,6 +118,9 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Get the received messages
+         */
         std::vector<T> take()
         {
             auto samples = dds_reader.take();

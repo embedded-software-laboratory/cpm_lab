@@ -41,6 +41,11 @@ class DetectVehicleID
     const std::vector<uint8_t> identification_LED_enabled_ticks;
 
 public:
+    /**
+     * \brief Constructor TODO
+     * \param _identification_LED_period_ticks TODO
+     * \param _identification_LED_enabled_ticks TODO
+     */
     DetectVehicleID(
         std::vector<uint8_t> _identification_LED_period_ticks,
         std::vector<uint8_t> _identification_LED_enabled_ticks

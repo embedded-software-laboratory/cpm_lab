@@ -40,11 +40,28 @@ using std::vector;
  */
 struct PathNode
 {
+    //! TODO
     double x;
+
+    //! TODO
     double y;
+
+    //! TODO
     double cos_yaw;
+
+    //! TODO
     double sin_yaw;
+
+    //! Simple Constructor
     PathNode(){}
+
+    /**
+     * \brief Constructor where all parameters can be set at once
+     * \param x TODO
+     * \param y TODO
+     * \param cos_yaw TODO
+     * \param sin_yaw TODO
+     */
     PathNode(double x, double y, double cos_yaw, double sin_yaw)
     :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
 };

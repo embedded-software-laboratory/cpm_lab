@@ -42,12 +42,22 @@ DetectVehicleID::DetectVehicleID(
     assert(identification_LED_enabled_ticks.size() == identification_LED_period_ticks.size());
 }
 
+/**
+ * \struct VehicleTrackingInfo
+ * \brief TODO
+ * \ingroup ips
+ */
 struct VehicleTrackingInfo
 {
     bool center_present = false;
     cv::Point2d centroid;
 };
 
+/**
+ * \struct SignalEdge
+ * \brief TODO
+ * \ingroup ips
+ */
 struct SignalEdge
 {
     int position;

@@ -50,13 +50,43 @@ class MultiVehicleTrajectoryPlanner
     std::map<uint8_t, std::vector<TrajectoryPoint> > trajectory_point_buffer;
 
 public:
-
+    /**
+     * \brief Constructor TODO
+     * \param dt_nanos TODO
+     */
     MultiVehicleTrajectoryPlanner(uint64_t dt_nanos);
+
+    /**
+     * \brief Destructor
+     */
     ~MultiVehicleTrajectoryPlanner();
+
+    /**
+     * \brief TODO
+     * \param t_now TODO
+     */
     std::vector<VehicleCommandTrajectory> get_trajectory_commands(uint64_t t_now);
+
+    /**
+     * \brief TODO
+     * \param t TODO
+     */
     void set_real_time(uint64_t t);
+
+    /**
+     * \brief TODO
+     */
     bool is_started() {return started;}
+
+    /**
+     * \brief TODO
+     * \param vehicle TODO
+     */
     void add_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+
+    /**
+     * \brief TODO
+     */
     void start();
 
 };

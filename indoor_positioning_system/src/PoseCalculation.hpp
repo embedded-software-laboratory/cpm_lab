@@ -41,7 +41,15 @@ class PoseCalculation
     std::vector<double> calibration_dy;
 
 public:
+    /**
+     * \brief Constructor TODO
+     */
     PoseCalculation();
+
+    /**
+     * \brief TODO
+     * \param vehiclePoints
+     */
     std::vector<VehicleObservation> apply(const VehiclePoints &vehiclePoints);
     
 };

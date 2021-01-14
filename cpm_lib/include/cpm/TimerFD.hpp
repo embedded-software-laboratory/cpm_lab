@@ -82,15 +82,30 @@ namespace cpm {
         std::function<void(uint64_t t_now)> m_update_callback;
         std::function<void()> m_stop_callback;
 
-
+        /**
+         * \brief Wait for the next period start of timerfd
+         */
         void wait();
-        uint64_t receiveStartTime(); //Bool: true if start signal was received, false if stop signal was received
+
+        /**
+         * \brief Wait for a start signal; 
+         * return the start signal as soon as one was received
+         * return the stop signal if that one was received
+         */
+        uint64_t receiveStartTime();
         uint64_t start_point = 0;
         bool start_point_initialized = false; //Only retrieve start_point from outside if it was initialized (mutex costs too much performance, is only written once)
+        
+        /**
+         * \brief True if a stop signal has been received
+         */
         bool received_stop_signal ();
         
         const bool wait_for_start; //If false, do not use receiveStartTime()
 
+        /**
+         * \brief Create the internal timerf using the realtime clock
+         */
         void createTimer ();
 
         //For custom stop signals, should be changed only if you know what you are doing (usually you do not want to define a stop signal for you own participant, but use the default one!)
@@ -99,13 +114,17 @@ namespace cpm {
     public:
         /**
          * \brief Create a "real-time" timer that can be used for function callback
-         * \param node_id ID of the timer in the network
+         * \param _node_id ID of the timer in the network
          * \param period_nanoseconds The timer is called periodically with a period of period_nanoseconds
          * \param offset_nanoseconds Initial offset (from timestamp 0)
          * \param wait_for_start Set whether the timer is started only if a start signal is sent via DDS (true), or if it should should start immediately (false)
          * \param _stop_signal Optional and not recommended unless you know what you are doing! Define your own stop signal (instead of the default one) for DDS communication
          */
         TimerFD(std::string _node_id, uint64_t period_nanoseconds, uint64_t offset_nanoseconds, bool wait_for_start, uint64_t _stop_signal = TRIGGER_STOP_SYMBOL);
+        
+        /**
+         * \brief Destructor for internal mutex, timerfd...
+         */
         ~TimerFD();
 
         /**

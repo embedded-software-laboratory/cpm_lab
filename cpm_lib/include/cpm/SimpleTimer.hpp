@@ -71,6 +71,10 @@ namespace cpm {
          * if set, stop_callback is set to be an empty lambda if start is called without stop_callback
          */
         SimpleTimer(std::string _node_id, uint64_t period_milliseconds, bool wait_for_start, bool react_to_stop_signal = true, uint64_t stop_signal = TRIGGER_STOP_SYMBOL);
+        
+        /**
+         * \brief Destructor due to internal mutex, timer...
+         */
         ~SimpleTimer();
 
         /**

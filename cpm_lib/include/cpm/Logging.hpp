@@ -76,17 +76,46 @@ namespace cpm {
             std::atomic_ushort log_level;
             std::shared_ptr<cpm::AsyncReader<LogLevel>> log_level_reader;
 
+            /**
+             * \brief Private Logging constructor to set up the Logging Singleton
+             */
             Logging();
+
+            /**
+             * \brief Private function to get the current time in ns, just uses get_time_ns
+             */
             uint64_t get_time();
+
+            /**
+             * \brief Check if the logging ID of the Logger Instance was set, else report an error and stop the program
+             */
             void check_id();
 
         public:
+            /**
+             * \brief Singleton constructor / method to access the Logging Singleton Instance; from there, the Logging functionality can be accessed
+             */
             static Logging& Instance();
+
+            /**
+             * \brief Function to set the Logging ID - must be called at the start of your program! 
+             * Is also called by internal configuration, so the init function initializes this automatically if
+             * --logging_id was set in the command line as parameter (else, the ID is "uninitialized")
+             * If you want to override the init function logging ID, call set_id explicitly after the cpm init
+             * \param id ID of the Logging program, with which the Logs can be identified (e.g. middleware, hlc, lcc...)
+             */
             void set_id(std::string id);
+
+            /**
+             * \brief Get the file name of the Logging file
+             */
             std::string get_filename();
+
             /**
              * \brief Allows for a C-style use of the logger, like printf, using snprintf
              * \param message_log_level Determines the relevance of the message (1: critical system failure, 2: typical error message, 3: any other message (verbose) - 0 means 'never log anything')
+             * \param f String of a form like in fprintf
+             * \param args Optional parameters as given to fprintf after the format string
              */
             template<class ...Args> void write(unsigned short message_log_level, const char* f, Args&& ...args) {
                 //Only log the message if the log_level of the message is <= the current level - else, it is not relevant enough
@@ -134,6 +163,8 @@ namespace cpm {
             /**
              * \brief Allows for a C-style use of the logger, like printf, using snprintf
              * We do not set any log-level here, the default value then is just one (as can be seen in the if clause)
+             * \param f String of a form like in fprintf
+             * \param args Optional parameters as given to fprintf after the format string
              */
             template<class ...Args> void write(const char* f, Args&& ...args) {
                 //Only log the message if the log_level of the message is <= the current level - else, it is not relevant enough

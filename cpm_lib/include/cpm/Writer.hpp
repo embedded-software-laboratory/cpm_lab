@@ -134,6 +134,10 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Send a message in the DDS network using the writer
+         * \param msg The message to send
+         */
         void write(T msg)
         {
             dds_writer.write(msg);

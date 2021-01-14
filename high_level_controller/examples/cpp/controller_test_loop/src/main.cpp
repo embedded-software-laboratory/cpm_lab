@@ -83,12 +83,31 @@ private:
     std::mutex& observation_mutex;
     std::map<uint8_t, VehicleObservation>& vehicle_observations;
 
+    /**
+     * \brief TODO
+     * \param x_1 TODO
+     * \param y_1 TODO
+     * \param x_2 TODO
+     * \param y_2 TODO
+     */
     double get_squared_distance(double x_1, double y_1, double x_2, double y_2)
     {
         return (x_1 - x_2) * (x_1 - x_2) 
             + (y_1 - y_2) * (y_1 - y_2);
     }
 
+    /**
+     * \brief TODO
+     * \param x1_before TODO
+     * \param y1_before TODO
+     * \param x1_after TODO
+     * \param y1_after TODO
+     * \param x2_before TODO
+     * \param y2_before TODO
+     * \param x2_after TODO
+     * \param y2_after TODO
+     * \param tolerance TODO
+     */
     bool has_collision(double x1_before, double y1_before, double x1_after, double y1_after,
         double x2_before, double y2_before, double x2_after, double y2_after, double tolerance)
     {
@@ -112,6 +131,14 @@ private:
         return false;
     }
 
+    /**
+     * \brief TODO
+     * \param x1 TODO
+     * \param y1 TODO
+     * \param x2 TODO
+     * \param y2 TODO
+     * \param tolerance TODO
+     */
     bool has_collision(double x1, double y1, double x2, double y2, double tolerance)
     {
         double min_x1 = x1 - tolerance/2.0;
@@ -134,6 +161,12 @@ private:
         return false;
     }
 
+    /**
+     * \brief TODO
+     * \param old_index TODO
+     * \param next_index TODO
+     * \param vehicle_id TODO
+     */
     bool has_collision(size_t old_index, size_t next_index, uint8_t vehicle_id)
     {
         const TrajectoryPoint& old_pose = trajectory_points.at(old_index);
@@ -185,7 +218,12 @@ private:
     }
 
 public:
-    //Get references to data required for the computation
+    /**
+     * \brief Constructor. Get references to data required for the computation
+     * \param _trajectory_points TODO
+     * \param _observation_mutex TODO
+     * \param _vehicle_observations TODO
+     */
     TrajectoryIndex(std::vector<TrajectoryPoint>& _trajectory_points, std::mutex& _observation_mutex, std::map<uint8_t, VehicleObservation>& _vehicle_observations) :
         trajectory_points(_trajectory_points),
         observation_mutex(_observation_mutex),
@@ -194,6 +232,10 @@ public:
 
     }
 
+    /**
+     * \brief TODO
+     * \param id TODO
+     */
     void set_closest_trajectory_point(uint8_t id)
     {
         //Lock map so that it cannot be changed elsewhere, then get trajectory index
@@ -236,6 +278,7 @@ public:
     /**
      * \brief Returns the trajectory point for the given id OR tries to calculate one - this might fail, so no valid value is returned in that case
      *      Also return whether a collision would have occurred - in that case, the vehicle needs to s
+     * \param id TODO
      */
     std::pair<int64_t,bool> get_next_trajectory_index(uint8_t id)
     {
@@ -269,6 +312,8 @@ public:
 
 /**
  * \brief Main function of the controller_test_loop scenario
+ * \param argc Command line param
+ * \param argv Command line param
  * \ingroup controller_test_loop
  */
 int main(int argc, char *argv[])

@@ -13,7 +13,7 @@
  */
 
 /**
- * \file hlc_local.bash
+ * \file hlc_start_local.bash
  * \brief Start a script using matlab locally in the shell
  * \ingroup hlc_bash
  */

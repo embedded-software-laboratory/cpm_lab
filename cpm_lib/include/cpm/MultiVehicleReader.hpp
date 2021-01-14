@@ -57,7 +57,10 @@ namespace cpm
 
         std::vector<uint8_t> vehicle_ids;
 
-
+        /**
+         * \brief Function to go through all samples received since the last call of get_samples.
+         * These are put in the ring buffer vehicle_buffers for each vehicle
+         */
         void flush_dds_reader()
         {
             auto samples = dds_reader.take();
@@ -112,6 +115,10 @@ namespace cpm
             vehicle_ids = _vehicle_ids;
         }
 
+        /**
+         * \brief Copy Constructor
+         * \param other the reader to copy
+         */
         MultiVehicleReader(const MultiVehicleReader &other) 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -121,7 +128,14 @@ namespace cpm
             vehicle_ids = other.vehicle_ids;
         }
         
-
+        /**
+         * \brief This function returns the newest already valid samples (-> using information from the msg header, Header.idl) 
+         * received from each vehicle the reader was set to receive samples from.
+         * If a returned sample has a create stamp of 0, a sample age of t_now and is otherwise empty, no sample could be found for that vehicle
+         * \param t_now Current time in ns since epoch
+         * \param sample_out Map of samples, with vehicle_id -> message / content
+         * \param sample_age_out Map of sample ages, with vehicle_id -> age of message
+         */
         void get_samples(
             const uint64_t t_now, 
             std::map<uint8_t, T>& sample_out, 

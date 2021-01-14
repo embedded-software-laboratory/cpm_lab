@@ -28,7 +28,11 @@
 #include "DetectVehicleID.hpp"
 
 
-
+/**
+ * \test Tests DetectVehicleID
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("test_DetectVehicleID")
 {
     // Create test data
@@ -86,7 +90,11 @@ TEST_CASE("test_DetectVehicleID")
 }
 
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_empty_input_SHOULD_return_empty_VehiclePoints")
 {
     // Create test data
@@ -105,7 +113,11 @@ TEST_CASE("TEST_apply_WITH_empty_input_SHOULD_return_empty_VehiclePoints")
 }
 
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_0_vehicles_SHOULD_return_empty_VehiclePoints")
 {
     // Create test data

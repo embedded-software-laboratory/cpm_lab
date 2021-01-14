@@ -52,6 +52,8 @@ using std::vector;
 /**
  * \brief Main function of the diagonal_figure_eight scenario
  * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Diagonal+Figure+Eight+Example
+ * \param argc Command line param
+ * \param argv Command line param
  * \ingroup diagonal_figure_eight
  */
 int main(int argc, char *argv[])

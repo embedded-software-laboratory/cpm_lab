@@ -43,9 +43,16 @@
  */
 struct IpsVisualizationInput
 {
+    //! TODO
     VehiclePoints identifiedVehicles;
+
+    //! TODO
     std::vector<VehicleObservation> vehicleObservations;
+
+    //! TODO
     FloorPoints floorPoints;
+
+    //! TODO
     VehiclePoints vehiclePoints;
 };
 
@@ -74,9 +81,27 @@ class IpsPipeline
     uint64_t t_previous_nanos = 0;
 
 public:
+    /**
+     * \brief Constructor TODO
+     * \param enable_visualization
+     */
     IpsPipeline(const bool enable_visualization);
+
+    /**
+     * \brief TODO
+     * \param led_points
+     */
     void apply(LedPoints led_points);
+
+    /**
+     * \brief TODO
+     * \param input
+     */
     cv::Mat visualization(const IpsVisualizationInput &input);
+
+    /**
+     * \brief TODO
+     */
     void visualization_loop();
     
     

@@ -64,7 +64,7 @@
  */
 
 /**
- * \file copy_to_remote.bash
+ * \file ./bash/copy_to_remote.bash
  * \brief Copies the chosen script to the HLC guest user, starts the script using tmux; 
  * path + script + middleware command line information are transferred as well;
  * does not check if the HLC is reachable beforehand, this is handled internally by the C++ code that calls this script via timeouts
@@ -72,43 +72,43 @@
  */
 
 /**
- * \file environment_variables_local.bash
+ * \file ./bash/environment_variables_local.bash
  * \brief Sets required environment variables for tmux sessions running locally
  * \ingroup lcc_bash
  */
 
 /**
- * \file environment_variables.bash
+ * \file ./bash/environment_variables.bash
  * \brief Sets required environment variables for tmux sessions running on the HLC
  * \ingroup lcc_bash
  */
 
 /**
- * \file reboot_raspberry.bash
+ * \file ./bash/reboot_raspberry.bash
  * \brief Sends a reboot signal to the vehicle
  * \ingroup lcc_bash
  */
 
 /**
- * \file remote_kill.bash
+ * \file ./bash/remote_kill.bash
  * \brief Kills the middleware and script tmux sessions on the HLC guest, if it is reachable
  * \ingroup lcc_bash
  */
 
 /**
- * \file remote_start.bash
+ * \file ./bash/remote_start.bash
  * \brief Starts middleware and script on the HLC guest via tmux
  * \ingroup lcc_bash
  */
 
 /**
- * \file tmux_middleware.bash
+ * \file ./bash/tmux_middleware.bash
  * \brief Script to start the middleware on the HLC, called by remote_start internally
  * \ingroup lcc_bash
  */
 
 /**
- * \file tmux_script.bash
+ * \file ./bash/tmux_script.bash
  * \brief Script to start the script on the HLC, called by remote_start internally
  * \ingroup lcc_bash
  */

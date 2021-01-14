@@ -62,23 +62,65 @@ class VehicleTrajectoryPlanningState
 
     array<double, N_STEPS_SPEED_PROFILE> speed_profile;
 
+    /**
+     * \brief TODO
+     */
     void invariant();
+
+    /**
+     * \brief TODO
+     * \param n
+     */
     void extend_random_route(size_t n);
+
+    /**
+     * \brief TODO
+     */
     vector<std::pair<size_t, size_t>> get_planned_path();
+
+    /**
+     * \brief TODO
+     * \param idx_speed_reduction
+     * \param speed_value
+     */
     void set_speed(int idx_speed_reduction, double speed_value);
 
 public:
-
+    /**
+     * \brief Constructor TODO
+     */
     VehicleTrajectoryPlanningState(){}
+
+    /**
+     * \brief Constructor TODO
+     * \param _vehicle_id
+     * \param _edge_index
+     * \param _edge_path_index
+     */
     VehicleTrajectoryPlanningState(
         uint8_t _vehicle_id,
         size_t _edge_index,
         size_t _edge_path_index);
 
+    /**
+     * \brief TODO
+     */
     TrajectoryPoint get_trajectory_point();
+
+    /**
+     * \brief TODO
+     * \param dt_nanos
+     */
     void apply_timestep(uint64_t dt_nanos);
 
-    // Change the own speed profile so as not to collide with the other_vehicles.
+    /**
+     * \brief Change the own speed profile so as not to collide with the other_vehicles.
+     * \param other_vehicles
+     */
     bool avoid_collisions(vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles);
+
+    /**
+     * \brief TODO
+     */
     uint8_t get_vehicle_id(){return vehicle_id;}
 };
