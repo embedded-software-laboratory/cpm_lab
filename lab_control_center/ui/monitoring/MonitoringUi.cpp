@@ -311,7 +311,7 @@ void MonitoringUi::init_ui_thread()
                                     cpm::Logging::Instance().write(
                                         1,
                                         "Warning: NUC %d disconnected. Stopping vehicles ...", 
-                                        hlc_id
+                                        static_cast<int>(hlc_id)
                                     );
                                     if(error_timestamps[0][0] == 0) 
                                     {
@@ -328,7 +328,7 @@ void MonitoringUi::init_ui_thread()
                                         cpm::Logging::Instance().write(
                                             1,
                                             "Warning: NUCs %d disconnected. Stopping experiment ...", 
-                                            hlc_id
+                                            static_cast<int>(hlc_id)
                                             );
                                         this->kill_deployed_applications();
                                         error_triggered[0][0] = true; 
@@ -341,7 +341,7 @@ void MonitoringUi::init_ui_thread()
                                     cpm::Logging::Instance().write(
                                         1,
                                         "Warning: NUC %d had a program crash. Stopping vehicles ...", 
-                                        hlc_id
+                                        static_cast<int>(hlc_id)
                                     );
                                     deploy_functions->stop_vehicles(vehicle_ids);
                                 }
@@ -406,7 +406,7 @@ void MonitoringUi::init_ui_thread()
                                 cpm::Logging::Instance().write(
                                     1,
                                     "Warning: Clock delta of vehicle %d too high. Stopping experiment ...",
-                                    vehicle_id
+                                    static_cast<int>(vehicle_id)
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
@@ -446,7 +446,7 @@ void MonitoringUi::init_ui_thread()
                                 cpm::Logging::Instance().write(
                                     1,
                                     "Warning: Battery level of vehicle %d too low. Stopping experiment ...", 
-                                    vehicle_id
+                                    static_cast<int>(vehicle_id)
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
@@ -482,7 +482,7 @@ void MonitoringUi::init_ui_thread()
                                 cpm::Logging::Instance().write(
                                     1,
                                     "Warning: speed of vehicle %d too high. Stopping experiment ...", 
-                                    vehicle_id
+                                    static_cast<int>(vehicle_id)
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
@@ -518,7 +518,7 @@ void MonitoringUi::init_ui_thread()
                                 cpm::Logging::Instance().write(
                                     1,
                                     "Warning: no IPS signal of vehicle %d. Age: %f ms. Stopping experiment ...", 
-                                    vehicle_id, value
+                                    static_cast<int>(vehicle_id), value
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
@@ -624,7 +624,7 @@ void MonitoringUi::init_ui_thread()
                                     cpm::Logging::Instance().write(
                                         1,
                                         "Warning: vehicle %d not on reference. Error: %f m and %f ms. Stopping experiment ...", 
-                                        vehicle_id, error, dt/1e6
+                                        static_cast<int>(vehicle_id), error, dt/1e6
                                     );
                                     this->kill_deployed_applications();
                                     error_triggered[i][vehicle_id] = true;
