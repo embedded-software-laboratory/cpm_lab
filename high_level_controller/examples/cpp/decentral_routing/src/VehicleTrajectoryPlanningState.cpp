@@ -39,7 +39,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_route_edge_indices({_edge_index})
 {   
     // Set seed for rand
-    srand(time(NULL));
+    srand(time(NULL)*vehicle_id);
 
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
