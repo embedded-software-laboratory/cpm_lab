@@ -33,6 +33,15 @@
  *  Author: cfrauzem
  */ 
 
+/**
+ * \file spi.c
+ *
+ * \author maczijewski, cfrauzem
+ * \date Created: 21.09.2018 17:50:29, Modified 19.06.2019
+ * 
+ * \ingroup low_level_controller
+ */
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>

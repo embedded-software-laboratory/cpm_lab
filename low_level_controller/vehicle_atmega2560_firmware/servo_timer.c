@@ -33,6 +33,15 @@
  *  Author: cfrauzem
  */ 
 
+/**
+ * \file servo_timer.c
+ *
+ * \author maczijewski, cfrauzem
+ * \date Created: 24.09.2018 16:26:48, Modified: 05.31.2019 11:32:19
+ * 
+ * \ingroup low_level_controller
+ */
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>

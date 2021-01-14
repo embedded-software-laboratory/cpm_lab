@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * watchdog.c
+/**
+ * \file watchdog.c
  *
- * Created: 6/21/2019 13:35:14
- *  Author: cfrauzem
+ * \author cfrauzem
+ * \date Created: 6/21/2019 13:35:14
+ * 
+ * \ingroup low_level_controller
  */ 
 
 

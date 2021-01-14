@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * odometer.c
+/**
+ * \file odometer.c
  *
- * Created: 20.09.2018 21:34:20
- *  Author: maczijewski
+ * \author maczijewski
+ * \date Created: 20.09.2018 21:34:20
+ * 
+ * \ingroup low_level_controller
  */ 
 
 

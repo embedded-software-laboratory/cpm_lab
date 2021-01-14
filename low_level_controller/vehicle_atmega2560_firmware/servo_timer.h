@@ -41,8 +41,29 @@
 
 // The servo PWM signal runs at 50Hz
 
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 uint32_t get_tick(); // time since chip startup, in 20 msec increments
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void servo_timer_setup();
+
+/**
+ * \brief TODO
+ * \param pwm
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void set_servo_pwm(uint16_t pwm); // values from 2000 to 4000. center at 3000
 
 

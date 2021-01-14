@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * led.c
+/**
+ * \file led.c
  *
- * Created: 20.11.2018 09:50:00
- *  Author: maczijewski
+ * \author maczijewski
+ * \date Created: 20.11.2018 09:50:00
+ * 
+ * \ingroup low_level_controller
  */ 
 
 

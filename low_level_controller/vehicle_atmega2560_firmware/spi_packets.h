@@ -45,7 +45,12 @@
 
 #define SPI_BUFFER_SIZE 27
 
-
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 typedef struct
 { // 12 bytes
 	uint32_t pi_tick;
@@ -56,7 +61,12 @@ typedef struct
 	uint8_t vehicle_id;
 } __attribute__((packed)) spi_mosi_data_t;
 
-
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 typedef struct
 { // 27 bytes
 	uint32_t tick;

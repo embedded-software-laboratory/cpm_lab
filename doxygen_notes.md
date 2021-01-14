@@ -14,6 +14,12 @@ PROJECT_BRIEF
 PROJECT_LOGO
 OUTPUT_DIRECTORY
 
+For struct definitions with attribute in the low_level_controller, to recognize the struct name I had to enable:
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = __attribute__(x)=
+
 Set EXTRACT_ALL to YES if you want undocumented files to appear in the documentation as well - currently: NO
 
 USE_MDFILE_AS_MAINPAGE can also be used instead of the current DoxygenMainpage.hpp - currently: NO

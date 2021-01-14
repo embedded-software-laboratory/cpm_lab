@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * motor.c
+/**
+ * \file motor.c
  *
- * Created: 20.09.2018 21:37:53
- *  Author: maczijewski
+ * \author maczijewski
+ * \date Created: 20.09.2018 21:37:53
+ * 
+ * \ingroup low_level_controller
  */ 
 
 

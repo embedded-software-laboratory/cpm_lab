@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * imu.c
+/**
+ * \file imu.c
  *
- * Created: 27.09.2018 10:54:21
- *  Author: maczijewski
+ * \author maczijewski
+ * \date Created: 27.09.2018 10:54:21
+ * 
+ * \ingroup low_level_controller
  */ 
 
 

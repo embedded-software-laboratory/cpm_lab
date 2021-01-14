@@ -43,8 +43,30 @@
 #define MOTOR_DIRECTION_FORWARD 1
 #define MOTOR_DIRECTION_REVERSE 2
 
+/**
+ * \brief TODO
+ * \param direction
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void motor_set_direction(uint8_t direction);
+
+/**
+ * \brief TODO
+ * \param duty
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void motor_set_duty(uint16_t duty); // values from 0 to 400
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void motor_setup();
 
 
