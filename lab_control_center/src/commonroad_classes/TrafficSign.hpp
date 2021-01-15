@@ -61,7 +61,9 @@
  */
 struct TrafficSignPost
 {
+    //! ID of the sign post, relating to the IDs defined in the commonroad specs e.g. for a speed limit sign
     std::string traffic_sign_id;
+    //! Optional additional values, e.g. the speed limit
     std::vector<std::string> additional_values;
 };
 
@@ -73,8 +75,11 @@ struct TrafficSignPost
  */
 struct TrafficSignElement
 {
+    //! List of traffic signs at the traffic sign's position
     std::vector<TrafficSignPost> traffic_sign_posts;
-    std::optional<Position> position = std::nullopt; //Must be exact according to spec! Ptr because we do not have a default constructor
+    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
+    std::optional<Position> position = std::nullopt;
+    //! If the traffic sign only exists virtually, not physically
     std::vector<bool> is_virtual;
 };
 
@@ -88,10 +93,12 @@ struct TrafficSignElement
 class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
+    //! List of traffic signs with the same ID
     std::vector<TrafficSignElement> traffic_sign_elements;
+    //! ID of the traffic sign(s)
     int id;
 
-    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
 
 public:
@@ -130,5 +137,8 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
     //Getter
+    /**
+     * \brief Get the stored list of traffic signs with the same ID
+     */
     const std::vector<TrafficSignElement>& get_traffic_sign_elements() const;
 };

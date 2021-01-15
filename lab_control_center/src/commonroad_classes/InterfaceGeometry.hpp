@@ -43,6 +43,6 @@ public:
      */
     virtual std::pair<double, double> get_center() = 0;
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceGeometry() {};
 };

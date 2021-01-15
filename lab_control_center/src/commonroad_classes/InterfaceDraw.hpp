@@ -56,7 +56,7 @@ public:
      */
     virtual void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) = 0;
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceDraw() {};
 
     //Utility functions that can be used by each class
@@ -97,6 +97,15 @@ public:
         ctx->restore();
     }
 
+    /**
+     * \brief Helper function to draw text centered, given a rotation, at (x,y), with a given font size
+     * \param ctx The cairo context of the LCC's Map View
+     * \param x x coordinate 
+     * \param y y coordinate
+     * \param rotation Applied before translation to (x,y)
+     * \param font_size Size of the font
+     * \param text Text to draw
+     */
     void draw_text_centered(const DrawingContext& ctx, double x, double y, double rotation, double font_size, std::string text)
     {
         ctx->save();

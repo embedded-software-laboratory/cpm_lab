@@ -40,6 +40,6 @@ public:
      */
     virtual void transform_timing(double time_scale) = 0;
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceTransformTime() {};
 };

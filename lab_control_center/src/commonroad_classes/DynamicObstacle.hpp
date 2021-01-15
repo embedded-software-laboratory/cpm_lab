@@ -75,28 +75,35 @@ enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, P
 class DynamicObstacle : public InterfaceTransform,public InterfaceTransformTime
 {
 private:
-    //Commonroad type
+    //! Commonroad obstacle type
     ObstacleTypeDynamic type;
+    //! Obstacle type as string
     std::string obstacle_type_text;
+    //! Obstacle shape, which must exist
     std::optional<Shape> shape = std::nullopt;
+    //! Obstacle initial state, which must exist
     std::optional<State> initial_state = std::nullopt;
+    //! Initial signal state of the obstacle, optional
     std::optional<SignalState> initial_signal_state = std::nullopt;
 
     //Choice in specification - thus, only one of these two value will be valid for each object
+    //! Trajectory (list of states) of the object; alternative specification: occupancy_set
     std::vector<State> trajectory;
+    //! Occupancy set (list of occupancies) of the object; alternative specification: trajectory
     std::vector<Occupancy> occupancy_set;
 
+    //! List of signal states, might not exist
     std::vector<SignalState> signal_series;
 
-    //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
 public:
     /**
-     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ dynamic obstacle representation
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (dynamic) obstacle node
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
@@ -123,7 +130,13 @@ public:
     //No draw function, obstacles are handled by LCC directly via simulation
 
     //Helper function for draw, because this is done multiple times
+    /**
+     * \brief Helper function to draw the shape of the obstacle with text
+     */
     void draw_shape_with_text(const DrawingContext& ctx, double scale = 1.0, double local_orientation = 0.0);
+    /**
+     * \brief Helper function to draw the text / description of the obstacle
+     */
     void draw_text(const DrawingContext& ctx, double scale, double local_orientation, std::pair<double, double> center);
 
     //Getter
@@ -133,12 +146,36 @@ public:
      */
     ObstacleSimulationData get_obstacle_simulation_data();
 
+    /**
+     * \brief Get the obstacle type as text
+     */
     std::string get_obstacle_type_text();
+    /**
+     * \brief Get the obstacle type
+     */
     ObstacleTypeDynamic get_type();
+    /**
+     * \brief Get the shape of the obstacle, this value must exist, still due to a translation error a nullopt is possible
+     */
     const std::optional<Shape>& get_shape() const;
+    /**
+     * \brief Get the initial state of the obstacle, this value must exist, still due to a translation error a nullopt is possible
+     */
     const std::optional<State>& get_initial_state() const;
+    /**
+     * \brief Get the initial signal state or nullopt if that was not set
+     */
     const std::optional<SignalState>& get_initial_signal_state() const;
+    /**
+     * \brief Get the obstacle's trajectory or nullopt if that was not set. In that case, an occupancy set should have been set.
+     */
     const std::vector<State>& get_trajectory() const;
+    /**
+     * \brief Get the obstacle's occupancy set or nullopt if that was not set. In that case, an trajectory should have been set.
+     */
     const std::vector<Occupancy>& get_occupancy_set() const;
+    /**
+     * \brief Get the signal series or nullopt if that was not set
+     */
     const std::vector<SignalState>& get_signal_series() const;
 };

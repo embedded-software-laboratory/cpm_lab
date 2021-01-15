@@ -79,6 +79,6 @@ public:
         return std::fmod((orientation - angle), 2.0 * M_PI);
     }
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceTransform() {};
 };

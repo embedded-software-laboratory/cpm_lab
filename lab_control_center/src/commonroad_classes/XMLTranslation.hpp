@@ -143,7 +143,7 @@ namespace xml_translation
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
-     * \param element_node An XML node
+     * \param node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
@@ -154,7 +154,7 @@ namespace xml_translation
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
-     * \param element_node An XML node
+     * \param node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
@@ -165,7 +165,7 @@ namespace xml_translation
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
-     * \param element_node An XML node
+     * \param node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
@@ -176,7 +176,7 @@ namespace xml_translation
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
-     * \param element_node An XML node
+     * \param node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node, or an empty optional value, if no error is thrown
@@ -188,7 +188,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
      * Goes another step deeper to extract the value in the "exact" node for exact decimal values
-     * \param element_node An XML node
+     * \param node An XML node
      * \param child_name Expected name of the child node
      * \param throw_error throw_error if the child does not exist (if true, else stay silent) - optional 
      * \return Value of the first child of the first child with name child_name of node of type exact, or an empty optional value, if no error is thrown
@@ -300,7 +300,7 @@ namespace xml_translation
      * Then, the attribute of all elements with the given attribute are given one by one to the function
      * Example: <a ref="1"/> <a ref="2"/> ... -> function gets "1", "2", ...
      * \param node An XML node 
-     * \param node_function Function that takes an attribute
+     * \param attribute_function Function that takes an attribute
      * \param node_name Expected name of the node
      * \param attribute_name Expected name of the attribute
      * \ingroup lcc_commonroad

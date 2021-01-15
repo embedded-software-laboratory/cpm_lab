@@ -49,11 +49,12 @@
 class Crossing : public InterfaceDraw
 {
 private:
-    std::vector<int> crossing_lanelets; //Lanelet ref
+    //! Lanelet references for a crossing
+    std::vector<int> crossing_lanelets;
 
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor for a crossing object, given a commonroad xml crossing node
      */
     Crossing(const xmlpp::Node* node);
 

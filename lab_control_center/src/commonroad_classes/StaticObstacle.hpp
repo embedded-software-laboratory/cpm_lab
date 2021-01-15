@@ -71,16 +71,21 @@ enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBou
 class StaticObstacle : public InterfaceTransform, public InterfaceTransformTime
 {
 private:
+    //! The obstacle type, e.g. a parked vehicle
     ObstacleTypeStatic type;
+    //! The obstacle type as string
     std::string obstacle_type_text;
+    //! Shape of the object, must exist
     std::optional<Shape> shape = std::nullopt;
+    //! Initial state of the object, must exist
     std::optional<State> initial_state = std::nullopt;
+
     //Other 2018 obstacle-values should only be set for dynamic obstacles - nonetheless, we check for their existence in the constructor (and show warnings, if necessary)
 
-    //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
 public:
@@ -118,8 +123,20 @@ public:
      */
     ObstacleSimulationData get_obstacle_simulation_data();
 
+    /**
+     * \brief Get the obstacle type
+     */
     ObstacleTypeStatic get_type();
+    /**
+     * \brief Get the obstacle type as string
+     */
     std::string get_obstacle_type_text();
+    /**
+     * \brief Get the obstacle shape, which must exist (optional due to no default constructor & potential translation issues)
+     */
     const std::optional<Shape>& get_shape() const;
+    /**
+     * \brief Get the obstacle initial state, which must exist (optional due to no default constructor & potential translation issues)
+     */
     const std::optional<State>& get_initial_state() const;
 };

@@ -71,7 +71,9 @@ enum class Direction {Right, Straight, Left, LeftStraight, StraightRight, LeftRi
  */
 struct TrafficCycleElement
 {
+    //! Traffig light colors / order of colors for each duration
     std::vector<TrafficLightColor> colors;
+    //! Duration with which each traffic light color is shown, in the given order
     std::vector<unsigned int> durations;
 };
 
@@ -82,7 +84,9 @@ struct TrafficCycleElement
  */
 struct TrafficLightCycle
 {
+    //! Definition of different traffic light cycles, giving order and duration of the colors
     std::vector<TrafficCycleElement> cycle_elements;
+    //! Time offset before the cycle start, optional
     std::optional<unsigned int> time_offset = std::nullopt;
 };
 
@@ -94,10 +98,14 @@ struct TrafficLightCycle
 struct TrafficLightElement
 {
     //Commonroad types
+    //! Traffic light cycle, defining when which color is shown
     TrafficLightCycle cycle;
+    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
     std::optional<Position> position = std::nullopt; //TODO: Position is specified as being always exact
+    //! Direction shown by the light
     Direction direction;
-    bool is_active; //Probably defaults to true, as it must not occur
+    //! Indicated if the traffic light is currently active. Is assumed to default to true
+    bool is_active; 
 };
 
 /**
@@ -112,21 +120,34 @@ private:
     //std::vector<TrafficLightElement> traffic_light_elements;
 
     //TODO: Current structure (as, in my opinion, the specification does not allow for unique definitions)
+    //! Positions of the traffic lights
     std::vector<Position> positions;
+    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
     std::vector<int> position_lines;
+    //! Directions of the traffic lights
     std::vector<Direction> directions;
+    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
     std::vector<int> direction_lines;
+    //! Values if each traffic light is active
     std::vector<bool> actives;
+    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
     std::vector<int> active_lines;
+    //! Cycles of the traffic lights
     std::vector<TrafficLightCycle> cycles;
+    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
     std::vector<int> cycle_lines;
 
+    //! ID of the traffic light(s)
     int id;
 
-    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
 
-    //Helper function that draws a tiny traffic light symbol
+    /**
+     * \brief Helper function that draws a tiny traffic light symbol
+     * \param ctx The drawing context for the LCC's map view
+     * \param scale To change the size of the drawn symbol
+     */
     void draw_traffic_light_symbol(const DrawingContext& ctx, double scale);
 
 public:
@@ -142,9 +163,25 @@ public:
     );
 
     //Helper functions for better readability
+    /**
+     * \brief Helper function to translate an xml position node
+     * \param position_node The Commonroad XML position node 
+     */
     Position translate_position(const xmlpp::Node* position_node);
+    /**
+     * \brief Helper function to translate an xml direction node
+     * \param direction_node The Commonroad XML direction node 
+     */
     Direction translate_direction(const xmlpp::Node* direction_node);
+    /**
+     * \brief Helper function to translate an xml active node
+     * \param active_node The Commonroad XML active node 
+     */
     bool translate_active(const xmlpp::Node* active_node);
+    /**
+     * \brief Helper function to translate an xml cycle node
+     * \param cycle_node The Commonroad XML cycle node 
+     */
     TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node);
 
     //TODO: Getter

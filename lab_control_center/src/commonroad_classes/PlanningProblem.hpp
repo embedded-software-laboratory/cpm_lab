@@ -61,7 +61,10 @@
  */
 struct PlanningProblemElement
 {
+    //! Initial state of the planning problem
     std::optional<StateExact> initial_state = std::nullopt;
+
+    //! List of possible / allowed goal states for the planning problem, when starting at the given initial state
     std::vector<GoalState> goal_states;
 };
 
@@ -75,6 +78,7 @@ struct PlanningProblemElement
 class PlanningProblem : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
+    //! List of planning problems stored within one planning problem ID (the specs allow more than one definition)
     std::vector<PlanningProblemElement> planning_problems;
 
 public:
@@ -123,6 +127,9 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
     //Getter
+    /**
+     * \brief Get the list of planning problems with the same planning problem ID
+     */
     const std::vector<PlanningProblemElement>& get_planning_problems() const;
 
     /**

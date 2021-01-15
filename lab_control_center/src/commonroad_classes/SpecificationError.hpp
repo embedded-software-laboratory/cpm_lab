@@ -36,5 +36,9 @@
 class SpecificationError : virtual public std::runtime_error
 {
 public:
+    /**
+     * \brief Constructor for the specification error type, to create such an error
+     * \param msg Error message
+     */
     SpecificationError(const std::string& msg);
 };
