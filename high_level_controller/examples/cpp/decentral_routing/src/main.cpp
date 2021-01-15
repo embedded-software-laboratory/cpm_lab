@@ -271,8 +271,11 @@ int main(int argc, char *argv[]) {
             */
             // This probably does not require a loop,
             // we just need to find the one VehicleState with our vehicle_id
+	    std::stringstream id_list;
+	    id_list << "VehicleStates: ";
             for(auto vehicle_state : vehicleStateList.state_list())
             {
+		id_list << static_cast<uint16_t>(vehicle_state.vehicle_id()) << ",";
                 if( vehicle_id == vehicle_state.vehicle_id() ) {
                     auto pose = vehicle_state.pose();
                     int out_edge_index = -1;
@@ -299,6 +302,9 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
+	    cpm::Logging::Instance().write(1,
+			    id_list.str().c_str());
+
 
             if( !matched ) {
                 // We might want to stop everything here, but it happens too

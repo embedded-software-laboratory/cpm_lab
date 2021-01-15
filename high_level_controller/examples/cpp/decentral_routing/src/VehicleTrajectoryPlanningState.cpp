@@ -44,6 +44,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
+    // 10 minor timesteps of 0 velocity so the vehicles have time to start
     speed_profile.fill(0);
     for (size_t i = 10; i < N_STEPS_SPEED_PROFILE; ++i)
     {

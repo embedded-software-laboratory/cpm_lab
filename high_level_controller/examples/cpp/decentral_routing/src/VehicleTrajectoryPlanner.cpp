@@ -70,7 +70,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     started = true;
     // Read LaneGraphTrajectory messages and write them into our buffer
     this->read_other_vehicles(); // Waits until we received the correct messages
-    cpm::Logging::Instance().write(1,
+    cpm::Logging::Instance().write(3,
             "%lu: Starting planning", t_real_time);
 
     // Check if we should stop and return early if we do
@@ -126,6 +126,20 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 		   new_trajectory_points.end()
 		   );
 
+    // Check quality of trajectory buffer
+    std::cout << "Timestep: " << t_real_time << std::endl;
+    uint64_t prev_time = trajectory_point_buffer[0].t().nanoseconds();
+    for( int i=1; i<trajectory_point_buffer.size(); i++ ) {
+	    int64_t time_diff = trajectory_point_buffer[i].t().nanoseconds() - prev_time;
+	    std::cout << time_diff;
+		    
+	    if( time_diff != dt_nanos ) {
+		std::cout << " WARNING";
+	    }
+	    std::cout << std::endl;
+	    prev_time = trajectory_point_buffer[i].t().nanoseconds();
+    }
+
     // Limit size of trajectory buffer; delete oldest points first
     while( trajectory_point_buffer.size() > 50 ) {
 	    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
@@ -145,7 +159,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
 
-    cpm::Logging::Instance().write(1,
+    cpm::Logging::Instance().write(3,
             "%lu: Finished planning", t_real_time);
     // Publish our planned trajectory with other vehicles
     write_trajectory(lane_graph_trajectory);
