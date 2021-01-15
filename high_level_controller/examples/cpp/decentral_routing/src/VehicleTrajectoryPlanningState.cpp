@@ -123,14 +123,18 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     }
 }
 
-TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
+TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point(
+		size_t edge_index,
+		size_t edge_path_index,
+		double speed
+		)
 {
     TrajectoryPoint trajectory_point;
     trajectory_point.t().nanoseconds(t_elapsed);
-    trajectory_point.px(laneGraphTools.edges_x.at(current_edge_index).at(current_edge_path_index));
-    trajectory_point.py(laneGraphTools.edges_y.at(current_edge_index).at(current_edge_path_index));
-    trajectory_point.vx(laneGraphTools.edges_cos.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
-    trajectory_point.vy(laneGraphTools.edges_sin.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
+    trajectory_point.px(laneGraphTools.edges_x.at(edge_index).at(edge_path_index));
+    trajectory_point.py(laneGraphTools.edges_y.at(edge_index).at(edge_path_index));
+    trajectory_point.vx(laneGraphTools.edges_cos.at(edge_index).at(edge_path_index) * speed);
+    trajectory_point.vy(laneGraphTools.edges_sin.at(edge_index).at(edge_path_index) * speed);
     return trajectory_point;
 }
 
@@ -247,6 +251,7 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
 
     for (int i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
     {
+
         int i_forward = idx_speed_reduction + i;
         int i_reverse = idx_speed_reduction - i;
 
@@ -286,6 +291,23 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
         result.push_back(std::make_pair(future_edge_index, future_edge_path_index));
     }
 
+    return result;
+}
+
+vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length) {
+    vector<TrajectoryPoint> result;
+    int index = 0;
+    
+    for( auto point : get_planned_path() ) {
+        if(index >= max_length) {
+            break;
+	}
+        result.push_back(
+	    get_trajectory_point(point.first, point.second, speed_profile[index])
+	    );
+	index++;
+    }
+    
     return result;
 }
 

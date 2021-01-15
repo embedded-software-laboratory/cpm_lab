@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
      * ---------------------------------------------------------------------------------
      */
     // This graphs gives the priorities, as well as the order of planning
-    CouplingGraph coupling_graph({1,2,3,4,5});
+    CouplingGraph coupling_graph({3, 13, 19});
     planner->set_coupling_graph(coupling_graph);
 
     /* ---------------------------------------------------------------------------------

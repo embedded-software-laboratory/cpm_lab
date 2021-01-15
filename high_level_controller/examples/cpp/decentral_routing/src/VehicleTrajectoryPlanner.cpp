@@ -71,7 +71,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // Read LaneGraphTrajectory messages and write them into our buffer
     this->read_other_vehicles(); // Waits until we received the correct messages
     cpm::Logging::Instance().write(1,
-            "Starting planning");
+            "%lu: Starting planning", t_real_time);
 
     // Check if we should stop and return early if we do
     if( stopFlag ) {
@@ -97,21 +97,12 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     if(t_start == 0)
     {
         t_start = t_real_time + 2000000000ull;
-        //auto trajectory_point = trajectoryPlan->get_trajectory_point();
-        //trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
-        //trajectory_point_buffer.push_back(trajectory_point);
     }
-    auto trajectory_point = trajectoryPlan->get_trajectory_point();
-    trajectory_point.t().nanoseconds(trajectory_point.t().nanoseconds() + t_start);
-    trajectory_point_buffer.push_back(trajectory_point);
+    auto trajectory_point_buffer = trajectoryPlan->get_planned_trajectory(50);
+    for( auto point : trajectory_point_buffer ) {
+        point.t().nanoseconds(point.t().nanoseconds() + t_start);
+    }
 
-    // Limits size of our trajectory_point_buffer
-    // However, atm the buffer only has 1-2 entries anyway
-    // If this leads to problems during testing, changes might be needed
-    while(trajectory_point_buffer.size() > 50)
-    {
-        trajectory_point_buffer.erase(trajectory_point_buffer.begin());
-    }
 
     // Get our current trajectory
     LaneGraphTrajectory lane_graph_trajectory;
@@ -128,7 +119,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     }
 
     cpm::Logging::Instance().write(1,
-            "Finished planning");
+            "%lu: Finished planning", t_real_time);
     // Publish our planned trajectory with other vehicles
     write_trajectory(lane_graph_trajectory);
 
