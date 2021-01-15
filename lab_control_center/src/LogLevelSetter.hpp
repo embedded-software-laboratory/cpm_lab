@@ -44,11 +44,11 @@
  */
 class LogLevelSetter {
 private:
-    //The writer is set to be transient local and reliable, s.t. a participant that joins the domain after the log level was set can still receive the last set value
+    //! Writer to send log level to all other participants in the network. Set to be transient local and reliable, s.t. a participant that joins the domain after the log level was set can still receive the last set value
     cpm::Writer<LogLevel> log_level_writer;
 
     /**
-     * \brief The constructor sets up the DDS Writer
+     * \brief The constructor sets up the DDS Writer, private as this is a Singleton
      */
     LogLevelSetter();
 

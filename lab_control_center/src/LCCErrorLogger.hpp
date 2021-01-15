@@ -29,13 +29,18 @@ class LCCErrorLogger {
     LCCErrorLogger& operator=(LCCErrorLogger &&) = delete;
 
 private:
-    //Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
-    std::unordered_map<std::string, std::string> error_storage; //For already requested error messages
-    std::unordered_map<std::string, std::string> new_error_storage; //For new error messages that have not yet been requested
+    //! For already taken error messages (using get_new_errors). Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
+    std::unordered_map<std::string, std::string> error_storage;
+    //! For new error messages that have not yet been taken (using get_new_errors). Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
+    std::unordered_map<std::string, std::string> new_error_storage;
+    //! Mutex for error_storage
     std::mutex error_storage_mutex;
+    //! Mutex for new_error_storage
     std::mutex new_error_storage_mutex;
 
-    //Made private s.t. singleton property is fulfilled
+    /**
+     * \brief Constructor, made private s.t. singleton property is fulfilled
+     */
     LCCErrorLogger() {};
 
     /**

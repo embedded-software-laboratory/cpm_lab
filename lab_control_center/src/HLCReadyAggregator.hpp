@@ -51,13 +51,18 @@ class HLCReadyAggregator
 private:
     //Reader, mutex and list to get and store a list of currently online HLCs
     //A map is used because each ID has a time to live, which is updated whenever a new sample with this ID is received - this is supposed to handle NUC crashes (-> not shown to be online anymore)
+    //! Reader to get the currently online HLCs
     cpm::AsyncReader<HLCHello> async_hlc_reader;
+    //! Mutex for the maps storing which hlc is online and which is running script / middleware
     std::mutex hlc_list_mutex;
+    //! Map to store when the last online message from an HLC was received
     std::map<uint8_t, uint64_t> hlc_map;
+    //! Map to store if the script was running on the HLC in the last message
     std::map<uint8_t, bool> hlc_script_running;
+    //! Map to store if the middleware was running on the HLC in the last message
     std::map<uint8_t, bool> hlc_middleware_running;
 
-    //The HLCs send a signal every second, so they are probably offline if no signal was received within 3 seconds
+    //! The HLCs send a signal every second, so they are probably offline if no signal was received within 3 seconds
     const uint64_t time_to_live_ns = 3000000000;
 
 public:
