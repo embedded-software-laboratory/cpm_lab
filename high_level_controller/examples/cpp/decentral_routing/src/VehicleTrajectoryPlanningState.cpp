@@ -44,8 +44,8 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
-    speed_profile[0] = 0;
-    for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
+    speed_profile.fill(0);
+    for (size_t i = 10; i < N_STEPS_SPEED_PROFILE; ++i)
     {
         speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
     }
@@ -124,13 +124,14 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
 }
 
 TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point(
+	        uint64_t time,	
 		size_t edge_index,
 		size_t edge_path_index,
 		double speed
 		)
 {
     TrajectoryPoint trajectory_point;
-    trajectory_point.t().nanoseconds(t_elapsed);
+    trajectory_point.t().nanoseconds(time);
     trajectory_point.px(laneGraphTools.edges_x.at(edge_index).at(edge_path_index));
     trajectory_point.py(laneGraphTools.edges_y.at(edge_index).at(edge_path_index));
     trajectory_point.vx(laneGraphTools.edges_cos.at(edge_index).at(edge_path_index) * speed);
@@ -299,12 +300,19 @@ vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(i
     int index = 0;
     
     for( auto point : get_planned_path() ) {
-        if(index >= max_length) {
+	// TODO: Make magic number dependent on dt_nanos/dt_speed_step_nanos
+        if(index >= 5*max_length) {
             break;
 	}
-        result.push_back(
-	    get_trajectory_point(point.first, point.second, speed_profile[index])
-	    );
+	if( index%5 == 0 ) {
+		result.push_back(
+		    get_trajectory_point(
+			    t_elapsed + index * dt_speed_profile_nanos,
+			    point.first,
+			    point.second,
+			    speed_profile[index])
+		    );
+	}
 	index++;
     }
     

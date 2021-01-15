@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
      * ---------------------------------------------------------------------------------
      */
     // This graphs gives the priorities, as well as the order of planning
-    CouplingGraph coupling_graph({3, 13, 19});
+    CouplingGraph coupling_graph({3,7,13,14,19});
     planner->set_coupling_graph(coupling_graph);
 
     /* ---------------------------------------------------------------------------------
@@ -246,12 +246,6 @@ int main(int argc, char *argv[]) {
                 // to send commands to vehicle
                 new_vehicleStateList = true;
                 vehicleStateList = sample.data();
-
-                std::cout << "StateList at " << vehicleStateList.t_now() << ":";
-                for(auto vehicleState : vehicleStateList.state_list()){
-                    std::cout << "<" << static_cast<uint32_t>(vehicleState.vehicle_id()) << ">";
-                }
-                std::cout << std::endl;
 
                 // middleware period needs to be manually set to 400ms
                 // on parameter server, else we don't start

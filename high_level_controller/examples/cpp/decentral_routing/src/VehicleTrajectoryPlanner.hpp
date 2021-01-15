@@ -56,6 +56,7 @@ class VehicleTrajectoryPlanner
     std::thread planning_thread;
     const uint64_t dt_nanos;
     const int planning_horizont = 5;
+    const uint64_t dt_keep_past_trajectories = 1000000000;
     vector<TrajectoryPoint> trajectory_point_buffer;
     CouplingGraph coupling_graph;
  

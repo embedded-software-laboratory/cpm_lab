@@ -96,13 +96,40 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     if(t_start == 0)
     {
-        t_start = t_real_time + 2000000000ull;
+        t_start = t_real_time;// + 2000000000ull;
     }
-    auto trajectory_point_buffer = trajectoryPlan->get_planned_trajectory(50);
-    for( auto point : trajectory_point_buffer ) {
+    else {
+	    // Delete all trajectory points that are in the future
+	    // These will be replaced by new points later
+	    std::vector<TrajectoryPoint>::iterator it_t_now = trajectory_point_buffer.end();
+	    for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer.begin() + 1; tp_it != trajectory_point_buffer.end(); ++tp_it)
+	    {
+		if (tp_it->t().nanoseconds() > t_real_time && it_t_now == trajectory_point_buffer.end())
+		{
+		    it_t_now = tp_it-1;
+		}
+	    }
+
+	    trajectory_point_buffer.erase(it_t_now, trajectory_point_buffer.end());
+    }
+    
+    // Get new points from PlanningState
+    std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35);
+    for( auto& point : new_trajectory_points ) {
         point.t().nanoseconds(point.t().nanoseconds() + t_start);
     }
 
+    // Append points to trajectory_point_buffer
+    trajectory_point_buffer.insert(
+		   trajectory_point_buffer.end(),
+		   new_trajectory_points.begin(),
+		   new_trajectory_points.end()
+		   );
+
+    // Limit size of trajectory buffer; delete oldest points first
+    while( trajectory_point_buffer.size() > 50 ) {
+	    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
+    }
 
     // Get our current trajectory
     LaneGraphTrajectory lane_graph_trajectory;
