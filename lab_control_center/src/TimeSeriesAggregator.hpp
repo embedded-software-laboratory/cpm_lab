@@ -31,6 +31,7 @@
 #include "VehicleObservation.hpp"
 #include "TimeSeries.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandPathTracking.hpp"
 
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_time_ns.hpp"
@@ -44,6 +45,7 @@
 
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
+using VehiclePathTracking = map<uint8_t, VehicleCommandPathTracking >;
 
 /**
  * \class TimeSeriesAggregator
@@ -61,6 +63,7 @@ class TimeSeriesAggregator
     shared_ptr<cpm::AsyncReader<VehicleState>> vehicle_state_reader;
     shared_ptr<cpm::AsyncReader<VehicleObservation>> vehicle_observation_reader;
     shared_ptr<cpm::MultiVehicleReader<VehicleCommandTrajectory>> vehicle_commandTrajectory_reader;
+    shared_ptr<cpm::MultiVehicleReader<VehicleCommandPathTracking>> vehicle_commandPathTracking_reader;
     std::vector<uint8_t> vehicle_ids; //Vector of vehicle IDs to listen to (every other trajectory msg gets ignored) - Reason: Compatible to MultiVehicleReader
     //Alternative: MultiVehicleReader that is flexible regarding the vehicle IDs
 
@@ -82,5 +85,6 @@ public:
     TimeSeriesAggregator(uint8_t max_vehicle_id);
     VehicleData get_vehicle_data();
     VehicleTrajectories get_vehicle_trajectory_commands();
+    VehiclePathTracking get_vehicle_path_tracking_commands();
     void reset_all_data(); //Reset the data structures if desired by the user (e.g. bc the simulation was stopped)
 };

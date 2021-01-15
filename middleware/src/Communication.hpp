@@ -56,6 +56,7 @@
 
 #include "CommonroadDDSGoalState.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandPathTracking.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandDirect.hpp"
 #include "ReadyStatus.hpp"
@@ -98,6 +99,7 @@ class Communication {
 
         //Communication for commands
         TypedCommunication<VehicleCommandTrajectory> trajectoryCommunication;
+        TypedCommunication<VehicleCommandPathTracking> pathTrackingCommunication;
         TypedCommunication<VehicleCommandSpeedCurvature> speedCurvatureCommunication;
         TypedCommunication<VehicleCommandDirect> directCommunication;
     public:
@@ -106,6 +108,7 @@ class Communication {
          * \param hlcDomainNumber DDS domain number of the communication on the HLC (middleware and script)
          * \param vehicleStateListTopicName Topic name for vehicle state list messages
          * \param vehicleTrajectoryTopicName Topic name for trajectory messages
+         * \param vehiclePathTrackingTopicName Topic name for path tracking messages
          * \param vehicleSpeedCurvatureTopicName Topic name for speed curvature messages
          * \param vehicleDirectTopicName Topic name for vehicle direct messages
          * \param _timer Required for current real or simulated timing information to check if answers of the HLC / script are received in time
@@ -115,6 +118,7 @@ class Communication {
             int hlcDomainNumber,
             std::string vehicleStateListTopicName,
             std::string vehicleTrajectoryTopicName,
+            std::string vehiclePathTrackingTopicName,
             std::string vehicleSpeedCurvatureTopicName,
             std::string vehicleDirectTopicName,
             std::shared_ptr<cpm::Timer> _timer,
@@ -141,6 +145,7 @@ class Communication {
         ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
 
         ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
+        ,pathTrackingCommunication(hlcParticipant, vehiclePathTrackingTopicName, _timer, vehicle_ids)
         ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
         ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
         {
@@ -159,10 +164,11 @@ class Communication {
             auto latest_response_trajectory = trajectoryCommunication.getLatestHLCResponseTime(id);
             auto latest_response_curvature = speedCurvatureCommunication.getLatestHLCResponseTime(id);
             auto latest_response_direct = directCommunication.getLatestHLCResponseTime(id);
+            auto latest_response_path_tracking = pathTrackingCommunication.getLatestHLCResponseTime(id);
 
             //Check for irregularities
             // - No msg received
-            if (! (latest_response_trajectory.has_value() || latest_response_curvature.has_value() || latest_response_direct.has_value()))
+            if (! (latest_response_trajectory.has_value() || latest_response_curvature.has_value() || latest_response_direct.has_value() || latest_response_path_tracking.has_value()))
             {
                 //Simulated time - we have not yet received any msg
                 if (period_nanoseconds == 0)
@@ -174,7 +180,9 @@ class Communication {
             }
 
             //  (Get highest of all values)
-            auto max_latest_response = std::max(latest_response_trajectory.value_or(0), latest_response_curvature.value_or(0));
+            auto max_latest_response = latest_response_trajectory.value_or(0);
+            max_latest_response = std::max(max_latest_response, latest_response_path_tracking.value_or(0));
+            max_latest_response = std::max(max_latest_response, latest_response_curvature.value_or(0));
             max_latest_response = std::max(max_latest_response, latest_response_direct.value_or(0));
 
             // - Undesired behaviour - log this, but do not treat it as an error
@@ -208,8 +216,20 @@ class Communication {
             std::unordered_map<uint8_t, uint64_t> last_response_times_all_types;
             last_response_times_all_types = trajectoryCommunication.getLastHLCResponseTimes();
 
+            const std::unordered_map<uint8_t, uint64_t> &path_tracking_times = pathTrackingCommunication.getLastHLCResponseTimes();
             const std::unordered_map<uint8_t, uint64_t> &curvature_times = speedCurvatureCommunication.getLastHLCResponseTimes();
             const std::unordered_map<uint8_t, uint64_t> &direct_times = directCommunication.getLastHLCResponseTimes();
+
+            for (std::unordered_map<uint8_t, uint64_t>::const_iterator it = path_tracking_times.begin(); it != path_tracking_times.end(); ++it) {
+                if (last_response_times_all_types.find(it->first) != last_response_times_all_types.end()) {
+                    if (last_response_times_all_types[it->first] < path_tracking_times.at(it->first)) {
+                        last_response_times_all_types[it->first] = it->second;
+                    }
+                }
+                else {
+                    last_response_times_all_types[it->first] = it->second;
+                }
+            }
 
             for (std::unordered_map<uint8_t, uint64_t>::const_iterator it = curvature_times.begin(); it != curvature_times.end(); ++it) {
                 if (last_response_times_all_types.find(it->first) != last_response_times_all_types.end()) {
@@ -365,6 +385,7 @@ class Communication {
         void update_period_t_now(uint64_t t_now)
         {
             trajectoryCommunication.update_period_t_now(t_now);
+            pathTrackingCommunication.update_period_t_now(t_now);
             speedCurvatureCommunication.update_period_t_now(t_now);
             directCommunication.update_period_t_now(t_now);
         }

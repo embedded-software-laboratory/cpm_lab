@@ -34,6 +34,7 @@
 #include <sstream>
 #include <vector>
 #include "TrajectoryCommand.hpp"
+#include "VehicleCommandPathTracking.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Visualization.hpp"
 #include "Pose2D.hpp"
@@ -47,6 +48,7 @@
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;
 using VehicleTrajectories = map<uint8_t, VehicleCommandTrajectory >;
+using VehiclePathTracking = map<uint8_t, VehicleCommandPathTracking >;
 
 class MapViewUi
 {
@@ -56,6 +58,7 @@ class MapViewUi
     Gtk::DrawingArea* drawingArea;
     std::function<VehicleData()> get_vehicle_data;
     std::function<VehicleTrajectories()> get_vehicle_trajectory_command_callback;
+    std::function<VehiclePathTracking()> get_vehicle_path_tracking_command_callback;
     std::function<std::vector<Visualization>()> get_visualization_msgs_callback;
     Glib::Dispatcher update_dispatcher;
     std::thread draw_loop_thread;
@@ -134,6 +137,7 @@ class MapViewUi
     std::pair<double, double> get_shape_center(CommonroadDDSShape& shape);
     void draw_path_painting(const DrawingContext& ctx);
     void draw_received_trajectory_commands(const DrawingContext& ctx);
+    void draw_received_path_tracking_commands(const DrawingContext& ctx);
 
     void draw_commonroad_obstacles(const DrawingContext& ctx);
 
@@ -151,6 +155,7 @@ public:
         shared_ptr<CommonRoadScenario> _commonroad_scenario,
         std::function<VehicleData()> get_vehicle_data_callback,
         std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+        std::function<VehiclePathTracking()> _get_vehicle_path_tracking_command_callback,
         std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );

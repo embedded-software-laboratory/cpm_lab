@@ -29,6 +29,7 @@
 #include "VehicleCommandDirect.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandPathTracking.hpp"
 #include "VehicleState.hpp"
 #include <map>
 #include <memory>
@@ -39,6 +40,7 @@
 #include "cpm/AsyncReader.hpp"
 #include "cpm/get_topic.hpp"
 #include "MpcController.hpp"
+#include "PathTrackingController.hpp"
 #include "TrajectoryInterpolation.hpp"
 
 extern "C" {
@@ -52,12 +54,14 @@ enum class ControllerState
     Stop,
     Direct,
     SpeedCurvature,
-    Trajectory
+    Trajectory,
+    PathTracking
 };
 
 class Controller
 {
     MpcController mpcController;
+    PathTrackingController pathTrackingController;
 
     std::function<uint64_t()> m_get_time;
 
@@ -70,11 +74,15 @@ class Controller
     cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
     std::unique_ptr< cpm::Reader<VehicleCommandTrajectory> > reader_CommandTrajectory;
 
+    cpm::VehicleIDFilteredTopic<VehicleCommandPathTracking> topic_vehicleCommandPathTracking;
+    std::unique_ptr< cpm::Reader<VehicleCommandPathTracking> > reader_CommandPathTracking;
+
     VehicleState m_vehicleState;
 
     VehicleCommandDirect m_vehicleCommandDirect;
     VehicleCommandSpeedCurvature m_vehicleCommandSpeedCurvature;
     VehicleCommandTrajectory m_vehicleCommandTrajectory;
+    VehicleCommandPathTracking m_vehicleCommandPathTracking;
     
     uint8_t vehicle_id;
 
