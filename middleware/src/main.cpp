@@ -48,11 +48,11 @@
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("middleware_main"); 
 
     //Initial parameters that can partially be set in the command line
     //Timer parameters
     std::string node_id = cpm::cmd_parameter_string("node_id", "middleware", argc, argv);
+    cpm::Logging::Instance().set_id(node_id); 
     uint64_t offset_nanoseconds = cpm::cmd_parameter_uint64_t("offset_nanoseconds", 1, argc, argv);
     //uint64_t period_nanoseconds = cpm::cmd_parameter_uint64_t("period_nanoseconds", 250000000, argc, argv);
     bool simulated_time_allowed = true;
