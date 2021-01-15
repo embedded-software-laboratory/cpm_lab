@@ -44,6 +44,7 @@
 #include "VehicleState.hpp"
 #include "VehicleCommandDirect.hpp"
 #include "VehicleCommandTrajectory.hpp"
+#include "VehicleCommandPathTracking.hpp"
 #include "VehicleCommandSpeedCurvature.hpp"
 
 #include "cpm/Logging.hpp"
