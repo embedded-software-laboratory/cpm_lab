@@ -45,21 +45,34 @@ using std::array;
  */
 class VehicleTrajectoryPlanningState
 {
+    //! TODO
     uint8_t vehicle_id = 0;
+    //! TODO
     size_t current_edge_index = 0;
+    //! TODO
     size_t current_edge_path_index = 0;
+    //! TODO
     double delta_s_path_node_offset = 0;
+    //! TODO
     vector<size_t> current_route_edge_indices;
 
+    //! TODO
     uint64_t t_elapsed = 0;
 
+    //! TODO
     static constexpr double ref_acceleration = 0.8;
+    //! TODO
     static constexpr double max_speed = 1.4;
+    //! TODO
     static constexpr double min_speed = 0.5;
+    //! TODO
     static constexpr uint64_t dt_speed_profile_nanos = 16000000ull;
+    //! TODO
     static constexpr double dt_speed_profile = (dt_speed_profile_nanos * 1e-9);
+    //! TODO
     static constexpr double delta_v_step = ref_acceleration * dt_speed_profile;
 
+    //! TODO
     array<double, N_STEPS_SPEED_PROFILE> speed_profile;
 
     /**

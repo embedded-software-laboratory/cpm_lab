@@ -37,7 +37,9 @@
  */
 class DetectVehicleID
 {
+    //! TODO
     const std::vector<uint8_t> identification_LED_period_ticks;
+    //! TODO
     const std::vector<uint8_t> identification_LED_enabled_ticks;
 
 public:

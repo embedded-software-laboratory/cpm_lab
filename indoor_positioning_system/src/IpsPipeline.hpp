@@ -63,21 +63,31 @@ struct IpsVisualizationInput
  */
 class IpsPipeline
 {
+    //! TODO
     cpm::Writer<VehicleObservation> writer_vehicleObservation;
 
+    //! TODO
     std::shared_ptr<UndistortPoints> undistortPointsFn;
+    //! TODO
     std::shared_ptr<DetectVehicles> detectVehiclesFn;
+    //! TODO
     std::shared_ptr<DetectVehicleID> detectVehicleIDfn;
+    //! TODO
     std::shared_ptr<PoseCalculation> poseCalculationFn;
 
+    //! TODO
     VehiclePointTimeseries vehiclePointTimeseries;
 
 
     // Temporary copy, for the visualization in another thread
+    //! TODO
     IpsVisualizationInput ipsVisualizationInput_buffer;
+    //! TODO
     std::mutex ipsVisualizationInput_buffer_mutex;
+    //! TODO
     std::thread visualization_thread;
 
+    //! TODO
     uint64_t t_previous_nanos = 0;
 
 public:

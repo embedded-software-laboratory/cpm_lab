@@ -49,15 +49,21 @@ namespace cpm {
      */
     class SimpleTimer : public cpm::Timer
     {
+        //! Internally, TimerFD is used, with a 50ms interval
         std::shared_ptr<cpm::TimerFD> internal_timer;
-        //The internal timer works with 50ms as interval, but a counter is used to call the actual callback function only every period_milliseconds (rounded up to 50ms)
+        //! A counter is used to call the actual callback function only every period_milliseconds (rounded up to 50ms)
         uint64_t internal_timer_counter = 0;
+        //! Count in 50ms intervals up to this value, determined by period_milliseconds / fifty_ms
         uint64_t counter_max = 0;
+        //! The internal timer works with 50ms as interval
         uint64_t fifty_ms = 50000000ull;
 
+        //! Callback function for the timer 
         std::function<void(uint64_t t_now)> m_update_callback;
+        //! Callback function when a stop signal is received, optional
         std::function<void()> m_stop_callback;
 
+        //! Internal callback function for TimerFD, calls the callback if internal_timer_counter reached counter_max
         void simple_timer_callback(uint64_t t_now);
 
     public:

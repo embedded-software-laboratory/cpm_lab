@@ -62,25 +62,33 @@
 class Position : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
     
-    //Exact position (positionExact)
+    //! Exact position (positionExact), position can also be set inexact in form of a shape (circles, polygons, rectangles, lanelet_refs)
     std::optional<Point> point = std::nullopt;
 
     //Inexact position (positionInterval)
+    //! Circles, part of the inexact position shape
     std::vector<Circle> circles;
+    //! Lanelet references, part of the inexact position shape
     std::vector<int> lanelet_refs;
+    //! Polygons, part of the inexact position shape
     std::vector<Polygon> polygons;
+    //! Rectangles, part of the inexact position shape
     std::vector<Rectangle> rectangles;
 
-    //Function to draw lanelet_refs
+    /**
+     * \brief Function to draw a shape given lanelet references, given by the CommonRoadScenario class
+     */
     std::function<void (int, const DrawingContext&, double, double, double, double)> draw_lanelet_refs;
 
-    //Function to get center of lanelet_ref
+    /**
+     * \brief Function to get center of lanelet_ref
+     */
     std::function<std::pair<double, double> (int)> get_lanelet_center;
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
 public:
@@ -137,8 +145,17 @@ public:
     std::pair<double, double> get_center() override;
 
     //Further getters
+    /**
+     * \brief Get lanelet ref for position; currently only a single stored reference is allowed, else throws an error
+     */
     std::optional<int> get_lanelet_ref();
+    /**
+     * \brief Tells if the position is exact or given in form of a shape
+     */
     bool is_exact();
+    /**
+     * \brief Tells if the position is given in form of a lanelet reference
+     */
     bool position_is_lanelet_ref();
 
     /**
@@ -148,6 +165,9 @@ public:
      */
     void transform_context(const DrawingContext& ctx, double scale = 1.0);
     
+    /**
+     * \brief Empty / not yet supported, to translate a position to DDS
+     */
     void to_dds_msg() {} 
     
     /**
@@ -161,9 +181,24 @@ public:
     CommonroadDDSPoint to_dds_point();
 
     //Getters for basic types
+    /**
+     * \brief Get the position in form of a point, if it exists
+     */
     std::optional<Point> get_point();
+    /**
+     * \brief Access the circles, which are part of the optional inexact position shape
+     */
     const std::vector<Circle>& get_circles() const;
+    /**
+     * \brief Access the lanelet references, which are part of the optional inexact position shape
+     */
     const std::vector<int>& get_lanelet_refs() const;
+    /**
+     * \brief Access the polygons, which are part of the optional inexact position shape
+     */
     const std::vector<Polygon>& get_polygons() const;
+    /**
+     * \brief Access the rectangles, which are part of the optional inexact position shape
+     */
     const std::vector<Rectangle>& get_rectangles() const;
 };

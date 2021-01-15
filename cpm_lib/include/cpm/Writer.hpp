@@ -48,6 +48,7 @@ namespace cpm
     template<typename T>
     class Writer
     {
+        //! Internal DDS Writer to be abstracted
         dds::pub::DataWriter<T> dds_writer;
 
         Writer(const Writer&) = delete;

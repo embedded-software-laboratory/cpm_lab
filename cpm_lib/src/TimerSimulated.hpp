@@ -54,21 +54,34 @@ namespace cpm {
      */
     class TimerSimulated : public cpm::Timer
     {
+        //! Periodicity with which the timer calls a callback function
         uint64_t period_nanoseconds; 
+        //! Offset from the common starting time 0 of all timers from which the periodic behaviour should start
         uint64_t offset_nanoseconds;
+        //! Writer for ready status, telling the network that the timer exists and that it finished its current load and is ready for its next time step
         cpm::Writer<ReadyStatus> writer_ready_status;
+        //! Used to receive start, stop and intermediate timing signals
         dds::sub::DataReader<SystemTrigger> reader_system_trigger;
+        //! ID of the timer, e.g. middleware, e.g. for identification in the timer tab of the LCC
         std::string node_id;
+        //! Current simulated time, also used by get_time
         uint64_t current_time;
 
+        //! Timer is (in)active
         std::atomic_bool active;
-        std::atomic_bool cancelled; //In rare cases, stop can be called even before active is set to true; in that case, active alone does not suffice
-        std::mutex join_mutex; //join does not work concurrently
+        //! In rare cases, stop can be called even before active is set to true; in that case, active alone does not suffice
+        std::atomic_bool cancelled; 
+        //! Join does not work concurrently, but the timer stop function might be used by different threads
+        std::mutex join_mutex; 
 
+        //! For async start / running
         std::thread runner_thread;
+        //! Callback function that the timer is supposed to call periodically
         std::function<void(uint64_t t_now)> m_update_callback;
+        //! Optional function for when a stop signal is received
         std::function<void()> m_stop_callback;
 
+        //! To set the waiting time for reading data (system trigger)
         dds::core::cond::WaitSet waitset;
 
         /**

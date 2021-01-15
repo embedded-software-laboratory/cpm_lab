@@ -59,9 +59,11 @@ namespace cpm
     template<typename T>
     class Reader
     {
+        //! Internal DDS Reader to receive messages of type T
         dds::sub::DataReader<T> dds_reader;
+        //! Mutex for access to get_sample and removing old messages
         std::mutex m_mutex;
-
+        //! Internal buffer that stores flushed messages until they are (partially) removed in get_sample
         std::vector<T> messages_buffer;
 
         /**

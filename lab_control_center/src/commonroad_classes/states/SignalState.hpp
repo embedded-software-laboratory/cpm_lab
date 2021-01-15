@@ -49,23 +49,32 @@
  * \class SignalState
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a SignalState specified in an XML file
+ * 
+ * WARNING: Currently not used except for translation!
  * \ingroup lcc_commonroad
  */
 class SignalState : public InterfaceDraw
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double (-> not too large), we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    //! Optional time of signal, in commonroad time representation (not nanoseconds)
+    std::optional<IntervalOrExact> time = std::nullopt;
+    //! Optional, tells if the horn is active
     std::optional<bool> horn = std::nullopt;
+    //! Optional, tells if the left indicator is active
     std::optional<bool> indicator_left = std::nullopt;
+    //! Optional, tells if the right indicator is active
     std::optional<bool> indicator_right = std::nullopt;
+    //! Optional, tells if the braking lights are active
     std::optional<bool> braking_lights = std::nullopt;
+    //! Optional, tells if the hazard warning lights are active
     std::optional<bool> hazard_warning_lights = std::nullopt;
+    //! Optional, tells if the flashing blue lights are active
     std::optional<bool> flashing_blue_lights = std::nullopt;
 
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor that creates a signal state from a commonroad xml signal state node
      */
     SignalState(const xmlpp::Node* node);
 
@@ -106,11 +115,32 @@ public:
     void to_dds_msg(); 
 
     //Getter
+    /**
+     * \brief Get the time of the signal or nullopt if undefined
+     */
     const std::optional<IntervalOrExact>& get_time() const;
+    /**
+     * \brief See if the horn is active, nullopt if undefined
+     */
     const std::optional<bool>& get_horn() const;
+    /**
+     * \brief See if the left indicator is active, nullopt if undefined
+     */
     const std::optional<bool>& get_indicator_left() const;
+    /**
+     * \brief See if the right indicator is active, nullopt if undefined
+     */
     const std::optional<bool>& get_indicator_right() const;
+    /**
+     * \brief See if the braking lights are active, nullopt if undefined
+     */
     const std::optional<bool>& get_braking_lights() const;
+    /**
+     * \brief See if the hazard warning lights are active, nullopt if undefined
+     */
     const std::optional<bool>& get_hazard_warning_lights() const;
+    /**
+     * \brief See if the flashing lights are active, nullopt if undefined
+     */
     const std::optional<bool>& get_flashing_blue_lights() const;
 };

@@ -58,9 +58,13 @@ namespace cpm
     {
     private:
         //Reader and waitset for receiving data and calling the callback function
+        //! Internal DDS Subscriber instance
         dds::sub::Subscriber sub;
+        //! Internal DDS Reader instance
         dds::sub::DataReader<MessageType> reader;
+        //! Read condition to be able to async. receive data
         dds::core::cond::StatusCondition read_condition;
+        //! Waitset as part of the read condition for async. data receiving
         rti::core::cond::AsyncWaitSet waitset;
 
         /**

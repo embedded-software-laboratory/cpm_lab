@@ -51,6 +51,7 @@ namespace cpm
     */
     class ParameterReceiver {
     public:
+        //! Provides access to the parameter receiver Singleton
         static ParameterReceiver& Instance();
 
         //Delete move and copy op
@@ -115,21 +116,35 @@ namespace cpm
         ParameterReceiver();
 
         //Variable storage, DDS request is sent only if the storage for key 'parameter_name' is empty
+        //! Param storage for boolean variables
         std::map<std::string, bool> param_bool;
+        //! Param storage for uint64_t variables
         std::map<std::string, uint64_t> param_uint64_t;
+        //! Param storage for int variables
         std::map<std::string, int32_t> param_int;
+        //! Param storage for double variables
         std::map<std::string, double> param_double;
+        //! Param storage for string variables
         std::map<std::string, std::string> param_string;
+        //! Param storage for list-of-int variables
         std::map<std::string, std::vector<int32_t>> param_ints;
+        //! Param storage for list-of-double variables
         std::map<std::string, std::vector<double>> param_doubles;
 
         //Mutex for each map
+        //! Mutex for boolean param storage
         std::mutex param_bool_mutex;
+        //! Mutex for uint64_t param storage
         std::mutex param_uint64_t_mutex;
+        //! Mutex for int param storage
         std::mutex param_int_mutex;
+        //! Mutex for double param storage
         std::mutex param_double_mutex;
+        //! Mutex for string param storage
         std::mutex param_string_mutex;
+        //! Mutex for list-of-int param storage
         std::mutex param_ints_mutex;
+        //! Mutex for list-of-double param storage
         std::mutex param_doubles_mutex;
 
         /**
@@ -145,7 +160,9 @@ namespace cpm
         void callback(std::vector<Parameter>& samples);
 
     private:
+        //! Internal writer to requrest parameter values
         cpm::Writer<ParameterRequest> writer;
+        //! Internal async reader to receive any parameter values that are sent in the network
         cpm::AsyncReader<Parameter> subscriber;
     };
 

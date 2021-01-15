@@ -53,10 +53,15 @@
 class Circle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    std::optional<Point> center = std::nullopt; //must not be set
-    double radius; //In constructor: Check if >= 0, must be unsigned
+    //! Circle center, must not be set due to commonroad specs (then: interpreted as origin)
+    std::optional<Point> center = std::nullopt;
+    //! Radius of the circle. Must be unsigned
+    double radius;
 
 public:
+    /**
+     * \brief The constructor, reads commonroad xml node data and translates it to a Circle object
+     */
     Circle(const xmlpp::Node* node);
 
     /**
@@ -95,6 +100,12 @@ public:
     CommonroadDDSCircle to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get the center value (or nullopt, then: origin) of the circle
+     */
     const std::optional<Point>& get_center() const;
+    /**
+     * \brief Get the radius of the circle
+     */
     double get_radius();
 };

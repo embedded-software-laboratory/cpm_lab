@@ -36,8 +36,9 @@
 class UndistortPoints
 {
 
-
+    //! TODO
     std::vector<double> calibration_x;
+    //! TODO
     std::vector<double> calibration_y;
 
 

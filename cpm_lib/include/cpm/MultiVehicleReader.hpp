@@ -50,11 +50,13 @@ namespace cpm
     class MultiVehicleReader
     {
     private:
+        //! Internal DDS Reader for reading vehicle data
         dds::sub::DataReader<T> dds_reader;
+        //! Internal mutex for get_samples and copy constructor
         std::mutex m_mutex;
-
+        //! Used as buffer to store vehicle data for each vehicle seperately, gets filled in flush_dds_reader and (partially) cleared in get_samples
         std::vector<std::vector<T>> vehicle_buffers;
-
+        //! Vehicle IDs to listen for
         std::vector<uint8_t> vehicle_ids;
 
         /**

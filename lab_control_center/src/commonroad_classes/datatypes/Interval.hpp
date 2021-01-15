@@ -48,6 +48,7 @@
 class Interval : public InterfaceTransform
 {
 private:
+    //! Internal commonroad interval representation
     std::vector<std::pair<double, double>> intervals;
 
 public:
@@ -160,6 +161,9 @@ public:
         return avgs;
     }
 
+    /**
+     * \brief Check if the interval is greater than or equal to zero with all values
+     */
     bool is_greater_zero()
     {
         bool greater_zero = true;

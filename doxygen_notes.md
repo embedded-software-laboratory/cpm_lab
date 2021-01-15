@@ -20,6 +20,10 @@ MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
 PREDEFINED             = __attribute__(x)=
 
+Set to yes:
+EXTRACT_PRIVATE
+EXTRACT_PRIV_VIRTUAL
+
 Set EXTRACT_ALL to YES if you want undocumented files to appear in the documentation as well - currently: NO
 
 USE_MDFILE_AS_MAINPAGE can also be used instead of the current DoxygenMainpage.hpp - currently: NO

@@ -35,9 +35,13 @@
  */
 class PoseCalculation
 {
+    //! TODO
     std::vector<double> calibration_px;
+    //! TODO
     std::vector<double> calibration_py;
+    //! TODO
     std::vector<double> calibration_dx;
+    //! TODO
     std::vector<double> calibration_dy;
 
 public:

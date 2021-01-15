@@ -58,20 +58,27 @@ class StateExact : public InterfaceTransform, public InterfaceDraw, public Inter
 {
 private:
     //Commonroad data
-    std::optional<Position> position = std::nullopt; //Exact position! Optional bc no default defined
+    //! Position of the state, optional because no default was defined
+    std::optional<Position> position = std::nullopt;
+    //! Orientation in the state
     double orientation;
-    double time; //In some parts, this is a double (though it shouldn't be a double here) - double chosen for consistency
+    //! Time of the state, in commonroad representation (not nanoseconds)
+    double time; 
+    //! Velocity of the state
     double velocity;
-    std::optional<double> acceleration = std::nullopt; //Must not exist
+    //! Optional acceleration value of the state
+    std::optional<double> acceleration = std::nullopt;
+    //! Yaw rate of the state
     double yaw_rate;
+    //! Slip angle of the state
     double slip_angle;
 
-    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
 
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor that creates an exact state object from a commonroad stateexact xml node
      */
     StateExact(const xmlpp::Node* node);
 
@@ -126,11 +133,32 @@ public:
     void to_dds_msg() {}
 
     //Getter
+    /**
+     * \brief Get the position, if it was defined, else nullopt
+     */
     const std::optional<Position>& get_position() const;
+    /**
+     * \brief Get the orientation of the state
+     */
     double get_orientation();
+    /**
+     * \brief Get the time of the state
+     */
     double get_time();
+    /**
+     * \brief Get the velocity of the state
+     */
     double get_velocity();
+    /**
+     * \brief Get the acceleration, if it was defined, else nullopt
+     */
     const std::optional<double> get_acceleration() const;
+    /**
+     * \brief Get the yaw rate of the state
+     */
     double get_yaw_rate();
+    /**
+     * \brief Get the slip angle of the state
+     */
     double get_slip_angle();
 };

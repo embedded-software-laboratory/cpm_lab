@@ -37,6 +37,7 @@ using std::vector;
  */
 class LaneGraphTools : public LaneGraph
 {
+    //! TODO
     std::vector<std::vector<double>> edges_s;
 public:
     //! TODO
@@ -69,5 +70,5 @@ public:
     void move_along_route(vector<size_t> route_edge_indices, size_t &edge_index, size_t &edge_path_index, double &delta_s) const;
 };
 
-
+//! TODO
 extern const LaneGraphTools laneGraphTools;

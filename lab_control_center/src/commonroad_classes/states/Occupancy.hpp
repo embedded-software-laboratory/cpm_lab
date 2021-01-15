@@ -58,15 +58,17 @@ class Occupancy : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
+    //! Occupied shape
     std::optional<Shape> shape = std::nullopt;
-    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    //! Time of occupation (within commonroad time interpretation, not nanoseconds), must exist
+    std::optional<IntervalOrExact> time = std::nullopt;
 
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor, set up an occupancy object from a commonroad xml occupancy node
      */
     Occupancy(const xmlpp::Node* node);
 
@@ -115,7 +117,16 @@ public:
     void to_dds_msg(); 
 
     //Getter
-    IntervalOrExact get_time(); //Must exist, throw error if it does not
+    /**
+     * \brief Time of occupation, must exist, throws error if not
+     */
+    IntervalOrExact get_time();
+    /**
+     * \brief Occupied shape, nullopt if not set
+     */
     const std::optional<Shape>& get_shape() const;
+    /**
+     * \brief Time of occupation, version that does not throw an error if it does not exist (although it should)
+     */
     const std::optional<IntervalOrExact>& get_time() const;
 };

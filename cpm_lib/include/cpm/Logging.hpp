@@ -59,21 +59,26 @@ namespace cpm {
         Logging& operator=(Logging &&) = delete;
 
         private:
-            //DDS Writer for Logging
+            //! DDS Writer for Logging
             cpm::Writer<Log> logger;
 
-            //File for logging
+            //! File for logging
             std::ofstream file;
+            //! Filename for logging
             std::string filename = ""; //Is changed in Instance creation: Current timestamp added
+            //! Logging identifier, e.g. "middleware", "LCC", ...
             std::string id = "uninitialized";
 
-            //Mutex s.t. only one thread has access to the file and the writer
+            //! Mutex s.t. only one thread has access to the file and the writer
             std::mutex log_mutex;
 
-            //Log-level (default value is 1) -> Determine verbosity, user messages are only printed if their log level is <= current log level
-            //This value is set by the LCC - else, the default value is used (1: only most important messages)
-            //From 0 (none) to e.g. 3 (verbose)
+            /**
+             * \brief Log-level (default value is 1) -> Determine verbosity, user messages are only printed if their log level is <= current log level.
+             * This value is set by the LCC - else, the default value is used (1: only most important messages).
+             * From 0 (none) to e.g. 3 (verbose).
+             */
             std::atomic_ushort log_level;
+            //! Reader to receive the currently set log level in the system
             std::shared_ptr<cpm::AsyncReader<LogLevel>> log_level_reader;
 
             /**

@@ -43,6 +43,7 @@ namespace cpm
      */
     class Participant
     {
+        //! Internal DDS participant that is abstracted by this class
         dds::domain::DomainParticipant dds_participant;
 
         Participant(const Participant&) = delete;

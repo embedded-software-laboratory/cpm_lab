@@ -59,17 +59,24 @@ typedef Pylon::CBaslerUsbGrabResultPtr GrabResultPtr_t; // Or use Camera_t::Grab
  */
 struct FrameInfo
 {
+    //! TODO
     cv::Mat image;
+    //! TODO
     uint64_t timestamp;
+    //! TODO
     std::vector<double> points_x;
+    //! TODO
     std::vector<double> points_y;
 };
 
+//! TODO
 bool enable_visualization;
+//! TODO
 bool enable_debug;
 
-
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
 
 /**

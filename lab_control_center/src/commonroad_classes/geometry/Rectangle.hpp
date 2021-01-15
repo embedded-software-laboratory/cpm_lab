@@ -53,12 +53,19 @@
 class Rectangle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    double length; //In constructor: Check if >= 0, must be unsigned
-    double width;  //In constructor: Check if >= 0, must be unsigned
-    std::optional<Point> center = std::nullopt; //must not be set (probably has default value then)
-    std::optional<double> orientation = std::nullopt; //must not be set (probably has default value then)
+    //! Length of the rectangle, must be unsigned
+    double length;
+    //! Width of the rectangle, must be unsigned
+    double width; 
+    //! Center of the rectangle, must not be set (then: interpreted as origin)
+    std::optional<Point> center = std::nullopt; 
+    //! Orientation of the rectangle, must not be set (then: interpreted as 0)
+    std::optional<double> orientation = std::nullopt; 
 
 public:
+    /**
+     * \brief Constructor, creates a rectangle object from a commonroad xml rectangle node
+     */
     Rectangle(const xmlpp::Node* node);
 
     /**
@@ -98,8 +105,20 @@ public:
     CommonroadDDSRectangle to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get the orientation of the rectangle, if it exists, or a nullopt
+     */
     std::optional<double> get_orientation();
+    /**
+     * \brief Get the center point of the rectangle, if it exists, or a nullopt (then: interpret this as origin)
+     */
     const std::optional<Point>& get_center() const;
+    /**
+     * \brief Get the length of the rectangle
+     */
     double get_length();
+    /**
+     * \brief Get the width of the rectangle
+     */
     double get_width();
 };

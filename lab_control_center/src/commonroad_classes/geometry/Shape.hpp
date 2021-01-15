@@ -53,14 +53,20 @@
 class Shape : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
+    //! Circles, part of the shape
     std::vector<Circle> circles;
+    //! Polygons, part of the shape
     std::vector<Polygon> polygons;
+    //! Rectangles, part of the shape
     std::vector<Rectangle> rectangles;
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
 public:
+    /**
+     * \brief Constructor, creates a shape object from a commonroad xml shape node
+     */
     Shape(const xmlpp::Node* node);
 
     /**
@@ -106,7 +112,16 @@ public:
     CommonroadDDSShape to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get circles, which are part of the overall shape
+     */
     const std::vector<Circle>& get_circles() const;
+    /**
+     * \brief Get polygons, which are part of the overall shape
+     */
     const std::vector<Polygon>& get_polygons() const;
+    /**
+     * \brief Get rectangles, which are part of the overall shape
+     */
     const std::vector<Rectangle>& get_rectangles() const;
 };

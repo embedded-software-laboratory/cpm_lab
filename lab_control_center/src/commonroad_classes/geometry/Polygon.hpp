@@ -54,12 +54,16 @@
 class Polygon : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
+    //! Corner points of the polygon
     std::vector<Point> points; //min. 3
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
 public:
+    /**
+     * \brief Constructor, set up a Polygon object from a commonroad xml polygon node
+     */
     Polygon(const xmlpp::Node* node);
 
     /**

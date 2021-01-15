@@ -75,12 +75,17 @@ class TrajectoryIndex
 private:
     //This map keeps track of the current trajectory index of each vehicle
     //Do not access these two 
+    //! TODO
     std::mutex trajectory_mutex;
+    //! TODO
     std::map<uint8_t, int64_t> vehicle_trajectory_indices;
 
     //Reference to required data
+    //! TODO
     std::vector<TrajectoryPoint>& trajectory_points;
+    //! TODO
     std::mutex& observation_mutex;
+    //! TODO
     std::map<uint8_t, VehicleObservation>& vehicle_observations;
 
     /**

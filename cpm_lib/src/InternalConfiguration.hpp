@@ -37,11 +37,14 @@ namespace cpm
      */
     class InternalConfiguration
     {
+        //! The actual Singleton instance
         static InternalConfiguration the_instance;
 
-        
+        //! DDS domain for the participant singleton, so for most of the communication
         int dds_domain = 0;
+        //! ID for log messages, usually program type, e.g. "LCC" or "middleware"
         std::string logging_id = "uninitialized";
+        //! Initial DDS peer, usually the LCC main computer (network performance reasons)
         std::string dds_initial_peer = "";
 
         /**

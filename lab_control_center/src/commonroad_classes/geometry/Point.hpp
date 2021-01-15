@@ -44,12 +44,15 @@
 class Point : public InterfaceTransform, public InterfaceDraw
 {
 private:
+    //! x coordinate of the point
     double x;
+    //! y coordinate of the point
     double y;
-    std::optional<double> z = std::nullopt; //must not be set
+    //! optional z coordinate of the point
+    std::optional<double> z = std::nullopt;
 public:
     /**
-     * \brief Constructor, set up a point object
+     * \brief Constructor, set up a point object from a commonroad xml point node
      */
     Point(const xmlpp::Node* node);
 
@@ -94,7 +97,16 @@ public:
     CommonroadDDSPoint to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get the x value of the point
+     */
     double get_x();
+    /**
+     * \brief Get the y value of the point
+     */
     double get_y();
+    /**
+     * \brief Get the z value of the point or nullopt, as this value is optional
+     */
     const std::optional<double>& get_z() const;
 };

@@ -50,7 +50,9 @@
 class IntervalOrExact : public InterfaceTransform
 {
 private:
+    //! Commonroad Interval; if this is set, there is no exact value set
     std::optional<Interval> interval = std::nullopt;
+    //! Exact value; if this is set, no interval is set
     std::optional<double> exact = std::nullopt;
 public:
     /**
@@ -92,21 +94,34 @@ public:
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
+
+    /**
+     * \brief Check if the data is exact or an interval
+     */
     bool is_exact()
     {
         return exact.has_value();
     }
 
+    /**
+     * \brief Get the exact value, if it exists (else: nullopt)
+     */
     const std::optional<double> get_exact_value()
     {
         return exact;
     }
 
+    /**
+     * \brief Check if the data is an interval or exact
+     */
     bool is_interval()
     {
         return interval.has_value();
     }
 
+    /**
+     * \brief Check if all the contained data (also for intervals) is greater than or equal to zero (equality only allowed for intervals)
+     */
     bool is_greater_zero()
     {
         bool greater_zero = true;
@@ -122,11 +137,17 @@ public:
         return greater_zero;
     }
     
+    /**
+     * \brief Get interval data or nullopt if it does not exist
+     */
     const std::optional<Interval> get_interval()
     {
         return interval;
     }
 
+    /**
+     * \brief Get exact value or mean of the stored interval(s)
+     */
     double get_mean()
     {
         if (exact.has_value())

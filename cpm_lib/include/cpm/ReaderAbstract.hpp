@@ -42,6 +42,7 @@ namespace cpm
     template<typename T>
     class ReaderAbstract
     {
+        //! Internal DDS reader that is abstracted by this class
         dds::sub::DataReader<T> dds_reader;
 
         ReaderAbstract(const ReaderAbstract&) = delete;
