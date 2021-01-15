@@ -70,6 +70,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     started = true;
     // Read LaneGraphTrajectory messages and write them into our buffer
     this->read_other_vehicles(); // Waits until we received the correct messages
+    cpm::Logging::Instance().write(1,
+            "Starting planning");
 
     // Check if we should stop and return early if we do
     if( stopFlag ) {
@@ -125,6 +127,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
 
+    cpm::Logging::Instance().write(1,
+            "Finished planning");
     // Publish our planned trajectory with other vehicles
     write_trajectory(lane_graph_trajectory);
 
