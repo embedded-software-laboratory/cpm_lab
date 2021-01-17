@@ -489,6 +489,7 @@ void Controller::reset()
     cpm::TimeMeasurement::Instance().start("reset_reader");
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
+    reader_CommandPathTracking.reset(new cpm::Reader<VehicleCommandPathTracking>(topic_vehicleCommandPathTracking));
     reader_CommandTrajectory.reset(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
     cpm::TimeMeasurement::Instance().stop("reset_reader");
 
