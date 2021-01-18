@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
                 auto data = e.second;
                 auto new_id = data.vehicle_id();
                 auto new_pose = data.pose();
+
                 int out_edge_index = -1;
                 int out_edge_path_index = -1;
                 bool matched = laneGraphTools.map_match_pose(new_pose, out_edge_index, out_edge_path_index);

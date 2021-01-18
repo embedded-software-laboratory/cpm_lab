@@ -24,6 +24,7 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+#include "cpm/Reader.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
@@ -31,6 +32,11 @@
 #include "cpm/Timer.hpp"
 #include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
+<<<<<<< Updated upstream
+=======
+#include "VehicleObservation.hpp" 
+#include <dds/pub/ddspub.hpp>
+>>>>>>> Stashed changes
 #include <iostream>
 #include <memory>
 
@@ -68,6 +74,10 @@ int main(int argc, char *argv[])
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
     //For more information see our documentation about RTI DDS
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
+
+    //the reader will read the pose of a vehicle given by its vehicle ID
+    cpm::Reader<VehicleObservation> reader("vehicleObservation")
+   
 
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
@@ -163,6 +173,8 @@ int main(int argc, char *argv[])
             reference_trajectory_time += segment_duration[reference_trajectory_index];
             reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         }
+
+        auto sample = reader.get_sample();
 
     });
 }
