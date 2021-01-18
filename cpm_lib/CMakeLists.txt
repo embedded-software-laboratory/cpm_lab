@@ -46,6 +46,8 @@ set(SOURCE_CPM
     src/get_time_ns.cpp
     include/cpm/RTTTool.hpp
     src/RTTTool.cpp
+    include/cpm/TimeMeasurement.hpp
+    src/TimeMeasurement.cpp
 )
 
 

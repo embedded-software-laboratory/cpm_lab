@@ -63,6 +63,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         int hlcDomainNumber = 1; 
         std::string vehicleStateListTopicName = "vehicleStateList"; 
         std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+        std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
@@ -83,6 +84,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
             hlcDomainNumber,
             vehicleStateListTopicName,
             vehicleTrajectoryTopicName,
+            vehiclePathTrackingTopicName,
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
             timer,

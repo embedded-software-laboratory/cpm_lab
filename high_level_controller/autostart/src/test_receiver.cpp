@@ -57,7 +57,8 @@ int main (int argc, char *argv[]) {
                 std::cout << "Received: " << data << std::endl;
             }
         },
-        "hlc_hello"
+        "hlc_hello",
+        true
     );
 
     std::cout << "Press Enter to stop the program" << std::endl;

@@ -182,7 +182,7 @@ std::vector<std::string> CrashChecker::check_for_remote_crashes()
     return crashed_programs;
 }
 
-void CrashChecker::start_checking(bool script_used, bool use_middleware_without_hlc, std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool lab_mode_on, bool labcam_toggled)
+void CrashChecker::start_checking(bool script_used, bool use_middleware_without_hlc, std::vector<uint8_t> remote_hlc_ids, bool has_local_hlc, bool remote_deploy_toggled, bool lab_mode_on, bool labcam_toggled)
 {
     kill_crash_check_thread();
 
@@ -197,7 +197,7 @@ void CrashChecker::start_checking(bool script_used, bool use_middleware_without_
     //Deploy crash check thread
     crash_check_running.store(true);
     thread_deploy_crash_check = std::thread(
-        [this, script_used, use_middleware_without_hlc, remote_hlc_ids, has_local_hlc, lab_mode_on, labcam_toggled] () {
+        [this, script_used, use_middleware_without_hlc, remote_hlc_ids, has_local_hlc, remote_deploy_toggled, lab_mode_on, labcam_toggled] () {
             //Give programs time to actually start
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -206,7 +206,7 @@ void CrashChecker::start_checking(bool script_used, bool use_middleware_without_
 
             while(crash_check_running.load())
             {
-                auto crashed_participants_local = deploy_functions->check_for_crashes(script_used, (remote_hlc_ids.size() > 0), has_local_hlc, lab_mode_on, labcam_toggled);
+                auto crashed_participants_local = deploy_functions->check_for_crashes(script_used, remote_deploy_toggled, has_local_hlc, lab_mode_on, labcam_toggled);
 
                 std::vector<std::string> crashed_participants_remote;
                 if (script_used)

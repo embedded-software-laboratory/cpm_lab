@@ -457,7 +457,7 @@ void SetupViewUI::deploy_applications() {
 #endif
     
     // Recording
-    deploy_functions->deploy_recording();
+    //deploy_functions->deploy_recording();
 
     //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
     //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
@@ -536,7 +536,7 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
+            deploy_functions->deploy_separate_local_hlcs(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
@@ -557,7 +557,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
@@ -629,7 +629,7 @@ void SetupViewUI::kill_deployed_applications() {
         //Also kill potential local HLC
         if (both_local_and_remote_deploy.exchange(false))
         {
-            deploy_functions->kill_local_hlc();
+            deploy_functions->kill_separate_local_hlcs();
         }
     }
     else 

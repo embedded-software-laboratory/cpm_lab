@@ -81,6 +81,17 @@ public:
      */
     void deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
 
+    //Specific local deploy functions with 1 HLC per vehicle ID
+    /**
+     * \brief Start the middleware once and the given Matlab/C++ script using tmux and a system call for each vehicle ID; pass parameters: domain id, initial peer, simulated time, vehicle id
+     * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
+     * \param active_vehicle_ids All vehicle IDs that are in use in this run, no matter if real or simulated
+     * \param script_path Path to the script, including the script name (and possible file ending)
+     * \param script_params Additional script parameters
+     */
+    void deploy_separate_local_hlcs(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
+    std::vector<unsigned int> deployed_local_hlcs;
+
     /**
      * \brief Deploy all vehicles that were set to be simulated locally, set simulated time (software is started using tmux)
      */
@@ -96,6 +107,7 @@ public:
     void stop_vehicles(std::vector<unsigned int> vehicle_ids);
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
     void kill_local_hlc();
+    void kill_separate_local_hlcs();
     void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
     void kill_sim_vehicle(unsigned int id);
 

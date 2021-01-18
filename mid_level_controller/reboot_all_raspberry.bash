@@ -1,7 +1,6 @@
 #!/bin/bash
 
 IPS=$'
-192.168.1.100
 192.168.1.101
 192.168.1.102
 192.168.1.103
@@ -27,8 +26,8 @@ IPS=$'
 for ip in $IPS;  
 do
     echo "Rebooting $ip"
-    sshpass -p t4nxAdDwrgqn ssh -o StrictHostKeyChecking=no -t -t pi@$ip 'sudo reboot now' &
-    sleep 1
+    sshpass -p "cpmcpmcpm" ssh -o StrictHostKeyChecking=no -t -t pi@$ip 'sudo reboot now' &
+    sleep 0.1
 done
 
 

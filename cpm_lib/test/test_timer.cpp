@@ -54,7 +54,7 @@ TEST_CASE( "TimerFD_accuracy" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_accuracy");
 
-    const uint64_t period = 21000000;
+    const uint64_t period = 200000000;
     const uint64_t offset =  5000000;
 
     const std::string time_name = "asdfg";
@@ -110,11 +110,11 @@ TEST_CASE( "TimerFD_accuracy" ) {
         CHECK( now >= starting_time + period * timer_loop_count); 
 
         if (timer_loop_count == 0) {
-            // actual start time is within 1 ms of initial start time
-            CHECK( t_start <= starting_time + period + 1000000); 
+            // actual start time is within 3 ms of initial start time
+            CHECK( t_start <= starting_time + period + 3000000); 
         }
         CHECK( t_start <= now ); //Callback should not be called before t_start
-        CHECK( now <= t_start + 1000000 ); // actual start time is within 1 ms of declared start time
+        CHECK( now <= t_start + 3000000 ); // actual start time is within 3 ms of declared start time
         CHECK( t_start % period == offset ); // start time corresponds to timer definition
 
         if(timer_loop_count > 0)

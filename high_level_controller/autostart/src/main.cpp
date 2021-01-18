@@ -120,7 +120,7 @@ int main (int argc, char *argv[]) {
     std::shared_ptr<cpm::Timer> timer = std::make_shared<cpm::TimerFD>("hlc_timer", callback_period, 0, false);
 
     //Create DataWriter that sends ready messages to the Lab
-    cpm::Writer<HLCHello> writer_readyMessage("hlc_hello");
+    cpm::Writer<HLCHello> writer_readyMessage("hlc_hello", true);
 
     //Wait a bit (10 seconds) for the NUC to get its IP address; the NUCs ID can be read from its IP
     //usleep(10000000);
