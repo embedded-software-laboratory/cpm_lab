@@ -26,7 +26,10 @@
 
 #include "VehicleTrajectoryPlanner.hpp"
 
-
+/**
+ * \file VehicleTrajectoryPlanner.cpp
+ * \ingroup decentral_routing
+ */
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}
 

@@ -65,6 +65,29 @@
 
 using std::vector;
 
+//Description for bash files
+/**
+ * \file high_level_controller/examples/cpp/decentral_routing/build.bash
+ * \brief Build script for decentral_routing
+ * \ingroup decentral_routing
+ */
+
+/**
+ * \file high_level_controller/examples/cpp/decentral_routing/run.bash
+ * \brief Run script for decentral_routing
+ * \ingroup decentral_routing
+ */
+
+/**
+ * \file high_level_controller/examples/cpp/decentral_routing/run_distributed.bash
+ * \brief TODO
+ * \ingroup decentral_routing
+ */
+
+/**
+ * \brief TODO
+ * \ingroup decentral_routing
+ */
 int main(int argc, char *argv[]) {   
 
     // Read command line arguments

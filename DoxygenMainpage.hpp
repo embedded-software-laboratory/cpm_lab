@@ -250,6 +250,12 @@
  */
 
 /**
+ * \defgroup decentral_routing Decentral Routing Example
+ * \ingroup cpp_examples
+ * \brief In this scenario, multiple vehicles drive on the Lab map following trajectories by a decentral routing mechanism that makes sure that the vehicles don't crash.
+ */
+
+/**
  * \defgroup controller_test_loop Controller Test Loop
  * \ingroup cpp_examples
  * \brief TODO

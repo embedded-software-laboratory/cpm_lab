@@ -70,5 +70,8 @@ public:
     void move_along_route(vector<size_t> route_edge_indices, size_t &edge_index, size_t &edge_path_index, double &delta_s) const;
 };
 
-//! TODO
+/**
+ * \brief TODO
+ * \ingroup central_routing
+ */
 extern const LaneGraphTools laneGraphTools;

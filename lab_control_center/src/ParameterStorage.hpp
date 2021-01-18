@@ -40,12 +40,18 @@
 
 /**
  * \class ParameterStorage
- * \brief This class can be used in combination with yaml files and the parameter server. Do not confuse this class with the class in the cpm lib! That class is used on the client's side.
+ * \brief This class can be used in combination with YAML files and the parameter server. 
+ * Stores parameter values set by the user (in the LCC's UI) or directly in the YAML file
+ * Do not confuse this class with the class in the cpm lib! That class is used on the client's side.
  * \ingroup lcc
  */
 class ParameterStorage {
 public:
-    //Constructor
+    /**
+     * \brief Constructor
+     * \param _filename Filename of the YAML file which stores saved parameter data for the program
+     * \param precision Floating point precision to be used within YAML, lower values allow i.e. for better storage efficiency
+     */
     ParameterStorage(std::string _filename, int precision);
 
     //Delete move and copy op
@@ -65,13 +71,21 @@ public:
      * \param _filename Change the current filename and use the given parameter for that, thus switch to the new file
      */
     void loadFile(std::string _filename);
+    /**
+     * \brief Load YAML file into memory, use mutex and filename stored in this class from the constructor
+     */
     void loadFile();
+
     /**
      * \brief Store current configuration in YAML file
      * \param _filename Change the current filename and use the given parameter for that, thus switch to the new file
      */
     void storeFile(std::string _filename);
+    /**
+     * \brief Store current configuration in YAML file, use filename stored in this class from the constructor
+     */
     void storeFile();
+
     /**
      * \brief Set the value of a parameter
      * \param name name of the parameter
@@ -79,14 +93,63 @@ public:
      * \param info description of the parameter's purpose
      */
     void set_parameter_bool(std::string name, bool value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_uint64_t(std::string name, uint64_t value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_int(std::string name, int32_t value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_double(std::string name, double value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_string(std::string name, std::string value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_string(std::string name, const char* value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_ints(std::string name, std::vector<int32_t> value, std::string info = "");
+    /**
+     * \brief Set the value of a parameter
+     * \param name name of the parameter
+     * \param value new value of the parameter
+     * \param info description of the parameter's purpose
+     */
     void set_parameter_doubles(std::string name, std::vector<double> value, std::string info = "");
+
+    /**
+     * \brief Abstracted function used by all set_parameter_... functions to actually store the parameter
+     * \param name Name of the parameter
+     * \param param Parameter values
+     */
     void set_parameter(std::string name, ParameterWithDescription param);
+
     /**
      * \brief Get the value of a parameter
      * \param name name of the parameter

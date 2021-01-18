@@ -51,28 +51,64 @@ class ObstacleSimulation
 {
 private: 
     //Trajectory info
+    //! ID of the obstacle
     uint8_t obstacle_id;
+    //! Trajectory data of the obstacle + obstacle type
     ObstacleSimulationData trajectory; //Important: Position should always be set! Translate lanelet refs beforehand!
+    //! Current position in the trajectory vector (used for simulation)
     size_t current_trajectory = 0;
 
-    const size_t future_time_steps = 10; //Send up to 10 trajectory points from future time steps
+    //! As we cannot just send single points, but need to send a trajectory to vehicles: Send up to 10 trajectory points from future time steps
+    const size_t future_time_steps = 10;
 
     /**
      * \brief Interpolation function that delivers state values in between set trajectory points
+     * \param p1 First trajectory point to interpolate from
+     * \param p2 Second trajectory point to interpolate to
+     * \param current_time Current time, required for interpolation
+     * \param time_step_size Commonorad time step size, to translate from time given in p1, p2 to nanoseconds representation
+     * \param x_interp Return value for x coordinate, as result of the interpolation
+     * \param y_interp Return value for y coordinate, as result of the interpolation
+     * \param yaw_interp Return value for yaw, as result of the interpolation
      * \return x,y,yaw values using references as input
      */
     void interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &yaw_interp);
 
     /**
      * \brief Interpolation function that delivers trajectory values in between set trajectory points
+     * \param p1 First trajectory point to interpolate from
+     * \param p2 Second trajectory point to interpolate to
+     * \param current_time Current time, required for interpolation
+     * \param time_step_size Commonorad time step size, to translate from time given in p1, p2 to nanoseconds representation
+     * \param x_interp Return value for x coordinate, as result of the interpolation
+     * \param y_interp Return value for y coordinate, as result of the interpolation
+     * \param vx Return value for x-velocity, as result of the interpolation
+     * \param vy Return value for y-velocity, as result of the interpolation
      * \return x,y,vx,vy values using references as input
      */
     void interpolate_between(ObstacleSimulationSegment& p1, ObstacleSimulationSegment& p2, double current_time, double time_step_size, double &x_interp, double &y_interp, double &vx, double& vy);
 
+    /**
+     * \brief Create CommonroadObstacle object from the given information
+     * \param point Current point of the obstacle (gives shape, time, velocity...)
+     * \param x x position of the obstacle
+     * \param y y position of the obstacle
+     * \param yaw yaw of the obstacle
+     * \param t_now current time
+     */
     CommonroadObstacle construct_obstacle(ObstacleSimulationSegment& point, double x, double y, double yaw, uint64_t t_now);
 
+    /**
+     * \brief Create a VehicleCommandTrajectory object to be sent e.g. to a vehicle from a given obstacle trajectory
+     * \param trajectory_points Obstacle trajectory
+     * \param t_now Current time
+     */
     VehicleCommandTrajectory construct_trajectory(std::vector<TrajectoryPoint>& trajectory_points, uint64_t t_now);
 
+    /**
+     * \brief Get the position of the obstacle in a time step given by the segment, which might be inexact - in that case, return the position mean
+     * \param segment The position and further obstacle information in Commonroad representation
+     */
     std::pair<double, double> get_position(ObstacleSimulationSegment& segment);
 
 public:
@@ -101,10 +137,10 @@ public:
      */
     CommonroadObstacle get_state(uint64_t start_time, uint64_t t_now, uint64_t time_step_size);
 
-    /**
-     * \brief Get the initial trajectory point of the vehicle
-     * \param t_now Current time, used for timestamp of msg
-     */
+    // /**
+    //  * \brief Get the initial trajectory point of the vehicle
+    //  * \param t_now Current time, used for timestamp of msg
+    //  */
     //Does not make sense, as with the current implementation the initial trajectory point would not get sent often enough
     //TODO & @Max: We need a "Drive to point" for this, before the simulation starts
     // VehicleCommandTrajectory get_init_trajectory(uint64_t t_now);
@@ -124,6 +160,9 @@ public:
      */
     VehicleCommandTrajectory get_trajectory(uint64_t start_time, uint64_t t_now, uint64_t time_step_size);
 
+    /**
+     * \brief Get the ID of the obstacle
+     */
     uint8_t get_id();
 
     //Reset internal counter variable which was implemented to make the lookup a bit faster

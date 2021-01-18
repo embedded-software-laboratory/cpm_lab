@@ -69,6 +69,9 @@ struct PathNode
 /**
  * \brief TODO
  * \ingroup central_routing
+ * \param vehicle TODO
+ * \param points_x TODO
+ * \param points_y TODO
  */
 static inline double min_distance_vehicle_to_points
 (
@@ -97,6 +100,8 @@ static inline double min_distance_vehicle_to_points
 /**
  * \brief TODO
  * \ingroup central_routing
+ * \param vehicleA TODO
+ * \param vehicleB TODO
  */
 static inline double min_distance_vehicle_to_vehicle(PathNode vehicleA, PathNode vehicleB)
 {
