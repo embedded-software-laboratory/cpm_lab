@@ -41,18 +41,8 @@
 #include <algorithm>
 #include <atomic>
 
-<<<<<<< Updated upstream
 #include "Log.hpp"
 #include "LogLevel.hpp"
-=======
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <dds/dds.hpp>
-#include <dds/core/ddscore.hpp>
-
-#include "dds/Log.hpp"
-#include "dds/LogLevel.hpp"
->>>>>>> Stashed changes
 
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
