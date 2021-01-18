@@ -29,21 +29,14 @@
 #include <iostream>
 #include <sstream>
 #include "cpm/Logging.hpp"
+#include "cpm/TimeMeasurement.hpp"
 #include "TrajectoryInterpolation.hpp"
 
 MpcController::MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
-:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
-,writer_Visualization
-(
-    dds::pub::DataWriter<Visualization>
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        topic_Visualization
-    )
-
-)
-,vehicle_id(_vehicle_id)
-,stop_vehicle(_stop_vehicle)
+:
+    writer_Visualization("visualization")
+    ,vehicle_id(_vehicle_id)
+    ,stop_vehicle(_stop_vehicle)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -231,6 +224,7 @@ void MpcController::optimize_control_inputs(
     double &out_steering_servo
 )
 {
+    cpm::TimeMeasurement::Instance().start("mpc_casadi");
     for (int i = 0; i < 20; ++i)
     {
         casadi_vars["var_x0"][0] = vehicleState_predicted_start.pose().x();
@@ -275,9 +269,11 @@ void MpcController::optimize_control_inputs(
             nullptr, nullptr, nullptr);
 
     }
+    cpm::TimeMeasurement::Instance().stop("mpc_casadi");
 
     //cpm::Logging::Instance().write("objective value %f ",casadi_vars["objective"][0]);
 
+    cpm::TimeMeasurement::Instance().start("mpc_opt_vis");
     if(casadi_vars["objective"][0] < 0.7)
     {
         out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
@@ -299,7 +295,9 @@ void MpcController::optimize_control_inputs(
             vis.points().at(j).x(casadi_vars["trajectory_x"][j]);
             vis.points().at(j).y(casadi_vars["trajectory_y"][j]);
         }
+        cpm::TimeMeasurement::Instance().start("mpc_vis_write");
         writer_Visualization.write(vis);
+        cpm::TimeMeasurement::Instance().stop("mpc_vis_write");
 
 
         /*
@@ -355,6 +353,7 @@ void MpcController::optimize_control_inputs(
         reset_optimizer();
         stop_vehicle(out_motor_throttle, out_steering_servo);
     }
+    cpm::TimeMeasurement::Instance().stop("mpc_opt_vis");
 }
 
 void MpcController::reset_optimizer()

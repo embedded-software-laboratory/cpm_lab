@@ -27,7 +27,4 @@ add_executable(basic_circle
 )
 target_link_libraries(basic_circle cpm)
 
-add_executable(basic_line
-    src/main_line.cpp
-)
-target_link_libraries(basic_line cpm)
+

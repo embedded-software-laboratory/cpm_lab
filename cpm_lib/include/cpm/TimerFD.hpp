@@ -42,6 +42,7 @@
 
 #include "cpm/exceptions.hpp"
 #include "cpm/get_time_ns.hpp"
+#include "cpm/Writer.hpp"
 
 #include <atomic>
 
@@ -63,13 +64,16 @@ namespace cpm {
     {
         uint64_t period_nanoseconds; 
         uint64_t offset_nanoseconds;
-        dds::topic::Topic<ReadyStatus> ready_topic;
-        dds::topic::Topic<SystemTrigger> trigger_topic;
         std::string node_id;
-        dds::sub::DataReader<SystemTrigger> reader_system_trigger;
 
+        //Cannot be substituted by other cpm classes and was not abstracted
+        //Usage here: Wait for data on 'take' up to x ms or until the read condition is fulfilled
+        dds::sub::DataReader<SystemTrigger> reader_system_trigger;
         dds::sub::cond::ReadCondition readCondition;
         dds::core::cond::WaitSet waitset;
+
+        //Reader / Writer for ready status and system trigger
+        cpm::Writer<ReadyStatus> writer_ready_status;
         
         std::atomic_bool active;
         std::atomic_bool cancelled; //In rare cases, stop can be called even before active is set to true; in that case, active alone does not suffice

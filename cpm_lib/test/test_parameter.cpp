@@ -35,6 +35,8 @@
 #include <functional>
 #include "cpm/get_topic.hpp"
 
+#include "cpm/Writer.hpp"
+
 /**
  * Tests:
  * - If parameter requests are processed correctly by the lib
@@ -45,23 +47,26 @@
 using namespace std::placeholders;
 class ParameterServer {
     private:
-        dds::pub::DataWriter<Parameter> parameter_writer;
+        cpm::Writer<Parameter> parameter_writer;
         cpm::AsyncReader<ParameterRequest> parameter_request_subscriber;
     public:
-        ParameterServer(std::function<void(dds::pub::DataWriter<Parameter>&, dds::sub::LoanedSamples<ParameterRequest>& samples)> callback) :
+        ParameterServer(std::function<void(std::vector<ParameterRequest>& samples)> callback) :
             parameter_writer(
-                dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-                cpm::get_topic<Parameter>("parameter"),
-                dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()
+                "parameter",
+                true
             ),
             parameter_request_subscriber(
-                std::bind(callback, parameter_writer, _1), 
-                cpm::ParticipantSingleton::Instance(),
-                cpm::get_topic<ParameterRequest>("parameterRequest"),
+                std::bind(callback, _1), 
+                "parameterRequest",
                 true
             )
         {
 
+        }
+
+        cpm::Writer<Parameter>& get_writer()
+        {
+            return parameter_writer;
         }
 };
 
@@ -81,24 +86,22 @@ TEST_CASE( "parameter_double" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
-        for (auto sample : samples) {
-            if (sample.info().valid()) {
-                if (sample.data().name() == param_name) {
-                    Parameter param = Parameter();
-                    param.name(param_name);
+    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+        for (auto data : samples) {
+            if (data.name() == param_name) {
+                Parameter param = Parameter();
+                param.name(param_name);
 
-                    std::vector<double> stdDoubles;
-                    stdDoubles.push_back(param_value);
-                    rti::core::vector<double> doubles(stdDoubles);
+                std::vector<double> stdDoubles;
+                stdDoubles.push_back(param_value);
+                rti::core::vector<double> doubles(stdDoubles);
 
-                    param.type(ParameterType::Double);
-                    param.values_double(doubles);
-                    writer.write(param);
-                }
-                else {
-                    received_wrong_param_name = true;
-                }
+                param.type(ParameterType::Double);
+                param.values_double(doubles);
+                server.get_writer().write(param);
+            }
+            else {
+                received_wrong_param_name = true;
             }
         }
     });
@@ -130,23 +133,21 @@ TEST_CASE( "parameter_strings" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
-        for (auto sample : samples) {
-            if (sample.info().valid()) {
-                if (sample.data().name() == param_name_1) {
-                    Parameter param = Parameter();
-                    param.name(param_name_1);
-                    param.type(ParameterType::String);
-                    param.value_string(string_param_1);
-                    writer.write(param);
-                }
-                else if (sample.data().name() == param_name_2) {
-                    Parameter param = Parameter();
-                    param.name(param_name_2);
-                    param.type(ParameterType::String);
-                    param.value_string(std::string(string_param_2));
-                    writer.write(param);
-                }
+    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+        for (auto data : samples) {
+            if (data.name() == param_name_1) {
+                Parameter param = Parameter();
+                param.name(param_name_1);
+                param.type(ParameterType::String);
+                param.value_string(string_param_1);
+                server.get_writer().write(param);
+            }
+            else if (data.name() == param_name_2) {
+                Parameter param = Parameter();
+                param.name(param_name_2);
+                param.type(ParameterType::String);
+                param.value_string(std::string(string_param_2));
+                server.get_writer().write(param);
             }
         }
     });
@@ -176,23 +177,21 @@ TEST_CASE( "parameter_bool" ) {
     });
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](dds::pub::DataWriter<Parameter>& writer, dds::sub::LoanedSamples<ParameterRequest>& samples){
-        for (auto sample : samples) {
-            if (sample.info().valid()) {
-                if (sample.data().name() == param_name_1) {
-                    Parameter param = Parameter();
-                    param.name(param_name_1);
-                    param.type(ParameterType::Bool);
-                    param.value_bool(desired_paramater_value_true);
-                    writer.write(param);
-                }
-                else if (sample.data().name() == param_name_2) {
-                    Parameter param = Parameter();
-                    param.name(param_name_2);
-                    param.type(ParameterType::Bool);
-                    param.value_bool(desired_paramater_value_false);
-                    writer.write(param);
-                }
+    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+        for (auto data : samples) {
+            if (data.name() == param_name_1) {
+                Parameter param = Parameter();
+                param.name(param_name_1);
+                param.type(ParameterType::Bool);
+                param.value_bool(desired_paramater_value_true);
+                server.get_writer().write(param);
+            }
+            else if (data.name() == param_name_2) {
+                Parameter param = Parameter();
+                param.name(param_name_2);
+                param.type(ParameterType::Bool);
+                param.value_bool(desired_paramater_value_false);
+                server.get_writer().write(param);
             }
         }
     });

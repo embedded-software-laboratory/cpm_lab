@@ -177,4 +177,19 @@ public:
             interval->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
     }
+
+    /**
+     * \brief Translate to DDS interval, if not exact
+     * \param ratio Relevant to translate e.g. time information to actual time
+     */
+    CommonroadDDSIntervals to_dds_interval(double ratio = 1.0)
+    {
+        //Throw error if conversion is invalid because of interval type
+        if (!interval.has_value())
+        {
+            throw std::runtime_error("IntervalOrExact cannot be translated to DDS Interval, is exact");
+        }
+
+        return interval->to_dds_msg(ratio);
+    }
 };

@@ -29,7 +29,7 @@
 using namespace std::placeholders;
 LogStorage::LogStorage() :
     /*Set up communication*/
-    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("log"), true)
+    log_reader(std::bind(&LogStorage::log_callback, this, _1), "log", true)
 {    
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
     file << "ID,Timestamp,Content" << std::endl;
@@ -41,40 +41,37 @@ LogStorage::~LogStorage()
     file.close();
 }
 
-void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) { 
+void LogStorage::log_callback(std::vector<Log>& samples) { 
     std::lock_guard<std::mutex> lock_1(log_storage_mutex);
     std::lock_guard<std::mutex> lock_2(log_buffer_mutex); 
 
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
-            //The warning will still show up, but the log message is altered s.t. the user can find the error
-            Log received_log = sample.data();
-            assert_utf8_validity(received_log);
+    for (auto& received_log : samples) {
+        //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
+        //The warning will still show up, but the log message is altered s.t. the user can find the error
+        assert_utf8_validity(received_log);
 
-            log_storage.push_back(received_log);
-            log_buffer.push_back(received_log);
+        log_storage.push_back(received_log);
+        log_buffer.push_back(received_log);
 
-            //Write logs immediately to csv file (taken from cpm library)
-            //For the log file: csv, so escape '"'
-            std::string str = received_log.content();
-            std::string log_string = std::string(str);
-            std::string escaped_quote = std::string("\"\"");
-            size_t pos = 0;
-            while ((pos = log_string.find('"', pos)) != std::string::npos) {
-                log_string.replace(pos, 1, escaped_quote);
-                pos += escaped_quote.size();
-            }
-            //Also put the whole string in quotes
-            log_string.insert(0, "\"");
-            log_string += "\"";
-
-            //Mutex for writing the message (file, writer) - is released when going out of scope
-            std::lock_guard<std::mutex> lock(file_mutex);
-
-            //Add the message to the log file
-            file << received_log.id() << "," << received_log.stamp().nanoseconds() << "," << log_string << std::endl;
+        //Write logs immediately to csv file (taken from cpm library)
+        //For the log file: csv, so escape '"'
+        std::string str = received_log.content();
+        std::string log_string = std::string(str);
+        std::string escaped_quote = std::string("\"\"");
+        size_t pos = 0;
+        while ((pos = log_string.find('"', pos)) != std::string::npos) {
+            log_string.replace(pos, 1, escaped_quote);
+            pos += escaped_quote.size();
         }
+        //Also put the whole string in quotes
+        log_string.insert(0, "\"");
+        log_string += "\"";
+
+        //Mutex for writing the message (file, writer) - is released when going out of scope
+        std::lock_guard<std::mutex> lock(file_mutex);
+
+        //Add the message to the log file
+        file << received_log.id() << "," << received_log.stamp().nanoseconds() << "," << log_string << std::endl;
     }
 
     //Clear storage and buffer when some max size was reached - keep last elements

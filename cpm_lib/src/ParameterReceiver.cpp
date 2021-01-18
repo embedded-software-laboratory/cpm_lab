@@ -28,6 +28,8 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Parameter.hpp"
 #include "cpm/get_topic.hpp"
+#include <chrono>
+#include <thread>
 
 using namespace std::placeholders;
 
@@ -64,10 +66,8 @@ namespace cpm
     }
 
     ParameterReceiver::ParameterReceiver():
-        parameterTopic(cpm::get_topic<Parameter>("parameter")),
-        parameterRequestTopic(cpm::get_topic<ParameterRequest>("parameterRequest")),
-        writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), parameterRequestTopic, dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()),
-        subscriber(std::bind(&ParameterReceiver::callback, this, _1), cpm::ParticipantSingleton::Instance(), parameterTopic, true)
+        writer("parameterRequest", true),
+        subscriber(std::bind(&ParameterReceiver::callback, this, _1), "parameter", true)
     {
 
     }
@@ -89,7 +89,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -129,7 +129,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -149,7 +149,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -169,7 +169,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -189,7 +189,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -209,7 +209,7 @@ namespace cpm
                 "Waiting for parameter %s ...", 
                 parameter_name.c_str()
             );
-            rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(1000)));
+            usleep(1000);
             s_lock.lock();
         }
 
@@ -224,39 +224,35 @@ namespace cpm
         writer.write(request);
     }
 
-    void ParameterReceiver::callback(dds::sub::LoanedSamples<Parameter>& samples) {
-        for (auto sample : samples) {
-            if (sample.info().valid()) {
-                const auto& parameter = sample.data();
-
-                if (parameter.type() == ParameterType::Int32 && parameter.values_int32().size() == 1) {
-                    std::lock_guard<std::mutex> u_lock(param_int_mutex);
-                    param_int[parameter.name()] = parameter.values_int32().at(0);
-                }
-                else if (parameter.type() == ParameterType::Double && parameter.values_double().size() == 1) {
-                    std::lock_guard<std::mutex> u_lock(param_double_mutex);
-                    param_double[parameter.name()] = parameter.values_double().at(0);
-                }
-                else if (parameter.type() == ParameterType::String) {
-                    std::lock_guard<std::mutex> u_lock(param_string_mutex);
-                    param_string[parameter.name()] = parameter.value_string();
-                }
-                else if (parameter.type() == ParameterType::Bool) {
-                    std::lock_guard<std::mutex> u_lock(param_bool_mutex);
-                    param_bool[parameter.name()] = parameter.value_bool();
-                }
-                else if (parameter.type() == ParameterType::UInt64) {
+    void ParameterReceiver::callback(std::vector<Parameter>& samples) {
+        for (const auto& parameter : samples) {
+            if (parameter.type() == ParameterType::Int32 && parameter.values_int32().size() == 1) {
+                std::lock_guard<std::mutex> u_lock(param_int_mutex);
+                param_int[parameter.name()] = parameter.values_int32().at(0);
+            }
+            else if (parameter.type() == ParameterType::Double && parameter.values_double().size() == 1) {
+                std::lock_guard<std::mutex> u_lock(param_double_mutex);
+                param_double[parameter.name()] = parameter.values_double().at(0);
+            }
+            else if (parameter.type() == ParameterType::String) {
+                std::lock_guard<std::mutex> u_lock(param_string_mutex);
+                param_string[parameter.name()] = parameter.value_string();
+            }
+            else if (parameter.type() == ParameterType::Bool) {
+                std::lock_guard<std::mutex> u_lock(param_bool_mutex);
+                param_bool[parameter.name()] = parameter.value_bool();
+            }
+            else if (parameter.type() == ParameterType::UInt64) {
                     std::lock_guard<std::mutex> u_lock(param_uint64_t_mutex);
                     param_uint64_t[parameter.name()] = parameter.value_uint64_t();
                 }
-                else if (parameter.type() == ParameterType::Vector_Int32) {
-                    std::lock_guard<std::mutex> u_lock(param_ints_mutex);
-                    param_ints[parameter.name()] = parameter.values_int32();
-                }
-                else if (parameter.type() == ParameterType::Vector_Double) {
-                    std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
-                    param_doubles[parameter.name()] = parameter.values_double();
-                }
+            else if (parameter.type() == ParameterType::Vector_Int32) {
+                std::lock_guard<std::mutex> u_lock(param_ints_mutex);
+                param_ints[parameter.name()] = parameter.values_int32();
+            }
+            else if (parameter.type() == ParameterType::Vector_Double) {
+                std::lock_guard<std::mutex> u_lock(param_doubles_mutex);
+                param_doubles[parameter.name()] = parameter.values_double();
             }
         }
     }

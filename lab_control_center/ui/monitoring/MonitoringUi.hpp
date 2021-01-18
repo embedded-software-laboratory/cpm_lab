@@ -93,7 +93,7 @@ public:
     //full rows
     const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     //We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
-    const vector<string> rows_restricted = {"ips_dt", "last_msg_state", "battery_level", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
+    const vector<string> rows_restricted = {"battery_level", "ips_dt", "last_msg_state", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
 
     // Indicates the starting time of the last error occurance for each vehicle
     vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};

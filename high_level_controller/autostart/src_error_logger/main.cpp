@@ -37,8 +37,6 @@
 #include <sstream>
 #include <string>
 
-#include <dds/pub/ddspub.hpp>
-
 #include "ReadyStatus.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"

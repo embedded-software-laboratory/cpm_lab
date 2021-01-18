@@ -30,8 +30,8 @@ ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadS
 :
 scenario(_scenario),
 use_simulated_time(_use_simulated_time),
-writer_commonroad_obstacle(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<CommonroadObstacleList>("commonroadObstacle")),
-writer_vehicle_trajectory(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
+writer_commonroad_obstacle("commonroadObstacle"),
+writer_vehicle_trajectory("vehicleCommandTrajectory")
 {
     //Set up cpm values (cpm init has already been done before)
     node_id = "obstacle_simulation"; //Will probably not be used, as main already set LabControlCenter

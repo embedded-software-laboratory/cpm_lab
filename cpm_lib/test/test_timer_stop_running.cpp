@@ -30,9 +30,12 @@
 
 #include <thread>
 #include <string>
+#include <chrono>
 
+#include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
+
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <dds/topic/ddstopic.hpp>
@@ -56,12 +59,10 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     uint64_t starting_time = timer.get_time() + 3000000000;
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "systemTrigger"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    cpm::Writer<SystemTrigger> writer_SystemTrigger("systemTrigger", true);
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> reader_ReadyStatus(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-        dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "readyStatus"), 
+        cpm::get_topic<ReadyStatus>(cpm::ParticipantSingleton::Instance(), "readyStatus"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data
@@ -88,7 +89,7 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
         writer_SystemTrigger.write(trigger);
 
         //Wait
-        rti::util::sleep(dds::core::Duration::from_millisecs(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         //Send stop signal
         trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));

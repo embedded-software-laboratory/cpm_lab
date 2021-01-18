@@ -33,10 +33,10 @@
 #include "cpm/stamp_message.hpp"
 #include "cpm/get_topic.hpp"
 
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <rti/core/cond/AsyncWaitSet.hpp>
 #include <mutex>
+
+#include "cpm/AsyncReader.hpp"
+#include "cpm/Writer.hpp"
 
 /**
  * Tests RTTTool
@@ -48,33 +48,21 @@ TEST_CASE( "RTT" ) {
     cpm::Logging::Instance().set_id("test_rtt");
     cpm::RTTTool::Instance().activate("test_rtt");
 
-    auto participant = cpm::ParticipantSingleton::Instance();
-    auto topic_rtt = cpm::get_topic<RoundTripTime>("round_trip_time");
-
     //Create a reader to check if the message would have been received by the RTTTool async reader (it does not answer, because the ID is the same)
-    dds::sub::DataReader<RoundTripTime> rtt_reader(dds::sub::Subscriber(participant), topic_rtt);
     //Use the reader async
     std::vector<std::string> received_ids;
     std::mutex receive_mutex;
-    dds::core::cond::StatusCondition read_condition(rtt_reader);
-    rti::core::cond::AsyncWaitSet waitset;
-    read_condition.enabled_statuses(dds::core::status::StatusMask::data_available()); 
-    read_condition->handler([&](){
+    cpm::AsyncReader<RoundTripTime> rtt_reader([&](std::vector<RoundTripTime>& samples){
         std::lock_guard<std::mutex> lock(receive_mutex);
-        auto samples = rtt_reader.take();
-        for(auto sample: samples)
+        for(auto& data: samples)
         {
-            if(sample.info().valid()) 
-            {
-                received_ids.push_back(sample.data().source_id());
-            }
+            received_ids.push_back(data.source_id());
         }
-    });
-    waitset.attach_condition(read_condition);
-    waitset.start();
+    },
+    "round_trip_time");
 
     //Create a writer to simulate a RTT request and check if an answer is received with the above reader
-    dds::pub::DataWriter<RoundTripTime> rtt_writer(dds::pub::Publisher(participant), topic_rtt);
+    cpm::Writer<RoundTripTime> rtt_writer("round_trip_time");
 
     //It usually takes some time for all instances to see each other - wait until then
     std::cout << "Waiting for DDS entity match in RTT test" << std::endl << "\t";
@@ -84,10 +72,7 @@ TEST_CASE( "RTT" ) {
         usleep(100000); //Wait 100ms
         std::cout << "." << std::flush;
 
-        auto matched_sub = dds::pub::matched_subscriptions<RoundTripTime>(rtt_writer);
-        auto matched_pub = dds::sub::matched_publications<RoundTripTime>(rtt_reader);
-
-        if (matched_pub.size() > 1 && matched_sub.size() > 1)
+        if (rtt_writer.matched_subscriptions_size() > 1 && rtt_reader.matched_publications_size() > 1)
             wait = false;
     }
     std::cout << std::endl;

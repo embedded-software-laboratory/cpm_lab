@@ -51,7 +51,7 @@ private:
      * \brief Stores new viz messages or deletes old ones, depending on their action
      * Important: User sends time to live, is converted to point in time when received
      */
-    void handle_new_viz_msgs(dds::sub::LoanedSamples<Visualization>& samples);
+    void handle_new_viz_msgs(std::vector<Visualization>& samples);
 
     //Reader to receive samples, map / mutex to thread-safely store and access them
     std::shared_ptr<cpm::AsyncReader<Visualization>> viz_reader;

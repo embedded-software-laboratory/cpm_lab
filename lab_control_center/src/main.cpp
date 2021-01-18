@@ -27,8 +27,6 @@
 #include "defaults.hpp"
 #include "stdio.h"
 #include <unistd.h>
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
 #include "ObstacleAggregator.hpp"
 #include "TimeSeriesAggregator.hpp"
 #include "HLCReadyAggregator.hpp"
@@ -59,6 +57,9 @@
 #include "cpm/init.hpp"
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
+
+#include "cpm/Writer.hpp"
+#include "CommonroadDDSGoalState.hpp"
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
@@ -194,6 +195,7 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return timeSeriesAggregator->get_vehicle_path_tracking_commands();},
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
@@ -216,14 +218,23 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         obstacle_simulation_manager 
     );
+
+    //Writer to send planning problems translated from commonroad to HLCs
+    //As it is transient local, we need to reset the writer before each simulation start
+    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
+
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
         hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){
+        [&](){
             //Things to do when the simulation is started
+
+            //Reset writer for planning problems (used down below), as it is transient local and we do not want to pollute the net with outdated data
+            writer_planning_problems.reset();
+            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
 
             //Stop RTT measurement
             rtt_aggregator->stop_measurement();
@@ -239,6 +250,9 @@ int main(int argc, char *argv[])
             
             //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
             loggerViewUi->reset();
+
+            //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
+            if(commonroad_scenario) commonroad_scenario->send_planning_problems(writer_planning_problems);
 
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
@@ -272,6 +286,7 @@ int main(int argc, char *argv[])
         [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
     monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
+    timerViewUi->register_crash_checker(setupViewUi->get_crash_checker());
     auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
     auto tabsViewUi = make_shared<TabsViewUI>(
         setupViewUi, 

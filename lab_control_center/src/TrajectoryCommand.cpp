@@ -29,11 +29,8 @@
 const uint64_t dt_nanos = 100000000ull;
 
 TrajectoryCommand::TrajectoryCommand()
-:topic_vehicleCommandTrajectory(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"))
-,writer_vehicleCommandTrajectory(dds::pub::DataWriter<VehicleCommandTrajectory>(
-    dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-    topic_vehicleCommandTrajectory)
-)
+: 
+    writer_vehicleCommandTrajectory("vehicleCommandTrajectory")
 {
     timer = std::make_shared<cpm::TimerFD>("LabControlCenter_TrajectoryCommand", dt_nanos, 0, false);
 

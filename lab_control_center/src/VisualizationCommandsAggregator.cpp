@@ -29,25 +29,21 @@
 VisualizationCommandsAggregator::VisualizationCommandsAggregator() 
 {
     viz_reader = make_shared<cpm::AsyncReader<Visualization>>(
-        [this](dds::sub::LoanedSamples<Visualization>& samples){
+        [this](std::vector<Visualization>& samples){
             handle_new_viz_msgs(samples);
-        },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<Visualization>("visualization"),
-        true
+        }
+        ,"visualization"
     );
 }
 
-void VisualizationCommandsAggregator::handle_new_viz_msgs(dds::sub::LoanedSamples<Visualization>& samples) {
+void VisualizationCommandsAggregator::handle_new_viz_msgs(std::vector<Visualization>& samples) {
     std::lock_guard<std::mutex> lock(received_viz_map_mutex);
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            //Add new message or replace old one using the id
-            received_viz_map[sample.data().id()] = sample.data();
+    for (auto& data : samples) {
+        //Add new message or replace old one using the id
+        received_viz_map[data.id()] = data;
 
-            //Change time stamp from time to live to point in time when msg is invalid
-            received_viz_map[sample.data().id()].time_to_live(received_viz_map[sample.data().id()].time_to_live() + cpm::get_time_ns());
-        }
+        //Change time stamp from time to live to point in time when msg is invalid
+        received_viz_map[data.id()].time_to_live(received_viz_map[data.id()].time_to_live() + cpm::get_time_ns());
     }
 }
 

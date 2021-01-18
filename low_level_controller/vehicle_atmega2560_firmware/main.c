@@ -115,13 +115,16 @@ int main(void)
 		int16_t imu_acceleration_left = 0;
 		int16_t imu_acceleration_up = 0;
 		
-		const bool imu_status = imu_read(		
-			&imu_yaw,
-			&imu_yaw_rate,
-			&imu_acceleration_forward,
-			&imu_acceleration_left,
-			&imu_acceleration_up
-		);
+		bool imu_status = false;
+		if (imu_init_status){
+			imu_status = imu_read(		
+				&imu_yaw,
+				&imu_yaw_rate,
+				&imu_acceleration_forward,
+				&imu_acceleration_left,
+				&imu_acceleration_up
+			);
+		}
 		
 		// collect sensor data
 		spi_miso_data.odometer_steps = odometer_count;
@@ -130,6 +133,7 @@ int main(void)
 		spi_miso_data.motor_current = current_sense;		
 		
 		if(imu_init_status && imu_status) {
+			CLEAR_BIT(spi_miso_data.status_flags, 0);
 			spi_miso_data.imu_yaw = imu_yaw;
 			spi_miso_data.imu_yaw_rate = imu_yaw_rate;
 			spi_miso_data.imu_acceleration_forward = imu_acceleration_forward;
@@ -166,6 +170,8 @@ int main(void)
 		/// apply commands
 		motor_set_direction(spi_mosi_data.motor_mode);
 		motor_set_duty(spi_mosi_data.motor_pwm);
+
+		// move the input into the PWM range
 		set_servo_pwm(spi_mosi_data.servo_command + 3000);
         led_set_state(spi_mosi_data.vehicle_id);
 	}

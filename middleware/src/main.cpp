@@ -34,9 +34,6 @@
 #include <sstream>
 #include <string>
 #include <functional>
-#include <dds/core/QosProvider.hpp>
-
-#include <dds/sub/ddssub.hpp>
 
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
@@ -82,6 +79,7 @@ int main (int argc, char *argv[]) {
     const std::string logTopicName = "log";
     const std::string vehicleStateListTopicName = "vehicleStateList"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
+    const std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking";
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
@@ -150,6 +148,7 @@ int main (int argc, char *argv[]) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,

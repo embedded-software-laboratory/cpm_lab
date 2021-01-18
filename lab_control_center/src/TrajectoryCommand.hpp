@@ -31,7 +31,7 @@
 #include "VehicleCommandTrajectory.hpp"
 #include "cpm/TimerFD.hpp"
 #include "cpm/get_topic.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
 
 /**
  * \class TrajectoryCommand
@@ -43,8 +43,7 @@ class TrajectoryCommand
     map<uint8_t, vector<TrajectoryPoint>> vehicle_trajectories;
     std::shared_ptr<cpm::TimerFD> timer;
 
-    dds::topic::Topic<VehicleCommandTrajectory> topic_vehicleCommandTrajectory;
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory;
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory;
 
 
     void send_trajectory(uint64_t t_now);

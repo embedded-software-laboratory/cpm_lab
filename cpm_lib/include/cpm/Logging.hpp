@@ -41,11 +41,6 @@
 #include <algorithm>
 #include <atomic>
 
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/pub/ddspub.hpp>
-#include <dds/dds.hpp>
-#include <dds/core/ddscore.hpp>
-
 #include "Log.hpp"
 #include "LogLevel.hpp"
 
@@ -54,6 +49,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/get_time_ns.hpp"
 #include "cpm/Parameter.hpp"
+#include "cpm/Writer.hpp"
 
 namespace cpm {
     class Logging {
@@ -64,8 +60,7 @@ namespace cpm {
 
         private:
             //DDS Writer for Logging
-            dds::topic::Topic<Log> loggingTopic;
-            dds::pub::DataWriter<Log> logger;
+            cpm::Writer<Log> logger;
 
             //File for logging
             std::ofstream file;

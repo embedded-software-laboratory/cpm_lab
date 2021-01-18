@@ -35,7 +35,7 @@ function main_vehicle_ids(varargin)
     init_script_path = fullfile('../', '/init_script.m');
     assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
     addpath(fileparts(init_script_path));
-    [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
+    [matlabParticipant, stateReader, trajectoryWriter, ~, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
     cd(script_directoy)
 
     vehicle_ids = varargin;

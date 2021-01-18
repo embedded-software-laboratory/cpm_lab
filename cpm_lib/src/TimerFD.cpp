@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include "cpm/get_topic.hpp"
+#include "cpm/TimeMeasurement.hpp"
 
 namespace cpm {
 
@@ -47,11 +48,10 @@ namespace cpm {
     )
     :period_nanoseconds(_period_nanoseconds)
     ,offset_nanoseconds(_offset_nanoseconds)
-    ,ready_topic(cpm::get_topic<ReadyStatus>("readyStatus"))
-    ,trigger_topic(cpm::get_topic<SystemTrigger>("systemTrigger"))
     ,node_id(_node_id)
-    ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+    ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
     ,readCondition(reader_system_trigger, dds::sub::status::DataState::any())
+    ,writer_ready_status("readyStatus", true)
     ,wait_for_start(_wait_for_start)
     ,stop_signal(_stop_signal)
     {
@@ -130,9 +130,6 @@ namespace cpm {
     }
 
     uint64_t TimerFD::receiveStartTime() {
-        //Reader / Writer for ready status and system trigger
-        dds::pub::DataWriter<ReadyStatus> writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
-
         //Create ready signal
         ReadyStatus ready_status;
         ready_status.next_start_stamp(TimeStamp(0));
@@ -219,6 +216,7 @@ namespace cpm {
                         "TimerFD: Periods missed: %d", 
                         static_cast<int>(((current_time - deadline) / period_nanoseconds) + 1)
                     );
+                    Logging::Instance().write(1,"%s", TimeMeasurement::Instance().get_str().c_str());
 
                     deadline += (((current_time - deadline)/period_nanoseconds) + 1)*period_nanoseconds;
                 }
