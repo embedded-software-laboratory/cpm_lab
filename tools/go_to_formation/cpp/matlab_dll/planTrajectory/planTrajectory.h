@@ -21,8 +21,8 @@
 // Function Declarations
 namespace mgen
 {
-  PLANTRAJECTORY_DLL_EXPORT extern void planTrajectory(const double
-    vehicleIdList[20], const struct0_T vehiclePoses[20], const Pose2D *goalPose,
+  PLANTRAJECTORY_DLL_EXPORT extern void planTrajectory(
+    const struct0_T vehiclePoses[20], const Pose2D *goalPose,
     double egoVehicleId, double speed, coder::array<struct1_T, 1U>
     &trajectory_points, boolean_T *isPathValid);
 }
