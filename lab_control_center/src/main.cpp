@@ -131,8 +131,9 @@ void exit_handler() {
 }
 
 /**
- * \brief Main function of the LCC
+ * \brief Main function of the LCC.
  * Command line arguments:
+ * 
  * --dds_domain
  * --logging_id
  * --dds_initial_peer

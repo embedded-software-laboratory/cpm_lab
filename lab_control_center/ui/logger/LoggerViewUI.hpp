@@ -60,52 +60,96 @@
  */
 class LoggerViewUI {
 private:
+    //! GTK builder for the UI
     Glib::RefPtr<Gtk::Builder> ui_builder;
+    //! Parent element of the UI, which can be integrated into another UI element, e.g. a window
     Gtk::Box* parent;
+    //! TreeView that contains the log messages
     Gtk::TreeView* logs_treeview;
+    //! Header for the treeview
     Gtk::Label* logs_label_header;
+    //! Makes logs_treeview scrollable
     Gtk::ScrolledWindow* logs_scrolled_window;
+    //! Enables / disables automatic scrolling in logs_treeview
     Gtk::CheckButton* autoscroll_check_button;
+    //! Allows to search for log entries
     Gtk::SearchEntry* logs_search_entry;
+    //! Set the type / column within which to search (log ID, log timestamp, log message content, all of them)
     Gtk::ComboBoxText* logs_search_type;
+    //! Set the log level within the network & to be displayed
     Gtk::ComboBoxText* log_level_combobox;
+    //! Displays warnings depending on the selected log level, e.g. that it might cause performance issues
     Gtk::Label* label_log_status;
 
-    //Max. amount of logs shown in the UI (performance reasons)
+    //! Max. amount of logs shown in logs_treeview at the same time (for performance reasons)
     const long max_log_amount = 100;
 
-    //Callback function for log_level_combobox
+    /**
+     * \brief Callback function for log_level_combobox.
+     * Sets the new log level. Its also sent within the network to other participants, so they stop logging now irrelevant messages.
+     * Resets the log entries and reloads to only show those that are relevent with the new log level.
+     */
     void on_log_level_changed();
+    //! Currently set log level
     std::atomic_ushort log_level;
+    //! To tell the UI that a log level was changed & perform the required updates in the UI thread
     std::atomic_bool log_level_changed{false};
-    //Labels for log_level_combobox (the string vector is transformed to the ustring vector in the settings, where we also add the selection options to the UI)
+    //! Labels for log_level_combobox (the string vector is transformed to the ustring vector in the settings, where we also add the selection options to the UI)
     std::vector<std::string> log_labels = {"0 - No logs", "1 - Critical errors", "2 - All Errors", "3 - Verbose"};
-    std::vector<Glib::ustring> log_level_labels; //Vector used so that we can infer the level number from the index (no need to transform the ustring to a number)
+    //! Vector used so that we can infer the level number from the index (no need to transform the ustring to a number)
+    std::vector<Glib::ustring> log_level_labels; 
 
-    //TreeView Layout, status storage for the UI
+    //! TreeView Layout
     LoggerModelRecord log_record;
+    //! Status storage for the UI, contains all shown logs
     Glib::RefPtr<Gtk::ListStore> log_list_store;
 
     //UI update functions and objects
+    /**
+     * \brief Function called by ui_thread to periodically activate the dispatcher that in turn calls GTK's UI thread, to perform UI updates
+     */
     void update_ui();
+    /**
+     * \brief Callback for GTK's UI dispatcher, all UI changes done during runtime should be performed within this function
+     */
     void dispatcher_callback();
-    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
+    //! To communicate between the current thread and GTK's UI thread
+    Glib::Dispatcher ui_dispatcher;
+    //! UI thread that periodically ativates the GTK dispatcher to perform an update in the UI
     std::thread ui_thread;
+    //! Tells ui_thread if it should still be running
     std::atomic_bool run_thread;
 
-    //Callback function for autoscroll
+    /**
+     * \brief Callback function to enable autoscroll if autoscroll_check_button is used
+     * \param allocation Irrelevant parameter that is part of the callback
+     */
     void on_size_change_autoscroll(Gtk::Allocation& allocation);
 
-    //Object that holds (new) log data
+    //! Object that holds (new) log data, also data that is not currently shown in the UI
     std::shared_ptr<LogStorage> log_storage;
 
     //Filtering and filter types
+    //! For filtering, ID column
     Glib::ustring type_id_ustring = "ID";
+    //! For filtering, log message column
     Glib::ustring type_content_ustring = "Content";
+    //! For filtering, timestamp column
     Glib::ustring type_timestamp_ustring = "Timestamp";
+    //! For filtering, all columns
     Glib::ustring type_all_ustring = "All";
+    /**
+     * \brief Callback for a filter type change. Start search if a filter is applied (text in logs_search_entry).
+     */
     void on_filter_type_changed();
+    /**
+     * \brief Disable searching and the filter. Called by logs_search_entry if cleared.
+     */
     void stop_search();
+    /**
+     * \brief Search was changed, called by logs_search_entry if the entry changes.
+     * Continue with new one if a filter is applied (text in logs_search_entry), else stop the search.
+     */
     void search_changed();
     std::atomic_bool filter_active;
     //Promise and future for search thread
@@ -116,7 +160,13 @@ private:
     std::atomic_bool search_thread_running;
     std::atomic_bool search_reset; //Set after search was finished, to retrieve all old log messages in the UI thread again
     std::thread search_thread;
+    /**
+     * \brief 
+     */
     void start_new_search_thread();
+    /**
+     * \brief 
+     */
     void kill_search_thread();
 
     //Add log entry to UI (only call from UI thread!)

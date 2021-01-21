@@ -10,11 +10,16 @@
  */
 class LCCErrorModelRecord : public Gtk::TreeModelColumnRecord {
 public:
+  /**
+   * \brief Constructor that defines the columns for a TreeVie that uses this Record. Here: Timestamp | Error message
+   */
   LCCErrorModelRecord() {
       add(timestamps); 
       add(error_content);
     }
 
+  //! Timestamp column
   Gtk::TreeModelColumn<Glib::ustring> timestamps;
+  //! Error message column
   Gtk::TreeModelColumn<Glib::ustring> error_content;
 };
