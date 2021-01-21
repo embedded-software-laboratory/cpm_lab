@@ -279,6 +279,10 @@ int main(int argc, char *argv[])
             rtt_aggregator->restart_measurement();
         },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
+        [&](std::vector<int32_t> active_vehicle_ids){
+            storage->set_parameter_ints("active_vehicle_ids", active_vehicle_ids, "Currently active vehicle ids");
+            paramViewUi->read_storage_data();
+        },
         argc, 
         argv
     );

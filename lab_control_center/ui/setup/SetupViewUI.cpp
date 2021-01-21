@@ -40,6 +40,7 @@ SetupViewUI::SetupViewUI
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
+    std::function<void(std::vector<int32_t>)> _update_vehicle_ids_parameter,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -51,8 +52,10 @@ SetupViewUI::SetupViewUI
     reset_timer(_reset_timer),
     on_simulation_start(_on_simulation_start),
     on_simulation_stop(_on_simulation_stop),
-    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
+    update_vehicle_ids_parameter(_update_vehicle_ids_parameter)
 {
+//    update_vehicle_ids_parameter = _update_vehicle_ids_parameter;
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
     builder->get_widget("parent", parent);
@@ -210,6 +213,20 @@ SetupViewUI::SetupViewUI
                         }
                     }
                 }
+
+                // Get a vector of all vehicles, with the real vehicles at the back
+                // This means, that the real vehicles will have to do more avoiding
+                std::vector<unsigned int> all_active_vehicles = get_vehicle_ids_active();
+
+                // Transform to signed int for parameter server
+                std::vector<int32_t> all_active_vehicles_signed(
+                        all_active_vehicles.size());
+                std::transform(
+                        all_active_vehicles.begin(),
+                        all_active_vehicles.end(), 
+                        all_active_vehicles_signed.begin(), [](unsigned int id) { return (int32_t)id;});
+                // Update the vehicle ids on the ParameterServer
+                update_vehicle_ids_parameter(all_active_vehicles_signed);
 
                 //The vehicle toggles must be updated in the UI thread
                 update_vehicle_toggles.store(true);

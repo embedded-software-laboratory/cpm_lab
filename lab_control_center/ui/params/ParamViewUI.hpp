@@ -84,9 +84,6 @@ private:
     //Function to get the main window
     std::function<Gtk::Window&()> get_main_window;
 
-    //Read all data from parameter storage
-    void read_storage_data();
-
     //Manipulate rows
     bool get_selected_row(std::string &name);
     //"Callback" function: Delete the row selected by the user if the delete button was clicked
@@ -128,6 +125,9 @@ public:
     //Calls to make the UI (in)sensitive during changes
     void make_sensitive();
     void make_insensitive();
+
+    //Read all data from parameter storage
+    void read_storage_data();
 
     /**
      * \brief Set the callback function that returns a reference to the application's main window
