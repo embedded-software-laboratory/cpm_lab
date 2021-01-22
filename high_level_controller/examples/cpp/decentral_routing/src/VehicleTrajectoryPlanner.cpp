@@ -129,8 +129,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // Check quality of trajectory buffer
     std::cout << "Timestep: " << t_real_time << std::endl;
     uint64_t prev_time = trajectory_point_buffer[0].t().nanoseconds();
-    for( int i=1; i<trajectory_point_buffer.size(); i++ ) {
-	    int64_t time_diff = trajectory_point_buffer[i].t().nanoseconds() - prev_time;
+    for( unsigned int i=1; i<trajectory_point_buffer.size(); i++ ) {
+	    uint64_t time_diff = trajectory_point_buffer[i].t().nanoseconds() - prev_time;
 	    std::cout << time_diff;
 		    
 	    if( time_diff != dt_nanos ) {

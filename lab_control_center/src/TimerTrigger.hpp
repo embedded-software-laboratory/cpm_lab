@@ -75,8 +75,8 @@ private:
     bool obtain_new_stop_request_signals();
     void stop_request_callback(std::vector<StopRequest>& samples);
     dds::sub::DataReader<ReadyStatus> ready_status_reader;
-    cpm::Writer<SystemTrigger> system_trigger_writer;
     cpm::AsyncReader<StopRequest> stop_request_reader;
+    cpm::Writer<SystemTrigger> system_trigger_writer;
     std::map<string, TimerData> ready_status_storage; //Always stores the highest timestamp that was sent by each participant
     std::mutex ready_status_storage_mutex;
     uint64_t current_simulated_time; //Only makes sense if simulated time is used
