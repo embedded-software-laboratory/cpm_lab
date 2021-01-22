@@ -55,7 +55,6 @@ SetupViewUI::SetupViewUI
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
     update_vehicle_ids_parameter(_update_vehicle_ids_parameter)
 {
-//    update_vehicle_ids_parameter = _update_vehicle_ids_parameter;
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
     builder->get_widget("parent", parent);
@@ -176,11 +175,17 @@ SetupViewUI::SetupViewUI
     is_deployed.store(false);
     vehicle_data_thread_running.store(true);
     check_real_vehicle_data_thread = std::thread([&]{
+        // So we can later check if anything changed
+        std::vector<unsigned int> old_active_vehicles;
+        std::vector<unsigned int> active_vehicles;
         while(vehicle_data_thread_running.load())
         {
+            active_vehicles = get_vehicle_ids_active();
+
             //Don't update data during experiment
             if (! is_deployed.load())
             {
+            
                 //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
                 auto currently_simulated_vehicles = get_vehicle_ids_simulated();
 
@@ -214,25 +219,27 @@ SetupViewUI::SetupViewUI
                     }
                 }
 
-                // Get a vector of all vehicles, with the real vehicles at the back
-                // This means, that the real vehicles will have to do more avoiding
-                std::vector<unsigned int> all_active_vehicles = get_vehicle_ids_active();
-
-                // Transform to signed int for parameter server
-                std::vector<int32_t> all_active_vehicles_signed(
-                        all_active_vehicles.size());
-                std::transform(
-                        all_active_vehicles.begin(),
-                        all_active_vehicles.end(), 
-                        all_active_vehicles_signed.begin(), [](unsigned int id) { return (int32_t)id;});
-                // Update the vehicle ids on the ParameterServer
-                update_vehicle_ids_parameter(all_active_vehicles_signed);
+                // If the active vehicle ids changed, update the parameter server
+                if (active_vehicles != old_active_vehicles) {
+                    // Transform to signed int for parameter server
+                    // We do not check if this is safe, because ids are small
+                    std::vector<int32_t> active_vehicles_signed(
+                            active_vehicles.size());
+                    std::transform(
+                            active_vehicles.begin(),
+                            active_vehicles.end(), 
+                            active_vehicles_signed.begin(), [](unsigned int id) { return (int32_t)id;});
+                    // Update the vehicle ids on the ParameterServer
+                    update_vehicle_ids_parameter(active_vehicles_signed);
+                }
 
                 //The vehicle toggles must be updated in the UI thread
                 update_vehicle_toggles.store(true);
                 ui_dispatcher.emit();
             }
 
+            std::cout << "Old should change" << std::endl;
+            old_active_vehicles = active_vehicles;
             //Sleep for a while, then update again
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
