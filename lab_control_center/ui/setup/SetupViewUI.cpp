@@ -238,8 +238,8 @@ SetupViewUI::SetupViewUI
                 ui_dispatcher.emit();
             }
 
-            std::cout << "Old should change" << std::endl;
             old_active_vehicles = active_vehicles;
+            
             //Sleep for a while, then update again
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
