@@ -11,7 +11,7 @@
 class LCCErrorModelRecord : public Gtk::TreeModelColumnRecord {
 public:
   /**
-   * \brief Constructor that defines the columns for a TreeVie that uses this Record. Here: Timestamp | Error message
+   * \brief Constructor that defines the columns for a TreeView that uses this Record. Here: Timestamp | Error message
    */
   LCCErrorModelRecord() {
       add(timestamps); 
