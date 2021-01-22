@@ -151,45 +151,82 @@ private:
      * Continue with new one if a filter is applied (text in logs_search_entry), else stop the search.
      */
     void search_changed();
+    //! Remember if a search filter is currently active, relevant for the UI thread s.t. it knows that entries in the Treeview must be updated
     std::atomic_bool filter_active;
-    //Promise and future for search thread
+    //! Promise for search thread, allows to perform abortable search independent of UI thread
     std::promise<std::vector<Log>> search_promise;
+    //! Future for search thread, allows to perform abortable search independent of UI thread
     std::future<std::vector<Log>> search_future;
-    //Extra mutex because promise can be reset right after the UI thread checked if a future exists
+    //! Extra mutex because promise can be reset right after the UI thread checked if a future exists, but we want to make sure that a future still exists after the check
     std::mutex promise_reset_mutex;
+    //! Used as stop condition for the thread that performs the search
     std::atomic_bool search_thread_running;
-    std::atomic_bool search_reset; //Set after search was finished, to retrieve all old log messages in the UI thread again
+    //! Set after search was finished, to retrieve all old log messages in the UI thread again
+    std::atomic_bool search_reset;
+    //! Thread to perform search for logs
     std::thread search_thread;
     /**
-     * \brief 
+     * \brief Kill old search, if it exists, and start a new one, given the current filter values; also starts a new search thread
      */
     void start_new_search_thread();
     /**
-     * \brief 
+     * \brief Stops the currently running search thread
      */
     void kill_search_thread();
 
-    //Add log entry to UI (only call from UI thread!)
+    /**
+     * \brief Add log entry to UI / Treeview for logs (only called from UI thread!)
+     * \param entry The log entry to add to the Treeview / to be shown in the UI
+     */
     void add_log_entry(const Log& entry);
 
-    //Delete old logs
+    /**
+     * \brief Delete old logs from the Treeview / UI until max_amount elements remain
+     * \param max_amount The amount of elements that should be left after deleting the oldest elements
+     */
     void delete_old_logs(const long max_amount);
+    /**
+     * \brief Delete all logs in the Treeview / UI
+     */
     void reset_list_store();
 
-    //Callback for tooltip
+    /**
+     * \brief Callback for tooltip (to show full message on mouse hover)
+     * \param x x coordinate e.g. of the mouse pointer
+     * \param y y coordinate e.g. of the mouse pointer
+     * \param keyboard_tooltip If the tooltip was triggered by the keyboard
+     * \param tooltip Reference to the tooltip to be shown
+     */
     bool tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
 
-    //Check for scroll event to turn off automatic scrolling
+    /**
+     * \brief Check for scroll event to turn off automatic scrolling in case the user scrolls manually through the error list
+     * \param scroll_event The scroll event
+     */
     bool scroll_callback(GdkEventScroll* scroll_event);
 
-    //Variable for the reset action (is performed within the UI)
+    //! Variable for the reset action - if true, reset the logs (is performed within the UI)
     std::atomic_bool reset_logs;
 
 public:
+    /**
+     * \brief Constructor. Takes log storage from which to obtain the shown logs / in which to search.
+     * \param logStorage Log storage that contains the log messages to be displayed in this UI element
+     */
     LoggerViewUI(std::shared_ptr<LogStorage> logStorage);
+
+    /**
+     * \brief Destructor, stops UI and search thread
+     */
     ~LoggerViewUI();
+
+    /**
+     * \brief Function to get the parent widget, so that this UI element can be placed within another UI element
+     */
     Gtk::Widget* get_parent();
 
-    //Might be called from outside, e.g. when a new 'simulation' is run
+    /**
+     * \brief Might be called from outside, e.g. when a new 'simulation' is run, to reset the current error messages
+     */
     void reset();
 };
