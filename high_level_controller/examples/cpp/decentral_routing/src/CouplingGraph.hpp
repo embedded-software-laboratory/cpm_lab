@@ -45,6 +45,10 @@ class CouplingGraph
         CouplingGraph(
                std::vector<uint8_t> vehicleIds,
                bool useDefaultOrder = 1);
+        // Alternative constructor, because nothing else uses uint8_t
+        CouplingGraph(
+               std::vector<int> vehicleIds,
+               bool useDefaultOrder = 1);
 
         void setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data);
         void setPreviousVehicles(uint8_t vehicleId, std::vector<uint8_t> previousVehicles);

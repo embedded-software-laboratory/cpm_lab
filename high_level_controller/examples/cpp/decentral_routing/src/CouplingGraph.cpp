@@ -36,6 +36,9 @@ CouplingGraph::CouplingGraph(std::vector<uint8_t> vehicleIds, bool useDefaultOrd
     }
 }
 
+CouplingGraph::CouplingGraph(std::vector<int> vehicleIds, bool useDefaultOrder) :
+    CouplingGraph(std::vector<uint8_t>(vehicleIds.begin(), vehicleIds.end()), useDefaultOrder){}
+
 void CouplingGraph::setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data) {
     for( auto element : data ) {
         couplingData[element.first] = vectorToSet(element.second);

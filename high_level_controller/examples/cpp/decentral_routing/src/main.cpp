@@ -38,7 +38,6 @@
 #include "cpm/get_topic.hpp"
 
 // IDL files
-#include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
 #include "TimeStamp.hpp"
 #include "ReadyStatus.hpp"
@@ -203,13 +202,6 @@ int main(int argc, char *argv[]) {
         reader_laneGraphTrajectory
         )
     );
-    /* ---------------------------------------------------------------------------------
-     * Communication graph: Which other HLCs do we have to wait for?
-     * ---------------------------------------------------------------------------------
-     */
-    // This graphs gives the priorities, as well as the order of planning
-    CouplingGraph coupling_graph({3,7,13,14,19});
-    planner->set_coupling_graph(coupling_graph);
 
     /* ---------------------------------------------------------------------------------
      * Compose and send Ready message
@@ -271,11 +263,8 @@ int main(int argc, char *argv[]) {
             */
             // This probably does not require a loop,
             // we just need to find the one VehicleState with our vehicle_id
-	    std::stringstream id_list;
-	    id_list << "VehicleStates: ";
             for(auto vehicle_state : vehicleStateList.state_list())
             {
-		id_list << static_cast<uint16_t>(vehicle_state.vehicle_id()) << ",";
                 if( vehicle_id == vehicle_state.vehicle_id() ) {
                     auto pose = vehicle_state.pose();
                     int out_edge_index = -1;
@@ -286,6 +275,13 @@ int main(int argc, char *argv[]) {
                             "Couldn't find starting position,\
                             try moving the vehicle if this persists.");
                     } else {
+
+                        // This graphs gives the priorities, as well as the order of planning
+                        // Currently we only plan sequentially, with lower vehicle ids first
+                        std::vector<int> vec(vehicleStateList.active_vehicle_ids());
+                        CouplingGraph coupling_graph(vec);
+                        planner->set_coupling_graph(coupling_graph);
+
                         // Initialize PlanningState with starting position
                         planner->set_vehicle(
                                 std::make_shared<VehicleTrajectoryPlanningState>(
@@ -302,9 +298,6 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
-	    cpm::Logging::Instance().write(1,
-			    id_list.str().c_str());
-
 
             if( !matched ) {
                 // We might want to stop everything here, but it happens too
