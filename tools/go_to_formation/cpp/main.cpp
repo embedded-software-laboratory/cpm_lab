@@ -52,7 +52,6 @@
 
 using std::vector;
 
-
 // Matlab lib function Declarations
 static void argInit_1x20_real_T(double result[20]);
 static void argInit_1x20_struct0_T(mgen::struct0_T result[20]);
@@ -62,18 +61,19 @@ static mgen::struct0_T argInit_struct0_T();
 static unsigned char argInit_uint8_T();
 
 // Matlab lib function Definitions
-//
+
 // Arguments    : double b_x
 //                double b_y
 //                double b_yaw
 // Return Type  : void
 //
+/*
 void Pose2D::init(double b_x, double b_y, double b_yaw)
 {
   this->x = b_x;
   this->y = b_y;
   this->yaw = b_yaw;
-}
+}*/
 
 //
 // Arguments    : double result[20]
@@ -115,12 +115,15 @@ static mgen::Pose2D argInit_Pose2D()
   // Set the value of each structure field.
   // Change this value to the value that the application requires.
   result_tmp = argInit_real_T();
-  result.init(result_tmp, result_tmp, result_tmp);
+  //result.init(result_tmp, result_tmp, result_tmp);
+  result.x = result_tmp;
+  result.y = result_tmp;
+  result.yaw = result_tmp;
   return result;
 }
 
 //
-// Arguments    : void
+// Arguments    : voids
 // Return Type  : double
 //
 static double argInit_real_T()
@@ -193,6 +196,8 @@ int main(int argc, char *argv[])
         vehicle_ids
     );
 
+
+    
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
     auto timer = cpm::Timer::create("reader_test", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
@@ -201,17 +206,26 @@ int main(int argc, char *argv[])
         std::map<uint8_t, uint64_t> ips_sample_age;
         ips_reader.get_samples(t_now, ips_sample, ips_sample_age);     
         
+        mgen::struct0_T vehiclePoses[20];
+        argInit_1x20_struct0_T(vehiclePoses);
+
+        double new_id = 0;
+
         for(auto e:ips_sample)
         {
             auto data = e.second;
-            auto new_id = data.vehicle_id();
-
             auto new_pose = data.pose();
+            new_id = data.vehicle_id();
   
             std::cout << new_id << std::endl;
             std::cout << new_pose << std::endl;
-        }
 
+            /*vehiclePoses[0].vehicle_id = new_id;
+            vehiclePoses[0].pose.x = new_pose.x;
+            vehiclePoses[0].pose.y = new_pose.y;
+            vehiclePoses[0].pose.yaw = new_pose.yaw;*/
+            
+        }
 
         double ego_vehicle_id = new_id;
         double speed = 1; // [m/s]
@@ -222,26 +236,20 @@ int main(int argc, char *argv[])
         // Initialize function input argument 'vehicleIdList'.
         // Initialize function input argument 'vehiclePoses'.
         // Initialize function input argument 'goalPose'.
- 
-        mgen::struct0_T vehiclePoses[20];
-        mgen::Pose2D goalPose;
+         mgen::Pose2D goalPose = argInit_Pose2D();
+         goalPose.x = 2.0;
+         goalPose.y = 2.0;
+         goalPose.yaw = 0.0;
 
-        argInit_1x20_struct0_T(vehiclePoses);
-        goalPose = argInit_Pose2D();
 
-        vehiclePoses[0].vehicle_id = new_id;
-        vehiclePoses[0].pose.x = new_pose.x;
-        vehiclePoses[0].pose.y = new_pose.y;
-        vehiclePoses[0].pose.yaw = new_pose.yaw;
-        goalPose.x = 2.0;
-        goalPose.y = 2.0;
-        goalPose.yaw = 0.0;
-
-        mgen::planTrajectory(vehiclePoses, &goalPose, ego_vehicle_id, speed,
-                            trajectory_points, &isPathValid);
+        //mgen::planTrajectory(vehiclePoses, &goalPose, ego_vehicle_id, speed,
+         //                   trajectory_points, &isPathValid);
 
         //std::cout << trajectory_points << std::endl;
-        
+        if (new_id != 0)
+        {
+        timer->stop();
+        }
     });
 
     // Terminate the application.

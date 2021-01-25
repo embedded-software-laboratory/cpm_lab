@@ -77,7 +77,7 @@ namespace mgen
     DubinsBuiltins();
     ~DubinsBuiltins();
   };
-
+  
   class PLANTRAJECTORY_DLL_EXPORT Pose2D
   {
    public:
