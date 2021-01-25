@@ -73,7 +73,7 @@ public:
 
     //Specific local deploy functions
     /**
-     * \brief Start the middleware and the given Matlab/C++ script using tmux and a system call; pass parameters: domain id, initial peer, simulated time, vehicle id
+     * \brief Start the middleware and the given Matlab/C++ script (using tmux and a system call); pass parameters: domain id, initial peer, simulated time, vehicle id
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
      * \param active_vehicle_ids All vehicle IDs that are in use in this run, no matter if real or simulated
      * \param script_path Path to the script, including the script name (and possible file ending)
@@ -83,32 +83,51 @@ public:
 
     //Specific local deploy functions with 1 HLC per vehicle ID
     /**
-     * \brief Start the middleware once and the given Matlab/C++ script using tmux and a system call for each vehicle ID; pass parameters: domain id, initial peer, simulated time, vehicle id
+     * \brief Start the middleware once and the given Matlab/C++ script (using tmux and a system call) once for each vehicle ID; pass parameters: domain id, initial peer, simulated time, vehicle id
      * \param use_simulated_time Whether simulated time or real time shall be used for the lab run
      * \param active_vehicle_ids All vehicle IDs that are in use in this run, no matter if real or simulated
      * \param script_path Path to the script, including the script name (and possible file ending)
      * \param script_params Additional script parameters
      */
     void deploy_separate_local_hlcs(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params);
-    std::vector<unsigned int> deployed_local_hlcs;
 
     /**
-     * \brief Deploy all vehicles that were set to be simulated locally, set simulated time (software is started using tmux)
+     * \brief Deploy all vehicles that were set to be simulated locally, set real or simulated time (software is started using tmux)
+     * \param simulated_vehicle_ids IDs of vehicles to simulate locally
+     * \param use_simulated_time True if simulated time should be used, false if real time should be used
      */
     void deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, bool use_simulated_time);
     /**
      * \brief Deploy a single simulated vehicle by passing its ID
+     * \param id ID of vehicle to simulate locally
+     * \param use_simulated_time True if simulated time should be used, false if real time should be used
      */
     void deploy_sim_vehicle(unsigned int id, bool use_simulated_time);
 
     /**
      * \brief Make running vehicles brake and stop
+     * \param vehicle_ids IDs of vehicles to stop (works for both simulated and real vehicles)
      */
     void stop_vehicles(std::vector<unsigned int> vehicle_ids);
+
     //Local kill functions: Kill middleware, script and vehicles using their tmux ID 
+    /**
+     * \brief Kill locally deployed HLC script, used if deploy_local_hlc was used before (only one script was started locally)
+     */
     void kill_local_hlc();
+    /**
+     * \brief Kill locally deployed HLC scripts, used if deploy_separate_local_hlcs was used before (multiple scripts were started locally)
+     */
     void kill_separate_local_hlcs();
+    /**
+     * \brief Kill all simulated vehicles with the given IDs
+     * \param simulated_vehicle_ids Vehicle IDs of simulated vehicle programs to kill
+     */
     void kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids);
+    /**
+     * \brief Kill simulated vehicle program with the given ID
+     * \param id Vehicle ID
+     */
     void kill_sim_vehicle(unsigned int id);
 
     /**
@@ -126,12 +145,26 @@ public:
     void reboot_hlcs(std::vector<uint8_t> ids, unsigned int timeout_seconds);
 
     //Deploy and kill the IPS (for position tracking of the real vehicles)
+    /**
+     * \brief Deploy IPS (for position tracking of the real vehicles)
+     */
     void deploy_ips();
+    /**
+     * \brief Kill IPS started with deploy_ips
+     */
     void kill_ips();
 
+    //! For diagnosis of data done in MonitoringUi, is set in SetupViewUI
     bool diagnosis_switch = false; 
+
     //Deploy and kill the rtirecordingservice
+    /**
+     * \brief Start the RTI recording service
+     */
     void deploy_recording();
+    /**
+     * \brief Kill the RTI recording service
+     */
     void kill_recording();
 
     //Specific remote deploy functions
@@ -175,15 +208,22 @@ public:
     std::vector<std::string> check_for_crashes(bool script_started, bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
-    //Used for process forking
+    /**
+     * \enum PROCESS_STATE
+     * \brief Used for process forking, when spawning and managing spawned processes
+     */
     enum PROCESS_STATE {DONE, RUNNING, ERROR};
 
-    //These values/functions are set once at startup (as command line parameters), never change and are thus stored in this class
+    //! DDS Domain ID. This value is set once at startup (as command line parameters).
     unsigned int cmd_domain_id; 
+    //! DDS Initial Peer. This value is set once at startup (as command line parameters).
     std::string cmd_dds_initial_peer;
 
-    //Callback function to send a vehicle stop signal / control to the specified vehicle
+    //! Callback function to send a vehicle stop signal / control to the specified vehicle
     std::function<void(uint8_t)> stop_vehicle;
+
+    //! In case of remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
+    std::vector<unsigned int> deployed_local_hlcs;
 
     //Helper functions
     /**
@@ -196,23 +236,27 @@ private:
 
     /**
      * \brief Check if the given tmux session already exists - used to kill left-over sessions
+     * \param session_id ID of the tmux session
      * \return True if the session exists, false otherwise
      */
     bool session_exists(std::string session_id);
 
     /**
      * \brief Kill a tmux session with the given session_id - only if it exists (uses session_exists)
+     * \param session_id ID of the tmux session
      */
     void kill_session(std::string session_id);
 
     /**
      * \brief Convert boolean to string - used for command line parameters (for deployment)
+     * \param var Boolean to convert to string
      * \return String version of the boolean (true -> "true", false -> "false")
      */
     std::string bool_to_string(bool var);
 
     /**
      * \brief Function to execute a shell command and get its output
+     * \param cmd A shell command as C-String
      * \return Output of the shell command
      */
     std::string execute_command(const char* cmd);
@@ -228,6 +272,7 @@ private:
 
     /**
      * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further
+     * \param cmd A shell command as C-String
      * \return Output of the shell command
      */
     int execute_command_get_pid(const char* cmd);
@@ -245,27 +290,44 @@ private:
      */
     void kill_process(int process_id);
 
-    // Session name for recording service
+    //! Tmux session name for the recording service
     const std::string recording_session = "dds_record";
-
+    //! Tmux session name for the IPS Pipeline
     const std::string ips_session = "ips_pipeline";
+    //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
+    //! Tmux session name for the middleware
     const std::string middleware_session = "middleware";
+    //! Tmux session name for the HLC
     const std::string hlc_session = "high_level_controller";
 
     //To reboot real vehicles
-    std::map<unsigned int, std::thread> vehicle_reboot_threads; //map to have access to vehicle IDs <-> reboot thread
+    //! Map to have access to vehicle IDs <-> reboot thread; threads are used to reboot vehicles s.t. the shell commands do not block the UI; they must be joined at some time
+    std::map<unsigned int, std::thread> vehicle_reboot_threads;
+    //! Mutex for access to vehicle_reboot_threads
     std::mutex vehicle_reboot_threads_mutex;
-    std::map<unsigned int, bool> vehicle_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    //! To find out if a thread has finished execution (no waiting desired), accessed both by main thread and vehicle reboot thread
+    std::map<unsigned int, bool> vehicle_reboot_thread_done;
+    //! Mutex to access vehicle_reboot_thread_done
     std::mutex vehicle_reboot_done_mutex;
-    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    /**
+     * \brief Function to clear already running vehicle reboot threads, 
+     * called whenever a new reboot is asked for. Also, all threads are killed on closing the LCC.
+     */
     void join_finished_vehicle_reboot_threads();
 
     //To reboot HLCs
-    std::map<unsigned int, std::thread> hlc_reboot_threads; //map to have access to HLC IDs <-> reboot thread
+    //! Map to have access to HLC IDs <-> reboot thread; threads are used to reboot HLCs s.t. the shell commands do not block the UI; they must be joined at some time
+    std::map<unsigned int, std::thread> hlc_reboot_threads;
+    //! Mutex for access to hlc_reboot_threads
     std::mutex hlc_reboot_threads_mutex;
-    std::map<unsigned int, bool> hlc_reboot_thread_done; //To find out if a thread has finished execution (no waiting desired)
+    //! To find out if a thread has finished execution (no waiting desired), accessed both by main thread and HLC reboot thread
+    std::map<unsigned int, bool> hlc_reboot_thread_done;
+    //! Mutex to access hlc_reboot_thread_done
     std::mutex hlc_reboot_done_mutex;
-    //Function to clear already running reboot threads, called whenever a new reboot is asked for - all threads are killed e.g. on shutdown
+    /**
+     * \brief Function to clear already running HLC reboot threads, 
+     * called whenever a new reboot is asked for. Also, all threads are killed on closing the LCC.
+     */
     void join_finished_hlc_reboot_threads();
 };

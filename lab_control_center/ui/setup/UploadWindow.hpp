@@ -40,11 +40,20 @@
  */
 class UploadWindow {
 private:
+    //! GTK UI Builder
     Glib::RefPtr<Gtk::Builder> params_create_builder;
 
+    //! GTK (upload) window
     Gtk::Window* upload_window;
+    //! GTK Label for text / information / error messages shown in the upload window
     Gtk::Label* label_upload;
 public:
+    /**
+     * \brief Constructor for an upload window object. Displays the window immediately.
+     * \param parent Parent window of the upload window
+     * \param vehicle_ids Vehicle IDs, to display matching between vehicle and HLC IDs (first entry matched to first entry etc.)
+     * \param hlc_ids HLC IDs, to display matching between vehicle and HLC IDs (first entry matched to first entry etc.)
+     */
     UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids);
 
     /**
@@ -54,10 +63,13 @@ public:
     void add_error_message(std::string msg);
 
     /**
-     * \brief For custom text
+     * \brief For custom text that should be shown in the upload window
      * \param text The text to show
      */
     void set_text(std::string text);
 
+    /**
+     * \brief Close the upload window. To show a new window, you need to create a new UploadWindow object.
+     */
     void close();
 };
