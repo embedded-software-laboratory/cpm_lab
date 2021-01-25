@@ -20,8 +20,9 @@ link_directories(../../../cpm_lib/build/)
 # Matlab lib
 add_library(planTrajectory SHARED IMPORTED)
 set_target_properties(planTrajectory PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/matlab_dll/planTrajectory/planTrajectory.so)
+# Needs to be changed
 add_library(iomp5 SHARED IMPORTED)
-set_target_properties(iomp5 PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/matlab_dll/planTrajectory/libiomp5.so)
+set_target_properties(iomp5 PROPERTIES IMPORTED_LOCATION /home/vp/libiomp5.so)
 
 # exe
 link_libraries(dl nsl m pthread rt)
@@ -29,8 +30,7 @@ link_libraries(dl nsl m pthread rt)
 add_executable(mlib_test main.cpp)
 
 target_link_libraries(mlib_test cpm)
-target_link_libraries(mlib_test planTrajectory)
 target_link_libraries(mlib_test iomp5)
-
-
+target_link_libraries(mlib_test planTrajectory)
+#target_include_directories(mlib_test PRIVATE ${CMAKE_SOURCE_DIR}/matlab_dll/planTrajectory)
 

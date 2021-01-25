@@ -8,5 +8,6 @@ if [ $# -eq 0 ]
   then
     echo "Missing argument vehicle ID list (comma separated)"
 else
-	./build/reader_test --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_ids=$1
+  cd build
+	./mlib_test --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_ids=$1
 fi

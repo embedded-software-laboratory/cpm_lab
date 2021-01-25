@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
         vehicle_ids
     );
 
-
+    int count = 0;
     
     //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
     auto timer = cpm::Timer::create("reader_test", dt_nanos, 0, false, true, enable_simulated_time); 
@@ -210,22 +210,34 @@ int main(int argc, char *argv[])
         argInit_1x20_struct0_T(vehiclePoses);
 
         double new_id = 0;
+        double x = 0;
+        double y = 0;
+        double yaw = 0;
+        
 
         for(auto e:ips_sample)
         {
             auto data = e.second;
             auto new_pose = data.pose();
             new_id = data.vehicle_id();
+            x = double(new_pose.x());
+            y = double(new_pose.y());
+            yaw = double(new_pose.yaw());
+            
   
             std::cout << new_id << std::endl;
             std::cout << new_pose << std::endl;
 
-            /*vehiclePoses[0].vehicle_id = new_id;
-            vehiclePoses[0].pose.x = new_pose.x;
-            vehiclePoses[0].pose.y = new_pose.y;
-            vehiclePoses[0].pose.yaw = new_pose.yaw;*/
-            
+          
+            count += 1;
+            std::cout << count << std::endl;
+
         }
+
+        vehiclePoses[0].vehicle_id = new_id;
+        vehiclePoses[0].pose.x = x;
+        vehiclePoses[0].pose.y = y;
+        vehiclePoses[0].pose.yaw = yaw;
 
         double ego_vehicle_id = new_id;
         double speed = 1; // [m/s]
@@ -241,15 +253,16 @@ int main(int argc, char *argv[])
          goalPose.y = 2.0;
          goalPose.yaw = 0.0;
 
+        mgen::planTrajectory(vehiclePoses, &goalPose, ego_vehicle_id, speed,
+                            trajectory_points, &isPathValid);
+        
 
-        //mgen::planTrajectory(vehiclePoses, &goalPose, ego_vehicle_id, speed,
-         //                   trajectory_points, &isPathValid);
-
-        //std::cout << trajectory_points << std::endl;
-        if (new_id != 0)
+    
+        /*
+        if ((count > 10)|| (new_id != 0) )
         {
         timer->stop();
-        }
+        } */
     });
 
     // Terminate the application.
