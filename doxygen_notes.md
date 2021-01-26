@@ -1,6 +1,8 @@
 Required packages: apt install doxygen graphviz
 The file output is set to ../doxygen, maybe the folder must be generated first (~/dev/doxygen)
 
+Run: doxygen ./doxygen_config in the same folder as this md file
+
 Settings:
 
 INPUT (currently redundant, as ./ is given in the end; only ./LICENSE is relevant additionally, because else the file without ending would not be included due to the set file patterns)
