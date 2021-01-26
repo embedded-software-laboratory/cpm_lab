@@ -49,6 +49,9 @@
 /**
  * \brief The Middleware's main function
  * \ingroup middleware
+ * 
+ * \param argc Command line param count
+ * \param argv Command line params
  */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
