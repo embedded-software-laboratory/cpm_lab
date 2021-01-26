@@ -41,5 +41,9 @@ extern "C" {
 class SensorCalibration {
 
 public:
+    /**
+     * \brief TODO
+     * \param spi_miso_data TODO
+     */
     static VehicleState convert(spi_miso_data_t spi_miso_data);
 };

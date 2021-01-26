@@ -34,17 +34,39 @@ using std::vector;
 #define VEHICLE_HALF_WIDTH (0.054)
 
 /**
+ * \file geometry.hpp
+ * \ingroup vehicle
+ * \brief (Needs to be included for static functions to show up properly)
+ */
+
+/**
  * \struct PathNode
  * \brief TODO
  * \ingroup vehicle
  */
 struct PathNode
 {
+    //! TODO
     double x;
+    //! TODO
     double y;
+    //! TODO
     double cos_yaw;
+    //! TODO
     double sin_yaw;
+
+    /**
+     * \brief TODO Constructor
+     */
     PathNode(){}
+
+    /**
+     * \brief TODO Constructor
+     * \param x TODO
+     * \param y TODO
+     * \param cos_yaw TODO
+     * \param sin_yaw TODO
+     */
     PathNode(double x, double y, double cos_yaw, double sin_yaw)
     :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
 };
@@ -52,6 +74,10 @@ struct PathNode
 /**
  * \brief TODO
  * \ingroup vehicle
+ * 
+ * \param vehicle TODO
+ * \param points_x TODO
+ * \param points_y TODO
  */
 static inline double min_distance_vehicle_to_points
 (
@@ -80,6 +106,9 @@ static inline double min_distance_vehicle_to_points
 /**
  * \brief TODO
  * \ingroup vehicle
+ * 
+ * \param vehicleA TODO
+ * \param vehicleB TODO
  */
 static inline double min_distance_vehicle_to_vehicle(PathNode vehicleA, PathNode vehicleB)
 {
