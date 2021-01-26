@@ -36,9 +36,22 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define SET_BIT(p,n) ((p) |= (1 << (n)))
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define CLEAR_BIT(p,n) ((p) &= ~((1) << (n)))
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define TOGGLE_BIT(p,n) ((p) ^= (1 << (n)))
 
 

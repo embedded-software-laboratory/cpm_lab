@@ -53,11 +53,17 @@
  */
 typedef struct
 { // 12 bytes
+	//! TODO
 	uint32_t pi_tick;
+	//! TODO
 	int16_t motor_pwm;
+	//! TODO
 	int16_t servo_command;
+	//! TODO
 	uint16_t CRC;
+	//! TODO
 	uint8_t motor_mode;
+	//! TODO
 	uint8_t vehicle_id;
 } __attribute__((packed)) spi_mosi_data_t;
 
@@ -69,17 +75,29 @@ typedef struct
  */
 typedef struct
 { // 27 bytes
+	//! TODO
 	uint32_t tick;
+	//! TODO
 	int32_t odometer_steps;
+	//! TODO
 	uint16_t imu_yaw;
+	//! TODO
 	int16_t imu_yaw_rate;
+	//! TODO
 	int16_t imu_acceleration_forward;
+	//! TODO
 	int16_t imu_acceleration_left;
+	//! TODO
 	int16_t imu_acceleration_up;
+	//! TODO
 	int16_t speed;
+	//! TODO
 	uint16_t battery_voltage;
+	//! TODO
 	uint16_t motor_current;
+	//! TODO
 	uint16_t CRC;
+	//! TODO
 	uint8_t status_flags;
 	/*
 	 * status_flags:
