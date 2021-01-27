@@ -2,10 +2,11 @@
 # exit when any command fails
 set -e
 
-cd matlab_dll/planTrajectory
-make -f planTrajectory_rtw.mk
+# Funktioniert leider nicht aufgrund der absoluten Pfade im makefile, schlage vor wir packen die fertige library ins git
+# cd matlab_dll/planTrajectory
+# make -f planTrajectory_rtw.mk
 
-cd ../..
+# cd ../..
 mkdir -p build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
