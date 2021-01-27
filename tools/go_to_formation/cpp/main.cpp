@@ -27,11 +27,14 @@
 // Include Files
 #include <cstddef>
 #include <cstdlib>
-#include "matlab_dll/planTrajectory/rtwtypes.h"
-#include "matlab_dll/planTrajectory/planTrajectory_types.h"
-#include "matlab_dll/planTrajectory/planTrajectory.h"
-#include "matlab_dll/planTrajectory/planTrajectory_terminate.h"
-#include "matlab_dll/planTrajectory/rt_nonfinite.h"
+#include "rtwtypes.h"
+#include "omp.h"
+#include "Pose2D.h"
+#include "planTrajectory.h"
+#include "planTrajectory_terminate.h"
+#include "planTrajectory_types.h"
+#include "rt_nonfinite.h"
+#include "coder_array.h"
 #include <string.h>
 
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
@@ -209,7 +212,7 @@ int main(int argc, char *argv[])
         mgen::struct0_T vehiclePoses[20];
         argInit_1x20_struct0_T(vehiclePoses);
 
-        double new_id = 0;
+        uint8_T new_id = 0;
         double x = 0;
         double y = 0;
         double yaw = 0;

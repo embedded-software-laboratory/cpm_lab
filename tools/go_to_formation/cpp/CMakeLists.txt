@@ -30,18 +30,18 @@ link_libraries(dl nsl m pthread rt)
 
 
 # MVP: Get example to build
-add_executable(mgen_example 
-    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/main.cpp
-)
-target_link_libraries(mgen_example ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
-target_include_directories(mgen_example PRIVATE 
-    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/
-    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-    /usr/local/MATLAB/R2020b/extern/include
-)
+# add_executable(mgen_example 
+#     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/main.cpp
+# )
+# target_link_libraries(mgen_example ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
+# target_include_directories(mgen_example PRIVATE 
+#     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/
+#     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
+#     /usr/local/MATLAB/R2020b/extern/include
+# )
 
-target_link_libraries(mgen_example cpm)
-target_link_libraries(mgen_example iomp5)
+# target_link_libraries(mgen_example cpm)
+# target_link_libraries(mgen_example iomp5)
 
 
 # Go to formation
@@ -49,7 +49,7 @@ add_executable(mlib_test main.cpp)
 target_link_libraries(mlib_test ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
 target_include_directories(mlib_test PRIVATE 
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-    # /usr/local/MATLAB/R2020b/extern/include
+    /usr/local/MATLAB/R2020b/extern/include
 )
 
 target_link_libraries(mlib_test cpm)
