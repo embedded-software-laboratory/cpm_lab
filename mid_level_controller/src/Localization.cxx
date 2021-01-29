@@ -33,6 +33,12 @@
  * \ingroup vehicle
  */
 
+/**
+ * \brief TODO
+ * \param previous TODO
+ * \param current TODO
+ * \ingroup vehicle
+ */
 void filter_update_step(const LocalizationState& previous, LocalizationState& current)
 {
     Pose2D new_pose = previous.pose;

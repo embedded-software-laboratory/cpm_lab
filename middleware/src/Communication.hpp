@@ -324,7 +324,7 @@ class Communication {
 
         /**
          * \brief Pass system trigger / timing messages from the LCC to the HLCs
-         * \param Samples Received sampels
+         * \param samples Received sampels
          */
         void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
             for (auto& sample : samples) {

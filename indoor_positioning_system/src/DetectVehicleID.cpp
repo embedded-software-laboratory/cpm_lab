@@ -49,7 +49,9 @@ DetectVehicleID::DetectVehicleID(
  */
 struct VehicleTrackingInfo
 {
+    //! TODO
     bool center_present = false;
+    //! TODO
     cv::Point2d centroid;
 };
 
@@ -60,7 +62,9 @@ struct VehicleTrackingInfo
  */
 struct SignalEdge
 {
+    //! TODO
     int position;
+    //! TODO
     bool is_rising;
 };
 

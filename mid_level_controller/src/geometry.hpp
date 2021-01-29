@@ -30,14 +30,23 @@
 #include <cmath>
 using std::vector;
 
-#define VEHICLE_HALF_LENGTH (0.11)
-#define VEHICLE_HALF_WIDTH (0.054)
-
 /**
  * \file geometry.hpp
  * \ingroup vehicle
  * \brief (Needs to be included for static functions to show up properly)
  */
+
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
+#define VEHICLE_HALF_LENGTH (0.11)
+
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
+#define VEHICLE_HALF_WIDTH (0.054)
 
 /**
  * \struct PathNode

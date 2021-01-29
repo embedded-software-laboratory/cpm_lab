@@ -146,6 +146,7 @@ public:
      * \param use_middleware_without_hlc Self explanatory, ignored in case of remote deployment
      * \param remote_hlc_ids If deployed remotely: IDs of HLCs on which the software was deployed
      * \param has_local_hlc True if local HLCs are used on top of remote ones
+     * \param remote_deploy_toggled True if Deploy Remote is enabled in SetupViewUI
      * \param lab_mode_on Whether the IPS etc. should be running
      * \param labcam_toggled If true, the labcam program should be running too
      */

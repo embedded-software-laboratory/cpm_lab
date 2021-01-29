@@ -98,7 +98,7 @@ namespace xml_translation
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Then, assuming that it is one of the common commonroad element nodes like '<country>ZAM</country>', where the first child node is a text node containint 'ZAM', 
+     * Then, assuming that it is one of the common commonroad element nodes like '\<country\>ZAM\</country\>', where the first child node is a text node containint 'ZAM', 
      * it checks whether this node exists, and, if so, gets its content in form of a string
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
@@ -109,7 +109,7 @@ namespace xml_translation
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Then, assuming that it is one of the common commonroad element nodes like '<country>ZAM</country>', where the first child node is a text node containint 'ZAM', 
+     * Then, assuming that it is one of the common commonroad element nodes like '\<country\>ZAM\</country\>', where the first child node is a text node containint 'ZAM', 
      * it checks whether this node exists, and, if so, gets its content in form of an int
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
@@ -120,7 +120,7 @@ namespace xml_translation
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Then, assuming that it is one of the common commonroad element nodes like '<country>ZAM</country>', where the first child node is a text node containint 'ZAM', 
+     * Then, assuming that it is one of the common commonroad element nodes like '\<country\>ZAM\</country\>', where the first child node is a text node containint 'ZAM', 
      * it checks whether this node exists, and, if so, gets its content in form of an unsigned long long
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
@@ -131,7 +131,7 @@ namespace xml_translation
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
-     * Then, assuming that it is one of the common commonroad element nodes like '<country>ZAM</country>', where the first child node is a text node containint 'ZAM', 
+     * Then, assuming that it is one of the common commonroad element nodes like '\<country\>ZAM\</country\>', where the first child node is a text node containint 'ZAM', 
      * it checks whether this node exists, and, if so, gets its content in form of a double
      * 
      * \param node An XML node, assumed to be of type Element (which must not be checked by the user)
@@ -298,7 +298,7 @@ namespace xml_translation
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)
      * Always warns if it is not an Element node 
      * Then, the attribute of all elements with the given attribute are given one by one to the function
-     * Example: <a ref="1"/> <a ref="2"/> ... -> function gets "1", "2", ...
+     * Example: \<a ref="1"/\> \<a ref="2"/\> ... -\> function gets "1", "2", ...
      * \param node An XML node 
      * \param attribute_function Function that takes an attribute
      * \param node_name Expected name of the node

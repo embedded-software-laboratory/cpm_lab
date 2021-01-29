@@ -138,7 +138,7 @@ public:
      * \param filters Filters to set for choosing a file, e.g. only YAML files are shown
      * \param config_file Configuration file where previous file locations are stored, for the convenience of the user (set relative filepath as well, e.g. "./xy.config")
      */
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters, std::string config_file = "./file_dialog_open_config.config");
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string config_file = "./file_dialog_open_config.config");
 
     /**
      * \brief Returns the previously selected path of last program execution

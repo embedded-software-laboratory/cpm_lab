@@ -267,7 +267,7 @@ public:
     /**
      * \brief Constructor
      * \param _commonroad_scenario The commonroad scenario to be managed by this view
-     * \param _set_obstacle_manager_obstacle_state Callback function to change the state of an obstacle in the obstacle manager, given its ID
+     * \param obstacle_sim_manager To change the state of an obstacle in the obstacle manager, given its ID
      */
     CommonroadViewUI(
         std::shared_ptr<CommonRoadScenario> _commonroad_scenario,

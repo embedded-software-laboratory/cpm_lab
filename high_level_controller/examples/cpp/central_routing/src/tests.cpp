@@ -32,6 +32,10 @@
  * \ingroup central_routing
  */
 
+/**
+ * \brief Main of central routing tests
+ * \ingroup central_routing
+ */
 int main()
 {
     for (size_t i_start_edge = 0; i_start_edge < laneGraphTools.n_edges; ++i_start_edge)

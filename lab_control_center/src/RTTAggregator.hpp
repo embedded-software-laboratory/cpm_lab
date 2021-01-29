@@ -111,10 +111,10 @@ public:
     /**
      * \brief Get current measurements for RTT
      * \param participant_id ID of the participant of which the RTT was supposed to be measured (entry might not exist), e.g. 'vehicle'
-     * \param current_best_rtt Best RTT of the current measurement (in ns)
-     * \param current_worst_rtt Worst RTT of the current measurement (in ns)
-     * \param all_time_worst_rtt Worst RTT of all measurements (in ns)
-     * \param missed_answers Percentage of missed answers for this participant (Measured from first received answer)
+     * \param _current_best_rtt Best RTT of the current measurement (in ns)
+     * \param _current_worst_rtt Worst RTT of the current measurement (in ns)
+     * \param _all_time_worst_rtt Worst RTT of all measurements (in ns)
+     * \param _missed_answers Percentage of missed answers for this participant (Measured from first received answer)
      * \returns False if no RTT has yet been measured, else true
      */
     bool get_rtt(std::string participant_id, uint64_t &_current_best_rtt, uint64_t &_current_worst_rtt, uint64_t &_all_time_worst_rtt, double &_missed_answers);

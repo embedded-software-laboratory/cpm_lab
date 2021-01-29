@@ -33,6 +33,10 @@
  * \ingroup central_routing
  */
 
+/**
+ * \brief TODO
+ * \ingroup central_routing
+ */
 const LaneGraphTools laneGraphTools;
 
 LaneGraphTools::LaneGraphTools()

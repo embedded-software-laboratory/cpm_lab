@@ -34,7 +34,13 @@ using namespace std;
  */
 
 
-// handler for bus call messages
+/**
+ * \brief Handler for bus call messages
+ * \param bus TODO
+ * \param msg TODO
+ * \param data TODO
+ * \ingroup lcc_labcam
+ */
 gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 {
 	bus = bus;

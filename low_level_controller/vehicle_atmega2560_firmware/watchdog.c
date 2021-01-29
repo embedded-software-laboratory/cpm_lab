@@ -44,6 +44,10 @@
 #include "led.h"
 #include "watchdog.h"
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 volatile uint8_t safe_mode_flag = 0;
 
 
@@ -99,6 +103,10 @@ void watchdog_reset() {
 	safe_mode_flag = 0;
 }
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 ISR(WDT_vect) {
 	safe_mode_flag = 1;
 }

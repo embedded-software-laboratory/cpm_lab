@@ -46,6 +46,12 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
+/**
+ * \file main.cpp
+ * \brief TODO. Contains one of the main functions (without subgroups, Doxygen only includes one)
+ * \ingroup controller_test_loop
+ */
+
 //Description for bash files
 /**
  * \file high_level_controller/examples/cpp/controller_test_loop/build.bash

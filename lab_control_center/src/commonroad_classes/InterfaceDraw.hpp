@@ -62,10 +62,11 @@ public:
     //Utility functions that can be used by each class
     /**
      * \brief This function can be used to draw an arrow from (x_1, y_1) to (x_2, y_2) - within the currently set coordinate system - with a given scale
-     * \param x_1
-     * \param y_1
-     * \param x_2
-     * \param y_2
+     * \param ctx A DrawingContext, used to draw on
+     * \param x_1 Arrow start x
+     * \param y_1 Arrow start y
+     * \param x_2 Arrow pointer / end x
+     * \param y_2 Arrow pointer / end y
      * \param scale Scale applies to the arrow thickness and the arrowhead size only
      */
     void draw_arrow(const DrawingContext& ctx, double x_1, double y_1, double x_2, double y_2, double scale)

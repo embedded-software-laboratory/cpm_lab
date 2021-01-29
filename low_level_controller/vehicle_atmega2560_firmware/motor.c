@@ -39,9 +39,22 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_BRAKE 0
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_FORWARD 1
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_REVERSE 2
 
 

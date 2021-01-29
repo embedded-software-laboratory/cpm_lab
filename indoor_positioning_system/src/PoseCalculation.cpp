@@ -27,12 +27,16 @@
 #include "PoseCalculation.hpp"
 #include <cassert>
 
-#define N_POSE_CALIBRATION_TERMS (5)
-
 /**
  * \file PoseCalculation.cpp
  * \ingroup ips
  */
+
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
+#define N_POSE_CALIBRATION_TERMS (5)
 
 
 PoseCalculation::PoseCalculation()
@@ -47,7 +51,11 @@ PoseCalculation::PoseCalculation()
     assert(calibration_dy.size() == N_POSE_CALIBRATION_TERMS);
 }
 
-
+/**
+ * \brief TODO
+ * \param p TODO
+ * \ingroup ips
+ */
 static inline double length(cv::Point2d p)
 {
     return sqrt(p.dot(p));

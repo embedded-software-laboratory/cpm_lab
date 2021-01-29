@@ -39,22 +39,65 @@
 #include "util.h"
 #include "odometer.h"
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static const int8_t direction_lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t hall_sensor_states_prev = 0;
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint16_t timer1_prev = 0;
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t standstill_flag = 0;
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile int32_t odometer_count = 0;
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define ODOMETER_BUFFER_SIZE 6
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t odometer_buffer_index = 0;
 
 
-// interrupt for hall sensor pin change
+/**
+ * \brief interrupt for hall sensor pin change
+ * \ingroup low_level_controller
+ */
 ISR(PCINT2_vect) {
 	uint16_t timer1_now = TCNT1;
 	uint8_t hall_sensor_states_now = PINK;

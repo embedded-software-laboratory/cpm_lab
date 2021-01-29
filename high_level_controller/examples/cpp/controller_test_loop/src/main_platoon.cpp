@@ -50,6 +50,12 @@
  * \ingroup controller_test_loop
  */
 
+/**
+ * \brief The other main function of the controller_test_loop scenario
+ * \param argc Command line param
+ * \param argv Command line param
+ * \ingroup controller_test_loop
+ */
 int main(int argc, char *argv[])
 {
     cpm::init(argc, argv);

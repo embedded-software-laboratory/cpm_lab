@@ -57,15 +57,41 @@
 // The communication is blocking / synchronous. 
 // spi_exchange() blocks until the transfer is complete.
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t spi_buffer_index = 0;
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t* miso_buffer = 0;
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t miso_correct_CRC[SPI_BUFFER_SIZE];
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t miso_wrong_CRC[SPI_BUFFER_SIZE];
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint8_t mosi_buffer[SPI_BUFFER_SIZE];
 
 
-// interrupt for end of byte transfer
+/**
+ * \brief interrupt for end of byte transfer
+ * \ingroup low_level_controller
+ */
 ISR(SPI_STC_vect) {
 	mosi_buffer[spi_buffer_index] = SPDR;
 	spi_buffer_index++;
@@ -73,7 +99,10 @@ ISR(SPI_STC_vect) {
 }
 
 
-// interrupt for slave select pin change
+/**
+ * \brief interrupt for slave select pin change
+ * \ingroup low_level_controller
+ */
 ISR(PCINT0_vect) {
 	if(PINB & 1) { // end of spi transmission
 		watchdog_reset(); // resume normal operation when the master raises the slave select

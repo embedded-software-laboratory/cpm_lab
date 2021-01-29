@@ -59,6 +59,7 @@ namespace cpm
          * \param offset_nanoseconds Initial offset (from timestamp 0)
          * \param wait_for_start For the real-time timer: Set whether the timer is started only if a start signal is sent via DDS
          * \param simulated_time_allowed Decide whether the timer can run with simulated time
+         * \param simulated_time Set to true if simulated time should be used for the user, else false
          */
         static std::shared_ptr<Timer> create(
             std::string node_id,

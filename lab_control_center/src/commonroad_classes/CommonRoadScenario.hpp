@@ -240,7 +240,7 @@ private:
 
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
-     * \param node root_node
+     * \param root_node root_node
      */
     void translate_attributes(const xmlpp::Node* root_node);
 

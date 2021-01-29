@@ -35,8 +35,16 @@
  * \ingroup vehicle
  */
 
-
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
 static inline double frand() { return (double(rand()))/RAND_MAX; }
+
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
 static inline double frand_sym() { return frand()*2-1; }
 
 SimulationIPS::SimulationIPS(std::string topic_name)

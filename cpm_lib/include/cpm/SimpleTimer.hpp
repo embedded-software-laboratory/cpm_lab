@@ -69,7 +69,7 @@ namespace cpm {
     public:
         /**
          * \brief Create a simple timer (not real-time capable) that can be used for function callback
-         * \param node_id ID of the timer in the network
+         * \param _node_id ID of the timer in the network
          * \param period_milliseconds The timer is called periodically with a period of period_milliseconds (rounded up to 50ms)
          * \param wait_for_start Set whether the timer is started only if a start signal is sent via DDS (true), or if it should should start immediately (false)
          * \param react_to_stop_signal Set whether the timer should be stopped if a stop signal is sent within the network (optional, default is true); 

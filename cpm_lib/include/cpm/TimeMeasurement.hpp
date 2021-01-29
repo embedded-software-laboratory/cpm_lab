@@ -42,10 +42,17 @@ namespace cpm
      */
     class MeasurementData {
         public:
+            //! TODO
             uint64_t start_time = 0;
+            //! TODO
             uint64_t end_time = 0;
+            //! TODO
             clockid_t clockid;
 
+            /**
+             * \brief TODO
+             * \param clockid TODO
+             */
             MeasurementData(clockid_t clockid);
     };
 
@@ -60,6 +67,9 @@ namespace cpm
 
     class TimeMeasurement {
         public:
+            /**
+             * \brief Provides access to the Singleton / creates it
+             */
             static TimeMeasurement& Instance();
 
             // Neccessary deletion of functions when working with singleton pattern
@@ -67,45 +77,54 @@ namespace cpm
             void operator=(TimeMeasurement const&)  = delete;
 
             /**
-             * This function starts a measurement. If there is already a measurment with this name the old data will be overriden.
+             * \brief This function starts a measurement. If there is already a measurment with this name the old data will be overriden.
              * \param name  The name of the measurement. All data for the measurment is saved under this name.
              * \param clockid The clockid which will be used for this measurement.
              */
             void start(std::string name, clockid_t clockid);
 
             /**
-             * Same as start above but uses default clockid.
+             * \brief Same as start above but uses default clockid.
+             * \param name The name of the measurement. All data for the measurment is saved under this name.
              */
             void start(std::string name);
 
             /**
-             * This function stops a measurement.
+             * \brief This function stops a measurement.
              * \param name  The name of the measurement which is to be stopped.
              * \return      The result of the measurement.
              */
             uint64_t stop(std::string name);
 
             /**
-             * Returns all measurements in string format.
+             * \brief Returns all measurements in string format.
              */
             std::string get_str();
 
             /**
-             * Configure the clockid which is used as default when calling start() without specifying the clockid.
+             * \brief Configure the clockid which is used as default when calling start() without specifying the clockid.
+             * \param clockid TODO
              */
             void set_default_clockid(clockid_t clockid);
 
             /**
-             * Returns true iff a measurement with the given name exists (active or finished)
+             * \brief Returns true iff a measurement with the given name exists (active or finished)
+             * \param name Measurement name
              */
             bool exists(std::string name);
 
 
         private:
+            /**
+             * \brief Private constructor (due to Singleton)
+             */
             TimeMeasurement(){}
+            //! Singleton instance
             static TimeMeasurement& instance;
 
+            //! TODO
             clockid_t default_clockid = CLOCK_MONOTONIC;
+            //! TODO
             std::map<std::string, MeasurementData> measurements;
 
     };

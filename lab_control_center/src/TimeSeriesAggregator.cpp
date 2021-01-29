@@ -129,7 +129,11 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 
 }
 
-
+/**
+ * \brief TODO
+ * \param v TODO
+ * \ingroup lcc
+ */
 static inline double voltage_to_percent(const double& v)
 {
     // approximate discharge curve with three linear segments,

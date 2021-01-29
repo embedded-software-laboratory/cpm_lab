@@ -145,7 +145,7 @@
  * \defgroup lcc_labcam Lab Control Center Labcam
  * \brief These files are part of the LCC Labcam files, for using the cam in the lab (if it is not used in simulated mode).
  * 
- * There is a Readme for setup: \ref LabcamReadme
+ * There is a Readme for setup in this folder as well (not included in the Docs)
  * 
  * The LCC is a graphical program for simulation and control within the Lab.
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Lab+Control+Center
@@ -172,7 +172,7 @@
  * \brief These files are part of the Vehicle, which is used either for the real vehicles in the Lab on the Raspberry Pis, or
  * for simulated vehicles on the PC that simulates them.
  * 
- * The vehicle also uses the Broadcom library, which is described here: \ref broadcom_page
+ * The vehicle also uses the Broadcom library.
  * 
  * You can find out more in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle
  * and in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Vehicle+Setup

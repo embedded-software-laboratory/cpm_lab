@@ -83,6 +83,7 @@ public:
      * \brief Constructor, set up a goalstate object from a commonroad xml goalstate node
      * \param node Goal state node to translate
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _get_lanelet_center Function to get the center (x, y) of a lanelet, given its ID
      * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
@@ -96,7 +97,10 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 

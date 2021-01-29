@@ -93,7 +93,7 @@ namespace cpm
         /**
          * \brief Constructor
          * \param topic the topic of the communication
-         * \param num_vehicles The number of vehicles to monitor / read from (from 1 to num_vehicles)
+         * \param num_of_vehicles The number of vehicles to monitor / read from (from 1 to num_vehicles)
          * \return The MultiVehicleReader, which only keeps the last 2000 msgs for better efficiency (might need to be tweaked)
          */
         MultiVehicleReader(dds::topic::Topic<T> topic, int num_of_vehicles) : 
