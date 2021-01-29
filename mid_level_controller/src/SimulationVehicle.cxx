@@ -131,7 +131,7 @@ VehicleState SimulationVehicle::update(
         cpm::Logging::Instance().write(
             1,
             "Warning: Simulation: Collision with vehicle %u at time %llu.", 
-            colli.first, colli.second);
+            static_cast<unsigned int>(colli.first), colli.second);
     }
     // Erase trajectory points which are older than 0.5 seconds
     const uint64_t past_threshold_time = t_now - 500000000ull;
