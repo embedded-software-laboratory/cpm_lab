@@ -162,7 +162,7 @@ int main (int argc, char *argv[]) {
 
         if (writer_readyMessage.matched_subscriptions_size() == 0)
         {
-            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id);
+            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id.c_str());
         }
     },
     [](){

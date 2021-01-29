@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
     cpm::Logging::Instance().write(3,
             "decentral_routing_%d coming online",
-            vehicle_id
+            static_cast<int>(vehicle_id)
     );
 
 
