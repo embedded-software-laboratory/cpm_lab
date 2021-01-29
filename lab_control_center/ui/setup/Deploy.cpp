@@ -120,7 +120,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 return;
             }
 
-            std::cout << command.str() << std::endl;
+            //std::cout << command.str() << std::endl;
 
             //Execute command
             system(command.str().c_str());
@@ -220,10 +220,10 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             return;
         }
 
-        std::cout << command.str() << std::endl;
+        //std::cout << command.str() << std::endl;
 
         // Debugging only
-        std::string test_string = command.str();
+        //std::string test_string = command.str();
 
         //Document, that we started this HLC
         deployed_local_hlcs.push_back(vehicle_id);

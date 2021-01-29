@@ -173,9 +173,9 @@ void MonitoringUi::init_ui_thread()
                 label = Gtk::manage(new Gtk::Label()); 
                 label->set_width_chars(10);
                 label->set_xalign(1);
-                label->set_text(string_format("Vehicle %02i", vehicle_id));
+                label->set_text(string_format("Vehicle %02i", static_cast<int>(vehicle_id)));
                 label->show_all();
-                grid_vehicle_monitor->attach(*label, vehicle_id + 1, 0, 1, 1);
+                grid_vehicle_monitor->attach(*label, static_cast<int>(vehicle_id) + 1, 0, 1, 1);
             }
         }
 
@@ -246,7 +246,7 @@ void MonitoringUi::init_ui_thread()
                         label->set_xalign(1);
                         label->get_style_context()->add_class("small_text");
                         label->show_all();
-                        grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
+                        grid_vehicle_monitor->attach(*label, static_cast<int>(vehicle_id)+1, i+1, 1, 1);
                     }
                     continue;
                 }
