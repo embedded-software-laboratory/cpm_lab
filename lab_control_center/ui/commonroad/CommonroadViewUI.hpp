@@ -160,7 +160,7 @@ private:
     bool apply_entry_rotate(GdkEventKey* event);
 
     //Config file that stores the previously selected script
-    const std::string config_file_location = "./commonroad_file_chooser.config";
+    const std::string config_file_location = "commonroad";
 
     /**
      * \brief Load, if exists, the stored transformation for the current file

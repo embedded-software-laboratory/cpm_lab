@@ -26,12 +26,9 @@
 
 #include "FileChooserUI.hpp"
 
-//Init static previous_file
-const std::string FileChooserUI::default_load_path = "../high_level_controller/examples/cpp/central_routing/build/central_routing";
-
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::string config_file) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::string _config_name) :
     on_close_callback(_on_close_callback),
-    config_location(config_file)
+    config_name(_config_name)
 {
     FileChooserUI::Filter yaml_filter;
     yaml_filter.name = "YAML files";
@@ -39,9 +36,9 @@ FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string
     init(parent, std::vector<FileChooserUI::Filter> {{yaml_filter}});
 }
 
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string config_file) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string _config_name) :
     on_close_callback(_on_close_callback),
-    config_location(config_file)
+    config_name(_config_name)
 {
     init(parent, filters);
 }
@@ -96,32 +93,16 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     file_chooser_dialog->add_events(Gdk::KEY_RELEASE_MASK);
 
     //Load filename from previous program execution 
-    previous_file = get_last_execution_path(config_location);
-
     //Open default or recently opened file / folder (not recommended by gtkmm documentation, because they want the user to use the "Recent"-Tab instead)
-    file_chooser_dialog->set_filename(previous_file);
+    file_chooser_dialog->set_filename(get_last_execution_path(config_name));
 
     //Listen for delete event - so that callback function is always called properly
     window->signal_delete_event().connect(sigc::mem_fun(this, &FileChooserUI::on_delete));
 }
 
-std::string FileChooserUI::get_last_execution_path(std::string config_file)
+std::string FileChooserUI::get_last_execution_path(std::string config_name)
 {
-    std::string path = "";
-    std::ifstream input_stream(config_file);
-    if (input_stream.good())
-    {
-        std::getline(input_stream, path);
-    }   
-    input_stream.close();
-
-    //Behaviour if no last execution path could be found - set to HLC folder
-    if (path == "")
-    {
-        path = default_load_path;
-    }
-
-    return path;
+    return FileDialogPaths::Instance().get_last_execution_path(config_name);;
 }
 
 bool FileChooserUI::handle_button_released(GdkEventKey* event) {
@@ -197,13 +178,9 @@ void FileChooserUI::on_abort() {
 
 void FileChooserUI::on_load() {
     std::string filename = file_chooser_dialog->get_filename();
-    previous_file = filename;
 
-    //Store previous_file for next program execution
-    std::ofstream file;
-    file.open(config_location, std::ofstream::out | std::ofstream::trunc);
-    file << previous_file << std::endl;
-    file.close();
+    //Store previous file for next program execution
+    FileDialogPaths::Instance().store_last_execution_path(filename, config_name);
     
     window->close();
     on_close_callback(filename, true);

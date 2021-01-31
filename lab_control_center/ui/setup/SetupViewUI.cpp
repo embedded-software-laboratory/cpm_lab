@@ -165,7 +165,7 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     //We use the default config location here
-    script_path->set_text(FileChooserUI::get_last_execution_path());
+    script_path->set_text(FileChooserUI::get_last_execution_path("script"));
 
     simulation_running.store(false);
     
@@ -341,7 +341,8 @@ void SetupViewUI::open_file_explorer()
         file_chooser_window = make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter },
+            "script"
         );
     }
     else
