@@ -218,6 +218,9 @@ void ParamViewUI::open_param_create_window() {
     //Also, a reference to the main window must already exist
     if(! parameter_view_unchangeable.exchange(true) && get_main_window) {
         make_insensitive();
+        //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
+        get_main_window().set_sensitive(false);
+        
         create_window_open = true;
         create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
     } 
@@ -247,10 +250,15 @@ void ParamViewUI::open_param_edit_window() {
             ParameterWithDescription param;
             //Get the parameter
             if (parameter_storage->get_parameter(name, param) && get_main_window) {
+                //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
+                get_main_window().set_sensitive(false);
+
                 create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
             }
             else if (!get_main_window)
             {
+                make_sensitive();
+
                 cpm::Logging::Instance().write(
                     1,
                     "%s", 
@@ -306,6 +314,19 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     parameter_view_unchangeable.store(false);
     create_window_open = false;
     make_sensitive();
+
+    //Make the main window sensitive again
+    if (get_main_window) {
+        get_main_window().set_sensitive(true);
+    }
+    else if (!get_main_window)
+    {
+        cpm::Logging::Instance().write(
+            1,
+            "%s", 
+            "ERROR: Main window reference is missing"
+        );
+    }
 }
 
 bool ParamViewUI::check_param_exists_callback(std::string name) {
