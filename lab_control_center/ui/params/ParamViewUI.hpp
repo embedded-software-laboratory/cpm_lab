@@ -48,6 +48,9 @@ private:
     //Storage for all parameters
     std::shared_ptr<ParameterStorage> parameter_storage;
 
+    //! Error dialog if loading a parameter fails
+    std::shared_ptr<Gtk::MessageDialog> error_dialog;
+
     Glib::RefPtr<Gtk::Builder> params_builder;
 
     Gtk::Widget* parent;

@@ -316,8 +316,7 @@ bool ParamViewUI::check_param_exists_callback(std::string name) {
 //Menu bar item handlers
 
 void ParamViewUI::params_reload_handler() {
-    parameter_storage->loadFile();
-    read_storage_data();
+    params_load_file_handler("");
 }
 
 void ParamViewUI::params_save_handler() {
@@ -329,8 +328,59 @@ void ParamViewUI::params_save_as_handler(std::string filename) {
 }
 
 void ParamViewUI::params_load_file_handler(std::string filename) {
-    parameter_storage->loadFile(filename);
-    read_storage_data();    
+    //Try to load the file; it might not be conformant to a param YAML file, in that case a domain error is thrown
+    std::string error_string = "";
+
+    try {
+        if (filename == "")
+        {
+            parameter_storage->loadFile();
+        }
+        else
+        {
+            parameter_storage->loadFile(filename);
+        }
+    }
+    catch (const std::domain_error& err)
+    {
+        error_string = err.what();
+    }
+    catch (const std::exception& err)
+    {
+        error_string = err.what();
+    }
+
+    if (error_string != "")
+    {
+        //Create new window
+        error_dialog = std::make_shared<Gtk::MessageDialog>(
+            get_main_window(),
+            error_string,
+            false,
+            Gtk::MessageType::MESSAGE_INFO,
+            Gtk::ButtonsType::BUTTONS_CLOSE,
+            false
+        );
+    
+        //Connect new window with parent, show window
+        error_dialog->set_transient_for(get_main_window());
+        error_dialog->property_destroy_with_parent().set_value(true);
+        error_dialog->show();
+
+        //Callback for closing
+        error_dialog->signal_response().connect(
+            [this] (auto response)
+            {
+                if (response == Gtk::ResponseType::RESPONSE_CLOSE)
+                {
+                    error_dialog->close();
+                }
+            }
+        );
+    }
+
+    //Load everything that could be loaded before an error was thrown or the whole file if no error was thrown
+    read_storage_data();
 }
 
 // void ParamViewUI::params_load_multiple_files_handler() {
