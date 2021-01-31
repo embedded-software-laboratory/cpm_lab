@@ -55,7 +55,7 @@ class VehicleTrajectoryPlanningState
     static constexpr double ref_acceleration = 0.8;
     static constexpr double max_speed = 1.4;
     static constexpr double min_speed = 0.5;
-    static constexpr uint64_t dt_speed_profile_nanos = 5*16000000ull;
+    static constexpr uint64_t dt_speed_profile_nanos = 5*10000000ull;
     static constexpr double dt_speed_profile = (dt_speed_profile_nanos * 1e-9);
     static constexpr double delta_v_step = ref_acceleration * dt_speed_profile;
 
@@ -73,12 +73,14 @@ public:
     VehicleTrajectoryPlanningState(
         uint8_t _vehicle_id,
         size_t _edge_index,
-        size_t _edge_path_index);
+        size_t _edge_path_index
+        );
 
     void get_lane_graph_positions(LaneGraphTrajectory *lane_graph_trajectory);
     TrajectoryPoint get_trajectory_point(uint64_t time, size_t edge_index, size_t edge_path_index, double speed);
-    vector<TrajectoryPoint> get_planned_trajectory(int max_length);
+    vector<TrajectoryPoint> get_planned_trajectory(int max_length, uint64_t dt_nanos);
     void apply_timestep(uint64_t dt_nanos);
+    uint64_t get_dt_speed_profile_nanos() {return dt_speed_profile_nanos;};
     void debug_writeOutOwnTrajectory(); // Debugging method
 
     // Change the own speed profile so as not to collide with the other_vehicles.

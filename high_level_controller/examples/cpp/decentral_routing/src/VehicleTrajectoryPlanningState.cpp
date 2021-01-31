@@ -46,7 +46,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 
     // 10 minor timesteps of 0 velocity so the vehicles have time to start
     speed_profile.fill(0);
-    for (size_t i = 10; i < N_STEPS_SPEED_PROFILE; ++i)
+    for (size_t i = 100; i < N_STEPS_SPEED_PROFILE; ++i)
     {
         speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
     }
@@ -154,6 +154,8 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
     {
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
+        cpm::Logging::Instance().write(1,
+                "Loopy");
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         size_t earliest_collision__speed_profile_index = 1<<30;
         int colliding_vehicle_id = 0;
@@ -296,16 +298,16 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     return result;
 }
 
-vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length) {
+vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length, uint64_t dt_nanos) {
     vector<TrajectoryPoint> result;
     int index = 0;
+    int n_steps = dt_nanos/dt_speed_profile_nanos; // Number of speed steps per dt_nanos
     
     for( auto point : get_planned_path() ) {
-	// TODO: Make magic number dependent on dt_nanos/dt_speed_step_nanos
-        if(index >= 5*max_length) {
+        if(index >= n_steps*max_length) {
             break;
 	}
-	if( index%5 == 0 ) {
+	if( index%n_steps == 0 ) {
 		result.push_back(
 		    get_trajectory_point(
 			    t_elapsed + index * dt_speed_profile_nanos,

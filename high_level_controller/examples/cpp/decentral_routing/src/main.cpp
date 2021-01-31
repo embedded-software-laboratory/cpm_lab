@@ -101,10 +101,6 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
-    // Initialize Planner and constants necessary for planning
-    // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
-    uint64_t dt_nanos = 400000000ull; // Needs to match period of planner
-
     // SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
 
@@ -189,7 +185,7 @@ int main(int argc, char *argv[]) {
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    auto planner = std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
+    auto planner = std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
@@ -238,17 +234,6 @@ int main(int argc, char *argv[]) {
                 // to send commands to vehicle
                 new_vehicleStateList = true;
                 vehicleStateList = sample.data();
-
-                // middleware period needs to be manually set to 400ms
-                // on parameter server, else we don't start
-                if( vehicleStateList.period_ms()*1e6 != dt_nanos ) {
-                    cpm::Logging::Instance().write(
-                            1,
-                            "Fatal Error: middleware_period_ms needs to be 400ms");
-                    StopRequest request(vehicle_id);
-                    writer_stopRequest.write(request);
-                    return 1;
-                }
             }
         }
 
@@ -320,7 +305,7 @@ int main(int argc, char *argv[]) {
             // Start async job for planning
             cmd_future = std::async(std::launch::async,
                     [&]{
-                        return planner->plan(vehicleStateList.t_now());
+                        return planner->plan(vehicleStateList.t_now(), vehicleStateList.period_ms()*1e6);
                     }
                 );
             planning = true;
@@ -366,7 +351,7 @@ int main(int argc, char *argv[]) {
 
         // Rate limit main while loop to 10-times per dt_nanos
         // Arbitrary, but larger waits decrease cpu load
-        std::this_thread::sleep_for(std::chrono::nanoseconds(dt_nanos/10));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(vehicleStateList.period_ms()/10));
     }
 
     return 0;

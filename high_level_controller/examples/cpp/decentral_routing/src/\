@@ -424,9 +424,6 @@ void VehicleTrajectoryPlanner::set_reader(
     reader_laneGraphTrajectory = reader;
 }
 
-/*
- * Prints contents of other_vehicles_buffer to stdout.
- */
 void VehicleTrajectoryPlanner::debug_writeOutReceivedTrajectories() {
     for(auto vehicle : other_vehicles_buffer) {
         std::cout << "Vehicle " << static_cast<uint32_t>(vehicle.first) << std::endl;

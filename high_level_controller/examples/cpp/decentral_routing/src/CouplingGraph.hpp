@@ -53,4 +53,5 @@ class CouplingGraph
         void setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data);
         void setPreviousVehicles(uint8_t vehicleId, std::vector<uint8_t> previousVehicles);
         std::set<uint8_t> getPreviousVehicles(uint8_t vehicleId);
+        std::set<uint8_t> getVehicles();
 };

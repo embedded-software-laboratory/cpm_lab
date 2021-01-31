@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -54,29 +55,31 @@ class VehicleTrajectoryPlanner
     uint64_t t_real_time = 0;
     std::mutex mutex;
     std::thread planning_thread;
-    const uint64_t dt_nanos;
+    uint64_t dt_nanos;
     const int planning_horizont = 5;
     const uint64_t dt_keep_past_trajectories = 1000000000;
     vector<TrajectoryPoint> trajectory_point_buffer;
     CouplingGraph coupling_graph;
+    std::set<uint8_t> messages_received; // Which vehicles have sent LaneGraphTrajs to us this timestep
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
     static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
-    static constexpr int timesteps_per_planningstep = 5; // For each dt_nanos, each HLC has 5 points planned
 
     void read_other_vehicles();
-    void apply_timestep();
+    bool wait_for_other_vehicles();
     void write_trajectory( LaneGraphTrajectory trajectory );
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
+    void clear_past_trajectory_point_buffer();
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
     void debug_writeOutReceivedTrajectories(); // Debugging method
+    void debug_analyzeTrajectoryPointBuffer(); // Debugging method
     
 public:
 
-    VehicleTrajectoryPlanner(uint64_t dt_nanos);
+    VehicleTrajectoryPlanner();
     ~VehicleTrajectoryPlanner();
     void set_real_time(uint64_t t);
     bool is_started() {return started;}
@@ -85,7 +88,7 @@ public:
     void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
     void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
     void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
-    std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time);
+    std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time, uint64_t dt);
     void stop();
     void start(){started = true;};
 

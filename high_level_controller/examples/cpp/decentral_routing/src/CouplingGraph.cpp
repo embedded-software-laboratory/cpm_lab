@@ -56,6 +56,10 @@ std::set<uint8_t> CouplingGraph::getPreviousVehicles(uint8_t vehicleId) {
     return couplingData[vehicleId];
 }
 
+std::set<uint8_t> CouplingGraph::getVehicles() {
+    return vehicleSet;
+}
+
 void CouplingGraph::setPreviousVehiclesToDefault(uint8_t vehicleId) {
     // vehicleId needs to be part of vehicleSet
     assert(vehicleSet.find(vehicleId) != vehicleSet.end());
