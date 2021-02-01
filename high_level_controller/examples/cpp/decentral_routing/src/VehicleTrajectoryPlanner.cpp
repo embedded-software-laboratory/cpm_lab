@@ -68,6 +68,13 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     t_real_time = t;
     dt_nanos = dt;
 
+    // Catch up planningState if we missed a timestep
+    while(t_real_time - t_prev != dt && t_prev !=0) {
+        trajectoryPlan->apply_timestep(dt_nanos);
+        t_prev += dt_nanos;
+    }
+    t_prev = t_real_time;
+
     started = true;
     // Messages_received gets reset every timestep
     messages_received.clear();
@@ -109,6 +116,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     
     // Get new points from PlanningState
     std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
+    std::cout << "Oldest new point: " << new_trajectory_points[0].t().nanoseconds()+t_start << std::endl;
     for( auto& point : new_trajectory_points ) {
         point.t().nanoseconds(point.t().nanoseconds() + t_start);
     }
@@ -116,7 +124,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     std::cout << "Past points:" << std::endl;
     for( unsigned int i=0; i<trajectory_point_buffer.size(); i++ ) {
-        std::cout <<trajectory_point_buffer[i].t().nanoseconds()-t_start << ":\t" <<  trajectory_point_buffer[i].px() << ",\t" << trajectory_point_buffer[i].py() << std::endl;
+        std::cout <<trajectory_point_buffer[i].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[i].px() << ",\t" << trajectory_point_buffer[i].py() << std::endl;
     }
 
     // Append points to trajectory_point_buffer
@@ -162,6 +170,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     debug_writeOutReceivedTrajectories();
     trajectoryPlan->debug_writeOutOwnTrajectory();
     */
+
     if (wait_for_other_vehicles()) {
         isStopped = true;
         cpm::Logging::Instance().write(1,

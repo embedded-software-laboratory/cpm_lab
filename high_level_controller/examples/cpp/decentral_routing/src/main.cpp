@@ -229,6 +229,7 @@ int main(int argc, char *argv[]) {
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
+                std::cout << "Got StateList for timestep: " << sample.data().t_now() << std::endl;
                 
                 // We received a StateList, which is our timing signal
                 // to send commands to vehicle
@@ -301,7 +302,6 @@ int main(int argc, char *argv[]) {
                 planner->stop();
                 planning = false;
             }
-
             // Start async job for planning
             cmd_future = std::async(std::launch::async,
                     [&]{

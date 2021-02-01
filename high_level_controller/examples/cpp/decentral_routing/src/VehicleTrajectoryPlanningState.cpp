@@ -67,6 +67,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
     assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
     assert(n_steps >= 1);
+    std::cout << "Applied timestep" << std::endl;
 
     // calculate driving distance of this time step
     for (size_t i = 0; i < n_steps; ++i)

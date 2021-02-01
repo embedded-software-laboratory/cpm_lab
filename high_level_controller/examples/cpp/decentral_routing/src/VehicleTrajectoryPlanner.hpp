@@ -53,6 +53,7 @@ class VehicleTrajectoryPlanner
     bool volatile isStopped = true;
     uint64_t t_start = 0;
     uint64_t t_real_time = 0;
+    uint64_t t_prev = 0;
     std::mutex mutex;
     std::thread planning_thread;
     uint64_t dt_nanos;
