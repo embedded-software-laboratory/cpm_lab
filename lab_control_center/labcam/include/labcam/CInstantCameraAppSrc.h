@@ -22,6 +22,7 @@
 */
 
 #include <pylon/PylonIncludes.h>
+#include <pylon/gige/BaslerGigEInstantCamera.h>
 #include <gst/gst.h>
 
 using namespace Pylon;
@@ -30,7 +31,7 @@ using namespace std;
 
 // ******* CInstantCameraAppSrc *******
 // Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
-class CInstantCameraAppSrc : public CInstantCamera
+class CInstantCameraAppSrc : public CBaslerGigEInstantCamera
 {
 public:
 	CInstantCameraAppSrc(string serialnumber = "22792310");

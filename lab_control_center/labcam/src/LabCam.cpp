@@ -112,7 +112,10 @@ bool LabCam::startRecordingImpl(){
 		int height = GenApi::CIntegerPtr(camera_.GetNodeMap().GetNode("Height"))->GetMax();
 		int frameRate = 30; // We will try for 30fps. The actual camera capabilities depend on it's settings...
 		
-		camera_.InitCamera(width, height, frameRate, false, false);		
+		camera_.InitCamera(width, height, frameRate, false, false);
+
+		camera_.GetStreamGrabberParams().ReceiveThreadPriorityOverride.SetValue(true);
+		camera_.GetStreamGrabberParams().ReceiveThreadPriority.SetValue(50);
 
 		cout << "Using Camera             : " << camera_.GetDeviceInfo().GetFriendlyName() << endl;
 		cout << "Camera Area Of Interest  : " << camera_.GetWidth() << "x" << camera_.GetHeight() << endl;

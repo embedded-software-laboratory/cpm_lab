@@ -328,6 +328,11 @@ bool CInstantCameraAppSrc::InitCamera(int width, int height, int framesPerSecond
 		// Initialize the Pylon image to a blank image on the off chance that the very first m_Image can't be supplied by the instant camera (ie: missing trigger signal)
 		m_Image.Reset(pixelType, m_width, m_height);
 
+		//GetStreamGrabber().GetNodes();
+		//GetStreamGrabber();//.Params().ReceiveThreadPriorityOverride.SetValue(true);
+		//GetStreamGrabberParams().ReceiveThreadPriority.SetValue(50);
+
+
 		m_isInitialized = true;
 
 		return true;
