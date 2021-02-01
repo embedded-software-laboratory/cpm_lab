@@ -164,18 +164,24 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     */
     if (wait_for_other_vehicles()) {
         isStopped = true;
-        //cpm::Logging::Instance().write(1,
-        //        "%lu: Returning trajectory", t_real_time);
-        //std::cout << "Trajectory Yes" << std::endl;
         cpm::Logging::Instance().write(1,
                 "Trajectory Yes");
+        no_trajectory_counter = 0;
         return std::unique_ptr<VehicleCommandTrajectory>(new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
     } else {
-        //cpm::Logging::Instance().write(1,
-        //        "%lu: Not returning trajectory", t_real_time);
-        //std::cout << "Trajectory No" << std::endl;
+        cpm::Logging::Instance().write(2,
+                "%lu: Not returning trajectory", t_real_time);
         cpm::Logging::Instance().write(1,
                 "Trajectory No");
+        no_trajectory_counter++;
+        // If no trajectory was sent for 500ms, vehicles stop
+        // Except for the first , like, 4 seconds, where it's normal
+        if(no_trajectory_counter*dt_nanos > 500000000ull && (t_real_time - t_start > 4000000000ull)){
+            cpm::Logging::Instance().write(1,
+                    "Planner missed too many timesteps");
+            crashed = true;
+            started = false; // end planning
+        }
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
@@ -406,7 +412,7 @@ void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
     std::vector<TrajectoryPoint>::iterator it_t_now = trajectory_point_buffer.end();
     for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer.begin() + 1; tp_it != trajectory_point_buffer.end(); ++tp_it)
     {
-        if (tp_it->t().nanoseconds() >= t_real_time && it_t_now == trajectory_point_buffer.end())
+        if (tp_it->t().nanoseconds() > t_real_time && it_t_now == trajectory_point_buffer.end())
         {
             it_t_now = tp_it-1;
         }
@@ -448,18 +454,12 @@ void VehicleTrajectoryPlanner::debug_analyzeTrajectoryPointBuffer() {
     std::cout << "trajectory_point_buffer:" << std::endl;
     std::cout << "Timestep: " << t_real_time << std::endl;
     auto prev_point = trajectory_point_buffer[0];
-    std::cout <<trajectory_point_buffer[0].t().nanoseconds()-t_start << ":\t" <<  trajectory_point_buffer[0].px() << ",\t" << trajectory_point_buffer[0].py() << std::endl;
+    std::cout <<trajectory_point_buffer[0].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[0].px() << ",\t" << trajectory_point_buffer[0].py() << std::endl;
     for( unsigned int i=1; i<trajectory_point_buffer.size(); i++ ) {
         // This int is currently signed, because it could be negative, but it shouldn't be
-	    //int64_t time_diff = trajectory_point_buffer[i].t().nanoseconds() - prev_time;
-	    //std::cout << time_diff;
-		//    
-	    //if( time_diff != dt_nanos ) {
-        //    std::cout << " WARNING";
-	    //}
 	    //std::cout << std::endl;
         double distance = sqrt(pow(((double)trajectory_point_buffer[i].px() - (double)prev_point.px()),2) + pow(((double)trajectory_point_buffer[i].py() - (double)prev_point.py()),2));
-	    int64_t time_diff = trajectory_point_buffer[i].t().nanoseconds() - prev_point.t().nanoseconds();
+	    int64_t time_diff = (int64_t) trajectory_point_buffer[i].t().nanoseconds() - (int64_t) prev_point.t().nanoseconds();
         std::cout <<trajectory_point_buffer[i].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[i].px() << ",\t" << trajectory_point_buffer[i].py();
         if( distance > 0.6) {
             std::cout << " DISTANCEWARNING " << distance;

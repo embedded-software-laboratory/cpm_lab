@@ -26,6 +26,10 @@
 
 #include "CouplingGraph.hpp"
 
+/*
+ * DefaultOrder bedeutet, dass Fahrzeuge mit niedrigeren IDs
+ * früher Planen und auch höhere Priorität haben.
+ */
 CouplingGraph::CouplingGraph(std::vector<uint8_t> vehicleIds, bool useDefaultOrder){
     vehicleSet = vectorToSet(vehicleIds);
 

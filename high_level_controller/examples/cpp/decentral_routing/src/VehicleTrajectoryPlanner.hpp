@@ -61,6 +61,7 @@ class VehicleTrajectoryPlanner
     vector<TrajectoryPoint> trajectory_point_buffer;
     CouplingGraph coupling_graph;
     std::set<uint8_t> messages_received; // Which vehicles have sent LaneGraphTrajs to us this timestep
+    short no_trajectory_counter = 0;
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
