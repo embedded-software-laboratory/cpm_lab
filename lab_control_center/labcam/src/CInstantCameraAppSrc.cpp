@@ -366,7 +366,8 @@ bool CInstantCameraAppSrc::StartCamera()
 			cout << "Camera will now expect a hardware trigger on: " << GenApi::CEnumerationPtr(GetNodeMap().GetNode("TriggerSource"))->ToString() << "..." << endl;
 		}
 		cout << "StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);" << endl;
-		StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
+		//StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
+		StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne);
 
 		// Note: At this point, the camera is acquiring and transmitting images, and the driver's Grab Engine is grabbing them.
 		//       When the Grab Engine has an image, it places it into it's Output Queue for retrieval by CInstantCamera::RetrieveResult().
@@ -434,6 +435,7 @@ bool CInstantCameraAppSrc::retrieve_image()
 		// if the Grab Result indicates success, then we have a good image within the result.
 		if (ptrGrabResult->GrabSucceeded())
 		{
+			correct_pictures++;
 			// if we have a color image, and the image is not RGB, convert it to RGB and place it into the CInstantCameraAppSrc::image for GStreamer
 			if (m_isColor == true && m_FormatConverter.ImageHasDestinationFormat(ptrGrabResult) == false)
 			{
@@ -448,10 +450,12 @@ bool CInstantCameraAppSrc::retrieve_image()
 		}
 		else
 		{
+			incorrect_pictures++;
 			// If a Grab Failed, the Grab Result is tagged with information about why it failed (technically you could even still access the pixel data to look at the bad image too).
 			cout << "Pylon: Grab Result Failed! Error: " << ptrGrabResult->GetErrorDescription() << endl;
 			cout << "Will push last good image instead..." << endl;
 		}
+		cout << "Proportion of bad pictures: " << ((double) incorrect_pictures) / (correct_pictures+incorrect_pictures) * 100 << "%" << endl;
 
 
 		// create a gst buffer wrapping the image container's buffer
