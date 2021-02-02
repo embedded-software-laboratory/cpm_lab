@@ -68,8 +68,11 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     t_real_time = t;
     dt_nanos = dt;
 
+    // Timesteps should come in a logical order
+    assert(t_prev < t_real_time);
+
     // Catch up planningState if we missed a timestep
-    while(t_real_time - t_prev != dt && t_prev !=0) {
+    while(t_real_time - t_prev > dt && t_prev !=0) {
         trajectoryPlan->apply_timestep(dt_nanos);
         t_prev += dt_nanos;
     }
@@ -81,7 +84,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     // Read LaneGraphTrajectory messages and write them into our buffer
     this->read_other_vehicles(); // Waits until we received the correct messages
-    cpm::Logging::Instance().write(1,
+    cpm::Logging::Instance().write(3,
             "%lu: Starting planning", t_real_time);
 
     //// Check if we should stop and return early if we do
@@ -116,15 +119,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     
     // Get new points from PlanningState
     std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
-    std::cout << "Oldest new point: " << new_trajectory_points[0].t().nanoseconds()+t_start << std::endl;
     for( auto& point : new_trajectory_points ) {
         point.t().nanoseconds(point.t().nanoseconds() + t_start);
-    }
-
-
-    std::cout << "Past points:" << std::endl;
-    for( unsigned int i=0; i<trajectory_point_buffer.size(); i++ ) {
-        std::cout <<trajectory_point_buffer[i].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[i].px() << ",\t" << trajectory_point_buffer[i].py() << std::endl;
     }
 
     // Append points to trajectory_point_buffer
@@ -139,7 +135,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 	    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
     }
 
-    debug_analyzeTrajectoryPointBuffer();
+    //debug_analyzeTrajectoryPointBuffer();
 
     // Get our current trajectory
     LaneGraphTrajectory lane_graph_trajectory;
@@ -164,24 +160,22 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     //        );
     write_trajectory(lane_graph_trajectory);
 
-    /*
+    
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     std::cout << "Time " << t_real_time << std::endl;
     debug_writeOutReceivedTrajectories();
     trajectoryPlan->debug_writeOutOwnTrajectory();
-    */
+    
 
     if (wait_for_other_vehicles()) {
         isStopped = true;
-        cpm::Logging::Instance().write(1,
-                "Trajectory Yes");
         no_trajectory_counter = 0;
+        std::cout << "Hit timestep" << std::endl;
         return std::unique_ptr<VehicleCommandTrajectory>(new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
     } else {
+        std::cout << "Missed timestep" << std::endl;
         cpm::Logging::Instance().write(2,
                 "%lu: Not returning trajectory", t_real_time);
-        cpm::Logging::Instance().write(1,
-                "Trajectory No");
         no_trajectory_counter++;
         // If no trajectory was sent for 500ms, vehicles stop
         // Except for the first , like, 4 seconds, where it's normal
@@ -223,11 +217,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                 messages_received.insert(data.vehicle_id());
 
                 // Only process message if it's from a previous vehicle
-                if ( std::find(
-                            prev_vehicles_list.begin(), 
-                            prev_vehicles_list.end(),
-                            sample.data().vehicle_id()
-                        )
+                if ( prev_vehicles_list.find( data.vehicle_id() )
                         == prev_vehicles_list.end()
                     ) {
                         continue;
@@ -284,8 +274,8 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         }
 
         // Check if we finished our checklist; if yes: exit loop
-        still_waiting = !std::includes(prev_vehicles_list.begin(), prev_vehicles_list.end(),
-                messages_received.begin(), messages_received.end());
+        still_waiting = !std::includes(messages_received.begin(), messages_received.end(),
+                prev_vehicles_list.begin(), prev_vehicles_list.end());
 
     }
 }

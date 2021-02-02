@@ -229,7 +229,6 @@ int main(int argc, char *argv[]) {
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
-                std::cout << "Got StateList for timestep: " << sample.data().t_now() << std::endl;
                 
                 // We received a StateList, which is our timing signal
                 // to send commands to vehicle
@@ -265,6 +264,11 @@ int main(int argc, char *argv[]) {
                         // This graphs gives the priorities, as well as the order of planning
                         // Currently we only plan sequentially, with lower vehicle ids first
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
+                        std::cout << "Graph: ";
+                        for( auto e : vec){
+                            std::cout << e<< " ";
+                        }
+                        std::cout << std::endl;
                         CouplingGraph coupling_graph(vec);
                         planner->set_coupling_graph(coupling_graph);
 

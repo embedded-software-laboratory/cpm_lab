@@ -67,7 +67,6 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
     assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
     assert(n_steps >= 1);
-    std::cout << "Applied timestep" << std::endl;
 
     // calculate driving distance of this time step
     for (size_t i = 0; i < n_steps; ++i)
@@ -155,8 +154,8 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
     {
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
-        cpm::Logging::Instance().write(1,
-                "Loopy");
+        //cpm::Logging::Instance().write(1,
+        //        "Loopy");
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         size_t earliest_collision__speed_profile_index = 1<<30;
         int colliding_vehicle_id = 0;
