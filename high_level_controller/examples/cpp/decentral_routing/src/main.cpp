@@ -24,6 +24,8 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+// Set to true to get additional information about execution time in stdout
+#define TIMED false
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
@@ -224,6 +226,11 @@ int main(int argc, char *argv[]) {
     VehicleStateList vehicleStateList;
     std::future<std::unique_ptr<VehicleCommandTrajectory>> cmd_future;
 
+#if TIMED
+    auto start_time = std::chrono::steady_clock::now();
+    auto end_time = std::chrono::steady_clock::now();
+#endif
+
     while( !stop ) {
 
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
@@ -264,11 +271,6 @@ int main(int argc, char *argv[]) {
                         // This graphs gives the priorities, as well as the order of planning
                         // Currently we only plan sequentially, with lower vehicle ids first
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
-                        std::cout << "Graph: ";
-                        for( auto e : vec){
-                            std::cout << e<< " ";
-                        }
-                        std::cout << std::endl;
                         CouplingGraph coupling_graph(vec);
                         planner->set_coupling_graph(coupling_graph);
 
@@ -303,9 +305,19 @@ int main(int argc, char *argv[]) {
 
             // Stop planning of previous timestep, if necessary
             if(planning) {
+#if TIMED
+                end_time = std::chrono::steady_clock::now();
+                auto diff = end_time - start_time;
+                std::cout << "TIMING: Aborting planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
                 planner->stop();
                 planning = false;
             }
+
+#if TIMED
+            std::cout << "------------- Timestep " << vehicleStateList.t_now() << " -------------" << std::endl;
+            start_time = std::chrono::steady_clock::now();
+#endif
             // Start async job for planning
             cmd_future = std::async(std::launch::async,
                     [&]{
@@ -320,6 +332,11 @@ int main(int argc, char *argv[]) {
             // Waits 1ms for result (or just get it instantly?)
             std::future_status future_status = cmd_future.wait_for(std::chrono::milliseconds(1));
             if( future_status == std::future_status::ready ) {
+#if TIMED
+                end_time = std::chrono::steady_clock::now();
+                auto diff = end_time - start_time;
+                std::cout << "TIMING: Finished planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
                 // Get commands and send to vehicle
                 std::unique_ptr<VehicleCommandTrajectory> cmd = cmd_future.get();
                 if( cmd.get() != nullptr ) {

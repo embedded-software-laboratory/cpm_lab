@@ -24,8 +24,10 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "VehicleTrajectoryPlanner.hpp"
+// Set to true to get additional information about execution time in stdout
+#define TIMED false
 
+#include "VehicleTrajectoryPlanner.hpp"
 
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(){}
@@ -162,18 +164,16 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
-    std::cout << "Time " << t_real_time << std::endl;
-    debug_writeOutReceivedTrajectories();
-    trajectoryPlan->debug_writeOutOwnTrajectory();
+    //std::cout << "Time " << t_real_time << std::endl;
+    //debug_writeOutReceivedTrajectories();
+    //trajectoryPlan->debug_writeOutOwnTrajectory();
     
 
     if (wait_for_other_vehicles()) {
         isStopped = true;
         no_trajectory_counter = 0;
-        std::cout << "Hit timestep" << std::endl;
         return std::unique_ptr<VehicleCommandTrajectory>(new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
     } else {
-        std::cout << "Missed timestep" << std::endl;
         cpm::Logging::Instance().write(2,
                 "%lu: Not returning trajectory", t_real_time);
         no_trajectory_counter++;
@@ -199,6 +199,10 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 void VehicleTrajectoryPlanner::read_other_vehicles()
 {
     assert(started);
+
+#if TIMED
+    auto start_time = std::chrono::steady_clock::now();
+#endif
 
     // Clear buffer from previous timestep
     other_vehicles_buffer.clear();
@@ -276,11 +280,22 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         // Check if we finished our checklist; if yes: exit loop
         still_waiting = !std::includes(messages_received.begin(), messages_received.end(),
                 prev_vehicles_list.begin(), prev_vehicles_list.end());
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     }
+
+#if TIMED
+    auto end_time = std::chrono::steady_clock::now();
+    auto diff = end_time - start_time;
+    std::cout << "TIMING: read_other_vehicles took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
 }
 
 bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
+#if TIMED
+    auto start_time = std::chrono::steady_clock::now();
+#endif
+
     // If we have a stopFlag, no need to wait
     bool stop_waiting = stopFlag;
     bool success_status = false;
@@ -303,7 +318,15 @@ bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
         success_status = (messages_received == all_vehicles);
         // Stop waiting if either we are successful, or we get a stopFlag
         stop_waiting = success_status || stopFlag;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+#if TIMED
+    auto end_time = std::chrono::steady_clock::now();
+    auto diff = end_time - start_time;
+    std::cout << "TIMING: wait_for_other_vehicles took " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
 
     return success_status;
 }
@@ -317,7 +340,7 @@ void VehicleTrajectoryPlanner::stop() {
     while( !isStopped) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    std::cout << "Stopped planning early at time " << t_real_time << std::endl;
+    std::cout << "Stopped planning early at timestep " << t_real_time << std::endl;
 
     stopFlag = false;
     return;
@@ -463,7 +486,7 @@ void VehicleTrajectoryPlanner::debug_analyzeTrajectoryPointBuffer() {
         if( distance > 0.6) {
             std::cout << " DISTANCEWARNING " << distance;
         }
-	    if( time_diff != dt_nanos ) {
+	    if( time_diff != (int64_t) dt_nanos ) {
             std::cout << " TIMEWARNING " << time_diff;
 	    }
         std::cout << std::endl;
