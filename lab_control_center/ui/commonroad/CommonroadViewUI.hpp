@@ -29,6 +29,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "cpm/Logging.hpp"
 #include "../../src/commonroad_classes/CommonRoadScenario.hpp"
 #include "ObstacleSimulationManager.hpp"
@@ -182,6 +183,9 @@ private:
      */
     void preview_clicked();
     bool preview_enabled = false;
+
+    //! Remember last click of load button, to prevent the user from "spamming" loading a file
+    uint64_t last_scenario_load_timestamp{0};
 
 public:
     /**

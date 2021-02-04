@@ -196,6 +196,9 @@ private:
     //Configuration class for what optional parts to draw (gets default-constructed by using {})
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration{std::make_shared<CommonroadDrawConfiguration>()};
 
+    //! We do not want to load a file if a file is already currently being loaded
+    std::atomic_bool file_is_loading{false};
+
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
      * \param node root_node
@@ -286,7 +289,8 @@ public:
 
     /**
      * \brief A load function to load another file
-     * While the file is being loaded, other public functions are "skipped" (using try_lock mutex) when called
+     * While the file is being loaded, other public functions are either "skipped" (using try_lock mutex) when called or wait for the new file to load
+     * Also, during a file load, no other file can be loaded (other calls are cancelled)
      * It gets an XML file and parses it once, translating it to the C++ data structure
      * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
      * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs

@@ -645,20 +645,40 @@ void CommonroadViewUI::load_button_callback()
 
 void CommonroadViewUI::load_chosen_file()
 {
-    std::string filepath = std::string(commonroad_path->get_text().c_str());
+    //Compare to last scenario load, do not load file if the last load was less than a second ago
+    auto current_time = cpm::get_time_ns();
+    std::stringstream error_msg_stream;
 
-    try
+    if (current_time - last_scenario_load_timestamp >= 1e9)
     {
-        commonroad_scenario->load_file(filepath);
+        std::string filepath = std::string(commonroad_path->get_text().c_str());
 
-        //Re-enter vehicle selection for obstacle simulation manager
-        apply_current_vehicle_selection();
+        try
+        {
+            commonroad_scenario->load_file(filepath);
+
+            //Re-enter vehicle selection for obstacle simulation manager
+            apply_current_vehicle_selection();
+        }
+        catch(const std::exception& e)
+        {
+            error_msg_stream << "The chosen scenario file could not be loaded / is not spec-conform. Error message is:\n";
+            error_msg_stream << e.what();
+        }
+
+        //Remember last load here, so that within 1 second after the load finished we do not allow a reload
+        //(In case of button spam, UI calls this function only after the previous button press callback has finished)
+        //(Thus, we also do not need atomic operations here)
+        last_scenario_load_timestamp = current_time;
     }
-    catch(const std::exception& e)
+    else
     {
-        std::stringstream error_msg_stream;
-        error_msg_stream << "The chosen scenario file could not be loaded / is not spec-conform. Error message is:\n";
-        error_msg_stream << e.what();
+        error_msg_stream << "File was not loaded due to load button spam! (Less than 1 second between load calls)";
+    }
+    
+
+    if(error_msg_stream.str().size() > 0)
+    {
         if (get_main_window)
         {
             Gtk::MessageDialog load_failed_dialog = Gtk::MessageDialog(
