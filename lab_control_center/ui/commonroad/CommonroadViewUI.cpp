@@ -694,6 +694,7 @@ void CommonroadViewUI::load_chosen_file()
         else
         {
             std::cerr << "Could not load error dialog (UI) - main window callback not set for CommonroadViewUI!" << std::endl;
+            LCCErrorLogger::Instance().log_error("Could not load error dialog (UI) - main window callback not set for CommonroadViewUI!");
         }
     }
 }
