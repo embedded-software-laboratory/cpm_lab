@@ -368,6 +368,9 @@ void CommonroadViewUI::apply_current_vehicle_selection()
 
 void CommonroadViewUI::vehicle_selection_changed(unsigned int id, ObstacleToggle::ToggleState state)
 {
+    //Reset currently running preview
+    reset_preview();
+
     if (obstacle_sim_manager)
     {
         obstacle_sim_manager->set_obstacle_simulation_state(static_cast<int>(id), state);
@@ -501,6 +504,9 @@ double CommonroadViewUI::string_to_double(std::string value, double default_valu
 
 void CommonroadViewUI::apply_transformation()
 {
+    //Reset currently running preview
+    reset_preview();
+
     //Get desired lane width and translation
     double lane_width = string_to_double(std::string(entry_lane_width->get_text().c_str()), 0.0);
     double translate_x = string_to_double(std::string(entry_translate_x->get_text().c_str()), 0.0);
@@ -525,6 +531,9 @@ bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
 {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
     {
+        //Reset currently running preview
+        reset_preview();
+
         //Get desired lane width and translation
         double new_step_size = string_to_double(std::string(entry_time_step_size->get_text().c_str()), 0.0);
 
@@ -548,6 +557,9 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
 {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
     {
+        //Reset currently running preview
+        reset_preview();
+
         //Get desired lane width and translation
         double lane_width = string_to_double(std::string(entry_lane_width->get_text().c_str()), 0.0);
 
@@ -570,6 +582,9 @@ bool CommonroadViewUI::apply_entry_translate_x(GdkEventKey* event)
 {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
     {
+        //Reset currently running preview
+        reset_preview();
+
         //Get desired lane width and translation
         double translate_x = string_to_double(std::string(entry_translate_x->get_text().c_str()), 0.0);
 
@@ -592,6 +607,9 @@ bool CommonroadViewUI::apply_entry_translate_y(GdkEventKey* event)
 {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
     {
+        //Reset currently running preview
+        reset_preview();
+
         //Get desired lane width and translation
         double translate_y = string_to_double(std::string(entry_translate_y->get_text().c_str()), 0.0);
 
@@ -614,6 +632,9 @@ bool CommonroadViewUI::apply_entry_rotate(GdkEventKey* event)
 {
     if (event->type == GDK_KEY_RELEASE && event->keyval == GDK_KEY_Return)
     {
+        //Reset currently running preview
+        reset_preview();
+
         //Get desired rotation
         double angle = string_to_double(std::string(entry_rotate->get_text().c_str()), 0.0);
 
@@ -648,6 +669,9 @@ void CommonroadViewUI::load_chosen_file()
     //Compare to last scenario load, do not load file if the last load was less than a second ago
     auto current_time = cpm::get_time_ns();
     std::stringstream error_msg_stream;
+
+    //Reset currently running preview
+    reset_preview();
 
     if (current_time - last_scenario_load_timestamp >= 1e9)
     {
@@ -699,56 +723,6 @@ void CommonroadViewUI::load_chosen_file()
     }
 }
 
-void CommonroadViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
-{
-    get_main_window = _get_main_window;
-}
-
-void CommonroadViewUI::set_sensitive(bool is_sensitive)
-{
-    parent->set_sensitive(is_sensitive);
-    commonroad_box->set_sensitive(is_sensitive);
-    commonroad_path->set_sensitive(is_sensitive);
-    entry_lane_width->set_sensitive(is_sensitive);
-    entry_translate_x->set_sensitive(is_sensitive);
-    entry_translate_y->set_sensitive(is_sensitive);
-    button_choose_commonroad->set_sensitive(is_sensitive);
-    button_load_commonroad->set_sensitive(is_sensitive);
-    button_apply_transformation->set_sensitive(is_sensitive);
-    problem_treeview->set_sensitive(is_sensitive);
-    problem_scrolled_window->set_sensitive(is_sensitive);
-}
-
-Gtk::Widget* CommonroadViewUI::get_parent()
-{
-    return parent;
-}
-
-//-------------------------------------------------------- YAML / Profile for transformation ------------------------------
-void CommonroadViewUI::load_transformation_from_profile()
-{
-    if (commonroad_scenario)
-    {
-        commonroad_scenario->apply_stored_transformation();
-    }
-}
-
-void CommonroadViewUI::store_transform_profile()
-{
-    if (commonroad_scenario)
-    {
-        commonroad_scenario->store_applied_transformation();
-    }
-}
-
-void CommonroadViewUI::reset_current_transform_profile()
-{
-    if (commonroad_scenario)
-    {
-        commonroad_scenario->reset_stored_transformation();
-    }
-}
-
 void CommonroadViewUI::preview_clicked()
 {
     if (preview_enabled)
@@ -780,7 +754,70 @@ void CommonroadViewUI::preview_clicked()
     preview_enabled = !preview_enabled;
 }
 
-void CommonroadViewUI::reset_preview_label()
+void CommonroadViewUI::reset_preview()
 {
-    button_preview->set_label("Start preview");
+    //Do not call from preview_clicked, because preview_enabled is set here as well
+    if (preview_enabled)
+    {
+        if (obstacle_sim_manager)
+        {
+            obstacle_sim_manager->stop();
+        }
+
+        button_preview->set_label("Start preview");
+        preview_enabled = false;
+    }
+}
+
+void CommonroadViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)
+{
+    get_main_window = _get_main_window;
+}
+
+void CommonroadViewUI::set_sensitive(bool is_sensitive)
+{
+    parent->set_sensitive(is_sensitive);
+    commonroad_box->set_sensitive(is_sensitive);
+    commonroad_path->set_sensitive(is_sensitive);
+    entry_lane_width->set_sensitive(is_sensitive);
+    entry_translate_x->set_sensitive(is_sensitive);
+    entry_translate_y->set_sensitive(is_sensitive);
+    button_choose_commonroad->set_sensitive(is_sensitive);
+    button_load_commonroad->set_sensitive(is_sensitive);
+    button_apply_transformation->set_sensitive(is_sensitive);
+    problem_treeview->set_sensitive(is_sensitive);
+    problem_scrolled_window->set_sensitive(is_sensitive);
+}
+
+Gtk::Widget* CommonroadViewUI::get_parent()
+{
+    return parent;
+}
+
+//-------------------------------------------------------- YAML / Profile for transformation ------------------------------
+void CommonroadViewUI::load_transformation_from_profile()
+{
+    //Reset currently running preview
+    reset_preview();
+
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->apply_stored_transformation();
+    }
+}
+
+void CommonroadViewUI::store_transform_profile()
+{
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->store_applied_transformation();
+    }
+}
+
+void CommonroadViewUI::reset_current_transform_profile()
+{
+    if (commonroad_scenario)
+    {
+        commonroad_scenario->reset_stored_transformation();
+    }
 }

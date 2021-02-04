@@ -212,7 +212,7 @@ public:
     void set_sensitive(bool is_sensitive);
 
     //In case the preview is stopped by a simulation start
-    void reset_preview_label();
+    void reset_preview();
 
     //Get the parent widget to put the view in a parent container
     Gtk::Widget* get_parent();
