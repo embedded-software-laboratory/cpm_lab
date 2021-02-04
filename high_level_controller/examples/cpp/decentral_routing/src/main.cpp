@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 // Set to true to get additional information about execution time in stdout
-#define TIMED false
+#define TIMED true
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Rate limit main while loop to 10-times per dt_nanos
-        // Arbitrary, but larger waits decrease cpu load
+        // Arbitrary, but larger waits should decrease cpu load of this loop
         std::this_thread::sleep_for(std::chrono::nanoseconds(vehicleStateList.period_ms()/10));
     }
 

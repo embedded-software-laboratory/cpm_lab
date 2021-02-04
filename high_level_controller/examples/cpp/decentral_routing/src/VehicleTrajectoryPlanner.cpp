@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 // Set to true to get additional information about execution time in stdout
-#define TIMED false
+#define TIMED true
 
 #include "VehicleTrajectoryPlanner.hpp"
 
@@ -210,8 +210,10 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     // Checklist to check, which messages we need to wait for
     std::set<uint8_t> prev_vehicles_list = coupling_graph.getPreviousVehicles(trajectoryPlan->get_vehicle_id());
 
-    bool still_waiting = true;
-    while( still_waiting && !stopFlag) {
+    // Loop until we receive a stopFlag OR
+    // our messages_received contains all previous vehicles
+    while( !std::includes(messages_received.begin(), messages_received.end(),
+                prev_vehicles_list.begin(), prev_vehicles_list.end()) && !stopFlag) {
         auto samples = reader_laneGraphTrajectory->take();
         for(auto sample : samples) {
             LaneGraphTrajectory data = sample.data();
@@ -278,9 +280,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         }
 
         // Check if we finished our checklist; if yes: exit loop
-        still_waiting = !std::includes(messages_received.begin(), messages_received.end(),
-                prev_vehicles_list.begin(), prev_vehicles_list.end());
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     }
 
@@ -291,21 +291,20 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
 #endif
 }
 
+/*
+ *
+ */
 bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
 #if TIMED
     auto start_time = std::chrono::steady_clock::now();
 #endif
 
-    // If we have a stopFlag, no need to wait
-    bool stop_waiting = stopFlag;
-    bool success_status = false;
-
+    // We want to wait until we received messages from all vehicles,
+    // but if stopFlag gets set, we abort early
     auto all_vehicles = coupling_graph.getVehicles();
-    if(stopFlag){
-        cpm::Logging::Instance().write(1, "Received stop before waiting");
-    }
+    bool success_status = (messages_received == all_vehicles);
 
-    while (!stop_waiting) {
+    while (!success_status && !stopFlag) {
         auto samples = reader_laneGraphTrajectory->take();
         for(auto sample : samples) {
             uint64_t t_message = sample.data().header().create_stamp().nanoseconds();
@@ -316,10 +315,8 @@ bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
 
         // Successfully waited, if we have received a message from every vehicle
         success_status = (messages_received == all_vehicles);
-        // Stop waiting if either we are successful, or we get a stopFlag
-        stop_waiting = success_status || stopFlag;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
 #if TIMED
