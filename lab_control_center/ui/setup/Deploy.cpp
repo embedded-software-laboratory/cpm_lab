@@ -875,9 +875,6 @@ int Deploy::execute_command_get_pid(const char* cmd)
         //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
-        //Error if execlp returns
-        cpm::Logging::Instance().write(1, "Execl error in Deploy class: %s, for execution of '%s'", std::strerror(errno), cmd);
-
         exit(1);
     }
     else if (process_id > 0)
