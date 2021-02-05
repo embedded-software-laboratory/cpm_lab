@@ -368,7 +368,8 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
-                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\""
+                    << " >~/dev/lcc_script_logs/stdout_vehicle_reboot.txt 2>~/dev/lcc_script_logs/stderr_vehicle_reboot.txt";
                 bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
                     [] () { 
                         //Ignore the check if the vehicle is still online
@@ -426,7 +427,8 @@ void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seco
                     //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                     std::stringstream command_reboot_hlc;
                     command_reboot_hlc 
-                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\"";
+                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\""
+                        << " >~/dev/lcc_script_logs/stdout_hlc_reboot.txt 2>~/dev/lcc_script_logs/stderr_hlc_reboot.txt";
                     bool msg_success = spawn_and_manage_process(command_reboot_hlc.str().c_str(), timeout_seconds, 
                         [] () { 
                             //Ignore the check if the HLC is still online
@@ -543,7 +545,8 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
-        << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
+        << " --middleware_arguments='" << middleware_argument_stream.str() << "'"
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_deploy.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_deploy.txt";
 
     //Spawn and manage new process
     return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds, is_online);
@@ -562,7 +565,8 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str()
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_kill.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_kill.txt";
 
     //Spawn and manage new process
     return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);
@@ -683,7 +687,7 @@ void Deploy::deploy_recording()
         << "-cfgName cpm_recorder" << " "
         << ">~/dev/lcc_script_logs/stdout_recording.txt 2>~/dev/lcc_script_logs/stderr_recording.txt";
     
-    std::cout << command.str() << std::endl;
+    //std::cout << command.str() << std::endl;
     //Execute command
     system(command.str().c_str());
 }
