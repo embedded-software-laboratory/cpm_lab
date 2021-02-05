@@ -33,6 +33,11 @@
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
 
+#include "PathInterpolation.hpp"
+#include "PathInterpolation.cxx"
+
+#include <stdio.h>
+
 using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(
@@ -40,6 +45,7 @@ MapViewUi::MapViewUi(
     shared_ptr<CommonRoadScenario> _commonroad_scenario,
     std::function<VehicleData()> get_vehicle_data_callback,
     std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<VehiclePathTracking()> _get_vehicle_path_tracking_command_callback,
     std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
     std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
@@ -47,6 +53,7 @@ MapViewUi::MapViewUi(
 ,commonroad_scenario(_commonroad_scenario)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
+,get_vehicle_path_tracking_command_callback(_get_vehicle_path_tracking_command_callback)
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 ,get_obstacle_data(_get_obstacle_data)
 {
@@ -341,6 +348,8 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_received_trajectory_commands(ctx);
 
+        draw_received_path_tracking_commands(ctx);
+
         for(const auto& entry : vehicle_data) {
             //const auto vehicle_id = entry.first;
             const auto& vehicle_timeseries = entry.second;
@@ -490,6 +499,77 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
             ctx->fill();
         }
     }
+    ctx->restore();
+}
+
+void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
+{
+    VehiclePathTracking vehiclePathTracking = get_vehicle_path_tracking_command_callback();
+
+    ctx->save();
+    for(const auto& entry : vehiclePathTracking) 
+    {
+        const auto& command = entry.second;
+
+        rti::core::vector<PathPoint> path = command.path();
+        
+        if(path.size() < 2 ) continue;
+
+        ctx->set_line_width(0.01);
+
+        // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+        // start from 1 because of i-1
+        for (size_t i = 1; i < path.size(); ++i)
+        {
+            const int n_interp = 20;
+            
+            ctx->begin_new_path();
+            ctx->move_to(path[i-1].pose().x(),
+                         path[i-1].pose().y()
+            );   
+
+            double start = path[i-1].s();
+            double end = path[i].s();
+            double ds = (end - start) / n_interp;
+            double s_query = start;
+
+            for (int j = 0; j < n_interp; j++)
+            {
+                s_query += ds;
+
+                // calculate distance to reference path
+                PathInterpolation path_interpolation(
+                    s_query, path[i-1], path[i]
+                );
+                
+                ctx->line_to(path_interpolation.position_x,
+                             path_interpolation.position_y
+                );
+
+                ctx->set_source_rgb(0,0.8,0.8);
+
+                ctx->stroke();
+                ctx->move_to(path_interpolation.position_x,
+                             path_interpolation.position_y
+                );
+            }
+        }
+
+        // Draw path points
+        ctx->begin_new_path();
+        for(size_t i = 0; i < path.size(); ++i)
+        {
+            ctx->set_source_rgb(0,0.8,0.8);
+
+            ctx->arc(
+                path[i].pose().x(),
+                path[i].pose().y(),
+                0.02, 0.0, 2 * M_PI
+            );
+            ctx->fill();
+        }
+    }
+
     ctx->restore();
 }
 
