@@ -680,7 +680,8 @@ void Deploy::deploy_recording()
         << "-s \"" << recording_session << "\" "
         << "rtirecordingservice "
         << "-cfgFile " << config_path_out << " "
-        << "-cfgName cpm_recorder";
+        << "-cfgName cpm_recorder" << " "
+        << ">~/dev/lcc_script_logs/stdout_recording.txt 2>~/dev/lcc_script_logs/stderr_recording.txt";
     
     std::cout << command.str() << std::endl;
     //Execute command
@@ -741,7 +742,8 @@ void Deploy::kill_session(std::string session_id)
     {
         std::stringstream command;
         command 
-            << "tmux kill-session -t \"" << session_id << "\"";
+            << "tmux kill-session -t \"" << session_id << "\""
+            << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt";
 
         //Execute command
         system(command.str().c_str());
