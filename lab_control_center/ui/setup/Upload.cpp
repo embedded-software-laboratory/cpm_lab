@@ -75,11 +75,8 @@ void Upload::deploy_remote(
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create upload dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create upload dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create upload dialog");
     }
 
     //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
@@ -157,11 +154,8 @@ void Upload::kill_remote()
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create upload dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create upload dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create upload dialog");
     }
     
     //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished

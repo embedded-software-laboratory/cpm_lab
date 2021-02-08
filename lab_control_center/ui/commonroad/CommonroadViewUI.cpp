@@ -456,11 +456,8 @@ void CommonroadViewUI::open_file_explorer()
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s",
-            "ERROR: Main window reference is missing, cannot create file chooser dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create file chooser dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create file chooser dialog");
     }
     
 }

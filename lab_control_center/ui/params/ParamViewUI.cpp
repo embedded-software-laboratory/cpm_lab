@@ -226,11 +226,8 @@ void ParamViewUI::open_param_create_window() {
     } 
     else if (!get_main_window)
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create param create dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create param create window";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create param create window");
     }
 }
 
@@ -259,11 +256,8 @@ void ParamViewUI::open_param_edit_window() {
             {
                 make_sensitive();
 
-                cpm::Logging::Instance().write(
-                    1,
-                    "%s", 
-                    "ERROR: Main window reference is missing, cannot create param edit dialog"
-                );
+                std::cerr << "ERROR: Main window reference is missing, cannot create param edit window";
+                LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create param edit window");
             }
         }
         else {
@@ -321,11 +315,8 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     }
     else if (!get_main_window)
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing"
-        );
+        std::cerr << "ERROR: Main window reference is missing in ParamView";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing in ParamView");
     }
 }
 
