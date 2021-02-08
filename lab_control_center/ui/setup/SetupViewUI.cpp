@@ -721,6 +721,10 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
     button_deploy->set_sensitive(is_sensitive);
 
+    switch_record_labcam->set_sensitive(is_sensitive);
+    switch_lab_mode->set_sensitive(is_sensitive);
+    switch_diagnosis->set_sensitive(is_sensitive);
+    switch_deploy_remote->set_sensitive(is_sensitive);
     switch_simulated_time->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)
