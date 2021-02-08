@@ -147,7 +147,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         //Ignore whitespaces (see http://xmlsoft.org/html/libxml-parser.html#xmlParserOption)
         parser.set_parser_options(256);
         parser.parse_file(xml_filepath);
-        if(!parser) std::cerr << "Cannot parse file!" << std::endl;
+        if(!parser) {
+            std::cerr << "Cannot parse file!" << std::endl;
+            LCCErrorLogger::Instance().log_error("CommonRoadScenario: Cannot parse file!");
+        }
 
         //Get parent node
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
@@ -208,6 +211,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     {
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+        LCCErrorLogger::Instance().log_error("CommonRoadScenario: All relevant data fields are empty (except for version / author / affiliation)");
     }
 
     lock.unlock();

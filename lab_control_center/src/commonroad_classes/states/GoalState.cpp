@@ -28,10 +28,12 @@
 
 GoalState::GoalState(
     const xmlpp::Node* node,
+    int _planning_problem_id,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
     std::function<std::pair<double, double> (int)> _get_lanelet_center,
     std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     ) :
+    planning_problem_id(_planning_problem_id),
     draw_configuration(_draw_configuration)
 {
     //2018 and 2020 specs are the same
@@ -47,6 +49,9 @@ GoalState::GoalState(
         }
         //No position must be given for a goal state, so default values are NOT assumed to be used here!
         std::cerr << "WARNING: No position has been set for this goal state (line " << node->get_line() << "). This might be intended." << std::endl;
+        std::stringstream err_stream;
+        err_stream << "WARNING: No position has been set for this goal state (line " << node->get_line() << "). This might be intended.";
+        LCCErrorLogger::Instance().log_error(err_stream.str());
 
         const auto velocity_node = xml_translation::get_child_if_exists(node, "velocity", false);
         if (velocity_node)
@@ -179,7 +184,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     if (draw_configuration->draw_goal_description.load())
     {
         std::stringstream descr_stream;
-        descr_stream << "Goal info - ";
+        descr_stream << "ID (" << planning_problem_id << "): ";
         if (time.has_value())
         {
             descr_stream << "t (mean): " << time.value().get_mean();

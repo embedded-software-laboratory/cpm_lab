@@ -44,6 +44,8 @@
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 
 using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
 using VehicleData = map<uint8_t, map<string, shared_ptr<TimeSeries> > >;

@@ -44,6 +44,8 @@
 #include <thread>
 #include <vector>
 
+#include "LCCErrorLogger.hpp"
+
 /**
  * \brief This class is responsible for managing upload tasks to the NUCs, as well as showing (in the UI) that an upload is performed / how it worked out
  */

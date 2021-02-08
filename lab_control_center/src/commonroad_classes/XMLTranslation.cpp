@@ -530,7 +530,10 @@ std::optional<int> xml_translation::string_to_int(std::string text)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate text to int" << std::endl;
+        std::cerr << "Could not translate text to int" << std::endl;
+        std::stringstream err_stream;
+        err_stream << "During XML translation: Could not translate text to int: " << text;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
         return std::nullopt;
     }
 }
@@ -543,7 +546,10 @@ std::optional<unsigned long long> xml_translation::string_to_uint(std::string te
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate text to unsigned long long" << std::endl;
+        std::cerr << "Could not translate text to unsigned long long" << std::endl;
+        std::stringstream err_stream;
+        err_stream << "During XML translation: Could not translate text to uint: " << text;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
         return std::nullopt;
     }
 }
@@ -556,7 +562,10 @@ std::optional<double> xml_translation::string_to_double(std::string text)
     }
     catch(...)
     {
-        std::cerr << "TODO: Better warning // Could not translate text to double" << std::endl;
+        std::cerr << "Could not translate text to double" << std::endl;
+        std::stringstream err_stream;
+        err_stream << "During XML translation: Could not translate text to double: " << text;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
         return std::nullopt;
     }
 }
