@@ -79,7 +79,7 @@ private:
      */
     void reset();
 
-    //Stop cpm timers, if they are running
+    //Stop cpm timers, if they are running, and send empty trajectories to overwrite / kill existing ones (required due to preview button)
     void stop_timers();
 
     /**
