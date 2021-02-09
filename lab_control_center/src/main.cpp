@@ -229,6 +229,7 @@ int main(int argc, char *argv[])
         hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
+        [=](){return monitoringUi->reset_vehicle_view();},
         [&](){
             //Things to do when the simulation is started
 
