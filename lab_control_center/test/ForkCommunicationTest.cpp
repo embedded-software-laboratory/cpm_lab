@@ -1,0 +1,251 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
+#include <chrono>
+#include <cstring>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <thread>
+
+//To spawn a process & get its PID
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+enum PROCESS_STATE {
+    RUNNING, ERROR, DONE
+};
+
+int execute_command_get_pid(const char* cmd)
+{
+    int process_id = fork();
+    if (process_id == 0)
+    {
+        //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
+        setpgid(0, 0);
+        
+        //Actions to take within the new child process
+        //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
+        execl("/bin/sh", "bash", "-c", cmd, NULL);
+
+        //Error if execlp returns
+        std::cerr << "Execl error in Deploy class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
+
+        exit(1);
+    }
+    else if (process_id > 0)
+    {
+        //We are in the parent process and got the child's PID
+        return process_id;
+    }
+    else 
+    {
+        //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
+        //TODO: Change behaviour
+        std::cerr << "Error in Deploy class: Could not create child process for " << cmd << std::endl;
+        exit(1);
+    }
+}
+
+PROCESS_STATE get_child_process_state(int process_id)
+{
+    int process_status;
+    pid_t result = waitpid(process_id, &process_status, WNOHANG);
+
+    if (result == 0)
+    {
+        return PROCESS_STATE::RUNNING;
+    }
+    else if (result == -1)
+    {
+        return PROCESS_STATE::ERROR;
+    }
+    else
+    {
+        return PROCESS_STATE::DONE;
+    }
+    
+}
+
+void kill_process(int process_id)
+{
+    //Tell the process to terminate - this way, it can terminate gracefully
+    //We mostly use bash, were whole process groups might be created - to kill those, we need the negative id
+    if (process_id > 0)
+    {
+        process_id *= (-1);
+    }
+
+    kill(process_id, SIGTERM);
+
+    //Wait for the process to terminate
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    //Check if the process terminated as desired
+    PROCESS_STATE state = get_child_process_state(process_id);
+
+    //If the process has not yet terminated, force a termination and clean up
+    if (state != PROCESS_STATE::DONE)
+    {
+        kill(process_id, SIGKILL);
+        int status;
+        waitpid(process_id, &status, 0); //0 -> no flags here
+    }
+}
+
+bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
+{
+    std::cout << "Executing " << cmd << std::endl;
+
+    //Spawn and manage new process
+    int process_id = execute_command_get_pid(cmd);
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    auto time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+    //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
+    while (time_passed_ms < static_cast<int64_t>(timeout_seconds) * 1000)
+    {
+        //Check current program state
+        PROCESS_STATE state = get_child_process_state(process_id);
+
+        if (state == PROCESS_STATE::DONE)
+        {
+            std::cout << "Success: execution of " << cmd << std::endl;
+            return true;
+        }
+        else if (state == PROCESS_STATE::ERROR)
+        {
+            kill_process(process_id);
+            std::cout << "Error in execution of " << cmd << std::endl;
+            return false;
+        }
+
+        //Use longer sleep time until short before end of timeout
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+        auto remaining_time = static_cast<int64_t>(timeout_seconds) * 1000 - time_passed_ms;
+        if (remaining_time > 1000)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        else if (remaining_time > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(remaining_time));
+        }
+        
+        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+    }
+
+    //Now kill the process, as it has not yet finished its execution
+    //std::cout << "Killing" << std::endl;
+    kill_process(process_id);
+    std::cout << "Could not execute in time: " << cmd << std::endl;
+    return false;
+}
+
+//Communication with Pipes, from gnu.org, slightly modified
+std::string read_from_pipe (int file)
+{
+    FILE *stream;
+    char c;
+    std::stringstream read_stream;
+
+    stream = fdopen (file, "r");
+    while ((c = fgetc (stream)) != EOF)
+        read_stream << c;
+    fclose (stream);
+
+    return read_stream.str();
+}
+
+void write_to_pipe (int file, std::string msg)
+{
+  FILE *stream;
+  stream = fdopen (file, "w");
+  fprintf (stream, msg.c_str());
+  fclose (stream);
+}
+
+//In this test scenario, we want to create a parent and a child process
+//The parent process tells the child process which other processes to create
+//The child process then uses the above functions to do so
+int main(int argc, char *argv[]) {
+    //Create parent and child process, allow communication via pipe
+    int command_pipe[2];
+
+    if (pipe(command_pipe))
+    {
+        std::cerr << "Pipe creation failed!" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    int process_id = fork();
+    if (process_id == 0)
+    {
+        //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
+        setpgid(0, 0);
+
+        //We only want to listen, close the pipe's write end
+        close(command_pipe[1]);
+        
+        //Use the child to fork / create other child processes and manage them, depending on the messages received by the parent process
+        std::string received_command = read_from_pipe(command_pipe[0]);
+        while(received_command != "EXIT")
+        {
+            std::cout << "Child received: " << received_command << std::endl;
+
+            received_command = read_from_pipe(command_pipe[0]);
+        }
+
+        exit(EXIT_SUCCESS);
+    }
+    else if (process_id > 0)
+    {
+        //We are in the parent process; simulate work using waiting functions, try to communicate with the child in between
+
+        //We only want to write, close the pipe's listen end
+        close(command_pipe[0]);
+
+        write_to_pipe(command_pipe[1], "This is a test");
+
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+
+        write_to_pipe(command_pipe[1], "Now the child will be shut down");
+
+        write_to_pipe(command_pipe[1], "EXIT");
+    }
+    else 
+    {
+        //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
+        //TODO: Change behaviour
+        std::cerr << "Error when using fork: Could not create 'meta'-child process!";
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
