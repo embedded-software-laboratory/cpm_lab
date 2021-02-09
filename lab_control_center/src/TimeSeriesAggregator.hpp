@@ -77,6 +77,9 @@ class TimeSeriesAggregator
     //Checks if the sample deviates from the expected interval, resets in that case to prevent spamming in case of periodical checking without value changes
     void check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff);
 
+    //! Max. allowed data age before data is totally ignored or reset if possible - currently at 1 second
+    const uint64_t max_allowed_age = 1e9;
+
 public:
     /**
      * \brief Constructor
