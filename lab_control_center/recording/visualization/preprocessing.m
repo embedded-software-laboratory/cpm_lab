@@ -40,10 +40,10 @@ function [DataByVehicle] = preprocessing(dds_domain, recording_file)
 % else 
 %    [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
 % end
-[ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
+ddsJsonSample = dbConnection(dds_domain, recording_file);
 %% Parse {JSON} formatted sample into structs for further processing.
-VehicleStateRaw = cellfun(@jsondecode, ddsVehicleStateJsonSample);
-VehicleObservationRaw = cellfun(@jsondecode, ddsVehiclePoseJsonSample);
+VehicleStateRaw = cellfun(@jsondecode, ddsJsonSample.VehicleState);
+VehicleObservationRaw = cellfun(@jsondecode, ddsJsonSample.VehiclePose);
 
 %% Create tables from decoded structs to enable filtering by logical operation and vectorized access of nested fields.
 VehicleStateTable = struct2table(VehicleStateRaw);
