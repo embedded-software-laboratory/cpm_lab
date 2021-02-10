@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
         std::string test_command = "Just print this plz";
         std::strncpy(msg.command.command, test_command.c_str(), sizeof(msg.command.command));
         msg.command.timeout_seconds = -1; //In our syntax, this would mean that we do not want a timeout
-        msg.mtype = 0; //Irrelevant for us
+        msg.mtype = 1; //Irrelevant for us
 
         //Now, send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
         auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
