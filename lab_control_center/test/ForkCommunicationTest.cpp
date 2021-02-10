@@ -57,7 +57,7 @@ int execute_command_get_pid(const char* cmd)
         //Error if execlp returns
         std::cerr << "Execl error in Deploy class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
 
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     else if (process_id > 0)
     {
@@ -69,7 +69,7 @@ int execute_command_get_pid(const char* cmd)
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
         //TODO: Change behaviour
         std::cerr << "Error in Deploy class: Could not create child process for " << cmd << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -137,6 +137,10 @@ bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
         if (state == PROCESS_STATE::DONE)
         {
             std::cout << "Success: execution of " << cmd << std::endl;
+
+            //Clean up by waiting / telling the child that it can "destroy itself"
+            int status;
+            waitpid(process_id, &status, 0); //0 -> no flags here
             return true;
         }
         else if (state == PROCESS_STATE::ERROR)
@@ -195,6 +199,14 @@ void write_to_pipe (int file, std::string msg)
 //The parent process tells the child process which other processes to create
 //The child process then uses the above functions to do so
 int main(int argc, char *argv[]) {
+    //Alternative for waiting (but without being able to determine if an error occured as in get_child_process_state):
+    //This always prevents zombie processes:
+    //signal(SIGCHLD, SIG_IGN);
+    //Currently, this is not used, instead, we always wait
+    //Advantage: We can see if a child process had to exit due to an error
+    //Disadvantage: We get zombie processes if our program crashes
+    //-> What is more important?
+
     //Create parent and child process, allow communication via pipe
     int command_pipe[2];
 
@@ -238,6 +250,12 @@ int main(int argc, char *argv[]) {
         write_to_pipe(command_pipe[1], "Now the child will be shut down");
 
         write_to_pipe(command_pipe[1], "EXIT");
+
+        //The parent ALWAYS has to wait for the child to finish, else ressources are not cleaned up
+        //There is an alternative to that (ignore SIGCHLD), but as far as I interpret it that would probably lead to 
+        //problems with get_child_process_state
+        int status;
+        waitpid(process_id, &status, 0); //0 -> no flags here
     }
     else 
     {
