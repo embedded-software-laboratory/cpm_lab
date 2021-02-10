@@ -32,6 +32,7 @@
 #include <thread>
 
 //To spawn a process & get its PID
+#include <sys/msg.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -208,12 +209,47 @@ int main(int argc, char *argv[]) {
     //-> What is more important?
 
     //Create parent and child process, allow communication via pipe
-    int command_pipe[2];
+    //But: It does not seem to be advisable to use pipes for message-communication
+    // int command_pipe[2];
 
-    if (pipe(command_pipe))
+    // if (pipe(command_pipe))
+    // {
+    //     std::cerr << "Pipe creation failed!" << std::endl;
+    //     return EXIT_FAILURE;
+    // }
+
+    //...
+    //We only want to listen, close the pipe's write end
+    //close(command_pipe[1]); std::string received_command = read_from_pipe(command_pipe[0]); ...
+    //We only want to write, close the pipe's listen end
+    //close(command_pipe[0]); write_to_pipe(command_pipe[1], "This is a test"); ...
+
+    //So: We will have to use something else instead
+    //Different methods exist for IPC (Inter Process Communication)
+    //- FIFOs
+    //- Message Queues
+    //- File Locking / Semaphores + File Access
+    //- Pipes
+    //- Signals
+    //...
+    //Our requirements: 
+    //- Send command strings of arbitrary length
+    //- Set a timeout or use SYSTEM (so: tell which one of those to use)
+    //- Maybe return to the main program if a child execution failed
+    //-> Message Queues seem to be the best choice in such a scenario
+    //Useful guide: http://beej.us/guide/bgipc/html/single/bgipc.html#fork
+
+    //For now, we will try to use a message queue
+    //To get a (hopefully) unqiue ID, we need to create one given a file location
+    //For better portability, we hope that argv[0] contains our current file location and use that 
+    //(It usually should)
+    auto key = ftok(argv[0], 'a'); //The char is usually arbitrary, I chose a
+    auto msqid = msgget(key, 0666 | IPC_CREAT); //Permissions: rw-rw-rw-
+
+    if (key == -1 || msqid == -1)
     {
-        std::cerr << "Pipe creation failed!" << std::endl;
-        return EXIT_FAILURE;
+        std::cerr << "ERROR: Could not create IPC Message Queue which is required for communicating commands to start external programs!" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     int process_id = fork();
@@ -222,34 +258,11 @@ int main(int argc, char *argv[]) {
         //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
         setpgid(0, 0);
 
-        //We only want to listen, close the pipe's write end
-        close(command_pipe[1]);
-        
-        //Use the child to fork / create other child processes and manage them, depending on the messages received by the parent process
-        std::string received_command = read_from_pipe(command_pipe[0]);
-        while(received_command != "EXIT")
-        {
-            std::cout << "Child received: " << received_command << std::endl;
-
-            received_command = read_from_pipe(command_pipe[0]);
-        }
-
         exit(EXIT_SUCCESS);
     }
     else if (process_id > 0)
     {
         //We are in the parent process; simulate work using waiting functions, try to communicate with the child in between
-
-        //We only want to write, close the pipe's listen end
-        close(command_pipe[0]);
-
-        write_to_pipe(command_pipe[1], "This is a test");
-
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-
-        write_to_pipe(command_pipe[1], "Now the child will be shut down");
-
-        write_to_pipe(command_pipe[1], "EXIT");
 
         //The parent ALWAYS has to wait for the child to finish, else ressources are not cleaned up
         //There is an alternative to that (ignore SIGCHLD), but as far as I interpret it that would probably lead to 
