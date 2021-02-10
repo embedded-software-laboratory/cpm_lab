@@ -196,6 +196,18 @@ void write_to_pipe (int file, std::string msg)
   fclose (stream);
 }
 
+//! Communication via message queues requires a communication struct
+struct CommandMsg {
+    //! Always required, can be used as and ID to get a sepcific msg (won't be used here though)
+    long mtype;
+
+    //! Better to use only one additional entry, so if more than one is required, define another struct here
+    struct CommandInfo {
+        char command[500];
+        int timeout_seconds;
+    } command;
+};
+
 //In this test scenario, we want to create a parent and a child process
 //The parent process tells the child process which other processes to create
 //The child process then uses the above functions to do so
@@ -242,7 +254,9 @@ int main(int argc, char *argv[]) {
     //For now, we will try to use a message queue
     //To get a (hopefully) unqiue ID, we need to create one given a file location
     //For better portability, we hope that argv[0] contains our current file location and use that 
-    //(It usually should)
+    //(It usually should)#
+    //NOTE: We do not use further control or error checking (e.g. in case of a full queue) right now,
+    //because due to the desired way of operation we do not expect the queue to become full
     auto key = ftok(argv[0], 'a'); //The char is usually arbitrary, I chose a
     auto msqid = msgget(key, 0666 | IPC_CREAT); //Permissions: rw-rw-rw-
 
@@ -258,17 +272,56 @@ int main(int argc, char *argv[]) {
         //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
         setpgid(0, 0);
 
+        //Now try to receive a message; the child waits if there currently is no message present
+        //0 to receive the next message on the queue, irrelevant of the value of mtype, flag not used (0 as well)
+        //TODO: Create a test scenario where the child gets killed while waiting, to test if that works
+        CommandMsg msg;
+        auto return_code = msgrcv(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0, 0);
+        if (return_code == -1)
+        {
+            std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+        }
+
+        std::cout << "Child received command: " << msg.command.command << std::endl;
+
         exit(EXIT_SUCCESS);
     }
     else if (process_id > 0)
     {
         //We are in the parent process; simulate work using waiting functions, try to communicate with the child in between
 
+        //Create a test struct and send a msg
+        //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
+        //msg.command.command, else we do not get a null terminated C string or need to truncate (which would be undesirable as well)
+        CommandMsg msg;
+        std::string test_command = "Just print this plz";
+        std::strncpy(msg.command.command, test_command.c_str(), sizeof(msg.command.command));
+        msg.command.timeout_seconds = -1; //In our syntax, this would mean that we do not want a timeout
+        msg.mtype = 0; //Irrelevant for us
+
+        //Now, send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
+        auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
+        if (return_code == -1)
+        {
+            std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+        }
+
+        //----------------------------------------CLEANING UP-----------------------------------------------------------//
         //The parent ALWAYS has to wait for the child to finish, else ressources are not cleaned up
         //There is an alternative to that (ignore SIGCHLD), but as far as I interpret it that would probably lead to 
         //problems with get_child_process_state
         int status;
         waitpid(process_id, &status, 0); //0 -> no flags here
+
+        //Destroy the message queue
+        return_code = msgctl(msqid, IPC_RMID, NULL);
+        if (return_code == -1)
+        {
+            std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        exit(EXIT_SUCCESS);
     }
     else 
     {
