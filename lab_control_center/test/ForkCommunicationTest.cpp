@@ -208,10 +208,71 @@ struct CommandMsg {
     } command;
 };
 
+/**
+ * \brief Create a CommandMsg from a command string and a given timeout. Returns false if creation failed 
+ * (usually: due to too large command_string, which is limited by the size of command in CommandInfo)
+ * \param command_string The command to execute 
+ * \param timeout_seconds Timeout for the command, set to a value <0 to disable timeouts for this command 
+ *                      (SYSTEM is used then instead of using fork explicitly)
+ */
+bool create_msg(std::string command_string, int timeout_seconds, CommandMsg& command_out)
+{
+    command_out.command.timeout_seconds = timeout_seconds; //In our syntax, this would mean that we do not want a timeout
+    command_out.mtype = 1; //Irrelevant for us
+
+    //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
+    //command_out.command.command, else we do not get a null terminated C string or need to truncate (which would be undesirable as well)
+    std::strncpy(command_out.command.command, command_string.c_str(), sizeof(command_out.command.command));
+    command_out.command.command[sizeof(command_out.command.command)-1] = '\0'; //For safety reasons, in case the string is too long
+
+    //Now: Compare the copied string to the original, return false if this failed
+    if (std::strcmp(command_out.command.command, command_string.c_str()) != 0) 
+        return false;
+
+    return true;
+}
+
+/**
+ * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
+ * \param msqid ID of the msg queue to use
+ * \param msg Message to send
+ */
+bool send_msg(int msqid, CommandMsg& msg)
+{
+    //Send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
+    auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
+    if (return_code == -1)
+    {
+        std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true
+ * \param msqid ID of the msg queue to use
+ * \param msg The received msg is stored here
+ */
+bool receive_msg(int msqid, CommandMsg& msg)
+{
+    auto return_code = msgrcv(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0, 0);
+    if (return_code == -1)
+    {
+        std::cerr << "ERROR: Could not receive IPC Message: " << std::strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 //In this test scenario, we want to create a parent and a child process
 //The parent process tells the child process which other processes to create
 //The child process then uses the above functions to do so
 int main(int argc, char *argv[]) {
+    //TODO: Deal with interrupts / program exit & kill the child process there
+
     //Alternative for waiting (but without being able to determine if an error occured as in get_child_process_state):
     //This always prevents zombie processes:
     //signal(SIGCHLD, SIG_IGN);
@@ -275,14 +336,20 @@ int main(int argc, char *argv[]) {
         //Now try to receive a message; the child waits if there currently is no message present
         //0 to receive the next message on the queue, irrelevant of the value of mtype, flag not used (0 as well)
         //TODO: Create a test scenario where the child gets killed while waiting, to test if that works
-        CommandMsg msg;
-        auto return_code = msgrcv(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0, 0);
-        if (return_code == -1)
+        while (true)
         {
-            std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+            CommandMsg msg;
+            receive_msg(msqid, msg);
+
+            std::cout << "Child received command: " << msg.command.command << std::endl;
+
+            //Exit condition - just compare the first characters, as strncpy fills up the char array
+            std::string msg_string = msg.command.command;
+            if (msg_string.compare(0, 4, "EXIT") == 0)
+                break;
         }
 
-        std::cout << "Child received command: " << msg.command.command << std::endl;
+        std::cout << "Child is stopping execution..." << std::endl;
 
         exit(EXIT_SUCCESS);
     }
@@ -290,20 +357,32 @@ int main(int argc, char *argv[]) {
     {
         //We are in the parent process; simulate work using waiting functions, try to communicate with the child in between
 
-        //Create a test struct and send a msg
-        //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
-        //msg.command.command, else we do not get a null terminated C string or need to truncate (which would be undesirable as well)
-        CommandMsg msg;
-        std::string test_command = "Just print this plz";
-        std::strncpy(msg.command.command, test_command.c_str(), sizeof(msg.command.command));
-        msg.command.timeout_seconds = -1; //In our syntax, this would mean that we do not want a timeout
-        msg.mtype = 1; //Irrelevant for us
-
-        //Now, send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
-        auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
-        if (return_code == -1)
+        //Create and send messages
+        for (auto i = 0; i < 12; ++i)
         {
-            std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+            std::stringstream msg_stream;
+            msg_stream << "This is test number " << i + 1 << ".";
+
+            CommandMsg msg;
+            if (create_msg(msg_stream.str(), -1, msg))
+            {
+                send_msg(msqid, msg);
+            }
+            else
+            {
+                std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
+            }
+        }
+
+        //Send final msg to tell the child to stop its execution
+        CommandMsg msg;
+        if (create_msg("EXIT", -1, msg))
+        {
+            send_msg(msqid, msg);
+        }
+        else
+        {
+            std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
         }
 
         //----------------------------------------CLEANING UP-----------------------------------------------------------//
@@ -314,7 +393,7 @@ int main(int argc, char *argv[]) {
         waitpid(process_id, &status, 0); //0 -> no flags here
 
         //Destroy the message queue
-        return_code = msgctl(msqid, IPC_RMID, NULL);
+        auto return_code = msgctl(msqid, IPC_RMID, NULL);
         if (return_code == -1)
         {
             std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
