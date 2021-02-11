@@ -113,13 +113,20 @@ int main(int argc, char *argv[]) {
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
+    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
+    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(
             middleware_domain,
             local_comms_qos_provider.participant_qos()
     );
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
+
+    local_comms_participant.qos();
+    local_comms_qos_provider.participant_qos();
+    local_comms_qos_provider.delegate();
+    auto library_names = local_comms_qos_provider->qos_profile_libraries();
+    auto default_library = local_comms_qos_provider->default_profile_library();
 
     /* --------------------------------------------------------------------------------- 
      * Create readers and writers for communication with middleware
@@ -232,7 +239,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     while( !stop ) {
-
+	writer_readyStatus.write(readyStatus);
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
@@ -241,6 +248,8 @@ int main(int argc, char *argv[]) {
                 // to send commands to vehicle
                 new_vehicleStateList = true;
                 vehicleStateList = sample.data();
+		std::cout << "StateList.info: "
+			<< sample.info().publication_handle() << std::endl;
             }
         }
 

@@ -71,7 +71,25 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     dt_nanos = dt;
 
     // Timesteps should come in a logical order
-    assert(t_prev < t_real_time);
+    //assert(t_prev < t_real_time);
+    if(t_prev == t_real_time) {
+	std::cout << "Received same timestamp " << t_real_time << " twice" << std::endl;
+    } else{
+	std::cout << "Received normal timestamp " << t_real_time << std::endl;
+    }
+
+    if(t_prev > t_real_time) {
+	cpm::Logging::Instance().write(1,
+			"Weird timing, t_prev: %lu, t_real_time: %lu ",
+			 t_prev,
+			 t_real_time);
+	std::cout <<
+		"Weird timing, t_prev: "
+		<<  t_prev
+		<< ", t_real_time: "
+		<< t_real_time
+		<< std::endl;
+    }
 
     // Catch up planningState if we missed a timestep
     while(t_real_time - t_prev > dt && t_prev !=0) {
@@ -117,6 +135,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     }
     else {
         clear_past_trajectory_point_buffer();
+	std::cout << "No of old points: " << trajectory_point_buffer.size() << std::endl;
     }
     
     // Get new points from PlanningState
