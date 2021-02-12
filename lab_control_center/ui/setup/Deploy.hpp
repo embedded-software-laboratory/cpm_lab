@@ -55,6 +55,7 @@
 #include <unistd.h>
 
 #include "cpm/Logging.hpp"
+#include "ProgramExecutor.hpp"
 
 /**
  * \brief This class is responsible for managing deployment of HLC and vehicle scripts / programs and other participants that are launched from the LCC
@@ -67,8 +68,14 @@ public:
      * \param _cmd_domain_id domain ID set in the command line (when starting the LCC)
      * \param _cmd_dds_initial_peer dds initial peer set in the command line (when starting the LCC)
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
+     * \param _program_executor Class object that gives "safer" access to fork etc., to prevent memory leaks etc. that may occur in multi threaded programs
      */
-    Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle);
+    Deploy(
+        unsigned int _cmd_domain_id, 
+        std::string _cmd_dds_initial_peer, 
+        std::function<void(uint8_t)> _stop_vehicle, 
+        std::shared_ptr<ProgramExecutor> _program_executor
+    );
 
     /**
      * \brief Deconstructor required because of reboot threads
@@ -188,6 +195,9 @@ private:
 
     //Callback function to send a vehicle stop signal / control to the specified vehicle
     std::function<void(uint8_t)> stop_vehicle;
+
+    //! Provides safer access to deploying functions (uses a child process that was forked before creation of DDS threads etc.)
+    std::shared_ptr<ProgramExecutor> program_executor;
 
     //Helper functions
     /**

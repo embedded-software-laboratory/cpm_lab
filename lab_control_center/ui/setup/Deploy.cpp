@@ -26,10 +26,16 @@
 
 #include "Deploy.hpp"
 
-Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle) :
+Deploy::Deploy(
+    unsigned int _cmd_domain_id, 
+    std::string _cmd_dds_initial_peer, 
+    std::function<void(uint8_t)> _stop_vehicle, 
+    std::shared_ptr<ProgramExecutor> _program_executor
+) :
     cmd_domain_id(_cmd_domain_id),
     cmd_dds_initial_peer(_cmd_dds_initial_peer),
-    stop_vehicle(_stop_vehicle)
+    stop_vehicle(_stop_vehicle),
+    program_executor(_program_executor)
 {
 
 }
@@ -123,7 +129,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             std::cout << command.str() << std::endl;
 
             //Execute command
-            system(command.str().c_str());
+            program_executor->execute_command(command.str());
         }
 
         //Check if old session already exists - if so, kill it
@@ -147,7 +153,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
 
         //Execute command
-        system(middleware_command.str().c_str());
+        program_executor->execute_command(middleware_command.str());
     }
 }
 
@@ -229,7 +235,7 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         deployed_local_hlcs.push_back(vehicle_id);
 
         //Execute command
-        system(command.str().c_str());
+        program_executor->execute_command(command.str());
     }
 
     //Check if old session already exists - if so, kill it
@@ -260,7 +266,7 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
 
     //Execute command
-    system(middleware_command.str().c_str());
+    program_executor->execute_command(middleware_command.str());
 }
 
 void Deploy::kill_separate_local_hlcs() 
@@ -310,7 +316,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
 
     //Execute command
     //TODO: (nach Besprechung, ob das so okay ist) - nutze fork/execl/kill um das abbrechen zu können (merke PIDs, breche bei Kill ab)
-    system(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 void Deploy::stop_vehicles(std::vector<unsigned int> vehicle_ids)
@@ -605,8 +611,8 @@ void Deploy::deploy_ips()
         << " >~/dev/lcc_script_logs/stdout_basler.txt 2>~/dev/lcc_script_logs/stderr_basler.txt\"";
 
     //Execute command
-    system(command_ips.str().c_str());
-    system(command_basler.str().c_str());
+    program_executor->execute_command(command_ips.str());
+    program_executor->execute_command(command_basler.str());
 }
 
 void Deploy::kill_ips() {
@@ -684,7 +690,7 @@ void Deploy::deploy_recording()
     
     std::cout << command.str() << std::endl;
     //Execute command
-    system(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 void Deploy::kill_recording() 
@@ -744,7 +750,7 @@ void Deploy::kill_session(std::string session_id)
             << "tmux kill-session -t \"" << session_id << "\"";
 
         //Execute command
-        system(command.str().c_str());
+        program_executor->execute_command(command.str());
     }
 }
 
@@ -798,7 +804,7 @@ void Deploy::create_log_folder(std::string name)
         << "mkdir -p ~/dev/" << name;
 
     //Execute command
-    system(command_folder.str().c_str());
+    program_executor->execute_command(command_folder.str());
 }
 
 bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)

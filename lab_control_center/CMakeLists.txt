@@ -201,6 +201,8 @@ add_executable(lab_control_center
     src/ParameterServer.hpp
     src/ParameterStorage.cpp
     src/ParameterStorage.hpp
+    src/ProgramExecutor.hpp
+    src/ProgramExecutor.cpp
     src/RTTAggregator.hpp
     src/RTTAggregator.cpp
     src/TrajectoryCommand.cpp

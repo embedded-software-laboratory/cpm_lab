@@ -61,6 +61,8 @@
 #include "cpm/Writer.hpp"
 #include "CommonroadDDSGoalState.hpp"
 
+#include "ProgramExecutor.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
@@ -116,7 +118,19 @@ void exit_handler() {
 
 int main(int argc, char *argv[])
 {
-    //Must be done first, s.t. no class using the logger produces an error
+    //It is vital to call this function before any threads or objects have been set up that are not
+    //required in child processes
+    //DO NOT move this further done unless you know what you do! Especially DO NOT put this below the cpm
+    //initialization, unless you want to risk memory leaks
+    std::shared_ptr<ProgramExecutor> program_executor = std::make_shared<ProgramExecutor>();
+    bool program_execution_possible = program_executor->setup_child_process(argv[0]);
+    if (! program_execution_possible)
+    {
+        std::cerr << "Killing LCC because no child process for program execution could be created!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    //Must be done as soon as possible, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
     cpm::RTTTool::Instance().activate("lab_control_center");
@@ -188,8 +202,9 @@ int main(int argc, char *argv[])
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
         cmd_dds_initial_peer, 
-        [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);
-    });
+        [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);},
+        program_executor
+    );
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         commonroad_scenario,
