@@ -10,9 +10,9 @@ ProgramExecutor::~ProgramExecutor()
         if (child_process_id > 0)
         {
             CommandMsg msg;
-            if (create_msg("EXIT", -1, msg))
+            if (create_command_msg("EXIT", msg))
             {
-                send_msg(msg_queue_id, msg);
+                send_command_msg(msg_send_queue_id, msg);
             }
             else
             {
@@ -27,7 +27,7 @@ ProgramExecutor::~ProgramExecutor()
         }
 
         //Destroy the message queue
-        auto return_code = msgctl(msg_queue_id, IPC_RMID, NULL);
+        auto return_code = msgctl(msg_send_queue_id, IPC_RMID, NULL);
         if (return_code == -1)
         {
             std::cerr << "ERROR: Could not kill IPC Message Queue: " << std::strerror(errno) << std::endl;
@@ -50,9 +50,9 @@ bool ProgramExecutor::setup_child_process(std::string filepath)
         exit(EXIT_FAILURE);
     }
 
-    msg_queue_id = msgget(key, IPC_CREAT | 0666); //Permissions: rw-rw-rw-
+    msg_send_queue_id = msgget(key, IPC_CREAT | 0666); //Permissions: rw-rw-rw-
 
-    if (msg_queue_id == -1)
+    if (msg_send_queue_id == -1)
     {
         std::cerr << "ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!" << std::endl;
         exit(EXIT_FAILURE);
@@ -71,7 +71,7 @@ bool ProgramExecutor::setup_child_process(std::string filepath)
         while (true)
         {
             CommandMsg msg;
-            receive_msg(msg_queue_id, msg);
+            receive_command_msg(msg_send_queue_id, msg);
 
             //Exit condition - just compare the first characters, as strncpy fills up the char array
             std::string msg_string = msg.command.command;
@@ -116,9 +116,9 @@ void ProgramExecutor::execute_command(std::string command, int timeout)
 {
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
-    if (create_msg(command, timeout, msg))
+    if (create_command_msg(command, msg, timeout))
     {
-        send_msg(msg_queue_id, msg);
+        send_command_msg(msg_send_queue_id, msg);
     }
     else
     {
@@ -126,9 +126,28 @@ void ProgramExecutor::execute_command(std::string command, int timeout)
     }
 }
 
-bool ProgramExecutor::create_msg(std::string command_string, int timeout_seconds, CommandMsg& command_out)
+std::string ProgramExecutor::get_command_output(std::string command)
 {
-    command_out.command.timeout_seconds = timeout_seconds; //In our syntax, this would mean that we do not want a timeout
+    //Send a msg to the child process, telling it to execute the given command
+    CommandMsg msg;
+    if (create_command_msg(command, msg, -1, true))
+    {
+        send_command_msg(msg_send_queue_id, msg);
+    }
+    else
+    {
+        std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
+    }
+
+    //Now wait for the answer / received command output
+    //TODO
+}
+
+bool ProgramExecutor::create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds, bool send_command_output, bool send_child_state)
+{
+    command_out.command.timeout_seconds = timeout_seconds;
+    command_out.command.send_command_output = send_command_output;
+    command_out.command.send_child_state = send_child_state;
     command_out.mtype = 1; //Irrelevant for us
 
     //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
@@ -143,7 +162,7 @@ bool ProgramExecutor::create_msg(std::string command_string, int timeout_seconds
     return true;
 }
 
-bool ProgramExecutor::send_msg(int msqid, CommandMsg& msg)
+bool ProgramExecutor::send_command_msg(int msqid, CommandMsg& msg)
 {
     //Send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
     auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
@@ -156,7 +175,7 @@ bool ProgramExecutor::send_msg(int msqid, CommandMsg& msg)
     return true;
 }
 
-bool ProgramExecutor::receive_msg(int msqid, CommandMsg& msg)
+bool ProgramExecutor::receive_command_msg(int msqid, CommandMsg& msg)
 {
     auto return_code = msgrcv(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0, 0);
     if (return_code == -1)
@@ -170,19 +189,17 @@ bool ProgramExecutor::receive_msg(int msqid, CommandMsg& msg)
 
 std::string ProgramExecutor::execute_command_get_output(const char* cmd)
 {
-    //TODO
-    return "";
-}
-
-bool ProgramExecutor::session_exists(std::string session_id)
-{
-    //TODO
-    return false;
-}
-
-void ProgramExecutor::kill_session(std::string session_id)
-{
-    //TODO
+    //Code from stackoverflow
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("Could not use popen - deployment failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
 }
 
 int ProgramExecutor::execute_command_get_pid(const char* cmd)
