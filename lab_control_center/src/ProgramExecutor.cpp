@@ -60,7 +60,7 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
                 break;
 
             //Debug log (can't use logger here, or any other cpm library function, because some parts of it use DDS)
-            std::cout << "Child received command: " << msg_string << std::endl;
+            //std::cout << "Child received command: " << msg_string << std::endl;
 
             //Now execute the command based on whether the timeout was set
             if (msg.command.request_type == RequestType::SEND_OUTPUT)
