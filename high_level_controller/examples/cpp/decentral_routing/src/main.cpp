@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
     system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
+    //TODO: QOS_READY_TRIGGER xml is currently only local, not on the NUC - right?
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
@@ -136,7 +137,7 @@ int main(int argc, char *argv[]) {
     dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
             local_comms_publisher,
             cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-            (dds::pub::qos::DataWriterQos()
+            (local_comms_qos_provider.datawriter_qos()
                 << dds::core::policy::Reliability::Reliable()
                 << dds::core::policy::History::KeepAll()
                 << dds::core::policy::Durability::TransientLocal())
@@ -239,7 +240,6 @@ int main(int argc, char *argv[]) {
 #endif
 
     while( !stop ) {
-	writer_readyStatus.write(readyStatus);
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
@@ -248,8 +248,8 @@ int main(int argc, char *argv[]) {
                 // to send commands to vehicle
                 new_vehicleStateList = true;
                 vehicleStateList = sample.data();
-		std::cout << "StateList.info: "
-			<< sample.info().publication_handle() << std::endl;
+                std::cout << "StateList.info: "
+                    << sample.info().publication_handle() << std::endl;
             }
         }
 
