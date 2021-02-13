@@ -33,6 +33,8 @@
 #include "ParameterWithDescription.hpp"
 #include "cpm/Logging.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <gtkmm/liststore.h>
