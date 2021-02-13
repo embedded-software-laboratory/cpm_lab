@@ -70,11 +70,12 @@ public:
      * 
      * Reasoning: The behaviour for setup is different for the child and the main process. This behaviour should not be split in the constructor.
      * 
-     * \param filepath A unique filepath. You should use argv[0]. Is required for message queue creation.
+     * \param filepath_1 A unique filepath. Is required for message queue creation.
+     * \param filepath_2 Another unique filepath. Is required for message queue creation.
      * 
      * \return True if parent process, false if the execution failed. (Exits before return in case of child process)
      */
-    bool setup_child_process(std::string filepath);
+    bool setup_child_process(std::string filepath_1, std::string filepath_2);
 
     /**
      * \brief Call this function to start an external program, like a simulated vehicle etc.
@@ -84,10 +85,13 @@ public:
      * executions are "on hold" (no threads are used to allow to execute multiple commands
      * with a timeout at once). Thus, commands can "pile up" in the msg queue for a while,
      * but should finally be executed nonetheless.
+     * 
+     * If a timeout is set, the function also returns whether the executed command succeeded (= finished in time).
      * \param command String command, like a command line command. Warning: the command length is limited, as a char array is used in the message queue.
      * \param timeout Time after which the command should be cancelled, if it is not finished before that. If not set or -1, no timeout is used.
+     * \return True if the timeout is > 0. Else true if the command worked, false if it failed or reached the given timeout before it finished.
      */
-    void execute_command(std::string command, int timeout = -1);
+    bool execute_command(std::string command, int timeout = -1);
 
     /**
      * \brief Function to execute a shell command and get its output
@@ -104,6 +108,13 @@ private:
         RUNNING, ERROR, DONE
     };
 
+    /**
+     * \brief Represents the command request type - if an answer by the child is expected or not
+     */
+    enum RequestType {
+        NO_ANSWER, SEND_OUTPUT, SEND_EXIT_STATE
+    };
+
     //! Communication via message queues requires a communication struct. Here: Sending commands to the child process.
     struct CommandMsg {
         //! Always required, can be used as and ID to get a sepcific msg (won't be used here though)
@@ -117,11 +128,8 @@ private:
             //! Timeout for the command, ignored if <= 0
             int timeout_seconds;
 
-            //! If an answer containing the command output should be returned via msg queue
-            bool send_command_output;
-
-            //! If the child process state should be communicated after termination
-            bool send_child_state;
+            //! What kind of answer is expected by the child via the msg_receive_queue
+            RequestType request_type;
         } command;
     };
 
@@ -135,8 +143,8 @@ private:
             //! The output of a command, truncated
             char truncated_command_output[5000];
 
-            //! Process state of the process if timeout was used and process state was asked for
-            PROCESS_STATE process_state;
+            //! Process state of the process if timeout was used and process state was asked for, true if DONE, else false
+            bool execution_success;
         } answer;
     };
 
@@ -144,22 +152,37 @@ private:
     pid_t child_process_id;
 
     //! The ID of the message queue, needs to be remembered to use the queue and to close it in the destructor
-    int msg_send_queue_id;
+    int msg_request_queue_id;
 
     //! The ID of the message queue for answers sent by the child process
-    int msg_receive_queue_id;
+    int msg_response_queue_id;
+
+    /**
+     * \brief Creates a msg queue and returns its ID
+     * \param filepath Required to create the queue key
+     */
+    int create_msg_queue(std::string filepath);
+
+    /**
+     * \brief Destroy a msg queue, given its ID
+     * \param msg_queue_id The ID of the msg queue to destroy
+     */
+    void destroy_msg_queue(int msg_queue_id);
 
     /**
      * \brief Create a CommandMsg from a command string and a given timeout. Returns false if creation failed 
      * (usually: due to too large command_string, which is limited by the size of command in CommandInfo)
+     * 
+     * Not all combinations of commands are implemented, e.g. if the command output should be printed, the timeout will be ignored!
+     * This is due to the implementation, which uses popen.
+     * 
      * \param command_string The command to execute 
      * \param command_out The created command message object / output
      * \param timeout_seconds Optional: Timeout for the command, set to a value <0 to disable timeouts for this command 
      *                      (SYSTEM is used then instead of using fork explicitly)
-     * \param send_command_output Optional: If an answer containing the command output should be returned via msg queue
-     * \param send_child_state Optional: If the child process state should be communicated after termination
+     * \param request_type Optional: If an answer containing the command output or the child exit state should be returned via msg queue
      */
-    bool create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds = -1, bool send_command_output = false, bool send_child_state = false);
+    bool create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds = -1, RequestType request_type = NO_ANSWER);
 
     /**
      * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
@@ -176,6 +199,21 @@ private:
     bool receive_command_msg(int msqid, CommandMsg& msg);
 
     /**
+     * \brief Create and send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \param msqid ID of the msg queue to use
+     * \param command_output Command output to send, may get truncated (max. 5000 characters)
+     * \param execution_success Exit state of the process, success if DONE (no ERROR or timeout)
+     */
+    bool send_answer_msg(int msqid, std::string command_output, bool execution_success);
+
+    /**
+     * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \param msqid ID of the msg queue to use
+     * \param msg The received msg is stored here
+     */
+    bool receive_answer_msg(int msqid, AnswerMsg& msg);
+
+    /**
      * \brief Function to execute a shell command and get its output
      * \param cmd A shell command as C-String
      * \return Output of the shell command
@@ -186,10 +224,9 @@ private:
      * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
      * \param cmd Command string to be executed
      * \param timeout_seconds Timout until the process termination is forced
-     * \param is_online Optional. Function to check whether the spawned process is still running.
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
      */
-    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online = [] { return true; });
+    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds);
 
     /**
      * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further

@@ -702,7 +702,7 @@ void Deploy::kill_recording()
 
 bool Deploy::session_exists(std::string session_id)
 {
-    std::string running_sessions = execute_command("tmux ls");
+    std::string running_sessions = program_executor->get_command_output("tmux ls");
     session_id += ":";
     return running_sessions.find(session_id) != std::string::npos;
 }
@@ -752,21 +752,6 @@ void Deploy::kill_session(std::string session_id)
         //Execute command
         program_executor->execute_command(command.str());
     }
-}
-
-std::string Deploy::execute_command(const char* cmd) 
-{
-    //Code from stackoverflow
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("Could not use popen - deployment failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
 }
 
 void Deploy::get_path_name(std::string& in, std::string& out_path, std::string& out_name)

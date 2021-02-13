@@ -118,17 +118,36 @@ void exit_handler() {
 
 int main(int argc, char *argv[])
 {
+    //-----------------------------------------------------------------------------------------------------
     //It is vital to call this function before any threads or objects have been set up that are not
     //required in child processes
     //DO NOT move this further done unless you know what you do! Especially DO NOT put this below the cpm
     //initialization, unless you want to risk memory leaks
+    std::string exec_path = argv[0];
+    
+    //Get absolute path to main.cpp 
+    auto pos = exec_path.rfind("/");
+    std::string main_cpp_path = "../src/main.cpp"; //Does not seem to work, thus we obtain the absolute path next
+    if (pos != std::string::npos)
+    {
+        auto build_path = exec_path.substr(0, pos);
+        pos = build_path.rfind("/");
+        if (pos != std::string::npos)
+        {
+            std::stringstream main_cpp_stream;
+            main_cpp_stream << build_path.substr(0, pos) << "/src/main.cpp";
+            main_cpp_path = main_cpp_stream.str();
+        }
+    }
+
     std::shared_ptr<ProgramExecutor> program_executor = std::make_shared<ProgramExecutor>();
-    bool program_execution_possible = program_executor->setup_child_process(argv[0]);
+    bool program_execution_possible = program_executor->setup_child_process(exec_path, main_cpp_path);
     if (! program_execution_possible)
     {
         std::cerr << "Killing LCC because no child process for program execution could be created!" << std::endl;
         exit(EXIT_FAILURE);
     }
+    //-----------------------------------------------------------------------------------------------------
 
     //Must be done as soon as possible, s.t. no class using the logger produces an error
     cpm::init(argc, argv);

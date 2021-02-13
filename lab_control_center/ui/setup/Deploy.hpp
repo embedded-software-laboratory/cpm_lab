@@ -226,12 +226,6 @@ private:
     std::string bool_to_string(bool var);
 
     /**
-     * \brief Function to execute a shell command and get its output
-     * \return Output of the shell command
-     */
-    std::string execute_command(const char* cmd);
-
-    /**
      * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
      * \param cmd Command string to be executed
      * \param timeout_seconds Timout until the process termination is forced

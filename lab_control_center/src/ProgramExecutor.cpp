@@ -12,7 +12,7 @@ ProgramExecutor::~ProgramExecutor()
             CommandMsg msg;
             if (create_command_msg("EXIT", msg))
             {
-                send_command_msg(msg_send_queue_id, msg);
+                send_command_msg(msg_request_queue_id, msg);
             }
             else
             {
@@ -27,37 +27,18 @@ ProgramExecutor::~ProgramExecutor()
         }
 
         //Destroy the message queue
-        auto return_code = msgctl(msg_send_queue_id, IPC_RMID, NULL);
-        if (return_code == -1)
-        {
-            std::cerr << "ERROR: Could not kill IPC Message Queue: " << std::strerror(errno) << std::endl;
-        }
+        destroy_msg_queue(msg_request_queue_id);
+        destroy_msg_queue(msg_response_queue_id);
     }
 }
 
-bool ProgramExecutor::setup_child_process(std::string filepath)
+bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string filepath_2)
 {
-    //To get a (hopefully) unqiue ID, we need to create one given a file location
-    //For better portability, we hope that argv[0] contains our current file location and use that 
-    //(It usually should)#
-    //NOTE: We do not use further control or error checking (e.g. in case of a full queue) right now,
-    //because due to the desired way of operation we do not expect the queue to become full
-    auto key = ftok(filepath.c_str(), 'a'); //The char is usually arbitrary, I chose a
+    //Create msg queues (must be done before forking, so that both processes have a working reference)
+    msg_request_queue_id = create_msg_queue(filepath_1);
+    msg_response_queue_id = create_msg_queue(filepath_2);
 
-    if (key == -1)
-    {
-        std::cerr << "ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    msg_send_queue_id = msgget(key, IPC_CREAT | 0666); //Permissions: rw-rw-rw-
-
-    if (msg_send_queue_id == -1)
-    {
-        std::cerr << "ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
+    //Create the child process
     child_process_id = fork();
 
     if (child_process_id == 0)
@@ -71,7 +52,7 @@ bool ProgramExecutor::setup_child_process(std::string filepath)
         while (true)
         {
             CommandMsg msg;
-            receive_command_msg(msg_send_queue_id, msg);
+            receive_command_msg(msg_request_queue_id, msg);
 
             //Exit condition - just compare the first characters, as strncpy fills up the char array
             std::string msg_string = msg.command.command;
@@ -82,9 +63,19 @@ bool ProgramExecutor::setup_child_process(std::string filepath)
             std::cout << "Child received command: " << msg_string << std::endl;
 
             //Now execute the command based on whether the timeout was set
-            if (msg.command.timeout_seconds > 0)
+            if (msg.command.request_type == RequestType::SEND_OUTPUT)
             {
-                spawn_and_manage_process(msg_string.c_str(), msg.command.timeout_seconds);
+                std::string output = execute_command_get_output(msg_string.c_str());
+                
+                //Create and send answer
+                send_answer_msg(msg_response_queue_id, output, true);
+            }
+            else if (msg.command.timeout_seconds > 0)
+            {
+                bool exec_success = spawn_and_manage_process(msg_string.c_str(), msg.command.timeout_seconds);
+
+                //Create and send answer
+                send_answer_msg(msg_response_queue_id, "", exec_success);
             }
             else
             {
@@ -112,27 +103,36 @@ bool ProgramExecutor::setup_child_process(std::string filepath)
     }
 }
 
-void ProgramExecutor::execute_command(std::string command, int timeout)
+bool ProgramExecutor::execute_command(std::string command, int timeout)
 {
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
     if (create_command_msg(command, msg, timeout))
     {
-        send_command_msg(msg_send_queue_id, msg);
+        send_command_msg(msg_request_queue_id, msg);
     }
     else
     {
         std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
     }
+
+    //Wait for an answer regarding the process state of the command in case a timeout was set
+    if (timeout > 0)
+    {
+        AnswerMsg response;
+        receive_answer_msg(msg_response_queue_id, response);
+        return response.answer.execution_success;
+    }
+    else return true;
 }
 
 std::string ProgramExecutor::get_command_output(std::string command)
 {
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
-    if (create_command_msg(command, msg, -1, true))
+    if (create_command_msg(command, msg, -1, RequestType::SEND_OUTPUT))
     {
-        send_command_msg(msg_send_queue_id, msg);
+        send_command_msg(msg_request_queue_id, msg);
     }
     else
     {
@@ -140,14 +140,54 @@ std::string ProgramExecutor::get_command_output(std::string command)
     }
 
     //Now wait for the answer / received command output
-    //TODO
+    AnswerMsg response;
+    receive_answer_msg(msg_response_queue_id, response);
+    return response.answer.truncated_command_output;
 }
 
-bool ProgramExecutor::create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds, bool send_command_output, bool send_child_state)
+int ProgramExecutor::create_msg_queue(std::string filepath)
+{
+    //To get a (hopefully) unqiue ID, we need to create one given a file location
+    //For better portability, we hope that argv[0] contains our current file location and use that 
+    //(It usually should)#
+    //NOTE: We do not use further control or error checking (e.g. in case of a full queue) right now,
+    //because due to the desired way of operation we do not expect the queue to become full
+    auto key = ftok(filepath.c_str(), 'a'); //The char is usually arbitrary, I chose a
+
+    if (key == -1)
+    {
+        std::cerr << "ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    int queue_id = msgget(key, IPC_CREAT | 0666); //Permissions: rw-rw-rw-
+
+    if (queue_id == -1)
+    {
+        std::cerr << "ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    return queue_id;
+}
+
+void ProgramExecutor::destroy_msg_queue(int msg_queue_id)
+{
+    if (msg_queue_id >= 0)
+    {
+        auto return_code = msgctl(msg_queue_id, IPC_RMID, NULL);
+        if (return_code == -1)
+        {
+            std::cerr << "ERROR: Could not kill IPC Message Queue: " << std::strerror(errno) << std::endl;
+        }
+    }
+}
+
+
+bool ProgramExecutor::create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds, RequestType request_type)
 {
     command_out.command.timeout_seconds = timeout_seconds;
-    command_out.command.send_command_output = send_command_output;
-    command_out.command.send_child_state = send_child_state;
+    command_out.command.request_type = request_type;
     command_out.mtype = 1; //Irrelevant for us
 
     //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
@@ -201,6 +241,46 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
     }
     return result;
 }
+
+bool ProgramExecutor::send_answer_msg(int msqid, std::string command_output, bool execution_success)
+{
+    AnswerMsg answer_msg;
+
+    answer_msg.answer.execution_success = execution_success;
+    answer_msg.mtype = 1; //Irrelevant for us
+
+    //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of
+    //command_out.command.command, else we do not get a null terminated C string or need to truncate (which would be undesirable as well)
+    std::strncpy(answer_msg.answer.truncated_command_output, command_output.c_str(), sizeof(answer_msg.answer.truncated_command_output));
+    answer_msg.answer.truncated_command_output[sizeof(answer_msg.answer.truncated_command_output)-1] = '\0'; //For safety reasons, in case the string is too long
+
+    //Now: Compare the copied string to the original, print warning if the output had to be truncated
+    if (std::strcmp(answer_msg.answer.truncated_command_output, command_output.c_str()) != 0) 
+        std::cerr << "\n!!!\n!!!\nWARNING: The requested command output was too large and had to be truncated. This may lead to undesired program behavior!\n!!!\n!!!\n" << std::endl;
+
+    //Send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
+    auto return_code = msgsnd(msqid, &answer_msg, sizeof(AnswerMsg::AnswerInfo), 0);
+    if (return_code == -1)
+    {
+        std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool ProgramExecutor::receive_answer_msg(int msqid, AnswerMsg& msg)
+{
+    auto return_code = msgrcv(msqid, &msg, sizeof(AnswerMsg::AnswerInfo), 0, 0);
+    if (return_code == -1)
+    {
+        std::cerr << "ERROR: Could not receive IPC Message: " << std::strerror(errno) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 
 int ProgramExecutor::execute_command_get_pid(const char* cmd)
 {
@@ -279,9 +359,9 @@ void ProgramExecutor::kill_process(int process_id, int timeout_ms)
     }
 }
 
-bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
+bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds)
 {
-    std::cout << "Executing " << cmd << std::endl;
+    //std::cout << "Executing " << cmd << std::endl;
 
     //Spawn and manage new process
     int process_id = execute_command_get_pid(cmd);
@@ -296,7 +376,7 @@ bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int tim
 
         if (state == PROCESS_STATE::DONE)
         {
-            std::cout << "Success: execution of " << cmd << std::endl;
+            //std::cout << "Success: execution of " << cmd << std::endl;
 
             //Clean up by waiting / telling the child that it can "destroy itself"
             int status;
@@ -306,7 +386,7 @@ bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int tim
         else if (state == PROCESS_STATE::ERROR)
         {
             kill_process(process_id);
-            std::cout << "Error in execution of " << cmd << std::endl;
+            //std::cout << "Error in execution of " << cmd << std::endl;
             return false;
         }
 
@@ -328,6 +408,6 @@ bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int tim
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
     kill_process(process_id);
-    std::cout << "Could not execute in time: " << cmd << std::endl;
+    //std::cout << "Could not execute in time: " << cmd << std::endl;
     return false;
 }
