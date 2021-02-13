@@ -709,13 +709,15 @@ bool Deploy::session_exists(std::string session_id)
 
 std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
+    //std::cout << "Gets called with: " << script_started << ", " << deploy_remote << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
     std::vector<std::string> crashed_participants;
-    if (!deploy_remote && has_local_hlc && script_started)
+    if ((!(deploy_remote) || has_local_hlc))
     {
         if (script_started)
         {
             if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
         }
+
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
     if (deploy_remote && has_local_hlc && script_started)
