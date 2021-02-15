@@ -10,7 +10,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
  
     %% Calculate path lengths between transition and intermitting poses
     transSegmentLengths = zeros(100, 1);
-    allSegmentLengths = zeros(length(intermittingPoses)+1, 1);
+    allSegmentLengths = zeros(length(intermittingPoses), 1);
     lastIndex = 0;
     helpIndex = [];
     for nPathSegments = 1:length(refPath.PathSegments)
@@ -33,7 +33,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
             allSegmentLengths(nPoses) = transPathLengths(index-1);
         else
             noTransPoses = sum(isTransPose(1:nPoses));
-            allSegmentLengths(nPoses) = (1+length(allSegmentLengths)-noTransPoses) * 0.5;
+            allSegmentLengths(nPoses) = (nPoses-noTransPoses) * 0.5;
         end
     end
 
@@ -48,7 +48,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
     trajectory_points(1).py = intermittingPoses(1, 2);
     trajectory_points(1).vx = 0;
     trajectory_points(1).vy = 0;
-    trajectory_points(1).t  = uint64(2e9); %[ns]
+    trajectory_points(1).t  = uint64(1e9); %[ns]
 
     % Second trajectory point
     trajectory_points(2).px = intermittingPoses(1, 1);
@@ -63,8 +63,8 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
         trajectory_points(nPoints).py = intermittingPoses(nPoints-1, 2); % [m]
         trajectory_points(nPoints).vx = cosd(intermittingPoses(nPoints-1, 3)) * speed; % [m/s]
         trajectory_points(nPoints).vy = sind(intermittingPoses(nPoints-1, 3)) * speed; % [m/s]
-        trajectory_points(nPoints).t  = uint64(trajectory_points(2).t +...
-                                        allSegmentLengths(nPoints-1) / speed * 1e9); % [ns]
+        trajectory_points(nPoints).t  = uint64(trajectory_points(2).t) +...
+                                        (allSegmentLengths(nPoints-1) / speed * 1e9); % [ns]
     end
 
     %Last TrajectoryPoint - correct home position guaranteed?
@@ -72,6 +72,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
     trajectory_points(end).py = intermittingPoses(end, 2);
     trajectory_points(end).vx = 0;
     trajectory_points(end).vy = 0;
-    trajectory_points(end).t  = uint64(trajectory_points(end-1).t + 1e9); %[ns]
+    trajectory_points(end).t  = uint64(trajectory_points(2).t) +...
+                                (allSegmentLengths(end) / speed * 1e9); %[ns]
 
 end

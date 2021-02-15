@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.coder" plugin-version="R2018b">
-  <configuration build-checksum="4219841279" file="/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/planTrajectory.prj" location="/home/patrick/dev/software/tools/go_to_formation/matlab/Coder" name="planTrajectory" target="target.unifiedcoder" target-name="MATLAB Coder">
+  <configuration build-checksum="3938137475" file="/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/planTrajectory.prj" location="/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder" name="planTrajectory" target="target.unifiedcoder" target-name="MATLAB Coder">
     <profile key="profile.mex">
       <param.BuiltInstrumentedMex />
       <param.RanInstrumentedMex>false</param.RanInstrumentedMex>
@@ -8,15 +8,15 @@
       <param.BuildFolder>option.BuildFolder.Project</param.BuildFolder>
       <param.SpecifiedBuildFolder />
       <param.SearchPaths />
-      <param.ResponsivenessChecks />
-      <param.ExtrinsicCalls />
-      <param.IntegrityChecks />
+      <param.ResponsivenessChecks>true</param.ResponsivenessChecks>
+      <param.ExtrinsicCalls>true</param.ExtrinsicCalls>
+      <param.IntegrityChecks>true</param.IntegrityChecks>
       <param.SaturateOnIntegerOverflow>true</param.SaturateOnIntegerOverflow>
-      <param.GlobalDataSyncMethod />
+      <param.GlobalDataSyncMethod>option.GlobalDataSyncMethod.SyncAlways</param.GlobalDataSyncMethod>
       <param.EnableVariableSizing>true</param.EnableVariableSizing>
       <param.DynamicMemoryAllocation>option.DynamicMemoryAllocation.Threshold</param.DynamicMemoryAllocation>
       <param.DynamicMemoryAllocationThreshold>65536</param.DynamicMemoryAllocationThreshold>
-      <param.DynamicMemoryAllocationInterface>option.DynamicMemoryAllocationInterface.AUTO</param.DynamicMemoryAllocationInterface>
+      <param.DynamicMemoryAllocationInterface>option.DynamicMemoryAllocationInterface.CPP</param.DynamicMemoryAllocationInterface>
       <param.RowMajor>option.RowMajor.ColumnMajor</param.RowMajor>
       <param.HighlightPotentialRowMajorIssues>true</param.HighlightPotentialRowMajorIssues>
       <param.PreserveArrayDimensions>false</param.PreserveArrayDimensions>
@@ -26,7 +26,7 @@
       <param.GenerateComments>true</param.GenerateComments>
       <param.MATLABSourceComments>false</param.MATLABSourceComments>
       <param.ReservedNameArray />
-      <param.EnableDebugging />
+      <param.EnableDebugging>false</param.EnableDebugging>
       <param.ReportPotentialDifferences>false</param.ReportPotentialDifferences>
       <param.GenerateReport>true</param.GenerateReport>
       <param.LaunchReport>false</param.LaunchReport>
@@ -50,25 +50,22 @@
       <param.CompileTimeRecursionLimit>50</param.CompileTimeRecursionLimit>
       <param.EnableRuntimeRecursion>true</param.EnableRuntimeRecursion>
       <param.PreserveVariableNames>option.PreserveVariableNames.None</param.PreserveVariableNames>
-      <param.EchoExpressions />
+      <param.InlineUserFunctions>option.InlineUserFunctions.Speed</param.InlineUserFunctions>
+      <param.InlineMWFunctions>option.InlineMWFunctions.Speed</param.InlineMWFunctions>
+      <param.InlineMWFunctionsInUserFunctions>option.InlineMWFunctionsInUserFunctions.Speed</param.InlineMWFunctionsInUserFunctions>
+      <param.EchoExpressions>true</param.EchoExpressions>
       <param.InlineThreshold>10</param.InlineThreshold>
       <param.InlineThresholdMax>200</param.InlineThresholdMax>
-      <param.InlineStackLimit>1000000</param.InlineStackLimit>
-      <param.InlineBetweenUserFunctions>option.InlineBetweenUserFunctions.Speed</param.InlineBetweenUserFunctions>
-      <param.InlineBetweenUserAndMathWorksFunctions>option.InlineBetweenUserAndMathWorksFunctions.Speed</param.InlineBetweenUserAndMathWorksFunctions>
-      <param.InlineBetweenMathWorksFunctions>option.InlineBetweenMathWorksFunctions.Speed</param.InlineBetweenMathWorksFunctions>
+      <param.InlineStackLimit>4000</param.InlineStackLimit>
       <param.EnableMemcpy>true</param.EnableMemcpy>
       <param.MemcpyThreshold>64</param.MemcpyThreshold>
       <param.EnableOpenMP>true</param.EnableOpenMP>
       <param.InitFltsAndDblsToZero>true</param.InitFltsAndDblsToZero>
-      <param.ConstantInputs />
+      <param.ConstantInputs>option.ConstantInputs.CheckValues</param.ConstantInputs>
       <param.EnableCRICodeCoverage>true</param.EnableCRICodeCoverage>
       <param.EnableJIT>false</param.EnableJIT>
       <param.EnableJITSilentBailOut />
-      <param.CheckForIssuesJIT />
-      <param.EnableGitSupport>false</param.EnableGitSupport>
-      <param.EnableAutoCommit>false</param.EnableAutoCommit>
-      <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
+      <param.CheckForIssuesJIT>true</param.CheckForIssuesJIT>
       <unset>
         <param.BuiltInstrumentedMex />
         <param.RanInstrumentedMex />
@@ -118,13 +115,13 @@
         <param.CompileTimeRecursionLimit />
         <param.EnableRuntimeRecursion />
         <param.PreserveVariableNames />
+        <param.InlineUserFunctions />
+        <param.InlineMWFunctions />
+        <param.InlineMWFunctionsInUserFunctions />
         <param.EchoExpressions />
         <param.InlineThreshold />
         <param.InlineThresholdMax />
         <param.InlineStackLimit />
-        <param.InlineBetweenUserFunctions />
-        <param.InlineBetweenUserAndMathWorksFunctions />
-        <param.InlineBetweenMathWorksFunctions />
         <param.EnableMemcpy />
         <param.MemcpyThreshold />
         <param.EnableOpenMP />
@@ -134,12 +131,10 @@
         <param.EnableJIT />
         <param.EnableJITSilentBailOut />
         <param.CheckForIssuesJIT />
-        <param.EnableGitSupport />
-        <param.EnableAutoCommit />
-        <param.RepositoryStyle />
       </unset>
     </profile>
     <profile key="profile.c">
+      <param.grt.GenCodeOnly>false</param.grt.GenCodeOnly>
       <param.WorkingFolder>option.WorkingFolder.Project</param.WorkingFolder>
       <param.SpecifiedWorkingFolder />
       <param.BuildFolder>option.BuildFolder.Project</param.BuildFolder>
@@ -152,7 +147,7 @@
       <param.EnableVariableSizing>true</param.EnableVariableSizing>
       <param.DynamicMemoryAllocation>option.DynamicMemoryAllocation.Threshold</param.DynamicMemoryAllocation>
       <param.DynamicMemoryAllocationThreshold>65536</param.DynamicMemoryAllocationThreshold>
-      <param.DynamicMemoryAllocationInterface>option.DynamicMemoryAllocationInterface.AUTO</param.DynamicMemoryAllocationInterface>
+      <param.DynamicMemoryAllocationInterface>option.DynamicMemoryAllocationInterface.CPP</param.DynamicMemoryAllocationInterface>
       <param.RowMajor>option.RowMajor.ColumnMajor</param.RowMajor>
       <param.HighlightPotentialRowMajorIssues>true</param.HighlightPotentialRowMajorIssues>
       <param.PreserveArrayDimensions>false</param.PreserveArrayDimensions>
@@ -169,7 +164,7 @@
       <param.EnableSignedLeftShifts>true</param.EnableSignedLeftShifts>
       <param.EnableSignedRightShifts>true</param.EnableSignedRightShifts>
       <param.ParenthesesLevel>option.ParenthesesLevel.Nominal</param.ParenthesesLevel>
-      <param.MaxIdLength>1024</param.MaxIdLength>
+      <param.MaxIdLength>31</param.MaxIdLength>
       <param.HeaderGuardStyle>option.HeaderGuardStyle.UseIncludeGuard</param.HeaderGuardStyle>
       <param.DataTypeReplacement>option.DataTypeReplacement.CBuiltIn</param.DataTypeReplacement>
       <param.EnableCustomReplacementTypes>false</param.EnableCustomReplacementTypes>
@@ -189,6 +184,7 @@
       <param.ReplacementTypes.HeaderFiles />
       <param.CppInterfaceStyle>option.CppInterfaceStyle.Functions</param.CppInterfaceStyle>
       <param.CppInterfaceClassName />
+      <param.CppPreserveClasses>true</param.CppPreserveClasses>
       <param.CustomFileNameStr>$N$M</param.CustomFileNameStr>
       <param.CustomSymbolStrGlobalVar>$M$N</param.CustomSymbolStrGlobalVar>
       <param.CustomSymbolStrType>$M$N</param.CustomSymbolStrType>
@@ -284,7 +280,6 @@
       <param.IndentStyle>option.IndentStyle.K&amp;R</param.IndentStyle>
       <param.IndentSize>2</param.IndentSize>
       <param.ColumnLimit>80</param.ColumnLimit>
-      <param.grt.GenCodeOnly>false</param.grt.GenCodeOnly>
       <param.ConstantFoldingTimeout>40000</param.ConstantFoldingTimeout>
       <param.CompileTimeRecursionLimit>50</param.CompileTimeRecursionLimit>
       <param.EnableRuntimeRecursion>true</param.EnableRuntimeRecursion>
@@ -293,15 +288,15 @@
       <param.IncludeTerminateFcn>true</param.IncludeTerminateFcn>
       <param.GenerateExampleMain>option.GenerateExampleMain.GenerateCodeOnly</param.GenerateExampleMain>
       <param.PreserveVariableNames>option.PreserveVariableNames.None</param.PreserveVariableNames>
+      <param.InlineUserFunctions>option.InlineUserFunctions.Speed</param.InlineUserFunctions>
+      <param.InlineMWFunctions>option.InlineMWFunctions.Speed</param.InlineMWFunctions>
+      <param.InlineMWFunctionsInUserFunctions>option.InlineMWFunctionsInUserFunctions.Speed</param.InlineMWFunctionsInUserFunctions>
       <param.GenerateMakefile>true</param.GenerateMakefile>
       <param.BuildToolEnable>false</param.BuildToolEnable>
       <param.BuildToolConfiguration />
       <param.InlineThreshold>10</param.InlineThreshold>
       <param.InlineThresholdMax>200</param.InlineThresholdMax>
-      <param.InlineStackLimit>1000000</param.InlineStackLimit>
-      <param.InlineBetweenUserFunctions>option.InlineBetweenUserFunctions.Speed</param.InlineBetweenUserFunctions>
-      <param.InlineBetweenUserAndMathWorksFunctions>option.InlineBetweenUserAndMathWorksFunctions.Speed</param.InlineBetweenUserAndMathWorksFunctions>
-      <param.InlineBetweenMathWorksFunctions>option.InlineBetweenMathWorksFunctions.Speed</param.InlineBetweenMathWorksFunctions>
+      <param.InlineStackLimit>4000</param.InlineStackLimit>
       <param.EnableStrengthReduction>false</param.EnableStrengthReduction>
       <param.EnableMemcpy>true</param.EnableMemcpy>
       <param.MemcpyThreshold>64</param.MemcpyThreshold>
@@ -314,10 +309,7 @@
       <param.CustomBLASCallback />
       <param.GenerateDefaultInSwitch>false</param.GenerateDefaultInSwitch>
       <param.EnableTraceability>true</param.EnableTraceability>
-      <param.UseECoderFeatures>false</param.UseECoderFeatures>
-      <param.EnableGitSupport>false</param.EnableGitSupport>
-      <param.EnableAutoCommit>false</param.EnableAutoCommit>
-      <param.RepositoryStyle>option.RepositoryStyle.Auto</param.RepositoryStyle>
+      <param.UseECoderFeatures>true</param.UseECoderFeatures>
       <param.psCustomPrjState>false</param.psCustomPrjState>
       <param.psCustomProjectFile />
       <param.psCheckConfValue>option.psCheckConfValue.onWarnCheckConfDlg</param.psCheckConfValue>
@@ -327,6 +319,7 @@
       <param.psQuickConfValue>option.psQuickConfValue.proj</param.psQuickConfValue>
       <param.psOutputFolder>results_$codegenName$</param.psOutputFolder>
       <unset>
+        <param.grt.GenCodeOnly />
         <param.WorkingFolder />
         <param.SpecifiedWorkingFolder />
         <param.BuildFolder />
@@ -376,6 +369,7 @@
         <param.ReplacementTypes.HeaderFiles />
         <param.CppInterfaceStyle />
         <param.CppInterfaceClassName />
+        <param.CppPreserveClasses />
         <param.CustomFileNameStr />
         <param.CustomSymbolStrGlobalVar />
         <param.CustomSymbolStrType />
@@ -454,7 +448,6 @@
         <param.IndentStyle />
         <param.IndentSize />
         <param.ColumnLimit />
-        <param.grt.GenCodeOnly />
         <param.ConstantFoldingTimeout />
         <param.CompileTimeRecursionLimit />
         <param.EnableRuntimeRecursion />
@@ -463,15 +456,15 @@
         <param.IncludeTerminateFcn />
         <param.GenerateExampleMain />
         <param.PreserveVariableNames />
+        <param.InlineUserFunctions />
+        <param.InlineMWFunctions />
+        <param.InlineMWFunctionsInUserFunctions />
         <param.GenerateMakefile />
         <param.BuildToolEnable />
         <param.BuildToolConfiguration />
         <param.InlineThreshold />
         <param.InlineThresholdMax />
         <param.InlineStackLimit />
-        <param.InlineBetweenUserFunctions />
-        <param.InlineBetweenUserAndMathWorksFunctions />
-        <param.InlineBetweenMathWorksFunctions />
         <param.EnableStrengthReduction />
         <param.EnableMemcpy />
         <param.MemcpyThreshold />
@@ -485,9 +478,6 @@
         <param.GenerateDefaultInSwitch />
         <param.EnableTraceability />
         <param.UseECoderFeatures />
-        <param.EnableGitSupport />
-        <param.EnableAutoCommit />
-        <param.RepositoryStyle />
         <param.psCustomPrjState />
         <param.psCustomProjectFile />
         <param.psCheckConfValue />
@@ -845,7 +835,7 @@
       </unset>
     </profile>
     <param.objective>option.objective.c</param.objective>
-    <param.WorkflowStep>generateCode</param.WorkflowStep>
+    <param.WorkflowStep>workflowSummary</param.WorkflowStep>
     <param.TestSnippets>
       <item>example</item>
     </param.TestSnippets>
@@ -853,9 +843,9 @@
     <param.UseGlobals>option.UseGlobals.No</param.UseGlobals>
     <param.outputfile>${PROJECT_ROOT}/codegen/lib/planTrajectory/planTrajectory.a</param.outputfile>
     <param.version>R2012a</param.version>
-    <param.HasECoderFeatures>false</param.HasECoderFeatures>
-    <param.HasGpuCoder>false</param.HasGpuCoder>
-    <var.HasNeuralNetworkToolbox>false</var.HasNeuralNetworkToolbox>
+    <param.HasECoderFeatures>true</param.HasECoderFeatures>
+    <param.HasGpuCoder>true</param.HasGpuCoder>
+    <var.HasNeuralNetworkToolbox>true</var.HasNeuralNetworkToolbox>
     <param.mex.mainhtml />
     <param.grt.mainhtml />
     <param.CallGeneratedCodeFromTest>true</param.CallGeneratedCodeFromTest>
@@ -866,7 +856,7 @@
     <param.AutoInferUnboundedSizeThreshold>2048</param.AutoInferUnboundedSizeThreshold>
     <param.EnableFixedPointStep>false</param.EnableFixedPointStep>
     <param.EnableScreener>true</param.EnableScreener>
-    <param.AnnotationChecksum>162502786</param.AnnotationChecksum>
+    <param.AnnotationChecksum>668310947</param.AnnotationChecksum>
     <var.LegacyTarget />
     <var.MirrorOnOpen>false</var.MirrorOnOpen>
     <param.FixedPointEnabled>false</param.FixedPointEnabled>
@@ -875,13 +865,13 @@
     <param.unifiedParamStorage />
     <var.gc.lastOutputRoot>codegen/lib/planTrajectory</var.gc.lastOutputRoot>
     <var.gc.lastOutputType>STATIC_LIBRARY</var.gc.lastOutputType>
-    <var.gc.preBuildChecksum>4180724665</var.gc.preBuildChecksum>
+    <var.gc.preBuildChecksum>2745756951</var.gc.preBuildChecksum>
     <var.cfi.lastOutputRoot>codegen/mex/planTrajectory</var.cfi.lastOutputRoot>
-    <var.cfi.preBuildChecksum>927732133</var.cfi.preBuildChecksum>
+    <var.cfi.preBuildChecksum>1068518162</var.cfi.preBuildChecksum>
     <var.lastCfiTestSnippet>example</var.lastCfiTestSnippet>
     <var.outdatedOnRestore>false</var.outdatedOnRestore>
-    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/PlanRRTPath.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/SetMapLimits.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/pathToTrajectory.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/planTrajectory.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/setCostmap.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;3459271782&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
-    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/PlanRRTPath.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/SetMapLimits.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/pathToTrajectory.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/planTrajectory.m&lt;/file&gt;&lt;file&gt;/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/setCostmap.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
+    <var.lastUserSourceChecksum>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;checksum&gt;&lt;includedFiles&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/PlanRRTPath.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/SetMapLimits.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/pathToTrajectory.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/planTrajectory.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/setCostmap.m&lt;/file&gt;&lt;/includedFiles&gt;&lt;value&gt;763395606&lt;/value&gt;&lt;/checksum&gt;</var.lastUserSourceChecksum>
+    <var.sourceSetState>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;sourceModel&gt;&lt;primarySourceFiles&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/PlanRRTPath.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/SetMapLimits.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/pathToTrajectory.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/planTrajectory.m&lt;/file&gt;&lt;file&gt;/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/setCostmap.m&lt;/file&gt;&lt;/primarySourceFiles&gt;&lt;fixedPointSourceFiles/&gt;&lt;fixedPointSourceRegistered&gt;false&lt;/fixedPointSourceRegistered&gt;&lt;fixedPointSourceSelected&gt;false&lt;/fixedPointSourceSelected&gt;&lt;/sourceModel&gt;</var.sourceSetState>
     <param.forceMexBuild>false</param.forceMexBuild>
     <param.NoDefaultJIT>false</param.NoDefaultJIT>
     <param.configImportActive>false</param.configImportActive>
@@ -889,28 +879,25 @@
     <var.notGpuCoder>true</var.notGpuCoder>
     <var.boundToGui>true</var.boundToGui>
     <var.isConfigDialog>false</var.isConfigDialog>
-    <var.ecoderEnabled>false</var.ecoderEnabled>
+    <var.ecoderEnabled>true</var.ecoderEnabled>
     <param.mex.outputfile>planTrajectory_mex</param.mex.outputfile>
     <param.grt.outputfile>planTrajectory</param.grt.outputfile>
     <param.artifact>option.target.artifact.lib</param.artifact>
     <param.outputfile>${PROJECT_ROOT}/codegen/lib/planTrajectory/planTrajectory.a</param.outputfile>
     <param.CppNamespace>mgen</param.CppNamespace>
-    <param.CppPackagesToNamespaces>true</param.CppPackagesToNamespaces>
-    <param.CppNamespaceForMathworksCode>coder</param.CppNamespaceForMathworksCode>
-    <param.CppPreserveClasses>true</param.CppPreserveClasses>
     <param.gpu.Enabled>false</param.gpu.Enabled>
     <param.gpu.KernelNamePrefix />
     <param.gpu.SelectCudaDevice>-1</param.gpu.SelectCudaDevice>
     <param.gpu.MaxKernelDepth>0</param.gpu.MaxKernelDepth>
-    <param.gpu.MallocMode />
+    <param.gpu.MallocMode>discrete</param.gpu.MallocMode>
     <param.gpu.MallocThreshold>200</param.gpu.MallocThreshold>
     <param.gpu.StackLimitPerThread>1024</param.gpu.StackLimitPerThread>
-    <param.gpu.EnableCUBLAS>false</param.gpu.EnableCUBLAS>
-    <param.gpu.EnableCUSOLVER>false</param.gpu.EnableCUSOLVER>
-    <param.gpu.EnableCUFFT>false</param.gpu.EnableCUFFT>
+    <param.gpu.EnableCUBLAS>true</param.gpu.EnableCUBLAS>
+    <param.gpu.EnableCUSOLVER>true</param.gpu.EnableCUSOLVER>
+    <param.gpu.EnableCUFFT>true</param.gpu.EnableCUFFT>
     <param.gpu.Benchmarking>false</param.gpu.Benchmarking>
     <param.gpu.SafeBuild>false</param.gpu.SafeBuild>
-    <param.gpu.ComputeCapability />
+    <param.gpu.ComputeCapability>3.5</param.gpu.ComputeCapability>
     <param.gpu.CustomComputeCapability />
     <param.gpu.CompilerFlags />
     <var.checkIssuesGpu>false</var.checkIssuesGpu>
@@ -918,11 +905,11 @@
     <var.isDeepLearningForMatlabCoderEnabled>true</var.isDeepLearningForMatlabCoderEnabled>
     <param.deeplearning.TargetLib>option.deeplearning.targetlibrary.none</param.deeplearning.TargetLib>
     <var.cfiTargetLibSuppression>false</var.cfiTargetLibSuppression>
-    <var.hasMatlabDeepLearningSupportPackage>false</var.hasMatlabDeepLearningSupportPackage>
-    <var.hasGpuDeepLearningSupportPackage>false</var.hasGpuDeepLearningSupportPackage>
+    <var.hasMatlabDeepLearningSupportPackage>true</var.hasMatlabDeepLearningSupportPackage>
+    <var.hasGpuDeepLearningSupportPackage>true</var.hasGpuDeepLearningSupportPackage>
     <param.tensorrt.DataType>option.tensorrt.datatype.fp32</param.tensorrt.DataType>
     <param.tensorrt.DataPath />
-    <param.tensorrt.NumCalibrationBatches>0</param.tensorrt.NumCalibrationBatches>
+    <param.tensorrt.NumCalibrationBatches>1</param.tensorrt.NumCalibrationBatches>
     <param.cudnn.AutoTuning>true</param.cudnn.AutoTuning>
     <param.cudnn.DataType>option.cudnn.datatype.fp32</param.cudnn.DataType>
     <param.cudnn.CalibrationResultFile />
@@ -1010,9 +997,6 @@
       <var.ecoderEnabled />
       <param.mex.outputfile />
       <param.grt.outputfile />
-      <param.CppPackagesToNamespaces />
-      <param.CppNamespaceForMathworksCode />
-      <param.CppPreserveClasses />
       <param.gpu.Enabled />
       <param.gpu.KernelNamePrefix />
       <param.gpu.SelectCudaDevice />
@@ -1033,6 +1017,8 @@
       <var.isDeepLearningForMatlabCoderEnabled />
       <param.deeplearning.TargetLib />
       <var.cfiTargetLibSuppression />
+      <var.hasMatlabDeepLearningSupportPackage />
+      <var.hasGpuDeepLearningSupportPackage />
       <param.tensorrt.DataType />
       <param.tensorrt.DataPath />
       <param.tensorrt.NumCalibrationBatches />
@@ -1089,7 +1075,7 @@
     </unset>
     <fileset.entrypoints>
       <file custom-data-expanded="false" value="${PROJECT_ROOT}/planTrajectory.m">
-        <Marker>1611758385469</Marker>
+        <Marker>1613403690681</Marker>
       </file>
     </fileset.entrypoints>
     <fileset.testbench>
@@ -1172,18 +1158,48 @@
       </file>
     </fileset.inputtypes>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}/codegen/lib/planTrajectory" name="planTrajectory.a" optional="false">/home/patrick/dev/software/tools/go_to_formation/matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a</file>
+      <file location="${PROJECT_ROOT}/codegen/lib/planTrajectory" name="planTrajectory.a" optional="false">/home/vp/Downloads/cpm/software/tools/go_to_formation/matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/usr/local/MATLAB/R2020b</root>
+      <root>/usr/local/MATLAB/R2020a</root>
       <toolboxes>
         <toolbox name="matlabcoder" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="neuralnetwork" />
       </toolboxes>
       <toolbox>
         <matlabcoder>
           <enabled>true</enabled>
         </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
       </toolbox>
     </matlab>
     <platform>
@@ -1195,7 +1211,7 @@
       <vista>false</vista>
       <linux>true</linux>
       <solaris>false</solaris>
-      <osver>5.4.0-64-generic</osver>
+      <osver>5.4.0-65-generic</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>glnxa64</arch>
