@@ -23,22 +23,22 @@ link_directories(../../../cpm_lib/build/)
 # set_target_properties(planTrajectory PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/matlab_dll/planTrajectory/planTrajectory.so)
 # Needs to be changed
 add_library(iomp5 SHARED IMPORTED)
-set_target_properties(iomp5 PROPERTIES IMPORTED_LOCATION /usr/local/MATLAB/R2020b/sys/os/glnxa64/libiomp5.so)
+set_target_properties(iomp5 PROPERTIES IMPORTED_LOCATION /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so)
 
 # exe
 link_libraries(dl nsl m pthread rt)
 
 
 # MVP: Get example to build
-# add_executable(mgen_example 
+#add_executable(mgen_example 
 #     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/main.cpp
 # )
 # target_link_libraries(mgen_example ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
 # target_include_directories(mgen_example PRIVATE 
 #     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/examples/
-#     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-#     /usr/local/MATLAB/R2020b/extern/include
-# )
+#    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
+#    /usr/local/MATLAB/R2020b/extern/include
+#   )
 
 # target_link_libraries(mgen_example cpm)
 # target_link_libraries(mgen_example iomp5)
@@ -46,11 +46,17 @@ link_libraries(dl nsl m pthread rt)
 
 # Go to formation
 add_executable(mlib_test main.cpp)
-target_link_libraries(mlib_test ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
 target_include_directories(mlib_test PRIVATE 
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-    /usr/local/MATLAB/R2020b/extern/include
+    /usr/local/MATLAB/R2020a/extern/include/
+    /usr/local/MATLAB/R2020a/extern/include/shared_autonomous
+    /usr/local/MATLAB/R2020a/extern/include/shared_robotics
+    
 )
+
+link_directories(/usr/local/MATLAB/R2020a/bin/glnxa64/)
+target_link_libraries(mlib_test ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
+target_link_libraries(mlib_test /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so)
 
 target_link_libraries(mlib_test cpm)
 target_link_libraries(mlib_test iomp5)

@@ -24,16 +24,6 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: main.cpp
-//
-// MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 01-Feb-2021 11:34:31
-//
-
 // Include Files
 #include <cstddef>
 #include <cstdlib>
@@ -67,11 +57,43 @@
 #include <thread>
 #include <map>
 #include <cmath>
-#include <chrono>
-#include <ctime>
 
 using std::vector;
 
+//
+// Academic License - for use in teaching, academic research, and meeting
+// course requirements at degree granting institutions only.  Not for
+// government, commercial, or other organizational use.
+// File: main.cpp
+//
+// MATLAB Coder version            : 5.0
+// C/C++ source code generated on  : 01-Feb-2021 11:34:31
+//
+
+//***********************************************************************
+// This automatically generated example C++ main file shows how to call
+// entry-point functions that MATLAB Coder generated. You must customize
+// this file for your application. Do not modify this file directly.
+// Instead, make a copy of this file, modify it, and integrate it into
+// your development environment.
+//
+// This file initializes entry-point function arguments to a default
+// size and value before calling the entry-point functions. It does
+// not store or use any values returned from the entry-point functions.
+// If necessary, it does pre-allocate memory for returned values.
+// You can use this file as a starting point for a main function that
+// you can deploy in your application.
+//
+// After you copy the file, and before you deploy it, you must make the
+// following changes:
+// * For variable-size function arguments, change the example sizes to
+// the sizes that your application requires.
+// * Change the example values of function arguments to the values that
+// your application requires.
+// * If the entry-point functions return values, store these values or
+// otherwise use them as required by your application.
+//
+//***********************************************************************
 
 // Function Declarations
 static void argInit_1xd256_real_T(double result_data[], int result_size[2]);
@@ -192,76 +214,13 @@ static unsigned char argInit_uint8_T()
   return 0U;
 }
 
+//
+// Arguments    : void
+// Return Type  : void
+//
 
-int main(int argc, char *argv[])
+static void main_planTrajectory()
 {
-
-  //Initialize cpm library
-  const std::string node_id = "mlib_test";
-  cpm::init(argc, argv);
-  cpm::Logging::Instance().set_id(node_id);
-  const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-  const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {1}, argc, argv);
-  std::vector<uint8_t> vehicle_ids;
-  for (auto i : vehicle_ids_int)
-  {
-      assert(i > 0);
-      assert(i < 255);
-      vehicle_ids.push_back(i);
-  }
-  assert(vehicle_ids.size() > 0);
-
-  ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
-  std::stringstream vehicle_ids_stream;
-  vehicle_ids_stream << "Vehicle IDs: ";
-  for (uint8_t id : vehicle_ids)
-  {
-      vehicle_ids_stream << static_cast<uint32_t>(id) << "|"; //Cast s.t. uint8_t is not interpreted as a character
-  }
-  std::string vehicle_ids_string = vehicle_ids_stream.str();
-  std::cout << vehicle_ids_string << std::endl;
-
-  //////////////Initialization for trajectory planning/////////////////////////////////
-  // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
-  const uint64_t dt_nanos = 400000000ull;
-   
-  ///////////// writer and reader for sending trajectory commands////////////////////////
-  //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
-  cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
-  //the reader will read the pose of a vehicle given by its vehicle ID
-  cpm::MultiVehicleReader<VehicleObservation> ips_reader(
-      cpm::get_topic<VehicleObservation>("vehicleObservation"),
-      vehicle_ids
-  );
-
-  auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
-  timer->start([&](uint64_t t_now)
-  {
-  std::map<uint8_t, VehicleObservation> ips_sample;
-  std::map<uint8_t, uint64_t> ips_sample_age;
-  ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
-  
-  uint8_t new_id;
-  Pose2D new_pose;
-
-
-  for(auto e:ips_sample)
-  {
-    auto key = e.first;
-    auto data = e.second;
-    new_id = data.vehicle_id();
-    new_pose = data.pose();
-
-    //new_mgen.x = double(new_pose.x();
-    //new_mgen.y = data.pose.y;
-    //new_mgen.yaw = data.pose.yaw;
-
-    std::cout << "pose: " << new_pose << std::endl;
-  }
-
-  // The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. 
-  // Invoke the entry-point functions.
-  // You can call entry-point functions multiple times.
   double vehicleIdList_data[256];
   int vehicleIdList_size[2];
   mgen::struct0_T vehiclePoses_data[256];
@@ -278,7 +237,6 @@ int main(int argc, char *argv[])
   argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
 
   // Initialize function input argument 'goalPose'.
-  // Call the entry-point 'planTrajectory'.
   r = argInit_Pose2D();
 
   for (int i = 0; i < 20; i++) {
@@ -286,14 +244,15 @@ int main(int argc, char *argv[])
   }
   vehicleIdList_size[1] = 20;
 
-  double new_yaw = 360 + new_pose.yaw()*180/M_PI;
-  vehiclePoses_data[0].vehicle_id = 1;
-  vehiclePoses_data[0].pose.x = new_pose.x();
-  vehiclePoses_data[0].pose.y = new_pose.y();
-  vehiclePoses_data[0].pose.yaw = new_yaw;
- 
-  std::cout << "yae: " << new_yaw << std::endl;
-  
+  vehiclePoses_data[0].vehicle_id = 3;
+  //vehiclePoses_data[0].pose.x = 4.0;
+  //vehiclePoses_data[0].pose.y = 3.5;
+  //vehiclePoses_data[0].pose.yaw = 180;
+
+  vehiclePoses_data[0].pose.x = 3.87879584432267;
+  vehiclePoses_data[0].pose.y = 3.72046857262141;
+  vehiclePoses_data[0].pose.yaw = 330; 
+
   vehiclePoses_size[1] = 1;
 
   r.x = 0.2;
@@ -301,7 +260,7 @@ int main(int argc, char *argv[])
   r.yaw = 90; //deg - value received will have to be converted from rad
 
   double speed = 1.0;
-  int vehicle_id = 1;
+  int vehicle_id = 3;
  
   mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
                        vehiclePoses_size, &r, vehicle_id, speed,
@@ -314,33 +273,17 @@ int main(int argc, char *argv[])
               trajectory_points[i].vx << " vy: " << trajectory_points[i].vy << std::endl;
   }
   std::cout << "path validity: " << (isPathValid == 1) << std::endl;
-  
-  /*  
-  auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
-  timer->start([&](uint64_t t_now)
-  {
-         
-      rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
-      VehicleCommandTrajectory vehicle_command_trajectory;
-      vehicle_command_trajectory.vehicle_id(vehicle_id);
-      vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
-      vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-      vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
-      writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
 
-    });
-  }
-  */
-  timer->stop();
-  });
+}
+
+
+int main(int argc, char *argv[])
+{
+
+  main_planTrajectory();
+
   // Terminate the application.
   // You do not need to do this more than one time.
   mgen::planTrajectory_terminate();
   return 0;
 }
-
-//
-// File trailer for main.cpp
-//
-// [EOF]
-//
