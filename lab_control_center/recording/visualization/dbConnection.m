@@ -47,10 +47,18 @@ getVehicleCommandPathTrackingJsonSample = ['SELECT rti_json_sample FROM "vehicle
 
 % Apply SQLite queries to database and fetch corresponding data.
 ddsJsonSample = struct;
-ddsJsonSample.VehicleState = fetch(conn,getVehicleStateJsonSample);
-ddsJsonSample.VehiclePose = fetch(conn,getVehiclePoseJsonSample);
-ddsJsonSample.VehicleCommandPathTracking = fetch(conn,getVehicleCommandPathTrackingJsonSample);
+ddsJsonSample.VehicleState = robustFetch(conn,getVehicleStateJsonSample);
+ddsJsonSample.VehiclePose = robustFetch(conn,getVehiclePoseJsonSample);
+ddsJsonSample.VehicleCommandPathTracking = robustFetch(conn,getVehicleCommandPathTrackingJsonSample);
 
 save ('dds_json_sample', 'ddsJsonSample')
 
+end
+
+function result = robustFetch(conn, sqlquery)
+try
+	result = fetch(conn, sqlquery);
+catch
+	result = [];
+end
 end
