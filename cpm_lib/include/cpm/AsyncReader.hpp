@@ -69,6 +69,8 @@ namespace cpm
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
+         * \param is_reliable If the QoS for DDS messages should be set to reliable (true) or best effort (false) messaging
+         * \param is_transient_local If true, and if the Writer is still present, the Reader receives data that was sent before it went online
          */
         dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool is_transient_local)
         {
