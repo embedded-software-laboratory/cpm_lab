@@ -7,13 +7,18 @@
  */
 
 /**
- * \file linear_discharge.m
+* \page pbd_files Plot Battery Discharge Files
+* \subpage pbd_lin <br>
+* \subpage pbd_main <br>
+* \ingroup plot_battery_discharge
+*/
+
+/**
+ * \page pbd_lin linear_discharge.m
  * \brief TODO
- * \ingroup plot_battery_discharge
  */
 
 /**
- * \file main.m
+ * \page pbd_main main.m
  * \brief TODO
- * \ingroup plot_battery_discharge
  */

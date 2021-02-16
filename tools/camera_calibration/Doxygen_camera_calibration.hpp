@@ -7,13 +7,18 @@
  */
 
 /**
- * \file calibrationCheckerboardPoints.m
+* \page camera_calib_files Camera Calibration Files
+* \subpage camera_calib_cal <br>
+* \subpage camera_calib_end <br>
+* \ingroup camera_calibration
+*/
+
+/**
+ * \page camera_calib_cal calibrationCheckerboardPoints.m
  * \brief TODO
- * \ingroup camera_calibration
  */
 
 /**
- * \file end_to_end_calibration.m
+ * \page camera_calib_end end_to_end_calibration.m
  * \brief TODO
- * \ingroup camera_calibration
  */

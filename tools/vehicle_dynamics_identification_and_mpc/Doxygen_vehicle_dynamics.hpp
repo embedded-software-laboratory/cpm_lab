@@ -7,73 +7,78 @@
  */
 
 /**
- * \file manual_parameter_fit.m
+* \page vdiam_files Vehicle Dynamics Identification and MPC Files
+* \subpage vdiam_manual <br>
+* \subpage vdiam_mpc_test <br>
+* \subpage vdiam_mpc <br>
+* \subpage vdiam_opt_eval <br>
+* \subpage vdiam_opt <br>
+* \subpage vdiam_opt_param <br>
+* \subpage vdiam_prep <br>
+* \subpage vdiam_read <br>
+* \subpage vdiam_record <br>
+* \subpage vdiam_sql <br>
+* \subpage vdiam_trajectory <br>
+* \subpage vdiam_vehicle <br>
+* \ingroup vehicle_dynamics_identification_and_mpc
+*/
+
+/**
+ * \page vdiam_manual manual_parameter_fit.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file mpc_test.m
+ * \page vdiam_mpc_test mpc_test.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file MpcController.m
+ * \page vdiam_mpc MpcController.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file optimize_parameters_delay_grid_eval.m
+ * \page vdiam_opt_eval optimize_parameters_delay_grid_eval.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file optimize_parameters_delay_grid.m
+ * \page vdiam_opt optimize_parameters_delay_grid.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file optimize_parameters.m
+ * \page vdiam_opt_param optimize_parameters.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file prepare_measurement_data.m
+ * \page vdiam_prep prepare_measurement_data.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file read_rti_csv.m
+ * \page vdiam_read read_rti_csv.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file recording_to_mat.bash
+ * \page vdiam_record recording_to_mat.bash
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file sql_to_mat.m
+ * \page vdiam_sql sql_to_mat.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file TrajectoryInterpolation.m
+ * \page vdiam_trajectory TrajectoryInterpolation.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
 
 /**
- * \file vehicle_dynamics.m
+ * \page vdiam_vehicle vehicle_dynamics.m
  * \brief TODO
- * \ingroup vehicle_dynamics_identification_and_mpc
  */
