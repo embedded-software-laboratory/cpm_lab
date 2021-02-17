@@ -251,7 +251,11 @@ bool imu_setup() {
 	return true;	
 }
 
-
+/**
+ * \brief TODO
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 static int32_t imu_yaw_accumulator = 0;
 
 

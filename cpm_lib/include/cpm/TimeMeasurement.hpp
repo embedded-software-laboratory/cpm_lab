@@ -64,7 +64,6 @@ namespace cpm
      * This class comprises functions with which time measurements between specific points in the code can be made.
      * One instance saves all measurements which are currently done (Singleton).
      */
-
     class TimeMeasurement {
         public:
             /**

@@ -115,11 +115,7 @@ public:
     /**
      * \brief constructor
      * \param _trajectory The trajectory to follow: Important: Translate lanelet ref to position beforehand, so that it must not be done here anymore (a value is expected for every single trajectory point)
-     * \param _time_step_size The size of one commonroad timestep (in seconds)
      * \param _id The ID of the simulated obstacle
-     * \param _simulated_time Whether simulated time should be used (TODO: Not properly supported /tested yet)
-     * \param _custom_stop_signal Custom stop signal for the slow timer that is used when no simulation is performed; Can be used to stop all running obstacle simulations at once & thus to save time when switching to simulation mode
-     * \param _get_lanelet_shape Function that returns shape (+ position) of a lanelet (given its ID), used when only a lanelet reference determines an obstacle's position
      */
     ObstacleSimulation(ObstacleSimulationData _trajectory, int _id);
 
@@ -165,6 +161,8 @@ public:
      */
     uint8_t get_id();
 
-    //Reset internal counter variable which was implemented to make the lookup a bit faster
+    /**
+     * \brief Reset internal counter variable which was implemented to make the lookup a bit faster
+     */
     void reset();
 };

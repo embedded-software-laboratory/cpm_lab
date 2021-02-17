@@ -30,6 +30,8 @@
  * \ingroup cpmlib_idl
  */
 struct Point2D {
+    //! x position
     double x;    
+    //! y position
     double y;    
 };

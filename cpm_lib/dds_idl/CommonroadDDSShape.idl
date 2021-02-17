@@ -35,7 +35,9 @@
  * \ingroup cpmlib_idl
  */
 struct CommonroadDDSPoint {
+    //! x position
     double x;
+    //! y position
     double y;
     //z : omitted
 };

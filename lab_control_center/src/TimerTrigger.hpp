@@ -63,8 +63,11 @@ enum ParticipantStatus {
  * \ingroup lcc
  */
 struct TimerData {
+    //! For simulated time: Next point in time when the participant should receive a start signal
     uint64_t next_timestep;
+    //! Timestamp for the last received message
     uint64_t last_message_receive_stamp;
+    //! Status of the participant
     ParticipantStatus participant_status;
 };
 
@@ -105,7 +108,9 @@ private:
     std::mutex simulated_time_mutex;
 
     //Timing functions
+    //! Timer thread that handles receiving + sending timing messages in a more ordered fashion
     std::thread next_signal_thread;
+    //! When sending the start signal: Decides if simulated or real time is used, cannot be reset afterwards
     std::atomic_bool simulation_started;
     /**
      * \brief Send time signals if simulated time is used, check received messages (which participant is currently working, which is out of sync etc.)

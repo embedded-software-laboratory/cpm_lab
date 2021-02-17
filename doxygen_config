@@ -859,8 +859,7 @@ INPUT_ENCODING         = UTF-8
 # C comment), *.py, *.pyw, *.f90, *.f95, *.f03, *.f08, *.f18, *.f, *.for, *.vhd,
 # *.vhdl, *.ucf, *.qsf and *.ice.
 
-FILE_PATTERNS          = *.bash \
-                         *.c \
+FILE_PATTERNS          = *.c \
                          *.cc \
                          *.cxx \
                          *.cpp \
@@ -886,7 +885,6 @@ FILE_PATTERNS          = *.bash \
                          *.php5 \
                          *.phtml \
                          *.inc \
-                         *.m \
                          *.markdown \
                          *.md \
                          *.mm \
@@ -907,13 +905,6 @@ FILE_PATTERNS          = *.bash \
                          *.ucf \
                          *.qsf \
                          *.ice \
-                         *.xml \
-                         *.yaml \
-                         *.glade \
-                         *.css \
-                         *.template  \
-                         *.config \
-                         *.sh
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.

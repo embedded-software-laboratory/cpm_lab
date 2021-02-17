@@ -1,4 +1,4 @@
-// With this file, you can generate a short description for each file in this folder; use \page instead of \file - we do not want to parse .m and other file types!
+// With this file, you can generate a short description for each file in this folder; use page instead of file - we do not want to parse .m and other file types!
 
 //////////////////////////////////////////////
 /**
