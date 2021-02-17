@@ -457,7 +457,7 @@ void SetupViewUI::deploy_applications() {
 #endif
     
     // Recording
-    //deploy_functions->deploy_recording();
+    deploy_functions->deploy_recording();
 
     //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
     //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
