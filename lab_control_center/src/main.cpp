@@ -92,7 +92,7 @@ void kill_cloud_discovery() {
  * when a new LCC gets started, kill all old sessions
  */
 void kill_all_tmux_sessions() {
-    std::string command = "tmux kill-server";
+    std::string command = "tmux kill-server >>/dev/null 2>>/dev/null";
     system(command.c_str());
 }
 
