@@ -43,15 +43,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/eight_zero/build.bash
- * \brief Build script for eight_zero
+ * \defgroup eight_zero_files Additional Files
  * \ingroup eight_zero
  */
 
 /**
- * \file high_level_controller/examples/cpp/eight_zero/run.bash
+ * \page eight_zero_files_page Additional Files for Eight Zero
+ * \subpage e_z_build <br>
+ * \subpage e_z_run <br>
+ * \ingroup eight_zero_files
+*/
+
+/**
+ * \page e_z_build build.bash
+ * \brief Build script for eight_zero
+ */
+
+/**
+ * \page e_z_run run.bash
  * \brief Run script for eight_zero
- * \ingroup eight_zero
  */
 
 /**

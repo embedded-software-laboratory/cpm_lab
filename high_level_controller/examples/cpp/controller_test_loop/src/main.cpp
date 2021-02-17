@@ -54,21 +54,31 @@
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/controller_test_loop/build.bash
+ * \defgroup controller_test_loop_files Additional Files
+ * \ingroup controller_test_loop
+ */
+
+/**
+ * \page controller_test_loop_files_page Additional Files for Controller Test Loop
+ * \subpage c_t_l_build <br>
+ * \subpage c_t_l_run <br>
+ * \subpage c_t_l_run_platoon <br>
+ * \ingroup controller_test_loop_files
+*/
+
+/**
+ * \page c_t_l_build build.bash
  * \brief Build script for controller_test_loop
- * \ingroup controller_test_loop
  */
 
 /**
- * \file high_level_controller/examples/cpp/controller_test_loop/run.bash
+ * \page c_t_l_run run.bash
  * \brief TODO
- * \ingroup controller_test_loop
  */
 
 /**
- * \file high_level_controller/examples/cpp/controller_test_loop/run_platoon.bash
+ * \page c_t_l_run_platoon run_platoon.bash
  * \brief TODO
- * \ingroup controller_test_loop
  */
 
 /**

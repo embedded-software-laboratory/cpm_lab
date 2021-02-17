@@ -48,15 +48,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/central_routing/build.bash
- * \brief Build script for central_routing
+ * \defgroup central_routing_files Additional Files
  * \ingroup central_routing
  */
 
 /**
- * \file high_level_controller/examples/cpp/central_routing/run.bash
+ * \page central_routing_files_page Additional Files for Central Routing
+ * \subpage central_routing_build <br>
+ * \subpage central_routing_run <br>
+ * \ingroup central_routing_files
+*/
+
+/**
+ * \page central_routing_build build.bash
+ * \brief Build script for central_routing
+ */
+
+/**
+ * \page central_routing_run run.bash
  * \brief Run script for central_routing
- * \ingroup central_routing
  */
 
 /**

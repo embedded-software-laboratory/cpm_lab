@@ -39,15 +39,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/basic_line/build.bash
- * \brief Build script for basic_line
+ * \defgroup basic_line_files Additional Files
  * \ingroup basic_line
  */
 
 /**
- * \file high_level_controller/examples/cpp/basic_line/run.bash
+ * \page basic_line_files_page Additional Files for Basic Line
+ * \subpage basic_line_build <br>
+ * \subpage basic_line_run <br>
+ * \ingroup basic_line_files
+*/
+
+/**
+ * \page basic_line_build build.bash
+ * \brief Build script for basic_line
+ */
+
+/**
+ * \page basic_line_run run.bash
  * \brief Run script for basic_line
- * \ingroup basic_line
  */
 
 /**

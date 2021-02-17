@@ -38,15 +38,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/two_vehicles_drive/build.bash
- * \brief Build script for two_vehicles_drive
+ * \defgroup two_vehicles_drive_files Additional Files
  * \ingroup two_vehicles_drive
  */
 
 /**
- * \file high_level_controller/examples/cpp/two_vehicles_drive/run.bash
+ * \page two_vehicles_drive_files_page Additional Files for Two Vehicles Drive
+ * \subpage t_v_d_build <br>
+ * \subpage t_v_d_run <br>
+ * \ingroup two_vehicles_drive_files
+*/
+
+/**
+ * \page t_v_d_build build.bash
+ * \brief Build script for two_vehicles_drive
+ */
+
+/**
+ * \page t_v_d_run run.bash
  * \brief Run script for two_vehicles_drive
- * \ingroup two_vehicles_drive
  */
 
 /**

@@ -38,15 +38,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/basic_circle/build.bash
- * \brief Build script for basic_circle
+ * \defgroup basic_circle_files Additional Files
  * \ingroup basic_circle
  */
 
 /**
- * \file high_level_controller/examples/cpp/basic_circle/run.bash
+ * \page basic_circle_files_page Additional Files for Basic Circle
+ * \subpage basic_circle_build <br>
+ * \subpage basic_circle_run <br>
+ * \ingroup basic_circle_files
+*/
+
+/**
+ * \page basic_circle_build build.bash
+ * \brief Build script for basic_circle
+ */
+
+/**
+ * \page basic_circle_run run.bash
  * \brief Run script for basic_circle
- * \ingroup basic_circle
  */
 
 /**

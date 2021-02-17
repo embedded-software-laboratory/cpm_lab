@@ -38,15 +38,25 @@ using std::vector;
 
 //Description for bash files
 /**
- * \file high_level_controller/examples/cpp/diagonal_figure_eight/build.bash
- * \brief Build script for diagonal_figure_eight
+ * \defgroup diagonal_figure_eight_files Additional Files
  * \ingroup diagonal_figure_eight
  */
 
 /**
- * \file high_level_controller/examples/cpp/diagonal_figure_eight/run.bash
+ * \page diagonal_figure_eight_files_page Additional Files for Diagonal Figure Eight
+ * \subpage d_f_e_build <br>
+ * \subpage d_f_e_run <br>
+ * \ingroup diagonal_figure_eight_files
+*/
+
+/**
+ * \page d_f_e_build build.bash
+ * \brief Build script for diagonal_figure_eight
+ */
+
+/**
+ * \page d_f_e_run run.bash
  * \brief Run script for diagonal_figure_eight
- * \ingroup diagonal_figure_eight
  */
 
 /**

@@ -55,18 +55,28 @@
 /////////////////////////////////////////////////
 ///////// Bash file descriptions for Doxygen
 ////////////////////////////////////////////////
-
 /**
- * \file ../create_nuc_package.bash
- * \brief Bash file that creates an important package required by the NUCs on the Main Lab PC
+ * \defgroup autostart_files Important Files
+ * \brief This group describes important bash files for the NUC
  * \ingroup autostart
  */
 
 /**
- * \file ../lab_autostart.bash
+ * \page autostart_files_page Important Files for Autostart
+ * \subpage autostart_create <br>
+ * \subpage autostart_lab <br>
+ * \ingroup autostart_files
+*/
+
+/**
+ * \page autostart_create ../create_nuc_package.bash
+ * \brief Bash file that creates an important package required by the NUCs on the Main Lab PC
+ */
+
+/**
+ * \page autostart_lab ../lab_autostart.bash
  * \brief Bash file that must be placed on the NUC together with some other file, 
  * as described in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
- * \ingroup autostart
  */
 
 /**
