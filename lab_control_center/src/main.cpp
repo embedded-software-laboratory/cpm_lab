@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
-    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(30); //LISTEN FOR VEHICLE DATA UP TO ID 30
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(255); //LISTEN FOR VEHICLE DATA UP TO ID 255 (for Commonroad Obstacles; is max. uint8_t value)
     auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
