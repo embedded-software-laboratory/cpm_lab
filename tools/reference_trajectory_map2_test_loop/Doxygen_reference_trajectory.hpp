@@ -7,31 +7,36 @@
  */
 
 /**
- * \file animate_trajectory.m
+* \page ref_tr_t_page Reference Trajectory Test
+* \subpage ref_tr_t_anim <br>
+* \subpage ref_tr_t_create <br>
+* \subpage ref_tr_t_export <br>
+* \subpage ref_tr_t_load <br>
+* \subpage ref_tr_t_opt <br>
+* \ingroup reference_trajectory_test
+*/
+
+/**
+ * \page ref_tr_t_anim animate_trajectory.m
  * \brief TODO
- * \ingroup reference_trajectory_test
  */
 
 /**
- * \file create_reference_path.m
+ * \page ref_tr_t_create create_reference_path.m
  * \brief TODO
- * \ingroup reference_trajectory_test
  */
 
 /**
- * \file export_trajectory.m
+ * \page ref_tr_t_export export_trajectory.m
  * \brief TODO
- * \ingroup reference_trajectory_test
  */
 
 /**
- * \file load_collision_map.m
+ * \page ref_tr_t_load load_collision_map.m
  * \brief TODO
- * \ingroup reference_trajectory_test
  */
 
 /**
- * \file optimize_speed_profile.m
+ * \page ref_tr_t_opt optimize_speed_profile.m
  * \brief TODO
- * \ingroup reference_trajectory_test
  */
