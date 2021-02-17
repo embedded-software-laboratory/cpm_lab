@@ -86,6 +86,16 @@ void kill_cloud_discovery() {
     system(command.c_str());
 }
 
+/**
+ * \brief Sometimes, a tmux session can stay open if the LCC crashed. 
+ * To make sure that no session is left over / everything is "clean" 
+ * when a new LCC gets started, kill all old sessions
+ */
+void kill_all_tmux_sessions() {
+    std::string command = "tmux kill-server";
+    system(command.c_str());
+}
+
 //Suppress warning for unused parameter (s)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -116,6 +126,9 @@ void exit_handler() {
 
 int main(int argc, char *argv[])
 {
+    //Kill remaining tmux sessions
+    kill_all_tmux_sessions();
+
     //Must be done first, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
