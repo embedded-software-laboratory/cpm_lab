@@ -22,7 +22,6 @@
 */
 
 #include <pylon/PylonIncludes.h>
-#include <pylon/gige/BaslerGigEInstantCamera.h>
 #include <gst/gst.h>
 
 using namespace Pylon;
