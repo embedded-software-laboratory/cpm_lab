@@ -31,7 +31,7 @@ using namespace std;
 
 // ******* CInstantCameraAppSrc *******
 // Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
-class CInstantCameraAppSrc : public CBaslerGigEInstantCamera
+class CInstantCameraAppSrc : public CInstantCamera
 {
 public:
 	CInstantCameraAppSrc(string serialnumber = "22792310");
@@ -82,6 +82,7 @@ private:
 	bool retrieve_image();
 	static void cb_need_data(GstElement *appsrc, guint unused_size, gpointer user_data);
 
+	// For measuring the amount of framedrops
 	int correct_pictures = 0;
 	int incorrect_pictures=0;
 };
