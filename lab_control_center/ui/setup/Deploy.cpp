@@ -819,10 +819,13 @@ std::string Deploy::bool_to_string(bool var)
 void Deploy::create_log_folder(std::string name)
 {
     //Generate command
+    // Remove all old logs except the ones of the labcam since the labcam is not started anew and thus also the logs
+    // from the experiment would be gone.
     std::stringstream command_folder;
     command_folder 
-        << "rm -rf ~/dev/" << name << ";"
-        << "mkdir -p ~/dev/" << name;
+        << "mkdir -p ~/dev/" << name << ";"
+        << "cd ~/dev/" << name << ";"
+        << "rm !(\"stderr_ips.txt\"|\"stdout_ips.txt\"|\"stderr_basler.txt\"|\"stdout_basler.txt\")" ;
 
     //Execute command
     system(command_folder.str().c_str());
