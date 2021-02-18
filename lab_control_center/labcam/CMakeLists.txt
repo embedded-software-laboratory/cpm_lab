@@ -33,4 +33,5 @@ add_library(labcamlib SHARED ${SRC})
 target_link_libraries(labcamlib ${PYLON_LIBRARIES} ${GLIB_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLib_LIBDIR} gobject-2.0 pthread)
 target_link_libraries(labcam_recorder_stand-alone labcamlib)
 target_link_libraries(labcam_recorder labcamlib)
+target_link_libraries(labcam_recorder cpm)
 

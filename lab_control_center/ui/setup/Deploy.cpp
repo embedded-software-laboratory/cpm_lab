@@ -626,8 +626,8 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
         << "tmux new-session -d "
         << "-s \"" << labcam_session << "\" "
         << "\"cd ~/dev/software/lab_control_center/build/labcam;./labcam_recorder "
-        //<< " --path= << path 
-        //<< " --file_name=" << file_name
+        << " --path=" << path
+        << " --file_name=" << file_name
         << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
     
     std::cout << command.str().c_str() << std::endl;
@@ -755,7 +755,8 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     }
     if (check_for_recording)
     {
-        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
+        if(! session_exists(recording_session)) crashed_participants.push_back("DDS Recording");
+        if(! session_exists(labcam_session)) crashed_participants.push_back("LabCam");
     }
 
     return crashed_participants;
