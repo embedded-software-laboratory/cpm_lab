@@ -18,6 +18,10 @@ find_package(Pylon REQUIRED)
 include_directories(${PYLON_INCLUDE_DIRS})
 message("-- found Pylon Version ${PYLON_VERSION}")
 
+# LabCam stand-alone Binary
+FILE(GLOB SRC src/main_stand-alone.cpp)
+add_executable(labcam_recorder_stand-alone ${SRC})
+
 # LabCam Binary
 FILE(GLOB SRC src/main.cpp)
 add_executable(labcam_recorder ${SRC})
@@ -27,8 +31,6 @@ include_directories("include")
 FILE(GLOB SRC src/LabCam.cpp  src/LabCamIface.cpp src/CInstantCameraAppSrc.cpp)
 add_library(labcamlib SHARED ${SRC})
 target_link_libraries(labcamlib ${PYLON_LIBRARIES} ${GLIB_LIBRARIES} ${GSTREAMER_LIBRARIES} ${GLib_LIBDIR} gobject-2.0 pthread)
+target_link_libraries(labcam_recorder_stand-alone labcamlib)
 target_link_libraries(labcam_recorder labcamlib)
-
-
-
 
