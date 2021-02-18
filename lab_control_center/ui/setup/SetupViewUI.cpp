@@ -444,7 +444,8 @@ void SetupViewUI::deploy_applications() {
     if(lab_mode_on && labcam_toggled){
         std::cerr << "RECORDING LABCAM" << std::endl;
         auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
-        labcam->startRecording("/tmp/", ctime(&timenow));
+        deploy_functions->deploy_labcam("/tmp/", ctime(&timenow));
+        //labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
@@ -610,7 +611,8 @@ void SetupViewUI::kill_deployed_applications() {
 
     // Stop LabCam
 #ifndef SIMULATION
-    labcam->stopRecording();
+    deploy_functions->kill_labcam();
+    //labcam->stopRecording();
 #endif
 
     is_deployed.store(false);

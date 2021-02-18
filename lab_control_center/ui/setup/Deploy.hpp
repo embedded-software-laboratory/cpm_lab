@@ -133,6 +133,18 @@ public:
     void deploy_ips();
     void kill_ips();
 
+
+    /**
+     * \brief Deploy the labcam. After executing this command the labcam will immediately start the recording.
+     * \param path The path where the video is to be saved.
+     * \param file_name The name of the video file.
+     */
+    void deploy_labcam(std::string path, std::string file_name);
+
+    // Kill the labcam. After executing this command the labcam will immediately stop the recording and save the result.
+    void kill_labcam();
+
+
     bool diagnosis_switch = false; 
     //Deploy and kill the rtirecordingservice
     void deploy_recording();
@@ -254,6 +266,7 @@ private:
 
     const std::string ips_session = "ips_pipeline";
     const std::string basler_session = "ips_basler";
+    const std::string labcam_session = "labcam";
     const std::string middleware_session = "middleware";
     const std::string hlc_session = "high_level_controller";
 
