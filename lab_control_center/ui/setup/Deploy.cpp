@@ -618,7 +618,6 @@ void Deploy::kill_ips() {
 void Deploy::deploy_labcam(std::string path, std::string file_name){
     //Check if old session already exists - if so, kill it
     kill_session(labcam_session);
-    std::cout << "Hello there" << std::endl;
 
     //Generate command
     std::stringstream command;
@@ -630,7 +629,6 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
         << " --file_name=" << file_name
         << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
     
-    std::cout << command.str().c_str() << std::endl;
     //Execute command
     system(command.str().c_str());
 }
