@@ -32,9 +32,8 @@
 #include <mutex>
 #include <thread>
 #include "cpm/Logging.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"
@@ -44,10 +43,10 @@ using std::vector;
 
 class VehicleTrajectoryPlanner
 {
-    std::shared_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
+    std::unique_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles_buffer;
-    std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer_laneGraphTrajectory;
-    std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
+    std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer_laneGraphTrajectory;
+    std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader_laneGraphTrajectory;
     bool started = false;
     bool crashed = false;
     bool volatile stopFlag = false;
@@ -87,10 +86,10 @@ public:
     void set_real_time(uint64_t t);
     bool is_started() {return started;}
     bool is_crashed() {return crashed;}
-    void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+    void set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle);
     void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
-    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
-    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
+    void set_writer(std::unique_ptr<cpm::Writer<LaneGraphTrajectory> > writer);
+    void set_reader(std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory> > reader);
     std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time, uint64_t dt);
     void stop();
     void start(){started = true;};

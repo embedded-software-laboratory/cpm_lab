@@ -58,10 +58,10 @@ void VehicleTrajectoryPlanner::set_real_time(uint64_t t)
 }
 
 
-void VehicleTrajectoryPlanner::set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle)
+void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle)
 {
     assert(!started);
-    trajectoryPlan = vehicle;
+    trajectoryPlan = std::move(vehicle);
 }
 
 std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_t t, uint64_t dt)
@@ -234,15 +234,14 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     while( !std::includes(messages_received.begin(), messages_received.end(),
                 prev_vehicles_list.begin(), prev_vehicles_list.end()) && !stopFlag) {
         auto samples = reader_laneGraphTrajectory->take();
-        for(auto sample : samples) {
-            LaneGraphTrajectory data = sample.data();
-            uint64_t t_message = data.header().create_stamp().nanoseconds();
+        for(LaneGraphTrajectory sample : samples) {
+            uint64_t t_message = sample.header().create_stamp().nanoseconds();
 
-            if (sample.info().valid() && t_message == t_real_time) {
-                messages_received.insert(data.vehicle_id());
+            if ( t_message == t_real_time) {
+                messages_received.insert(sample.vehicle_id());
 
                 // Only process message if it's from a previous vehicle
-                if ( prev_vehicles_list.find( data.vehicle_id() )
+                if ( prev_vehicles_list.find( sample.vehicle_id() )
                         == prev_vehicles_list.end()
                     ) {
                         continue;
@@ -253,7 +252,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                 int prev_edge_path_index = -1;
 
                 // Save all received positions that are not in the past already
-                for ( LaneGraphPosition position : data.lane_graph_positions() ) {
+                for ( LaneGraphPosition position : sample.lane_graph_positions() ) {
 
 
                     // Check TimeStamp of each Position to see where it fits into our buffer
@@ -272,7 +271,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                     // Only write into buffer if index is positive,
                     // but still use negative indices for interpolation
                     if( index >= 0 ) {
-                        other_vehicles_buffer[data.vehicle_id()][index] =
+                        other_vehicles_buffer[sample.vehicle_id()][index] =
                             std::make_pair(
                                 position.edge_index(),
                                 position.edge_path_index()
@@ -283,7 +282,7 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
                     // If not we cannot interpolate because there is just one point in the buffer
                     if( prev_edge_index >= 0 ) {
                         interpolate_other_vehicles_buffer(
-                                data.vehicle_id(),
+                                sample.vehicle_id(),
                                 prev_buffer_index, prev_edge_index, prev_edge_path_index,
                                 index, position.edge_index(), position.edge_path_index()
                         );
@@ -325,10 +324,10 @@ bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
 
     while (!success_status && !stopFlag) {
         auto samples = reader_laneGraphTrajectory->take();
-        for(auto sample : samples) {
-            uint64_t t_message = sample.data().header().create_stamp().nanoseconds();
-            if (sample.info().valid() && t_message == t_real_time) {
-                messages_received.insert(sample.data().vehicle_id());
+        for(LaneGraphTrajectory sample : samples) {
+            uint64_t t_message = sample.header().create_stamp().nanoseconds();
+            if (t_message == t_real_time) {
+                messages_received.insert(sample.vehicle_id());
             }
         }
 
@@ -460,12 +459,12 @@ void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
 }
 
 void VehicleTrajectoryPlanner::set_writer(
-        std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer){
-    writer_laneGraphTrajectory = writer;
+        std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer){
+    writer_laneGraphTrajectory = std::move(writer);
 }
 void VehicleTrajectoryPlanner::set_reader(
-        std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader){
-    reader_laneGraphTrajectory = reader;
+        std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader){
+    reader_laneGraphTrajectory = std::move(reader);
 }
 
 /*

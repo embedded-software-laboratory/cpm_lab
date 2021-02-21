@@ -38,6 +38,8 @@
 #include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
 
 // IDL files
 #include "VehicleCommandTrajectory.hpp"
@@ -179,33 +181,29 @@ int main(int argc, char *argv[]) {
      * Reader/Writers for comms between vehicles directly
      */
     // Writer to communicate plans with other vehicles
-    dds::pub::DataWriter<LaneGraphTrajectory> writer_laneGraphTrajectory(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
+    cpm::Writer<LaneGraphTrajectory> writer_laneGraphTrajectory(
+            "laneGraphTrajectory");
 
     // Reader to receive planned trajectories of other vehicles
-    dds::sub::DataReader<LaneGraphTrajectory> reader_laneGraphTrajectory(
-            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
+    cpm::ReaderAbstract<LaneGraphTrajectory> reader_laneGraphTrajectory(
+            "laneGraphTrajectory");
     
     
     /* ---------------------------------------------------------------------------------
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    auto planner = std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
+    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
-    std::shared_ptr<dds::pub::DataWriter<LaneGraphTrajectory>>(
-        &writer_laneGraphTrajectory
+    std::unique_ptr<cpm::Writer<LaneGraphTrajectory>>(
+        new cpm::Writer<LaneGraphTrajectory>("laneGraphTrajectory")
         )
     );
     planner->set_reader(
-    std::make_shared<dds::sub::DataReader<LaneGraphTrajectory>>(
-        reader_laneGraphTrajectory
+    std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory>>(
+        new cpm::ReaderAbstract<LaneGraphTrajectory>("laneGraphTrajectory")
         )
     );
 
@@ -285,10 +283,12 @@ int main(int argc, char *argv[]) {
 
                         // Initialize PlanningState with starting position
                         planner->set_vehicle(
-                                std::make_shared<VehicleTrajectoryPlanningState>(
-                                    vehicle_id,
-                                    out_edge_index,
-                                    out_edge_path_index
+                                std::unique_ptr<VehicleTrajectoryPlanningState>(
+                                    new VehicleTrajectoryPlanningState(
+                                        vehicle_id,
+                                        out_edge_index,
+                                        out_edge_path_index
+                                        )
                                 )
                         );
                         cpm::Logging::Instance().write(
