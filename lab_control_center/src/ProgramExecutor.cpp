@@ -52,7 +52,7 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
         while (true)
         {
             CommandMsg msg;
-            receive_command_msg(msg_request_queue_id, msg);
+            bool receive_success = receive_command_msg(msg_request_queue_id, msg);
 
             //Exit condition - just compare the first characters, as strncpy fills up the char array
             std::string msg_string = msg.command.command;
@@ -62,26 +62,47 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
             //Debug log (can't use logger here, or any other cpm library function, because some parts of it use DDS)
             //std::cout << "Child received command: " << msg_string << std::endl;
 
-            //Now execute the command based on whether the timeout was set
-            if (msg.command.request_type == RequestType::SEND_OUTPUT)
+            //The child can either process a single or multiple commands at once
+            //This depends on a follow-up flag, which tells the child that it should wait
+            //for more commands before starting the execution
+            if (msg.command.wait_for_more_commands == false)
             {
-                std::string output = execute_command_get_output(msg_string.c_str());
-                
-                //Create and send answer
-                send_answer_msg(msg_response_queue_id, output, true);
+                process_single_child_command(msg);
             }
-            else if (msg.command.timeout_seconds > 0)
+            else if (receive_success)
             {
-                bool exec_success = spawn_and_manage_process(msg_string.c_str(), msg.command.timeout_seconds);
+                //Wait for further commands until the flag is false
+                std::vector<CommandMsg> received_commands;
+                received_commands.push_back(msg);
 
-                //Create and send answer
-                send_answer_msg(msg_response_queue_id, "", exec_success);
+                bool wait_condition = true;
+                receive_success = true;
+                while(wait_condition)
+                {
+                    CommandMsg next_cmd;
+                    receive_success = receive_command_msg(msg_request_queue_id, next_cmd);
+
+                    if (receive_success)
+                    {
+                        received_commands.push_back(next_cmd);
+                        wait_condition = next_cmd.command.wait_for_more_commands;
+                    }
+                    else wait_condition = false;
+                }
+
+                //In case of a receive error, the child will try to consume all follow-up messages
+                if (receive_success)
+                {
+                    process_multi_child_commands(received_commands);
+                }
+                else
+                {
+                    consume_invalid_commands();
+                }
             }
             else
             {
-                //We just want to execute the command without timeouts
-                //Simply use system() in this case
-                system(msg_string.c_str());
+                consume_invalid_commands();
             }
         }
 
@@ -103,13 +124,154 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
     }
 }
 
+void ProgramExecutor::process_single_child_command(CommandMsg& msg)
+{
+    std::string msg_string = msg.command.command;
+
+    //Execute the command based on the command type / timeout
+    if (msg.command.request_type == RequestType::SEND_OUTPUT)
+    {
+        std::string output = execute_command_get_output(msg_string.c_str());
+        
+        //Create and send answer, repeat in case of failure (as the main process waits for it)
+        while(! send_answer_msg(msg_response_queue_id, output, true))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    else if (msg.command.timeout_seconds > 0)
+    {
+        bool exec_success = spawn_and_manage_process(msg_string.c_str(), msg.command.timeout_seconds);
+
+        //Create and send answer, repeat in case of failure (as the main process waits for it)
+        while(! send_answer_msg(msg_response_queue_id, "", exec_success))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    else
+    {
+        //We just want to execute the command without timeouts
+        //Simply use system() in this case
+        system(msg_string.c_str());
+    }
+}
+
+void ProgramExecutor::process_multi_child_commands(std::vector<CommandMsg>& msgs)
+{
+    //Procedure:
+    //1) Execute each command in a thread. In each thread, start the command & store the output in a map when finished.
+    //2) Wait for all threads.
+    //3) Send answer by going through thread return map.
+
+    //Create map to easily save return values of all created threads w.r.t. order
+    std::map<int, bool> return_values;
+    std::mutex return_values_mutex;
+    std::vector<std::thread> threads;
+
+    //NOTE: We expect a valid timeout value here. Checks are performed during sending. Still, we check again, because
+    //of possible bit flips etc.
+    //Find a proper value for valid_timeout
+    int valid_timeout = 1;
+    for (auto& msg : msgs)
+    {
+        if (msg.command.timeout_seconds > 0) 
+        {
+            valid_timeout = msg.command.timeout_seconds;
+            break;
+        }
+    }
+    //Replace all garbage timeout values
+    for (auto& msg : msgs)
+    {
+        if (msg.command.timeout_seconds <= 0) msg.command.timeout_seconds = valid_timeout;
+    }
+
+    //1)
+    int counter = 0;
+    for (auto& msg : msgs)
+    {
+        threads.push_back(std::thread(
+            [this, msg, counter, &return_values, &return_values_mutex] () {
+                bool exec_success = spawn_and_manage_process(msg.command.command, msg.command.timeout_seconds);
+
+                std::lock_guard<std::mutex> lock(return_values_mutex);
+                return_values[counter] = exec_success;
+            }
+        ));
+
+        ++counter;
+    }
+
+    //2)
+    for (auto& thread : threads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+        }
+    }
+
+    //3)
+    for (size_t i = 0; i < msgs.size(); ++i)
+    {
+        //These values must exist, no error checking here
+        bool exec_success = return_values.at(i);
+
+        //Create and send answer, repeat in case of failure (as the main process waits for it)
+        while(! send_answer_msg(msg_response_queue_id, "", exec_success))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+}
+
+void ProgramExecutor::consume_invalid_commands()
+{
+    //This function may be redundant or unecessary
+    //If the child does not send answers for received multi-process commands, 
+    //the program will currently hang at some point
+
+    std::cerr << "ERROR: Child could not receive all follow-up commands to a parallel-execution-command, now trying to consume leftovers" << std::endl;
+
+    bool wait_condition = true;
+    bool receive_success = true;
+    CommandMsg next_cmd;
+    while(wait_condition)
+    {
+        receive_success = receive_command_msg(msg_request_queue_id, next_cmd);
+
+        if (receive_success) wait_condition = next_cmd.command.wait_for_more_commands;
+        else wait_condition = false;
+    }
+
+    if (! receive_success)
+    {
+        std::cerr << "ERROR: Could not consume follow-up commands. Program may be broken from here on." << std::endl;
+        std::cerr 
+            << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl
+            << "WARNING: Program may be broken, but cannot be closed from child process!" << std::endl
+            << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    }
+    else
+    {
+        std::cerr << "NOTE: Last removed command: " << next_cmd.command.command << std::endl;
+    }
+}
+
 bool ProgramExecutor::execute_command(std::string command, int timeout)
 {
+    //Block execution of other commands until this function returns
+    std::lock_guard<std::mutex> lock(command_send_mutex);
+
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
     if (create_command_msg(command, msg, timeout))
     {
-        send_command_msg(msg_request_queue_id, msg);
+        bool send_success = send_command_msg(msg_request_queue_id, msg);
+
+        //If the msg could not be sent, return false
+        if (!send_success) return false;
     }
     else
     {
@@ -120,14 +282,113 @@ bool ProgramExecutor::execute_command(std::string command, int timeout)
     if (timeout > 0)
     {
         AnswerMsg response;
-        receive_answer_msg(msg_response_queue_id, response);
-        return response.answer.execution_success;
+        if (receive_answer_msg(msg_response_queue_id, response))
+        {
+            return response.answer.execution_success;
+        }
+        else return false;
     }
     else return true;
 }
 
+std::vector<bool> ProgramExecutor::execute_commands(std::vector<std::string> commands, int timeout)
+{
+    //Only accept valid values for timeout
+    if (timeout <= 0) {
+        std::cerr << "Set timeout <= 0 in execute_commands, aborting execution..." << std::endl;
+        return { false };
+    }
+
+    //Block execution of other commands until this function returns
+    std::lock_guard<std::mutex> lock(command_send_mutex);
+
+    //We are doing something similar to execute_command, but use a follow_up flag
+    //With this flag set, the child process knows that it needs to wait for further
+    //commands until, in the last one, the flag is unset - then, the commands are
+    //all executed in parallel
+
+    //First create msgs, to check for errors, then send commands
+    //This prevents execution of commands in the child if some of the commands
+    //given to this function are too long
+    bool cmd_creation_success = true;
+    std::vector<CommandMsg> command_msgs;
+    for (auto& cmd : commands)
+    {
+        CommandMsg msg;
+        cmd_creation_success &= create_command_msg(cmd, msg, timeout, RequestType::SEND_EXIT_STATE, true);
+        command_msgs.push_back(msg);
+    }
+
+    //Set the follow-up flag to false for the last msg
+    command_msgs.back().command.wait_for_more_commands = false;
+
+    //Check if the command creation was successful
+    if (cmd_creation_success)
+    {
+        //Remember send state of all msgs - required for return value
+        std::vector<bool> cmd_return_status;
+        int successful_requests = 0;
+
+        //Send all msgs
+        for(auto& cmd_msg : command_msgs)
+        {
+            bool send_status = send_command_msg(msg_request_queue_id, cmd_msg);
+            cmd_return_status.push_back(send_status);
+            if (send_status == true) ++successful_requests;
+        }
+
+        //If the last msg could not be sent, send an empty msg instead until that succeeds
+        //This is very important! Else, the child waits forever for the "end" msg
+        if (cmd_return_status.back() == false)
+        {
+            CommandMsg empty_msg;
+            create_command_msg("ls", empty_msg, 1, RequestType::SEND_EXIT_STATE, false);
+
+            while(! send_command_msg(msg_request_queue_id, empty_msg))
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
+        }
+
+        //Now wait for answers on all msgs that could be sent
+        //The answers are sent in order of command reception at the child,
+        //and as we work with a queue no ID should be required, as the command
+        //order should be the same as the receive order
+        //But: Some commands may not have been sent, so store answers in a temporary vector first
+        std::vector<bool> received_answers;
+        for (int i = 0; i < successful_requests; ++i)
+        {
+            AnswerMsg response;
+            bool receive_success = receive_answer_msg(msg_response_queue_id, response);
+            if (receive_success) received_answers.push_back(response.answer.execution_success);
+            else received_answers.push_back(false); //Although command execution may have worked - we cannot know it for sure
+        }
+
+        //Now update the return status of those commands that could be sent to the answer
+        size_t received_index = 0;
+        for (size_t i = 0; i < cmd_return_status.size(); ++i)
+        {
+            if (cmd_return_status.at(i) == true)
+            {
+                cmd_return_status.at(i) = received_answers.at(received_index);
+                ++received_index;
+            }
+        }
+
+        return cmd_return_status;
+    }
+    else
+    {
+        std::cerr << "ERROR: Could not create IPC Message, one of the command strings was too large" << std::endl;
+        return { false };
+    }
+}
+
 std::string ProgramExecutor::get_command_output(std::string command)
 {
+    //Block execution of other commands until this function returns
+    std::lock_guard<std::mutex> lock(command_send_mutex);
+
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
     if (create_command_msg(command, msg, -1, RequestType::SEND_OUTPUT))
@@ -141,8 +402,11 @@ std::string ProgramExecutor::get_command_output(std::string command)
 
     //Now wait for the answer / received command output
     AnswerMsg response;
-    receive_answer_msg(msg_response_queue_id, response);
-    return response.answer.truncated_command_output;
+    if (receive_answer_msg(msg_response_queue_id, response))
+    {
+        return response.answer.truncated_command_output;
+    }
+    else return "ERROR";
 }
 
 int ProgramExecutor::create_msg_queue(std::string filepath)
@@ -184,10 +448,11 @@ void ProgramExecutor::destroy_msg_queue(int msg_queue_id)
 }
 
 
-bool ProgramExecutor::create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds, RequestType request_type)
+bool ProgramExecutor::create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds, RequestType request_type, bool wait_for_more)
 {
     command_out.command.timeout_seconds = timeout_seconds;
     command_out.command.request_type = request_type;
+    command_out.command.wait_for_more_commands = wait_for_more;
     command_out.mtype = 1; //Irrelevant for us
 
     //WARNING: In a real-world scenario, do not forget to make sure that the command string is shorter than the size of

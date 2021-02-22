@@ -225,34 +225,6 @@ private:
      */
     std::string bool_to_string(bool var);
 
-    /**
-     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
-     * \param cmd Command string to be executed
-     * \param timeout_seconds Timout until the process termination is forced
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
-     * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
-     */
-    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online);
-
-    /**
-     * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further
-     * \return Output of the shell command
-     */
-    int execute_command_get_pid(const char* cmd);
-
-    /**
-     * \brief Function to find out which state a process spawned before is currently in
-     * \param process_id The process id of the child process that was spawned before
-     * \return The current state of the process
-     */
-    PROCESS_STATE get_child_process_state(int process_id);
-
-    /**
-     * \brief Kill a process - first allow it to terminate gracefully, else force-kill it
-     * \param process_id The ID of the process
-     */
-    void kill_process(int process_id);
-
     // Session name for recording service
     const std::string recording_session = "dds_record";
 

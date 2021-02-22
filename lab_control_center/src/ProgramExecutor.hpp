@@ -30,6 +30,8 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <map>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -53,6 +55,9 @@
  * child processes to execute other programs. Its destructor also makes sure that (in case the LCC
  * is terminated normally) the child is waited for after destruction, so that it does not remain as
  * a zombie process. The same goes for the message queue.
+ * 
+ * NOTE: This class CANNOT use the CPM Logger or any other CPM function. If it does, the above errors
+ * are not resolved and the class becomes meaningless!
  * 
  * \ingroup lcc
  */
@@ -87,11 +92,29 @@ public:
      * but should finally be executed nonetheless.
      * 
      * If a timeout is set, the function also returns whether the executed command succeeded (= finished in time).
-     * \param command String command, like a command line command. Warning: the command length is limited, as a char array is used in the message queue.
+     * \param command String command, like a command line command. Warning: the command length is limited, as a char array of 5000 chars is used in the message queue.
      * \param timeout Time after which the command should be cancelled, if it is not finished before that. If not set or -1, no timeout is used.
-     * \return True if the timeout is > 0. Else true if the command worked, false if it failed or reached the given timeout before it finished.
+     * \return True if the timeout is > 0. Else true if the command worked, false if it could not be sent, failed or reached the given timeout before it finished.
      */
     bool execute_command(std::string command, int timeout = -1);
+
+    /**
+     * \brief Call this function to start multiple external programs
+     * with similar tasks that are supposed to be performed in parallel,
+     * e.g. uploading HLC scripts to multiple NUCs.
+     * You can use commands that would usually work in the terminal, like tmux commands.
+     * You must set a timeout for this task, and during that time, no other commands
+     * of the used class object are executed. 
+     * Forks explicitly, and kill the process after the timeout. 
+     * Commands executed after this function was called can "pile up" in the msg queue for a while,
+     * but should finally be executed nonetheless.
+     * 
+     * The function also returns whether the executed command succeeded (= finished in time) for each command.
+     * \param commands String commands, like a command line command. Warning: the command length is limited, as a char array of 5000 chars is used in the message queue.
+     * \param timeout Time after which the commands should be cancelled, if they are not finished before that. Must be > 0 here.
+     * \return True if the command worked, false if it failed or reached the given timeout before it finished, for each command.
+     */
+    std::vector<bool> execute_commands(std::vector<std::string> commands, int timeout);
 
     /**
      * \brief Function to execute a shell command and get its output
@@ -122,7 +145,7 @@ private:
 
         //! Better to use only one additional entry, so if more than one is required, define another struct here
         struct CommandInfo {
-            //! The command string to execute
+            //! The command string to execute. Max msg size on linux may only be 8192 bytes.
             char command[5000];
 
             //! Timeout for the command, ignored if <= 0
@@ -130,6 +153,9 @@ private:
 
             //! What kind of answer is expected by the child via the msg_receive_queue
             RequestType request_type;
+
+            //! True if more msgs are comming in, false if not - msgs can this way be aggregated and then be executed in parallel
+            bool wait_for_more_commands;
         } command;
     };
 
@@ -140,7 +166,7 @@ private:
 
         //! Better to use only one additional entry, so if more than one is required, define another struct here
         struct AnswerInfo {
-            //! The output of a command, truncated
+            //! The output of a command, truncated. Max msg size on linux may only be 8192 bytes.
             char truncated_command_output[5000];
 
             //! Process state of the process if timeout was used and process state was asked for, true if DONE, else false
@@ -156,6 +182,29 @@ private:
 
     //! The ID of the message queue for answers sent by the child process
     int msg_response_queue_id;
+
+    //! Mutex for access to public command functions - any of them can only be performed at a time. This is especially important for those that wait for an answer.
+    std::mutex command_send_mutex;
+
+    /**
+     * \brief Helper for the child process. Processes a single command msg.
+     * \param msg The received command msg.
+     */
+    void process_single_child_command(CommandMsg& msg);
+
+    /**
+     * \brief Helper for the child processes. Processes multiple command msgs
+     * in threads for each msg.
+     * \param msgs Received msgs to execute in parallel.
+     */
+    void process_multi_child_commands(std::vector<CommandMsg>& msgs);
+
+    /**
+     * \brief Helper for the child process. Tries to consume invalid
+     * follow-up commands for parallel message execution if / after a receive 
+     * failed during getting those commands
+     */
+    void consume_invalid_commands();
 
     /**
      * \brief Creates a msg queue and returns its ID
@@ -181,8 +230,9 @@ private:
      * \param timeout_seconds Optional: Timeout for the command, set to a value <0 to disable timeouts for this command 
      *                      (SYSTEM is used then instead of using fork explicitly)
      * \param request_type Optional: If an answer containing the command output or the child exit state should be returned via msg queue
+     * \param wait_for_more Optional: If follow-up messages will be sent and should be aggregated before execution of all received msgs in parallel
      */
-    bool create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds = -1, RequestType request_type = NO_ANSWER);
+    bool create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds = -1, RequestType request_type = NO_ANSWER, bool wait_for_more = false);
 
     /**
      * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
