@@ -67,12 +67,12 @@ catch
 
 end
 
-try
+%try
 [VehicleCommandPathTrackingTable, HeaderCommandPathTracking, t_start_pathtracking_nanos] = jsonDeconstruct(ddsJsonSample.VehicleCommandPathTracking);
 t_start_list = [t_start_list, t_start_pathtracking_nanos];
-catch
+%catch
 
-end
+%end
 
 t_start_nanos = min(t_start_list);
 
@@ -127,9 +127,33 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]' - t_start_nanos;
     DataByVehicle.(currentVehicle).pathtracking.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos;
     DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos;
+    
     % TODO: Array with path points
+    allPTCommands = VehicleCommandPathTrackingTable.path(currentRowsPathTracking);
+    path_table = [];
+    for i = 1:numel(allPTCommands)
+        path_struct = VehicleCommandPathTrackingTable.path(i);
+        path_list = [];
+        s = [path_struct{1}(:).s];
+        pose = [path_struct{1}(:).pose];
+        x = [pose(:).x];
+        y = [pose(:).y];
+        yaw = [pose(:).yaw];
+
+        for i=1:numel(s)
+            pp = PathPoint;
+            pp.s = s(i);
+            pp.pose.x = x(i);
+            pp.pose.y = y(i);
+            pp.pose.yaw = yaw(i);
+            path_list = [path_list pp];
+        end
+        path_table = [path_table; path_list];
+    end
+    DataByVehicle.(currentVehicle).pathtracking.path = path_table;
     DataByVehicle.(currentVehicle).pathtracking.speed = [VehicleCommandPathTrackingTable.speed(currentRowsPathTracking)]';
     catch
+        disp("no pt commands");
     end
 end
 
