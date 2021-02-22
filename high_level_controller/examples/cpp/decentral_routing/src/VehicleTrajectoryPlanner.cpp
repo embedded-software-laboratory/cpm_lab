@@ -159,20 +159,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // Advance trajectoryPlanningState by 1 timestep
     trajectoryPlan->apply_timestep(dt_nanos);
 
-    //if(stopFlag) {
-    //    isStopped = true;
-    //    return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
-    //}
-
-    //cpm::Logging::Instance().write(1,
-    //        "%lu: Finished planning", t_real_time);
-    //// Publish our planned trajectory with other vehicles
-    //cpm::Logging::Instance().write(1,
-    //        "Sending traj, vehicle %i",
-    //        trajectoryPlan->get_vehicle_id()
-    //        );
     write_trajectory(lane_graph_trajectory);
-
     
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
@@ -183,7 +170,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     if (wait_for_other_vehicles()) {
         isStopped = true;
         no_trajectory_counter = 0;
-        return std::unique_ptr<VehicleCommandTrajectory>(new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
+        return std::unique_ptr<VehicleCommandTrajectory>(
+                new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
     } else {
         cpm::Logging::Instance().write(2,
                 "%lu: Not returning trajectory", t_real_time);
@@ -224,7 +212,8 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     // Loop until we receive a stopFlag OR
     // our messages_received contains all previous vehicles
     while( !std::includes(messages_received.begin(), messages_received.end(),
-                prev_vehicles_list.begin(), prev_vehicles_list.end()) && !stopFlag) {
+                prev_vehicles_list.begin(), prev_vehicles_list.end())
+            && !stopFlag) {
         auto samples = reader_laneGraphTrajectory->take();
         for(LaneGraphTrajectory sample : samples) {
             uint64_t t_message = sample.header().create_stamp().nanoseconds();
@@ -447,10 +436,11 @@ void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
     // Delete all trajectory points that are in the future
     // These will be replaced by new points later
     std::vector<TrajectoryPoint>::iterator it_t_now = trajectory_point_buffer.end();
-    for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer.begin() + 1; tp_it != trajectory_point_buffer.end(); ++tp_it)
-    {
-        if (tp_it->t().nanoseconds() > t_real_time && it_t_now == trajectory_point_buffer.end())
-        {
+    for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer.begin() + 1;
+            tp_it != trajectory_point_buffer.end();
+            ++tp_it) {
+        if (tp_it->t().nanoseconds() > t_real_time
+                && it_t_now == trajectory_point_buffer.end()) {
             it_t_now = tp_it-1;
         }
     }
@@ -474,9 +464,13 @@ void VehicleTrajectoryPlanner::debug_writeOutReceivedTrajectories() {
     for(auto vehicle : other_vehicles_buffer) {
         std::cout << "Vehicle " << static_cast<uint32_t>(vehicle.first) << std::endl;
         for(auto point : vehicle.second) {
-            std::cout << point.first << ", "; 
-            std::cout << point.second.first << ", "; 
-            std::cout << point.second.second << std::endl; 
+            std::cout
+                << point.first
+                << ", " 
+                << point.second.first
+                << ", "
+                << point.second.second
+                << std::endl; 
         }
     }
 }
@@ -491,13 +485,31 @@ void VehicleTrajectoryPlanner::debug_analyzeTrajectoryPointBuffer() {
     std::cout << "trajectory_point_buffer:" << std::endl;
     std::cout << "Timestep: " << t_real_time << std::endl;
     auto prev_point = trajectory_point_buffer[0];
-    std::cout <<trajectory_point_buffer[0].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[0].px() << ",\t" << trajectory_point_buffer[0].py() << std::endl;
+    std::cout
+        << trajectory_point_buffer[0].t().nanoseconds()
+        << ":\t"
+        <<  trajectory_point_buffer[0].px()
+        << ",\t"
+        << trajectory_point_buffer[0].py()
+        << std::endl;
     for( unsigned int i=1; i<trajectory_point_buffer.size(); i++ ) {
         // This int is currently signed, because it could be negative, but it shouldn't be
-	    //std::cout << std::endl;
-        double distance = sqrt(pow(((double)trajectory_point_buffer[i].px() - (double)prev_point.px()),2) + pow(((double)trajectory_point_buffer[i].py() - (double)prev_point.py()),2));
+        double distance = sqrt(
+                pow(
+                    ((double)trajectory_point_buffer[i].px() - (double)prev_point.px()),
+                    2
+                )
+                + pow(
+                    ((double)trajectory_point_buffer[i].py() - (double)prev_point.py()),
+                    2
+                ));
 	    int64_t time_diff = (int64_t) trajectory_point_buffer[i].t().nanoseconds() - (int64_t) prev_point.t().nanoseconds();
-        std::cout <<trajectory_point_buffer[i].t().nanoseconds() << ":\t" <<  trajectory_point_buffer[i].px() << ",\t" << trajectory_point_buffer[i].py();
+        std::cout
+            << trajectory_point_buffer[i].t().nanoseconds()
+            << ":\t"
+            << trajectory_point_buffer[i].px()
+            << ",\t"
+            << trajectory_point_buffer[i].py();
         if( distance > 0.6) {
             std::cout << " DISTANCEWARNING " << distance;
         }
