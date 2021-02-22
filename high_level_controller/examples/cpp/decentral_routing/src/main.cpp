@@ -333,14 +333,22 @@ int main(int argc, char *argv[]) {
 #if TIMED
                 end_time = std::chrono::steady_clock::now();
                 auto diff = end_time - start_time;
-                std::cout << "TIMING: Aborting planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+                std::cout
+                    << "TIMING: Aborting planning after "
+                    << std::chrono::duration<double, std::milli>(diff).count()
+                    << " ms"
+                    << std::endl;
 #endif
                 planner->stop();
                 planning = false;
             }
 
 #if TIMED
-            std::cout << "------------- Timestep " << vehicleStateList.t_now() << " -------------" << std::endl;
+            std::cout
+                << "------------- Timestep "
+                << vehicleStateList.t_now()
+                << " -------------"
+                << std::endl;
             start_time = std::chrono::steady_clock::now();
 #endif
             // Start async job for planning
@@ -360,7 +368,11 @@ int main(int argc, char *argv[]) {
 #if TIMED
                 end_time = std::chrono::steady_clock::now();
                 auto diff = end_time - start_time;
-                std::cout << "TIMING: Finished planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+                std::cout
+                    << "TIMING: Finished planning after "
+                    << std::chrono::duration<double, std::milli>(diff).count()
+                    << " ms"
+                    << std::endl;
 #endif
                 // Get commands and send to vehicle
                 std::unique_ptr<VehicleCommandTrajectory> cmd = cmd_future.get();
@@ -376,9 +388,8 @@ int main(int argc, char *argv[]) {
 
         // Check if we received a SystemTrigger to stop
         auto systemTrigger_samples = reader_systemTrigger.take();
-        for(auto sample : systemTrigger_samples) {
-            if (sample.next_start().nanoseconds() == trigger_stop)
-            {
+        for (auto sample : systemTrigger_samples) {
+            if (sample.next_start().nanoseconds() == trigger_stop) {
                 cpm::Logging::Instance().write(
                     2,
                     "Received stop signal, stopping"
