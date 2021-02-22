@@ -67,12 +67,12 @@ catch
 
 end
 
-%try
+try
 [VehicleCommandPathTrackingTable, HeaderCommandPathTracking, t_start_pathtracking_nanos] = jsonDeconstruct(ddsJsonSample.VehicleCommandPathTracking);
 t_start_list = [t_start_list, t_start_pathtracking_nanos];
-%catch
+catch
 
-%end
+end
 
 t_start_nanos = min(t_start_list);
 
