@@ -116,66 +116,87 @@ int main(int argc, char *argv[]) {
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
-    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
-    dds::domain::DomainParticipant local_comms_participant(
+    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
+    //dds::domain::DomainParticipant local_comms_participant(
+    //        middleware_domain,
+    //        local_comms_qos_provider.participant_qos()
+    //);
+    cpm::Participant local_comms_participant(
             middleware_domain,
-            local_comms_qos_provider.participant_qos()
+            "./QOS_LOCAL_COMMUNICATION.xml",
+            "MatlabLibrary::LocalCommunicationProfile"
     );
-    dds::pub::Publisher local_comms_publisher(local_comms_participant);
-    dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
-
-    local_comms_participant.qos();
-    local_comms_qos_provider.participant_qos();
-    local_comms_qos_provider.delegate();
-    auto library_names = local_comms_qos_provider->qos_profile_libraries();
-    auto default_library = local_comms_qos_provider->default_profile_library();
 
     /* --------------------------------------------------------------------------------- 
      * Create readers and writers for communication with middleware
      * ---------------------------------------------------------------------------------
      */
     // These QoS Settings are taken from the QOS_READY_TRIGGER.xml used in matlab example
-    dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
-            local_comms_publisher,
-            cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-            (local_comms_qos_provider.datawriter_qos()
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll()
-                << dds::core::policy::Durability::TransientLocal())
+    cpm::Writer<ReadyStatus> writer_readyStatus(
+            local_comms_participant.get_participant(),
+            "readyStatus",
+            true,
+            true,
+            true
     );
+
+    //dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
+    //        local_comms_publisher,
+    //        cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
+    //        (local_comms_qos_provider.datawriter_qos()
+    //            << dds::core::policy::Reliability::Reliable()
+    //            << dds::core::policy::History::KeepAll()
+    //            << dds::core::policy::Durability::TransientLocal())
+    //);
 
     // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
-    dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
-            local_comms_subscriber,
-            cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
-            (dds::sub::qos::DataReaderQos()
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll())
+    cpm::ReaderAbstract<SystemTrigger> reader_systemTrigger(
+            local_comms_participant.get_participant(),
+            "systemTrigger",
+            true,
+            true
     );
+
+    //dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
+    //        local_comms_subscriber,
+    //        cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
+    //        (dds::sub::qos::DataReaderQos()
+    //            << dds::core::policy::Reliability::Reliable()
+    //            << dds::core::policy::History::KeepAll())
+    //);
 
     // VehicleStateList is our timing signal from the middleware
-    dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
-            local_comms_subscriber,
-            cpm::get_topic<VehicleStateList>(
-                local_comms_participant,
-                "vehicleStateList")
-    );
-     
-    // Writer to send trajectory to middleware
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-        local_comms_publisher,
-        cpm::get_topic<VehicleCommandTrajectory>(
-            local_comms_participant,
-            "vehicleCommandTrajectory")
+    cpm::ReaderAbstract<VehicleStateList> reader_vehicleStateList(
+            local_comms_participant.get_participant(),
+            "vehicleStateList"
     );
 
-    // Writer to send a StopRequest to LCC (in case of failure)
-    // Currently not implemented in LCC
-    dds::pub::DataWriter<StopRequest> writer_stopRequest(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<StopRequest>("stopRequest")
+    //dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
+    //        local_comms_subscriber,
+    //        cpm::get_topic<VehicleStateList>(
+    //            local_comms_participant,
+    //            "vehicleStateList")
+    //);
+     
+    // Writer to send trajectory to middleware
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+            local_comms_participant.get_participant(),
+            "vehicleCommandTrajectory"
     );
+
+    //dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+    //    local_comms_publisher,
+    //    cpm::get_topic<VehicleCommandTrajectory>(
+    //        local_comms_participant,
+    //        "vehicleCommandTrajectory")
+    //);
+
+    // Writer to send a StopRequest to LCC (in case of failure)
+    //dds::pub::DataWriter<StopRequest> writer_stopRequest(
+    //        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+    //        cpm::get_topic<StopRequest>("stopRequest")
+    //);
+    cpm::Writer<StopRequest> writer_stopRequest("stopRequest");
 
     /* 
      * Reader/Writers for comms between vehicles directly
@@ -238,17 +259,12 @@ int main(int argc, char *argv[]) {
 #endif
 
     while( !stop ) {
-        dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
+        auto state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
-            if( sample.info().valid() ) {
-                
-                // We received a StateList, which is our timing signal
-                // to send commands to vehicle
-                new_vehicleStateList = true;
-                vehicleStateList = sample.data();
-                std::cout << "StateList.info: "
-                    << sample.info().publication_handle() << std::endl;
-            }
+            // We received a StateList, which is our timing signal
+            // to send commands to vehicle
+            new_vehicleStateList = true;
+            vehicleStateList = sample;
         }
 
         // The first time we receive a sample, we need to initialize our position on the laneGraph
@@ -359,11 +375,10 @@ int main(int argc, char *argv[]) {
         }
 
         // Check if we received a SystemTrigger to stop
-        dds::sub::LoanedSamples<SystemTrigger> systemTrigger_samples = reader_systemTrigger.take();
+        auto systemTrigger_samples = reader_systemTrigger.take();
         for(auto sample : systemTrigger_samples) {
-            if( sample.info().valid() && 
-                   (sample.data().next_start().nanoseconds() == trigger_stop)
-              ) {
+            if (sample.next_start().nanoseconds() == trigger_stop)
+            {
                 cpm::Logging::Instance().write(
                     2,
                     "Received stop signal, stopping"
