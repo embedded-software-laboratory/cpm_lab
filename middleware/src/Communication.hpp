@@ -76,10 +76,7 @@ using namespace std::placeholders;
 class Communication {
     private:
         //For HLC - communication
-	dds::core::QosProvider hlcQosProvider;
-	//hlcQosProvider->default_profile("MatlabLibrary::LocalCommunicationProfile");
-	dds::domain::DomainParticipant tempParticipant;
-	cpm::Participant hlcParticipant;
+        cpm::Participant hlcParticipant;
         cpm::Writer<VehicleStateList> hlcStateWriter;
         cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
         std::atomic_bool all_hlc_online{false}; //Remember if all HLCs are online (checked by main using wait_for_hlc_ready_msg)
@@ -127,11 +124,7 @@ class Communication {
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> vehicle_ids
         ) 
-        :
-	//hlcQosProvider("./QOS_LOCAL_COMMUNICATION.xml")
-	hlcQosProvider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile")
-	,tempParticipant(hlcDomainNumber, hlcQosProvider.participant_qos())
-	,hlcParticipant(tempParticipant)
+        :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile")
         ,hlcStateWriter(hlcParticipant.get_participant(), vehicleStateListTopicName)
         ,hlc_ready_status_reader(hlcParticipant.get_participant(), "readyStatus", true, true, true)
 
