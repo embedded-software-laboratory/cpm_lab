@@ -26,12 +26,15 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstring>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -99,24 +102,6 @@ public:
     bool execute_command(std::string command, int timeout = -1);
 
     /**
-     * \brief Call this function to start multiple external programs
-     * with similar tasks that are supposed to be performed in parallel,
-     * e.g. uploading HLC scripts to multiple NUCs.
-     * You can use commands that would usually work in the terminal, like tmux commands.
-     * You must set a timeout for this task, and during that time, no other commands
-     * of the used class object are executed. 
-     * Forks explicitly, and kill the process after the timeout. 
-     * Commands executed after this function was called can "pile up" in the msg queue for a while,
-     * but should finally be executed nonetheless.
-     * 
-     * The function also returns whether the executed command succeeded (= finished in time) for each command.
-     * \param commands String commands, like a command line command. Warning: the command length is limited, as a char array of 5000 chars is used in the message queue.
-     * \param timeout Time after which the commands should be cancelled, if they are not finished before that. Must be > 0 here.
-     * \return True if the command worked, false if it failed or reached the given timeout before it finished, for each command.
-     */
-    std::vector<bool> execute_commands(std::vector<std::string> commands, int timeout);
-
-    /**
      * \brief Function to execute a shell command and get its output
      * \param cmd A shell command
      * \return Output of the shell command
@@ -153,9 +138,6 @@ private:
 
             //! What kind of answer is expected by the child via the msg_receive_queue
             RequestType request_type;
-
-            //! True if more msgs are comming in, false if not - msgs can this way be aggregated and then be executed in parallel
-            bool wait_for_more_commands;
         } command;
     };
 
@@ -183,28 +165,51 @@ private:
     //! The ID of the message queue for answers sent by the child process
     int msg_response_queue_id;
 
-    //! Mutex for access to public command functions - any of them can only be performed at a time. This is especially important for those that wait for an answer.
-    std::mutex command_send_mutex;
+    //Variables for the child's thread pool
+    //! Amount of threads for parallel execution
+    const int thread_pool_size = 6;
+    //! Holds all worker threads
+    std::vector<std::thread> thread_pool;
+    //! Holds all open commands
+    std::queue<CommandMsg> job_queue;
+    //! Access to the job_queue
+    std::mutex job_mutex;
+    //! Wakes up waiting threads if queue was empty and now a new job was put into it
+    std::condition_variable jobs_available;
+    //! To stop all running threads and exit the child process afterwards
+    std::atomic_bool stop_threads {false};
+
+    //! Counter for current command ID - NEVER access this directly, ALWAYS use the increment function
+    long current_command_id = 1;
+    //! To get access to the current command id
+    std::mutex command_id_mutex;
+
+    /**
+     * \brief You need a command ID for your commands. Always use this function and nothing else to obtain one! (Is thread-safe)
+     */
+    long get_unique_command_id();
+
+    /**
+     * \brief (Child) Add a job to the job queue for the thread pool to execute it
+     * \param msg Job / command received from the parent
+     */
+    void add_job(CommandMsg& msg);
+
+    /**
+     * \brief Function executed by all worker threads
+     */
+    void do_jobs_or_stop();
+
+    /**
+     * \brief To kill all running threads and destroy the thread pool
+     */
+    void stop_thread_pool();
 
     /**
      * \brief Helper for the child process. Processes a single command msg.
      * \param msg The received command msg.
      */
     void process_single_child_command(CommandMsg& msg);
-
-    /**
-     * \brief Helper for the child processes. Processes multiple command msgs
-     * in threads for each msg.
-     * \param msgs Received msgs to execute in parallel.
-     */
-    void process_multi_child_commands(std::vector<CommandMsg>& msgs);
-
-    /**
-     * \brief Helper for the child process. Tries to consume invalid
-     * follow-up commands for parallel message execution if / after a receive 
-     * failed during getting those commands
-     */
-    void consume_invalid_commands();
 
     /**
      * \brief Creates a msg queue and returns its ID
@@ -227,12 +232,12 @@ private:
      * 
      * \param command_string The command to execute 
      * \param command_out The created command message object / output
+     * \param command_id Unique ID of the command, to be able to retrieve answers / responses by the child process
      * \param timeout_seconds Optional: Timeout for the command, set to a value <0 to disable timeouts for this command 
      *                      (SYSTEM is used then instead of using fork explicitly)
      * \param request_type Optional: If an answer containing the command output or the child exit state should be returned via msg queue
-     * \param wait_for_more Optional: If follow-up messages will be sent and should be aggregated before execution of all received msgs in parallel
      */
-    bool create_command_msg(std::string command_string, CommandMsg& command_out, int timeout_seconds = -1, RequestType request_type = NO_ANSWER, bool wait_for_more = false);
+    bool create_command_msg(std::string command_string, CommandMsg& command_out, long command_id, int timeout_seconds = -1, RequestType request_type = NO_ANSWER);
 
     /**
      * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
@@ -252,26 +257,30 @@ private:
      * \brief Create and send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
      * \param msqid ID of the msg queue to use
      * \param command_output Command output to send, may get truncated (max. 5000 characters)
+     * \param command_id Unique ID of the command, to be able to retrieve answers / responses by the child process for the right request
      * \param execution_success Exit state of the process, success if DONE (no ERROR or timeout)
      */
-    bool send_answer_msg(int msqid, std::string command_output, bool execution_success);
+    bool send_answer_msg(int msqid, std::string command_output, long command_id, bool execution_success);
 
     /**
      * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true
      * \param msqid ID of the msg queue to use
+     * \param command_id ID of the answer, is the same as the ID of the sent request
      * \param msg The received msg is stored here
      */
-    bool receive_answer_msg(int msqid, AnswerMsg& msg);
+    bool receive_answer_msg(int msqid, long command_id, AnswerMsg& msg);
 
     /**
-     * \brief Function to execute a shell command and get its output
+     * \brief Function to execute a shell command and get its output.
+     * Is currently not stopped if stop_threads becomes true
      * \param cmd A shell command as C-String
      * \return Output of the shell command
      */
     std::string execute_command_get_output(const char* cmd);
 
     /**
-     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
+     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below.
+     * Also uses stop_threads during waiting, so a process spawned this way can be killed if the child should terminate all executions.
      * \param cmd Command string to be executed
      * \param timeout_seconds Timout until the process termination is forced
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
