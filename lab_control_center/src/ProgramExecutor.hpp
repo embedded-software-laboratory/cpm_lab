@@ -240,21 +240,24 @@ private:
     bool create_command_msg(std::string command_string, CommandMsg& command_out, long command_id, int timeout_seconds = -1, RequestType request_type = NO_ANSWER);
 
     /**
-     * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \brief Send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true.
+     * Note: As far as I know, msgsnd is thread-safe, so no mutexes are used here.
      * \param msqid ID of the msg queue to use
      * \param msg Message to send
      */
     bool send_command_msg(int msqid, CommandMsg& msg);
 
     /**
-     * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true.
+     * Note: As far as I know, msgrcv is thread-safe, so no mutexes are used here (And different mtypes are used -> no race condition).
      * \param msqid ID of the msg queue to use
      * \param msg The received msg is stored here
      */
     bool receive_command_msg(int msqid, CommandMsg& msg);
 
     /**
-     * \brief Create and send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \brief Create and send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true.
+     * Note: As far as I know, msgsnd is thread-safe, so no mutexes are used here.
      * \param msqid ID of the msg queue to use
      * \param command_output Command output to send, may get truncated (max. 5000 characters)
      * \param command_id Unique ID of the command, to be able to retrieve answers / responses by the child process for the right request
@@ -263,7 +266,8 @@ private:
     bool send_answer_msg(int msqid, std::string command_output, long command_id, bool execution_success);
 
     /**
-     * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true
+     * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true.
+     * Note: As far as I know, msgrcv is thread-safe, so no mutexes are used here (And different mtypes are used -> no race condition).
      * \param msqid ID of the msg queue to use
      * \param command_id ID of the answer, is the same as the ID of the sent request
      * \param msg The received msg is stored here
