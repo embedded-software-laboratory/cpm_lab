@@ -359,16 +359,88 @@ bool ProgramExecutor::receive_command_msg(int msqid, CommandMsg& msg)
 std::string ProgramExecutor::execute_command_get_output(const char* cmd)
 {
     //Code from stackoverflow
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("Could not use popen - deployment failed!");
+    // std::array<char, 128> buffer;
+    // std::string result;
+    // std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    // if (!pipe) {
+    //     throw std::runtime_error("Could not use popen - deployment failed!");
+    // }
+    // while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    //     result += buffer.data();
+    // }
+    // return result;
+
+    //We want to be able to kill the process early, so popen() is not really an option
+    //Do smth similar to spawn_and_manage_process instead
+    int command_pipe[2];
+
+    if (pipe(command_pipe))
+    {
+        std::cerr << "Pipe creation failed!" << std::endl;
+        return "";
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
+
+    int process_id = fork();
+    if (process_id == 0)
+    {
+        //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
+        setpgid(0, 0);
+
+        //We only want to write stdout, close the pipe's listen end
+        dup2(command_pipe[1], STDOUT_FILENO);
+        close(command_pipe[0]);
+        
+        //Actions to take within the new child process
+        //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
+        execl("/bin/sh", "bash", "-c", cmd, NULL);
+
+        //Error if execlp returns
+        std::cerr << "Execl error in Deploy class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
+
+        exit(EXIT_FAILURE);
     }
-    return result;
+    else if (process_id > 0)
+    {
+        //We are in the parent process and got the child's PID
+
+        //We only want to listen, close the pipe's write end
+        close(command_pipe[1]);
+
+        //Get the output until no more characters are available
+        //!!!!!!!!!!!!!!!!!!!!!!!!
+        //TODO / NOTE: This might be very inefficient (mutex lock for each character for stop_threads.load()), shall I improve this?
+        //!!!!!!!!!!!!!!!!!!!!!!!!
+        char ch;
+        std::string out;
+        while (read(command_pipe[0], &ch, 1) && !stop_threads.load())
+        {
+            out += ch;
+        }
+
+        //Finally, close the pipe and kill the process
+        if (get_child_process_state(process_id) == PROCESS_STATE::DONE)
+        {
+            //std::cout << "Success: execution of " << cmd << std::endl;
+
+            //Clean up by waiting / telling the child that it can "destroy itself"
+            int status;
+            waitpid(process_id, &status, 0); //0 -> no flags here
+        }
+        else
+        {
+            kill_process(process_id, 100);
+        }
+
+        //Return the obtained msg
+        return out;
+    }
+    else 
+    {
+        //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
+        //TODO: Change behaviour
+        std::cerr << "Error in Deploy class: Could not create child process for " << cmd << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 bool ProgramExecutor::send_answer_msg(int msqid, std::string command_output, long command_id, bool execution_success)
@@ -514,7 +586,7 @@ bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int tim
         }
         else if (state == PROCESS_STATE::ERROR || stop_threads.load())
         {
-            kill_process(process_id);
+            kill_process(process_id, 100);
             //std::cout << "Error in execution of " << cmd << std::endl;
             return false;
         }
@@ -536,7 +608,7 @@ bool ProgramExecutor::spawn_and_manage_process(const char* cmd, unsigned int tim
 
     //Now kill the process, as it has not yet finished its execution
     //std::cout << "Killing" << std::endl;
-    kill_process(process_id);
+    kill_process(process_id, 100);
     //std::cout << "Could not execute in time: " << cmd << std::endl;
     return false;
 }
