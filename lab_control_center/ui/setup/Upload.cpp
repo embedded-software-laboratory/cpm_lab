@@ -122,8 +122,7 @@ void Upload::deploy_remote(
                     simulated_time,
                     script_path,
                     script_params,
-                    remote_deploy_timeout,
-                    std::bind(&Upload::check_if_online, this, hlc_id)
+                    remote_deploy_timeout
                 );
                 this->notify_upload_finished(hlc_id, deploy_worked);
             }
@@ -193,8 +192,7 @@ void Upload::kill_remote()
             [this, hlc_id] () {
                 bool kill_worked = deploy_functions->kill_remote_hlc(
                     hlc_id, 
-                    remote_kill_timeout,
-                    std::bind(&Upload::check_if_online, this, hlc_id)
+                    remote_kill_timeout
                 );
                 this->notify_upload_finished(hlc_id, kill_worked, true);
             }

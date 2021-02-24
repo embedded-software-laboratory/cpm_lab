@@ -126,7 +126,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 return;
             }
 
-            std::cout << command.str() << std::endl;
+            //std::cout << command.str() << std::endl;
 
             //Execute command
             program_executor->execute_command(command.str());
@@ -226,10 +226,10 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             return;
         }
 
-        std::cout << command.str() << std::endl;
+        //std::cout << command.str() << std::endl;
 
         // Debugging only
-        std::string test_string = command.str();
+        //std::string test_string = command.str();
 
         //Document, that we started this HLC
         deployed_local_hlcs.push_back(vehicle_id);
@@ -375,12 +375,7 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
                     << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
-                bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
-                    [] () { 
-                        //Ignore the check if the vehicle is still online
-                        return true; 
-                    }
-                );
+                bool msg_success = program_executor->execute_command(command_kill_real_vehicle.str().c_str(), timeout_seconds);
 
                 if(!msg_success)
                 {
@@ -433,12 +428,7 @@ void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seco
                     std::stringstream command_reboot_hlc;
                     command_reboot_hlc 
                         << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\"";
-                    bool msg_success = spawn_and_manage_process(command_reboot_hlc.str().c_str(), timeout_seconds, 
-                        [] () { 
-                            //Ignore the check if the HLC is still online
-                            return true; 
-                        }
-                    );
+                    bool msg_success = program_executor->execute_command(command_reboot_hlc.str().c_str(), timeout_seconds);
 
                     if(!msg_success)
                     {
@@ -493,7 +483,7 @@ void Deploy::join_finished_hlc_reboot_threads()
     }
 }
 
-bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 
+bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds) 
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
@@ -552,10 +542,10 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
 
     //Spawn and manage new process
-    return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds, is_online);
+    return program_executor->execute_command(copy_command.str().c_str(), timeout_seconds);
 }
 
-bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online) 
+bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds) 
 {
     //Get the IP address from the current id
     std::stringstream ip_stream;
@@ -571,7 +561,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
     kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
 
     //Spawn and manage new process
-    return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);
+    return program_executor->execute_command(kill_command.str().c_str(), timeout_seconds);
 }
 
 void Deploy::deploy_ips() 
@@ -688,7 +678,7 @@ void Deploy::deploy_recording()
         << "-cfgFile " << config_path_out << " "
         << "-cfgName cpm_recorder";
     
-    std::cout << command.str() << std::endl;
+    //std::cout << command.str() << std::endl;
     //Execute command
     program_executor->execute_command(command.str());
 }

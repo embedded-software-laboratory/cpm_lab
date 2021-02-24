@@ -155,18 +155,16 @@ public:
      * \param script_path Path to the script, including the script name (and possible file ending) - MUST BE ABSOLUTE
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online);
+    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds);
     /**
      * \brief Kill the script + middleware on the given HLC (again determine the IP from the HLC ID)
      * \param hlc_id ID of the HLC on which to kill the programs
      * \param timeout_seconds Timeout in seconds until the kill process should be terminated
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online);
+    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds);
 
     /**
      * \brief Used to create the folder ~/dev/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
