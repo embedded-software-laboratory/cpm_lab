@@ -248,9 +248,9 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
         //Remove entry (also from timeseries) if outdated
         if (now - it->second > max_allowed_age)
         {
-            it = last_vehicle_state_time.erase(it);
             last_vehicle_observation_time.erase(it->first);
             timeseries_vehicles.erase(it->first);
+            it = last_vehicle_state_time.erase(it);
         }
         else
         {
