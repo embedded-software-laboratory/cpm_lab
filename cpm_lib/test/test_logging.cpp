@@ -51,8 +51,18 @@ TEST_CASE( "Logging" ) {
     //Create logging logs_reader
     cpm::ReaderAbstract<Log> logs_reader("log", true, true);
 
-    //Sleep 100ms to make sure that the logger reader is ready to receive messages
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Logging test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (logs_reader.matched_publications_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;

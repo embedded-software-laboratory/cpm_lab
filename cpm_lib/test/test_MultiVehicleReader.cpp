@@ -45,11 +45,23 @@ TEST_CASE( "MultiVehicleReader" ) {
     std::vector<uint8_t> vehicle_ids{1, 3, 7};
     cpm::MultiVehicleReader<VehicleState> reader(cpm::get_topic<VehicleState>("asldkjfhslakdj"), vehicle_ids);
 
-
     const uint64_t second = 1000000000ull;
     const uint64_t millisecond = 1000000ull;
     const uint64_t t0 = 1500000000ull * second;
     const uint64_t expected_delay = 400 * millisecond;
+
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in MultiVehicleReader test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (writer.matched_subscriptions_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     // send
     for (uint64_t t_now = t0; t_now <= t0 + 10*second; t_now += second)
@@ -78,8 +90,6 @@ TEST_CASE( "MultiVehicleReader" ) {
 
         usleep(10000);
     }
-
-    sleep(1);
 
     // example read
     std::map<uint8_t, VehicleState> samples;

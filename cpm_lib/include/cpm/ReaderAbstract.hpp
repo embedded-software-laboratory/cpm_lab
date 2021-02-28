@@ -138,7 +138,6 @@ namespace cpm
         /**
          * \brief Returns # of matched writers, needs template parameter for topic type
          */
-        template<typename MessageType>
         size_t matched_publications_size()
         {
             auto matched_pub = dds::sub::matched_publications(dds_reader);

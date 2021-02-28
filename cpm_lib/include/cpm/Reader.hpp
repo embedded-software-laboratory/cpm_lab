@@ -204,6 +204,15 @@ namespace cpm
             //      If so: A 'timeout' for this could be set in the constructor
             remove_old_msgs(sample_out);
         }
+
+        /**
+         * \brief Returns # of matched writers, needs template parameter for topic type
+         */
+        size_t matched_publications_size()
+        {
+            auto matched_pub = dds::sub::matched_publications(dds_reader);
+            return matched_pub.size();
+        }
     };
 
 }

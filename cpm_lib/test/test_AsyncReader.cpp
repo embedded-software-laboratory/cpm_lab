@@ -64,7 +64,7 @@ TEST_CASE( "AsyncReader" ) {
     bool wait = true;
     while (wait)
     {
-        usleep(100000); //Wait 100ms
+        usleep(10000); //Wait 10ms
         std::cout << "." << std::flush;
 
         if (test_writer.matched_subscriptions_size() > 0 && async_reader.matched_publications_size() > 0)

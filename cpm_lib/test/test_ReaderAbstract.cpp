@@ -49,8 +49,20 @@ TEST_CASE( "ReaderAbstract" ) {
 
     std::vector<double> expected_odometer_values;
 
-    //Wait for reader setup
-    usleep(10000);
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in ReaderAbstract test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (reader.matched_publications_size() > 0 && sample_writer.matched_subscriptions_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
+
+    HIER UND IN DEN ANDEREN TESTS: TODO - WARTE BZW POLLE DATEN VOM READER BIS ALLES DA IST ODER EIN TIMEOUT ERREICHT IST - NICHT NICHT ODER PAUSCHAL MEHRERE SEKUNDEN WARTEN!
 
     // send samples with different time stamps and data
     for (size_t i = 0; i < 5; ++i)
@@ -61,8 +73,6 @@ TEST_CASE( "ReaderAbstract" ) {
         sample_writer.write(vehicleState);
         usleep(10000);
     }
-
-    sleep(1);
     
     //Read should contain desired data
     auto samples = reader.take();
