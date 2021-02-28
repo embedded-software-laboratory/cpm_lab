@@ -103,63 +103,68 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     messages_received.clear();
 
     // Read LaneGraphTrajectory messages and write them into our buffer
-    this->read_other_vehicles(); // Waits until we received the correct messages
+    this->read_prev_vehicles(); // Waits until we received the correct messages
     cpm::Logging::Instance().write(3,
             "%lu: Starting planning", t_real_time);
 
-    // Priority based collision avoidance: Every vehicle avoids 
-    // the 'previous' vehicles, in this example those with a smaller ID.
-    bool is_collision_avoidable = false;
-    is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
-
-    if (!is_collision_avoidable){
-        cpm::Logging::Instance().write(1,
-                "Found unavoidable collision");
-        crashed = true;
-        started = false; // end planning
-        isStopped = true;
-        return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
-    }
-
-
-    if(t_start == 0)
+    bool no_collisions = false;
+    while(!no_collisions)
     {
-        t_start = t_real_time;// + 2000000000ull;
-    }
-    else {
-        clear_past_trajectory_point_buffer();
-    }
-    
-    // Get new points from PlanningState
-    std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
-    for( auto& point : new_trajectory_points ) {
-        point.t().nanoseconds(point.t().nanoseconds() + t_start);
-    }
+	    // Priority based collision avoidance: Every vehicle avoids 
+	    // the 'previous' vehicles, in this example those with a smaller ID.
+	    bool is_collision_avoidable = false;
+	    is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
 
-    // Append points to trajectory_point_buffer
-    trajectory_point_buffer.insert(
-		   trajectory_point_buffer.end(),
-		   new_trajectory_points.begin(),
-		   new_trajectory_points.end()
-		   );
+	    if (!is_collision_avoidable){
+		cpm::Logging::Instance().write(1,
+			"Found unavoidable collision");
+		crashed = true;
+		started = false; // end planning
+		isStopped = true;
+		return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
+	    }
 
-    // Limit size of trajectory buffer; delete oldest points first
-    while( trajectory_point_buffer.size() > 50 ) {
-	    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
+
+	    if(t_start == 0)
+	    {
+		t_start = t_real_time;// + 2000000000ull;
+	    }
+	    else {
+		clear_past_trajectory_point_buffer();
+	    }
+	    
+	    // Get new points from PlanningState
+	    std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
+	    for( auto& point : new_trajectory_points ) {
+		point.t().nanoseconds(point.t().nanoseconds() + t_start);
+	    }
+
+	    // Append points to trajectory_point_buffer
+	    trajectory_point_buffer.insert(
+			   trajectory_point_buffer.end(),
+			   new_trajectory_points.begin(),
+			   new_trajectory_points.end()
+			   );
+
+	    // Limit size of trajectory buffer; delete oldest points first
+	    while( trajectory_point_buffer.size() > 50 ) {
+		    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
+	    }
+
+	    //debug_analyzeTrajectoryPointBuffer();
+
+	    // Get our current trajectory
+	    LaneGraphTrajectory lane_graph_trajectory;
+	    trajectoryPlan->get_lane_graph_positions(
+		    &lane_graph_trajectory
+	    );
+
+	    write_trajectory(lane_graph_trajectory);
+	    no_collisions = read_concurrent_vehicles();
     }
-
-    //debug_analyzeTrajectoryPointBuffer();
-
-    // Get our current trajectory
-    LaneGraphTrajectory lane_graph_trajectory;
-    trajectoryPlan->get_lane_graph_positions(
-            &lane_graph_trajectory
-    );
 
     // Advance trajectoryPlanningState by 1 timestep
     trajectoryPlan->apply_timestep(dt_nanos);
-
-    write_trajectory(lane_graph_trajectory);
     
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
@@ -195,7 +200,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
  * Blocks until a message from all vehicles specified in the comm graph
  * is received or the stop() method is called.
  */
-void VehicleTrajectoryPlanner::read_other_vehicles()
+void VehicleTrajectoryPlanner::read_prev_vehicles()
 {
     assert(started);
 
@@ -292,6 +297,10 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
         << " ms"
         << std::endl;
 #endif
+}
+
+bool VehicleTrajectoryPlanner::read_concurrent_vehicles() {
+   return true;
 }
 
 /*
