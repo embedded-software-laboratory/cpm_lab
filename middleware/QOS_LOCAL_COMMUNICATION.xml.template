@@ -85,14 +85,9 @@ RTI Connext user manual.
         -->
         <qos_profile name="LocalCommunicationProfile" base_name="BuiltinQosLibExp::Generic.StrictReliable" is_default_qos="false">
             <participant_qos>
-                <!-- Limit discovery to localhost -->
-                <discovery>
-                    <accept_unknown_peers>false</accept_unknown_peers>
-                    <initial_peers>
-                        <element>localhost</element>
-                        <element>TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
-                    </initial_peers>   
-                </discovery>
+	        <transport_builtin>
+	            <mask>SHMEM</mask>
+	        </transport_builtin>
             </participant_qos>
             <datareader_qos>
               <history>
