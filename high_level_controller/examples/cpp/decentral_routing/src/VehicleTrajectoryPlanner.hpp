@@ -34,8 +34,10 @@
 #include "cpm/Logging.hpp"
 #include "cpm/Writer.hpp"
 #include "cpm/ReaderAbstract.hpp"
+
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
+
 #include "VehicleTrajectoryPlanningState.hpp"
 #include "CouplingGraph.hpp"
 

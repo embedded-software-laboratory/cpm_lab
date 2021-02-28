@@ -29,7 +29,6 @@
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
-#include "CouplingGraph.hpp"
 
 // CPM Wrappers and functions
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
@@ -49,12 +48,6 @@
 #include "VehicleStateList.hpp"
 #include "StopRequest.hpp"
 
-// DDS files
-#include <dds/pub/ddspub.hpp>                   //rti folder
-#include <dds/sub/ddssub.hpp>                   //rti folder
-#include <dds/domain/DomainParticipant.hpp>         // Required for communication with middleware
-#include <dds/core/QosProvider.hpp>             // Required for communication with middleware
-
 // General C++ libs
 #include <chrono>
 #include <iostream>
@@ -64,6 +57,7 @@
 #include <thread>
 #include <limits>                           // To get maximum integer value (for stop condition)
 
+#include "CouplingGraph.hpp"
 // Planner
 #include "VehicleTrajectoryPlanner.hpp"    //sw-folder central routing
 
