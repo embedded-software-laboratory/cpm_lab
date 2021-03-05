@@ -285,7 +285,15 @@ void worker_grab_image()
                 {
                     uint64_t now = cpm::get_time_ns();
                     double fps = 100.0/((now - lastFrameReportTime)*1e-9);
-                    std::cout << "FPS " << fps << std::endl;
+
+                    if (fps < 49.5){
+                        std::cout << "FPS " << fps << " comparably low!" << std::endl;
+                    }
+                    else {
+                        std::cout << "FPS " << fps << std::endl;
+                    }
+
+
                     lastFrameReportTime = now;
                 }
             }
