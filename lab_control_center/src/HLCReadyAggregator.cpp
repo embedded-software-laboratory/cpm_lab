@@ -56,10 +56,10 @@ HLCReadyAggregator::HLCReadyAggregator() :
                 }
                 catch (const std::runtime_error& err)
                 {
-                    cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string, err.what());
+                    cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string.c_str(), err.what());
                 }
                 catch (...) {
-                    cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string);
+                    cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string.c_str());
                 }
             }
         },

@@ -942,11 +942,11 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(1,1,1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
 
             ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
             ctx->set_source_rgb(1,.1,.1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
         }
         ctx->restore();
 
