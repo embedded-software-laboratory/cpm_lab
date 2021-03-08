@@ -291,15 +291,10 @@ public:
      */
     void set_sensitive(bool is_sensitive);
 
-<<<<<<< HEAD
     /**
      * \brief In case the preview is stopped by a simulation start, reset the preview button label
      */
-    void reset_preview_label();
-=======
-    //In case the preview is stopped by a simulation start
     void reset_preview();
->>>>>>> origin/ui_bugfixes
 
     /**
      * \brief Get the parent widget to put the view in a parent container
