@@ -125,6 +125,19 @@ void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _res
 
 void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordinates)
 {
+    //We do not want to load a file if a file is already currently being loaded
+    //In this case: Abort
+    if (file_is_loading.exchange(true))
+    {
+        //File is currently loading, cancel
+        std::cout << "Cancelled" << std::endl;
+        return;
+    }
+    //Else: File_is_loading has been set to true with this operation as well, so other load_file calls
+    //that got to the if(...) after the atomic operation are stopped
+
+    //This mutex exists for other operations than loading a file
+    //While a file loads, these operations either wait or abort (with try_lock)
     std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
     //Delete all old data
@@ -139,7 +152,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         //Ignore whitespaces (see http://xmlsoft.org/html/libxml-parser.html#xmlParserOption)
         parser.set_parser_options(256);
         parser.parse_file(xml_filepath);
-        if(!parser) std::cerr << "Cannot parse file!" << std::endl;
+        if(!parser) {
+            std::cerr << "Cannot parse file!" << std::endl;
+            LCCErrorLogger::Instance().log_error("CommonRoadScenario: Cannot parse file!");
+        }
 
         //Get parent node
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
@@ -200,6 +216,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     {
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+        LCCErrorLogger::Instance().log_error("CommonRoadScenario: All relevant data fields are empty (except for version / author / affiliation)");
     }
 
     lock.unlock();
@@ -241,6 +258,9 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     //Set up / load (new) data entry for transformation profile
     yaml_transformation_storage.set_scenario_name(xml_filepath);
     //Change regarding center_coordinate is not stored in the transform profile (it is either done by default at loading or disabled, so it must not be stored as well)
+
+    //Allow the load_file function to be called again
+    file_is_loading.store(false);
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)

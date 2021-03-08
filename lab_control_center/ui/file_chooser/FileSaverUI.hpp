@@ -38,6 +38,8 @@
 #include <locale>
 #include <string>
 #include <vector>
+//For remembering the last saved file
+#include "FileDialogPaths.hpp"
 
 /**
  * \class FileSaverUI
@@ -85,17 +87,14 @@ private:
     //! If the callback was called before
     bool called_callback = false;
 
-    //! Remember last opened file (also in between program executions)
-    static std::string previous_file;
-    //! If the config file was already loaded before (if not: take a look at that first, then at the previous file)
-    static bool file_config_loaded;
-    //! Location of the config file that stores the previously stored file between program executions
-    static const std::string file_dialog_config_location;
+    //! Name for the config file, to remember the last opened file for a specific use-case, e.g. for parameters, scripts, commonroad scenarios etc.
+    std::string config_name;
 public:
     /**
      * \brief Constructor
      * \param parent Parent window, a reference is required to be able to properly handle the GTK Dialog
      * \param on_close_callback Callback function the be called when the saver is closed, to get the relevant information (file path, if a file is supposed to be saved)
+     * \param config_name In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
      */
-    FileSaverUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback);
+    FileSaverUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::string config_name = "default");
 };

@@ -1002,7 +1002,8 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
     {
         if (polygon.points().size() < 3)
         {
-            std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            std::cerr << "Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            LCCErrorLogger::Instance().log_error("Points missing in translated polygon (at least 3 required) - will not be drawn");
         }
         else
         {

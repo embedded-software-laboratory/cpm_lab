@@ -43,6 +43,7 @@
 #include "CommonroadObstacle.hpp"
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
+#include "LCCErrorLogger.hpp"
 
 /**
  * \brief Used in a lot of classes, provides a reference to the drawing context of the map view, 

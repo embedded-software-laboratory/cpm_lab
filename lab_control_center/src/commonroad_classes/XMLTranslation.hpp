@@ -37,6 +37,8 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 /**
  * \namespace xml_translation
  * \brief This is a utility namespace

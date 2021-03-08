@@ -29,6 +29,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "cpm/Logging.hpp"
 #include "../../src/commonroad_classes/CommonRoadScenario.hpp"
 #include "ObstacleSimulationManager.hpp"
@@ -239,7 +240,7 @@ private:
     bool apply_entry_rotate(GdkEventKey* event);
 
     //! Config file that stores the previously selected script, so that one is always shown when the LCC is restarted
-    const std::string config_file_location = "./commonroad_file_chooser.config";
+    const std::string config_file_location = "commonroad";
 
     /**
      * \brief Load, if exists, the stored transformation for the current file
@@ -262,6 +263,9 @@ private:
     void preview_clicked();
     //! To start and stop a preview, we need to know if one is currently shown
     bool preview_enabled = false;
+
+    //! Remember last click of load button, to prevent the user from "spamming" loading a file
+    uint64_t last_scenario_load_timestamp{0};
 
 public:
     /**
@@ -287,10 +291,15 @@ public:
      */
     void set_sensitive(bool is_sensitive);
 
+<<<<<<< HEAD
     /**
      * \brief In case the preview is stopped by a simulation start, reset the preview button label
      */
     void reset_preview_label();
+=======
+    //In case the preview is stopped by a simulation start
+    void reset_preview();
+>>>>>>> origin/ui_bugfixes
 
     /**
      * \brief Get the parent widget to put the view in a parent container

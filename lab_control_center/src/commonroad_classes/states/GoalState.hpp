@@ -52,6 +52,7 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 #include "CommonroadDDSGoalState.hpp"
+#include "LCCErrorLogger.hpp"
 
 /**
  * \class GoalState
@@ -71,7 +72,9 @@ private:
     std::optional<Interval> orientation = std::nullopt;
     //! Allowed velocity range within the goal state. Must not be defined
     std::optional<Interval> velocity = std::nullopt;
-
+    //! ID of the planning problem, can be used when drawing the goal state
+    int planning_problem_id;
+    
     //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
 
@@ -82,12 +85,14 @@ public:
     /**
      * \brief Constructor, set up a goalstate object from a commonroad xml goalstate node
      * \param node Goal state node to translate
+     * \param planning_problem_id ID of the planning problem, to show the GoalState ID when drawing
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      * \param _get_lanelet_center Function to get the center (x, y) of a lanelet, given its ID
      * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
         const xmlpp::Node* node,
+        int planning_problem_id,
         std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
         std::function<std::pair<double, double> (int)> _get_lanelet_center,
         std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration

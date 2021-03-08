@@ -295,10 +295,12 @@ int main(int argc, char *argv[])
             //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
             if(commonroad_scenario) commonroad_scenario->send_planning_problems(writer_planning_problems);
 
+            //Reset preview, must be done before starting the obstacle simulation manager because this stops the manager running for the preview
+            commonroadViewUi->reset_preview();
+
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
             obstacle_simulation_manager->start();
-            commonroadViewUi->reset_preview_label();
 
         }, 
         [=](){

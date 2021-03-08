@@ -80,11 +80,8 @@ void Upload::deploy_remote(
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create upload dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create upload dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create upload dialog");
     }
 
     //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
@@ -148,6 +145,8 @@ void Upload::kill_remote()
     else 
     {
         std::cerr << "No lookup function to get HLC IDs given, cannot kill on HLCs" << std::endl;
+        LCCErrorLogger::Instance().log_error("No lookup function to get HLC IDs given, cannot kill on HLCs");
+
         return;
     }
 
@@ -160,11 +159,8 @@ void Upload::kill_remote()
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1,
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create upload dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create upload dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create upload dialog");
     }
     
     //Let the UI dispatcher know that kill-related actions need to be performed after all threads have finished
@@ -249,7 +245,10 @@ void Upload::ui_dispatch()
             if (undo_kill_button_greyout)
                 undo_kill_button_greyout();
             else
+            {
                 std::cerr << "ERROR: Callback for undoing kill button grey-out missing in Upload class" << std::endl;
+                LCCErrorLogger::Instance().log_error("ERROR: Callback for undoing kill button grey-out missing in Upload class");
+            }
         }
         lock.unlock();
 
@@ -268,7 +267,10 @@ void Upload::ui_dispatch()
             if (undo_ui_greyout)
                 undo_ui_greyout();
             else
+            {
                 std::cerr << "ERROR: Callback for undoing ui grey-out missing in Upload class" << std::endl;
+                LCCErrorLogger::Instance().log_error("ERROR: Callback for undoing ui grey-out missing in Upload class");
+            }
         }
     }
 }
@@ -283,6 +285,7 @@ void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success, bool is
     if (thread_count.load() == 0)
     {
         std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+        LCCErrorLogger::Instance().log_error("WARNING: Upload thread count has not been initialized correctly!");
     }
 
     //Trigger error msg if the upload failed
@@ -316,6 +319,7 @@ void Upload::notify_upload_finished(uint8_t hlc_id, bool upload_success, bool is
         if (notify_count == upload_threads.size())
         {
             std::cerr << "WARNING: Upload thread count has not been initialized correctly!" << std::endl;
+            LCCErrorLogger::Instance().log_error("WARNING: Upload thread count has not been initialized correctly!");
 
             notify_count = 0;
 
@@ -331,6 +335,7 @@ bool Upload::check_if_online(uint8_t hlc_id)
     if (!get_hlc_ids)
     {
         std::cerr << "ERROR: Callback for getting HLC IDs missing in Upload class" << std::endl;
+        LCCErrorLogger::Instance().log_error("ERROR: Callback for getting HLC IDs missing in Upload class");
     }
 
     //Check if the HLC is still online (in get_hlc_ids)
