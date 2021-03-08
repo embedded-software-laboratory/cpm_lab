@@ -26,6 +26,11 @@
 
 #include "VehicleToggle.hpp"
 
+/**
+ * \file VehicleToggle.cpp
+ * \ingroup lcc_ui
+ */
+
 VehicleToggle::VehicleToggle(unsigned int _id) :
     id(_id)
 {

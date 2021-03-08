@@ -26,7 +26,17 @@
 
 #ifndef PARAMETERREQUEST_IDL
 #define PARAMETERREQUEST_IDL
+
+/**
+ * \struct ParameterRequest
+ * \brief Parameter values can be distributed by the LCC. To request a parameter that might have been set in this central instance,
+ * send a parameter request message and wait for an answer to it (this behaviour is already implemented, e.g. in cpm::parameter_bool to get a boolean parameter)
+ * 
+ * https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?pageId=11698287
+ * \ingroup cpmlib_idl
+ */
 struct ParameterRequest {
+    //! Name of the parameter for which a value is requested
     string name; //@key
 };
 #endif

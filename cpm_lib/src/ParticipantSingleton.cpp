@@ -30,7 +30,10 @@
 #include <dds/domain/qos/DomainParticipantQos.hpp>
 #include <memory>
 
-
+/**
+ * \file ParticipantSingleton.cpp
+ * \ingroup cpmlib
+ */
 namespace cpm 
 {
     dds::domain::DomainParticipant& ParticipantSingleton::Instance() {

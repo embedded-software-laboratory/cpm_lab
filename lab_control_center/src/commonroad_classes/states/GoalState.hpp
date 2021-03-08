@@ -57,27 +57,33 @@
  * \class GoalState
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a GoalState specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class GoalState : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
     //Commonroad data
-    std::optional<IntervalOrExact> time = std::nullopt; //Time values should probably be within the range of double; Can only be defined as interval according to spec, not changed yet due to necessary changes elsewhere
-    std::optional<Position> position = std::nullopt; //Must not be defined 
-    std::optional<Interval> orientation = std::nullopt; //Must not be defined
-    std::optional<Interval> velocity = std::nullopt; //Must not be defined
+    //! Time values should probably be within the range of unsigned doubles; Can only be defined as interval according to spec
+    std::optional<IntervalOrExact> time = std::nullopt;
+    //! Position of the goal state. Must not be defined
+    std::optional<Position> position = std::nullopt; 
+    //! Allowed orientation range within the goal state. Must not be defined
+    std::optional<Interval> orientation = std::nullopt;
+    //! Allowed velocity range within the goal state. Must not be defined
+    std::optional<Interval> velocity = std::nullopt;
 
-    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
 
-    //Look up in draw if some parts should be drawn or not
+    //! Look up in draw configuration if some parts should be drawn or not
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
 
 public:
     /**
-     * \brief Constructor, set up a goalstate object
+     * \brief Constructor, set up a goalstate object from a commonroad xml goalstate node
      * \param node Goal state node to translate
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _get_lanelet_center Function to get the center (x, y) of a lanelet, given its ID
      * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
@@ -91,7 +97,10 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
@@ -123,8 +132,20 @@ public:
     CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
     //Getter
+    /**
+     * \brief Get the point or interval in time within which the goal state must be reached, or nullopt if not set
+     */
     const std::optional<IntervalOrExact>& get_time() const;
+    /**
+     * \brief Get the position of the goal state, or nullopt if not set
+     */
     const std::optional<Position>& get_position() const;
+    /**
+     * \brief Get the allowed orientation within the goal state, or nullopt if not set
+     */
     const std::optional<Interval>& get_orientation() const;
+    /**
+     * \brief Get the allowed velocity within the goal state, or nullopt if not set
+     */
     const std::optional<Interval>& get_velocity() const;
 };

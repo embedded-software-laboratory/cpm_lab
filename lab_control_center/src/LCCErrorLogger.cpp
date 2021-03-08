@@ -1,5 +1,10 @@
 #include "LCCErrorLogger.hpp"
 
+/**
+ * \file LCCErrorLogger.cpp
+ * \ingroup lcc
+ */
+
 LCCErrorLogger& LCCErrorLogger::Instance()
 {
     static LCCErrorLogger instance;

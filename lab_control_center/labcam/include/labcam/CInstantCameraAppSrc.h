@@ -28,8 +28,10 @@ using namespace Pylon;
 using namespace GenApi;
 using namespace std;
 
-// ******* CInstantCameraAppSrc *******
-// Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
+/**
+ * \brief Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
+ * \ingroup lcc_labcam
+ */
 class CInstantCameraAppSrc : public CInstantCamera
 {
 public:

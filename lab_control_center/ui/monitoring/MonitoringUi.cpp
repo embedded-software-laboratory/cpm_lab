@@ -28,6 +28,10 @@
 #include <numeric>
 #include <cassert>
 
+/**
+ * \file MonitoringUi.cpp
+ * \ingroup lcc_ui
+ */
 
 MonitoringUi::MonitoringUi(
     std::shared_ptr<Deploy> deploy_functions_callback, 

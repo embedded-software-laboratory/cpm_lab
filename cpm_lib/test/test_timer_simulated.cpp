@@ -45,14 +45,15 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerSimulated accuracy
+ * 
  * - Does the source ID match the sender ID (data remains unchanged, no other data was received during the test)
  * - Do the ready signals match the expectation (offset and period are correct, increase by period in each step)
  * - Are start signals that do not match the ready signal ignored
  * - Is the current time stamp correct (regarding offset and period)
  * - Does the thread time match the current time (the simulated timestamp should be the same as t_now)
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerSimulated_accuracy" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timer_simulated_accuracy");

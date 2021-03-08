@@ -26,6 +26,11 @@
 
 #include "HLCReadyAggregator.hpp"
 
+/**
+ * \file HLCReadyAggregator.cpp
+ * \ingroup lcc
+ */
+
 //The reader callback is initialized in the init list of the constructor; store all IDs in a map together with the current time in nanoseconds
 HLCReadyAggregator::HLCReadyAggregator() :
     async_hlc_reader(

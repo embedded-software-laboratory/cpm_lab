@@ -33,6 +33,11 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+
+/**
+ * \brief Main function of the labcam
+ * \ingroup lcc_labcam
+ */
 int main(int argc, char *argv[])
 {
     LabCam labcam;

@@ -33,6 +33,15 @@
  *  Author: cfrauzem
  */ 
 
+/**
+ * \file servo_timer.c
+ *
+ * \author maczijewski, cfrauzem
+ * \date Created: 24.09.2018 16:26:48, Modified: 05.31.2019 11:32:19
+ * 
+ * \ingroup low_level_controller
+ */
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -40,11 +49,22 @@
 #include "servo_timer.h"
 #include "led.h"
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint32_t tick_counter = 0;
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static uint8_t consecutive_servo_center_command_count = 0;
 
 /* 
@@ -92,9 +112,14 @@ uint32_t get_tick() {
 }
 
 
-// timer 3 set to 20ms period
-// timer/counter3 overflow interrupt
-// used timer3 because convenient: could have used different timer
+/**
+ * \brief timer 3 set to 20ms period
+ * 
+ * timer/counter3 overflow interrupt
+ * 
+ * used timer3 because convenient: could have used different timer
+ * \ingroup low_level_controller
+ */
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
 	// use the same timer for LEDs, as it has the same frequency-requirements 

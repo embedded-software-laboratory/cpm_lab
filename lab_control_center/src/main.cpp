@@ -76,11 +76,19 @@ using namespace std::placeholders;
 //We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
 std::shared_ptr<SetupViewUI> setupViewUi;
 
+/**
+ * \brief Function to deploy cloud discovery (to help participants discover each other)
+ * \ingroup lcc
+ */
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
     system(command.c_str());
 }
 
+/**
+ * \brief Function to kill cloud discovery
+ * \ingroup lcc
+ */
 void kill_cloud_discovery() {
     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
     system(command.c_str());
@@ -100,6 +108,10 @@ void kill_all_tmux_sessions() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+/**
+ * \brief Interrup handler of the LCC
+ * \ingroup lcc
+ */
 void interrupt_handler(int s) {
     kill_cloud_discovery();
 
@@ -114,6 +126,10 @@ void interrupt_handler(int s) {
 
 #pragma GCC diagnostic pop
 
+/**
+ * \brief Exit handler of the LCC
+ * \ingroup lcc
+ */
 void exit_handler() {
     kill_cloud_discovery();
 
@@ -124,6 +140,18 @@ void exit_handler() {
     }
 }
 
+/**
+ * \brief Main function of the LCC.
+ * Command line arguments:
+ * 
+ * --dds_domain
+ * --logging_id
+ * --dds_initial_peer
+ * --simulated_time
+ * --number_of_vehicles (default 20, set how many vehicles can max. be selected in the UI)
+ * --config_file (default parameters.yaml)
+ * \ingroup lcc
+ */
 int main(int argc, char *argv[])
 {
     //Kill remaining tmux sessions

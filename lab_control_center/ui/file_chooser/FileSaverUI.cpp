@@ -26,6 +26,11 @@
 
 #include "FileSaverUI.hpp"
 
+/**
+ * \file FileSaverUI.cpp
+ * \ingroup lcc_ui
+ */
+
 std::string FileSaverUI::previous_file = "./";
 const std::string FileSaverUI::file_dialog_config_location = "./file_dialog_save_config.txt";
 bool FileSaverUI::file_config_loaded = false;

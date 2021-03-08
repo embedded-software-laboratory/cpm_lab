@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/Intersection.hpp"
 
+/**
+ * \file Intersection.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Intersection::Intersection(const xmlpp::Node* node)
 {
     //Check if node is of type intersection

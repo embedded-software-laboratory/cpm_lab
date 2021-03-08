@@ -41,11 +41,12 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD stop signal
+ * 
  * - Sends a stop signal but not a start signal
  * - Therefore: Makes sure that the timer callback function is never actually called
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_stop_signal" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_stop_signal");

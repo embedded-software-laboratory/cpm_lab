@@ -37,6 +37,11 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/TimeMeasurement.hpp"
 
+/**
+ * \file TimerFD.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
     TimerFD::TimerFD(

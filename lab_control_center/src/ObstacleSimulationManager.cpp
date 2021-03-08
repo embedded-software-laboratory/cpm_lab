@@ -26,6 +26,11 @@
 
 #include "ObstacleSimulationManager.hpp"
 
+/**
+ * \file ObstacleSimulationManager.cpp
+ * \ingroup lcc
+ */
+
 ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool _use_simulated_time) 
 :
 scenario(_scenario),

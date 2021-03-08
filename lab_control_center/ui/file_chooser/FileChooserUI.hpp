@@ -40,42 +40,86 @@
 #include <string>
 #include <vector>
 
+/**
+ * \class FileChooserUI
+ * \brief A UI class for a file chooser dialog
+ * \ingroup lcc_ui
+ */
 class FileChooserUI {
 public:
-    //Filter struct for defining Filters for the file chooser dialog (such as: only show files of type .m, .exe etc...)
+    /**
+     * \struct Filter
+     * \brief Filter struct for defining Filters for the file chooser dialog (such as: only show files of type .m, .exe etc...)
+     * \ingroup lcc_ui
+     */
     struct Filter 
     {
+        //! Filter name in the file chooser window
         std::string name;
+        //! Filter definition in mime types, cannot be combined with patterns
         std::vector<std::string> mime_filter_types;
+        //! Filter defintion using patterns, cannot be combined with mime types
         std::vector<std::string> pattern_filter_types;
     };
 
 private:
+    //! GTK UI Builder for the file chooser
     Glib::RefPtr<Gtk::Builder> params_create_builder;
 
+    //! Main window
     Gtk::Window* window;
+    //! File chooser dialog UI
     Gtk::FileChooserDialog* file_chooser_dialog;
+    //! Abort button in the file chooser
     Gtk::Button* button_abort;
+    //! Load file button in the file chooser
     Gtk::Button* button_load;
 
+    /**
+     * \brief Init function, shared by the different constructors
+     * \param parent Parent window to be set for this object, to have a reference to a top window when a dialog is created
+     * \param filters Filters to be shown in the file chooser. Only files of that type can be selected
+     */
     void init(Gtk::Window& parent, std::vector<Filter> filters);
 
-    //Callback function on close (must always be called!)
+    //! Callback function called on file chooser close (must always be called!)
     std::function<void(std::string, bool)> on_close_callback;
 
     //Callback functions for buttons and delete event
+    /**
+     * \brief Callback function for delete event of the file chooser, calls on_close_callback
+     * \param any_event Ignored event that caused the delete
+     */
     bool on_delete(GdkEventAny* any_event);
+    /**
+     * \brief Callback function for abort event of the file chooser, closes the window
+     */
     void on_abort();
+    /**
+     * \brief Callback function for load event of the file chooser.
+     * When a file gets loaded, the window is closed and on_close_callback gets called.
+     */
     void on_load();
 
     //Key events - act depending on which button was released
+    /**
+     * \brief UI key event to react to Enter and Escape Key with loading and aborting
+     * \param event UI key event
+     */
     bool handle_button_released(GdkEventKey* event);
+    /**
+     * \brief UI mouse event to load a file when it is double clicked
+     * \param event UI Button event
+     */
     bool handle_double_click(GdkEventButton* event);
+    //! Boolean to remember if a callback was called before, currently not properly used
     bool called_callback = false;
 
-    //Remember last opened file (also in between program executions)
+    //! Remember last opened file (also in between program executions)
     std::string previous_file = "./";
+    //! Default load path if no previous file is present
     static const std::string default_load_path;
+    //! Location of the config file for this file chooser, which tells the previously selected file of the last program execution
     std::string config_location;
 public:
     /**
@@ -94,7 +138,7 @@ public:
      * \param filters Filters to set for choosing a file, e.g. only YAML files are shown
      * \param config_file Configuration file where previous file locations are stored, for the convenience of the user (set relative filepath as well, e.g. "./xy.config")
      */
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters, std::string config_file = "./file_dialog_open_config.config");
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string config_file = "./file_dialog_open_config.config");
 
     /**
      * \brief Returns the previously selected path of last program execution

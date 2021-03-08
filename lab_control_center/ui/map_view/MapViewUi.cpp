@@ -38,6 +38,11 @@
 
 #include <stdio.h>
 
+/**
+ * \file MapViewUi.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(
@@ -589,7 +594,14 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
-// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+/**
+ * \brief Determine the offset for alligned string messages drawn draw_received_visualization_command()
+ * \param ext TODO
+ * \param anchor TODO
+ * \param offs_x TODO
+ * \param offs_y TODO
+ * \ingroup lcc_ui
+ */
 void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
 {
     // x offset
@@ -716,6 +728,12 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     }
 }
 
+/**
+ * \brief Print XML Node content
+ * \param node XML Node 
+ * \param indentation Indentation for printing the XML Node
+ * \ingroup lcc_ui
+ */
 void print_node(const xmlpp::Node* node, unsigned int indentation = 0)
 {
   const Glib::ustring indent(indentation, ' ');

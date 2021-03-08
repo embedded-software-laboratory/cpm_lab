@@ -1,5 +1,10 @@
 #include "LCCErrorViewUI.hpp"
 
+/**
+ * \file LCCErrorViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 LCCErrorViewUI::LCCErrorViewUI() :
     ui_dispatcher()

@@ -32,6 +32,11 @@
 #include "cpm/TimeMeasurement.hpp"
 #include "TrajectoryInterpolation.hpp"
 
+/**
+ * \file MpcController.cxx
+ * \ingroup vehicle
+ */
+
 MpcController::MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
 :
     writer_Visualization("visualization")

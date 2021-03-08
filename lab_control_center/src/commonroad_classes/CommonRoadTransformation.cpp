@@ -1,5 +1,10 @@
 #include "commonroad_classes/CommonRoadTransformation.hpp"
 
+/**
+ * \file CommonRoadTransformation.cpp
+ * \ingroup lcc_commonroad
+ */
+
 CommonRoadTransformation::CommonRoadTransformation()
 {
     //Make sure that the file exists, else create a file first

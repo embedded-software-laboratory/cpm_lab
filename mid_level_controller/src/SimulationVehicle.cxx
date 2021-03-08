@@ -29,6 +29,11 @@
 #include <math.h>
 #include <iostream>
 
+/**
+ * \file SimulationVehicle.cxx
+ * \ingroup vehicle
+ */
+
 extern "C" {
 #include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 }

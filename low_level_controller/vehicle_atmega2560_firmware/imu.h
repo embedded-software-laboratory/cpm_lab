@@ -39,9 +39,25 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 bool imu_setup();
 
+/**
+ * \brief TODO
+ * \param imu_yaw
+ * \param imu_yaw_rate
+ * \param imu_acceleration_forward
+ * \param imu_acceleration_left
+ * \param imu_acceleration_up
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 bool imu_read(
 	uint16_t* imu_yaw,
 	int16_t* imu_yaw_rate,

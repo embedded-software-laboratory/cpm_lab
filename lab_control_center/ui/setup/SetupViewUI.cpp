@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <chrono>
 
+/**
+ * \file SetupViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
