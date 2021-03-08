@@ -234,113 +234,142 @@ int main(int argc, char *argv[])
       vehicle_ids
   );
 
+  bool computed = false;
+  bool planning_started = false;
+  vector<TrajectoryPoint> trajectory_points;
+  double trajectory_duration;
+  double reference_time;
+  uint64_t invalid_after_stamp;
+  vector<std::pair<int, Pose2D>> help_vector;
+  int vehicle_id = 1;
+
+
   auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
   timer->start([&](uint64_t t_now)
   {
-  std::map<uint8_t, VehicleObservation> ips_sample;
-  std::map<uint8_t, uint64_t> ips_sample_age;
-  ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
   
-  uint8_t new_id;
-  Pose2D new_pose;
+    if(! planning_started){
+      reference_time = t_now;
+      planning_started = true;
+    }
+
+    if(! computed){
+          
+          std::map<uint8_t, VehicleObservation> ips_sample;
+          std::map<uint8_t, uint64_t> ips_sample_age;
+          ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
+          
+          int new_id;
+          Pose2D new_pose;
+
+          // Init variables needed as arguments by matlab generated function
+          double vehicleIdList_data[256];
+          int vehicleIdList_size[2];
+          mgen::struct0_T vehiclePoses_data[256];
+          int vehiclePoses_size[2];
+          mgen::Pose2D r;
+          coder::array<mgen::struct1_T, 1U> generated_trajectory;
+          boolean_T isPathValid;
+
+          // Initialize function 'planTrajectory' input arguments.
+          // Initialize function input argument 'vehicleIdList'.
+          argInit_1xd256_real_T(vehicleIdList_data, vehicleIdList_size);
+
+          // Initialize function input argument 'vehiclePoses'.
+          argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
+
+          // Initialize function input argument 'goalPose'.
+          // Call the entry-point 'planTrajectory'.
+          r = argInit_Pose2D();
+
+          for (int i = 0; i < 20; i++) {
+            vehicleIdList_data[i] = i+1;
+          }
+          vehicleIdList_size[1] = 20;
+
+          
+          for(auto i = ips_sample.begin(); i != ips_sample.end(); i++){
+            auto data = i->second;
+            //new_id = data.vehicle_id();
+            //new_pose = data.pose();
+            help_vector.emplace_back(data.vehicle_id(), data.pose());
+          }
+
+          for(int i = 0; i < vehicle_ids.size(); i++){
+            new_pose = help_vector[i].second;
+            new_id = help_vector[i].first;
+
+            // conversion from rad[-pi,pi] to deg [0, 4pi] (+360° used to get only positive angles)
+            double new_yaw = 360 + new_pose.yaw()*180/M_PI; 
+            vehiclePoses_data[i].vehicle_id = new_id;
+            vehiclePoses_data[i].pose.x = new_pose.x();
+            vehiclePoses_data[i].pose.y = new_pose.y();
+            vehiclePoses_data[i].pose.yaw = new_yaw;
+          }
+          
+        
+        vehiclePoses_size[1] = 1;
+
+          r.x = 0.2;
+          r.y = 3.6;
+          r.yaw = 90; //deg - value received will have to be converted from rad
+
+          double speed = 1.0;
+                
+          mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
+                              vehiclePoses_size, &r, vehicle_id, speed,
+                              generated_trajectory, &isPathValid);
+          
+          auto len = *(generated_trajectory).size();
+          
+          for (int i = 0; i < len; i++) {
+            std::cout << " t: " << generated_trajectory[i].t << " px: " << generated_trajectory[i].px << " py: " << generated_trajectory[i].py << " vx: " << 
+                      generated_trajectory[i].vx << " vy: " << generated_trajectory[i].vy << std::endl;
+          }
+          std::cout << "path validity: " << (isPathValid == 1) << std::endl;
+          
+            
+            for (size_t i = 0; i < len; ++i)
+            {
+                TrajectoryPoint trajectory_point;
+                trajectory_point.px(generated_trajectory[i].px);
+                trajectory_point.py(generated_trajectory[i].py);
+                trajectory_point.vx(generated_trajectory[i].vx);
+                trajectory_point.vy(generated_trajectory[i].vy);
+                trajectory_point.t().nanoseconds(generated_trajectory[i].t + t_now);
+                trajectory_points.push_back(trajectory_point);
+
+            } 
+
+            invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
+            std::cout << "invalid after: " << invalid_after_stamp << std::endl;
+            computed = true;
+    }
+
+    if(computed && t_now < invalid_after_stamp){
+            std::cout << "sending trajectory" << std::endl;
+            // Send the current trajectory
+            rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
+            VehicleCommandTrajectory vehicle_command_trajectory;
+            //vehicle_command_trajectory.vehicle_id(vehicle_ids.at(0));
+            vehicle_command_trajectory.vehicle_id(vehicle_id);
+            vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
+            vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
+            vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
+            writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+
+    } else {
+      std::cout << "invalid after stamp: " << invalid_after_stamp << std::endl;
+      std::cout << "t_now: " << t_now << std::endl;
+      std::cout << "stopping timer" << std::endl;
+      timer->stop();
+    }
 
 
-  for(auto e:ips_sample)
-  {
-    auto key = e.first;
-    auto data = e.second;
-    new_id = data.vehicle_id();
-    new_pose = data.pose();
-
-    //new_mgen.x = double(new_pose.x();
-    //new_mgen.y = data.pose.y;
-    //new_mgen.yaw = data.pose.yaw;
-
-    std::cout << "pose: " << new_pose << std::endl;
-  }
-
-  // The initialize function is being called automatically from your entry-point function. So, a call to initialize is not included here. 
-  // Invoke the entry-point functions.
-  // You can call entry-point functions multiple times.
-  double vehicleIdList_data[256];
-  int vehicleIdList_size[2];
-  mgen::struct0_T vehiclePoses_data[256];
-  int vehiclePoses_size[2];
-  mgen::Pose2D r;
-  coder::array<mgen::struct1_T, 1U> trajectory_points;
-  boolean_T isPathValid;
-
-  // Initialize function 'planTrajectory' input arguments.
-  // Initialize function input argument 'vehicleIdList'.
-  argInit_1xd256_real_T(vehicleIdList_data, vehicleIdList_size);
-
-  // Initialize function input argument 'vehiclePoses'.
-  argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
-
-  // Initialize function input argument 'goalPose'.
-  // Call the entry-point 'planTrajectory'.
-  r = argInit_Pose2D();
-
-  for (int i = 0; i < 20; i++) {
-    vehicleIdList_data[i] = i+1;
-  }
-  vehicleIdList_size[1] = 20;
-
-  double new_yaw = 360 + new_pose.yaw()*180/M_PI;
-  vehiclePoses_data[0].vehicle_id = 1;
-  vehiclePoses_data[0].pose.x = new_pose.x();
-  vehiclePoses_data[0].pose.y = new_pose.y();
-  vehiclePoses_data[0].pose.yaw = new_yaw;
- 
-  std::cout << "yae: " << new_yaw << std::endl;
-  
-  vehiclePoses_size[1] = 1;
-
-  r.x = 0.2;
-  r.y = 3.6;
-  r.yaw = 90; //deg - value received will have to be converted from rad
-
-  double speed = 1.0;
-  int vehicle_id = 1;
- 
-  mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
-                       vehiclePoses_size, &r, vehicle_id, speed,
-                       trajectory_points, &isPathValid);
-  
-  auto len = *(trajectory_points).size();
-  
-  for (int i = 0; i < len; i++) {
-    std::cout << " t: " << trajectory_points[i].t << " px: " << trajectory_points[i].px << " py: " << trajectory_points[i].py << " vx: " << 
-              trajectory_points[i].vx << " vy: " << trajectory_points[i].vy << std::endl;
-  }
-  std::cout << "path validity: " << (isPathValid == 1) << std::endl;
-  
-  /*  
-  auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
-  timer->start([&](uint64_t t_now)
-  {
-         
-      rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
-      VehicleCommandTrajectory vehicle_command_trajectory;
-      vehicle_command_trajectory.vehicle_id(vehicle_id);
-      vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
-      vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-      vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
-      writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-
-    });
-  }
-  */
-  timer->stop();
   });
+
   // Terminate the application.
   // You do not need to do this more than one time.
   mgen::planTrajectory_terminate();
   return 0;
 }
-
-//
-// File trailer for main.cpp
-//
-// [EOF]
-//
