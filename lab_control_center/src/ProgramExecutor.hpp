@@ -276,9 +276,11 @@ private:
 
     /**
      * \brief Function to execute a shell command and get its output.
-     * Is currently not stopped if stop_threads becomes true
+     * Is currently not stopped if stop_threads becomes true. 
+     * But: A timeout of max. 10 seconds is always added to the command in the executing child 
+     * due to troubles with program errors before.
      * \param cmd A shell command as C-String
-     * \return Output of the shell command
+     * \return Output of the shell command, or ERROR in case of a serious error or command timeout
      */
     std::string execute_command_get_output(const char* cmd);
 

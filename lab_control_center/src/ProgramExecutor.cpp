@@ -186,7 +186,14 @@ void ProgramExecutor::process_single_child_command(CommandMsg& msg)
     //Execute the command based on the command type / timeout
     if (msg.command.request_type == RequestType::SEND_OUTPUT)
     {
-        std::string output = execute_command_get_output(msg_string.c_str());
+        //Sometimes, this type of command seems to hang up, for unknown reasons. Thus, a timeout is added in this case.
+        //SIGTERM is set after 10 seconds, SIGKILL after 12 if TERM was not enough
+        //After the timeout, if the process was killed due to a timeout, ERROR is returned
+        std::stringstream stream;
+        stream << "timeout -k 12 10 " << msg.command.command << "; if [ $? != 0 ]; then echo 'ERROR'; fi";
+        std::cout << "Executing " << msg.mtype << std::endl;
+        std::string output = execute_command_get_output(stream.str().c_str());
+        std::cout << "Finished " << msg.mtype << " with command " << stream.str() << std::endl;
         
         //Create and send answer, repeat in case of failure (as the main process waits for it)
         while(! send_answer_msg(msg_response_queue_id, output, msg.mtype, true))
@@ -247,6 +254,8 @@ std::string ProgramExecutor::get_command_output(std::string command)
 {
     auto command_id = get_unique_command_id();
 
+    std::cout << "Start output " << command_id << std::endl;
+
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
     if (create_command_msg(command, msg, command_id, -1, RequestType::SEND_OUTPUT))
@@ -262,9 +271,21 @@ std::string ProgramExecutor::get_command_output(std::string command)
     AnswerMsg response;
     if (receive_answer_msg(msg_response_queue_id, command_id, response))
     {
+        std::cout << "End output " << command_id << std::endl;
+
+        std::string string_response(response.answer.truncated_command_output);
+
+        if (string_response.find("ERROR") != std::string::npos)
+        {
+            std::cerr << "ERROR while waiting for response!" << std::endl;
+        }
+
         return response.answer.truncated_command_output;
     }
-    else return "ERROR";
+    else {
+        std::cout << "End output " << command_id << std::endl;
+        return "ERROR";
+    }
 }
 
 int ProgramExecutor::create_msg_queue(std::string filepath)
@@ -377,7 +398,7 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
     if (pipe(command_pipe))
     {
         std::cerr << "Pipe creation failed!" << std::endl;
-        return "";
+        return "ERROR";
     }
 
     int process_id = fork();
@@ -395,7 +416,10 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
-        std::cerr << "Execl error in Deploy class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
+        std::cerr << "Execl error in ProgramExecutor class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
+
+        //Write to pipe because some response is still required / waited for
+        write(command_pipe[1], "ERROR", 5);
 
         exit(EXIT_FAILURE);
     }
@@ -437,9 +461,8 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
     else 
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
-        //TODO: Change behaviour
-        std::cerr << "Error in Deploy class: Could not create child process for " << cmd << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "Error in ProgramExecutor class: Could not create child process for " << cmd << std::endl;
+        return "ERROR";
     }
 }
 
@@ -496,7 +519,7 @@ int ProgramExecutor::execute_command_get_pid(const char* cmd)
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
         //Error if execlp returns
-        std::cerr << "Execl error in Deploy class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
+        std::cerr << "Execl error in ProgramExecutor class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
 
         exit(EXIT_FAILURE);
     }
@@ -509,7 +532,7 @@ int ProgramExecutor::execute_command_get_pid(const char* cmd)
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
         //TODO: Change behaviour
-        std::cerr << "Error in Deploy class: Could not create child process for " << cmd << std::endl;
+        std::cerr << "Error in ProgramExecutor class: Could not create child process for " << cmd << std::endl;
         exit(EXIT_FAILURE);
     }
 }

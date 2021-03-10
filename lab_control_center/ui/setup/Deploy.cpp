@@ -374,7 +374,7 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
-                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\" >/dev/null 2>/dev/null";
                 bool msg_success = program_executor->execute_command(command_kill_real_vehicle.str().c_str(), timeout_seconds);
 
                 if(!msg_success)
@@ -427,7 +427,7 @@ void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seco
                     //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                     std::stringstream command_reboot_hlc;
                     command_reboot_hlc 
-                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\"";
+                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\" >/dev/null 2>/dev/null";
                     bool msg_success = program_executor->execute_command(command_reboot_hlc.str().c_str(), timeout_seconds);
 
                     if(!msg_success)
@@ -539,7 +539,7 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
-        << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
+        << " --middleware_arguments='" << middleware_argument_stream.str() << "' >/dev/null 2>/dev/null";
 
     //Spawn and manage new process
     return program_executor->execute_command(copy_command.str().c_str(), timeout_seconds);
@@ -558,7 +558,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds)
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str() << ">/dev/null 2>/dev/null";
 
     //Spawn and manage new process
     return program_executor->execute_command(kill_command.str().c_str(), timeout_seconds);
@@ -676,7 +676,8 @@ void Deploy::deploy_recording()
         << "-s \"" << recording_session << "\" "
         << "rtirecordingservice "
         << "-cfgFile " << config_path_out << " "
-        << "-cfgName cpm_recorder";
+        << "-cfgName cpm_recorder"
+        << ">/dev/null 2>/dev/null";
     
     //std::cout << command.str() << std::endl;
     //Execute command
@@ -694,6 +695,13 @@ bool Deploy::session_exists(std::string session_id)
 {
     std::string running_sessions = program_executor->get_command_output("tmux ls");
     session_id += ":";
+
+    if (running_sessions.find("ERROR") != std::string::npos)
+    {
+        std::cerr << "Could not determine running sessions, assuming no crash..." << std::endl;
+        return true;
+    }
+
     return running_sessions.find(session_id) != std::string::npos;
 }
 
@@ -739,7 +747,7 @@ void Deploy::kill_session(std::string session_id)
     {
         std::stringstream command;
         command 
-            << "tmux kill-session -t \"" << session_id << "\"";
+            << "tmux kill-session -t \"" << session_id << "\" >/dev/null 2>/dev/null";
 
         //Execute command
         program_executor->execute_command(command.str());
