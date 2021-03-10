@@ -73,6 +73,8 @@ class TimeSeriesAggregator
     const uint64_t expected_period_nanoseconds = 20000000ull; // 50 Hz
     const uint64_t allowed_deviation = expected_period_nanoseconds / 10;
     std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time;
+    //! Minimal effort change so that check_for_deviation must not be changed, but last_vehicle_state_time it not changed by that function
+    std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time_dev;
     std::unordered_map<uint8_t, uint64_t> last_vehicle_observation_time;
     //Checks if the sample deviates from the expected interval, resets in that case to prevent spamming in case of periodical checking without value changes
     void check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff);
