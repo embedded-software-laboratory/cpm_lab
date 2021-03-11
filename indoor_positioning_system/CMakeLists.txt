@@ -5,10 +5,14 @@ set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE STRING "Modules for CMake" FORCE)
 
 # OpenCV
-set(OPENCV_ROOT /opt/opencv400)
-include_directories(${OPENCV_ROOT}/include/opencv4)
-link_directories(${OPENCV_ROOT}/lib)
-set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
+#set(OPENCV_ROOT /opt/opencv400)
+#include_directories(${OPENCV_ROOT}/include/opencv4)
+#link_directories(${OPENCV_ROOT}/lib)
+#set(OpenCV_LIBRARIES opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_highgui opencv_imgcodecs opencv_imgproc opencv_ml opencv_objdetect opencv_photo opencv_stitching opencv_videoio opencv_video )
+
+set(OpenCV_LIBS_IN calib3d core features2d flann highgui imgcodecs imgproc ml objdetect photo stitching videoio video)
+find_package(OpenCV REQUIRED ${OpenCV_LIBS_IN})
+link_libraries(${OpenCV_LIBS})
 
 # Pylon
 find_package(Pylon REQUIRED)
