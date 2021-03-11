@@ -308,11 +308,8 @@ private:
     const std::string ips_session = "ips_pipeline";
     //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
-<<<<<<< HEAD
     const std::string labcam_session = "labcam";
-=======
     //! Tmux session name for the middleware
->>>>>>> master
     const std::string middleware_session = "middleware";
     //! Tmux session name for the HLC
     const std::string hlc_session = "high_level_controller";
