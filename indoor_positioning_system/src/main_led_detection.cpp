@@ -227,7 +227,7 @@ void worker_grab_image()
         camera.ExposureTime.SetValue(120);
 
 
-        camera.StartGrabbing();
+        camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
         GrabResultPtr_t ptrGrabResult;
 
         int frameCount = 0;
