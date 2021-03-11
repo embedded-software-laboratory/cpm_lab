@@ -42,7 +42,22 @@
 
 #include <stdint.h>
 
+/**
+ * \brief TODO
+ * \param battery_voltage
+ * \param current_sense
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void adc_measure(uint16_t* battery_voltage, uint16_t* current_sense);
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void adc_setup();
 
 

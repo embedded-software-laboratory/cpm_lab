@@ -30,17 +30,33 @@
 #ifndef VEHICLECOMMANDPATHTRACKING_IDL
 #define VEHICLECOMMANDPATHTRACKING_IDL
 
+/**
+ * \struct PathPoint
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
 struct PathPoint 
 {
+    //! TODO
     Pose2D pose;
+    //! TODO
     double s;           // m
 };
 
+/**
+ * \struct VehicleCommandPathTracking
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
 struct VehicleCommandPathTracking
 {
+    //! TODO
     octet vehicle_id;   //@key
+    //! TODO
     Header header;
+    //! TODO
     sequence<PathPoint> path;
+    //! TODO
     double speed;       // [m/s]
 };
 #endif

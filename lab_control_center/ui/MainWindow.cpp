@@ -26,6 +26,11 @@
 
 #include "MainWindow.hpp"
 
+/**
+ * \file MainWindow.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 MainWindow::MainWindow(
@@ -142,7 +147,7 @@ void MainWindow::on_menu_params_save_as_pressed() {
     // menu_bar_params_load_params->set_sensitive(false);
     tabs_view_ui->get_param_view()->make_insensitive();
 
-    file_saver_window = make_shared<FileSaverUI>(get_window(), std::bind(&MainWindow::file_saver_callback, this, _1, _2));
+    file_saver_window = make_shared<FileSaverUI>(get_window(), std::bind(&MainWindow::file_saver_callback, this, _1, _2), "parameters");
 }
 
 void MainWindow::on_menu_params_load_file_pressed() {
@@ -155,7 +160,7 @@ void MainWindow::on_menu_params_load_file_pressed() {
     // menu_bar_params_load_params->set_sensitive(false);
     tabs_view_ui->get_param_view()->make_insensitive();
 
-    file_chooser_window = make_shared<FileChooserUI>(get_window(), std::bind(&MainWindow::file_chooser_callback, this, _1, _2));
+    file_chooser_window = make_shared<FileChooserUI>(get_window(), std::bind(&MainWindow::file_chooser_callback, this, _1, _2), "parameters");
 }
 
 // void MainWindow::on_menu_params_load_multiple_files_pressed() {

@@ -26,6 +26,11 @@
 
 #include "LogStorage.hpp"
 
+/**
+ * \file LogStorage.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 LogStorage::LogStorage() :
     /*Set up communication*/

@@ -26,7 +26,21 @@
 
 #include "MultiVehicleTrajectoryPlanner.hpp"
 
+/**
+ * \file MultiVehicleTrajectoryPlanner.cpp
+ * \ingroup central_routing
+ */
+
+/**
+ * \brief TODO
+ * \ingroup central_routing
+ */
 #define T_START_DELAY_NANOS 5000000000ull
+
+/**
+ * \brief TODO
+ * \ingroup central_routing
+ */
 #define T_PLAN_AHEAD_NANOS 6000000000ull
 
 MultiVehicleTrajectoryPlanner::MultiVehicleTrajectoryPlanner(uint64_t dt_nanos):dt_nanos(dt_nanos){}

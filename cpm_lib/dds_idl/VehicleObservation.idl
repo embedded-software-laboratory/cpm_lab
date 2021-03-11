@@ -29,10 +29,21 @@
 
 #ifndef VEHICLE_OBSERVATION_IDL
 #define VEHICLE_OBSERVATION_IDL
+
+/**
+ * \struct VehicleObservation
+ * \brief Vehicle observation data from the IPS (gives position of a vehicle)
+ * \ingroup cpmlib_idl
+ */
 struct VehicleObservation 
 {
+    //! ID of the vehicle the observation belongs to
     octet vehicle_id; //@key
+
+    //! Header data
     Header header;
+
+    //! Position of the vehicle
     Pose2D pose;
 };
 #endif

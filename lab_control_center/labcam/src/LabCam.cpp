@@ -28,8 +28,19 @@
 
 using namespace std;
 
+/**
+ * \file LabCam.cpp
+ * \ingroup lcc_labcam
+ */
 
-// handler for bus call messages
+
+/**
+ * \brief Handler for bus call messages
+ * \param bus TODO
+ * \param msg TODO
+ * \param data TODO
+ * \ingroup lcc_labcam
+ */
 gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data)
 {
 	bus = bus;

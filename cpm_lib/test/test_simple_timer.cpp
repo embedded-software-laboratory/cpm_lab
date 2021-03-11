@@ -41,14 +41,15 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests SimpleTimer
+ * 
  * - Is the timer started after the initial starting time
  * - Does t_now match the expectation regarding offset, period and start values
  * - Is the callback function called shortly after t_now
  * - Is the timer actually stopped when it should be stopped
  * - If the callback function takes longer than period to finish, is this handled correctly
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "SimpleTimer functionality" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_simple_timer");

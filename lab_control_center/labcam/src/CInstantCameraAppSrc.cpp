@@ -62,6 +62,11 @@ using namespace Pylon;
 using namespace GenApi;
 using namespace std;
 
+/**
+ * \file CInstantCameraAppSrc.cpp
+ * \ingroup lcc_labcam
+ */
+
 #define UNUSED(x) (void)(x)
 
 // Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.

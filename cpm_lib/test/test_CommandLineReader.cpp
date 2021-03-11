@@ -27,6 +27,10 @@
 #include "catch.hpp"
 #include "cpm/CommandLineReader.hpp"
 
+/**
+ * \test Tests CommandLineReader
+ * \ingroup cpmlib
+ */
 TEST_CASE( "CommandLineReader" ) {
     //Create pseudo-commandline parameters
     char program_name[] = "irrelevant_program";

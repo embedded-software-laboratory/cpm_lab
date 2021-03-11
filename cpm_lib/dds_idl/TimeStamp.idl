@@ -27,8 +27,13 @@
 #ifndef TIMESTAMP_IDL
 #define TIMESTAMP_IDL
 
+/**
+ * \struct TimeStamp
+ * \brief Data type that contains a timestamp in nanoseconds since 1970, UTC
+ * \ingroup cpmlib_idl
+ */
 struct TimeStamp {
-    /* Unix timestamp in nanoseconds, i.e. nanoseconds since 1970, UTC. */
+    //! Unix timestamp in nanoseconds, i.e. nanoseconds since 1970, UTC.
     unsigned long long nanoseconds;
 };
 #endif

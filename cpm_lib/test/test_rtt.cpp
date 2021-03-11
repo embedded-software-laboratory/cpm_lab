@@ -39,11 +39,12 @@
 #include "cpm/Writer.hpp"
 
 /**
- * Tests RTTTool
+ * \test Tests RTTTool
+ * 
  * WARNING: No other participant should be running while this test is running, or it will fail 
  * (due to potential answers to RTT requests by other participants in the network)
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "RTT" ) {
     cpm::Logging::Instance().set_id("test_rtt");
     cpm::RTTTool::Instance().activate("test_rtt");

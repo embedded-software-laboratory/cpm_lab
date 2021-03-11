@@ -39,10 +39,41 @@
 #include "servo_timer.h"
 #include "spi_packets.h"
 
-
+/**
+ * \brief TODO
+ * \param vehicle_id_in
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void led_set_state(uint8_t vehicle_id_in);
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void led_toggle();
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void led_setup();
+
+/**
+ * \brief TODO
+ * \param led1
+ * \param led2
+ * \param led3
+ * \param led4
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void led_test(uint8_t led1, uint8_t led2, uint8_t led3, uint8_t led4);
 
 
