@@ -624,6 +624,30 @@ void Deploy::kill_ips() {
 }
 
 
+void Deploy::deploy_labcam(std::string path, std::string file_name){
+    //Check if old session already exists - if so, kill it
+    kill_session(labcam_session);
+
+    //Generate command
+    std::stringstream command;
+    command
+        << "tmux new-session -d "
+        << "-s \"" << labcam_session << "\" "
+        << "\"cd ~/dev/software/lab_control_center/build/labcam;./labcam_recorder "
+        << " --path=" << path
+        << " --file_name=" << file_name
+        << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
+    
+    //Execute command
+    system(command.str().c_str());
+}
+
+
+void Deploy::kill_labcam() {
+    kill_session(labcam_session);
+}
+
+
 
 void Deploy::deploy_recording() 
 {
@@ -739,7 +763,8 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     }
     if (check_for_recording)
     {
-        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
+        if(! session_exists(recording_session)) crashed_participants.push_back("DDS Recording");
+        if(! session_exists(labcam_session)) crashed_participants.push_back("LabCam");
     }
 
     return crashed_participants;

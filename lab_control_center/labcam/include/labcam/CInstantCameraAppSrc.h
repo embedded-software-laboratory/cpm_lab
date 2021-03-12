@@ -82,4 +82,8 @@ private:
 	GstBuffer* m_gstBuffer;
 	bool retrieve_image();
 	static void cb_need_data(GstElement *appsrc, guint unused_size, gpointer user_data);
+
+	// For measuring the amount of framedrops
+	int correct_pictures = 0;
+	int incorrect_pictures=0;
 };

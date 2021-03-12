@@ -154,6 +154,18 @@ public:
      */
     void kill_ips();
 
+
+    /**
+     * \brief Deploy the labcam. After executing this command the labcam will immediately start the recording.
+     * \param path The path where the video is to be saved.
+     * \param file_name The name of the video file.
+     */
+    void deploy_labcam(std::string path, std::string file_name);
+
+    // Kill the labcam. After executing this command the labcam will immediately stop the recording and save the result.
+    void kill_labcam();
+
+
     //! For diagnosis of data done in MonitoringUi, is set in SetupViewUI
     bool diagnosis_switch = false; 
 
@@ -296,6 +308,7 @@ private:
     const std::string ips_session = "ips_pipeline";
     //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
+    const std::string labcam_session = "labcam";
     //! Tmux session name for the middleware
     const std::string middleware_session = "middleware";
     //! Tmux session name for the HLC
