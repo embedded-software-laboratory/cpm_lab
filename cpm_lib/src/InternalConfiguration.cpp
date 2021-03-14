@@ -30,6 +30,11 @@
 #include "cpm/Logging.hpp"
 #include "cpm/RTTTool.hpp"
 
+/**
+ * \file InternalConfiguration.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm
 {
     void init(int argc, char *argv[])

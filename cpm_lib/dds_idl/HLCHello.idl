@@ -24,17 +24,18 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * These messages are sent by the LCC to check if a program is still running on a remote machine
- */
-
 #ifndef HLC_HELLO_IDL
 #define HLC_HELLO_IDL
 
+/**
+ * \struct HLCHello
+ * \brief These messages are sent by the LCC to check if a program is still running on a remote machine
+ * \ingroup cpmlib_idl
+ */
 struct HLCHello {
-    string source_id; //To find out where the msg came from and to not answer to own msg
+    string source_id; //!< To find out where the msg came from and to not answer to own msg
 
-    boolean script_running; //If true, a Matlab / C++ session is still running
-    boolean middleware_running; //If true, a Middleware session is still running
+    boolean script_running; //!< If true, a Matlab / C++ session is still running
+    boolean middleware_running; //!< If true, a Middleware session is still running
 };
 #endif

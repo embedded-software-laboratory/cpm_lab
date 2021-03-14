@@ -24,37 +24,145 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * imu.c
+/**
+ * \file imu.c
  *
- * Created: 27.09.2018 10:54:21
- *  Author: maczijewski
+ * \author maczijewski
+ * \date Created: 27.09.2018 10:54:21
+ * 
+ * \ingroup low_level_controller
  */ 
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_ADDRESS (0x28)
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_CHIP_ID_ADDR  0x00
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_CHIP_ID      (0xA0)
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_REGISTER_PAGE_ADDR (0x07)
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_ACC_CONFIG_ADDR (0x08) // On page 1 !
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_GYRO_CONFIG0_ADDR (0x0A) // On page 1 !
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_GYRO_CONFIG1_ADDR (0x0B) // On page 1 !
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_EULER_H_LSB_ADDR (0x1A)
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_EULER_H_MSB_ADDR (0x1B)
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_OPR_MODE_ADDR     0X3D
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_PWR_MODE_ADDR     0X3E
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_POWER_MODE_NORMAL        0X00
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_OPERATION_MODE_NDOF      0X0C
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_OPERATION_MODE_IMU      0b00001000
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_OPERATION_MODE_ACCGYRO      0b00000101
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR  0X28
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_ACCEL_DATA_X_LSB_ADDR         0X08
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_GYRO_DATA_X_LSB_ADDR         0X14
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_GYRO_DATA_Y_LSB_ADDR         0X16
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_GYRO_DATA_Z_LSB_ADDR         0X18
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_SYS_TRIGGER_ADDR              0X3F
+
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define BNO055_SYS_TRIGGER_RESET_SYSTEM  0b00100000
 
 
@@ -143,7 +251,11 @@ bool imu_setup() {
 	return true;	
 }
 
-
+/**
+ * \brief TODO
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 static int32_t imu_yaw_accumulator = 0;
 
 

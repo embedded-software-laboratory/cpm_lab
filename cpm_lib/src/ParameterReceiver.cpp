@@ -33,7 +33,10 @@
 
 using namespace std::placeholders;
 
-
+/**
+ * \file ParameterReceiver.cpp
+ * \ingroup cpmlib
+ */
 namespace cpm
 {
 

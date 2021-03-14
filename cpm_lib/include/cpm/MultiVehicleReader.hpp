@@ -44,19 +44,25 @@ namespace cpm
      * \brief Class MultiVehicleReader
      * Use this to get a reader for multiple vehicles that works like "Reader", but checks timestamps in the header for all of the vehicles separately
      * This reader always acts in the domain of ParticipantSingleton
+     * \ingroup cpmlib
      */
     template<typename T>
     class MultiVehicleReader
     {
     private:
+        //! Internal DDS Reader for reading vehicle data
         dds::sub::DataReader<T> dds_reader;
+        //! Internal mutex for get_samples and copy constructor
         std::mutex m_mutex;
-
+        //! Used as buffer to store vehicle data for each vehicle seperately, gets filled in flush_dds_reader and (partially) cleared in get_samples
         std::vector<std::vector<T>> vehicle_buffers;
-
+        //! Vehicle IDs to listen for
         std::vector<uint8_t> vehicle_ids;
 
-
+        /**
+         * \brief Function to go through all samples received since the last call of get_samples.
+         * These are put in the ring buffer vehicle_buffers for each vehicle
+         */
         void flush_dds_reader()
         {
             auto num_samples = dds_reader->datareader_cache_status().sample_count();
@@ -87,7 +93,7 @@ namespace cpm
         /**
          * \brief Constructor
          * \param topic the topic of the communication
-         * \param num_vehicles The number of vehicles to monitor / read from (from 1 to num_vehicles)
+         * \param num_of_vehicles The number of vehicles to monitor / read from (from 1 to num_vehicles)
          * \return The MultiVehicleReader, which only keeps the last 2000 msgs for better efficiency (might need to be tweaked)
          */
         MultiVehicleReader(dds::topic::Topic<T> topic, int num_of_vehicles) : 
@@ -120,6 +126,10 @@ namespace cpm
             vehicle_ids = _vehicle_ids;
         }
 
+        /**
+         * \brief Copy Constructor
+         * \param other the reader to copy
+         */
         MultiVehicleReader(const MultiVehicleReader &other) 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -129,7 +139,14 @@ namespace cpm
             vehicle_ids = other.vehicle_ids;
         }
         
-
+        /**
+         * \brief This function returns the newest already valid samples (-> using information from the msg header, Header.idl) 
+         * received from each vehicle the reader was set to receive samples from.
+         * If a returned sample has a create stamp of 0, a sample age of t_now and is otherwise empty, no sample could be found for that vehicle
+         * \param t_now Current time in ns since epoch
+         * \param sample_out Map of samples, with vehicle_id -> message / content
+         * \param sample_age_out Map of sample ages, with vehicle_id -> age of message
+         */
         void get_samples(
             const uint64_t t_now, 
             std::map<uint8_t, T>& sample_out, 

@@ -52,21 +52,37 @@ typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 typedef Pylon::CBaslerUsbImageEventHandler ImageEventHandler_t; // Or use Camera_t::ImageEventHandler_t
 typedef Pylon::CBaslerUsbGrabResultPtr GrabResultPtr_t; // Or use Camera_t::GrabResultPtr_t
 
+/**
+ * \struct FrameInfo
+ * \brief TODO
+ * \ingroup ips
+ */
 struct FrameInfo
 {
+    //! TODO
     cv::Mat image;
+    //! TODO
     uint64_t timestamp;
+    //! TODO
     std::vector<double> points_x;
+    //! TODO
     std::vector<double> points_y;
 };
 
+//! TODO
 bool enable_visualization;
+//! TODO
 bool enable_debug;
 
-
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
 
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_led_detection()
 {
     cpm::Writer<LedPoints> LED_writer("ipsLedPoints");
@@ -141,7 +157,10 @@ void worker_led_detection()
     }
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_visualization()
 {
     while (1)
@@ -167,6 +186,10 @@ void worker_visualization()
     }
 }
 
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_grab_image()
 {
     // Before using any pylon methods, the pylon runtime must be initialized. 
@@ -304,7 +327,10 @@ void worker_grab_image()
     PylonTerminate(); 
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 int main(int argc, char* argv[])
 {
     if(argc < 2) {

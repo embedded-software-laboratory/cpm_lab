@@ -42,11 +42,12 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests SimpleTimer with curstom stop signal
+ * 
  * - Sends a custom stop signal and checks whether it works
  * - Therefore: Makes sure that the timer callback function is never actually called
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "SimpleTimer_custom_stop_signal" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_simple_timer_custom_stop_signal");

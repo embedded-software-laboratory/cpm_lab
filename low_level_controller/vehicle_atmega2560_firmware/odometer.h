@@ -35,9 +35,28 @@
 #ifndef ODOMETER_H_
 #define ODOMETER_H_
 
-
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 int16_t get_speed();
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 int32_t get_odometer_count();
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void odometer_setup();
 
 

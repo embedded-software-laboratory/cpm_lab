@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Rectangle.hpp"
 
+/**
+ * \file Rectangle.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Rectangle::Rectangle(const xmlpp::Node* node)
 {
     //Check if node is of type rectangle

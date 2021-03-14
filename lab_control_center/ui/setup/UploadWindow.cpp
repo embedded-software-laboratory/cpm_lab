@@ -26,6 +26,11 @@
 
 #include "UploadWindow.hpp"
 
+/**
+ * \file UploadWindow.cpp
+ * \ingroup lcc_ui
+ */
+
 UploadWindow::UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/setup/upload_window.glade");

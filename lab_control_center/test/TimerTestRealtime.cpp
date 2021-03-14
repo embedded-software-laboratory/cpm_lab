@@ -31,7 +31,12 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/Logging.hpp"
 
-//In this test scenario, the timers are not stopped by the program but by the LCC stop signal
+
+/**
+ * \file TimerTestRealtime.cpp
+ * \brief Test scenario: Creates a real-time timer that should be visible and stoppable from the LCC' timer tab
+ * \ingroup lcc
+ */
 
 int main(int argc, char *argv[]) {
     cpm::Logging::Instance().set_id("Logger_test");

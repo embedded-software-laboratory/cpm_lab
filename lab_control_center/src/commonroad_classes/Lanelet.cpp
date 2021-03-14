@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/Lanelet.hpp"
 
+/**
+ * \file Lanelet.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Lanelet::Lanelet(
     const xmlpp::Node* node,
     std::map<int, std::pair<int, bool>>& traffic_sign_positions, 

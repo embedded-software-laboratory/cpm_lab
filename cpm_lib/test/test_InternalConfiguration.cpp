@@ -28,6 +28,10 @@
 #include "InternalConfiguration.hpp"
 #include "cpm/init.hpp"
 
+/**
+ * \test Tests InternalConfiguration by faking some command line input
+ * \ingroup cpmlib
+ */
 TEST_CASE( "InternalConfiguration" ) 
 {
     char program_name[] = "irrelevant_program";

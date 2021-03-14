@@ -26,6 +26,11 @@
 
 #include "cpm/get_time_ns.hpp"
 
+/**
+ * \file get_time_ns.cpp
+ * \ingroup cpmlib
+ */
+
 uint64_t cpm::get_time_ns(clockid_t clockid) {
     struct timespec t;
     clock_gettime(clockid, &t);

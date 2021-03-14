@@ -26,6 +26,11 @@
 
 #include "LogLevelSetter.hpp"
 
+/**
+ * \file LogLevelSetter.cpp
+ * \ingroup lcc
+ */
+
 LogLevelSetter::LogLevelSetter() :
     log_level_writer("logLevel", true, true, true)
 {

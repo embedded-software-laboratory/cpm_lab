@@ -61,3 +61,4 @@ lab_control_center/*.config
 lab_control_center/vgdump
 lab_control_center/commonroad_profiles.yaml
 lab_control_center/gtk.suppression
+lab_control_center/file_dialog_open_config.yaml

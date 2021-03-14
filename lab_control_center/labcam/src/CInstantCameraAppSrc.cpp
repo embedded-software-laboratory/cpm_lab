@@ -62,6 +62,11 @@ using namespace Pylon;
 using namespace GenApi;
 using namespace std;
 
+/**
+ * \file CInstantCameraAppSrc.cpp
+ * \ingroup lcc_labcam
+ */
+
 #define UNUSED(x) (void)(x)
 
 // Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
@@ -328,6 +333,7 @@ bool CInstantCameraAppSrc::InitCamera(int width, int height, int framesPerSecond
 		// Initialize the Pylon image to a blank image on the off chance that the very first m_Image can't be supplied by the instant camera (ie: missing trigger signal)
 		m_Image.Reset(pixelType, m_width, m_height);
 
+
 		m_isInitialized = true;
 
 		return true;
@@ -365,14 +371,19 @@ bool CInstantCameraAppSrc::StartCamera()
 		{
 			cout << "Camera will now expect a hardware trigger on: " << GenApi::CEnumerationPtr(GetNodeMap().GetNode("TriggerSource"))->ToString() << "..." << endl;
 		}
-		cout << "StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);" << endl;
-		StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
+		cout << "StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne);" << endl;
+		StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne);
 
 		// Note: At this point, the camera is acquiring and transmitting images, and the driver's Grab Engine is grabbing them.
 		//       When the Grab Engine has an image, it places it into it's Output Queue for retrieval by CInstantCamera::RetrieveResult().
 		//		 When the AppSrc needs an image to push to the GStreamer pipeline, it fires the "need-data" callback, which runs cb_need_data().
 		//		 cb_need_data() calls RetrieveImage(), which in turn calls RetrieveResult(), which retrieves an image from the Grab Engine Output Queue
 		//       If you like, you can see how many images are waiting for retrieval by checking camera.NumReadyBuffers.GetValue().
+		//
+		// Note: The default GrabStrategy is "LatestImageOnly" (see below for more information on this grab strategy). However, we decided to use GrabStrategy_OneByOne
+		//		 because when using this strategy no picture gets lost (as soon as no buffer "overflow" occurs of too much pictures in the queue).
+		//		 This means, that each pictures is safed in a queue and then extracted and appended to the output video one by one. This is better here
+		//		 because we want videos without any framedrops and this is no realtime application.
 		//
 		// Note: When using GrabStrategy_LatestImageOnly, there will always be only one image waiting in the Output Queue by design - the latest image to come in from the camera.
 		//		 LatestImageOnly is good for display applications and for benchmarking the application/host...
@@ -434,6 +445,7 @@ bool CInstantCameraAppSrc::retrieve_image()
 		// if the Grab Result indicates success, then we have a good image within the result.
 		if (ptrGrabResult->GrabSucceeded())
 		{
+			correct_pictures++;
 			// if we have a color image, and the image is not RGB, convert it to RGB and place it into the CInstantCameraAppSrc::image for GStreamer
 			if (m_isColor == true && m_FormatConverter.ImageHasDestinationFormat(ptrGrabResult) == false)
 			{
@@ -448,9 +460,17 @@ bool CInstantCameraAppSrc::retrieve_image()
 		}
 		else
 		{
+			incorrect_pictures++;
 			// If a Grab Failed, the Grab Result is tagged with information about why it failed (technically you could even still access the pixel data to look at the bad image too).
 			cout << "Pylon: Grab Result Failed! Error: " << ptrGrabResult->GetErrorDescription() << endl;
 			cout << "Will push last good image instead..." << endl;
+		}
+
+		if (correct_pictures+incorrect_pictures == 100){
+			// Print statistics regarding how many frames are incorrectly read/transmitted
+			cout << "Framedrops in 100 pictures: " << incorrect_pictures << endl;
+			correct_pictures = 0;
+			incorrect_pictures = 0;
 		}
 
 

@@ -26,6 +26,11 @@
 
 #include "TimerTrigger.hpp"
 
+/**
+ * \file TimerTrigger.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
@@ -126,7 +131,7 @@ bool TimerTrigger::obtain_new_ready_signals() {
                 } //If an old message is received and the entry in the storage is old as well, the participant is out of sync
                 else if (next_start_request < current_simulated_time && use_simulated_time) {
                     current_participant_status = OUT_OF_SYNC;
-                    cpm::Logging::Instance().write(1, "Participant with id '%s' is out of sync", id);
+                    cpm::Logging::Instance().write(1, "Participant with id '%s' is out of sync", id.c_str());
                 }
                 else if (next_start_request > current_simulated_time && use_simulated_time) {
                     current_participant_status = WAITING;
