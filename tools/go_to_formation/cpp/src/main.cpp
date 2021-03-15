@@ -68,22 +68,23 @@ using std::vector;
 
 void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses);
 
-
+// Calculation of vector of vehicle poses at upper left corner of laboratory map for picking them up.
 void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
 { 
   mgen::Pose2D home_pose = argInit_Pose2D();
-  double map_y = 4.0;
+  
+  const double MAP_Y = 4.0;
 
-  // vehicle dimensions [m]
-  double  vehicle_rear_overhang = 0.03;
-  double  vehicle_length = 0.2200;
-  double  vehicle_width = 0.1070;
-  double  clearance = vehicle_width/2; //safety distance vehicle to vehicle and vehicle to map edge [m]
-
-  // arrangement of vehicles
+  // Vehicle dimensions [m]
+  const double  VEHICLE_REAR_OVERHANG = 0.03;
+  const double  VEHICLE_LENGTH = 0.2200;
+  const double  VEHICLE_WIDTH = 0.1070;
+  
+  // Arrangement of vehicles
   int max_no_vehicles = 20;
   int total_rows = 3;
   int total_columns = ceil(max_no_vehicles / total_rows);
+  const double  clearance = VEHICLE_WIDTH/2; //safety distance vehicle to vehicle and vehicle to map edge [m]
   
   int column;
   int row;
@@ -98,8 +99,8 @@ void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
         row = 1 + floor(i / total_columns);
       }
 
-      home_pose.x = 2 * vehicle_width + column * clearance + (column-1) * vehicle_width ;
-      home_pose.y = map_y - (vehicle_length - vehicle_rear_overhang) - row * clearance - (row-1) * vehicle_length * 2 ;
+      home_pose.x = 2 * VEHICLE_WIDTH + column * clearance + (column-1) * VEHICLE_WIDTH ;
+      home_pose.y = MAP_Y - (VEHICLE_LENGTH - VEHICLE_REAR_OVERHANG) - row * clearance - (row-1) * VEHICLE_LENGTH * 2 ;
       home_pose.yaw = 90;
       home_poses.push_back(home_pose);
     }
@@ -146,7 +147,7 @@ int main(int argc, char *argv[])
       vehicle_ids
   );
 
-   // Initialization of variables needed as arguments by matlab generated function
+  // Initialization of variables needed as arguments by matlab generated function
   double vehicleIdList_data[256];
   int vehicleIdList_size[2];
   mgen::struct0_T vehiclePoses_data[256];
@@ -160,27 +161,31 @@ int main(int argc, char *argv[])
     vehicleIdList_data[i] = i+1;
   }
   vehicleIdList_size[1] = 20;
+
+  // Setting of home poses
+  vector<mgen::Pose2D> goal_poses; // Needs to be initialized as Matlab defined type via argInit_Pose2D(), done here in set_home_poses
+  set_home_poses(vehicle_ids.size(), goal_poses);
  
-  // Inititilization of variables needed for main behaviour
+  // Initialization of variables needed for main behaviour
+  // Flags
   bool computed = false;
   bool planning_started = false;
   bool trajectory_is_active = false;
-  double trajectory_duration;
-  double reference_time;
+  boolean_T is_path_valid;
+  // Time tracking
+  uint64_t trajectory_duration;
+  uint64_t reference_time;
   uint64_t invalid_after_stamp;
+
   vector<TrajectoryPoint> trajectory_points;
   vector<std::pair<int, Pose2D>> help_vector;
+  
   int vehicle_id = 1;
-  boolean_T is_path_valid;
-
+  
   std::map<uint8_t, VehicleObservation> ips_sample;
   std::map<uint8_t, uint64_t> ips_sample_age;
-
-  // Seting of home poses
-  vector<mgen::Pose2D> goal_poses;
-  set_home_poses(vehicle_ids.size(), goal_poses);
   
-  
+  // Go to formation task
   auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
   timer->start([&](uint64_t t_now)
   {
