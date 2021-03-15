@@ -35,7 +35,7 @@ function main_vehicle_ids(varargin)
     init_script_path = fullfile('../', '/init_script.m');
     assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
     addpath(fileparts(init_script_path));
-    [matlabParticipant, stateReader, trajectoryWriter, ~, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
+    [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
     cd(script_directoy)
 
     vehicle_ids = varargin;
@@ -87,25 +87,9 @@ function main_vehicle_ids(varargin)
     end
 
     if got_stop == false
-        while(true)
-            disp('Checking system trigger for stop signal');
-            trigger = SystemTrigger;
-            sampleCount = 0;
-            [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
-            break_while = false;
-            while sampleCount > 0
-                current_time = trigger.next_start().nanoseconds();
-                if current_time == trigger_stop
-                    break_while = true;
-                end
-                [trigger, status, sampleCount, sampleInfo] = systemTriggerReader.take(trigger);
-            end
-
-            if break_while
-                disp("Stopping bc of stop signal");
-                break;
-            end
-
+        i = 0;
+        while(i < 8)
+           
             disp('Waiting for data');
             sample = VehicleStateList;
             status = 0;
@@ -113,19 +97,17 @@ function main_vehicle_ids(varargin)
             sampleInfo = DDS.SampleInfo;
             [sample, status, stateSampleCount, sampleInfo] = stateReader.take(sample);
 
-            % Check if any new message was received (TODO: throw away all messages that were received during computation)
-            if stateSampleCount > 0                
-                disp('Current time:');
-                disp(sample.t_now);
-            
-                % Call the programs to calculate the trajectories of all HLCs
-                if (size(vehicle_ids) > 0)
-                    for i = 1 : length(vehicle_ids)
-                        msg_leader = leader(vehicle_ids{i}, sample.t_now);
-                        trajectoryWriter.write(msg_leader);
-                    end
-                end
+            % Check for missing data
+            vehicle_data = sample.state_list;
+            ids_copy = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20];
+            for data = vehicle_data
+                ids_copy(ids_copy == int32(data.vehicle_id)) = [];
             end
+            disp('Missing:');
+            disp(ids_copy);
+            disp('----------------------------');
+            
+            i = i + 1;
         end
     end
 

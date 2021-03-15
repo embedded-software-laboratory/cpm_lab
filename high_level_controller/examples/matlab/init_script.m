@@ -26,7 +26,7 @@
 
 % This script is intended to be used by every single Matlab HLC script; it loads all required files and sets up all required writers/reader
 % WARNING: The state reader waitset does not get initialized here, in case you want to do something else
-function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlab_domain_id)
+function [matlabParticipant, stateReader, trajectoryWriter, pathTrackingWriter, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlab_domain_id)
     clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     previous_folder = cd(script_directoy); % Remember folder of calling function
@@ -53,6 +53,8 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
     %% variables for the communication
     matlabStateTopicName = 'vehicleStateList';
     matlabCommandTopicName = 'vehicleCommandTrajectory';
+    matlabCommandTrajectoryTopicName = 'vehicleCommandTrajectory';
+    matlabCommandPathTrackingTopicName = 'vehicleCommandPathTracking';
     systemTriggerTopicName = 'systemTrigger';
     readyStatusTopicName = 'readyStatus';
     trigger_stop = uint64(18446744073709551615);
@@ -62,7 +64,8 @@ function [matlabParticipant, stateReader, trajectoryWriter, systemTriggerReader,
 
     %% create reader and writer
     stateReader = DDS.DataReader(DDS.Subscriber(matlabParticipant), 'VehicleStateList', matlabStateTopicName);
-    trajectoryWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'VehicleCommandTrajectory', matlabCommandTopicName);
+    trajectoryWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'VehicleCommandTrajectory', matlabCommandTrajectoryTopicName);
+    pathTrackingWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'VehicleCommandPathTracking', matlabCommandPathTrackingTopicName);
     systemTriggerReader = DDS.DataReader(DDS.Subscriber(matlabParticipant), 'SystemTrigger', systemTriggerTopicName, 'TriggerLibrary::ReadyTrigger');
     readyStatusWriter = DDS.DataWriter(DDS.Publisher(matlabParticipant), 'ReadyStatus', readyStatusTopicName, 'TriggerLibrary::ReadyTrigger');
 

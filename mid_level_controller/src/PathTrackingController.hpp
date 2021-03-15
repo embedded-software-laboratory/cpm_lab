@@ -24,45 +24,31 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/**
- * \class main.cpp
- * \brief This file includes a reader that receives NUC messages
- */
-
-#include <memory>
-#include <sstream>
-#include <string>
+#pragma once
 #include <vector>
-#include <functional>
+#include "VehicleCommandPathTracking.hpp"
+#include "VehicleState.hpp"
+#include "Visualization.hpp"
+#include "cpm/Writer.hpp"
 
-#include "HLCHello.hpp"
 
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/get_topic.hpp"
-#include "cpm/Logging.hpp"
-#include "cpm/CommandLineReader.hpp"
-#include "cpm/init.hpp"
-#include "cpm/AsyncReader.hpp"
 
-int main (int argc, char *argv[]) { 
-    //Initialize the cpm logger, set domain id etc
-    cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("hlc_hello");
-
-    //Create DataReader that reads NUC ready messages
-    cpm::AsyncReader<HLCHello> reader(
-        [](std::vector<HLCHello>& samples){
-            for (auto& data : samples)
-            {
-                std::cout << "Received: " << data << std::endl;
-            }
-        },
-        "hlc_hello",
-        true
+class PathTrackingController
+{
+    cpm::Writer<Visualization> writer_Visualization;
+    uint8_t vehicle_id;
+    Pose2D find_reference_pose(
+        const std::vector<PathPoint> &path,
+        const double x,
+        const double y
     );
 
-    std::cout << "Press Enter to stop the program" << std::endl;
-    std::cin.get();
+public:
 
-    return 0;
-}
+    PathTrackingController(uint8_t vehicle_id);
+
+    double control_steering_servo(
+        const VehicleState &vehicleState,
+        const VehicleCommandPathTracking &commandPathTracking
+    );
+};

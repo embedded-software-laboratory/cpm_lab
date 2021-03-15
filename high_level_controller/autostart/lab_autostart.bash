@@ -8,6 +8,29 @@ export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat
 
 export DDS_INITIAL_PEER=rtps@udpv4://192.168.1.249:25598
 
+# --------------------------------- WAIT FOR TIME SYNC --------------------------------------------------------
+# Wait for clock sync before doing anything else, because starting any program before a clock sync would cause problems
+# The clock sync is performed in rc.local of the sudo user
+# We communicate via pipes, alternatively starting this script as another user would have been possible as well
+# Check for existing pipe, wait until it has been created
+nuc_ntp_pipe=/tmp/nuc_ntp_pipe
+nuc_lab_pipe=/tmp/nuc_lab_pipe
+
+while [[ ! (-p $nuc_ntp_pipe && -p $nuc_lab_pipe ) ]]; do
+        sleep 1
+done
+
+# Read msg from pipe, which is sent after the time sync, then answer
+# 1 -> time sync done, answer with 1 on other pipe
+while read sy < $nuc_ntp_pipe; do
+	if [[ $sy -eq 1 ]]; then
+		break
+	fi
+	sleep 1
+done
+echo "1" > $nuc_lab_pipe
+# ---------------------------------------------------------------------------------------------------------------
+
 # Ping to make sure that an internet connection is available
 # Write to /dev/null to suppress output
 while ! ping -c 1 -w 1 192.168.1.249 &>/dev/null

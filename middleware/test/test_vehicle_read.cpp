@@ -55,6 +55,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     int hlcDomainNumber = 1; 
     std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+    std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     std::vector<uint8_t> vehicle_ids = { 0, 1 };
@@ -76,6 +77,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,

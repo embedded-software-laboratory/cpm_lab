@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::BottomRight);
     usleep(100000);
-    std::cout << "Sending visualization BottomLeft string..." << std::endl;
+    std::cout << "Sending visualization BottomRight string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::BottomCenter);
