@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
     //For more information see our documentation about RTI DDS
       cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
       
-    
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
     //They are relative to the defined center point defined below as map_center_x and map_center_y
