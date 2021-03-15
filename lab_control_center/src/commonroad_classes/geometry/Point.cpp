@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Point.hpp"
 
+/**
+ * \file Point.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Point::Point(const xmlpp::Node* node) 
 {
     //Check if node is of type point

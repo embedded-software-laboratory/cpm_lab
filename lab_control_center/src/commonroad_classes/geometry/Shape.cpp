@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Shape.hpp"
 
+/**
+ * \file Shape.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Shape::Shape(const xmlpp::Node* node)
 {
     //Check if node is of type shape

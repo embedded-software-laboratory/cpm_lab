@@ -30,6 +30,10 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file IpsPipeline.cpp
+ * \ingroup ips
+ */
 
 IpsPipeline::IpsPipeline(const bool enable_visualization)
 :writer_vehicleObservation("vehicleObservation")

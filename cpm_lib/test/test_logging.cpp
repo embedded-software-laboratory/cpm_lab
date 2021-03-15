@@ -41,6 +41,10 @@
 #include "cpm/ReaderAbstract.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
+/**
+ * \test Tests Logging
+ * \ingroup cpmlib
+ */
 TEST_CASE( "Logging" ) {
     //Make sure that the Logging topic already exists
     cpm::Logging::Instance();

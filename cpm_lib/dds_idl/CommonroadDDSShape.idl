@@ -24,39 +24,64 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * Provides commonroad obstacle shape data
- */
-
 #ifndef COMMONROAD_DDS_SHAPE_IDL
 #define COMMONROAD_DDS_SHAPE_IDL
 
-//If a point does not exist in the commonroad representation, a default value of (0, 0) is chosen instead
+/**
+ * \struct CommonroadDDSPoint
+ * \brief Commonroad point definition
+ * 
+ * If a point does not exist in the commonroad representation, a default value of (0, 0) is chosen instead
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSPoint {
+    //! x position
     double x;
+    //! y position
     double y;
     //z : omitted
 };
 
+/**
+ * \struct CommonroadDDSCircle
+ * \brief Commonroad circle definition
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSCircle {
-    CommonroadDDSPoint center;
-    double radius;
+    CommonroadDDSPoint center; //!< Center of the circle
+    double radius; //!< Radius of the circle
 };
 
+/**
+ * \struct CommonroadDDSPolygon
+ * \brief Commonroad polygon definition
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSPolygon {
-    sequence<CommonroadDDSPoint> points;
+    sequence<CommonroadDDSPoint> points; //!< Corner points of the polygon
 };
 
+/**
+ * \struct CommonroadDDSRectangle
+ * \brief Commonroad rectangle definition
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSRectangle {
-    double length;
-    double width;
-    CommonroadDDSPoint center;
-    double orientation;
+    double length; //!< Rectangle length
+    double width; //!< Rectangle width
+    CommonroadDDSPoint center; //!< Rectangle center
+    double orientation; //!< Rectangle orientation / rotation in rad
 };
 
+/**
+ * \struct CommonroadDDSShape
+ * \brief Commonroad shape definition.
+ * Shapes are constructed from circles, polygons and rectangles
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadDDSShape {
-    sequence<CommonroadDDSCircle> circles;
-    sequence<CommonroadDDSPolygon> polygons;
-    sequence<CommonroadDDSRectangle> rectangles;
+    sequence<CommonroadDDSCircle> circles; //!< Circles the shape consists of
+    sequence<CommonroadDDSPolygon> polygons; //!< Polygons the shape consists of
+    sequence<CommonroadDDSRectangle> rectangles; //!< Rectangles the shape consists of
 };
 #endif

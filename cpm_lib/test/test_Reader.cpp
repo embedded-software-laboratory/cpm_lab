@@ -35,11 +35,12 @@
 #include "cpm/Writer.hpp"
 
 /**
- * Tests:
+ * \test Tests Reader
+ * 
  * - The cpm reader
  * - If the reader returns the newest valid sample
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "Reader" ) {
     cpm::Logging::Instance().set_id("test_reader");
 

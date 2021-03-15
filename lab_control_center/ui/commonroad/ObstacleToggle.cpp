@@ -26,6 +26,11 @@
 
 #include "ObstacleToggle.hpp"
 
+/**
+ * \file ObstacleToggle.cpp
+ * \ingroup lcc_ui
+ */
+
 ObstacleToggle::ObstacleToggle(unsigned int _id) :
     id(_id % 256)
 {

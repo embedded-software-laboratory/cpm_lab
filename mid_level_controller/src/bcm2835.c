@@ -22,6 +22,11 @@
 #define BCK2835_LIBRARY_BUILD
 #include "bcm2835.h"
 
+/**
+ * \file bcm2835.c
+ * \ingroup vehicle
+ */
+
 /* This define enables a little test program (by default a blinking output on pin RPI_GPIO_PIN_11)
 // You can do some safe, non-destructive testing on any platform with:
 // gcc bcm2835.c -D BCM2835_TEST

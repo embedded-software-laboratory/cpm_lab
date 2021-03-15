@@ -36,11 +36,12 @@
 #include "cpm/ReaderAbstract.hpp"
 
 /**
- * Tests:
- * - The cpm reader
- * - If the reader returns the newest valid sample
+ * \test Tests Participant
+ * 
+ * - Can QOS XML files be read
+ * - Does the participant work with ReaderAbstract and Writer
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "Participant" ) {
     cpm::Logging::Instance().set_id("test_participant");
 

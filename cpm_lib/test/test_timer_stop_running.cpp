@@ -43,10 +43,11 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD stop signal while running
+ * 
  * - Tests if the timer can be stopped by sending a stop signal
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_stop_signal_when_running");

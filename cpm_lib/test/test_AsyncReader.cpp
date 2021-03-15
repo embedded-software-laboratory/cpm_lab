@@ -36,11 +36,11 @@
 #include "cpm/Writer.hpp"
 
 /**
- * Tests AsyncReader
+ * \test Tests AsyncReader
  * WARNING: No other participant should be running while this test is running, or it will fail 
  * (due to potential answers to RTT requests by other participants in the network)
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "AsyncReader" ) {
     cpm::Logging::Instance().set_id("test_async");
 

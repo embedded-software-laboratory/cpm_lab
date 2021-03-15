@@ -50,32 +50,36 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum class LaneletType
+ * \enum LaneletType
  * \brief Stores lanelet type, as in spec
+ * \ingroup lcc_commonroad
  */
 enum class LaneletType {
     Unspecified, Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, Unknown
 };
 
 /**
- * \enum class VehicleType
+ * \enum VehicleType
  * \brief Stores lanelet type, as in spec
+ * \ingroup lcc_commonroad
  */
 enum class VehicleType {
     Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train
 };
 
 /**
- * \enum class DrivingDirection
+ * \enum DrivingDirection
  * \brief Stores driving direction, used by Adjacent
+ * \ingroup lcc_commonroad
  */
 enum class DrivingDirection {
     Same, Opposite
 };
 
 /**
- * \enum class LineMarking
+ * \enum LineMarking
  * \brief Holds all line marking types defined by the specification, used by Bound
+ * \ingroup lcc_commonroad
  */
 enum class LineMarking {
     Dashed, Solid, BroadDashed, BroadSolid
@@ -85,20 +89,26 @@ enum class LineMarking {
  * \struct Adjacent
  * \brief Holds information on adjacent road tiles and their driving direction
  * Initial values in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct Adjacent
 {
+    //! ID of adjacent lanelets
     int ref_id = -1;
+    //! Driving direction
     DrivingDirection direction;
 };
 
 /**
  * \struct Bound
  * \brief Bound of a lanelet, defined by points and marking, e.g. dashed if adjacent to another lanelet
+ * \ingroup lcc_commonroad
  */
 struct Bound
 {
-    std::vector<Point> points; //min. 2
+    //! Lanelet bound points, that define one side of the lanelet shape, min. 2
+    std::vector<Point> points;
+    //! Line marking of a lanelet, e.g. dashed if adjacent to another lanelet
     std::optional<LineMarking> line_marking = std::nullopt;
 };
 
@@ -106,41 +116,60 @@ struct Bound
  * \struct StopLine
  * \brief Defines position of a stop line on the lanelet (w. possible reference to traffic signs etc)
  * Initial value in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct StopLine
 {
-    std::vector<Point> points; //Must consist of exactly two points
+    //! Position of the stop line. Must consist of exactly two points.
+    std::vector<Point> points;
+    //! Line marking of the stop line, e.g. dashed
     LineMarking line_marking;
-    std::vector<int> traffic_sign_refs; //trafficsignref
-    std::vector<int> traffic_light_ref; //only one possible, but easier to handle if nonexistent, trafficlightref
+    //! References to traffic signs that might be next to the stop line
+    std::vector<int> traffic_sign_refs;
+    //! References to traffic lights that might be next to the stop line; only one possible, but a vector easier to handle if nonexistent
+    std::vector<int> traffic_light_ref;
 };
 
 /**
  * \class Lanelet
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store Lanelets specified in the XML file (segments of a lane, with references to following and adjacent lanes)
+ * \ingroup lcc_commonroad
  */
 class Lanelet : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
+    //! Left boundary of the lanelet, shape is formed combined with the right boundary
     Bound left_bound;
+    //! Right boundary of the lanelet, shape is formed combined with the left boundary
     Bound right_bound;
-    std::vector<int> predecessors; //Multiple possible e.g. in case of a fork; laneletref
-    std::vector<int> successors;   //Multiple possible e.g. in case of a fork; laneletref
+    //! Lanelet references to predecessors of the lanelet, multiple possible e.g. in case of a fork
+    std::vector<int> predecessors;
+    //! Lanelet references to successors of the lanelet, multiple possible e.g. in case of a fork
+    std::vector<int> successors;  
+    //! Adjacent lanelets on the left, optional
     std::optional<Adjacent> adjacent_left = std::nullopt; 
+    //! Adjacent lanelets on the right, optional
     std::optional<Adjacent> adjacent_right = std::nullopt;
+    //! Stop line on the lanelet, optional
     std::optional<StopLine> stop_line = std::nullopt;
-    LaneletType lanelet_type; //enum class possible
-    std::vector<VehicleType> user_one_way; //enum class possible
-    std::vector<VehicleType> user_bidirectional; //enum class possible
-    std::vector<int> traffic_sign_refs; //trafficsignref
-    std::vector<int> traffic_light_refs; //trafficlightref
-    std::optional<double> speed_limit = std::nullopt; //From 2018 specs, must not be set
+    //! Type of the lanelet
+    LaneletType lanelet_type; 
+    //! For which vehicles the lanelet is one-way
+    std::vector<VehicleType> user_one_way; 
+    //! For which vehicles the lanelet is bidirectional
+    std::vector<VehicleType> user_bidirectional;
+    //! References to traffic sign IDs for traffic signs on the lanelet
+    std::vector<int> traffic_sign_refs;
+    //! References to traffic light IDs for traffic lights on the lanelet
+    std::vector<int> traffic_light_refs;
+    //! 2018 specs, defines the speed limit, optional (2020: Defined by optional traffic sign)
+    std::optional<double> speed_limit = std::nullopt;
 
-    //Remember line in commonroad file for logging
+    //! Remember line in commonroad file for logging
     int commonroad_line = 0;
 
-    //Look up in draw if some parts should be drawn or not
+    //! Look up in draw if some parts should be drawn or not
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
 
     /**
@@ -192,8 +221,22 @@ private:
     LineMarking translate_line_marking(const xmlpp::Node* line_node);
 
     //Helper functions
+    /**
+     * \brief Set drawing style of a drawn boundary
+     * \param ctx Drawing context of the LCC's map view
+     * \param line_marking Line marking style, e.g. dashed
+     * \param dash_length Length of a dash
+     */
     void set_boundary_style(const DrawingContext& ctx, std::optional<LineMarking> line_marking, double dash_length);
+    /**
+     * \brief Translate enum LaneletType to a string
+     * \param lanelet_type The enum to translate to text
+     */
     std::string to_text(LaneletType lanelet_type);
+    /**
+     * \brief Translate enum VehicleType to a string
+     * \param vehicle_type The enum to translate to text
+     */
     std::string to_text(VehicleType vehicle_type);
 
 public:
@@ -223,7 +266,10 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
@@ -254,6 +300,9 @@ public:
      */
     void draw_ref(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
     
+    /**
+     * \brief Not defined, but possible later on, to translate a lanelet to a DDS message
+     */
     void to_dds_msg() {}
 
     //TODO: Getter (no setter, bc we do not want to manipulate data except for transformation)

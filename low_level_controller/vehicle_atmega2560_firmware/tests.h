@@ -38,8 +38,22 @@
 #include "spi_packets.h"
 #include <avr/io.h>
 
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void tests_setup();
 
+/**
+ * \brief TODO
+ * \param packet_send
+ * \param packet_received
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void tests_apply(spi_miso_data_t *packet_send, spi_mosi_data_t *packet_received);
 
 #endif /* TESTS_H_ */

@@ -19,6 +19,14 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
 */
 
+/**
+ * \file twi.c
+ *
+ * \author Copyright (c) 2006 Nicholas Zambetti. Modified 2012 by Todd Krein.
+ * 
+ * \ingroup low_level_controller
+ */
+
 
 #include <math.h>
 #include <stdlib.h>

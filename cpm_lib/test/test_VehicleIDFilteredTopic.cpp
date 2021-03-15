@@ -32,11 +32,12 @@
 #include "cpm/Writer.hpp"
 
 /**
- * Tests:
+ * \test Tests VehicleIDFilteredTopic
+ * 
  * - The filter for vehicle IDs
  * - First sends data for various IDs, then checks if they were received as expected
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "VehicleIDFilteredTopic" ) {
 
     auto participant = cpm::ParticipantSingleton::Instance();

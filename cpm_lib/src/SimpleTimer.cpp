@@ -33,6 +33,10 @@
 #include <cstdlib>
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file SimpleTimer.cpp
+ * \ingroup cpmlib
+ */
 namespace cpm {
 
     SimpleTimer::SimpleTimer(

@@ -48,21 +48,31 @@
 /**
  * \class Circle
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+ * \ingroup lcc_commonroad
  */
 class Circle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    std::optional<Point> center = std::nullopt; //must not be set
-    double radius; //In constructor: Check if >= 0, must be unsigned
+    //! Circle center, must not be set due to commonroad specs (then: interpreted as origin)
+    std::optional<Point> center = std::nullopt;
+    //! Radius of the circle. Must be unsigned
+    double radius;
 
 public:
+    /**
+     * \brief The constructor, reads commonroad xml node data and translates it to a Circle object
+     * \param node A Commonroad XML Circle Node
+     */
     Circle(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
@@ -94,6 +104,12 @@ public:
     CommonroadDDSCircle to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get the center value (or nullopt, then: origin) of the circle
+     */
     const std::optional<Point>& get_center() const;
+    /**
+     * \brief Get the radius of the circle
+     */
     double get_radius();
 };
