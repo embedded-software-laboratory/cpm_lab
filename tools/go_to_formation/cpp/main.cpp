@@ -83,6 +83,8 @@ static mgen::struct0_T argInit_struct0_T();
 static unsigned char argInit_uint8_T();
 static void main_planTrajectory();
 
+void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses);
+
 // Function Definitions
 
 //
@@ -192,6 +194,41 @@ static unsigned char argInit_uint8_T()
   return 0U;
 }
 
+void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
+{ 
+  mgen::Pose2D home_pose = argInit_Pose2D();
+  double map_y = 4.0;
+
+  // vehicle dimensions [m]
+  double  vehicle_rear_overhang = 0.03;
+  double  vehicle_length = 0.2200;
+  double  vehicle_width = 0.1070;
+  double  clearance = vehicle_width/2; //safety distance vehicle to vehicle and vehicle to map edge [m]
+
+  // arrangement of vehicles
+  int max_no_vehicles = 20;
+  int total_rows = 3;
+  int total_columns = ceil(max_no_vehicles / total_rows);
+  
+  int column;
+  int row;
+
+  for (int i = 1; i < n_vehicles+1; i++) {
+      
+      if (i % total_columns == 0){
+        column = total_columns; 
+        row = floor(i / total_columns);
+      }else{
+        column = i % total_columns;
+        row = 1 + floor(i / total_columns);
+      }
+
+      home_pose.x = 2 * vehicle_width + column * clearance + (column-1) * vehicle_width ;
+      home_pose.y = map_y - (vehicle_length - vehicle_rear_overhang) - row * clearance - (row-1) * vehicle_length * 2 ;
+      home_pose.yaw = 90;
+      home_poses.push_back(home_pose);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -236,14 +273,19 @@ int main(int argc, char *argv[])
 
   bool computed = false;
   bool planning_started = false;
-  vector<TrajectoryPoint> trajectory_points;
+  bool trajectory_is_active = false;
   double trajectory_duration;
   double reference_time;
   uint64_t invalid_after_stamp;
+  vector<TrajectoryPoint> trajectory_points;
   vector<std::pair<int, Pose2D>> help_vector;
   int vehicle_id = 1;
+  boolean_T is_path_valid;
 
-
+  // setting of home poses
+  vector<mgen::Pose2D> goal_poses;
+  set_home_poses(vehicle_ids.size(), goal_poses);
+  
   auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
   timer->start([&](uint64_t t_now)
   {
@@ -269,7 +311,7 @@ int main(int argc, char *argv[])
           int vehiclePoses_size[2];
           mgen::Pose2D r;
           coder::array<mgen::struct1_T, 1U> generated_trajectory;
-          boolean_T isPathValid;
+          
 
           // Initialize function 'planTrajectory' input arguments.
           // Initialize function input argument 'vehicleIdList'.
@@ -307,46 +349,44 @@ int main(int argc, char *argv[])
             vehiclePoses_data[i].pose.yaw = new_yaw;
           }
           
-        
         vehiclePoses_size[1] = 1;
+        double speed = 1.0;
 
-          r.x = 0.2;
-          r.y = 3.6;
-          r.yaw = 90; //deg - value received will have to be converted from rad
-
-          double speed = 1.0;
-                
-          mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
-                              vehiclePoses_size, &r, vehicle_id, speed,
-                              generated_trajectory, &isPathValid);
+        std::cout << "x" << goal_poses[0].x << "y" << goal_poses[0].y << "yaw" << goal_poses[0].yaw << std::endl;
+              
+        mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
+                            vehiclePoses_size, &goal_poses[0], vehicle_id, speed,
+                            generated_trajectory, &is_path_valid);
+        
+        auto len = *(generated_trajectory).size();
+        
+        for (int i = 0; i < len; i++) {
+          std::cout << " t: " << generated_trajectory[i].t << " px: " << generated_trajectory[i].px << " py: " << generated_trajectory[i].py << " vx: " << 
+                    generated_trajectory[i].vx << " vy: " << generated_trajectory[i].vy << std::endl;
+        }
+        std::cout << "path validity: " << (is_path_valid == 1) << std::endl;
+        
+        if(is_path_valid){
           
-          auto len = *(generated_trajectory).size();
-          
-          for (int i = 0; i < len; i++) {
-            std::cout << " t: " << generated_trajectory[i].t << " px: " << generated_trajectory[i].px << " py: " << generated_trajectory[i].py << " vx: " << 
-                      generated_trajectory[i].vx << " vy: " << generated_trajectory[i].vy << std::endl;
-          }
-          std::cout << "path validity: " << (isPathValid == 1) << std::endl;
-          
-            
-            for (size_t i = 0; i < len; ++i)
-            {
-                TrajectoryPoint trajectory_point;
-                trajectory_point.px(generated_trajectory[i].px);
-                trajectory_point.py(generated_trajectory[i].py);
-                trajectory_point.vx(generated_trajectory[i].vx);
-                trajectory_point.vy(generated_trajectory[i].vy);
-                trajectory_point.t().nanoseconds(generated_trajectory[i].t + t_now);
-                trajectory_points.push_back(trajectory_point);
+          for (size_t i = 0; i < len; ++i)
+          {
+            TrajectoryPoint trajectory_point;
+            trajectory_point.px(generated_trajectory[i].px);
+            trajectory_point.py(generated_trajectory[i].py);
+            trajectory_point.vx(generated_trajectory[i].vx);
+            trajectory_point.vy(generated_trajectory[i].vy);
+            trajectory_point.t().nanoseconds(generated_trajectory[i].t + t_now);
+            trajectory_points.push_back(trajectory_point);
 
-            } 
+          } 
 
-            invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
-            std::cout << "invalid after: " << invalid_after_stamp << std::endl;
-            computed = true;
-    }
+          invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
+          std::cout << "invalid after: " << invalid_after_stamp << std::endl;
+          computed = true;
+        }
+  }
 
-    if(computed && t_now < invalid_after_stamp){
+    if(is_path_valid && computed && t_now < invalid_after_stamp){
             std::cout << "sending trajectory" << std::endl;
             // Send the current trajectory
             rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
