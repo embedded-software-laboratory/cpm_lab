@@ -38,6 +38,11 @@
 
 #include <stdio.h>
 
+/**
+ * \file MapViewUi.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders; //For std::bind
 
 MapViewUi::MapViewUi(
@@ -589,7 +594,14 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
-// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+/**
+ * \brief Determine the offset for alligned string messages drawn draw_received_visualization_command()
+ * \param ext TODO
+ * \param anchor TODO
+ * \param offs_x TODO
+ * \param offs_y TODO
+ * \ingroup lcc_ui
+ */
 void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
 {
     // x offset
@@ -716,6 +728,12 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
     }
 }
 
+/**
+ * \brief Print XML Node content
+ * \param node XML Node 
+ * \param indentation Indentation for printing the XML Node
+ * \ingroup lcc_ui
+ */
 void print_node(const xmlpp::Node* node, unsigned int indentation = 0)
 {
   const Glib::ustring indent(indentation, ' ');
@@ -942,11 +960,11 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(1,1,1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
 
             ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
             ctx->set_source_rgb(1,.1,.1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
         }
         ctx->restore();
 
@@ -984,7 +1002,8 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
     {
         if (polygon.points().size() < 3)
         {
-            std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            std::cerr << "Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            LCCErrorLogger::Instance().log_error("Points missing in translated polygon (at least 3 required) - will not be drawn");
         }
         else
         {

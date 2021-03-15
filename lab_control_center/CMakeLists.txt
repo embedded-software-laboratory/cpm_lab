@@ -161,6 +161,8 @@ add_executable(lab_control_center
     ui/file_chooser/FileChooserUI.cpp
     ui/file_chooser/FileSaverUI.hpp
     ui/file_chooser/FileSaverUI.cpp
+    ui/file_chooser/FileDialogPaths.hpp
+    ui/file_chooser/FileDialogPaths.cpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.hpp
     ui/params/ParamViewUI.cpp

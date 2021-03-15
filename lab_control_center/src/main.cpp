@@ -78,13 +78,31 @@ using namespace std::placeholders;
 //We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
 std::shared_ptr<SetupViewUI> setupViewUi;
 
+/**
+ * \brief Function to deploy cloud discovery (to help participants discover each other)
+ * \ingroup lcc
+ */
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
     system(command.c_str());
 }
 
+/**
+ * \brief Function to kill cloud discovery
+ * \ingroup lcc
+ */
 void kill_cloud_discovery() {
     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
+    system(command.c_str());
+}
+
+/**
+ * \brief Sometimes, a tmux session can stay open if the LCC crashed. 
+ * To make sure that no session is left over / everything is "clean" 
+ * when a new LCC gets started, kill all old sessions
+ */
+void kill_all_tmux_sessions() {
+    std::string command = "tmux kill-server >>/dev/null 2>>/dev/null";
     system(command.c_str());
 }
 
@@ -92,6 +110,10 @@ void kill_cloud_discovery() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+/**
+ * \brief Interrup handler of the LCC
+ * \ingroup lcc
+ */
 void interrupt_handler(int s) {
     kill_cloud_discovery();
 
@@ -106,6 +128,10 @@ void interrupt_handler(int s) {
 
 #pragma GCC diagnostic pop
 
+/**
+ * \brief Exit handler of the LCC
+ * \ingroup lcc
+ */
 void exit_handler() {
     kill_cloud_discovery();
 
@@ -116,6 +142,18 @@ void exit_handler() {
     }
 }
 
+/**
+ * \brief Main function of the LCC.
+ * Command line arguments:
+ * 
+ * --dds_domain
+ * --logging_id
+ * --dds_initial_peer
+ * --simulated_time
+ * --number_of_vehicles (default 20, set how many vehicles can max. be selected in the UI)
+ * --config_file (default parameters.yaml)
+ * \ingroup lcc
+ */
 int main(int argc, char *argv[])
 {
     //-----------------------------------------------------------------------------------------------------
@@ -148,6 +186,9 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     //-----------------------------------------------------------------------------------------------------
+
+    //Kill remaining tmux sessions
+    kill_all_tmux_sessions();
 
     //Must be done as soon as possible, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
@@ -211,7 +252,7 @@ int main(int argc, char *argv[])
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
-    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(30); //LISTEN FOR VEHICLE DATA UP TO ID 30
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(255); //LISTEN FOR VEHICLE DATA UP TO ID 255 (for Commonroad Obstacles; is max. uint8_t value)
     auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
@@ -288,10 +329,12 @@ int main(int argc, char *argv[])
             //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
             if(commonroad_scenario) commonroad_scenario->send_planning_problems(writer_planning_problems);
 
+            //Reset preview, must be done before starting the obstacle simulation manager because this stops the manager running for the preview
+            commonroadViewUi->reset_preview();
+
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
             obstacle_simulation_manager->start();
-            commonroadViewUi->reset_preview_label();
 
         }, 
         [=](){

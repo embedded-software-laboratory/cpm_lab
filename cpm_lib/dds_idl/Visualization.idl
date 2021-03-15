@@ -30,6 +30,11 @@
 #ifndef VISUALIZATION_IDL
 #define VISUALIZATION_IDL
 
+/**
+ * \enum VisualizationType
+ * \brief Types of visualization that can be drawn, e.g. line or circle
+ * \ingroup cpmlib_idl
+ */
 enum VisualizationType 
 {
     LineStrips=0,
@@ -38,6 +43,11 @@ enum VisualizationType
     FilledCircle //Center at points[0]
 };
 
+/**
+ * \enum StringMessageAnchor
+ * \brief Where the string should be oriented w.r.t. the defined position, e.g. left or right
+ * \ingroup cpmlib_idl
+ */
 enum StringMessageAnchor
 {
     BottomLeft=0,
@@ -51,19 +61,35 @@ enum StringMessageAnchor
     TopRight
 };
 
+/**
+ * \struct Visualization
+ * \brief Data type for visualizing / drawing on the LCC's map view
+ * \ingroup cpmlib_idl
+ */
 struct Visualization 
 {
-    //Id to be able to delete the viz later on
+    //!Id to be able to delete the viz later on; received messages are drawn in order of the IDs, so you can draw them on top of each other
     unsigned long long id; //@key
 
+    //!Type of visualization
     VisualizationType type;
+
+    //!Time after which the message is deleted automatically
     unsigned long long time_to_live;
 
+    //!Point(s) to draw / positions where to draw (position of text, center of circle, corners of polygon...)
     sequence<Point2D> points;
+
+    //!Line width, text size, circle radius...
     double size; //Line width in pixels or text size in pt
+
+    //!Message content if the type is string
     string string_message;
+
+    //!How to align a string message
     StringMessageAnchor string_message_anchor; //Align
 
+    //!Color of the drawing
     Color color;
 };
 #endif

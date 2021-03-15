@@ -35,13 +35,20 @@
  * in the scenario, when drawing. Some "sub"-classes of the scenario, like lanelet, might have direct access to this
  * file, for easier data sharing
  * We use atomic bool because access from different parts of the program is allowed and desired
+ * \ingroup lcc_commonroad
  */
 struct CommonroadDrawConfiguration
 {
+    //! Sets if traffic signs should be drawn in the LCC Map View
     std::atomic_bool draw_traffic_signs{false};
+    //! Sets if traffic lights should be drawn in the LCC Map View
     std::atomic_bool draw_traffic_lights{false};
+    //! Sets if lanelet type descriptions should be drawn in each lanelet segment in the LCC Map View
     std::atomic_bool draw_lanelet_types{false};
+    //! Sets if the lanelet orientation in form of grey arrows should be drawn in the LCC Map View
     std::atomic_bool draw_lanelet_orientation{false};
+    //! Sets if goal descriptions should be drawn on the goal states in the LCC Map View
     std::atomic_bool draw_goal_description{false};
+    //! Sets if obstacle descriptions should be drawn on the obstacles in the LCC Map View
     std::atomic_bool draw_obstacle_description{false};
 };

@@ -374,7 +374,8 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
-                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\" >/dev/null 2>/dev/null";
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\""
+                    << " >~/dev/lcc_script_logs/stdout_vehicle_reboot.txt 2>~/dev/lcc_script_logs/stderr_vehicle_reboot.txt";
                 bool msg_success = program_executor->execute_command(command_kill_real_vehicle.str().c_str(), timeout_seconds);
 
                 if(!msg_success)
@@ -427,7 +428,8 @@ void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seco
                     //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                     std::stringstream command_reboot_hlc;
                     command_reboot_hlc 
-                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\" >/dev/null 2>/dev/null";
+                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\""
+                        << " >~/dev/lcc_script_logs/stdout_hlc_reboot.txt 2>~/dev/lcc_script_logs/stderr_hlc_reboot.txt";
                     bool msg_success = program_executor->execute_command(command_reboot_hlc.str().c_str(), timeout_seconds);
 
                     if(!msg_success)
@@ -539,7 +541,8 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
-        << " --middleware_arguments='" << middleware_argument_stream.str() << "' >/dev/null 2>/dev/null";
+        << " --middleware_arguments='" << middleware_argument_stream.str() << "'"
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_deploy.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_deploy.txt";
 
     //Spawn and manage new process
     return program_executor->execute_command(copy_command.str().c_str(), timeout_seconds);
@@ -558,7 +561,8 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds)
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str() << ">/dev/null 2>/dev/null";
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str()
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_kill.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_kill.txt";
 
     //Spawn and manage new process
     return program_executor->execute_command(kill_command.str().c_str(), timeout_seconds);
@@ -608,6 +612,30 @@ void Deploy::deploy_ips()
 void Deploy::kill_ips() {
     kill_session(ips_session);
     kill_session(basler_session);
+}
+
+
+void Deploy::deploy_labcam(std::string path, std::string file_name){
+    //Check if old session already exists - if so, kill it
+    kill_session(labcam_session);
+
+    //Generate command
+    std::stringstream command;
+    command
+        << "tmux new-session -d "
+        << "-s \"" << labcam_session << "\" "
+        << "\"cd ~/dev/software/lab_control_center/build/labcam;./labcam_recorder "
+        << " --path=" << path
+        << " --file_name=" << file_name
+        << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
+    
+    //Execute command
+    system(command.str().c_str());
+}
+
+
+void Deploy::kill_labcam() {
+    kill_session(labcam_session);
 }
 
 
@@ -676,8 +704,8 @@ void Deploy::deploy_recording()
         << "-s \"" << recording_session << "\" "
         << "rtirecordingservice "
         << "-cfgFile " << config_path_out << " "
-        << "-cfgName cpm_recorder"
-        << ">/dev/null 2>/dev/null";
+        << "-cfgName cpm_recorder" << " "
+        << ">~/dev/lcc_script_logs/stdout_recording.txt 2>~/dev/lcc_script_logs/stderr_recording.txt";
     
     //std::cout << command.str() << std::endl;
     //Execute command
@@ -735,7 +763,8 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     }
     if (check_for_recording)
     {
-        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
+        if(! session_exists(recording_session)) crashed_participants.push_back("DDS Recording");
+        if(! session_exists(labcam_session)) crashed_participants.push_back("LabCam");
     }
 
     return crashed_participants;
@@ -747,7 +776,8 @@ void Deploy::kill_session(std::string session_id)
     {
         std::stringstream command;
         command 
-            << "tmux kill-session -t \"" << session_id << "\" >/dev/null 2>/dev/null";
+            << "tmux kill-session -t \"" << session_id << "\""
+            << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt";
 
         //Execute command
         program_executor->execute_command(command.str());

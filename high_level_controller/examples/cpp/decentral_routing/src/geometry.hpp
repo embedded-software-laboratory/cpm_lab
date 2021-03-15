@@ -33,17 +33,42 @@ using std::vector;
 #define VEHICLE_HALF_LENGTH (0.15)
 #define VEHICLE_HALF_WIDTH (0.06)
 
+/**
+ * \struct PathNode
+ * \ingroup decentral_routing
+ */
 struct PathNode
 {
+    //! TODO
     double x;
+    //! TODO
     double y;
+    //! TODO
     double cos_yaw;
+    //! TODO
     double sin_yaw;
+    
+    //! TODO Constructor
     PathNode(){}
+
+    /**
+     * \brief TODO Constructor
+     * \param x TODO
+     * \param y TODO
+     * \param cos_yaw TODO
+     * \param sin_yaw TODO
+     */
     PathNode(double x, double y, double cos_yaw, double sin_yaw)
     :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
 };
 
+/**
+ * \brief TODO
+ * \ingroup decentral_routing
+ * \param vehicle TODO
+ * \param points_x TODO
+ * \param points_y TODO
+ */
 static inline double min_distance_vehicle_to_points
 (
     PathNode vehicle,
@@ -68,7 +93,12 @@ static inline double min_distance_vehicle_to_points
     return min_distance;
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup decentral_routing
+ * \param vehicleA TODO
+ * \param vehicleB TODO
+ */
 static inline double min_distance_vehicle_to_vehicle(PathNode vehicleA, PathNode vehicleB)
 {
     const vector<double> cornersA_x

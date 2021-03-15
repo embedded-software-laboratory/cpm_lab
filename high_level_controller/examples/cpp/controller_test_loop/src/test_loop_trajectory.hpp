@@ -26,6 +26,11 @@
 
 #pragma once
 #include "VehicleCommandTrajectory.hpp"
+
+/**
+ * \brief TODO
+ * \ingroup controller_test_loop
+ */
 static inline void get_test_loop_trajectory(
     std::vector<TrajectoryPoint> &points,
     uint64_t &loop_period_nanoseconds,

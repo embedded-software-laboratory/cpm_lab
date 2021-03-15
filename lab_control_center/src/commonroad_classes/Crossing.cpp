@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/Crossing.hpp"
 
+/**
+ * \file Crossing.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Crossing::Crossing(const xmlpp::Node* node)
 {
     //TODO: Assert node type to be crossing - can't do that, bc crossing is unused and thus no expectable names for the crossign types are given in the specs
