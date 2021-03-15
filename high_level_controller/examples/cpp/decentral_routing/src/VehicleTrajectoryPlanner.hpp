@@ -70,8 +70,7 @@ class VehicleTrajectoryPlanner
     static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
     static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
 
-    void read_prev_vehicles();
-    bool read_concurrent_vehicles();
+    void read_other_vehicles();
     bool wait_for_other_vehicles();
     void write_trajectory( LaneGraphTrajectory trajectory );
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
