@@ -62,7 +62,6 @@ TEST_CASE( "ReaderAbstract" ) {
     }
     std::cout << std::endl;
 
-    HIER UND IN DEN ANDEREN TESTS: TODO - WARTE BZW POLLE DATEN VOM READER BIS ALLES DA IST ODER EIN TIMEOUT ERREICHT IST - NICHT NICHT ODER PAUSCHAL MEHRERE SEKUNDEN WARTEN!
 
     // send samples with different time stamps and data
     for (size_t i = 0; i < 5; ++i)
@@ -74,12 +73,21 @@ TEST_CASE( "ReaderAbstract" ) {
         usleep(10000);
     }
     
-    //Read should contain desired data
-    auto samples = reader.take();
+    //Read should contain desired dataexpected_odometer_values
+    //Continue reading until all data has been received or 1 second has passed (to compensate test for machines with slow DDS / net. / VMs)
     std::vector<double> received_odometer_values;
-    for (auto& sample : samples)
+    for (int i = 0; i < 10; ++i)
     {
-        received_odometer_values.push_back(sample.odometer_distance());
+        auto samples = reader.take();
+        for (auto& sample : samples)
+        {
+            received_odometer_values.push_back(sample.odometer_distance());
+        }
+
+        if (received_odometer_values.size() >= 5)
+            break;
+        else
+            usleep(100000);
     }
 
     for( auto expected_value : expected_odometer_values )

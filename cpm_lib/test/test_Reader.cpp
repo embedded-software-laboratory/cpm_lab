@@ -80,10 +80,17 @@ TEST_CASE( "Reader" ) {
     }
 
     // example read, should contain the newest valid data depending on the value on t_now and the data sent before
+    // Wait up to 1 second before "giving up"
     VehicleState sample;
     uint64_t sample_age;
-    const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
-    reader.get_sample(t_now, sample, sample_age);
+    for (int i = 0; i < 10; ++i)
+    {
+        const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
+        reader.get_sample(t_now, sample, sample_age);
+
+        if (sample.odometer_distance() == 4) break;
+        else usleep(100000);
+    }
 
     REQUIRE( sample_age == 900 * millisecond );
     REQUIRE( sample.odometer_distance() == 4 );

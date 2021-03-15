@@ -70,8 +70,18 @@ TEST_CASE( "Participant" ) {
     vehicleState.vehicle_id(99);
     vehicle_state_writer.write(vehicleState);
 
-    //Receive sample
+    //Receive sample, maybe multiple times because this behaviour is not deterministic
+    //Thus, for VMs, slow machines etc, wait up to 1 second before failing this test
     auto samples = vehicle_state_reader.take();
+    for (int i = 0; i < 9; ++i)
+    {
+        if (samples.size() <= 0)
+        {
+            usleep(100000);
+            samples = vehicle_state_reader.take();
+        }
+        else break;
+    }
 
     //Check that sample content is correct
     REQUIRE( samples.size() == 1 );

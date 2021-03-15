@@ -71,6 +71,18 @@ TEST_CASE( "SimpleTimer_custom_stop_signal" ) {
     dds::sub::cond::ReadCondition read_cond(reader_ReadyStatus, dds::sub::status::DataState::any());
     waitset += read_cond;
 
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Timer Stop test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        if (writer_SystemTrigger.matched_subscriptions_size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Thread to send a stop signal after the ready signal was received
     std::thread signal_thread = std::thread([&](){
