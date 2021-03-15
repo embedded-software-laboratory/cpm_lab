@@ -30,6 +30,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -184,6 +185,28 @@ private:
     //! To get access to the current command id
     std::mutex command_id_mutex;
 
+
+    //! File to log "main" child error(s) to
+    std::string filename;
+    //! Mutex for logging
+    std::mutex log_mutex;
+
+    /**
+     * \brief Log an (error) msg to a file, unique w.r.t. the starting time of the LCC
+     * We cannot use the cpm Logger here, as it uses DDS / its own threads. 
+     * File name is determined by start time of LCC and differs from LCC Error Logger Name (on purpose).
+     * 
+     * ONLY USED BY THE CHILD PROCESS that manages all other processes (and by the parent process, but only if child init. fails)
+     * 
+     * \param message Message to append to the log file
+     */
+    void log(std::string message);
+
+    /**
+     * \brief To create a unique log ID, uses cpm Log constructor code, as we cannot use the cpm lib here
+     */
+    std::string get_unique_log_id();
+
     /**
      * \brief You need a command ID for your commands. Always use this function and nothing else to obtain one! (Is thread-safe)
      */
@@ -250,6 +273,8 @@ private:
     /**
      * \brief Receive a message on the given message queue. Prints an error and returns false if it failed, else returns true.
      * Note: As far as I know, msgrcv is thread-safe, so no mutexes are used here (And different mtypes are used -> no race condition).
+     * 
+     * ONLY TO BE USED BY THE CHILD PROCESS
      * \param msqid ID of the msg queue to use
      * \param msg The received msg is stored here
      */
@@ -258,6 +283,8 @@ private:
     /**
      * \brief Create and send the desired message on the given message queue. Prints an error and returns false if it failed, else returns true.
      * Note: As far as I know, msgsnd is thread-safe, so no mutexes are used here.
+     * 
+     * ONLY TO BE USED BY THE CHILD PROCESS
      * \param msqid ID of the msg queue to use
      * \param command_output Command output to send, may get truncated (max. 5000 characters)
      * \param command_id Unique ID of the command, to be able to retrieve answers / responses by the child process for the right request

@@ -39,7 +39,20 @@ ProgramExecutor::~ProgramExecutor()
 
 bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string filepath_2)
 {
+    //Set the filename for the log file
+    //It should only be accessed by the parent if the child does not (yet) exist
+    filename = "Log_child_process_";
+    filename += get_unique_log_id();
+    filename += ".csv";
+
+    //Create log head
+    std::ofstream file;
+    file.open(filename, std::ofstream::out | std::ofstream::trunc);
+    file << "Timestamp of child error msg,Error msg" << std::endl;
+    file.close();
+
     //Create msg queues (must be done before forking, so that both processes have a working reference)
+    //Uses log() because it is called before fork()
     msg_request_queue_id = create_msg_queue(filepath_1);
     msg_response_queue_id = create_msg_queue(filepath_2);
 
@@ -94,10 +107,51 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
     else 
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
-        //TODO: Change behaviour
-        std::cerr << "Error when using fork: Could not create 'meta'-child process!";
+        log("Error when using fork: Could not create 'meta'-child process! Without it, no external program can run, so the LCC is shut down now...");
         return false;
     }
+}
+
+void ProgramExecutor::log(std::string message)
+{
+    //For the log file: csv, so escape '"'
+    std::string log_string(message);
+    std::string escaped_quote = std::string("\"\"");
+    size_t pos = 0;
+    while ((pos = log_string.find('"', pos)) != std::string::npos) {
+        log_string.replace(pos, 1, escaped_quote);
+        pos += escaped_quote.size();
+    }
+    //Also put the whole string in quotes
+    log_string.insert(0, "\"");
+    log_string += "\"";
+
+    //Mutex for writing the message (file, writer) - is released when going out of scope
+    std::lock_guard<std::mutex> lock(log_mutex);
+
+    //First print the message using std::cerr
+    std::cerr << "ERROR IN CHILD: " << message << std::endl;
+
+    //Then print the message to the current log file
+    std::ofstream file;
+    file.open(filename, std::ios::app);
+    file << get_unique_log_id() << "," << log_string << std::endl;
+    file.close();
+}
+
+std::string ProgramExecutor::get_unique_log_id() {
+    // Formatted start time for log filename
+    char time_format_buffer[100];
+    {
+        struct tm* tm_info;
+        time_t timer;
+        time(&timer);
+        tm_info = gmtime(&timer);
+        strftime(time_format_buffer, 100, "%Y_%m_%d_%H_%M_%S", tm_info);
+    }
+
+    std::string ret(time_format_buffer);
+    return ret;
 }
 
 long ProgramExecutor::get_unique_command_id()
@@ -232,7 +286,9 @@ bool ProgramExecutor::execute_command(std::string command, int timeout)
     }
     else
     {
+        //Do not use log() here - is not a child function. Plus: The caller should ideally react to "false" with its own log.
         std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
+        return false;
     }
 
     //Wait for an answer regarding the process state of the command in case a timeout was set
@@ -260,7 +316,9 @@ std::string ProgramExecutor::get_command_output(std::string command)
     }
     else
     {
+        //Do not use log() here - is not a child function. Plus: The caller should ideally react to "false" with its own log.
         std::cerr << "ERROR: Could not create IPC Message, command string was too large" << std::endl;
+        return "ERROR";
     }
 
     //Now wait for the answer / received command output
@@ -271,6 +329,7 @@ std::string ProgramExecutor::get_command_output(std::string command)
 
         if (string_response.find("ERROR") != std::string::npos)
         {
+            //Also do not use log here, ERROR is already returned so we do not handle this further
             std::cerr << "ERROR while waiting for response!" << std::endl;
         }
 
@@ -288,11 +347,15 @@ int ProgramExecutor::create_msg_queue(std::string filepath)
     //(It usually should)#
     //NOTE: We do not use further control or error checking (e.g. in case of a full queue) right now,
     //because due to the desired way of operation we do not expect the queue to become full
+
+    //Uses the log function because it is used before child creation
+
     auto key = ftok(filepath.c_str(), 'a'); //The char is usually arbitrary, I chose a
 
     if (key == -1)
     {
-        std::cerr << "ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!" << std::endl;
+        log("ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!");
+        std::cerr << "THE LCC WILL NOW SHUT DOWN" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -300,7 +363,8 @@ int ProgramExecutor::create_msg_queue(std::string filepath)
 
     if (queue_id == -1)
     {
-        std::cerr << "ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!" << std::endl;
+        log("ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!");
+        std::cerr << "THE LCC WILL NOW SHUT DOWN" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -350,6 +414,7 @@ bool ProgramExecutor::send_command_msg(int msqid, CommandMsg& msg)
     auto return_code = msgsnd(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0);
     if (return_code == -1)
     {
+        //Not called by child, so do not log this further
         std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
         return false;
     }
@@ -363,7 +428,10 @@ bool ProgramExecutor::receive_command_msg(int msqid, CommandMsg& msg)
     auto return_code = msgrcv(msqid, &msg, sizeof(CommandMsg::CommandInfo), 0, 0);
     if (return_code == -1)
     {
-        std::cerr << "ERROR: Could not receive IPC Message: " << std::strerror(errno) << std::endl;
+        //Use log, as only the child receives command messages
+        std::stringstream error_msg;
+        error_msg << "ERROR: Could not receive IPC Message: " << std::strerror(errno);
+        log(error_msg.str());
         return false;
     }
 
@@ -390,7 +458,9 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
 
     if (pipe(command_pipe))
     {
-        std::cerr << "Pipe creation failed!" << std::endl;
+        std::stringstream error_msg;
+        error_msg << "Pipe creation failed in execute_command_get_output, command: " << cmd;
+        log(error_msg.str());
         return "ERROR";
     }
 
@@ -408,7 +478,7 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
         //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
-        //Error if execlp returns
+        //Error if execlp returns, cannot log this as this is not within the "parent" child
         std::cerr << "Execl error in ProgramExecutor class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
 
         //Write to pipe because some response is still required / waited for
@@ -457,7 +527,9 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
     else 
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
-        std::cerr << "Error in ProgramExecutor class: Could not create child process for " << cmd << std::endl;
+        std::stringstream error_msg;
+        error_msg << "Error in ProgramExecutor class: Could not create child process in execute_command_get_output, command: " << cmd;
+        log(error_msg.str());
         return "ERROR";
     }
 }
@@ -476,13 +548,21 @@ bool ProgramExecutor::send_answer_msg(int msqid, std::string command_output, lon
 
     //Now: Compare the copied string to the original, print warning if the output had to be truncated
     if (std::strcmp(answer_msg.answer.truncated_command_output, command_output.c_str()) != 0) 
-        std::cerr << "\n!!!\n!!!\nWARNING: The requested command output was too large and had to be truncated. This may lead to undesired program behavior!\n!!!\n!!!\n" << std::endl;
+    {
+        //Only called by child, so we can use log
+        std::stringstream error_msg;
+        error_msg << "WARNING: The requested command output was too large and had to be truncated. This may lead to undesired program behavior! Output: " << command_output;
+        log(error_msg.str());
+    }
 
     //Send the message. There might be some problem with it, so do not forget to check for errors. The flag is not used (0)
     auto return_code = msgsnd(msqid, &answer_msg, sizeof(AnswerMsg::AnswerInfo), 0);
     if (return_code == -1)
     {
-        std::cerr << "ERROR: Could not send IPC Message: " << std::strerror(errno) << std::endl;
+        //Only called by child, so we can use log
+        std::stringstream error_msg;
+        error_msg << "ERROR: Could not send IPC Message: " << std::strerror(errno) << ", msg was: " << command_output;
+        log(error_msg.str());
         return false;
     }
 
@@ -494,6 +574,7 @@ bool ProgramExecutor::receive_answer_msg(int msqid, long command_id, AnswerMsg& 
     auto return_code = msgrcv(msqid, &msg, sizeof(AnswerMsg::AnswerInfo), command_id, 0);
     if (return_code == -1)
     {
+        //Cannot use log function here, as this is a parent error msg
         std::cerr << "ERROR: Could not receive IPC Message: " << std::strerror(errno) << std::endl;
         return false;
     }
@@ -514,7 +595,7 @@ int ProgramExecutor::execute_command_get_pid(const char* cmd)
         //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
         execl("/bin/sh", "bash", "-c", cmd, NULL);
 
-        //Error if execlp returns
+        //Error if execlp returns, cannot log this as this is not the "master" child
         std::cerr << "Execl error in ProgramExecutor class: %s, for execution of '%s'" << std::strerror(errno) << cmd << std::endl;
 
         exit(EXIT_FAILURE);
@@ -527,8 +608,9 @@ int ProgramExecutor::execute_command_get_pid(const char* cmd)
     else 
     {
         //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
-        //TODO: Change behaviour
-        std::cerr << "Error in ProgramExecutor class: Could not create child process for " << cmd << std::endl;
+        std::stringstream error_msg;
+        error_msg << "Error in execute_command_get_pid: Could not create child process for " << cmd;
+        log(error_msg.str());
         exit(EXIT_FAILURE);
     }
 }
