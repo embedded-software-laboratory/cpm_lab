@@ -26,6 +26,7 @@ add_library(iomp5 SHARED IMPORTED)
 set_target_properties(iomp5 PROPERTIES IMPORTED_LOCATION /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so)
 
 # exe
+
 link_libraries(dl nsl m pthread rt)
 
 
@@ -43,9 +44,13 @@ link_libraries(dl nsl m pthread rt)
 # target_link_libraries(mgen_example cpm)
 # target_link_libraries(mgen_example iomp5)
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Go to formation
-add_executable(mlib_test main.cpp)
+add_executable(mlib_test 
+               src/main.cpp 
+               src/mgen_init.cpp
+)
 target_include_directories(mlib_test PRIVATE 
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
     /usr/local/MATLAB/R2020a/extern/include/
