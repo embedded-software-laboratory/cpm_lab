@@ -191,9 +191,7 @@ void ProgramExecutor::process_single_child_command(CommandMsg& msg)
         //After the timeout, if the process was killed due to a timeout, ERROR is returned
         std::stringstream stream;
         stream << "timeout -k 12 10 " << msg.command.command << "; if [ $? != 0 ]; then echo 'ERROR'; fi";
-        std::cout << "Executing " << msg.mtype << std::endl;
         std::string output = execute_command_get_output(stream.str().c_str());
-        std::cout << "Finished " << msg.mtype << " with command " << stream.str() << std::endl;
         
         //Create and send answer, repeat in case of failure (as the main process waits for it)
         while(! send_answer_msg(msg_response_queue_id, output, msg.mtype, true))
@@ -254,8 +252,6 @@ std::string ProgramExecutor::get_command_output(std::string command)
 {
     auto command_id = get_unique_command_id();
 
-    std::cout << "Start output " << command_id << std::endl;
-
     //Send a msg to the child process, telling it to execute the given command
     CommandMsg msg;
     if (create_command_msg(command, msg, command_id, -1, RequestType::SEND_OUTPUT))
@@ -271,8 +267,6 @@ std::string ProgramExecutor::get_command_output(std::string command)
     AnswerMsg response;
     if (receive_answer_msg(msg_response_queue_id, command_id, response))
     {
-        std::cout << "End output " << command_id << std::endl;
-
         std::string string_response(response.answer.truncated_command_output);
 
         if (string_response.find("ERROR") != std::string::npos)
@@ -283,7 +277,6 @@ std::string ProgramExecutor::get_command_output(std::string command)
         return response.answer.truncated_command_output;
     }
     else {
-        std::cout << "End output " << command_id << std::endl;
         return "ERROR";
     }
 }
