@@ -67,11 +67,7 @@ int main(int argc, char *argv[])
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
     //For more information see our documentation about RTI DDS
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+      cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
     /*
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
