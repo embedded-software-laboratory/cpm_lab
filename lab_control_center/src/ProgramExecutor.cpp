@@ -420,6 +420,7 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
 
         //Write to pipe because some response is still required / waited for
         write(command_pipe[1], "ERROR", 5);
+        close(command_pipe[1]);
 
         exit(EXIT_FAILURE);
     }
@@ -454,6 +455,8 @@ std::string ProgramExecutor::execute_command_get_output(const char* cmd)
         {
             kill_process(process_id, 100);
         }
+
+        close(command_pipe[0]);
 
         //Return the obtained msg
         return out;
