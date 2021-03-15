@@ -1,5 +1,10 @@
 #include "ProgramExecutor.hpp"
 
+/**
+ * \file ProgramExecutor.cpp
+ * \ingroup lcc
+ */
+
 ProgramExecutor::~ProgramExecutor()
 {
     //Do something if not the child
