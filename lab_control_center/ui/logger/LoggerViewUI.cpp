@@ -26,6 +26,11 @@
 
 #include "LoggerViewUI.hpp"
 
+/**
+ * \file LoggerViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_dispatcher(),

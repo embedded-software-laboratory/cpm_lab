@@ -29,17 +29,33 @@
 #ifndef LANEGRAPHTRAJECTORY_IDL
 #define LANEGRAPHTRAJECTORY_IDL
 
+/**
+ * \struct LaneGraphPosition
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
 struct LaneGraphPosition 
 {
+    //! TODO
     TimeStamp estimated_arrival_time;
+    //! TODO
     unsigned short edge_index;
+    //! TODO
     unsigned short edge_path_index;
 };
 
+/**
+ * \struct LaneGraphTrajectory
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
 struct LaneGraphTrajectory 
 {
+    //! TODO
     octet vehicle_id; //@key
+    //! TODO
     Header header;
+    //! TODO
     sequence<LaneGraphPosition> lane_graph_positions;
 };
 #endif

@@ -51,29 +51,46 @@
 
 /**
  * \brief Used to receive and store Log messages (cpm::Logging) from all participants in the current domain
+ * \ingroup lcc
  */
 class LogStorage {
 public:
+    /**
+     * \enum FilterType
+     * \brief For searching through the log storage: Which values should be considered (only the content, only the ID...)
+     */
     enum FilterType {ID, Content, Timestamp, All};
 
 private:
     //Communication objects and callbacks
+    /**
+     * \brief Callback function for async. received log messages
+     * \param samples The received log messages
+     */
     void log_callback(std::vector<Log>& samples);
+    //! Async. reader to receive log messages sent within the network
     cpm::AsyncReader<Log> log_reader;
-    //Only keeps the newest logs, used when not in search-mode
-    std::vector<Log> log_buffer; //TODO choose a more useful data structure depending on what is supposed to be done with the Logs
-    //Keeps all logs (might delete oldest ones if some limit is reached)
+    //! Only keeps the newest logs, used when not in search-mode
+    std::vector<Log> log_buffer;
+    //! Keeps all logs (might delete oldest ones if some limit is reached)
     std::vector<Log> log_storage;
+    //! Mutex for accessing log_buffer
     std::mutex log_buffer_mutex;
+    //! Mutex for accessing log_storage
     std::mutex log_storage_mutex;
 
-    //File for logging
+    //! File for logging, to write all received logs to
     std::ofstream file;
+    //! Filename for the logfile of all received logs
     std::string filename = "all_received_logs.csv"; 
-    //Mutex s.t. only one thread has access to the file
+    //! Mutex s.t. only one thread has access to the log file
     std::mutex file_mutex;
 
-    //Clear elements so that count last elements are kept
+    /**
+     * \brief Clear elements so that count last elements are kept
+     * \param vector Data structure from which to clear elemetns
+     * \param count Max. number of remaining elements
+     */
     void keep_last_elements(std::vector<Log>& vector, size_t count);
 
     /**
@@ -83,12 +100,18 @@ private:
      * This function checks all parts of the message, but only changes the log message
      * Gtk will still show warnings for invalid messages (Pango), but the user, when looking at the logs,
      * should notice that his log messages are invalid, and where to find them (to be able to correct them)
-     * 
+     * \param log Log message to check
      */
     void assert_utf8_validity(Log& log);
 
 public:
+    /**
+     * \brief Constructor
+     */
     LogStorage();
+    /**
+     * \brief Destructor
+     */
     ~LogStorage();
 
     /**

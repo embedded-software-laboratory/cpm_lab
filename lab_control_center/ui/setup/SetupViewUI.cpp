@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <chrono>
 
+/**
+ * \file SetupViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
@@ -165,7 +170,7 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     //We use the default config location here
-    script_path->set_text(FileChooserUI::get_last_execution_path());
+    script_path->set_text(FileChooserUI::get_last_execution_path("script"));
 
     simulation_running.store(false);
     
@@ -341,16 +346,14 @@ void SetupViewUI::open_file_explorer()
         file_chooser_window = make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter },
+            "script"
         );
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1, 
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create file chooser dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create file chooser dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create file chooser dialog");
     }
     
 }
@@ -443,8 +446,16 @@ void SetupViewUI::deploy_applications() {
 #ifndef SIMULATION
     if(lab_mode_on && labcam_toggled){
         std::cerr << "RECORDING LABCAM" << std::endl;
-        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
-        labcam->startRecording("/tmp/", ctime(&timenow));
+        // Use current time as file name of the recording
+        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::string file_name = ctime(&timenow);
+
+        // Replace unwanted characters
+        std::replace(file_name.begin(), file_name.end(), ' ', '_');
+        std::replace(file_name.begin(), file_name.end(), '\n', '_');
+
+        deploy_functions->deploy_labcam("/tmp/", file_name);
+        //labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
@@ -610,7 +621,8 @@ void SetupViewUI::kill_deployed_applications() {
 
     // Stop LabCam
 #ifndef SIMULATION
-    labcam->stopRecording();
+    deploy_functions->kill_labcam();
+    //labcam->stopRecording();
 #endif
 
     is_deployed.store(false);
@@ -720,6 +732,10 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
     button_deploy->set_sensitive(is_sensitive);
 
+    switch_record_labcam->set_sensitive(is_sensitive);
+    switch_lab_mode->set_sensitive(is_sensitive);
+    switch_diagnosis->set_sensitive(is_sensitive);
+    switch_deploy_remote->set_sensitive(is_sensitive);
     switch_simulated_time->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)

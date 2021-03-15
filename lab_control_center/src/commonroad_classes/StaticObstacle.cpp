@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/StaticObstacle.hpp"
 
+/**
+ * \file StaticObstacle.cpp
+ * \ingroup lcc_commonroad
+ */
+
 StaticObstacle::StaticObstacle(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs

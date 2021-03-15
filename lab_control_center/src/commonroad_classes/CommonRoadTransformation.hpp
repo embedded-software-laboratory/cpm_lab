@@ -46,25 +46,35 @@
 
 /**
  * \brief Used to remember transformations for files during execution, if saved, and to save / load those in between executions using YAML
+ * \ingroup lcc_commonroad
  */
 class CommonRoadTransformation
 {
 private:
-    //Config file that stores the applied transformation for each file name
+    //! Config file that stores the applied transformation for each file name
     const std::string transformation_file_location = "./commonroad_profiles.yaml";
 
-    //Name of current file
+    //! Name of current file
     std::string current_file_name = "";
 
     //Loaded profile
+    //! Mutex to change the data for the transform profiles
     std::mutex yaml_profile_mutex;
-    YAML::Node yaml_transform_profile; //'Working' profile that is immediately changed with each change made by the user ("cache" which might not be used)
-    YAML::Node old_yaml_transform_profile; //Remembers state after last save of current setting, s.t. reset to those when loading again is possible without reloading the file
+    //! 'Working' profile that is immediately changed with each change made by the user ("cache" which might not be used)
+    YAML::Node yaml_transform_profile;
+    //! Remembers state after last save of current setting, s.t. reset to those when loading again is possible without reloading the file
+    YAML::Node old_yaml_transform_profile;
+    //! Key for the time scale value in a profile
     const std::string time_scale_key = "time_scale";
+    //! Key for the scale scale value in a profile
     const std::string scale_key = "scale";
+    //! Key for the translate_x value in a profile
     const std::string translate_x_key = "translate_x";
+    //! Key for the translate_y value in a profile
     const std::string translate_y_key = "translate_y";
+    //! Key for the rotation value in a profile
     const std::string rotation_key = "z_rotation";
+    //! If a profile was applied before saving the new transformations, we need to consider this when saving (because changes are then 'incremental' instead of 'overwriting')
     std::atomic_bool profile_applied;
 
     /**
@@ -90,7 +100,9 @@ public:
      */
     void set_scenario_name(std::string scenario_path);
 
+    //! To floor small values; smaller values are not allowed
     const double min_value = 1.0e-6;
+    
     /**
      * \brief Load, if exists, the stored transformation for the current file; values smaller than min_value are set to zero (to avoid values like 6.553e-310)
      * \param time_scale Output, 0.0 if empty, analog to time step size

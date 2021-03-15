@@ -27,6 +27,11 @@
 #include "lane_graph_tools.hpp"
 #include <iostream>
 
+/**
+ * \file tests.cpp
+ * \ingroup decentral_routing
+ */
+
 int main()
 {
     for (size_t i_start_edge = 0; i_start_edge < laneGraphTools.n_edges; ++i_start_edge)

@@ -45,9 +45,12 @@
 #include "Communication.hpp"
 
 /**
- * \brief This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \test Tests if vehicle messages are received
+ * 
+ * This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) 
+ * [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \ingroup middleware
  */
-
 TEST_CASE( "VehicleCommunication_Read" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
