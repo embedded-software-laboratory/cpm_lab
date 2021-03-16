@@ -33,12 +33,10 @@
 
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(
-    std::shared_ptr<TimerTrigger> timerTrigger,
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+    std::shared_ptr<TimerTrigger> timerTrigger
     ) :
     timer_trigger(timerTrigger),
-    ui_dispatcher(),
-    obstacle_simulation_manager(_obstacle_simulation_manager)
+    ui_dispatcher()
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -91,9 +89,6 @@ TimerViewUI::~TimerViewUI() {
 }
 
 void TimerViewUI::button_reset_callback() {
-    //Stop obstacle simulation
-    // obstacle_simulation_manager->stop();
-
     //Stop checking for program chrashes
     assert(crash_checker);
     crash_checker->stop_checking();
@@ -211,9 +206,6 @@ void TimerViewUI::update_ui() {
 }
 
 void TimerViewUI::button_start_callback() {
-    // //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    // obstacle_simulation_manager->start();
-
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
@@ -226,9 +218,6 @@ void TimerViewUI::button_stop_callback() {
     crash_checker->stop_checking();
 
     timer_trigger->send_stop_signal();
-
-    //Stop obstacle simulation
-    // obstacle_simulation_manager->stop();
 
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);

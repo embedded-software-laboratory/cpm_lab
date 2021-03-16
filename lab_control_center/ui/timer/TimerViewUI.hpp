@@ -146,9 +146,6 @@ private:
      */
     std::string get_human_readable_time_diff(uint64_t other_time);
 
-    //! Deprecated / no longer required. Class to simulate obstacles based on the loaded commonroad file
-    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
-
     //! Stop checking for crashes if the timer is stopped
     std::shared_ptr<CrashChecker> crash_checker;
 
@@ -156,11 +153,9 @@ public:
     /**
      * \brief Constructor
      * \param timerTrigger E.g. to send stop signals
-     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
      */
     TimerViewUI(
-        std::shared_ptr<TimerTrigger> timerTrigger,
-        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+        std::shared_ptr<TimerTrigger> timerTrigger
     );
 
     /**

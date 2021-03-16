@@ -54,8 +54,6 @@ private:
 
     //! Parent window, used to register key handling etc.
     Gtk::Window* window;
-    //! Also parent window, deprecated
-    Gtk::Widget* parent;
     //! Contains buttons and parameter description / entries
     Gtk::Box* params_create_box;
     //! Box that contains the buttons to add a param or abort param creation

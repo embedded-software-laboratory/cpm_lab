@@ -78,8 +78,6 @@ class MapViewUi
     shared_ptr<TrajectoryCommand> trajectoryCommand;
     //! Reference to the current commonroad scenario object, which is used for drawing objects and to find out which additional information to draw
     shared_ptr<CommonRoadScenario> commonroad_scenario;
-    //! Deprecated, was used for drawingArea
-    Gtk::Fixed container;
     //! GTK area to draw on / to show the map, obstacles etc, also parent of the Map View UI element
     Gtk::DrawingArea* drawingArea;
     //! Callback to get vehicle data (position etc.) for drawing

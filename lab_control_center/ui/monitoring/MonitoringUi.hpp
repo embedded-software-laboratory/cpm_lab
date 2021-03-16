@@ -150,11 +150,6 @@ public:
      */
     void stop_ui_thread();
 
-    /**
-     * \brief TODO: Deprecated / unused, stop vehicles and HLCs
-     */
-    void stop_experiment(std::vector<unsigned int>, std::vector<uint8_t>);
-
 public:
     /**
      * \brief Constructor, creates the monitoring view for detailed vehicle information, rebooting HLCs, RTT info etc...

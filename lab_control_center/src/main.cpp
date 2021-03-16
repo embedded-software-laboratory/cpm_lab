@@ -211,10 +211,7 @@ int main(int argc, char *argv[])
     auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
 
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
-    auto timerViewUi = make_shared<TimerViewUI>(
-        timerTrigger,
-        obstacle_simulation_manager
-    );
+    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
