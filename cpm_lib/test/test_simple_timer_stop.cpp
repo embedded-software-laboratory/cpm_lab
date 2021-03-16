@@ -79,7 +79,9 @@ TEST_CASE( "SimpleTimer_custom_stop_signal" ) {
         usleep(100000); //Wait 100ms
         std::cout << "." << std::flush;
 
-        if (writer_SystemTrigger.matched_subscriptions_size() >= 1)
+        auto matched_pub = dds::sub::matched_publications(reader_ReadyStatus);
+
+        if (writer_SystemTrigger.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
             wait = false;
     }
     std::cout << std::endl;
