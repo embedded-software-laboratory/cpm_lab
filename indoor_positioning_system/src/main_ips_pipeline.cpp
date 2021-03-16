@@ -39,7 +39,10 @@
 #include "IpsPipeline.hpp"
 
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 int main(int argc, char* argv[])
 {
     if(argc < 2) {

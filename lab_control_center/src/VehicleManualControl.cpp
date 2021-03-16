@@ -29,10 +29,39 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file VehicleManualControl.cpp
+ * \ingroup lcc
+ */
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define AXIS_THROTTLE (5)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define AXIS_BRAKE (2)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define AXIS_STEERING (0)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define BUTTON_SPEED_1MS (4)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define BUTTON_SPEED_CONST (5)
 
 VehicleManualControl::VehicleManualControl()

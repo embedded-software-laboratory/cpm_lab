@@ -27,11 +27,16 @@
 #ifndef LOGLEVEL_IDL
 #define LOGLEVEL_IDL
 
-/*
- * Log level from 0 (log nothing) to e.g. 3 (high verbosity)
+/**
+ * \struct LogLevel
+ * \brief Log level from 0 (log nothing) to e.g. 3 (high verbosity)
+ * 
+ * The Logging class in the cpm lib only prints messages with a log level <= the current one. 
+ * The lowest allowed level for msgs is 1, s.t. with 0 no messages are logged.
+ * \ingroup cpmlib_idl
  */
-
 struct LogLevel {
+    //! The log level that should be set within the network, usually sent by the LCC to other participants
     unsigned short log_level;
 };
 

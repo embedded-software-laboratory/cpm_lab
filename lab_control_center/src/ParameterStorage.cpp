@@ -26,6 +26,11 @@
 
 #include "ParameterStorage.hpp"
 
+/**
+ * \file ParameterStorage.cpp
+ * \ingroup lcc
+ */
+
 ParameterStorage::ParameterStorage(std::string _filename, int precision) :
     PRECISION(precision),
     filename(_filename)

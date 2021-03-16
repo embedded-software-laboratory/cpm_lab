@@ -26,6 +26,11 @@
 
 #include "TimerViewUI.hpp"
 
+/**
+ * \file TimerViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(
     std::shared_ptr<TimerTrigger> timerTrigger,

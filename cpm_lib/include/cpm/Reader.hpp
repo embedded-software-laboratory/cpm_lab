@@ -26,25 +26,6 @@
 
 #pragma once
 
-/**
- * \class Reader.hpp
- * \brief Creates a DDS Reader that, on request, returns 
- * the newest valid received sample according to the 
- * timestamp of the DDS type T. Use this reader if 
- * a synchronous use of samples is desired.
- * This reader uses a buffer that holds the latest
- * samples. Any used DDS type is required to 
- * include the Header.idl: It contains timestamps that specify 
- * from when on a sample is valid (valid_after_stamp) 
- * and a stamp for when a sample was created (create_stamp). 
- * These stamps are used to find the newest 
- * sample (using create_stamp) that 
- * is valid (using valid_after_stamp) according 
- * to the current system time. Once the Reader is 
- * created, it can be used anytime to retrieve the 
- * newest valid sample, if one exist.
- */
-
 #include <dds/sub/ddssub.hpp>
 
 #include <iterator>
@@ -56,16 +37,33 @@
 namespace cpm
 {
     /**
-     * \brief Class Reader
-     * Use this to get a reader that regards timestamps in the header for you and gets you the newest valid sample regarding the current time
-     * This reader always acts in the domain of ParticipantSingleton
+     * \class Reader
+     * \brief Creates a DDS Reader that, on request, returns 
+     * the newest valid received sample according to the 
+     * timestamp of the DDS type T and the current time. Use this reader if 
+     * a synchronous use of samples is desired, within the domain
+     * of ParticipantSingleton.
+     * This reader uses a buffer that holds the latest
+     * samples. Any used DDS type is required to 
+     * include the Header.idl: It contains timestamps that specify 
+     * from when on a sample is valid (valid_after_stamp) 
+     * and a stamp for when a sample was created (create_stamp). 
+     * These stamps are used to find the newest 
+     * sample (using create_stamp) that 
+     * is valid (using valid_after_stamp) according 
+     * to the current system time. Once the Reader is 
+     * created, it can be used anytime to retrieve the 
+     * newest valid sample, if one exist.
+     * \ingroup cpmlib
      */
     template<typename T>
     class Reader
     {
+        //! Internal DDS Reader to receive messages of type T
         dds::sub::DataReader<T> dds_reader;
+        //! Mutex for access to get_sample and removing old messages
         std::mutex m_mutex;
-
+        //! Internal buffer that stores flushed messages until they are (partially) removed in get_sample
         std::vector<T> messages_buffer;
 
         /**

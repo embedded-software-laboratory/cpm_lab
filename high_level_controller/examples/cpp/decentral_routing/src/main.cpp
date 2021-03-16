@@ -63,6 +63,39 @@
 
 using std::vector;
 
+//Description for bash files
+/**
+ * \defgroup decentral_routing_files Additional Files
+ * \ingroup decentral_routing
+ */
+
+/**
+ * \page decentral_routing_files_page Additional Files for Decentral Routing
+ * \subpage d_r_build <br>
+ * \subpage d_r_run <br>
+ * \subpage d_r_run_distr <br>
+ * \ingroup decentral_routing_files
+*/
+
+/**
+ * \page d_r_build build.bash
+ * \brief Build script for decentral_routing
+ */
+
+/**
+ * \page d_r_run run.bash
+ * \brief Run script for decentral_routing
+ */
+
+/**
+ * \page d_r_run_distr run_distributed.bash
+ * \brief TODO
+ */
+
+/**
+ * \brief TODO
+ * \ingroup decentral_routing
+ */
 int main(int argc, char *argv[]) {   
 
     // Read command line arguments
@@ -87,7 +120,7 @@ int main(int argc, char *argv[]) {
 
     cpm::Logging::Instance().write(3,
             "decentral_routing_%d coming online",
-            vehicle_id
+            static_cast<int>(vehicle_id)
     );
 
 

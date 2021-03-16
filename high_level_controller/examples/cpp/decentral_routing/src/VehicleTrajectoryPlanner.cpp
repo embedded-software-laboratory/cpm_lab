@@ -29,6 +29,10 @@
 
 #include "VehicleTrajectoryPlanner.hpp"
 
+/**
+ * \file VehicleTrajectoryPlanner.cpp
+ * \ingroup decentral_routing
+ */
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(){}
 

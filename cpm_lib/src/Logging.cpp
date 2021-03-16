@@ -26,6 +26,11 @@
 
 #include "cpm/Logging.hpp"
 
+/**
+ * \file Logging.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
     Logging::Logging() :

@@ -28,13 +28,14 @@
 #include "Pose2D.idl"
 #include "CommonroadDDSShape.idl"
 
-/*
- * Provides simulated commonroad obstacle state data
- */
-
 #ifndef COMMONROAD_OBSTACLE_IDL
 #define COMMONROAD_OBSTACLE_IDL
 
+/**
+ * \enum ObstacleType
+ * \brief Possible types of obstacles, e.g. car or bicycle
+ * \ingroup cpmlib_idl
+ */
 enum ObstacleType 
 {
     Unknown=0,
@@ -49,26 +50,34 @@ enum ObstacleType
     ParkedVehicle, 
     ConstructionZone, 
     RoadBoundary
-}; //TODO: Think about whether static obstacles need to represented this way
+}; //TODO: Think about whether static obstacles need to be represented this way
 
+
+/**
+ * \struct CommonroadObstacle
+ * \brief Provides data for simulated commonroad obstacles
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadObstacle {
-    octet vehicle_id; //@key //Also used here, because an ID can be set for each obstacle
-    Header header; //There is no need to distinguish between create and valid after stamp in this case
+    //! An ID can be set for each obstacle
+    octet vehicle_id; //@key
 
-    boolean is_moving; //Maybe different color based on whether the obstacle is moving or not (moving /= dynamic or static obstacle, some obstacles are defined as dynamic but do not move)
+    Header header; //!< There is no need to distinguish between create and valid after stamp in this case
 
-    /*
-     * Pose contains vehicle orientation and position, but these values must not be exact
-     */
+    boolean is_moving; //!< Shows whether the obstacle is moving or not (moving /= dynamic or static obstacle, some obstacles are defined as dynamic but do not move)
+
+    //! Pose contains vehicle orientation and position, but these values must not be exact
     Pose2D pose;
+
+    //! Tells if values in pose are exact or only average values
     boolean pose_is_exact;
 
+    //! The type of obstacle, e.g. car
     ObstacleType type;
 
-    //Optional value which defines a shape, especially useful if the occupancy type was used
-    //But: also useful for visualizing lanelet references or inexact positional values
+    //! Optional value which defines a shape, especially useful if the occupancy type was used. But: also useful for visualizing lanelet references or inexact positional values
     CommonroadDDSShape shape; 
 
-    double speed; // m/s
+    double speed; //!< Speed in m/s
 };
 #endif

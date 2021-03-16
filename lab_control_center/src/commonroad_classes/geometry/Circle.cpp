@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Circle.hpp"
 
+/**
+ * \file Circle.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Circle::Circle(const xmlpp::Node* node)
 {
     //Check if node is of type circle

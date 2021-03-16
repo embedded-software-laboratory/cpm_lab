@@ -26,10 +26,6 @@
 
 #pragma once
 
-/**
- * \class Communication.hpp
- * \brief This class holds all readers and writers required for the middleware and provides access to them
- */
 #include <string>
 #include <sstream>
 #include <functional>
@@ -68,39 +64,53 @@
 using namespace std::placeholders;
 
 /**
- * \brief This class is responsible for the communication between HLC, middleware and vehicle
+ * \class Communication
+ * \brief This class holds all readers and writers required for the middleware and provides access to them
  * These include message forwarding, collecting of vehicle states, timing messages and exchange of commands
  * For command exchange, we use the specialized class TypedCommunication, because we want to support it for different
  * command types (e.g. trajectories) which all have the same behaviour
+ * \ingroup middleware
  */
 class Communication {
     private:
         //For HLC - communication
         cpm::Participant hlcParticipant;
         cpm::Writer<VehicleStateList> hlcStateWriter;
+        //! DDS reader for getting ready status messages from the HLC (sent when it has finished its initialization)
         cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
-        std::atomic_bool all_hlc_online{false}; //Remember if all HLCs are online (checked by main using wait_for_hlc_ready_msg)
+        //! Remember if all HLCs are online (checked by main using wait_for_hlc_ready_msg)
+        std::atomic_bool all_hlc_online{false};
 
         //Timing messages to HLC
+        //! DDS writer for sending stop signals to the HLC
         cpm::Writer<SystemTrigger> hlc_system_trigger_writer;
+        //! DDS async reader to receive timing information from the LCC, which are handled by the Middleware, not the HLC
         cpm::AsyncReader<SystemTrigger> lcc_system_trigger_reader;
 
         //Goal states to HLC
+        //! DDS writer to send Commonroad goal state information to the HLC
         cpm::Writer<CommonroadDDSGoalState> hlc_goal_state_writer;
+        //! For access to the goal state writer (handled async. upon receiving and also after HLC init.)
         std::mutex hlc_goal_state_writer_mutex;
+        //! DDS async reader for receiving Commonroad goal state information from the LCC (and passing it to the HLC)
         cpm::AsyncReader<CommonroadDDSGoalState> lcc_goal_state_reader;
-        std::vector<CommonroadDDSGoalState> buffered_goal_states; //Before all HLCs have come online, remember goal states received so far
+        //! Before all HLCs have come online, remember goal states received so far
+        std::vector<CommonroadDDSGoalState> buffered_goal_states;
 
-        //For Vehicle communication
+        //! DDS reader, for Vehicle communication, to receive states of vehicles and pass them on to the HLC
         cpm::MultiVehicleReader<VehicleState> vehicleReader;
 
-        //For vehicle observation
+        //! DDS reader, for vehicle observation, to receive observation of vehicles and pass them on to the HLC
         cpm::MultiVehicleReader<VehicleObservation> vehicleObservationReader;
 
         //Communication for commands
+        //! To send trajectory commands to a vehicle (given by the HLC)
         TypedCommunication<VehicleCommandTrajectory> trajectoryCommunication;
+        //! To send path tracking commands to a vehicle (given by the HLC)
         TypedCommunication<VehicleCommandPathTracking> pathTrackingCommunication;
+        //! To send speed curvature commands to a vehicle (given by the HLC)
         TypedCommunication<VehicleCommandSpeedCurvature> speedCurvatureCommunication;
+        //! To send direct commands to a vehicle (given by the HLC)
         TypedCommunication<VehicleCommandDirect> directCommunication;
     public:
         /**
@@ -210,7 +220,10 @@ class Communication {
             return true;
         }
 
-        //Only left for testing purposes, do not use for anything else
+        /**
+         * \brief Deprecated. Only left for testing purposes, do not use for anything else.
+         * Returns last HLC response timestamps (map: HLC ID -> timestamp)
+         */
         std::unordered_map<uint8_t, uint64_t> getLastHLCResponseTimes() {
             //Go through the response times for all types, as different HLCs might use different types
             std::unordered_map<uint8_t, uint64_t> last_response_times_all_types;
@@ -256,12 +269,20 @@ class Communication {
             return last_response_times_all_types;
         }
 
+        /**
+         * \brief Send a list of vehicle states to the HLC, also including the current time and periodicity of the call.
+         * Is used as a "go" signal for the HLC, that indicates that it should start computation given the new information 
+         * and return its result as soon as possible.
+         * 
+         * \param message Current vehicle states, time, periodicity of calling this function
+         */
         void sendToHLC(VehicleStateList message) {
             hlcStateWriter.write(message);
         }
 
         /**
          * \brief Get most recent messages received by the vehicles (vehicle states) w.r.t. t_now
+         * \param t_now Current time (unix timestamp / epoch since 1970)
          */
         std::vector<VehicleState> getLatestVehicleMessages(uint64_t t_now) {
             VehicleState message;
@@ -281,6 +302,7 @@ class Communication {
 
         /**
          * \brief Get most recent messages received by the IPS (vehicle observation) w.r.t. t_now
+         * \param t_now Current time (unix timestamp / epoch since 1970
          */
         std::vector<VehicleObservation> getLatestVehicleObservationMessages(uint64_t t_now) {
             VehicleObservation message;
@@ -300,6 +322,7 @@ class Communication {
 
         /**
          * \brief Pass system trigger / timing messages from the LCC to the HLCs
+         * \param samples Received sampels
          */
         void pass_through_system_trigger(std::vector<SystemTrigger>& samples) {
             for (auto& sample : samples) {
@@ -309,6 +332,7 @@ class Communication {
 
         /**
          * \brief Pass goal states from the LCC to the HLCs
+         * \param samples Received samples
          */
         void pass_through_goal_states(std::vector<CommonroadDDSGoalState>& samples) {
             std::lock_guard<std::mutex> lock(hlc_goal_state_writer_mutex);
@@ -329,6 +353,7 @@ class Communication {
         /**
          * \brief The list of vehicles IDs passed to the Middleware shows how many different HLCs the Middleware is connected to.
          * Each of the HLCs needs to send an initial bootup message s.t. the Middleware knows that they are all online.
+         * \param vehicle_ids Registered HLCs for this Middleware / HLCs to wait for
          */
         void wait_for_hlc_ready_msg(const std::vector<uint8_t>& vehicle_ids) {
             std::vector<std::string> vehicle_ids_string;
