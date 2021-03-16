@@ -26,35 +26,29 @@
 
 #include <stdlib.h>
 #include <iostream>
+#include <csignal>
 #include <string>
-#include "labcam/LabCam.hpp"
+#include "labcam/LabCamIface.hpp"
+#include "cpm/CommandLineReader.hpp"
 
-//Suppress warning for unused parameter of main
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+static LabCamIface labcam;
+
+void sigterm_handler(int){
+    labcam.stopRecording();
+};
 
 int main(int argc, char *argv[])
 {
-    LabCam labcam;
+    // Connect signal handler for termination signal
+    signal(SIGTERM, sigterm_handler);
 
-    labcam.startRecording(".", "awesome_recording1");
+    // Read command line input
+    // If no path is given, the default location is software/lab_control_center/build/labcam (due to "." and creation of tmux session)
+    std::string path = cpm::cmd_parameter_string("path", ".", argc, argv);
+    std::string file_name = cpm::cmd_parameter_string("file_name", "awesome_recording", argc, argv);
 
-    std::cout << "." << std::endl;
-    std::cin.get();
-
-    std::cout << "stopping lab cam" << std::endl;
-    labcam.stopRecording();
-    std::cout << "Press enter to start recording again" << std::endl;
-
-    
-    std::cin.get();
-    labcam.startRecording(".", "awesome_recording2");
-
-
-    std::cin.get();
-    labcam.stopRecording();
+    // Start recording by using the given input parameters
+    labcam.startRecording(path, file_name);
 
     while(1);
 }
-
-#pragma GCC diagnostic pop

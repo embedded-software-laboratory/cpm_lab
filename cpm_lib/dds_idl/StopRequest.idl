@@ -32,7 +32,13 @@
 #ifndef STOPREQUEST_IDL
 #define STOPREQUEST_IDL
 
+/**
+ * \struct StopRequest
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
 struct StopRequest {
+    //! TODO
     octet vehicle_id; //@key
 };
 #endif

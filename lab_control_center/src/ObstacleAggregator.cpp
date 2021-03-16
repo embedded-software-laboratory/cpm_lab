@@ -26,6 +26,11 @@
 
 #include "ObstacleAggregator.hpp"
 
+/**
+ * \file ObstacleAggregator.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 
 ObstacleAggregator::ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scenario) :

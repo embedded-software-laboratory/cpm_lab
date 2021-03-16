@@ -24,17 +24,18 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * These messages are sent by the LCC to measure the best current round trip time in the network (and to estimate the worst)
- */
-
 #ifndef ROUNDTRIPTIME_IDL
 #define ROUNDTRIPTIME_IDL
 
+/**
+ * \struct RoundTripTime
+ * \brief These messages are sent by the LCC to measure the best current round trip time in the network (and to estimate the worst)
+ * \ingroup cpmlib_idl
+ */
 struct RoundTripTime {
-    string source_id; //To find out where the msg came from and to not answer to own msg
+    string source_id; //!< To find out where the msg came from and to not answer to own msg
 
-    boolean is_answer; //If true, do not respond to this msg, as it already is an answer to an RTT request
-    octet count; //Counter to not mix up old with new RTT requests
+    boolean is_answer; //!< If true, do not respond to this msg, as it already is an answer to an RTT request
+    octet count; //!< Counter to not mix up old with new RTT requests
 };
 #endif

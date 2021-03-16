@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/DynamicObstacle.hpp"
 
+/**
+ * \file DynamicObstacle.cpp
+ * \ingroup lcc_commonroad
+ */
+
 DynamicObstacle::DynamicObstacle(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs

@@ -27,6 +27,11 @@
 #include "DetectVehicleID.hpp"
 #include <iostream>
 
+/**
+ * \file DetectVehicleID.cpp
+ * \ingroup ips
+ */
+
 DetectVehicleID::DetectVehicleID(
     std::vector<uint8_t> _identification_LED_period_ticks,
     std::vector<uint8_t> _identification_LED_enabled_ticks
@@ -37,15 +42,29 @@ DetectVehicleID::DetectVehicleID(
     assert(identification_LED_enabled_ticks.size() == identification_LED_period_ticks.size());
 }
 
+/**
+ * \struct VehicleTrackingInfo
+ * \brief TODO
+ * \ingroup ips
+ */
 struct VehicleTrackingInfo
 {
+    //! TODO
     bool center_present = false;
+    //! TODO
     cv::Point2d centroid;
 };
 
+/**
+ * \struct SignalEdge
+ * \brief TODO
+ * \ingroup ips
+ */
 struct SignalEdge
 {
+    //! TODO
     int position;
+    //! TODO
     bool is_rising;
 };
 

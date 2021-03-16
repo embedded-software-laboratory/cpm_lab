@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Argument 1: Vehicle ID
-# Argument 2: Node ID (Identifier of the middleware)
+# Argument 2: Simulated time
 vehicle_ids=$1
 simulated_time=$2
 middleware_id=$(printf "middleware_${vehicle_ids}" )

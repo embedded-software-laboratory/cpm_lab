@@ -26,6 +26,11 @@
 
 #include "TabsViewUI.hpp"
 
+/**
+ * \file TabsViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 TabsViewUI::TabsViewUI
 (
     std::shared_ptr<SetupViewUI> setupViewUi, 

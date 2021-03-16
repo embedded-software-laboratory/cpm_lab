@@ -26,22 +26,26 @@
 
 #pragma once
 
-/**
- * \class Timer.hpp
- * This class calls a callback function periodically 
- * based on either the system clock or a simulated 
- * clock. The calls are synchronized in both frequency 
- * and phase to the clock.
- */
-
 #include <string>
 #include <functional>
 #include <memory>
 
 namespace cpm
 {
+    /**
+     * \brief Stop symbol sent by the Timing Instance, e.g. the LCC, to indicate that the timer should be stopped (max uint64_t value)
+     * \ingroup cpmlib
+     */
     constexpr uint64_t TRIGGER_STOP_SYMBOL = (0xffffffffffffffffull);
 
+    /**
+     * \class Timer
+     * \brief This class calls a callback function periodically 
+     * based on either the system clock or a simulated 
+     * clock. The calls are synchronized in both frequency 
+     * and phase to the clock.
+     * \ingroup cpmlib
+     */
     class Timer
     {
     protected:
@@ -55,6 +59,7 @@ namespace cpm
          * \param offset_nanoseconds Initial offset (from timestamp 0)
          * \param wait_for_start For the real-time timer: Set whether the timer is started only if a start signal is sent via DDS
          * \param simulated_time_allowed Decide whether the timer can run with simulated time
+         * \param simulated_time Set to true if simulated time should be used for the user, else false
          */
         static std::shared_ptr<Timer> create(
             std::string node_id,

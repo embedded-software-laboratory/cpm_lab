@@ -45,9 +45,11 @@
 #include "Communication.hpp"
 
 /**
+ * \test Tests communication from simulated vehicle to simulated middleware
+ * 
  * Tests if data sent by a virtual vehicle is received by a fake middleware, therefore if Communication receives the vehicle data - tests getLatestVehicleMessage
+ * \ingroup middleware
  */
-
 TEST_CASE( "VehicleToMiddlewareCommunication" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     

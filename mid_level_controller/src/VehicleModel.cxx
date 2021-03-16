@@ -27,6 +27,11 @@
 #include "VehicleModel.hpp"
 #include <cpm/Logging.hpp>
 
+/**
+ * \file VehicleModel.cxx
+ * \ingroup vehicle
+ */
+
 void VehicleModel::step(
     const std::vector<double> &dynamics_parameters,
     const double dt,

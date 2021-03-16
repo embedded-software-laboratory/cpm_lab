@@ -26,6 +26,11 @@
 
 #include "VehicleAutomatedControl.hpp"
 
+/**
+ * \file VehicleAutomatedControl.cpp
+ * \ingroup lcc
+ */
+
 VehicleAutomatedControl::VehicleAutomatedControl() 
 :participant(cpm::ParticipantSingleton::Instance())
 ,topic_vehicleCommandSpeedCurvature(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"))

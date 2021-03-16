@@ -28,18 +28,27 @@
 
 #ifndef LEDPOINTS_IDL
 #define LEDPOINTS_IDL
+
+/**
+ * \struct ImagePoint
+ * \brief Image / pixel coordinates
+ * \ingroup cpmlib_idl
+ */
 struct ImagePoint
 {
-    double x;    // image coordinates in x direction
-    double y;    // image coordinates in y direction
+    double x;    //!< image coordinates in x direction
+    double y;    //!< image coordinates in y direction
 };
 
-
-// LED points that are detected in the IPS camera image.
-// Using raw pixel coordiantes, no calibration.
+/**
+ * \struct LedPoints
+ * \brief LED points that are detected in the IPS camera image.
+ * Using raw pixel coordiantes, no calibration.
+ * \ingroup cpmlib_idl
+ */
 struct LedPoints 
 {
-    TimeStamp time_stamp;                // timestamp when the image was recorded
-    sequence<ImagePoint> led_points;     // image coordinates of detected led points
+    TimeStamp time_stamp;                //!< timestamp when the image was recorded
+    sequence<ImagePoint> led_points;     //!< image coordinates of detected led points
 };
 #endif

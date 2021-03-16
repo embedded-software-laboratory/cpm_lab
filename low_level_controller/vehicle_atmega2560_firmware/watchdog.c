@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * watchdog.c
+/**
+ * \file watchdog.c
  *
- * Created: 6/21/2019 13:35:14
- *  Author: cfrauzem
+ * \author cfrauzem
+ * \date Created: 6/21/2019 13:35:14
+ * 
+ * \ingroup low_level_controller
  */ 
 
 
@@ -42,6 +44,10 @@
 #include "led.h"
 #include "watchdog.h"
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 volatile uint8_t safe_mode_flag = 0;
 
 
@@ -97,6 +103,10 @@ void watchdog_reset() {
 	safe_mode_flag = 0;
 }
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 ISR(WDT_vect) {
 	safe_mode_flag = 1;
 }

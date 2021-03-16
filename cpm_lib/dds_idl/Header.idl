@@ -28,11 +28,17 @@
 
 #ifndef HEADER_IDL
 #define HEADER_IDL
+
+/**
+ * \struct Header
+ * \brief Provides timing information: Creation and valid_after timestamp
+ * \ingroup cpmlib_idl
+ */
 struct Header {
-    /* The time at which this sample was created. */
+    //! The time at which this sample was created.
     TimeStamp create_stamp;
 
-    /* This sample may be used at or after the valid_after_stamp time, not before. */
+    //! This sample may be used at or after the valid_after_stamp time, not before.
     TimeStamp valid_after_stamp;
 };
 #endif
