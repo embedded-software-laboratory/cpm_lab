@@ -125,8 +125,9 @@ private:
      * \brief Takes a participant status and translates it to a string
      */
     std::string participant_status_to_ustring(ParticipantStatus response);
-    //! Used by participant_status_to_ustring to determine if the timer is currently running (start was clicked and reset wasn't)
-    std::atomic_bool system_is_running;
+
+    //! Used by participant_status_to_ustring to determine if the timer was started (start was clicked and reset wasn't), do not use this for anything else! (Stays true after stop is called to keep displaying the last value)
+    std::atomic_bool participant_status_timer_started;
 
     /**
      * \brief Start the UI thread
