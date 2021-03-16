@@ -36,6 +36,10 @@
 #include <vector>
 #include <map>
 
+/**
+ * \test Tests MultiVehicleReader
+ * \ingroup cpmlib
+ */
 TEST_CASE( "MultiVehicleReader" ) {
     
     // sender

@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Polygon.hpp"
 
+/**
+ * \file Polygon.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Polygon::Polygon(const xmlpp::Node* node)
 {
     //Check if node is of type polygon

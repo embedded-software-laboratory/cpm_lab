@@ -27,6 +27,10 @@
 #include "VehicleManualControlUi.hpp"
 #include <cstdlib>
 
+/**
+ * \file VehicleManualControlUi.cpp
+ * \ingroup lcc_ui
+ */
 
 VehicleManualControlUi::VehicleManualControlUi(shared_ptr<VehicleManualControl> _vehicleManualControl) : vehicleManualControl(_vehicleManualControl)
 {

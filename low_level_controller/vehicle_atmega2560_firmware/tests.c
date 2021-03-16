@@ -24,12 +24,14 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * tests.c
+/**
+ * \file tests.c
  *
- * Created: 09/08/2019 09:48:04
- *  Author: Janis
- */ 
+ * \author maczijewski, cfrauzem
+ * \date Created: 09/08/2019 09:48:04
+ * 
+ * \ingroup low_level_controller
+ */
 
 
 #include "tests.h"

@@ -32,6 +32,7 @@
  * \class InterfaceTransform
  * \brief This interface requires the deriving classes to implement a transform function
  * It is mainly used for clarity, to define common behaviour
+ * \ingroup lcc_commonroad
  */
 class InterfaceTransform
 {
@@ -78,6 +79,6 @@ public:
         return std::fmod((orientation - angle), 2.0 * M_PI);
     }
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceTransform() {};
 };

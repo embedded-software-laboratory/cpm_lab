@@ -28,8 +28,10 @@ using namespace Pylon;
 using namespace GenApi;
 using namespace std;
 
-// ******* CInstantCameraAppSrc *******
-// Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
+/**
+ * \brief Here we extend the Pylon CInstantCamera class with a few things to make it easier to integrate with Appsrc.
+ * \ingroup lcc_labcam
+ */
 class CInstantCameraAppSrc : public CInstantCamera
 {
 public:
@@ -80,4 +82,8 @@ private:
 	GstBuffer* m_gstBuffer;
 	bool retrieve_image();
 	static void cb_need_data(GstElement *appsrc, guint unused_size, gpointer user_data);
+
+	// For measuring the amount of framedrops
+	int correct_pictures = 0;
+	int incorrect_pictures=0;
 };

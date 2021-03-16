@@ -33,11 +33,11 @@
 #include "cpm/stamp_message.hpp"
 
 /**
- * Tests:
- * - The cpm reader
- * - If the reader returns the newest valid sample
+ * \test Tests ReaderAbstract
+ * 
+ * - The most basic cpm reader
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "ReaderAbstract" ) {
     cpm::Logging::Instance().set_id("test_readerAbstract");
 

@@ -26,6 +26,11 @@
 
 #include "TimeSeries.hpp"
 
+/**
+ * \file TimeSeries.cpp
+ * \ingroup lcc
+ */
+
 template<typename T>
 _TimeSeries<T>::_TimeSeries(string _name, string _format, string _unit)
 :name(_name)

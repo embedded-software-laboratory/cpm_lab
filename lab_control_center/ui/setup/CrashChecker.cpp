@@ -1,5 +1,10 @@
 #include "CrashChecker.hpp"
 
+/**
+ * \file CrashChecker.cpp
+ * \ingroup lcc_ui
+ */
+
 CrashChecker::CrashChecker(
     std::shared_ptr<Deploy> _deploy_functions,
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator,

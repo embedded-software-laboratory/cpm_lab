@@ -24,14 +24,6 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/**
- * \class main.cpp
- * \brief This file includes a mechanism for a NUC to tell the LCC that it is online 
- * (should be called on NUC startup by a startup script, see lab_autostart.bash)
- * It is also used to check if the scripts started remotely are (still) running
- * (regarding their tmux session id)
- */
-
 #include <memory>
 #include <sstream>
 #include <string>
@@ -60,7 +52,37 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-//Helper functions to check for existing tmux sessions (same as in LCC's Deploy.cpp)
+/////////////////////////////////////////////////
+///////// Bash file descriptions for Doxygen
+////////////////////////////////////////////////
+/**
+ * \defgroup autostart_files Important Files
+ * \brief This group describes important bash files for the NUC
+ * \ingroup autostart
+ */
+
+/**
+ * \page autostart_files_page Important Files for Autostart
+ * \subpage autostart_create <br>
+ * \subpage autostart_lab <br>
+ * \ingroup autostart_files
+*/
+
+/**
+ * \page autostart_create ../create_nuc_package.bash
+ * \brief Bash file that creates an important package required by the NUCs on the Main Lab PC
+ */
+
+/**
+ * \page autostart_lab ../lab_autostart.bash
+ * \brief Bash file that must be placed on the NUC together with some other file, 
+ * as described in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
+ */
+
+/**
+ * \brief Helper function to execute a system command, like e.g. starting a tmux session
+ * \ingroup autostart
+ */
 std::string execute_command(const char* cmd) 
 {
     //Code from stackoverflow
@@ -76,6 +98,10 @@ std::string execute_command(const char* cmd)
     return result;
 }
 
+/**
+ * \brief Helper function to check if a tmux session exists
+ * \ingroup autostart
+ */
 bool session_exists(std::string session_id)
 {
     std::string running_sessions = execute_command("tmux ls");
@@ -83,6 +109,15 @@ bool session_exists(std::string session_id)
     return running_sessions.find(session_id) != std::string::npos;
 }
 
+/**
+ * \brief Main function of the autostart software
+ * 
+ * This function includes a mechanism for a NUC to tell the LCC that it is online 
+ * (should be called on NUC startup by a startup script, see lab_autostart.bash)
+ * It is also used to check if the scripts started remotely are (still) running
+ * (regarding their tmux session id)
+ * \ingroup autostart
+ */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);
@@ -162,7 +197,7 @@ int main (int argc, char *argv[]) {
 
         if (writer_readyMessage.matched_subscriptions_size() == 0)
         {
-            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id);
+            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id.c_str());
         }
     },
     [](){

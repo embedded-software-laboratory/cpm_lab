@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/Occupancy.hpp"
 
+/**
+ * \file Occupancy.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Occupancy::Occupancy(const xmlpp::Node* node)
 {
     //Check if node is of type occupancy
