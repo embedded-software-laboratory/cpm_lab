@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
                         // Currently we only plan sequentially, with lower vehicle ids first
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
                         CouplingGraph coupling_graph(vec);
-                        coupling_graph.addIterativeBlock(std::vector<int>( &vec[1], &vec[3]));
+                        coupling_graph.addIterativeBlock(std::vector<int>( vec.begin(), vec.end()));
 
                         planner->set_coupling_graph(coupling_graph);
 

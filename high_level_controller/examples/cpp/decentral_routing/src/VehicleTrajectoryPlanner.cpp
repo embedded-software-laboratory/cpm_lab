@@ -92,20 +92,18 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // This loop runs until we get a stopFlag or all collisions are resolved
     bool has_collisions = true;
     bool received_collisions = true;
-    int count = 0;
     do
     {
         count++;
-        has_collisions = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
+        has_collisions = !trajectoryPlan->avoid_collisions(other_vehicles_buffer);
         send_plan_to_hlcs(false, has_collisions);
         received_collisions = read_concurrent_vehicles();
-        std::cout << "Planning trajectory " << count << std::endl;
     } while(
-            !stopFlag && !has_collisions && !received_collisions
+            !stopFlag && (received_collisions || has_collisions)
         );
 
-    /* This currently doesn't apply
-    if (!is_collision_avoidable){
+    // If we still have collisions here, something went wrong
+    if (received_collisions){
         cpm::Logging::Instance().write(1,
                 "Found unavoidable collision");
         crashed = true;
@@ -113,7 +111,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
-    */
 
     if( !stopFlag ) {
         send_plan_to_hlcs();
@@ -213,7 +210,7 @@ bool VehicleTrajectoryPlanner::read_vehicles(std::set<uint8_t> vehicle_ids, bool
     // Loop until we receive a stopFlag OR
     // our messages_received contains all vehicles we're waiting for
     std::set<uint8_t> received_messages;
-    int received_collisions;
+    int received_collisions = 0;
     while( !std::includes(received_messages.begin(), received_messages.end(),
                 vehicle_ids.begin(), vehicle_ids.end()) // Becomes true, when we received msg from all vehicle_ids
             && !vehicle_ids.empty() // Stop immediately when vehicle_ids is empty

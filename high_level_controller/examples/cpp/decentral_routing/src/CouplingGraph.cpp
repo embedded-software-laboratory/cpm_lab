@@ -58,12 +58,17 @@ void CouplingGraph::setDefaultOrder(){
 void CouplingGraph::addIterativeBlock(vector<int> blockIds){
     //TODO: Check if blockIds are actually a block, i.e. vehicles that are next to each other on the graph
 
-    for( auto const &vehicleId1 : blockIds ){
+    for( auto const &vehicleId1 : blockIds )
+    {
         // Vehicles need to be inside our vehicleSet 
         assert(vehicleSet.find(vehicleId1) != vehicleSet.end());
         auto &vehicleData = couplingData.at(vehicleId1);
-        for( auto const &vehicleId2 : blockIds ){
+        for( auto const &vehicleId2 : blockIds )
+        {
+            if( vehicleId1 != vehicleId2 )
+            {
             vehicleData[vehicleId2] = concurrentVehicle;
+            }
         }
     }
 }
