@@ -94,7 +94,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     bool received_collisions = true;
     do
     {
-        count++;
         has_collisions = !trajectoryPlan->avoid_collisions(other_vehicles_buffer);
         send_plan_to_hlcs(false, has_collisions);
         received_collisions = read_concurrent_vehicles();
