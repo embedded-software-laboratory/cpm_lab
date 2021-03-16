@@ -97,12 +97,13 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         has_collisions = !trajectoryPlan->avoid_collisions(other_vehicles_buffer);
         send_plan_to_hlcs(false, has_collisions);
         received_collisions = read_concurrent_vehicles();
+        std::cout << "StopFlag says: " << stopFlag << std::endl;
     } while(
             !stopFlag && (received_collisions || has_collisions)
         );
 
     // If we still have collisions here, something went wrong
-    if (received_collisions){
+    if (received_collisions || has_collisions){
         cpm::Logging::Instance().write(1,
                 "Found unavoidable collision");
         crashed = true;
