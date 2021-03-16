@@ -59,6 +59,7 @@ namespace cpm
     template<typename T>
     class Reader
     {
+    private:
         //! Internal DDS Reader to receive messages of type T
         dds::sub::DataReader<T> dds_reader;
         //! Mutex for access to get_sample and removing old messages
@@ -151,12 +152,12 @@ namespace cpm
             }
         }
 
+    public:
         Reader(const Reader&) = delete;
         Reader& operator=(const Reader&) = delete;
         Reader(const Reader&&) = delete;
         Reader& operator=(const Reader&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor using a topic to create a Reader
          * \param topic the topic of the communication

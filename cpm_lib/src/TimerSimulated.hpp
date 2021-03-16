@@ -54,6 +54,7 @@ namespace cpm {
      */
     class TimerSimulated : public cpm::Timer
     {
+    private: 
         //! Periodicity with which the timer calls a callback function
         uint64_t period_nanoseconds; 
         //! Offset from the common starting time 0 of all timers from which the periodic behaviour should start
