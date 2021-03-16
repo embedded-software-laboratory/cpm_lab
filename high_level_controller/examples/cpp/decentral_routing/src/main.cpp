@@ -196,13 +196,12 @@ int main(int argc, char *argv[]) {
      * Reader/Writers for comms between vehicles directly
      */
     // Writer to communicate plans with other vehicles
-    cpm::Writer<LaneGraphTrajectory> writer_laneGraphTrajectory(
-            "laneGraphTrajectory");
+    cpm::Writer<HlcCommunication> writer_HlcCommunication(
+            "hlcCommunication");
 
     // Reader to receive planned trajectories of other vehicles
-    cpm::ReaderAbstract<LaneGraphTrajectory> reader_laneGraphTrajectory(
-            "laneGraphTrajectory");
-    
+    cpm::ReaderAbstract<HlcCommunication> reader_HlcCommunication(
+            "hlcCommunication");
     
     /* ---------------------------------------------------------------------------------
      * Create planner object
@@ -212,13 +211,13 @@ int main(int argc, char *argv[]) {
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
-    std::unique_ptr<cpm::Writer<LaneGraphTrajectory>>(
-        new cpm::Writer<LaneGraphTrajectory>("laneGraphTrajectory")
+    std::unique_ptr<cpm::Writer<HlcCommunication>>(
+        new cpm::Writer<HlcCommunication>("hlcCommunication")
         )
     );
     planner->set_reader(
-    std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory>>(
-        new cpm::ReaderAbstract<LaneGraphTrajectory>("laneGraphTrajectory")
+    std::unique_ptr<cpm::ReaderAbstract<HlcCommunication>>(
+        new cpm::ReaderAbstract<HlcCommunication>("hlcCommunication")
         )
     );
 
@@ -289,6 +288,8 @@ int main(int argc, char *argv[]) {
                         // Currently we only plan sequentially, with lower vehicle ids first
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
                         CouplingGraph coupling_graph(vec);
+                        coupling_graph.addIterativeBlock(std::vector<int>( &vec[1], &vec[3]));
+
                         planner->set_coupling_graph(coupling_graph);
 
                         // Initialize PlanningState with starting position

@@ -26,8 +26,8 @@
 
 #include "Header.idl"
 
-#ifndef LANEGRAPHTRAJECTORY_IDL
-#define LANEGRAPHTRAJECTORY_IDL
+#ifndef HLCCOMMUNICATION_IDL
+#define HLCCOMMUNICATION_IDL
 
 struct LaneGraphPosition 
 {
@@ -36,10 +36,18 @@ struct LaneGraphPosition
     unsigned short edge_path_index;
 };
 
-struct LaneGraphTrajectory 
+enum MessageType
+{
+    Iterative,
+    Final
+};
+
+struct HlcCommunication 
 {
     octet vehicle_id; //@key
     Header header;
+    MessageType type;
+    boolean has_collisions;
     sequence<LaneGraphPosition> lane_graph_positions;
 };
 #endif

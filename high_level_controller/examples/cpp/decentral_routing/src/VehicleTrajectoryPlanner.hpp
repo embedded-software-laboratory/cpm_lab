@@ -36,7 +36,7 @@
 #include "cpm/ReaderAbstract.hpp"
 
 #include "VehicleCommandTrajectory.hpp"
-#include "LaneGraphTrajectory.hpp"
+#include "HlcCommunication.hpp"
 
 #include "VehicleTrajectoryPlanningState.hpp"
 #include "CouplingGraph.hpp"
@@ -47,8 +47,8 @@ class VehicleTrajectoryPlanner
 {
     std::unique_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles_buffer;
-    std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer_laneGraphTrajectory;
-    std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader_laneGraphTrajectory;
+    std::unique_ptr< cpm::Writer<HlcCommunication> > writer_hlcCommunication;
+    std::unique_ptr< cpm::ReaderAbstract<HlcCommunication> > reader_hlcCommunication;
     bool started = false;
     bool crashed = false;
     bool volatile stopFlag = false;
@@ -63,16 +63,18 @@ class VehicleTrajectoryPlanner
     const uint64_t dt_keep_past_trajectories = 1000000000;
     vector<TrajectoryPoint> trajectory_point_buffer;
     CouplingGraph coupling_graph;
-    std::set<uint8_t> messages_received; // Which vehicles have sent LaneGraphTrajs to us this timestep
+    std::set<uint8_t> all_received_messages; // Which vehicles have sent LaneGraphTrajs to us this timestep
     short no_trajectory_counter = 0;
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
     static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
 
-    void read_other_vehicles();
-    bool wait_for_other_vehicles();
-    void write_trajectory( LaneGraphTrajectory trajectory );
+    void read_previous_vehicles();
+    bool read_concurrent_vehicles();
+    void wait_for_ignored_vehicles();
+    bool read_vehicles(std::set<uint8_t> vehicle_ids, bool write_to_buffer=false, bool final_messages_only=true);
+    void send_plan_to_hlcs( bool is_final=true, bool has_collisions=false );
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
@@ -90,8 +92,8 @@ public:
     bool is_crashed() {return crashed;}
     void set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle);
     void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
-    void set_writer(std::unique_ptr<cpm::Writer<LaneGraphTrajectory> > writer);
-    void set_reader(std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory> > reader);
+    void set_writer(std::unique_ptr<cpm::Writer<HlcCommunication> > writer);
+    void set_reader(std::unique_ptr<cpm::ReaderAbstract<HlcCommunication> > reader);
     std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time, uint64_t dt);
     void stop();
     void start(){started = true;};

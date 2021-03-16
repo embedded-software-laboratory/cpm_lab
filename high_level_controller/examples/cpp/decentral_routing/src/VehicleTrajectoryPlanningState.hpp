@@ -32,7 +32,7 @@
 #include <cstdint>
 #include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include "LaneGraphTrajectory.hpp"
+#include "HlcCommunication.hpp"
 
 using std::vector;
 using std::array;
@@ -76,7 +76,7 @@ public:
         size_t _edge_path_index
         );
 
-    void get_lane_graph_positions(LaneGraphTrajectory *lane_graph_trajectory);
+    void get_lane_graph_positions(HlcCommunication *lane_graph_trajectory);
     TrajectoryPoint get_trajectory_point(uint64_t time, size_t edge_index, size_t edge_path_index, double speed);
     vector<TrajectoryPoint> get_planned_trajectory(int max_length, uint64_t dt_nanos);
     void apply_timestep(uint64_t dt_nanos);

@@ -72,24 +72,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     // Timesteps should come in a logical order
     assert(t_prev < t_real_time);
-    //if(t_prev == t_real_time) {
-    //    std::cout << "Received same timestamp " << t_real_time << " twice" << std::endl;
-    //} else{
-    //    std::cout << "Received normal timestamp " << t_real_time << std::endl;
-    //}
-
-    //if(t_prev > t_real_time) {
-	//cpm::Logging::Instance().write(1,
-	//		"Weird timing, t_prev: %lu, t_real_time: %lu ",
-	//		 t_prev,
-	//		 t_real_time);
-	//std::cout <<
-	//	"Weird timing, t_prev: "
-	//	<<  t_prev
-	//	<< ", t_real_time: "
-	//	<< t_real_time
-	//	<< std::endl;
-    //}
 
     // Catch up planningState if we missed a timestep
     while(t_real_time - t_prev > dt && t_prev !=0) {
@@ -100,18 +82,29 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     started = true;
     // Messages_received gets reset every timestep
-    messages_received.clear();
+    all_received_messages.clear();
 
-    // Read LaneGraphTrajectory messages and write them into our buffer
-    this->read_other_vehicles(); // Waits until we received the correct messages
+    // Read HlcCommunication messages and write them into our buffer
+    read_previous_vehicles(); // Waits until we received the correct messages
     cpm::Logging::Instance().write(3,
             "%lu: Starting planning", t_real_time);
 
-    // Priority based collision avoidance: Every vehicle avoids 
-    // the 'previous' vehicles, in this example those with a smaller ID.
-    bool is_collision_avoidable = false;
-    is_collision_avoidable = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
+    // This loop runs until we get a stopFlag or all collisions are resolved
+    bool has_collisions = true;
+    bool received_collisions = true;
+    int count = 0;
+    do
+    {
+        count++;
+        has_collisions = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
+        send_plan_to_hlcs(false, has_collisions);
+        received_collisions = read_concurrent_vehicles();
+        std::cout << "Planning trajectory " << count << std::endl;
+    } while(
+            !stopFlag && !has_collisions && !received_collisions
+        );
 
+    /* This currently doesn't apply
     if (!is_collision_avoidable){
         cpm::Logging::Instance().write(1,
                 "Found unavoidable collision");
@@ -120,54 +113,48 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
     }
+    */
 
+    if( !stopFlag ) {
+        send_plan_to_hlcs();
 
-    if(t_start == 0)
-    {
-        t_start = t_real_time;// + 2000000000ull;
+        if(t_start == 0)
+        {
+            t_start = t_real_time;// + 2000000000ull;
+        }
+        else {
+            clear_past_trajectory_point_buffer();
+        }
+        
+        // Get new points from PlanningState
+        std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
+        for( auto& point : new_trajectory_points ) {
+            point.t().nanoseconds(point.t().nanoseconds() + t_start);
+        }
+
+        // Append points to trajectory_point_buffer
+        trajectory_point_buffer.insert(
+               trajectory_point_buffer.end(),
+               new_trajectory_points.begin(),
+               new_trajectory_points.end()
+               );
+
+        // Limit size of trajectory buffer; delete oldest points first
+        while( trajectory_point_buffer.size() > 50 ) {
+            trajectory_point_buffer.erase(trajectory_point_buffer.begin());
+        }
     }
-    else {
-        clear_past_trajectory_point_buffer();
-    }
-    
-    // Get new points from PlanningState
-    std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
-    for( auto& point : new_trajectory_points ) {
-        point.t().nanoseconds(point.t().nanoseconds() + t_start);
-    }
-
-    // Append points to trajectory_point_buffer
-    trajectory_point_buffer.insert(
-		   trajectory_point_buffer.end(),
-		   new_trajectory_points.begin(),
-		   new_trajectory_points.end()
-		   );
-
-    // Limit size of trajectory buffer; delete oldest points first
-    while( trajectory_point_buffer.size() > 50 ) {
-	    trajectory_point_buffer.erase(trajectory_point_buffer.begin());
-    }
-
-    //debug_analyzeTrajectoryPointBuffer();
-
-    // Get our current trajectory
-    LaneGraphTrajectory lane_graph_trajectory;
-    trajectoryPlan->get_lane_graph_positions(
-            &lane_graph_trajectory
-    );
-
-    // Advance trajectoryPlanningState by 1 timestep
-    trajectoryPlan->apply_timestep(dt_nanos);
-
-    write_trajectory(lane_graph_trajectory);
     
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
     //debug_writeOutReceivedTrajectories();
     //trajectoryPlan->debug_writeOutOwnTrajectory();
-    
 
-    if (wait_for_other_vehicles()) {
+    // Advance trajectoryPlanningState by 1 timestep
+    trajectoryPlan->apply_timestep(dt_nanos);
+
+    wait_for_ignored_vehicles();
+    if ( !stopFlag ) {
         isStopped = true;
         no_trajectory_counter = 0;
         return std::unique_ptr<VehicleCommandTrajectory>(
@@ -190,12 +177,32 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 }
 
 /*
+ *
+ */
+void VehicleTrajectoryPlanner::read_previous_vehicles() {
+    read_vehicles(coupling_graph.getPreviousVehicles(trajectoryPlan->get_vehicle_id()), true);
+}
+
+/*
+ *
+ */
+bool VehicleTrajectoryPlanner::read_concurrent_vehicles() {
+    return read_vehicles(coupling_graph.getConcurrentVehicles(trajectoryPlan->get_vehicle_id()), true, false); }
+
+/*
+ *
+ */
+void VehicleTrajectoryPlanner::wait_for_ignored_vehicles() {
+    read_vehicles(coupling_graph.getIgnoredVehicles(trajectoryPlan->get_vehicle_id()));
+}
+
+/*
  * Reads LaneGraphTrajectories sent by other vehicles in this timestep
  * into other_vehicles_buffer.
  * Blocks until a message from all vehicles specified in the comm graph
  * is received or the stop() method is called.
  */
-void VehicleTrajectoryPlanner::read_other_vehicles()
+bool VehicleTrajectoryPlanner::read_vehicles(std::set<uint8_t> vehicle_ids, bool write_to_buffer, bool final_messages_only)
 {
     assert(started);
 
@@ -203,38 +210,55 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
     auto start_time = std::chrono::steady_clock::now();
 #endif
 
-    // Clear buffer from previous timestep
-    other_vehicles_buffer.clear();
-
-    // Checklist to check, which messages we need to wait for
-    std::set<uint8_t> prev_vehicles_list = coupling_graph.getPreviousVehicles(trajectoryPlan->get_vehicle_id());
-
     // Loop until we receive a stopFlag OR
-    // our messages_received contains all previous vehicles
-    while( !std::includes(messages_received.begin(), messages_received.end(),
-                prev_vehicles_list.begin(), prev_vehicles_list.end())
-            && !stopFlag) {
-        auto samples = reader_laneGraphTrajectory->take();
-        for(LaneGraphTrajectory sample : samples) {
+    // our messages_received contains all vehicles we're waiting for
+    std::set<uint8_t> received_messages;
+    int received_collisions;
+    while( !std::includes(received_messages.begin(), received_messages.end(),
+                vehicle_ids.begin(), vehicle_ids.end()) // Becomes true, when we received msg from all vehicle_ids
+            && !vehicle_ids.empty() // Stop immediately when vehicle_ids is empty
+            && !stopFlag // Stop early, when we receive a stopFlag
+            ) {
+        auto samples = reader_hlcCommunication->take();
+        for(HlcCommunication sample : samples) {
             uint64_t t_message = sample.header().create_stamp().nanoseconds();
 
-            if ( t_message == t_real_time) {
-                messages_received.insert(sample.vehicle_id());
+            // Usually we only listen to messages with MessageType Final
+            if ( final_messages_only && sample.type() != MessageType::Final ) {
+                continue;
+            }
 
-                // Only process message if it's from a previous vehicle
-                if ( prev_vehicles_list.find( sample.vehicle_id() )
-                        == prev_vehicles_list.end()
+            if ( t_message == t_real_time) {
+                received_messages.insert(sample.vehicle_id());
+
+                // Only process message if it's on the list of vehicles to read
+                if ( vehicle_ids.find( sample.vehicle_id() )
+                        == vehicle_ids.end()
                     ) {
+                        std::cout << "Received message from "
+                            << static_cast<uint32_t>(sample.vehicle_id())
+                            << ", but cannot process it at this point."
+                            << std::endl;
                         continue;
+                }
+
+                received_collisions += sample.has_collisions();
+
+                // Only look at the lane graph positions if we need to write them to buffer
+                if( !write_to_buffer) {
+                    continue;
                 }
 
                 int prev_buffer_index = -1;
                 int prev_edge_index = -1;
                 int prev_edge_path_index = -1;
 
+                // Clear out the buffer for this specific vehicle
+                // Especially important for iterative planning vehicles
+                other_vehicles_buffer[sample.vehicle_id()].clear();
+
                 // Save all received positions that are not in the past already
                 for ( LaneGraphPosition position : sample.lane_graph_positions() ) {
-
 
                     // Check TimeStamp of each Position to see where it fits into our buffer
                     // Casting to signed number because we might get negative values
@@ -278,61 +302,25 @@ void VehicleTrajectoryPlanner::read_other_vehicles()
             }
         }
 
-        // Check if we finished our checklist; if yes: exit loop
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-    }
-
-#if TIMED
-    auto end_time = std::chrono::steady_clock::now();
-    auto diff = end_time - start_time;
-    std::cout
-        << "TIMING: read_other_vehicles took "
-        << std::chrono::duration<double, std::milli>(diff).count()
-        << " ms"
-        << std::endl;
-#endif
-}
-
-/*
- *
- */
-bool VehicleTrajectoryPlanner::wait_for_other_vehicles() {
-#if TIMED
-    auto start_time = std::chrono::steady_clock::now();
-#endif
-
-    // We want to wait until we received messages from all vehicles,
-    // but if stopFlag gets set, we abort early
-    auto all_vehicles = coupling_graph.getVehicles();
-    bool success_status = (messages_received == all_vehicles);
-
-    while (!success_status && !stopFlag) {
-        auto samples = reader_laneGraphTrajectory->take();
-        for(LaneGraphTrajectory sample : samples) {
-            uint64_t t_message = sample.header().create_stamp().nanoseconds();
-            if (t_message == t_real_time) {
-                messages_received.insert(sample.vehicle_id());
-            }
-        }
-
-        // Successfully waited, if we have received a message from every vehicle
-        success_status = (messages_received == all_vehicles);
-
+        // Slow down loop a little
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
 #if TIMED
     auto end_time = std::chrono::steady_clock::now();
     auto diff = end_time - start_time;
+    std::cout << "TIMING: reading vehicles ";
+    for(auto const &veh_id : vehicle_ids){
+        std::cout << static_cast<uint32_t>(veh_id) << ", ";
+    }
     std::cout
-        << "TIMING: wait_for_other_vehicles took "
+        << "took "
         << std::chrono::duration<double, std::milli>(diff).count()
         << " ms"
         << std::endl;
 #endif
 
-    return success_status;
+    return received_collisions;
 }
 
 /*
@@ -353,23 +341,25 @@ void VehicleTrajectoryPlanner::stop() {
 /*
  * Publish the planned trajectory to DDS
  */
-void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory ) {
+void VehicleTrajectoryPlanner::send_plan_to_hlcs(bool is_final, bool has_collisions) {
 
+    HlcCommunication hlc_comms;
+    trajectoryPlan->get_lane_graph_positions(&hlc_comms);
     // Add TimeStamp to each point
-    for( unsigned int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
+    for( unsigned int i=0; i<hlc_comms.lane_graph_positions().size(); i++ ) {
         // Calculate, which point in time this index corresponds to
         uint64_t eta = t_real_time + (trajectoryPlan->get_dt_speed_profile_nanos())*i;
-        trajectory.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
+        hlc_comms.lane_graph_positions()[i].estimated_arrival_time().nanoseconds(eta);
     }
 
-    LaneGraphTrajectory msg;
+    HlcCommunication msg;
     std::vector<LaneGraphPosition> shortened_trajectory;
     
     int current_edge_index = -1;
     LaneGraphPosition current_position;
 
-    for( unsigned int i=0; i<trajectory.lane_graph_positions().size(); i++ ) {
-        current_position = trajectory.lane_graph_positions()[i];
+    for( unsigned int i=0; i<hlc_comms.lane_graph_positions().size(); i++ ) {
+        current_position = hlc_comms.lane_graph_positions()[i];
 
         // Only send each edge_index once
         if( current_position.edge_index() != current_edge_index ) {
@@ -384,10 +374,20 @@ void VehicleTrajectoryPlanner::write_trajectory( LaneGraphTrajectory trajectory 
 
     msg.lane_graph_positions(shortened_trajectory);
     
+    if( is_final )
+    {
+        msg.type(MessageType::Final);
+    }
+    else
+    {
+        msg.type(MessageType::Iterative);
+    }
+
+    msg.has_collisions(has_collisions); 
     msg.vehicle_id(trajectoryPlan->get_vehicle_id());
     msg.header().create_stamp().nanoseconds(t_real_time);
     msg.header().valid_after_stamp().nanoseconds(t_real_time + 5000000000ull);
-    this->writer_laneGraphTrajectory->write(msg);
+    this->writer_hlcCommunication->write(msg);
 }
 
 /*
@@ -449,12 +449,12 @@ void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
 }
 
 void VehicleTrajectoryPlanner::set_writer(
-        std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer){
-    writer_laneGraphTrajectory = std::move(writer);
+        std::unique_ptr< cpm::Writer<HlcCommunication> > writer){
+    writer_hlcCommunication = std::move(writer);
 }
 void VehicleTrajectoryPlanner::set_reader(
-        std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader){
-    reader_laneGraphTrajectory = std::move(reader);
+        std::unique_ptr< cpm::ReaderAbstract<HlcCommunication> > reader){
+    reader_hlcCommunication = std::move(reader);
 }
 
 /*
