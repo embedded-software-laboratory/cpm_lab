@@ -80,8 +80,8 @@ TimerViewUI::TimerViewUI(
     //Create thread and register dispatcher callback
     start_ui_thread();
 
-    //Boolean variable to find out if the system has been started
-    system_is_running.store(false);
+    //Boolean variable to find out if the timer has been started
+    participant_status_timer_started.store(false);
 }
 
 TimerViewUI::~TimerViewUI() {
@@ -145,7 +145,7 @@ void TimerViewUI::stop_ui_thread() {
 void TimerViewUI::reset_ui() {
     //Reset values that are connected to the timer
     timer_list_storage->clear();
-    system_is_running.store(false);
+    participant_status_timer_started.store(false);
 
     //Change UI button sensitivity
     button_start->set_sensitive(true);
@@ -209,7 +209,7 @@ void TimerViewUI::button_start_callback() {
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
-    system_is_running.store(true);
+    participant_status_timer_started.store(true);
 }
 
 void TimerViewUI::button_stop_callback() {
@@ -219,6 +219,14 @@ void TimerViewUI::button_stop_callback() {
 
     timer_trigger->send_stop_signal();
 
+    //Stop obstacle simulation
+    // obstacle_simulation_manager->stop();
+
+    //We do not set participant_status_timer_started here, as it is only used to set the correct value for the timer labels
+    //(Makes more sense to keep the last label while running instead of going back to READY)
+    //The timer cannot be restarted without being reset, where participant_status_timer_started is reset as well, so 
+    //this is not problematic
+
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);
     current_timestep_label->set_label(label_msg_ustring);
@@ -227,7 +235,7 @@ void TimerViewUI::button_stop_callback() {
 }
 
 std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus response) {
-    if (system_is_running.load() == false) {
+    if (participant_status_timer_started.load() == false) {
         return "READY";
     }
     else {

@@ -42,13 +42,10 @@ namespace cpm
     template<typename T>
     class ReaderAbstract
     {
+    private:
+
         //! Internal DDS reader that is abstracted by this class
         dds::sub::DataReader<T> dds_reader;
-
-        ReaderAbstract(const ReaderAbstract&) = delete;
-        ReaderAbstract& operator=(const ReaderAbstract&) = delete;
-        ReaderAbstract(const ReaderAbstract&&) = delete;
-        ReaderAbstract& operator=(const ReaderAbstract&&) = delete;
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
@@ -84,6 +81,11 @@ namespace cpm
         }
 
     public:
+        ReaderAbstract(const ReaderAbstract&) = delete;
+        ReaderAbstract& operator=(const ReaderAbstract&) = delete;
+        ReaderAbstract(const ReaderAbstract&&) = delete;
+        ReaderAbstract& operator=(const ReaderAbstract&&) = delete;
+        
         /**
          * \brief Constructor for a ReaderAbstract which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings

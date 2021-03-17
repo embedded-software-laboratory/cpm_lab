@@ -53,11 +53,6 @@ namespace cpm {
      * \ingroup cpmlib
      */
     class Logging {
-        Logging(Logging const&) = delete;
-        Logging(Logging&&) = delete; 
-        Logging& operator=(Logging const&) = delete;
-        Logging& operator=(Logging &&) = delete;
-
         private:
             //! DDS Writer for Logging
             cpm::Writer<Log> logger;
@@ -97,6 +92,11 @@ namespace cpm {
             void check_id();
 
         public:
+            Logging(Logging const&) = delete;
+            Logging(Logging&&) = delete; 
+            Logging& operator=(Logging const&) = delete;
+            Logging& operator=(Logging &&) = delete;
+            
             /**
              * \brief Singleton constructor / method to access the Logging Singleton Instance; from there, the Logging functionality can be accessed
              */

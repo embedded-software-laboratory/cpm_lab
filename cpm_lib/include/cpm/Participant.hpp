@@ -43,15 +43,16 @@ namespace cpm
      */
     class Participant
     {
+    private:
         //! Internal DDS participant that is abstracted by this class
         dds::domain::DomainParticipant dds_participant;
 
+    public:
         Participant(const Participant&) = delete;
         Participant& operator=(const Participant&) = delete;
         Participant(const Participant&&) = delete;
         Participant& operator=(const Participant&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor for a participant 
          * \param domain_number Set the domain ID of the domain within which the communication takes place

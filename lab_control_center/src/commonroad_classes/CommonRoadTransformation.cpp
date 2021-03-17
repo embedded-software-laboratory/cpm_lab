@@ -20,7 +20,23 @@ CommonRoadTransformation::CommonRoadTransformation()
 
     //Now load the profile
     std::lock_guard<std::mutex> lock(yaml_profile_mutex);
+
     yaml_transform_profile = YAML::LoadFile(transformation_file_location);
+
+    //Make sure that the file has not been edited / malformed manually - in that case, clear its content
+    if (! yaml_transform_profile.IsNull())
+    {
+        if (! yaml_transform_profile.IsMap())
+        {
+            std::cout << "NOTE: Resetting YAML transform profile, is malformed" << std::endl;
+            std::ofstream yaml_file;
+            yaml_file.open(transformation_file_location, std::ofstream::out | std::ofstream::trunc);
+            yaml_file.close();
+
+            yaml_transform_profile = YAML::LoadFile(transformation_file_location);
+        }
+    }
+    
     old_yaml_transform_profile = YAML::Clone(yaml_transform_profile);
 
     //If a profile was applied, we need to consider this when saving (because changes are then 'incremental' instead of 'overwriting')
@@ -78,8 +94,6 @@ void CommonRoadTransformation::load_transformation_from_profile(double& time_sca
         }
     
         //Load values from profile
-        std::cout << "Scale before: " << profile[scale_key].as<double>() << std::endl;
-        std::cout << "Scale after: " << floor_small_values(profile[scale_key].as<double>()) << std::endl;
         time_scale = floor_small_values(profile[time_scale_key].as<double>());
         scale = floor_small_values(profile[scale_key].as<double>());
         translate_x = floor_small_values(profile[translate_x_key].as<double>());
@@ -162,14 +176,10 @@ void CommonRoadTransformation::add_change_to_transform_profile(double time_scale
         if ( new_scale > 0 ) profile[scale_key] = floor_small_values(new_scale);
         else if ( scale > 0 ) profile[scale_key] = floor_small_values(scale);
 
-        std::cout << "Translate x to be stored: " << translate_x << std::endl;
-
         if ( time_scale > 0 ) profile[time_scale_key] = floor_small_values(time_scale);
         profile[translate_x_key] = floor_small_values(translate_x_old + translate_x);
         profile[translate_y_key] = floor_small_values(translate_y_old + translate_y);
         profile[rotation_key] = floor_small_values(std::fmod((rotation_old + rotation), 2.0 * M_PI)); //Modulo 2*Pi for rotation value
-
-        std::cout << "Now in profile: " << profile[translate_x_key] << std::endl;
 
         //Now we are in a situation where, if the profile was applied before or not, we now use the same profile as the one stored in the profile node
         //As changes are additive from here on, we need to reuse old values

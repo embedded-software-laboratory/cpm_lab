@@ -61,6 +61,8 @@ namespace cpm {
      */
     class TimerFD : public cpm::Timer
     {
+    private:
+    
         //! Periodicity with which the timer calls a callback function
         uint64_t period_nanoseconds; 
         //! Offset from the 1970 epoch where the counting starts, should usually stay the same value 0 for all used timers in the network
