@@ -194,6 +194,8 @@ private:
      * Params: Simulated time (false if real time), send stop signal (false if none should be sent)
      */
     std::function<void(bool, bool)> reset_timer;
+    //! Already called in on_simulation_start and stop, but also required if a simulated vehicle is turned off, to remove it from monitoring ui
+    std::function<void()> reset_vehicle_view;
     //! Callback function that is called when a simulation is started
     std::function<void()> on_simulation_start;
     //! Callback function that is called when a simulation is stopped
@@ -306,6 +308,7 @@ public:
      * \param _hlc_ready_aggregator Get all IDs of currently active HLCs for correct remote deployment, get currently running scripts etc
      * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
+     * \param _reset_vehicle_view Reset shown data for vehicles in monitoring ui, called when a simulated vehicle is turned off
      * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
      * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
@@ -318,6 +321,7 @@ public:
         std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
         std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
+        std::function<void()> _reset_vehicle_view,
         std::function<void()> _on_simulation_start,
         std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,

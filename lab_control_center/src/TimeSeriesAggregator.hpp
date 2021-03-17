@@ -122,6 +122,8 @@ class TimeSeriesAggregator
     const uint64_t allowed_deviation = expected_period_nanoseconds / 10;
     //! Map vehicle_id -> timestamp of last received vehicle state message
     std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time;
+    //! Minimal effort change so that check_for_deviation must not be changed, but last_vehicle_state_time it not changed by that function
+    std::unordered_map<uint8_t, uint64_t> last_vehicle_state_time_dev;
     //! Map vehicle_id -> timestamp of last received vehicle observation message
     std::unordered_map<uint8_t, uint64_t> last_vehicle_observation_time;
     /**
@@ -132,6 +134,9 @@ class TimeSeriesAggregator
      * \param allowed_diff Allowed diff betwwen current time and receive time
      */
     void check_for_deviation(uint64_t t_now, std::unordered_map<uint8_t, uint64_t>::iterator entry, uint64_t allowed_diff);
+
+    //! Max. allowed data age before data is totally ignored or reset if possible - currently at 3 seconds
+    const uint64_t max_allowed_age = 3e9;
 
 public:
     /**

@@ -28,6 +28,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include <gtkmm/grid.h>
 
 #include <algorithm>
 #include <atomic>
@@ -35,6 +36,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 #include <math.h>
@@ -128,6 +130,23 @@ public:
     const vector<string> rows = { "battery_voltage", "battery_level", "last_msg_state", "clock_delta", "pose_x", "pose_y", "pose_yaw", "ips_x", "ips_y", "ips_yaw", "odometer_distance", "imu_acceleration_forward", "imu_acceleration_left", "speed", "motor_current" };
     //! We do not want to show all vehicle information to the user - empty string become empty rows (better formatting)
     const vector<string> rows_restricted = {"battery_level", "ips_dt", "last_msg_state", "clock_delta", "reference_deviation", "speed", "nuc_connected"};
+
+    /**
+     * \brief List of currently shown vehicle IDs in grid_vehicle_monitor (which does not have a "get_all"-function) to delete no longer existing vehicles.
+     * As "query_child" did not exist due to my compiler (even though it does in the specs) and as there is no efficient way to iterate through
+     * all GTK::Grid childs, the only option left was to mimic the behaviour of the grid to determine the current position of an entry.
+     * The positions (columns) change as soon as one entry gets deleted, so using the vehicle id to get the position no longer works.
+     * Instead, the IDs are stored in or removed from a vector, and the position of the IDs in the vector should always be the same as the position
+     * or row number in the grid. Helper functions are used to compensate further.
+     */
+    std::vector<uint8_t> grid_vehicle_ids;
+
+    /**
+     * \brief Uses grid_vehicle_ids to determine the position of the vehicle_id-entry in the GTK Grid.
+     * DO NOT USE if the entry does not exist.
+     * \param vehicle_id The vehicle ID to get the GTK column ID for
+     */
+    int get_column_id(uint8_t vehicle_id);
 
     //! Indicates the starting time of the last error occurance for each vehicle
     vector<vector<uint64_t> > error_timestamps{vector<vector<uint64_t> > (rows_restricted.size(), vector<uint64_t>(30,0))};
