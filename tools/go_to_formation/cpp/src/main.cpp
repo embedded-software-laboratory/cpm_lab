@@ -39,7 +39,6 @@
 #include "planTrajectory.h"
 #include "planTrajectory_terminate.h"
 #include "rt_nonfinite.h"
-#include <string.h>
 
 #define _USE_MATH_DEFINES
 
@@ -63,6 +62,7 @@
 #include <cmath>
 #include <chrono>
 #include <ctime>
+#include <string.h>
 
 using std::vector;
 
@@ -82,9 +82,9 @@ void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
   
   // Arrangement of vehicles
   int max_no_vehicles = 20;
-  int total_rows = 3;
+  int total_rows = 5;
   int total_columns = ceil(max_no_vehicles / total_rows);
-  const double  clearance = VEHICLE_WIDTH/2; //safety distance vehicle to vehicle and vehicle to map edge [m]
+  const double  clearance = VEHICLE_WIDTH; //safety distance vehicle to vehicle and vehicle to map edge [m]
   
   int column;
   int row;
@@ -152,7 +152,10 @@ int main(int argc, char *argv[])
   int vehicleIdList_size[2];
   mgen::struct0_T vehiclePoses_data[256];
   int vehiclePoses_size[2];
+  vehiclePoses_size[1] = 1;
   coder::array<mgen::struct1_T, 1U> generated_trajectory;
+  
+  double speed = 1.0; // Driving speed of vehicles [m/s]
   
   argInit_1xd256_real_T(vehicleIdList_data, vehicleIdList_size);
   argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
@@ -164,81 +167,115 @@ int main(int argc, char *argv[])
 
   // Setting of home poses
   vector<mgen::Pose2D> goal_poses; // Needs to be initialized as Matlab defined type via argInit_Pose2D(), done here in set_home_poses
-  set_home_poses(vehicle_ids.size(), goal_poses);
+  set_home_poses(20, goal_poses);
  
   // Initialization of variables needed for main behaviour
   // Flags
-  bool computed = false;
   bool planning_started = false;
   bool trajectory_is_active = false;
-  boolean_T is_path_valid;
+  boolean_T is_path_valid; // Used by matlab generated function
+  bool stop_now = false;
   // Time tracking
-  uint64_t trajectory_duration;
   uint64_t reference_time;
   uint64_t invalid_after_stamp;
 
   vector<TrajectoryPoint> trajectory_points;
   vector<std::pair<int, Pose2D>> help_vector;
   
-  int vehicle_id = 1;
+  vector<uint8_t> active_vehicle_ids = vehicle_ids; //vector of vehicles that have to be positioned
+  vector<uint8_t> pending_vehicle_ids; 
+  vector<uint8_t> old_pending_vehicle_ids;
+  int ego_vehicle_id = 1;
   
-  std::map<uint8_t, VehicleObservation> ips_sample;
-  std::map<uint8_t, uint64_t> ips_sample_age;
   
-  // Go to formation task
+   //////////////Go to formation trajectory planning/////////////////////////////////
   auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
   timer->start([&](uint64_t t_now)
   {
-  
+
+    // TODO: senden der letzten trajektorie, wenn aktiv
     if(! planning_started){
       reference_time = t_now;
+      invalid_after_stamp = reference_time;
       planning_started = true;
     }
+    
+      // Check if lastly sent trajectory still valid
+    if(t_now >= invalid_after_stamp){
+      trajectory_is_active = false;
+    }
 
-    if(! computed){
+      
+    // If no valid trajectory present, calculate new one
+    if(! trajectory_is_active){
+
+
+      if(active_vehicle_ids.empty()){
+
+        if(pending_vehicle_ids.empty()){
+          std::cout << "All vehicles in position. Stopping timer." << std::endl;
+          timer->stop();
+          stop_now = true;
+        }else if (pending_vehicle_ids == old_pending_vehicle_ids){
+          std::cout << "All vehicles in position or unmovable. Stopping timer." << std::endl;
+          timer->stop();
+          stop_now = true;
+        }else{
+          active_vehicle_ids = pending_vehicle_ids;
+          old_pending_vehicle_ids = pending_vehicle_ids;
+          pending_vehicle_ids.clear();
+        }
+      }
+      
+      if(! stop_now){
+        ego_vehicle_id = active_vehicle_ids[0];
+        int new_id;
+        Pose2D new_pose;
+        help_vector.clear();
+
+        std::map<uint8_t, VehicleObservation> ips_sample;
+        std::map<uint8_t, uint64_t> ips_sample_age;
+        ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
+                          
+        // Transformation of sample into format needed by matlab generated function                
+        for(auto i = ips_sample.begin(); i != ips_sample.end(); i++){
+          auto data = i->second;
+          help_vector.emplace_back(data.vehicle_id(), data.pose());
+        }
+
+        for(int i = 0; i < vehicle_ids.size(); i++){
+          new_id = help_vector[i].first;
+          new_pose = help_vector[i].second;
+
+          // Conversion from rad[-pi,pi] to deg [0, 4pi] (+360° used to get only positive angles)
+          double new_yaw = 360 + new_pose.yaw()*180/M_PI; 
           
-          ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
+          vehiclePoses_data[i].vehicle_id = new_id;
+          vehiclePoses_data[i].pose.x = new_pose.x();
+          vehiclePoses_data[i].pose.y = new_pose.y();
+          vehiclePoses_data[i].pose.yaw = new_yaw;
+        }
+      
+        // Find index of vehicle in vehicle_ids and choose goal_pose by this index
+        vector<uint8_t>::iterator it = find(vehicle_ids.begin(), vehicle_ids.end(), ego_vehicle_id);
+        int index = distance(vehicle_ids.begin(), it);
           
-          int new_id;
-          Pose2D new_pose;
-
-                  
-          for(auto i = ips_sample.begin(); i != ips_sample.end(); i++){
-            auto data = i->second;
-            //new_id = data.vehicle_id();
-            //new_pose = data.pose();
-            help_vector.emplace_back(data.vehicle_id(), data.pose());
-          }
-
-          for(int i = 0; i < vehicle_ids.size(); i++){
-            new_pose = help_vector[i].second;
-            new_id = help_vector[i].first;
-
-            // conversion from rad[-pi,pi] to deg [0, 4pi] (+360° used to get only positive angles)
-            double new_yaw = 360 + new_pose.yaw()*180/M_PI; 
-            vehiclePoses_data[i].vehicle_id = new_id;
-            vehiclePoses_data[i].pose.x = new_pose.x();
-            vehiclePoses_data[i].pose.y = new_pose.y();
-            vehiclePoses_data[i].pose.yaw = new_yaw;
-          }
-          
-        vehiclePoses_size[1] = 1;
-        double speed = 1.0;
-             
         mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
-                            vehiclePoses_size, &goal_poses[0], vehicle_id, speed,
+                            vehiclePoses_size, &goal_poses[index], ego_vehicle_id, speed,
                             generated_trajectory, &is_path_valid);
         
         auto len = *(generated_trajectory).size();
-        
+        /*
         for (int i = 0; i < len; i++) {
           std::cout << " t: " << generated_trajectory[i].t << " px: " << generated_trajectory[i].px << " py: " << generated_trajectory[i].py << " vx: " << 
                     generated_trajectory[i].vx << " vy: " << generated_trajectory[i].vy << std::endl;
         }
+        */
         std::cout << "path validity: " << (is_path_valid == 1) << std::endl;
         
+        // If calculated trajectory is valid, turn into DDS formatted vector of trajectory points
         if(is_path_valid){
-          
+
           for (size_t i = 0; i < len; ++i)
           {
             TrajectoryPoint trajectory_point;
@@ -253,34 +290,35 @@ int main(int argc, char *argv[])
 
           invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
           std::cout << "invalid after: " << invalid_after_stamp << std::endl;
-          computed = true;
+          trajectory_is_active = true;
+          active_vehicle_ids.erase(active_vehicle_ids.begin());
+
+        }else{
+          trajectory_is_active = false;
+          pending_vehicle_ids.push_back(active_vehicle_ids[0]);
+          active_vehicle_ids.erase(active_vehicle_ids.begin());
         }
+      }
   }
 
-    if(is_path_valid && computed && t_now < invalid_after_stamp){
-            std::cout << "sending trajectory" << std::endl;
-            // Send the current trajectory
-            rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
-            VehicleCommandTrajectory vehicle_command_trajectory;
-            //vehicle_command_trajectory.vehicle_id(vehicle_ids.at(0));
-            vehicle_command_trajectory.vehicle_id(vehicle_id);
-            vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
-            vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-            vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
-            writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
 
-    } else {
-      std::cout << "invalid after stamp: " << invalid_after_stamp << std::endl;
-      std::cout << "t_now: " << t_now << std::endl;
-      std::cout << "stopping timer" << std::endl;
-      timer->stop();
-    }
-
-
+    if(trajectory_is_active){
+      std::cout << "sending trajectory" << std::endl;
+      // Send the current trajectory
+      rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
+      VehicleCommandTrajectory vehicle_command_trajectory;
+      vehicle_command_trajectory.vehicle_id(ego_vehicle_id);
+      vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
+      vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
+      vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
+      writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
+    } 
+  
+    
   });
-
+  std::cout << "Finished" << std::endl;
   // Terminate the application.
   // You do not need to do this more than one time.
-  mgen::planTrajectory_terminate();
+  //mgen::planTrajectory_terminate();
   return 0;
 }
