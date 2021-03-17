@@ -28,21 +28,29 @@
 #include <iostream>
 #include "cpm/Parameter.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/TimeMeasurement.hpp"
+
+/**
+ * \file Controller.cxx
+ * \ingroup vehicle
+ */
 
 using namespace std::placeholders;
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
-:
-mpcController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
+:mpcController(_vehicle_id, std::bind(&Controller::get_stop_signals, this, _1, _2))
+,pathTrackingController(_vehicle_id)
 ,m_get_time(_get_time)
 ,topic_vehicleCommandDirect(cpm::VehicleIDFilteredTopic<VehicleCommandDirect>(cpm::get_topic<VehicleCommandDirect>("vehicleCommandDirect"), _vehicle_id))
 ,topic_vehicleCommandSpeedCurvature(cpm::VehicleIDFilteredTopic<VehicleCommandSpeedCurvature>(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"), _vehicle_id))
 ,topic_vehicleCommandTrajectory(cpm::VehicleIDFilteredTopic<VehicleCommandTrajectory>(cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"), _vehicle_id))
+,topic_vehicleCommandPathTracking(cpm::VehicleIDFilteredTopic<VehicleCommandPathTracking>(cpm::get_topic<VehicleCommandPathTracking>("vehicleCommandPathTracking"), _vehicle_id))
 ,vehicle_id(_vehicle_id)
 {
     reader_CommandDirect = std::unique_ptr<cpm::Reader<VehicleCommandDirect>>(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature = std::unique_ptr<cpm::Reader<VehicleCommandSpeedCurvature>>(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
     reader_CommandTrajectory = std::unique_ptr<cpm::Reader<VehicleCommandTrajectory>>(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
+    reader_CommandPathTracking = std::unique_ptr<cpm::Reader<VehicleCommandPathTracking>>(new cpm::Reader<VehicleCommandPathTracking>(topic_vehicleCommandPathTracking));
 }
 
 
@@ -65,9 +73,13 @@ void Controller::receive_commands(uint64_t t_now)
     VehicleCommandTrajectory sample_CommandTrajectory;
     uint64_t sample_CommandTrajectory_age;
 
+    VehicleCommandPathTracking sample_CommandPathTracking;
+    uint64_t sample_CommandPathTracking_age;
+
     reader_CommandDirect->get_sample(t_now, sample_CommandDirect, sample_CommandDirect_age);
     reader_CommandSpeedCurvature->get_sample(t_now, sample_CommandSpeedCurvature, sample_CommandSpeedCurvature_age);
     reader_CommandTrajectory->get_sample(t_now, sample_CommandTrajectory, sample_CommandTrajectory_age);
+    reader_CommandPathTracking->get_sample(t_now, sample_CommandPathTracking, sample_CommandPathTracking_age);
 
     if(sample_CommandDirect_age < command_timeout)
     {
@@ -108,6 +120,19 @@ void Controller::receive_commands(uint64_t t_now)
             sample_CommandTrajectory.header().valid_after_stamp().nanoseconds()
         );
     }
+    else if (sample_CommandPathTracking_age < command_timeout)
+    {
+        m_vehicleCommandPathTracking = sample_CommandPathTracking;  
+        state = ControllerState::PathTracking;
+
+        //Evaluation: Log received timestamp
+        cpm::Logging::Instance().write(
+            3,
+            "Controller: Read PathTracking message. "
+            "Valid after %llu",
+            sample_CommandPathTracking.header().valid_after_stamp().nanoseconds()
+        );
+    }
     // no new commands received
     else if (state != ControllerState::Stop)
     {
@@ -141,7 +166,11 @@ double Controller::speed_controller(const double speed_measured, const double sp
     return motor_throttle;
 }
 
-
+/**
+ * \brief TODO
+ * \param curvature TODO
+ * \ingroup vehicle
+ */
 double steering_curvature_calibration(double curvature) 
 {
     // steady-state curve, from curve fitting
@@ -271,6 +300,11 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
     }
 }
 
+/**
+ * \brief Return square of the given parameter
+ * \param x A number
+ * \ingroup vehicle
+ */
 static inline double square(double x) {return x*x;}
 
 void Controller::trajectory_tracking_statistics_update(uint64_t t_now)
@@ -410,6 +444,23 @@ void Controller::get_control_signals(uint64_t t_now, double &out_motor_throttle,
         }
         break;
 
+        case ControllerState::PathTracking:
+        {
+            std::lock_guard<std::mutex> lock(command_receive_mutex);
+
+            // Speed: PID
+            const double speed_target   = m_vehicleCommandPathTracking.speed();
+            const double speed_measured = m_vehicleState.speed();
+            motor_throttle = speed_controller(speed_measured, speed_target);
+
+            // Steering: Stanley
+            steering_servo = pathTrackingController.control_steering_servo(
+                m_vehicleState,
+                m_vehicleCommandPathTracking
+            );
+        }
+        break;
+
         default: // Direct
         {
             motor_throttle = m_vehicleCommandDirect.motor_throttle();
@@ -449,9 +500,12 @@ void Controller::reset()
 {
     std::lock_guard<std::mutex> lock(command_receive_mutex);
 
+    cpm::TimeMeasurement::Instance().start("reset_reader");
     reader_CommandDirect.reset(new cpm::Reader<VehicleCommandDirect>(topic_vehicleCommandDirect));
     reader_CommandSpeedCurvature.reset(new cpm::Reader<VehicleCommandSpeedCurvature>(topic_vehicleCommandSpeedCurvature));
+    reader_CommandPathTracking.reset(new cpm::Reader<VehicleCommandPathTracking>(topic_vehicleCommandPathTracking));
     reader_CommandTrajectory.reset(new cpm::Reader<VehicleCommandTrajectory>(topic_vehicleCommandTrajectory));
+    cpm::TimeMeasurement::Instance().stop("reset_reader");
 
     //Set current state to stop until new commands are received
     state = ControllerState::Stop;

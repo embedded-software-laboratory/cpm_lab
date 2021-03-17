@@ -45,9 +45,11 @@
 #include "Communication.hpp"
 
 /**
+ * \test Tests communication from simulated vehicle to simulated middleware
+ * 
  * Tests if data sent by a virtual vehicle is received by a fake middleware, therefore if Communication receives the vehicle data - tests getLatestVehicleMessage
+ * \ingroup middleware
  */
-
 TEST_CASE( "VehicleToMiddlewareCommunication" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
@@ -61,6 +63,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         int hlcDomainNumber = 1; 
         std::string vehicleStateListTopicName = "vehicleStateList"; 
         std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+        std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
@@ -81,6 +84,7 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
             hlcDomainNumber,
             vehicleStateListTopicName,
             vehicleTrajectoryTopicName,
+            vehiclePathTrackingTopicName,
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
             timer,

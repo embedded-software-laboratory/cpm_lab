@@ -26,26 +26,29 @@
 
 #pragma once
 
-/**
- * \class Writer.hpp
- * \brief Creates a DDS Writer that can be used for writing / publishing messages
- * This encapsulation allows for changes e.g. in the participant or QoS without 
- * the need to change the implementation across the whole project
- */
-
 #include <dds/pub/ddspub.hpp>
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
+#include <dds/core/QosProvider.hpp>
+#include <dds/dds.hpp>
+#include <dds/core/ddscore.hpp>
+
+// #include <experimental/filesystem>
+
 namespace cpm
 {
     /**
-     * \brief Class Writer
-     * Use this to get a simple writer with a write() function for writing messages
+     * \class Writer
+     * \brief Creates a DDS Writer that can be used for writing / publishing messages
+     * This encapsulation allows for changes e.g. in the participant or QoS without 
+     * the need to change the implementation across the whole project
+     * \ingroup cpmlib
      */
     template<typename T>
     class Writer
     {
+        //! Internal DDS Writer to be abstracted
         dds::pub::DataWriter<T> dds_writer;
 
         Writer(const Writer&) = delete;
@@ -99,6 +102,19 @@ namespace cpm
         }
 
         /**
+         * \brief Constructor for a writer which is communicating within the ParticipantSingleton
+         * Allows to set the topic name and some QoS settings
+         * \param topic Name of the topic to write in
+         * \param qos_xml_path Path for setting additional QoS
+         * \param library The loaded library to use
+         */
+        Writer(std::string topic, std::string qos_xml_path, std::string library)
+        :dds_writer(dds::pub::Publisher(ParticipantSingleton::Instance()), cpm::get_topic<T>(topic), dds::core::QosProvider(qos_xml_path, library).datawriter_qos())
+        { 
+        
+        }
+
+        /**
          * \brief Constructor for a writer that communicates within another domain
          * Allows to set the topic name and some QoS settings
          * \param _participant The domain (participant) in which to write
@@ -119,6 +135,10 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Send a message in the DDS network using the writer
+         * \param msg The message to send
+         */
         void write(T msg)
         {
             dds_writer.write(msg);

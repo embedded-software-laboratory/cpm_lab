@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Position.hpp"
 
+/**
+ * \file Position.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Position::Position(const xmlpp::Node* node)
 {
     //Check if node is of type position
@@ -346,4 +351,55 @@ const std::vector<Polygon>& Position::get_polygons() const
 const std::vector<Rectangle>& Position::get_rectangles() const
 {
     return rectangles;
+}
+
+CommonroadDDSPositionInterval Position::to_dds_position_interval()
+{
+    //Throw error if conversion is invalid because of position type
+    if (is_exact())
+    {
+        throw std::runtime_error("Position cannot be translated to DDS Interval, is exact");
+    }
+
+    CommonroadDDSPositionInterval position_interval;
+
+    std::vector<CommonroadDDSCircle> vector_circles;
+    std::vector<CommonroadDDSPolygon> vector_polygons;
+    std::vector<CommonroadDDSRectangle> vector_rectangles;
+    std::vector<int32_t> vector_lanelet_refs;
+
+    for (auto& circle : circles)
+    {
+        vector_circles.push_back(circle.to_dds_msg());
+    }
+    for (auto& polygon : polygons)
+    {
+        vector_polygons.push_back(polygon.to_dds_msg());
+    }
+    for (auto& rectangle : rectangles)
+    {
+        vector_rectangles.push_back(rectangle.to_dds_msg());
+    }
+    for (auto& lanelet_ref : lanelet_refs)
+    {
+        vector_lanelet_refs.push_back(static_cast<int32_t>(lanelet_ref));
+    }
+
+    position_interval.circles(rti::core::vector<CommonroadDDSCircle>(vector_circles));
+    position_interval.polygons(rti::core::vector<CommonroadDDSPolygon>(vector_polygons));
+    position_interval.rectangles(rti::core::vector<CommonroadDDSRectangle>(vector_rectangles));
+    position_interval.lanelet_refs(rti::core::vector<int32_t>(vector_lanelet_refs));
+
+    return position_interval;
+}
+
+CommonroadDDSPoint Position::to_dds_point()
+{
+    //Throw error if conversion is invalid because of position type
+    if (!is_exact())
+    {
+        throw std::runtime_error("Position cannot be translated to DDS Point, is interval");
+    }
+
+    return point->to_dds_msg();
 }

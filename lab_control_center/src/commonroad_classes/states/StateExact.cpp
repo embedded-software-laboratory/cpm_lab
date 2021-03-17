@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/StateExact.hpp"
 
+/**
+ * \file StateExact.cpp
+ * \ingroup lcc_commonroad
+ */
+
 StateExact::StateExact(const xmlpp::Node* node)
 {
     //2018 and 2020 specs are the same

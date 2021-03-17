@@ -33,6 +33,11 @@
 #include <unistd.h>
 #include <cmath>
 
+/**
+ * \file TimerSimulated.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
 

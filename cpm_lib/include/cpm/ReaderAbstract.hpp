@@ -26,13 +26,6 @@
 
 #pragma once
 
-/**
- * \class ReaderAbstract.hpp
- * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
- * Abstraction from different DDS Reader implementations
- * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
- */
-
 #include <dds/sub/ddssub.hpp>
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -40,12 +33,16 @@
 namespace cpm
 {
     /**
-     * \brief Class ReaderAbstract
-     * Use this to get a simple reader with a take() function for reading received messages whenever you want, without considering time stamps etc
+     * \class ReaderAbstract
+     * \brief Creates a DDS Reader that provides the simple take() function for getting all samples received after the last call of "take()"
+     * Abstraction from different DDS Reader implementations
+     * Difference to cpm::Reader: That one is supposed to give the latest sample w.r.t. timing information in the header. ReaderAbstract works more general than that.
+     * \ingroup cpmlib
      */
     template<typename T>
     class ReaderAbstract
     {
+        //! Internal DDS reader that is abstracted by this class
         dds::sub::DataReader<T> dds_reader;
 
         ReaderAbstract(const ReaderAbstract&) = delete;
@@ -55,6 +52,9 @@ namespace cpm
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
+         * \param is_reliable Set the QoS to best effort / reliable
+         * \param history_keep_all Set the QoS to keep the whole history / only the last message
+         * \param is_transient_local Set the QoS to (not) be transient local
          */
         dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool history_keep_all, bool is_transient_local)
         {
@@ -119,6 +119,9 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Get the received messages
+         */
         std::vector<T> take()
         {
             auto samples = dds_reader.take();
@@ -138,7 +141,6 @@ namespace cpm
         /**
          * \brief Returns # of matched writers, needs template parameter for topic type
          */
-        template<typename MessageType>
         size_t matched_publications_size()
         {
             auto matched_pub = dds::sub::matched_publications(dds_reader);

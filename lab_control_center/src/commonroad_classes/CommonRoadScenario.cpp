@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
+/**
+ * \file CommonRoadScenario.cpp
+ * \ingroup lcc_commonroad
+ */
+
 CommonRoadScenario::CommonRoadScenario()
 {
     //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
@@ -120,6 +125,19 @@ void CommonRoadScenario::register_obstacle_aggregator(std::function<void()> _res
 
 void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordinates)
 {
+    //We do not want to load a file if a file is already currently being loaded
+    //In this case: Abort
+    if (file_is_loading.exchange(true))
+    {
+        //File is currently loading, cancel
+        std::cout << "Cancelled" << std::endl;
+        return;
+    }
+    //Else: File_is_loading has been set to true with this operation as well, so other load_file calls
+    //that got to the if(...) after the atomic operation are stopped
+
+    //This mutex exists for other operations than loading a file
+    //While a file loads, these operations either wait or abort (with try_lock)
     std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
     //Delete all old data
@@ -134,7 +152,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         //Ignore whitespaces (see http://xmlsoft.org/html/libxml-parser.html#xmlParserOption)
         parser.set_parser_options(256);
         parser.parse_file(xml_filepath);
-        if(!parser) std::cerr << "Cannot parse file!" << std::endl;
+        if(!parser) {
+            std::cerr << "Cannot parse file!" << std::endl;
+            LCCErrorLogger::Instance().log_error("CommonRoadScenario: Cannot parse file!");
+        }
 
         //Get parent node
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
@@ -195,6 +216,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     {
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
+        LCCErrorLogger::Instance().log_error("CommonRoadScenario: All relevant data fields are empty (except for version / author / affiliation)");
     }
 
     lock.unlock();
@@ -236,6 +258,9 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     //Set up / load (new) data entry for transformation profile
     yaml_transformation_storage.set_scenario_name(xml_filepath);
     //Change regarding center_coordinate is not stored in the transform profile (it is either done by default at loading or disabled, so it must not be stored as well)
+
+    //Allow the load_file function to be called again
+    file_is_loading.store(false);
 }
 
 void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
@@ -727,6 +752,8 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
         planning_problem.second.transform_timing(time_scale);
     }
 
+    //Time values themselves will currently still be defined w.r.t. time steps, so they need to be multiplied with time step size to obtain the actual time value
+
     //Update database entry for transformation
     yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
 
@@ -1072,5 +1099,29 @@ std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
         error_stream << "Lanelet reference not found in draw_lanelet_ref! Did you set the right ref in the scenario?";
         LCCErrorLogger::Instance().log_error(error_stream.str());
         return {0, 0};
+    }
+}
+
+/*****************************************************************************************/
+/******************                 DDS Functions               **************************/
+/*****************************************************************************************/
+
+void CommonRoadScenario::send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems)
+{
+    assert(writer_planning_problems);
+    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    //Due to the size of each planning problem (contains again list of planning problems which contains lists of goal states)
+    //we had to break things apart in order for DDS messages to still work without causing errors
+    //We thus send each goal state individually, and augment them with information about the ID of the problem they are associated with,
+    //the position in the list of planning problems within that problem, and the position in the list of goal states within the inner
+    //planning problems
+    for (auto& entry : planning_problems)
+    {
+        for (auto& goal_state : entry.second.get_dds_goal_states(time_step_size))
+        {
+            goal_state.planning_problem_id(static_cast<int32_t>(entry.first));
+            writer_planning_problems->write(goal_state);
+        }   
     }
 }

@@ -45,9 +45,12 @@
 #include "Communication.hpp"
 
 /**
- * \brief This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \test Tests if vehicle messages are received
+ * 
+ * This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) 
+ * [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \ingroup middleware
  */
-
 TEST_CASE( "VehicleCommunication_Read" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
@@ -55,6 +58,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     int hlcDomainNumber = 1; 
     std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+    std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     std::vector<uint8_t> vehicle_ids = { 0, 1 };
@@ -76,6 +80,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,

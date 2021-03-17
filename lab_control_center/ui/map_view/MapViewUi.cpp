@@ -28,9 +28,20 @@
 #include <cassert>
 #include <glibmm/main.h>
 #include <libxml++-2.6/libxml++/libxml++.h>
+#include <math.h>
 
 #include "TrajectoryInterpolation.hpp"
 #include "TrajectoryInterpolation.cxx"
+
+#include "PathInterpolation.hpp"
+#include "PathInterpolation.cxx"
+
+#include <stdio.h>
+
+/**
+ * \file MapViewUi.cpp
+ * \ingroup lcc_ui
+ */
 
 using namespace std::placeholders; //For std::bind
 
@@ -39,6 +50,7 @@ MapViewUi::MapViewUi(
     shared_ptr<CommonRoadScenario> _commonroad_scenario,
     std::function<VehicleData()> get_vehicle_data_callback,
     std::function<VehicleTrajectories()> _get_vehicle_trajectory_command_callback,
+    std::function<VehiclePathTracking()> _get_vehicle_path_tracking_command_callback,
     std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
     std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
 )
@@ -46,9 +58,11 @@ MapViewUi::MapViewUi(
 ,commonroad_scenario(_commonroad_scenario)
 ,get_vehicle_data(get_vehicle_data_callback)
 ,get_vehicle_trajectory_command_callback(_get_vehicle_trajectory_command_callback)
+,get_vehicle_path_tracking_command_callback(_get_vehicle_path_tracking_command_callback)
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 ,get_obstacle_data(_get_obstacle_data)
 {
+    //Create a drawing area to draw on (for showing vehicles, trajectories, obstacles etc.)
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
     drawingArea->set_double_buffered();
     drawingArea->show();
@@ -57,6 +71,8 @@ MapViewUi::MapViewUi(
     image_car = Cairo::ImageSurface::create_from_png("ui/map_view/car_small.png");
     image_object = Cairo::ImageSurface::create_from_png("ui/map_view/object_small.png");
     image_map = Cairo::ImageSurface::create_from_png("ui/map_view/map.png");
+    //image_arrow = Cairo::ImageSurface::create_from_png("ui/map_view/arrow.png");
+    image_labcam = Cairo::ImageSurface::create_from_png("ui/map_view/labcam.png");
     
     update_dispatcher.connect([&](){ 
         //Pan depending on key press
@@ -195,11 +211,16 @@ MapViewUi::MapViewUi(
     });
 
     drawingArea->signal_motion_notify_event().connect([&](GdkEventMotion* event) {
-        mouse_x = (event->x - pan_x) / zoom;
-        mouse_y = -(event->y - pan_y) / zoom;
+        // Transform mouse-event from canvas coordinates into world coordinates by reversing all steps done while drawing (compare (*))
+        // Rotation around z-axis corresponds to the following matrix multiplication [x'] = [cos(a) -sin(a)] * [x]
+        //                                                                           [y']   [sin(a)  cos(a)]   [y]
+        double event_x =  ((event->x - pan_x) / zoom) - rotation_fixpoint_x;
+        double event_y = -((event->y - pan_y) / zoom) - rotation_fixpoint_y;
+        mouse_x =  (cos(-rotation)*event_x - sin(-rotation)*event_y) + rotation_fixpoint_x;
+        mouse_y =  (sin(-rotation)*event_x + cos(-rotation)*event_y) + rotation_fixpoint_y;
+
 
         vehicle_id_in_focus = find_vehicle_id_in_focus();
-
 
         // if in path drawing mode
         if(mouse_left_button && !path_painting_in_progress.empty())
@@ -296,9 +317,15 @@ int MapViewUi::find_vehicle_id_in_focus()
 void MapViewUi::draw(const DrawingContext& ctx)
 {
     ctx->save();
-    {
+    {   
+        // transforming (*)
         ctx->translate(pan_x, pan_y);
         ctx->scale(zoom, -zoom);
+        
+        // rotate mapview without changing the center of the map
+        ctx->translate(rotation_fixpoint_x,rotation_fixpoint_y);
+        ctx->rotate(rotation);
+        ctx->translate(-rotation_fixpoint_x,-rotation_fixpoint_y);       
 
         //draw_grid(ctx);
         //Draw map
@@ -321,7 +348,11 @@ void MapViewUi::draw(const DrawingContext& ctx)
 
         draw_lab_boundaries(ctx);
 
+        draw_labcam(ctx);
+
         draw_received_trajectory_commands(ctx);
+
+        draw_received_path_tracking_commands(ctx);
 
         for(const auto& entry : vehicle_data) {
             //const auto vehicle_id = entry.first;
@@ -475,6 +506,77 @@ void MapViewUi::draw_received_trajectory_commands(const DrawingContext& ctx)
     ctx->restore();
 }
 
+void MapViewUi::draw_received_path_tracking_commands(const DrawingContext& ctx)
+{
+    VehiclePathTracking vehiclePathTracking = get_vehicle_path_tracking_command_callback();
+
+    ctx->save();
+    for(const auto& entry : vehiclePathTracking) 
+    {
+        const auto& command = entry.second;
+
+        rti::core::vector<PathPoint> path = command.path();
+        
+        if(path.size() < 2 ) continue;
+
+        ctx->set_line_width(0.01);
+
+        // Draw trajectory interpolation - use other color for already invalid parts (timestamp older than current point in time)
+        // start from 1 because of i-1
+        for (size_t i = 1; i < path.size(); ++i)
+        {
+            const int n_interp = 20;
+            
+            ctx->begin_new_path();
+            ctx->move_to(path[i-1].pose().x(),
+                         path[i-1].pose().y()
+            );   
+
+            double start = path[i-1].s();
+            double end = path[i].s();
+            double ds = (end - start) / n_interp;
+            double s_query = start;
+
+            for (int j = 0; j < n_interp; j++)
+            {
+                s_query += ds;
+
+                // calculate distance to reference path
+                PathInterpolation path_interpolation(
+                    s_query, path[i-1], path[i]
+                );
+                
+                ctx->line_to(path_interpolation.position_x,
+                             path_interpolation.position_y
+                );
+
+                ctx->set_source_rgb(0,0.8,0.8);
+
+                ctx->stroke();
+                ctx->move_to(path_interpolation.position_x,
+                             path_interpolation.position_y
+                );
+            }
+        }
+
+        // Draw path points
+        ctx->begin_new_path();
+        for(size_t i = 0; i < path.size(); ++i)
+        {
+            ctx->set_source_rgb(0,0.8,0.8);
+
+            ctx->arc(
+                path[i].pose().x(),
+                path[i].pose().y(),
+                0.02, 0.0, 2 * M_PI
+            );
+            ctx->fill();
+        }
+    }
+
+    ctx->restore();
+}
+
 void MapViewUi::draw_path_painting(const DrawingContext& ctx)
 {
     if(path_painting_in_progress.size() > 1 && path_painting_in_progress_vehicle_id >= 0)
@@ -491,7 +593,14 @@ void MapViewUi::draw_path_painting(const DrawingContext& ctx)
     }
 }
 
-// Determine the offset for alligned string messages drawn draw_received_visualization_command()
+/**
+ * \brief Determine the offset for alligned string messages drawn draw_received_visualization_command()
+ * \param ext TODO
+ * \param anchor TODO
+ * \param offs_x TODO
+ * \param offs_y TODO
+ * \ingroup lcc_ui
+ */
 void get_text_offset(Cairo::TextExtents ext, StringMessageAnchor anchor, double& offs_x, double& offs_y)
 {
     // x offset
@@ -583,6 +692,9 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
         }
         else if (entry.type() == VisualizationType::StringMessage
                  && entry.string_message().size() > 0 && entry.points().size() >= 1) {
+            
+            ctx->save();
+            // ctx->rotate(-rotation);
             //Set font properties
             ctx->set_source_rgb(entry.color().r()/255.0, entry.color().g()/255.0, entry.color().b()/255.0);
             ctx->set_font_size(entry.size());
@@ -591,11 +703,17 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             Cairo::TextExtents ext;
             ctx->get_text_extents(entry.string_message(), ext);
             
-            double text_offset_x, text_offset_y;
-            get_text_offset(ext, entry.string_message_anchor(), text_offset_x, text_offset_y);
-            
+            // Firstly, compute text offset neglecting the current map view rotation.
+            // Secondly, apply rotation matrix to text_offset so that offset is correclty applied dependent on the map view rotation.
+            double text_offset_left, text_offset_right;
+            get_text_offset(ext, entry.string_message_anchor(), text_offset_left, text_offset_right);
+            double text_offset_x = (cos(-rotation)*text_offset_left - sin(-rotation)*text_offset_right);
+            double text_offset_y = (sin(-rotation)*text_offset_left + cos(-rotation)*text_offset_right);
+
+            // Move to the correct position and rotate so that text is shown horizontally
             ctx->move_to(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
+            ctx->rotate(-rotation);
 
             //Flip font
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
@@ -603,10 +721,18 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
 
             //Draw text
             ctx->show_text(entry.string_message().c_str());
+
+            ctx->restore();
         }
     }
 }
 
+/**
+ * \brief Print XML Node content
+ * \param node XML Node 
+ * \param indentation Indentation for printing the XML Node
+ * \ingroup lcc_ui
+ */
 void print_node(const xmlpp::Node* node, unsigned int indentation = 0)
 {
   const Glib::ustring indent(indentation, ' ');
@@ -763,6 +889,22 @@ void MapViewUi::draw_grid(const DrawingContext& ctx)
     ctx->restore();
 }
 
+
+void MapViewUi::draw_labcam(const DrawingContext& ctx)
+{
+    ctx->save();
+    {
+        const double scale = 0.1/image_labcam->get_width();
+        ctx->translate(-0.1,1.95);
+        ctx->rotate(M_PI / 2);
+        ctx->scale(scale, scale);
+        ctx->set_source(image_labcam,0,0);
+        ctx->paint();
+    }
+    ctx->restore();
+}
+
+
 void MapViewUi::draw_vehicle_past_trajectory(const DrawingContext& ctx, const map<string, shared_ptr<TimeSeries>>& vehicle_timeseries)
 {
     vector<double> trajectory_x = vehicle_timeseries.at("pose_x")->get_last_n_values(100);
@@ -809,7 +951,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
         {
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
@@ -817,11 +959,11 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
 
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(1,1,1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
 
             ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
             ctx->set_source_rgb(1,.1,.1);
-            ctx->show_text(to_string(vehicle_id));
+            ctx->show_text(to_string(static_cast<int>(vehicle_id)));
         }
         ctx->restore();
 
@@ -859,7 +1001,8 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
     {
         if (polygon.points().size() < 3)
         {
-            std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            std::cerr << "Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+            LCCErrorLogger::Instance().log_error("Points missing in translated polygon (at least 3 required) - will not be drawn");
         }
         else
         {
@@ -1075,7 +1218,7 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 
             ctx->translate(-0.03, 0);
             const double scale = 0.01;
-            ctx->rotate(-yaw);
+            ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
@@ -1098,4 +1241,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
 Gtk::DrawingArea* MapViewUi::get_parent()
 {
     return drawingArea;
+}
+
+
+void MapViewUi::rotate_by(double rotation) {
+    this->rotation = std::fmod(this->rotation + (rotation * M_PI / 180), 2*M_PI);
 }

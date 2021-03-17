@@ -25,9 +25,10 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
- * \brief This class includes the main function and is mainly responsible for the initialization of the middleware
+ * \file main.cpp
+ * \brief This file includes the middleware's main function and is mainly responsible for the initialization of the middleware
  * Params etc are documented in the cpm lab documentation
+ * \ingroup middleware
  */
 
 #include <memory>
@@ -45,6 +46,13 @@
 
 #include "Communication.hpp"
 
+/**
+ * \brief The Middleware's main function
+ * \ingroup middleware
+ * 
+ * \param argc Command line param count
+ * \param argv Command line params
+ */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);
@@ -79,6 +87,7 @@ int main (int argc, char *argv[]) {
     const std::string logTopicName = "log";
     const std::string vehicleStateListTopicName = "vehicleStateList"; 
     const std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory";
+    const std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking";
     const std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
@@ -147,6 +156,7 @@ int main (int argc, char *argv[]) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,

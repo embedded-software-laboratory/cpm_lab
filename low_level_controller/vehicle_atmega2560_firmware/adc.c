@@ -24,13 +24,14 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * adc.c
+/**
+ * \file adc.c
  *
- * Created: 26.09.2018 12:31:36
- *  Author: maczijewski
+ * \date Created: 26.09.2018 12:31:36
+ * \author maczijewski
+ * 
+ * \ingroup low_level_controller
  */ 
-
 
 #include "adc.h"
 #include "util.h"

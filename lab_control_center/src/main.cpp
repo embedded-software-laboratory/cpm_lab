@@ -58,6 +58,11 @@
 
 #include "commonroad_classes/CommonRoadScenario.hpp"
 
+#include "cpm/Writer.hpp"
+#include "CommonroadDDSGoalState.hpp"
+
+#include "ProgramExecutor.hpp"
+
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include <functional>
@@ -70,23 +75,57 @@
 
 using namespace std::placeholders;
 
-//We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+/**
+ * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+ * (call on_lcc_close)
+ * \ingroup lcc
+ */
 std::shared_ptr<SetupViewUI> setupViewUi;
 
+/**
+ * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+ * to execute command line commands
+ * \ingroup lcc
+ */
+std::shared_ptr<ProgramExecutor> program_executor;
+
+/**
+ * \brief Function to deploy cloud discovery (to help participants discover each other)
+ * Will crash on purpose if program_executor is not set (we need this function to work)
+ * \ingroup lcc
+ */
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
-    system(command.c_str());
+    program_executor->execute_command(command.c_str());
 }
 
+/**
+ * \brief Function to kill cloud discovery
+ * \ingroup lcc
+ */
 void kill_cloud_discovery() {
     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
-    system(command.c_str());
+    if (program_executor) program_executor->execute_command(command.c_str());
+}
+
+/**
+ * \brief Sometimes, a tmux session can stay open if the LCC crashed. 
+ * To make sure that no session is left over / everything is "clean" 
+ * when a new LCC gets started, kill all old sessions
+ */
+void kill_all_tmux_sessions() {
+    std::string command = "tmux kill-server >>/dev/null 2>>/dev/null";
+    if (program_executor) program_executor->execute_command(command.c_str());
 }
 
 //Suppress warning for unused parameter (s)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+/**
+ * \brief Interrup handler of the LCC
+ * \ingroup lcc
+ */
 void interrupt_handler(int s) {
     kill_cloud_discovery();
 
@@ -101,6 +140,10 @@ void interrupt_handler(int s) {
 
 #pragma GCC diagnostic pop
 
+/**
+ * \brief Exit handler of the LCC
+ * \ingroup lcc
+ */
 void exit_handler() {
     kill_cloud_discovery();
 
@@ -111,9 +154,55 @@ void exit_handler() {
     }
 }
 
+/**
+ * \brief Main function of the LCC.
+ * Command line arguments:
+ * 
+ * --dds_domain
+ * --logging_id
+ * --dds_initial_peer
+ * --simulated_time
+ * --number_of_vehicles (default 20, set how many vehicles can max. be selected in the UI)
+ * --config_file (default parameters.yaml)
+ * \ingroup lcc
+ */
 int main(int argc, char *argv[])
 {
-    //Must be done first, s.t. no class using the logger produces an error
+    //-----------------------------------------------------------------------------------------------------
+    //It is vital to call this function before any threads or objects have been set up that are not
+    //required in child processes
+    //DO NOT move this further done unless you know what you do! Especially DO NOT put this below the cpm
+    //initialization, unless you want to risk memory leaks
+    std::string exec_path = argv[0];
+    
+    //Get absolute path to main.cpp 
+    auto pos = exec_path.rfind("/");
+    std::string main_cpp_path = "../src/main.cpp"; //Does not seem to work, thus we obtain the absolute path next
+    if (pos != std::string::npos)
+    {
+        auto build_path = exec_path.substr(0, pos);
+        pos = build_path.rfind("/");
+        if (pos != std::string::npos)
+        {
+            std::stringstream main_cpp_stream;
+            main_cpp_stream << build_path.substr(0, pos) << "/src/main.cpp";
+            main_cpp_path = main_cpp_stream.str();
+        }
+    }
+
+    program_executor = std::make_shared<ProgramExecutor>();
+    bool program_execution_possible = program_executor->setup_child_process(exec_path, main_cpp_path);
+    if (! program_execution_possible)
+    {
+        std::cerr << "Killing LCC because no child process for program execution could be created!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    //-----------------------------------------------------------------------------------------------------
+
+    //Kill remaining tmux sessions
+    kill_all_tmux_sessions();
+
+    //Must be done as soon as possible, s.t. no class using the logger produces an error
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("lab_control_center");
     cpm::RTTTool::Instance().activate("lab_control_center");
@@ -167,15 +256,12 @@ int main(int argc, char *argv[])
     auto obstacle_simulation_manager = std::make_shared<ObstacleSimulationManager>(commonroad_scenario, use_simulated_time);
 
     auto timerTrigger = make_shared<TimerTrigger>(use_simulated_time);
-    auto timerViewUi = make_shared<TimerViewUI>(
-        timerTrigger,
-        obstacle_simulation_manager
-    );
+    auto timerViewUi = make_shared<TimerViewUI>(timerTrigger);
     auto loggerViewUi = make_shared<LoggerViewUI>(logStorage);
     auto vehicleManualControl = make_shared<VehicleManualControl>();
     auto vehicleAutomatedControl = make_shared<VehicleAutomatedControl>();
     auto trajectoryCommand = make_shared<TrajectoryCommand>();
-    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(30); //LISTEN FOR VEHICLE DATA UP TO ID 30
+    auto timeSeriesAggregator = make_shared<TimeSeriesAggregator>(255); //LISTEN FOR VEHICLE DATA UP TO ID 255 (for Commonroad Obstacles; is max. uint8_t value)
     auto obstacleAggregator = make_shared<ObstacleAggregator>(commonroad_scenario); //Use scenario to register reset callback if scenario is reloaded
     auto hlcReadyAggregator = make_shared<HLCReadyAggregator>();
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
@@ -185,13 +271,15 @@ int main(int argc, char *argv[])
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
         cmd_dds_initial_peer, 
-        [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);
-    });
+        [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);},
+        program_executor
+    );
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         commonroad_scenario,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [=](){return timeSeriesAggregator->get_vehicle_path_tracking_commands();},
         [=](){return obstacleAggregator->get_obstacle_data();}, 
         [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
@@ -214,14 +302,24 @@ int main(int argc, char *argv[])
         commonroad_scenario,
         obstacle_simulation_manager 
     );
+
+    //Writer to send planning problems translated from commonroad to HLCs
+    //As it is transient local, we need to reset the writer before each simulation start
+    auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
+
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 
         hlcReadyAggregator, 
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){
+        [=](){return monitoringUi->reset_vehicle_view();},
+        [&](){
             //Things to do when the simulation is started
+
+            //Reset writer for planning problems (used down below), as it is transient local and we do not want to pollute the net with outdated data
+            writer_planning_problems.reset();
+            writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
 
             //Stop RTT measurement
             rtt_aggregator->stop_measurement();
@@ -238,10 +336,15 @@ int main(int argc, char *argv[])
             //We also reset the log file here - if you want to use it, make sure to rename it before you start a new simulation!
             loggerViewUi->reset();
 
+            //Send commonroad planning problems to the HLCs (we use transient settings, so that the readers do not need to have joined)
+            if(commonroad_scenario) commonroad_scenario->send_planning_problems(writer_planning_problems);
+
+            //Reset preview, must be done before starting the obstacle simulation manager because this stops the manager running for the preview
+            commonroadViewUi->reset_preview();
+
             //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
             obstacle_simulation_manager->stop(); //In case the preview has been used
             obstacle_simulation_manager->start();
-            commonroadViewUi->reset_preview_label();
 
         }, 
         [=](){
@@ -270,6 +373,7 @@ int main(int argc, char *argv[])
         [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
     monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
+    timerViewUi->register_crash_checker(setupViewUi->get_crash_checker());
     auto lccErrorViewUi = make_shared<LCCErrorViewUI>();
     auto tabsViewUi = make_shared<TabsViewUI>(
         setupViewUi, 

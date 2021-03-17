@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <chrono>
 
+/**
+ * \file SetupViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
@@ -37,6 +42,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
+    std::function<void()> _reset_vehicle_view,
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
@@ -49,6 +55,7 @@ SetupViewUI::SetupViewUI
     hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
+    reset_vehicle_view(_reset_vehicle_view),
     on_simulation_start(_on_simulation_start),
     on_simulation_stop(_on_simulation_stop),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
@@ -165,7 +172,7 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     //We use the default config location here
-    script_path->set_text(FileChooserUI::get_last_execution_path());
+    script_path->set_text(FileChooserUI::get_last_execution_path("script"));
 
     simulation_running.store(false);
     
@@ -249,6 +256,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else if (state == VehicleToggle::ToggleState::Off)
     {
         deploy_functions->kill_sim_vehicle(vehicle_id);
+        reset_vehicle_view(); //Remove sim. vehicle entry in map view
     }
     else
     {
@@ -341,16 +349,14 @@ void SetupViewUI::open_file_explorer()
         file_chooser_window = make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter },
+            "script"
         );
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1, 
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create file chooser dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create file chooser dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create file chooser dialog");
     }
     
 }
@@ -394,8 +400,9 @@ void SetupViewUI::ui_dispatch()
         }
     }
 
-    //Kill has a timeout s.t. a kill button can not be "spammed"; grey-out should not be undone though during simulation, because Deploy already has control over when Kill should become sensitive again
-    if (undo_kill_grey_out.exchange(false) && !simulation_running.load())
+    //Kill has a timeout s.t. a kill button can not be "spammed"
+    //But: grey-out should not be undone during remote simulation, because Deploy then already has control over when Kill should become sensitive again
+    if (undo_kill_grey_out.exchange(false) && !(simulation_running.load() && switch_deploy_remote->get_active()))
     {
         button_kill->set_sensitive(true);
     }
@@ -442,8 +449,16 @@ void SetupViewUI::deploy_applications() {
 #ifndef SIMULATION
     if(lab_mode_on && labcam_toggled){
         std::cerr << "RECORDING LABCAM" << std::endl;
-        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
-        labcam->startRecording("/tmp/", ctime(&timenow));
+        // Use current time as file name of the recording
+        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::string file_name = ctime(&timenow);
+
+        // Replace unwanted characters
+        std::replace(file_name.begin(), file_name.end(), ' ', '_');
+        std::replace(file_name.begin(), file_name.end(), '\n', '_');
+
+        deploy_functions->deploy_labcam("/tmp/", file_name);
+        //labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
@@ -480,8 +495,10 @@ void SetupViewUI::deploy_applications() {
         }
     }
 
-    std::experimental::filesystem::path filepath = filepath_str;
-    std::cout << "Path is: " << filepath << " but was: " << script_path->get_text() << std::endl;
+    //Also check if an empty string was passed - in this case, we only want to start the middleware
+    //We only do this in case of local deployment (e.g. for debug purposes of locally running programs) - 
+    //  for remote deployment, we require a valid script to be set
+    bool start_middleware_without_hlc = (filepath_str.size() == 0);
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
     //Remote deployment of scripts on HLCs or local deployment depending on switch state
@@ -528,7 +545,7 @@ void SetupViewUI::deploy_applications() {
             }
 
             both_local_and_remote_deploy.store(true);
-            deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
+            deploy_functions->deploy_separate_local_hlcs(switch_simulated_time->get_active(), local_vehicles, filepath_str, script_params->get_text().c_str());
         }
         //Remember vehicle to HLC mapping
         std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
@@ -537,7 +554,7 @@ void SetupViewUI::deploy_applications() {
             vehicle_to_hlc_map[vehicle_ids.at(i)] = hlc_ids.at(i);
         }
     }
-    else if (file_exists)
+    else if (file_exists || start_middleware_without_hlc)
     {
         deploy_functions->deploy_local_hlc(switch_simulated_time->get_active(), get_vehicle_ids_active(), filepath_str, script_params->get_text().c_str());
     }
@@ -549,7 +566,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(file_exists, remote_hlc_ids, both_local_and_remote_deploy.load(), lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
@@ -607,7 +624,8 @@ void SetupViewUI::kill_deployed_applications() {
 
     // Stop LabCam
 #ifndef SIMULATION
-    labcam->stopRecording();
+    deploy_functions->kill_labcam();
+    //labcam->stopRecording();
 #endif
 
     is_deployed.store(false);
@@ -621,7 +639,7 @@ void SetupViewUI::kill_deployed_applications() {
         //Also kill potential local HLC
         if (both_local_and_remote_deploy.exchange(false))
         {
-            deploy_functions->kill_local_hlc();
+            deploy_functions->kill_separate_local_hlcs();
         }
     }
     else 
@@ -717,6 +735,10 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
     button_deploy->set_sensitive(is_sensitive);
 
+    switch_record_labcam->set_sensitive(is_sensitive);
+    switch_lab_mode->set_sensitive(is_sensitive);
+    switch_diagnosis->set_sensitive(is_sensitive);
+    switch_deploy_remote->set_sensitive(is_sensitive);
     switch_simulated_time->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)
@@ -752,6 +774,8 @@ void SetupViewUI::select_no_vehicles()
             deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
         }
     }
+
+    reset_vehicle_view(); //Remove sim. vehicle entry in map view
 }
 
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

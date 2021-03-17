@@ -26,6 +26,11 @@
 
 #include "PlanningProblem.hpp"
 
+/**
+ * \file PlanningProblem.cpp
+ * \ingroup lcc_commonroad
+ */
+
 PlanningProblem::PlanningProblem(
     const xmlpp::Node* node,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
@@ -45,6 +50,9 @@ PlanningProblem::PlanningProblem(
         std::vector<GoalState> goal_states;
         std::vector<int> goal_state_lines;
 
+        //Get the lanelet ID to tell it to the goal states (to be able to show the user the goal state ID in the UI)
+        auto planning_problem_id = xml_translation::get_attribute_int(node, "id", true).value();
+
         xml_translation::iterate_children(
             node,
             [&] (const xmlpp::Node* child)
@@ -58,7 +66,7 @@ PlanningProblem::PlanningProblem(
             node,
             [&] (const xmlpp::Node* child)
             {
-                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
+                goal_states.push_back(GoalState(child, planning_problem_id, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
                 goal_state_lines.push_back(child->get_line());
             },
             "goalState"
@@ -198,4 +206,22 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
 const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problems() const
 {
     return planning_problems;
+}
+
+std::vector<CommonroadDDSGoalState> PlanningProblem::get_dds_goal_states(double time_step_size)
+{
+    std::vector<CommonroadDDSGoalState> goal_states;
+
+    for (size_t planning_pos = 0; planning_pos < planning_problems.size(); ++planning_pos)
+    {
+        for (size_t goal_pos = 0; goal_pos < planning_problems.at(planning_pos).goal_states.size(); ++ goal_pos)
+        { 
+            auto dds_goal_state = planning_problems.at(planning_pos).goal_states.at(goal_pos).to_dds_msg(time_step_size);
+            dds_goal_state.goal_state_pos(goal_pos);
+            dds_goal_state.planning_problem_pos(planning_pos);
+            goal_states.push_back(dds_goal_state);
+        }
+    }
+
+    return goal_states;
 }

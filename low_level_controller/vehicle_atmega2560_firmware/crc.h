@@ -16,6 +16,13 @@
 #ifndef _crc_h
 #define _crc_h
 
+/**
+ * \file crc.h
+ *
+ * \author Copyright (c) 2000 by Michael Barr
+ * 
+ * \ingroup low_level_controller
+ */ 
 
 #include <stdint.h>
 

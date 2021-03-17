@@ -37,14 +37,18 @@
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "CommonroadDDSGoalState.hpp"
+
 /**
  * \class Interval
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
  * It should also make other classes that use this type more readable.
+ * \ingroup lcc_commonroad
  */
 class Interval : public InterfaceTransform
 {
 private:
+    //! Internal commonroad interval representation
     std::vector<std::pair<double, double>> intervals;
 
 public:
@@ -157,6 +161,9 @@ public:
         return avgs;
     }
 
+    /**
+     * \brief Check if the interval is greater than or equal to zero with all values
+     */
     bool is_greater_zero()
     {
         bool greater_zero = true;
@@ -180,9 +187,10 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
-     * \param translate_x Currently ignored, must be changed if this is used for position values
-     * \param translate_y Currently ignored, must be changed if this is used for position values
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
@@ -194,6 +202,28 @@ public:
                 interval.second *= scale;
             }
         }
+    }
+
+    /**
+     * \brief Translate to DDS
+     * \param ratio Relevant to translate e.g. time information to actual time
+     */
+    CommonroadDDSIntervals to_dds_msg(double ratio = 1.0)
+    {
+        CommonroadDDSIntervals dds_interval;
+        
+        std::vector<CommonroadDDSInterval> vector_intervals;
+        for (auto& interval : intervals)
+        {
+            CommonroadDDSInterval dds_interval;
+            dds_interval.interval_start(interval.first * ratio);
+            dds_interval.interval_end(interval.second * ratio);
+            vector_intervals.push_back(dds_interval);
+        }
+
+        dds_interval.intervals(rti::core::vector<CommonroadDDSInterval>(vector_intervals));
+
+        return dds_interval;
     }
 
     #pragma GCC diagnostic pop

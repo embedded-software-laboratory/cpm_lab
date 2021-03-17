@@ -26,14 +26,17 @@
 
 #include "TimerViewUI.hpp"
 
+/**
+ * \file TimerViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(
-    std::shared_ptr<TimerTrigger> timerTrigger,
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+    std::shared_ptr<TimerTrigger> timerTrigger
     ) :
     timer_trigger(timerTrigger),
-    ui_dispatcher(),
-    obstacle_simulation_manager(_obstacle_simulation_manager)
+    ui_dispatcher()
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -86,8 +89,9 @@ TimerViewUI::~TimerViewUI() {
 }
 
 void TimerViewUI::button_reset_callback() {
-    //Stop obstacle simulation
-    // obstacle_simulation_manager->stop();
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
 
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
@@ -202,9 +206,6 @@ void TimerViewUI::update_ui() {
 }
 
 void TimerViewUI::button_start_callback() {
-    // //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    // obstacle_simulation_manager->start();
-
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
@@ -212,10 +213,11 @@ void TimerViewUI::button_start_callback() {
 }
 
 void TimerViewUI::button_stop_callback() {
-    timer_trigger->send_stop_signal();
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
 
-    //Stop obstacle simulation
-    // obstacle_simulation_manager->stop();
+    timer_trigger->send_stop_signal();
 
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);
@@ -278,4 +280,9 @@ std::string TimerViewUI::get_human_readable_time_diff(uint64_t other_time) {
 
 Gtk::Widget* TimerViewUI::get_parent() {
     return parent;
+}
+
+void TimerViewUI::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
 }

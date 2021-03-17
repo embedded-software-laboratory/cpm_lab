@@ -60,20 +60,25 @@
 
 #include "LCCErrorLogger.hpp"
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#include "cpm/Writer.hpp"
+#include "CommonroadDDSGoalState.hpp"
+
+///////////////////////////////////////////////
 //TODO: Put Enums etc inside class definition??
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///////////////////////////////////////////////
 
 /**
- * \enum ObstacleType
+ * \enum ObstacleRole
  * \brief Obstacle types according to spec, for 2018 specs Obstacle
+ * \ingroup lcc_commonroad
  */
 enum class ObstacleRole {Static, Dynamic};
 
 /**
- * \enum class ScenarioTag
+ * \enum ScenarioTag
  * \brief This enum class is also defined in commonroad and 'categorizes' the scenario type
  * From 2020 specs
+ * \ingroup lcc_commonroad
  */
 enum class ScenarioTag {
     Interstate, Highway, Urban, Comfort, Critical, Evasive, CutIn, IllegalCutIn, Intersection, LaneChange, LaneFollowing, MergingLanes,
@@ -82,30 +87,37 @@ enum class ScenarioTag {
 };
 
 /**
- * \enum Attributes
+ * \enum Attribute
  * \brief Expected attributes of this class according to specs; WARNING: Due to conformance to 2018-specs (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2018b.xsd) some things are redundant
+ * \ingroup lcc_commonroad
  */
 enum class Attribute {CommonRoadVersion, BenchmarkID, Date, Author, Affiliation, Source, TimeStepSize, Tags};
 
 /**
- * \enum Elements
+ * \enum Element
  * \brief Expected elements of this class according to specs
  * Obstacle: From 2018 specs
+ * \ingroup lcc_commonroad
  */
 enum class Element {Location, ScenarioTags, Lanelet, TrafficSign, TrafficLight, Intersection, StaticObstacle, DynamicObstacle, Obstacle, PlanningProblem};
 
 /**
- * \struct Geo Transformation (2020 only)
- * \brief Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ * \struct GeoTransformation
+ * \brief (2020 only) Holds additional location information for class CommonRoadScenario, most important: Scaling + translating the problem
+ * Geo reference was left out, we only deal with additionalTransformation here
+ * \ingroup lcc_commonroad
  */
 struct GeoTransformation 
 {
-    //Geo reference was left out, we only deal with additional transformation here
     //Data from additionalTransformation
+    //! x translation that must be initially applied to the scene
     double x_translation = 0.0;
+    //! y translation that must be initially applied to the scene
     double y_translation = 0.0;
+    //! z rotation that must be initially applied to the scene
     double z_rotation = 0.0;
-    double scaling = 1.0; //Must be > 0
+    //! scaling that must be initially applied to the scene, must be > 0
+    double scaling = 1.0;
 };
 
 /**
@@ -113,16 +125,25 @@ struct GeoTransformation
  * \brief Holds location information for class CommonRoadScenario
  * Mostly relevant for UI, probably irrelevant for HLCs
  * Initial values in case it does not exist
+ * \ingroup lcc_commonroad
  */
 struct Location 
 {
-    std::optional<std::string> country; //outdated 2020 (removed from spec after some time)
-    std::optional<std::string> federal_state; //outdated 2020
+    //! Optional country tag, outdated 2020 (removed from spec after some time)
+    std::optional<std::string> country;
+    //! Optional federal state tag, outdated 2020
+    std::optional<std::string> federal_state; 
+    //! GPS Latitude
     int gps_latitude = -1;
+    //! GPS Longitude
     int gps_longitude = -1;
-    std::optional<int> geo_name_id = -1;  //new 2020 (added to spec after some time)
+    //! Optional Geo Name ID, new 2020 (added to spec after some time)
+    std::optional<int> geo_name_id = -1;
+    //! Optional Zipcode
     std::optional<std::string> zipcode = std::nullopt;
+    //! Optional location name
     std::optional<std::string> name = std::nullopt;
+    //! Optional geo transformation, which gets applied to the translated scenario after translation
     std::optional<GeoTransformation> geo_transformation = std::nullopt;
     //For 2018 versions, this means that country / location information are missing too
 };
@@ -131,38 +152,60 @@ struct Location
  * \class CommonRoadScenario
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a commonroad scenario specified in an XML file, which is loaded once and then replaced by more efficient C++ access methods (instead of parsing the XML over and over again)
+ * \ingroup lcc_commonroad
  */
 class CommonRoadScenario : public InterfaceTransform, public InterfaceDraw
 {
 private:
     //Meta information (only relevant maybe for UI except for time_step_size)
+    //! Author of the scenario, meta information
     std::string author;
+    //! Affiliation of the scenario, meta information
     std::string affiliation;
+    //! Benchmark ID of the scenario, meta information
     std::string benchmark_id;
+    //! Commonroad Version of the scenario (2018, 2020...), meta information
     std::string common_road_version;
+    //! Date of the scenario, meta information
     std::string date;
+    //! Source of the scenario, meta information
     std::string source;
+
+    //! Time step size, gives meaning to time step values - one time step corresponds to time_step_size seconds
     double time_step_size = -1.0;
-    std::vector<std::string> tags; //From 2018 specs
+
+    //! Scenario tags for further identification, 2018 specs
+    std::vector<std::string> tags;
 
     //Commonroad data
-    std::vector<ScenarioTag> scenario_tags; //From 2020 specs
+    //! Scenario tags for further identification, 2020 specs
+    std::vector<ScenarioTag> scenario_tags;
+    //! Optional location information for the scenario
     std::optional<Location> location = std::nullopt;
     //We store the IDs in the map and the object (in the object: for dds communication, if required)
+    //! All scenario lanelets, stored by ID
     std::map<int, Lanelet> lanelets;
+    //! All scenario traffic signs, stored by ID
     std::map<int, TrafficSign> traffic_signs;
+    //! All scenario traffic lights, stored by ID
     std::map<int, TrafficLight> traffic_lights; //Was fixed in new 2020 specs, 0..1 in outdated specification was a mistake, see https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+    //! All scenario intersections, stored by ID
     std::map<int, Intersection> intersections;
+    //! All scenario static obstacles, stored by ID
     std::map<int, StaticObstacle> static_obstacles;
+    //! All scenario dynamic obstacles, stored by ID
     std::map<int, DynamicObstacle> dynamic_obstacles;
+    //! All scenario planning problems, stored by ID
     std::map<int, PlanningProblem> planning_problems;
 
     //Lanelets may contain traffic sign / light IDs, whereas traffic signs / lights might not contain a position value, but can have that value
     //Thus, to draw these traffic "symbols", we need to combine the information that we can obtain from lanelet and the symbols
     //-> We remember the (last) lanelet-ID for each symbol-ID; if the symbol does not have its own location, it can look one up here
     //As transformations may take place, we cannot store the position, but just a lanelet reference to obtain the current position from there
-    std::map<int, std::pair<int, bool>> lanelet_traffic_sign_positions; //<Sign ID, <Lanelet ID, is_stopline>>
-    std::map<int, std::pair<int, bool>> lanelet_traffic_light_positions; //<Light ID, <Lanelet ID, is_stopline>>
+    //! Store lanelet reference for each traffic sign, as <Sign ID, <Lanelet ID, is_stopline>>, because these may define the traffic sign's position
+    std::map<int, std::pair<int, bool>> lanelet_traffic_sign_positions; 
+    //! Store lanelet reference for each traffic light, as <Light ID, <Lanelet ID, is_stopline>>, because these may define the traffic light's position
+    std::map<int, std::pair<int, bool>> lanelet_traffic_light_positions;
 
     /**
      * Function used by a traffic sign to find out if a position was set for it by a lanelet definition
@@ -177,25 +220,30 @@ private:
     std::optional<std::pair<double, double>> get_lanelet_light_position(int id);
 
     //Not commonroad
-    //Mutex to lock the object while it is being translated from an XML file
+    //! Mutex to lock the object while it is being translated from an XML file
     std::mutex xml_translation_mutex;
 
-    //Load / store translation in YAML
+    //! Storage to load / store translation in YAML
     CommonRoadTransformation yaml_transformation_storage;
 
     //Obstacle simulation callback functions (when new scenario is loaded)
+    //! Callback function for e.g. when a new scenario is loaded, for setup
     std::function<void()> setup_obstacle_sim_manager; 
+    //! Callback function for e.g. when a new scenario is loaded, to reset the old one
     std::function<void()> reset_obstacle_sim_manager;
 
-    //Obstacle aggregator callback function (when new scenario is loaded)
+    //! Obstacle aggregator callback function (when new scenario is loaded)
     std::function<void()> reset_obstacle_aggregator;
 
-    //Configuration class for what optional parts to draw (gets default-constructed by using {})
+    //! Configuration class to define which optional parts to draw on the map view of the LCC (gets default-constructed by using {})
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration{std::make_shared<CommonroadDrawConfiguration>()};
+
+    //! We do not want to load a file if a file is already currently being loaded
+    std::atomic_bool file_is_loading{false};
 
     /**
      * \brief This function provides a translation of the node attributes in XML (as string) to one the expected node attributes of the root node (warning if non-existant)
-     * \param node root_node
+     * \param root_node root_node
      */
     void translate_attributes(const xmlpp::Node* root_node);
 
@@ -235,14 +283,28 @@ private:
     void clear_data();
 
     /**
-     * Calculate the center (mean position) of the planning problem based on lanelets and obstacles
+     * \brief Calculate the center (mean position) of the planning problem based on lanelets and obstacles
      * Only gets re-calculated whenever the problem is transformed or another problem is loaded
      */
     void calculate_center();
+    //! Center of the planning problem based on lanelets and obstacles, only gets re-calculated whenever the problem is transformed or another problem is loaded
     std::pair<double, double> center;
 
     //Lanelet ref functions
+    /**
+     * \brief Redraw a lanelet, given a lanelet reference - if another color is set beforehand, the particular lanelet can be highlighted this way
+     * \param lanelet_ref ID of / reference to a lanelet, which might not exist (an error is printed then)
+     * \param ctx Cairo drawing context of the LCC
+     * \param scale Drawing scale modifier
+     * \param global_orientation Global orientation modifier
+     * \param global_translate_x Global x-coordinate modifier (w.r.t. origin)
+     * \param global_translate_y Global y-coordinate modifier (w.r.t. origin)
+     */
     void draw_lanelet_ref(int lanelet_ref, const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0);
+    /**
+     * \brief Get the center (boundary mean) of a given lanelet, prints error and returns {0,0} if non-existent
+     * \param id ID of / reference to a lanelet, which might not exist
+     */
     std::pair<double, double> get_lanelet_center(int id);
 
     /**
@@ -283,7 +345,8 @@ public:
 
     /**
      * \brief A load function to load another file
-     * While the file is being loaded, other public functions are "skipped" (using try_lock mutex) when called
+     * While the file is being loaded, other public functions are either "skipped" (using try_lock mutex) when called or wait for the new file to load
+     * Also, during a file load, no other file can be loaded (other calls are cancelled)
      * It gets an XML file and parses it once, translating it to the C++ data structure
      * From there on, the CommonRoadScenario Object can be used to access the scenario, send it to HLCs, fit it to the map etc
      * An error is thrown in case the XML file is invalid / does not match the expected CommonRoad specs
@@ -347,28 +410,87 @@ public:
     std::shared_ptr<CommonroadDrawConfiguration> get_draw_configuration();
 
     //TODO: Getter, by type and by ID, and constructor
+    /**
+     * \brief Get the set author of the currently loaded commonroad file
+     */
     const std::string& get_author();
+    /**
+     * \brief Get the set affiliation of the currently loaded commonroad file
+     */
     const std::string& get_affiliation();
+    /**
+     * \brief Get the set benchmark id of the currently loaded commonroad file
+     */
     const std::string& get_benchmark_id();
+    /**
+     * \brief Get the set commonroad version of the currently loaded commonroad file
+     */
     const std::string& get_common_road_version();
+    /**
+     * \brief Get the set date of the currently loaded commonroad file
+     */
     const std::string& get_date();
+    /**
+     * \brief Get the set source of the currently loaded commonroad file
+     */
     const std::string& get_source();
 
     //We need to be able to get and set time_step_size, to change the speed of the simulation
+    /**
+     * \brief Get the size of a time step (in seconds) of the currently loaded scenario. Required e.g. to display it, for transformation to time stamps etc.
+     */
     double get_time_step_size();
+    /**
+     * \brief Change the size of a time step (in seconds) of the currently loaded scenario. Allows to control the simulation speed.
+     * \param new_time_step_size The new size of a time step (in seconds): Higher for a slower simulation and vice-versa
+     */
     void set_time_step_size(double new_time_step_size); 
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
+
+    /**
+     * \brief Get the location information of the scenario, if defined, else nullopt
+     */
     const std::optional<Location> get_location();
 
+    /**
+     * \brief Get all IDs of dynamic obstacles of the currently loaded scenario
+     */
     std::vector<int> get_dynamic_obstacle_ids();
+    /**
+     * \brief Get a dynamic obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
     std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
 
+    /**
+     * \brief Get all IDs of static obstacles of the currently loaded scenario
+     */
     std::vector<int> get_static_obstacle_ids();
+    /**
+     * \brief Get a static obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
     std::optional<StaticObstacle> get_static_obstacle(int id);
 
+    /**
+     * \brief Get all planning problem IDs of the currently loaded scenario
+     */
     std::vector<int> get_planning_problem_ids();
+    /**
+     * \brief Get a planning problem of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
     std::optional<PlanningProblem> get_planning_problem(int id);
 
+    /**
+     * \brief Get a lanelet of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
     std::optional<Lanelet> get_lanelet(int id);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////                 DDS Functions               ///////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * \brief Send all currently stored planning problems into the network / to the HLCs
+     * \param writer_planning_problems DDS writer to send planning problems
+     */
+    void send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems);
 };

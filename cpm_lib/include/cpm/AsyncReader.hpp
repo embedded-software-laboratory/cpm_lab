@@ -41,26 +41,36 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/Participant.hpp"
 
+/**
+ * \file AsyncReader.hpp
+ */
+
 namespace cpm 
 {
     /**
-     * \class AsyncReader.hpp
+     * \class AsyncReader
      * \brief This class is a wrapper for a data reader that uses an AsyncWaitSet to call a callback function whenever any new data is available
      * Template: Class of the message objects, depending on which IDL file is used
+     * \ingroup cpmlib
      */ 
-
     template<class MessageType> 
     class AsyncReader
     {
     private:
         //Reader and waitset for receiving data and calling the callback function
+        //! Internal DDS Subscriber instance
         dds::sub::Subscriber sub;
+        //! Internal DDS Reader instance
         dds::sub::DataReader<MessageType> reader;
+        //! Read condition to be able to async. receive data
         dds::core::cond::StatusCondition read_condition;
+        //! Waitset as part of the read condition for async. data receiving
         rti::core::cond::AsyncWaitSet waitset;
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
+         * \param is_reliable If the QoS for DDS messages should be set to reliable (true) or best effort (false) messaging
+         * \param is_transient_local If true, and if the Writer is still present, the Reader receives data that was sent before it went online
          */
         dds::sub::qos::DataReaderQos get_qos(bool is_reliable, bool is_transient_local)
         {
@@ -97,7 +107,7 @@ namespace cpm
          * \param func Callback function that is called by the reader if new data is available. Samples are passed to the function to be processed further.
          * \param topic_name The name of the topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
-         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable and keep all
          */
         AsyncReader(
             std::function<void(std::vector<MessageType>&)> func, 
@@ -113,7 +123,7 @@ namespace cpm
          * \param participant Domain participant to specify in which domain the reader should operate
          * \param topic_name The name of the topic that is supposed to be used by the reader
          * \param is_reliable If true, the used reader is set to be reliable, else best effort is expected
-         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable
+         * \param is_transient_local If true, the used reader is set to be transient local - in this case, it is also set to reliable and keep all
          */
         AsyncReader(
             std::function<void(std::vector<MessageType>&)> func,

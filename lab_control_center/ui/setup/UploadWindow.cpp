@@ -26,6 +26,11 @@
 
 #include "UploadWindow.hpp"
 
+/**
+ * \file UploadWindow.cpp
+ * \ingroup lcc_ui
+ */
+
 UploadWindow::UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/setup/upload_window.glade");
@@ -45,7 +50,7 @@ UploadWindow::UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicl
     std::stringstream label_string;
     if (hlc_ids.size() == 0)
     {
-        label_string << "ERROR: No HLCs are online, aborting deployment...";
+        label_string << "INFO: No HLCs are online, deploying locally only...";
     }
     else if (vehicle_ids.size() == 0)
     {
@@ -60,7 +65,8 @@ UploadWindow::UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicl
         }
         if (vehicle_ids.size() > hlc_ids.size())
         {
-            label_string << "\n\nWARNING: Less HLCs than selected vehicle IDs available";
+            label_string << "\n\nWARNING: Less HLCs than selected vehicle IDs available, \
+		    some vehicles will be deployed locally.";
         }
     }
     label_upload->set_text(label_string.str().c_str());

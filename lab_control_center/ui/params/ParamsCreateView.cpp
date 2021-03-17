@@ -26,6 +26,11 @@
 
 #include "ParamsCreateView.hpp"
 
+/**
+ * \file ParamsCreateView.cpp
+ * \ingroup lcc_ui
+ */
+
 ParamsCreateView::ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
@@ -138,7 +143,6 @@ void ParamsCreateView::on_type_changed() {
 void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder = Gtk::Builder::create_from_file("ui/params/params_create.glade");
 
-    params_create_builder->get_widget("params_create_dialog", parent);
     params_create_builder->get_widget("params_create_dialog", window);
     params_create_builder->get_widget("params_create_box", params_create_box);
     params_create_builder->get_widget("params_create_buttons", params_create_buttons);
@@ -146,7 +150,6 @@ void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder->get_widget("params_create_add_button", params_create_add_button);
     params_create_builder->get_widget("params_create_values_grid", params_create_values_grid);
 
-    assert(parent);
     assert(window);
     assert(params_create_box);
     assert(params_create_buttons);

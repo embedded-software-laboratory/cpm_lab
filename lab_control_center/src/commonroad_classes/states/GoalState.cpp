@@ -26,12 +26,19 @@
 
 #include "commonroad_classes/states/GoalState.hpp"
 
+/**
+ * \file GoalState.cpp
+ * \ingroup lcc_commonroad
+ */
+
 GoalState::GoalState(
     const xmlpp::Node* node,
+    int _planning_problem_id,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
     std::function<std::pair<double, double> (int)> _get_lanelet_center,
     std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     ) :
+    planning_problem_id(_planning_problem_id),
     draw_configuration(_draw_configuration)
 {
     //2018 and 2020 specs are the same
@@ -47,6 +54,9 @@ GoalState::GoalState(
         }
         //No position must be given for a goal state, so default values are NOT assumed to be used here!
         std::cerr << "WARNING: No position has been set for this goal state (line " << node->get_line() << "). This might be intended." << std::endl;
+        std::stringstream err_stream;
+        err_stream << "WARNING: No position has been set for this goal state (line " << node->get_line() << "). This might be intended.";
+        LCCErrorLogger::Instance().log_error(err_stream.str());
 
         const auto velocity_node = xml_translation::get_child_if_exists(node, "velocity", false);
         if (velocity_node)
@@ -179,7 +189,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     if (draw_configuration->draw_goal_description.load())
     {
         std::stringstream descr_stream;
-        descr_stream << "Goal info - ";
+        descr_stream << "ID (" << planning_problem_id << "): ";
         if (time.has_value())
         {
             descr_stream << "t (mean): " << time.value().get_mean();
@@ -238,4 +248,48 @@ const std::optional<Interval>& GoalState::get_orientation() const
 const std::optional<Interval>& GoalState::get_velocity() const
 {
     return velocity;
+}
+
+CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
+{
+    CommonroadDDSGoalState goal_state;
+
+    goal_state.time_set(time.has_value());
+    if(time.has_value())
+    {
+        goal_state.time(time->to_dds_interval(time_step_size));
+    }
+
+    std::vector<CommonroadDDSPositionInterval> positions;
+    std::vector<CommonroadDDSIntervals> orientations;
+    std::vector<CommonroadDDSIntervals> velocities; 
+
+    if (position.has_value())
+    {
+        goal_state.has_exact_position(position->is_exact());
+
+        //The original commonroad specification only uses position intervals here, but we also support exact positions
+        if (position->is_exact())
+        {
+            goal_state.exact_position(position->to_dds_point());
+        }
+        else
+        {
+            positions.push_back(position->to_dds_position_interval());
+        }
+    }
+    if (orientation.has_value())
+    {
+        orientations.push_back(orientation->to_dds_msg());
+    }
+    if (velocity.has_value())
+    {
+        velocities.push_back(velocity->to_dds_msg());
+    }
+
+    goal_state.positions(positions);
+    goal_state.orientations(orientations);
+    goal_state.velocities(velocities);
+
+    return goal_state;
 }

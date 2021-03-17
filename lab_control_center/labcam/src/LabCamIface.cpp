@@ -27,6 +27,11 @@
 #include "labcam/LabCamIface.hpp"
 #include "labcam/LabCam.hpp"
 
+/**
+ * \file LabCamIface.cpp
+ * \ingroup lcc_labcam
+ */
+
 LabCamIface::LabCamIface(){
 	impl_ = new LabCam();
 }

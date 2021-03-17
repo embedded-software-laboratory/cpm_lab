@@ -48,23 +48,34 @@
 /**
  * \class Rectangle
  * \brief Auxiliary class from the XML specification: https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/blob/master/documentation/XML_commonRoad_XSD_2020a.xsd
+ * \ingroup lcc_commonroad
  */
 class Rectangle : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
-    double length; //In constructor: Check if >= 0, must be unsigned
-    double width;  //In constructor: Check if >= 0, must be unsigned
-    std::optional<Point> center = std::nullopt; //must not be set (probably has default value then)
-    std::optional<double> orientation = std::nullopt; //must not be set (probably has default value then)
+    //! Length of the rectangle, must be unsigned
+    double length;
+    //! Width of the rectangle, must be unsigned
+    double width; 
+    //! Center of the rectangle, must not be set (then: interpreted as origin)
+    std::optional<Point> center = std::nullopt; 
+    //! Orientation of the rectangle, must not be set (then: interpreted as 0)
+    std::optional<double> orientation = std::nullopt; 
 
 public:
+    /**
+     * \brief Constructor, creates a rectangle object from a commonroad xml rectangle node
+     */
     Rectangle(const xmlpp::Node* node);
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
@@ -97,8 +108,20 @@ public:
     CommonroadDDSRectangle to_dds_msg();
 
     //Getter
+    /**
+     * \brief Get the orientation of the rectangle, if it exists, or a nullopt
+     */
     std::optional<double> get_orientation();
+    /**
+     * \brief Get the center point of the rectangle, if it exists, or a nullopt (then: interpret this as origin)
+     */
     const std::optional<Point>& get_center() const;
+    /**
+     * \brief Get the length of the rectangle
+     */
     double get_length();
+    /**
+     * \brief Get the width of the rectangle
+     */
     double get_width();
 };
