@@ -241,7 +241,3 @@ add_executable(VisualizationTest
 )
 
 target_link_libraries(VisualizationTest cpm)
-
-add_executable(ForkCommunicationTest
-    test/ForkCommunicationTest.cpp
-)

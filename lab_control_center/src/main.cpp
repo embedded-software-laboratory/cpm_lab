@@ -75,16 +75,28 @@
 
 using namespace std::placeholders;
 
-//We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+/**
+ * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+ * (call on_lcc_close)
+ * \ingroup lcc
+ */
 std::shared_ptr<SetupViewUI> setupViewUi;
 
 /**
+ * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
+ * to execute command line commands
+ * \ingroup lcc
+ */
+std::shared_ptr<ProgramExecutor> program_executor;
+
+/**
  * \brief Function to deploy cloud discovery (to help participants discover each other)
+ * Will crash on purpose if program_executor is not set (we need this function to work)
  * \ingroup lcc
  */
 void deploy_cloud_discovery() {
     std::string command = "tmux new-session -d -s \"rticlouddiscoveryservice\" \"rticlouddiscoveryservice -transport 25598\"";
-    system(command.c_str());
+    program_executor->execute_command(command.c_str());
 }
 
 /**
@@ -93,7 +105,7 @@ void deploy_cloud_discovery() {
  */
 void kill_cloud_discovery() {
     std::string command = "tmux kill-session -t \"rticlouddiscoveryservice\"";
-    system(command.c_str());
+    if (program_executor) program_executor->execute_command(command.c_str());
 }
 
 /**
@@ -103,7 +115,7 @@ void kill_cloud_discovery() {
  */
 void kill_all_tmux_sessions() {
     std::string command = "tmux kill-server >>/dev/null 2>>/dev/null";
-    system(command.c_str());
+    if (program_executor) program_executor->execute_command(command.c_str());
 }
 
 //Suppress warning for unused parameter (s)
@@ -178,7 +190,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::shared_ptr<ProgramExecutor> program_executor = std::make_shared<ProgramExecutor>();
+    program_executor = std::make_shared<ProgramExecutor>();
     bool program_execution_possible = program_executor->setup_child_process(exec_path, main_cpp_path);
     if (! program_execution_possible)
     {
