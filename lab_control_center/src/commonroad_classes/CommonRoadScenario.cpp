@@ -37,8 +37,6 @@ CommonRoadScenario::CommonRoadScenario()
 
     //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
 
-    //TODO: Translate time step size to uint64_t - nanoseconds representation?
-
     //Sets up YAML storage for transformations of XML files stored in between sessions, done implicitly (yaml_transformation_storage)
 }
 
