@@ -82,7 +82,7 @@ void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
   
   // Arrangement of vehicles
   int max_no_vehicles = 20;
-  int total_rows = 5;
+  int total_rows = 3;
   int total_columns = ceil(max_no_vehicles / total_rows);
   const double  clearance = VEHICLE_WIDTH; //safety distance vehicle to vehicle and vehicle to map edge [m]
   
@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
         int new_id;
         Pose2D new_pose;
         help_vector.clear();
+        generated_trajectory.clear();
 
         std::map<uint8_t, VehicleObservation> ips_sample;
         std::map<uint8_t, uint64_t> ips_sample_age;
@@ -275,6 +276,7 @@ int main(int argc, char *argv[])
         
         // If calculated trajectory is valid, turn into DDS formatted vector of trajectory points
         if(is_path_valid){
+            trajectory_points.clear();
 
           for (size_t i = 0; i < len; ++i)
           {
