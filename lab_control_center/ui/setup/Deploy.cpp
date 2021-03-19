@@ -630,7 +630,7 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
         << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
     
     //Execute command
-    system(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 
