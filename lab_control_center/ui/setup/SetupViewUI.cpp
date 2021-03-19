@@ -28,6 +28,11 @@
 #include <cstdlib>
 #include <chrono>
 
+/**
+ * \file SetupViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 
 SetupViewUI::SetupViewUI
@@ -37,6 +42,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
+    std::function<void()> _reset_vehicle_view,
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
@@ -49,6 +55,7 @@ SetupViewUI::SetupViewUI
     hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
+    reset_vehicle_view(_reset_vehicle_view),
     on_simulation_start(_on_simulation_start),
     on_simulation_stop(_on_simulation_stop),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
@@ -165,7 +172,7 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     //We use the default config location here
-    script_path->set_text(FileChooserUI::get_last_execution_path());
+    script_path->set_text(FileChooserUI::get_last_execution_path("script"));
 
     simulation_running.store(false);
     
@@ -249,6 +256,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else if (state == VehicleToggle::ToggleState::Off)
     {
         deploy_functions->kill_sim_vehicle(vehicle_id);
+        reset_vehicle_view(); //Remove sim. vehicle entry in map view
     }
     else
     {
@@ -341,16 +349,14 @@ void SetupViewUI::open_file_explorer()
         file_chooser_window = make_shared<FileChooserUI>(
             get_main_window(), 
             std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
-            std::vector<FileChooserUI::Filter> { application_filter, all_filter }
+            std::vector<FileChooserUI::Filter> { application_filter, all_filter },
+            "script"
         );
     }
     else
     {
-        cpm::Logging::Instance().write(
-            1, 
-            "%s", 
-            "ERROR: Main window reference is missing, cannot create file chooser dialog"
-        );
+        std::cerr << "ERROR: Main window reference is missing, cannot create file chooser dialog";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create file chooser dialog");
     }
     
 }
@@ -729,6 +735,10 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
 
     button_deploy->set_sensitive(is_sensitive);
 
+    switch_record_labcam->set_sensitive(is_sensitive);
+    switch_lab_mode->set_sensitive(is_sensitive);
+    switch_diagnosis->set_sensitive(is_sensitive);
+    switch_deploy_remote->set_sensitive(is_sensitive);
     switch_simulated_time->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)
@@ -764,6 +774,8 @@ void SetupViewUI::select_no_vehicles()
             deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
         }
     }
+
+    reset_vehicle_view(); //Remove sim. vehicle entry in map view
 }
 
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

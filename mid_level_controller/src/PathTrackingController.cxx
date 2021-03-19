@@ -114,38 +114,67 @@ Pose2D PathTrackingController::find_reference_pose(
     const double y
 )
 {
-    // Iterate over interpolated path to find point with minimum distance
-    const double ds = 0.01; // [m]
+    // find closest junction point
     assert(path.size() > 1);
-    size_t i_path_point = 0;
-    double s_max = path.back().s();
-    double min_dist = 1e300;
-    Pose2D result;
-    for (double s_query = 0; s_query <= s_max; s_query += ds)
-    {
-        // Advance path points for interpolation if necessary
-        assert( i_path_point < path.size()-1 );
-        if (s_query > path[i_path_point+1].s())
-        {
-            ++i_path_point;
-        }
+    size_t i_junction_closest = 0;
 
-        // calculate distance to reference path
-        PathInterpolation path_interpolation(
-            s_query, path[i_path_point], path[i_path_point+1]
-        );
-        double dx = x - path_interpolation.position_x;
-        double dy = y - path_interpolation.position_y;
+    double min_dist = 1e300;
+    // first and last point should be equal, so size()-1
+    for (size_t i_junction = 0; i_junction < path.size()-1; ++i_junction)
+    {
+        double dx = x - path[i_junction].pose().x();
+        double dy = y - path[i_junction].pose().y();
         double distance = sqrt( dx*dx + dy*dy );
 
         if (distance < min_dist)
         {
             min_dist = distance;
-            // update reference pose
-            result.x(path_interpolation.position_x);
-            result.y(path_interpolation.position_y);
-            result.yaw(path_interpolation.yaw);
+            i_junction_closest = i_junction;
         }
     }
+
+    // consider path segment leading to and leaving junction
+    std::vector<size_t> i_start;
+    i_start.push_back(i_junction_closest);
+    if (i_junction_closest == 0)
+    {
+        i_start.push_back(path.size()-2);
+    }
+    else
+    {
+        i_start.push_back(i_junction_closest-1);
+    }
+    
+    
+    // Iterate over interpolated path to find point with minimum distance
+    const double ds = 0.01; // [m]
+    
+    min_dist = 1e300;
+    Pose2D result;
+    for (size_t i_path_point : i_start)
+    {
+        double s_start = path[i_path_point].s();
+        double s_end = path[i_path_point+1].s();
+        for (double s_query = s_start; s_query <= s_end; s_query += ds)
+        {
+            // calculate distance to reference path
+            PathInterpolation path_interpolation(
+                s_query, path[i_path_point], path[i_path_point+1]
+            );
+            double dx = x - path_interpolation.position_x;
+            double dy = y - path_interpolation.position_y;
+            double distance = sqrt( dx*dx + dy*dy );
+
+            if (distance < min_dist)
+            {
+                min_dist = distance;
+                // update reference pose
+                result.x(path_interpolation.position_x);
+                result.y(path_interpolation.position_y);
+                result.yaw(path_interpolation.yaw);
+            }
+        }
+    }
+    
     return result;
 }

@@ -36,6 +36,7 @@ using DrawingContext = ::Cairo::RefPtr< ::Cairo::Context >;
  * \class InterfaceDraw
  * \brief This interface requires the deriving classes to implement a draw function
  * It is mainly used for clarity, to define common behaviour
+ * \ingroup lcc_commonroad
  */
 class InterfaceDraw
 {
@@ -55,16 +56,17 @@ public:
      */
     virtual void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) = 0;
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceDraw() {};
 
     //Utility functions that can be used by each class
     /**
      * \brief This function can be used to draw an arrow from (x_1, y_1) to (x_2, y_2) - within the currently set coordinate system - with a given scale
-     * \param x_1
-     * \param y_1
-     * \param x_2
-     * \param y_2
+     * \param ctx A DrawingContext, used to draw on
+     * \param x_1 Arrow start x
+     * \param y_1 Arrow start y
+     * \param x_2 Arrow pointer / end x
+     * \param y_2 Arrow pointer / end y
      * \param scale Scale applies to the arrow thickness and the arrowhead size only
      */
     void draw_arrow(const DrawingContext& ctx, double x_1, double y_1, double x_2, double y_2, double scale)
@@ -96,6 +98,15 @@ public:
         ctx->restore();
     }
 
+    /**
+     * \brief Helper function to draw text centered, given a rotation, at (x,y), with a given font size
+     * \param ctx The cairo context of the LCC's Map View
+     * \param x x coordinate 
+     * \param y y coordinate
+     * \param rotation Applied before translation to (x,y)
+     * \param font_size Size of the font
+     * \param text Text to draw
+     */
     void draw_text_centered(const DrawingContext& ctx, double x, double y, double rotation, double font_size, std::string text)
     {
         ctx->save();

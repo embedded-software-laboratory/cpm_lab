@@ -29,6 +29,7 @@
 /**
  * \class InterfaceTransformTime
  * \brief This interface requires the deriving classes to implement a transform function for timing
+ * \ingroup lcc_commonroad
  */
 class InterfaceTransformTime
 {
@@ -39,6 +40,6 @@ public:
      */
     virtual void transform_timing(double time_scale) = 0;
 
-    //Good practice
+    //! Destructor. Good practice
     virtual ~InterfaceTransformTime() {};
 };

@@ -28,6 +28,10 @@
 
 #include "lane_graph_tools.hpp" //sw folder decentral routing
 
+/**
+ * \file VehicleTrajectoryPlanningState.cpp
+ * \ingroup decentral_routing
+ */
 
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     uint8_t _vehicle_id,

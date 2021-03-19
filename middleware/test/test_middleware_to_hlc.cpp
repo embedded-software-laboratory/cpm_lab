@@ -58,9 +58,12 @@
 #include "Communication.hpp"
 
 /**
- * \brief Tests getLastHLCResponseTime and sendToHLC (middleware functions). Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \test Tests communication from middleware to simulated HLC
+ * 
+ * Tests getLastHLCResponseTime and sendToHLC (middleware functions). 
+ * Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \ingroup middleware
  */
-
 TEST_CASE( "MiddlewareToHLCCommunication" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     

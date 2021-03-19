@@ -41,14 +41,15 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD accuracy
+ * 
  * - Is the timer started after the initial starting time
  * - Does t_now match the expectation regarding offset, period and start values
  * - Is the callback function called shortly after t_now
  * - Is the timer actually stopped when it should be stopped
  * - If the callback function takes longer than period to finish, is this handled correctly
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_accuracy" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_accuracy");
@@ -75,6 +76,21 @@ TEST_CASE( "TimerFD_accuracy" ) {
     dds::core::cond::WaitSet waitset;
     dds::sub::cond::ReadCondition read_cond(timer_ready_signal_ready, dds::sub::status::DataState::any());
     waitset += read_cond;
+
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Timer Accuracy test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub = dds::sub::matched_publications(timer_ready_signal_ready);
+
+        if (timer_system_trigger_writer.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Variables for CHECKs - only to identify the timer by its id
     std::string source_id;

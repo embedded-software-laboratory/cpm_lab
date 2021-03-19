@@ -47,26 +47,28 @@ namespace cpm
      * which replies to every round trip time message received immediately with the current program's logging ID
      * 
      * It can also be used to measure the round trip time
+     * \ingroup cpmlib
      */
     class RTTTool
     {
-        RTTTool(RTTTool const&) = delete;
-        RTTTool(RTTTool&&) = delete; 
-        RTTTool& operator=(RTTTool const&) = delete;
-        RTTTool& operator=(RTTTool &&) = delete;
-
     private:
+        //! DDS Writer to send an RTT request or an answer to a request
         cpm::Writer<RoundTripTime> rtt_writer;
-
+        //! DDS Reader to receive an RTT request or answer
         std::shared_ptr<cpm::AsyncReader<RoundTripTime>> rtt_reader;
-
+        //! ID of the program using or responding to an RTT request, e.g. "LCC", "middleware", ...
         std::string program_id = "no_prog_id_set";
 
         //Measure RTT request receive times, read async, requested by measure_rtt
+        //! Used by activate, if not true than no measurement can be requested or answered to; enforces setting the program ID
         std::atomic_bool rtt_measurement_active;
+        //! To find out if the current participant requested an RTT measurement (measure_rtt) or if it should only answer to measurements by others
         std::atomic_bool rtt_measure_requested;
-        std::atomic<std::uint8_t> rtt_count; //Cannot use atomic_uint8_t due to compatability to lower C++ standards for vehicles
+        //! Counter to distinguish measurements. Cannot use atomic_uint8_t due to compatability to lower C++ standards for vehicles
+        std::atomic<std::uint8_t> rtt_count; 
+        //! Mutex for access to receive_times
         std::mutex receive_times_mutex;
+        //! Multiple members may use the same ID (e.g. "vehicle") - then, multiple RTT times can exist. All RTT times are stored here during measurement.
         std::map<std::string, std::vector<uint64_t>> receive_times;
 
         /**
@@ -75,6 +77,11 @@ namespace cpm
         RTTTool();
 
     public:
+        RTTTool(RTTTool const&) = delete;
+        RTTTool(RTTTool&&) = delete; 
+        RTTTool& operator=(RTTTool const&) = delete;
+        RTTTool& operator=(RTTTool &&) = delete;
+
         /**
          * \brief Interface to create / get access to the singleton
          */ 

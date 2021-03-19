@@ -43,10 +43,11 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD stop signal while running
+ * 
  * - Tests if the timer can be stopped by sending a stop signal
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_stop_signal_when_running");
@@ -70,6 +71,20 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     dds::sub::cond::ReadCondition read_cond(reader_ReadyStatus, dds::sub::status::DataState::any());
     waitset += read_cond;
 
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Timer Stop Signal While Running test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub = dds::sub::matched_publications(reader_ReadyStatus);
+
+        if (writer_SystemTrigger.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Thread to receive the ready signal, send a start signal and then a stop signal after 100ms
     std::thread signal_thread = std::thread([&](){

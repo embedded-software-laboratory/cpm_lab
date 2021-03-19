@@ -30,6 +30,11 @@
 #include "cpm/Logging.hpp"
 #include "cpm/TimeMeasurement.hpp"
 
+/**
+ * \file Controller.cxx
+ * \ingroup vehicle
+ */
+
 using namespace std::placeholders;
 
 Controller::Controller(uint8_t _vehicle_id, std::function<uint64_t()> _get_time)
@@ -161,7 +166,11 @@ double Controller::speed_controller(const double speed_measured, const double sp
     return motor_throttle;
 }
 
-
+/**
+ * \brief TODO
+ * \param curvature TODO
+ * \ingroup vehicle
+ */
 double steering_curvature_calibration(double curvature) 
 {
     // steady-state curve, from curve fitting
@@ -291,6 +300,11 @@ void Controller::trajectory_controller_linear(uint64_t t_now, double &motor_thro
     }
 }
 
+/**
+ * \brief Return square of the given parameter
+ * \param x A number
+ * \ingroup vehicle
+ */
 static inline double square(double x) {return x*x;}
 
 void Controller::trajectory_tracking_statistics_update(uint64_t t_now)

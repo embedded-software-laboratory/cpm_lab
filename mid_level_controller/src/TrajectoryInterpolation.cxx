@@ -27,6 +27,11 @@
 #include "TrajectoryInterpolation.hpp"
 #include <cmath>
 
+/**
+ * \file TrajectoryInterpolation.cxx
+ * \ingroup vehicle
+ */
+
 TrajectoryInterpolation::TrajectoryInterpolation(uint64_t stamp_now, TrajectoryPoint start_point, TrajectoryPoint end_point) 
 {
 

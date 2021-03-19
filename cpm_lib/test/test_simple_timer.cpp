@@ -41,14 +41,15 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests SimpleTimer
+ * 
  * - Is the timer started after the initial starting time
  * - Does t_now match the expectation regarding offset, period and start values
  * - Is the callback function called shortly after t_now
  * - Is the timer actually stopped when it should be stopped
  * - If the callback function takes longer than period to finish, is this handled correctly
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "SimpleTimer functionality" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_simple_timer");
@@ -77,6 +78,21 @@ TEST_CASE( "SimpleTimer functionality" ) {
 
     //Variables for CHECKs - only to identify the timer by its id
     std::string source_id;
+
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Simple Timer test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub = dds::sub::matched_publications(timer_ready_signal_ready);
+
+        if (timer_system_trigger_writer.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Thread to receive the ready signal and send a start signal afterwards
     std::thread signal_thread = std::thread([&](){
