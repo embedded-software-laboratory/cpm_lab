@@ -15,10 +15,18 @@ case $i in
 esac
 done
 
+# Get middlware build directory and environment variables directory relative to this script's directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/"
+RELATIVE_MIDDLEWARE_DIR="${DIR}../../middleware/build"
+ABSOLUTE_MIDDLEWARE_DIR="$(realpath "${RELATIVE_MIDDLEWARE_DIR}")"
+RELATIVE_LOG_DIR="${DIR}../../../lcc_script_logs"
+ABSOLUTE_LOG_DIR="$(realpath "${RELATIVE_LOG_DIR}")"
+
 #Load environment variables, like RTI location, library location, Matlab location...
+cd $DIR
 . ./environment_variables.bash
 
 # Start screen for middleware; detach and start middleware
-cd ~/dev/software/middleware/build
+cd ${ABSOLUTE_MIDDLEWARE_DIR}
 
-./middleware ${MIDDLEWARE_ARGS} &> ~/dev/lcc_script_logs/middleware.log
+./middleware ${MIDDLEWARE_ARGS} &> ${ABSOLUTE_LOG_DIR}/middleware.log
