@@ -250,7 +250,7 @@ void worker_grab_image()
         camera.ExposureTime.SetValue(120);
 
 
-        camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly);
+        camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne);
         GrabResultPtr_t ptrGrabResult;
 
         int frameCount = 0;
@@ -258,6 +258,7 @@ void worker_grab_image()
         uint64_t lastFrameTimeStamp = cpm::get_time_ns();
         uint64_t max_time_between_frames = 0;
         uint64_t min_time_between_frames = 1000000000;
+        uint64_t max_retrieve_time = 0;
 
 
         // The camera counts time in nanoseconds, from an arbitrary starting point.
@@ -270,11 +271,10 @@ void worker_grab_image()
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
             // RetrieveResult calls the image event handler's OnImageGrabbed method.
-            try{
-                camera.RetrieveResult( 20, ptrGrabResult, TimeoutHandling_ThrowException);
-            } catch (...) {
-                cout << "RetrieveResult Timeout" << endl;
-            }
+            
+            uint64_t time_before_retrieve = cpm::get_time_ns();
+            camera.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
+            max_retrieve_time = max(max_retrieve_time, cpm::get_time_ns() - time_before_retrieve);
 
 
             if(ptrGrabResult->GrabSucceeded())
@@ -328,9 +328,11 @@ void worker_grab_image()
                     else {
                         std::cout << now << " max time between frames: " << max_time_between_frames << " min time between frames: " << min_time_between_frames << " FPS " << fps << std::endl;
                     }
+                    cout << "Max. TTW: " << max_retrieve_time << endl;
 
                     max_time_between_frames = 0;
                     min_time_between_frames = 1000000000;
+                    max_retrieve_time = 0;
 
                     lastFrameReportTime = now;
                 }
