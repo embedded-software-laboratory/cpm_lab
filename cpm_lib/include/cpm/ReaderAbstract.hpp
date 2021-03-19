@@ -126,6 +126,7 @@ namespace cpm
          */
         std::vector<T> take()
         {
+            //Only take() could be a cause for not being thread-safe, but the DDS APIs should be implemented thread-safe (is the case for RTI DDS)
             auto samples = dds_reader.take();
             std::vector<T> samples_vec;
 
