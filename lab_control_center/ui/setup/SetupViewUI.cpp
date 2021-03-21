@@ -425,7 +425,7 @@ void SetupViewUI::deploy_applications() {
 
     simulation_running.store(true);
 
-    //Create log folder for all applications that are started on this machine
+    //Re-create log folder for all applications that are started on this machine (-> delete old entries, recreate folder)
     deploy_functions->create_log_folder("lcc_script_logs");
 
     //Reset old UI elements etc (call all functions that registered for this callback in main)

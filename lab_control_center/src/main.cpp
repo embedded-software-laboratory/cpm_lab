@@ -168,6 +168,23 @@ void exit_handler() {
  */
 int main(int argc, char *argv[])
 {
+    //Do this even before creating the process-spawning child
+    //We need to get the path to the executable, and argv[0] is not
+    //reliable enough for that (and sometimes also only returns a relative path)
+    std::array<char, 128> buffer;
+    std::string absolute_executable_path;
+    ssize_t len = ::readlink("/proc/self/exe", buffer.data(), buffer.size()-1);
+    if (len >= 0) {
+      buffer[len] = '\0';
+      std::string temp(buffer.data());
+      absolute_executable_path = temp;
+    }
+    else
+    {
+        std::cerr << "ERROR: Could not obtain executable path, thus deploying functions would not work. Shutting down..." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     //-----------------------------------------------------------------------------------------------------
     //It is vital to call this function before any threads or objects have been set up that are not
     //required in child processes
@@ -272,7 +289,8 @@ int main(int argc, char *argv[])
         cmd_domain_id, 
         cmd_dds_initial_peer, 
         [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);},
-        program_executor
+        program_executor,
+        absolute_executable_path
     );
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
