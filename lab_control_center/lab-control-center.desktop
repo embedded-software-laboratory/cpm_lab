@@ -5,6 +5,7 @@
 # sudo cp $HOME/dev/software/lab_control_center/lab-control-center.desktop /usr/share/applications/
 # sudo mkdir -p /usr/share/icons/LCC
 # sudo cp $HOME/dev/software/lab_control_center/icon.png /usr/share/icons/LCC/icon.png
+# ($HOME/dev should be replaced with your install path in case you installed it somewhere else)
 
 # Application, Links (URL), or Directory (sub-group for applications)
 Type=Application

@@ -25,9 +25,13 @@
 % Author: i11 - Embedded Software, RWTH Aachen University
 
 function main(vehicle_id)
+    % Get current path
+    clc
+    script_directoy = fileparts([mfilename('fullpath') '.m']);
+
     % Initialize data readers/writers...
     common_cpm_functions_path = fullfile( ...
-        getenv('HOME'), 'dev/software/high_level_controller/examples/matlab' ...
+        script_directoy, '/..' ...
     );
     assert(isfolder(common_cpm_functions_path), 'Missing folder "%s".', common_cpm_functions_path);
     addpath(common_cpm_functions_path);
