@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
     const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
-    std::cout << "HERE" << std::endl;
     for(auto i:vehicle_ids_int)
     {
         assert(i>0);
@@ -127,8 +126,6 @@ int main(int argc, char *argv[])
             eight.move_forward(); //TODO Fitting with initial point?
         }
 
-        std::cout << reference_trajectory_time << ";" << trajectory_duration << std::endl;
-
 
         // Delete outdated points, i.e., remove first point if second one lies in past, too,
         while (!trajectory_points.empty() && trajectory_points.at(1).t().nanoseconds() < t_now){
@@ -147,25 +144,5 @@ int main(int argc, char *argv[])
         vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
         vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-
-        // // Send the current trajectory point to the vehicle
-        // TrajectoryPoint trajectory_point = eight.get_trajectoryPoint();
-        // trajectory_point.t().nanoseconds(reference_trajectory_time);
-
-        // VehicleCommandTrajectory vehicle_command_trajectory;
-        // vehicle_command_trajectory.vehicle_id(vehicle_id);
-        // vehicle_command_trajectory.trajectory_points(rti::core::vector<TrajectoryPoint>(1, trajectory_point));
-        // writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-
-        // Advance the reference state to T+2sec.
-        // The reference state must be in the future,
-        // to allow some time for the vehicle to receive
-        // the message and anticipate the next turn.
-        // while(reference_trajectory_time < t_now + 2000000000ull)
-        // {
-        //     reference_trajectory_time += eight.get_segment_duration();
-        //     eight.move_forward();
-        // }
-
     });
 }
