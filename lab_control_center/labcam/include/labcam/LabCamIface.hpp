@@ -30,14 +30,31 @@
 
 class LabCam;
 
+/**
+ * \brief TODO
+ * \ingroup lcc_labcam
+ */
 class LabCamIface {
 	private:
+		//! TODO
 		LabCam* impl_;
 
 	public:
+		/**
+		 * \brief TODO Constructor
+		 */
 		LabCamIface();
 		~LabCamIface() = default;
 
+		/**
+		 * \brief TODO
+		 * \param path TODO
+		 * \param file_name TODO
+		 */
 		void startRecording(std::string path, std::string file_name);
+
+		/**
+		 * \brief TODO
+		 */
 		void stopRecording();
 };

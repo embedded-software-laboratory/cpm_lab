@@ -24,26 +24,22 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/**
- * \class main.cpp
- * \brief This file includes a mechanism for a NUC to tell the LCC that it is online (should be called on NUC startup by a startup script, see lab_autostart.bash)
- */
-
 #include <memory>
 #include <sstream>
 #include <string>
 #include <functional>
 
-#include <dds/pub/ddspub.hpp>
+#include "HLCHello.hpp"
 
-#include "ReadyStatus.hpp"
-
+#include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/TimerFD.hpp"
 #include "cpm/Logging.hpp"
+#include "cpm/RTTTool.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
+#include "cpm/Writer.hpp"
 
 //To get the IP address
 #include <arpa/inet.h>
@@ -51,10 +47,82 @@
 #include <ifaddrs.h>
 #include <stdio.h>
 
+//To spawn a process & get its PID
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+/////////////////////////////////////////////////
+///////// Bash file descriptions for Doxygen
+////////////////////////////////////////////////
+/**
+ * \defgroup autostart_files Important Files
+ * \brief This group describes important bash files for the NUC
+ * \ingroup autostart
+ */
+
+/**
+ * \page autostart_files_page Important Files for Autostart
+ * \subpage autostart_create <br>
+ * \subpage autostart_lab <br>
+ * \ingroup autostart_files
+*/
+
+/**
+ * \page autostart_create ../create_nuc_package.bash
+ * \brief Bash file that creates an important package required by the NUCs on the Main Lab PC
+ */
+
+/**
+ * \page autostart_lab ../lab_autostart.bash
+ * \brief Bash file that must be placed on the NUC together with some other file, 
+ * as described in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Setup+Without+a+NUC+Image
+ */
+
+/**
+ * \brief Helper function to execute a system command, like e.g. starting a tmux session
+ * \ingroup autostart
+ */
+std::string execute_command(const char* cmd) 
+{
+    //Code from stackoverflow
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("Could not use popen - deployment failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+/**
+ * \brief Helper function to check if a tmux session exists
+ * \ingroup autostart
+ */
+bool session_exists(std::string session_id)
+{
+    std::string running_sessions = execute_command("tmux ls");
+    session_id += ":";
+    return running_sessions.find(session_id) != std::string::npos;
+}
+
+/**
+ * \brief Main function of the autostart software
+ * 
+ * This function includes a mechanism for a NUC to tell the LCC that it is online 
+ * (should be called on NUC startup by a startup script, see lab_autostart.bash)
+ * It is also used to check if the scripts started remotely are (still) running
+ * (regarding their tmux session id)
+ * \ingroup autostart
+ */
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("hlc_hello"); 
+    cpm::RTTTool::Instance().activate("hlc");
 
     uint64_t callback_period = 1000000000ull;
 
@@ -62,11 +130,7 @@ int main (int argc, char *argv[]) {
     std::shared_ptr<cpm::Timer> timer = std::make_shared<cpm::TimerFD>("hlc_timer", callback_period, 0, false);
 
     //Create DataWriter that sends ready messages to the Lab
-    dds::pub::DataWriter<ReadyStatus> writer_readyMessage
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<ReadyStatus>("hlc_startup")
-    );
+    cpm::Writer<HLCHello> writer_readyMessage("hlc_hello", true);
 
     //Wait a bit (10 seconds) for the NUC to get its IP address; the NUCs ID can be read from its IP
     //usleep(10000000);
@@ -106,23 +170,35 @@ int main (int argc, char *argv[]) {
         //Log error if the own ID could not yet be determined
         if (hlc_id == "")
         {
-            cpm::Logging::Instance().write("ID of a NUC could not yet be determined");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "ID of a NUC could not yet be determined"
+            );
         }
     }
 
     std::cout << "Set ID to " << hlc_id << std::endl;
 
-
     //Create ready message
-    ReadyStatus ready_message;
-    ready_message.source_id(hlc_id);
+    HLCHello hello_msg;
+    hello_msg.source_id(hlc_id);
 
     //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 
     timer->start([&](uint64_t t_now) {
-        writer_readyMessage.write(ready_message);
+        //Check if script / middleware are running with hello msg (distinguish between simulation running / not running at receiver (LCC))
+        hello_msg.script_running(session_exists("script"));
+        hello_msg.middleware_running(session_exists("middleware"));
+
+        writer_readyMessage.write(hello_msg);
+
+        if (writer_readyMessage.matched_subscriptions_size() == 0)
+        {
+            cpm::Logging::Instance().write(1, "HLC %s has no more matched subscriptions", hlc_id.c_str());
+        }
     },
     [](){
         //Ignore stop signals

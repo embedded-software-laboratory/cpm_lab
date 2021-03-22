@@ -31,9 +31,7 @@
 #include <random>
 #include <thread>
 #include <vector>
-
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include <chrono>
 
 #include "cpm/Timer.hpp"
 #include "cpm/Parameter.hpp"
@@ -47,9 +45,12 @@
 #include "Communication.hpp"
 
 /**
- * \brief This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \test Tests if vehicle messages are received
+ * 
+ * This tests getLatestVehicleMessage (to make sure that most/all messages sent by two vehicle are actually received) 
+ * [with sensor period = (timer period / 2) two messages from each vehicle are received on average by the reader, and only the latest one is returned]
+ * \ingroup middleware
  */
-
 TEST_CASE( "VehicleCommunication_Read" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
@@ -57,6 +58,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     int hlcDomainNumber = 1; 
     std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+    std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     std::vector<uint8_t> vehicle_ids = { 0, 1 };
@@ -78,9 +80,9 @@ TEST_CASE( "VehicleCommunication_Read" ) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicle_ids.at(0),
         timer,
         vehicle_ids);
 
@@ -97,10 +99,8 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     });
 
     //Send random data from two vehicle dummies to the Middleware
-    dds::pub::DataWriter<VehicleState> vehicle_0_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
-    dds::pub::DataWriter<VehicleState> vehicle_1_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        dds::topic::find<dds::topic::Topic<VehicleState>>(cpm::ParticipantSingleton::Instance(), "vehicleState"));
+    cpm::Writer<VehicleState> vehicle_0_writer("vehicleState");
+    cpm::Writer<VehicleState> vehicle_1_writer("vehicleState");
 
     for (int stamp_number = 0; stamp_number <= testMessagesAmount; ++stamp_number) {
         //Create random variable
@@ -122,7 +122,7 @@ TEST_CASE( "VehicleCommunication_Read" ) {
 
 		vehicle_0_writer.write(first_vehicle_state);
         vehicle_1_writer.write(second_vehicle_state);
-		rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(sensor_period)));
+		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(sensor_period)));
     }
 
     timer->stop();

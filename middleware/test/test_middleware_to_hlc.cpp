@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 #include <dds/sub/ddssub.hpp>
 #include <dds/pub/ddspub.hpp>
@@ -49,12 +50,20 @@
 #include "VehicleCommandSpeedCurvature.hpp"
 #include "Parameter.hpp"
 
+#include "cpm/AsyncReader.hpp"
+#include "cpm/ReaderAbstract.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/Participant.hpp"
+
 #include "Communication.hpp"
 
 /**
- * \brief Tests getLastHLCResponseTime and sendToHLC (middleware functions). Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \test Tests communication from middleware to simulated HLC
+ * 
+ * Tests getLastHLCResponseTime and sendToHLC (middleware functions). 
+ * Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \ingroup middleware
  */
-
 TEST_CASE( "MiddlewareToHLCCommunication" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
@@ -62,6 +71,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     int hlcDomainNumber = 1; 
     std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+    std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     int vehicleID = 0; 
@@ -82,47 +92,46 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
-        vehicleID,
         timer,
         vehicle_ids);
 
     //HLC Writer
     dds::domain::DomainParticipant participant = dds::domain::find(hlcDomainNumber);
-    dds::pub::DataWriter<VehicleCommandSpeedCurvature> hlcWriter(dds::pub::Publisher(participant), dds::topic::find<dds::topic::Topic<VehicleCommandSpeedCurvature>>(participant, vehicleSpeedCurvatureTopicName));
+    auto cpm_participant = cpm::Participant(participant);
+    cpm::Writer<VehicleCommandSpeedCurvature> hlcWriter(participant, vehicleSpeedCurvatureTopicName);
 
     //Data for checks
     std::vector<uint64_t> hlc_current_round_received;
     std::vector<bool> timestep_not_missed;
+    bool t_now_correct = true;
+    bool period_ms_correct = true;
+    uint64_t t_now_value = 100;
+    uint64_t period_ms_value = 200;
     
     //Round number: Used by the simulated middleware to count how often its callback was called & by the fake HLC to check if the current count matches the received count number
     std::vector<uint64_t> round_numbers;
     size_t hlc_reader_round_pos = 0;
 
     //Test which data was received by the HLC
-	dds::sub::DataReader<VehicleStateList> hlcReader(dds::sub::Subscriber(participant), dds::topic::find<dds::topic::Topic<VehicleStateList>>(participant, vehicleStateListTopicName));
-    dds::core::cond::StatusCondition readCondition = dds::core::cond::StatusCondition(hlcReader);
-    rti::core::cond::AsyncWaitSet waitset;
-    readCondition.enabled_statuses(dds::core::status::StatusMask::data_available());
-    readCondition->handler([&] {
-        dds::sub::LoanedSamples<VehicleStateList> samples = hlcReader.take();
-        waitset.unlock_condition(dds::core::cond::StatusCondition(hlcReader));
-
+	cpm::AsyncReader<VehicleStateList> hlcReader([&] (std::vector<VehicleStateList>& samples) {
         // Check if received data matches sent data + order is kept (not guaranteed though)
         // Store the highest round value and require it to be as high as the current round value of the timer (see checks)
         uint64_t highest_round_value = 0;
         uint64_t current_round = 0;
         bool got_valid_sample = false;
 
-        for (auto sample : samples) {
-            if (sample.info().valid()) {
-                got_valid_sample = true;
-                //Store all received round values and the current round value for comparison
-                if (sample.data().state_list().at(0).header().create_stamp().nanoseconds() >= highest_round_value) {
-                    highest_round_value = sample.data().state_list().at(0).header().create_stamp().nanoseconds();
-                }
+        for (auto& data : samples) {
+            got_valid_sample = true;
+            //Store all received round values and the current round value for comparison
+            if (data.state_list().at(0).header().create_stamp().nanoseconds() >= highest_round_value) {
+                highest_round_value = data.state_list().at(0).header().create_stamp().nanoseconds();
             }
+
+            t_now_correct = data.t_now() == t_now_value;
+            period_ms_correct = data.period_ms() == period_ms_value;
         }
 
         if (got_valid_sample) {
@@ -133,17 +142,16 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
 
         //Miss a period on purpose
         if (current_round % 3 == 2) {
-            rti::util::sleep(dds::core::Duration::from_millisecs(51));
+            std::this_thread::sleep_for(std::chrono::milliseconds(51));
         }
 
         VehicleCommandSpeedCurvature curv(vehicleID, Header(TimeStamp(1), TimeStamp(1)), 0, 0);
         hlcWriter.write(curv);
-    });
-    waitset.attach_condition(readCondition);
-    waitset.start();
+    },
+    cpm_participant, vehicleStateListTopicName);
 
     //Wait for setup
-    rti::util::sleep(dds::core::Duration::from_millisecs(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     //Run the fake middleware (use communication class as the middleware does)
     using namespace std::placeholders;
@@ -159,7 +167,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
 
         //Get the last response time of the HLC -> Do not send another start signal if it is still calculating a solution
         // -> Print an error message if a period has been missed
-        std::map<uint8_t, uint64_t> lastHLCResponseTimes;
+        std::unordered_map<uint8_t, uint64_t> lastHLCResponseTimes;
         lastHLCResponseTimes = communication->getLastHLCResponseTimes();
         uint64_t lastHLCResponseTime = 0;
         if (lastHLCResponseTimes.find(vehicleID) != lastHLCResponseTimes.end()) {
@@ -179,6 +187,8 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
             dds::core::vector<VehicleState> rti_state_list(states);
             VehicleStateList state_list;
             state_list.state_list(rti_state_list);
+            state_list.t_now(t_now_value);
+            state_list.period_ms(period_ms_value);
 
             communication->sendToHLC(state_list);
         }
@@ -187,9 +197,9 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
         timestep_not_missed.push_back(((!(period_missed || lastHLCResponseTime > t_now)) || (roundNum % 3 == 0)));
     });
 
-    rti::util::sleep(dds::core::Duration::from_millisecs(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     timer->stop();
-    rti::util::sleep(dds::core::Duration::from_millisecs(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     //Perform checks
     //The highest round value in each round (HLC) should match the current round value of the timer
@@ -200,4 +210,8 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     for (bool period_not_missed : timestep_not_missed) {
         CHECK(period_not_missed);
     }
+
+    //Check if t_now and period_ms work
+    CHECK(t_now_correct);
+    CHECK(period_ms_correct);
 }

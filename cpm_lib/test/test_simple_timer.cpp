@@ -30,9 +30,10 @@
 
 #include <thread>
 
+#include "cpm/Writer.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
-#include <dds/pub/ddspub.hpp>
+
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <dds/topic/ddstopic.hpp>
@@ -40,14 +41,15 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests SimpleTimer
+ * 
  * - Is the timer started after the initial starting time
  * - Does t_now match the expectation regarding offset, period and start values
  * - Is the callback function called shortly after t_now
  * - Is the timer actually stopped when it should be stopped
  * - If the callback function takes longer than period to finish, is this handled correctly
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "SimpleTimer functionality" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_simple_timer");
@@ -63,9 +65,7 @@ TEST_CASE( "SimpleTimer functionality" ) {
     uint64_t starting_time = timer.get_time() + 2000000000;
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> timer_system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        cpm::get_topic<SystemTrigger>("systemTrigger"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    cpm::Writer<SystemTrigger> timer_system_trigger_writer("systemTrigger", true);
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> timer_ready_signal_ready(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
         cpm::get_topic<ReadyStatus>("readyStatus"),
@@ -78,6 +78,21 @@ TEST_CASE( "SimpleTimer functionality" ) {
 
     //Variables for CHECKs - only to identify the timer by its id
     std::string source_id;
+
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Simple Timer test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub = dds::sub::matched_publications(timer_ready_signal_ready);
+
+        if (timer_system_trigger_writer.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Thread to receive the ready signal and send a start signal afterwards
     std::thread signal_thread = std::thread([&](){

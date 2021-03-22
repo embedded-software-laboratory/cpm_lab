@@ -26,12 +26,13 @@
 
 #include "LogLevelSetter.hpp"
 
+/**
+ * \file LogLevelSetter.cpp
+ * \ingroup lcc
+ */
+
 LogLevelSetter::LogLevelSetter() :
-    log_level_writer(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<LogLevel>(cpm::ParticipantSingleton::Instance(), "logLevel"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll() << dds::core::policy::Durability::TransientLocal())
-    )
+    log_level_writer("logLevel", true, true, true)
 {
     
 }
@@ -51,4 +52,9 @@ void LogLevelSetter::set_log_level(unsigned short log_level)
 
     //Write the message / send it to all other participants within the domain
     log_level_writer.write(msg);
+
+    //Priority 1 to always show this message in the logs - 
+    //it is not a critical error per se, but a level change 
+    //can be crucial for debugging and should thus always be indicated
+    cpm::Logging::Instance().write(1, "Log level was changed to %i", static_cast<int>(log_level));
 }

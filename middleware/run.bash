@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Argument 1: Vehicle ID
-# Argument 2: Node ID (Identifier of the middleware)
+# Argument 2: Simulated time
 vehicle_ids=$1
 simulated_time=$2
 middleware_id=$(printf "middleware_${vehicle_ids}" )
@@ -12,4 +12,4 @@ export DDS_INITIAL_PEER=rtps@udpv4://$IP_SELF:25598
 
 # Start screen for middleware; detach and start middleware
 cd ./build
-./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_ids} --dds_domain=21 --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}
+./middleware --node_id=${middleware_id} --vehicle_ids=${vehicle_ids} --dds_domain=$DDS_DOMAIN --simulated_time=${simulated_time} --dds_initial_peer=${DDS_INITIAL_PEER}

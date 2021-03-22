@@ -26,10 +26,17 @@
 
 #include "commonroad_classes/geometry/Polygon.hpp"
 
+/**
+ * \file Polygon.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Polygon::Polygon(const xmlpp::Node* node)
 {
     //Check if node is of type polygon
     assert(node->get_name() == "polygon");
+
+    commonroad_line = node->get_line();
 
     try
     {
@@ -60,15 +67,15 @@ Polygon::Polygon(const xmlpp::Node* node)
     }
 
     //Test output
-    std::cout << "Polygon:" << std::endl;
-    std::cout << "\tPoints: " << points.size() << std::endl;
+    // std::cout << "Polygon:" << std::endl;
+    // std::cout << "\tPoints: " << points.size() << std::endl;
 }
 
-void Polygon::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Polygon::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     for (auto& point : points)
     {
-        point.transform_coordinate_system(scale, translate_x, translate_y);
+        point.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -76,14 +83,15 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double global_orient
 {
     if (points.size() < 3)
     {
-        std::cerr << "TODO: Better warning // Points missing in translated polygon (at least 3 required) - will not be drawn" << std::endl;
+        std::stringstream error_stream;
+        error_stream << "Points missing in translated polygon (at least 3 required) - will not be drawn, from line " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
     else
     {
         ctx->save();
 
         //Perform required translation + rotation
-        //TODO: Local transformation (Translate to center (use get_center()), rotate, draw from there using center-relative coordinates)
         ctx->translate(global_translate_x, global_translate_y);
         ctx->rotate(global_orientation);
 
@@ -123,4 +131,24 @@ std::pair<double, double> Polygon::get_center()
     }
 
     return std::pair<double, double>(sum_x / static_cast<double>(points.size()), sum_y / static_cast<double>(points.size()));
+}
+
+const std::vector<Point>& Polygon::get_points() const
+{
+    return points;
+}
+
+CommonroadDDSPolygon Polygon::to_dds_msg()
+{
+    CommonroadDDSPolygon polygon;
+
+    std::vector<CommonroadDDSPoint> dds_points;
+    for (auto point : points)
+    {
+        dds_points.push_back(point.to_dds_msg());
+    }
+
+    polygon.points(rti::core::vector<CommonroadDDSPoint>(dds_points));
+
+    return polygon;
 }

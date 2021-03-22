@@ -29,19 +29,19 @@
 #include <iostream>
 #include <sstream>
 #include "cpm/Logging.hpp"
+#include "cpm/TimeMeasurement.hpp"
 #include "TrajectoryInterpolation.hpp"
 
-MpcController::MpcController(uint8_t _vehicle_id)
-:topic_Visualization(cpm::get_topic<Visualization>("visualization"))
-,writer_Visualization
-(
-    dds::pub::DataWriter<Visualization>
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        topic_Visualization
-    )
-)
-,vehicle_id(_vehicle_id)
+/**
+ * \file MpcController.cxx
+ * \ingroup vehicle
+ */
+
+MpcController::MpcController(uint8_t _vehicle_id, std::function<void(double&, double&)> _stop_vehicle)
+:
+    writer_Visualization("visualization")
+    ,vehicle_id(_vehicle_id)
+    ,stop_vehicle(_stop_vehicle)
 {
     const casadi_int n_in = casadi_mpc_fn_n_in();
     const casadi_int n_out = casadi_mpc_fn_n_out();
@@ -194,8 +194,7 @@ void MpcController::update(
     ))
     {
         reset_optimizer();
-        out_motor_throttle = 0;
-        out_steering_servo = 0;
+        stop_vehicle(out_motor_throttle, out_steering_servo);
         return;
     }
 
@@ -230,6 +229,7 @@ void MpcController::optimize_control_inputs(
     double &out_steering_servo
 )
 {
+    cpm::TimeMeasurement::Instance().start("mpc_casadi");
     for (int i = 0; i < 20; ++i)
     {
         casadi_vars["var_x0"][0] = vehicleState_predicted_start.pose().x();
@@ -274,9 +274,11 @@ void MpcController::optimize_control_inputs(
             nullptr, nullptr, nullptr);
 
     }
+    cpm::TimeMeasurement::Instance().stop("mpc_casadi");
 
     //cpm::Logging::Instance().write("objective value %f ",casadi_vars["objective"][0]);
 
+    cpm::TimeMeasurement::Instance().start("mpc_opt_vis");
     if(casadi_vars["objective"][0] < 0.7)
     {
         out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
@@ -287,7 +289,7 @@ void MpcController::optimize_control_inputs(
         Visualization vis;
         vis.id(vehicle_id);
         vis.type(VisualizationType::LineStrips);
-        vis.time_to_live(2000000000ull);
+        vis.time_to_live(25000000ull);
         vis.size(0.03);
         vis.color().r(255);
         vis.color().g(0);
@@ -298,7 +300,9 @@ void MpcController::optimize_control_inputs(
             vis.points().at(j).x(casadi_vars["trajectory_x"][j]);
             vis.points().at(j).y(casadi_vars["trajectory_y"][j]);
         }
+        cpm::TimeMeasurement::Instance().start("mpc_vis_write");
         writer_Visualization.write(vis);
+        cpm::TimeMeasurement::Instance().stop("mpc_vis_write");
 
 
         /*
@@ -345,13 +349,16 @@ void MpcController::optimize_control_inputs(
     else
     {
         cpm::Logging::Instance().write(
-            "Warning: Trajectory Controller: "
-            "Large MPC objective %f. Provide a better reference trajectory. Stopping.", casadi_vars["objective"][0]);
+            1,
+            "Error: Trajectory Controller: "
+            "Large MPC objective %f. Provide a better reference trajectory. Stopping.",
+            casadi_vars["objective"][0]
+        );
 
         reset_optimizer();
-        out_motor_throttle = 0.0;
-        out_steering_servo = 0.0;
+        stop_vehicle(out_motor_throttle, out_steering_servo);
     }
+    cpm::TimeMeasurement::Instance().stop("mpc_opt_vis");
 }
 
 void MpcController::reset_optimizer()
@@ -394,20 +401,24 @@ bool MpcController::interpolate_reference_trajectory(
 
     if(t_trajectory_min >= t_start)
     {
-        //Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+        // TODO: Cleanup workaround to avoid logger compile warning when no formatting is used
         cpm::Logging::Instance().write(
-            "Warning: Trajectory Controller: The trajectory command starts in the %s.", "future");
-
+            2,
+            "Warning: Trajectory Controller: The first trajectory point is in the %s.",
+            "future"
+        );
         return false;
     }
 
     if(t_trajectory_max < t_end)
     {
         cpm::Logging::Instance().write(
+            2,
             "Warning: Trajectory Controller: "
             "The trajectory command has insufficient lead time. "
             "Increase lead time by %.2f ms.",
-            double(t_end - t_trajectory_max) * 1e-6);
+            double(t_end - t_trajectory_max) * 1e-6
+        );
         return false;
     }
 
@@ -426,6 +437,7 @@ bool MpcController::interpolate_reference_trajectory(
         end_point.t().nanoseconds(0);
 
         //When looking up the current segment, start at 1, because start and end must follow each other (we look up end, and from that determine start)
+        // It is certain that this point exists, since we checked that (t_trajectory_min >= t_start) && (t_trajectory_max < t_end)
         for (size_t i = 1; i < trajectory_points.size(); ++i)
         {
             if (trajectory_points.at(i).t().nanoseconds() >= t_interpolation)
@@ -436,24 +448,6 @@ bool MpcController::interpolate_reference_trajectory(
             }
         }
 
-        //Log an error if we could not find a valid trajectory segment w.r.t. end
-        if (end_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- no end value could be found!"
-            );
-        }
-
-        //Log an error if we could not find a valid trajectory segment w.r.t. start
-        if (start_point.t().nanoseconds() >= t_interpolation || start_point.t().nanoseconds() == 0)
-        {
-            cpm::Logging::Instance().write(
-                "No valid interpolation data could be found within the current trajectory segment %s",
-                "- start newer than expected or no start found!"
-            );
-        }
-    
         assert(t_now <= end_point.t().nanoseconds());
 
         assert(t_interpolation >= start_point.t().nanoseconds());
@@ -464,6 +458,7 @@ bool MpcController::interpolate_reference_trajectory(
         if(fabs(trajectory_interpolation.acceleration_x) > 20.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_x = %f",
@@ -474,6 +469,7 @@ bool MpcController::interpolate_reference_trajectory(
         if(fabs(trajectory_interpolation.acceleration_y) > 20.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large acceleration in reference trajectory. "
                 "acceleration_y = %f",
@@ -481,9 +477,11 @@ bool MpcController::interpolate_reference_trajectory(
             return false;
         }
 
-        if(fabs(trajectory_interpolation.curvature) > 50.0)
+        if(fabs(trajectory_interpolation.speed) > 0.1 &&
+           fabs(trajectory_interpolation.curvature) > 50.0)
         {
             cpm::Logging::Instance().write(
+                2,
                 "Warning: Trajectory Controller: "
                 "Large curvature in reference trajectory. "
                 "curvature = %f",

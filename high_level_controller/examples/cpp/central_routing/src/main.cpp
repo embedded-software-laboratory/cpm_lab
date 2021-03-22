@@ -32,11 +32,11 @@
 #include "cpm/MultiVehicleReader.hpp"           //->cpm_lib->include->cpm
 #include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
+#include "cpm/Writer.hpp"
 #include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"   //sw-folder central routing
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
-#include <dds/pub/ddspub.hpp>                   //rti folder
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -46,6 +46,34 @@
 
 using std::vector;
 
+//Description for bash files
+/**
+ * \defgroup central_routing_files Additional Files
+ * \ingroup central_routing
+ */
+
+/**
+ * \page central_routing_files_page Additional Files for Central Routing
+ * \subpage central_routing_build <br>
+ * \subpage central_routing_run <br>
+ * \ingroup central_routing_files
+*/
+
+/**
+ * \page central_routing_build build.bash
+ * \brief Build script for central_routing
+ */
+
+/**
+ * \page central_routing_run run.bash
+ * \brief Run script for central_routing
+ */
+
+/**
+ * \brief Main function of the central_routing scenario
+ * This tutorial is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
+ * \ingroup central_routing
+ */
 int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
@@ -75,16 +103,13 @@ int main(int argc, char *argv[])
     //////////////Initialization for trajectory planning/////////////////////////////////
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     const uint64_t dt_nanos = 400000000ull;
-    MultiVehicleTrajectoryPlanner planner(dt_nanos);
+    // MultiVehicleTrajectoryPlanner planner(dt_nanos);
+    std::unique_ptr<MultiVehicleTrajectoryPlanner> planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
 
 
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
     //the reader will read the pose of a vehicle given by its vehicle ID
     cpm::MultiVehicleReader<VehicleObservation> ips_reader(
         cpm::get_topic<VehicleObservation>("vehicleObservation"),
@@ -96,16 +121,13 @@ int main(int argc, char *argv[])
     auto timer = cpm::Timer::create("central_routing", dt_nanos, 0, false, true, enable_simulated_time); 
     timer->start([&](uint64_t t_now)
     {
-        planner.set_real_time(t_now);
+        planner->set_real_time(t_now);
 
-        if(planner.is_started())//will be set to true after fist activation
+        if(planner->is_started())//will be set to true after fist activation
         {
-            auto computation_start_time = timer->get_time();
             //get trajectory commands from MultiVehicleTrajectoryPlanner with new points for each vehicle ID
-            auto commands = planner.get_trajectory_commands(t_now);
-            auto computation_end_time = timer->get_time();
-
-            cpm::Logging::Instance().write("%s, Computation start time: %llu, Computation end time: %llu", vehicle_ids_string.c_str(), computation_start_time, computation_end_time);
+            auto commands = planner->get_trajectory_commands(t_now);
+            
             for(auto& command:commands)
             {
                 writer_vehicleCommandTrajectory.write(command);
@@ -113,6 +135,10 @@ int main(int argc, char *argv[])
         }
         else //prepare to start planner
         {
+            // reset planner object
+            planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
+            planner->set_real_time(t_now);
+
             std::map<uint8_t, VehicleObservation> ips_sample;
             std::map<uint8_t, uint64_t> ips_sample_age;
             ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
@@ -125,7 +151,12 @@ int main(int argc, char *argv[])
 
             if(!all_vehicles_online)
             {
-                std::cout << "Waiting for vehicles ..." << std::endl;
+                // FIXME Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
+                cpm::Logging::Instance().write(
+                    3,
+                    "Waiting for %s ...",
+                    "vehicles"
+                );
                 return;
             }
 
@@ -142,13 +173,21 @@ int main(int argc, char *argv[])
                 //if vehicle was found on map, add vehicle to MultiVehicleTrajectoryPlanner
                 if(matched)
                 {
-                    planner.add_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index));
-                    std::cout << "Vehicle " << int(new_id) << " matched" << std::endl;
+                    planner->add_vehicle(std::make_shared<VehicleTrajectoryPlanningState>(new_id, out_edge_index, out_edge_path_index));
+                    cpm::Logging::Instance().write(
+                        3,
+                        "Vehicle %d matched.",
+                        int(new_id)
+                    );
                 }
                 else //Errormessage, if not all vehicles could be matched to the map
                 {
                     all_vehicles_matched = false;
-                    std::cout << "Vehicle " << int(new_id) << " not matched" << std::endl;
+                    cpm::Logging::Instance().write(
+                        1,
+                        "Error: Vehicle %d not matched.",
+                        int(new_id)
+                    );
                 }
             }
 
@@ -156,7 +195,7 @@ int main(int argc, char *argv[])
             {   
                 //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
                 //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-                planner.start();
+                planner->start();
             }
         }
     });

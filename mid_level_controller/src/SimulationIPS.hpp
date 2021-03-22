@@ -25,21 +25,35 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #pragma once
-#include <dds/pub/ddspub.hpp>
 #include "VehicleObservation.hpp"
+#include "cpm/Writer.hpp"
 #include <list>
+#include <string>
 
+/**
+ * \class SimulationIPS
+ * \brief TODO
+ * \ingroup vehicle
+ */
 class SimulationIPS
 {
+    //! TODO
+    cpm::Writer<VehicleObservation> writer_vehicleObservation;
 
-    dds::topic::Topic<VehicleObservation> topic_vehicleObservation;
-    dds::pub::DataWriter<VehicleObservation> writer_vehicleObservation;
-
+    //! TODO
     std::list<VehicleObservation> delay_buffer;
 
 public:
-    SimulationIPS(dds::topic::Topic<VehicleObservation>& _topic_vehicleObservation);
+    /**
+     * \brief TODO Constructor
+     * \param topic_name TODO
+     */
+    SimulationIPS(std::string topic_name);
 
+    /**
+     * \brief TODO
+     * \param simulatedState TODO
+     */
     void update(VehicleObservation simulatedState);
     
 };

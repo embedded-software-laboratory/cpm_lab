@@ -26,10 +26,15 @@
 
 #include "LogStorage.hpp"
 
+/**
+ * \file LogStorage.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 LogStorage::LogStorage() :
     /*Set up communication*/
-    log_reader(std::bind(&LogStorage::log_callback, this, _1), cpm::ParticipantSingleton::Instance(), cpm::get_topic<Log>("log"), true)
+    log_reader(std::bind(&LogStorage::log_callback, this, _1), "log", true)
 {    
     file.open(filename, std::ofstream::out | std::ofstream::trunc);
     file << "ID,Timestamp,Content" << std::endl;
@@ -41,40 +46,37 @@ LogStorage::~LogStorage()
     file.close();
 }
 
-void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) { 
+void LogStorage::log_callback(std::vector<Log>& samples) { 
     std::lock_guard<std::mutex> lock_1(log_storage_mutex);
     std::lock_guard<std::mutex> lock_2(log_buffer_mutex); 
 
-    for (auto sample : samples) {
-        if (sample.info().valid()) {
-            //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
-            //The warning will still show up, but the log message is altered s.t. the user can find the error
-            Log received_log = sample.data();
-            assert_utf8_validity(received_log);
+    for (auto& received_log : samples) {
+        //Make sure that the utf8-encoding is correct, or else Gtk will show a warning (Pango, regarding UTF-8)
+        //The warning will still show up, but the log message is altered s.t. the user can find the error
+        assert_utf8_validity(received_log);
 
-            log_storage.push_back(received_log);
-            log_buffer.push_back(received_log);
+        log_storage.push_back(received_log);
+        log_buffer.push_back(received_log);
 
-            //Write logs immediately to csv file (taken from cpm library)
-            //For the log file: csv, so escape '"'
-            std::string str = received_log.content();
-            std::string log_string = std::string(str);
-            std::string escaped_quote = std::string("\"\"");
-            size_t pos = 0;
-            while ((pos = log_string.find('"', pos)) != std::string::npos) {
-                log_string.replace(pos, 1, escaped_quote);
-                pos += escaped_quote.size();
-            }
-            //Also put the whole string in quotes
-            log_string.insert(0, "\"");
-            log_string += "\"";
-
-            //Mutex for writing the message (file, writer) - is released when going out of scope
-            std::lock_guard<std::mutex> lock(file_mutex);
-
-            //Add the message to the log file
-            file << received_log.id() << "," << received_log.stamp().nanoseconds() << "," << log_string << std::endl;
+        //Write logs immediately to csv file (taken from cpm library)
+        //For the log file: csv, so escape '"'
+        std::string str = received_log.content();
+        std::string log_string = std::string(str);
+        std::string escaped_quote = std::string("\"\"");
+        size_t pos = 0;
+        while ((pos = log_string.find('"', pos)) != std::string::npos) {
+            log_string.replace(pos, 1, escaped_quote);
+            pos += escaped_quote.size();
         }
+        //Also put the whole string in quotes
+        log_string.insert(0, "\"");
+        log_string += "\"";
+
+        //Mutex for writing the message (file, writer) - is released when going out of scope
+        std::lock_guard<std::mutex> lock(file_mutex);
+
+        //Add the message to the log file
+        file << received_log.id() << "," << received_log.stamp().nanoseconds() << "," << log_string << std::endl;
     }
 
     //Clear storage and buffer when some max size was reached - keep last elements
@@ -82,27 +84,60 @@ void LogStorage::log_callback(dds::sub::LoanedSamples<Log>& samples) {
     keep_last_elements(log_buffer, 100);
 }
 
-std::vector<Log> LogStorage::get_new_logs() {
+std::vector<Log> LogStorage::get_new_logs(unsigned int log_level) {
     std::lock_guard<std::mutex> lock(log_buffer_mutex);
-    std::vector<Log> log_copy = log_buffer;
+    std::vector<Log> log_copy;
+
+    for (auto log : log_buffer)
+    {
+        //TODO: It could be more efficient to store logs of different levels in different data structures (though merging them would take more time)
+        if(log.log_level() <= log_level)
+        {
+            log_copy.push_back(log);
+        }
+    }
+
     log_buffer.clear();
     return log_copy;
 }
 
-std::vector<Log> LogStorage::get_all_logs() {
+std::vector<Log> LogStorage::get_all_logs(unsigned short log_level) {
     std::lock_guard<std::mutex> lock(log_storage_mutex);
-    std::vector<Log> log_copy = log_storage;
+    std::vector<Log> log_copy;
+
+    for (auto log : log_storage)
+    {
+        //TODO: It could be more efficient to store logs of different levels in different data structures (though merging them would take more time)
+        if(log.log_level() <= log_level)
+        {
+            log_copy.push_back(log);
+        }
+    }
+
     return log_copy;
 }
 
-std::vector<Log> LogStorage::get_recent_logs(const long log_amount) {
+std::vector<Log> LogStorage::get_recent_logs(const long log_amount, unsigned short log_level) {
     std::lock_guard<std::mutex> lock(log_storage_mutex);
-    std::vector<Log> log_copy = log_storage;
-    keep_last_elements(log_copy, log_amount);
+    std::vector<Log> log_copy;
+    long count = 0;
+    for (auto back_it = log_storage.rbegin(); back_it != log_storage.rend(); ++back_it)
+    {
+        //Only add log_amount most recent logs
+        if (count >= log_amount) break;
+
+        //Get next log, if it is within the given log level
+        if (back_it->log_level() <= log_level)
+        {
+            log_copy.push_back(*back_it);
+            ++count;
+        }
+    }
+
     return log_copy;
 }
 
-std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, FilterType filter_type, std::atomic_bool &continue_search) {
+std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, FilterType filter_type, unsigned short log_level, std::atomic_bool &continue_search) {
     //Copy log_storage and perform search on copy only
     std::unique_lock<std::mutex> lock(log_storage_mutex);
     std::vector<Log> log_storage_copy = std::vector<Log>(log_storage);
@@ -140,7 +175,7 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
                     break;
             }
 
-            if (std::regex_search(filter_by_text, search_regex)) {
+            if (std::regex_search(filter_by_text, search_regex) && iterator->log_level() <= log_level) {
                 search_result.emplace_back(*iterator);
             }
 
@@ -151,11 +186,11 @@ std::vector<Log> LogStorage::perform_abortable_search(std::string filter_value, 
     }
     catch (std::regex_error& e) {
         std::cout << "Regex error (due to filter string): " << e.what() << std::endl;
-        search_result.push_back(Log("", "No results - Wrong regex expression!", TimeStamp(0)));
+        search_result.push_back(Log("", "No results - Wrong regex expression!", TimeStamp(0), 0));
     }
 
     if (search_result.size() == 0 && log_storage_copy.size() > 0) {
-        search_result.push_back(Log("", "No results", TimeStamp(0)));
+        search_result.push_back(Log("", "No results", TimeStamp(0), 0));
     }
 
     keep_last_elements(search_result, 100);

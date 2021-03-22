@@ -29,9 +29,9 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Eight.hpp"
-#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 #include <stdlib.h>
@@ -41,7 +41,35 @@
 using std::vector;
 
 
+//Description for bash files
+/**
+ * \defgroup eight_zero_files Additional Files
+ * \ingroup eight_zero
+ */
 
+/**
+ * \page eight_zero_files_page Additional Files for Eight Zero
+ * \subpage e_z_build <br>
+ * \subpage e_z_run <br>
+ * \ingroup eight_zero_files
+*/
+
+/**
+ * \page e_z_build build.bash
+ * \brief Build script for eight_zero
+ */
+
+/**
+ * \page e_z_run run.bash
+ * \brief Run script for eight_zero
+ */
+
+/**
+ * \brief Main function of the eight_zero scenario
+ * \param argc Command line param
+ * \param argv Command line param
+ * \ingroup eight_zero
+ */
 int main(int argc, char *argv[])
 {
     const std::string node_id = "eight_zero";
@@ -63,11 +91,7 @@ int main(int argc, char *argv[])
 
 
     // Writer for sending trajectory commands
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
     // Initialize 8-Trajectory

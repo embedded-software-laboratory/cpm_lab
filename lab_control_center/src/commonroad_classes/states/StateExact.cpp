@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/StateExact.hpp"
 
+/**
+ * \file StateExact.cpp
+ * \ingroup lcc_commonroad
+ */
+
 StateExact::StateExact(const xmlpp::Node* node)
 {
     //2018 and 2020 specs are the same
@@ -38,6 +43,14 @@ StateExact::StateExact(const xmlpp::Node* node)
         if (position_node)
         {
             position = std::optional<Position>{std::in_place, position_node};
+
+            if (! position->is_exact())
+            {
+                std::stringstream error_stream;
+                error_stream << "Position must be exact, in line: ";
+                error_stream << position_node->get_line();
+                throw SpecificationError(error_stream.str());
+            }
         }
         else
         {
@@ -57,10 +70,14 @@ StateExact::StateExact(const xmlpp::Node* node)
         //Acceleration must not exist
         acceleration = xml_translation::get_child_child_double_exact(node, "acceleration", false);
 
-        //Warn if time is not specified; must always be zero according to specs, so we ignore the actual value
-        //TODO: Is that okay?
-        xml_translation::get_child_if_exists(node, "time", true);
-        time = 0;
+        //Warn if time is not specified; must always be zero according to specs
+        time = xml_translation::get_child_child_double_exact(node, "time", true).value(); //We can use .value() here, because if none exists an error is thrown beforehand
+        if (time != 0.0)
+        {
+            std::stringstream error_msg_stream;
+            error_msg_stream << "Only a time value of exactly 0 is allowed here - line " << node->get_line();
+            throw SpecificationError(error_msg_stream.str());
+        }
     }
     catch(const SpecificationError& e)
     {
@@ -74,28 +91,50 @@ StateExact::StateExact(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "StateExact: " << std::endl;
-    std::cout << "\tPosition exists: " << position.has_value() << std::endl;
-    std::cout << "\tVelocity: " << velocity << std::endl;
-    std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
-    std::cout << "\tOrientation: " << orientation << std::endl;
-    std::cout << "\tYaw rate: " << yaw_rate << std::endl;
-    std::cout << "\tSlip angle: " << slip_angle << std::endl;
-    std::cout << "\tTime: " << time << std::endl;
+    // std::cout << "StateExact: " << std::endl;
+    // std::cout << "\tPosition exists: " << position.has_value() << std::endl;
+    // std::cout << "\tVelocity: " << velocity << std::endl;
+    // std::cout << "\tAcceleration defined: " << acceleration.has_value() << std::endl;
+    // std::cout << "\tOrientation: " << orientation << std::endl;
+    // std::cout << "\tYaw rate: " << yaw_rate << std::endl;
+    // std::cout << "\tSlip angle: " << slip_angle << std::endl;
+    // std::cout << "\tTime: " << time << std::endl;
 }
 
-void StateExact::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void StateExact::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-    
     if (position.has_value())
     {
-        position->transform_coordinate_system(scale, translate_x, translate_y);
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
+    }
+
+    //If all positional values are adjusted, the velocity must be adjusted as well
+    velocity *= scale;
+    if (acceleration.has_value())
+    {
+        auto new_acceleration = scale * acceleration.value();
+        acceleration = std::optional<double>(new_acceleration);
     }
 
     if (scale > 0)
     {
         transform_scale *= scale;   
+    }
+}
+
+void StateExact::transform_timing(double time_scale)
+{
+    if (time_scale > 0)
+    {
+        velocity *= time_scale;
+
+        if (acceleration.has_value())
+        {
+            auto new_acceleration = time_scale * acceleration.value();
+            acceleration = std::optional<double>(new_acceleration);
+        }
+
+        yaw_rate *= time_scale;
     }
 }
 
@@ -115,7 +154,7 @@ void StateExact::draw(const DrawingContext& ctx, double scale, double global_ori
     ctx->rotate(orientation + local_orientation);
 
     double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-    draw_arrow(ctx, 0.0, 0.0, 1.0 * arrow_scale, 0.0, scale * transform_scale);
+    draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
 
     ctx->restore();
 }
@@ -135,4 +174,39 @@ void StateExact::transform_context(const DrawingContext& ctx, double scale)
     
     //Rotate, if necessary
     ctx->rotate(orientation);
+}
+
+const std::optional<Position>& StateExact::get_position() const
+{
+    return position;
+}
+
+double StateExact::get_orientation()
+{
+    return orientation;
+}
+
+double StateExact::get_time()
+{
+    return time;
+}
+
+double StateExact::get_velocity()
+{
+    return velocity;
+}
+
+const std::optional<double> StateExact::get_acceleration() const
+{
+    return acceleration;
+}
+
+double StateExact::get_yaw_rate()
+{
+    return yaw_rate;
+}
+
+double StateExact::get_slip_angle()
+{
+    return slip_angle;
 }

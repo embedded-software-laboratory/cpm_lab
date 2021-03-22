@@ -29,24 +29,44 @@
 #include "cpm/init.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleCommandTrajectory.hpp"
-#include <dds/pub/ddspub.hpp>
 #include <iostream>
 #include <memory>
 
 using std::vector;
 
-/*
- * Read this before you start:
- *     Vehicle Commands: http://cpm-lab.embedded.rwth-aachen.de:8090/display/CLD/Vehicle+Commands
- *     Timer:            http://cpm-lab.embedded.rwth-aachen.de:8090/pages/viewpage.action?pageId=2293786
+//Description for bash files
+/**
+ * \defgroup basic_circle_files Additional Files
+ * \ingroup basic_circle
  */
 
+/**
+ * \page basic_circle_files_page Additional Files for Basic Circle
+ * \subpage basic_circle_build <br>
+ * \subpage basic_circle_run <br>
+ * \ingroup basic_circle_files
+*/
 
+/**
+ * \page basic_circle_build build.bash
+ * \brief Build script for basic_circle
+ */
 
+/**
+ * \page basic_circle_run run.bash
+ * \brief Run script for basic_circle
+ */
+
+/**
+ * \brief Main function of the basic_circle scenario
+ * This tutorial is also described in https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Basic+Circle+Example
+ * \ingroup basic_circle
+ */
 int main(int argc, char *argv[])
 {
-    //Prepare for Logging
+    //Initialize cpm library
     const std::string node_id = "basic_circle";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
@@ -69,11 +89,7 @@ int main(int argc, char *argv[])
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
     //For more information see our documentation about RTI DDS
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 

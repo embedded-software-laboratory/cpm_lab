@@ -17,6 +17,13 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/**
+ * \file twi.h
+ *
+ * \author Copyright (c) 2006 Nicholas Zambetti
+ * 
+ * \ingroup low_level_controller
+ */
 
 #ifndef twi_h
 #define twi_h

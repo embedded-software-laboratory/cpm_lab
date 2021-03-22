@@ -32,11 +32,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cmath>
-#include <dds/pub/ddspub.hpp>
+#include <vector>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
 #include "VehicleObservation.hpp"
 #include "test_loop_trajectory.hpp"
 #include "VehicleCommandTrajectory.hpp"
@@ -44,25 +46,89 @@
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
+/**
+ * \file main.cpp
+ * \brief TODO. Contains one of the main functions (without subgroups, Doxygen only includes one)
+ * \ingroup controller_test_loop
+ */
+
+//Description for bash files
+/**
+ * \defgroup controller_test_loop_files Additional Files
+ * \ingroup controller_test_loop
+ */
+
+/**
+ * \page controller_test_loop_files_page Additional Files for Controller Test Loop
+ * \subpage c_t_l_build <br>
+ * \subpage c_t_l_run <br>
+ * \subpage c_t_l_run_platoon <br>
+ * \ingroup controller_test_loop_files
+*/
+
+/**
+ * \page c_t_l_build build.bash
+ * \brief Build script for controller_test_loop
+ */
+
+/**
+ * \page c_t_l_run run.bash
+ * \brief TODO
+ */
+
+/**
+ * \page c_t_l_run_platoon run_platoon.bash
+ * \brief TODO
+ */
+
+/**
+ * \class TrajectoryIndex
+ * \brief TODO
+ * \ingroup controller_test_loop
+ */
 class TrajectoryIndex
 {
 private:
     //This map keeps track of the current trajectory index of each vehicle
     //Do not access these two 
+    //! TODO
     std::mutex trajectory_mutex;
+    //! TODO
     std::map<uint8_t, int64_t> vehicle_trajectory_indices;
 
     //Reference to required data
+    //! TODO
     std::vector<TrajectoryPoint>& trajectory_points;
+    //! TODO
     std::mutex& observation_mutex;
+    //! TODO
     std::map<uint8_t, VehicleObservation>& vehicle_observations;
 
+    /**
+     * \brief TODO
+     * \param x_1 TODO
+     * \param y_1 TODO
+     * \param x_2 TODO
+     * \param y_2 TODO
+     */
     double get_squared_distance(double x_1, double y_1, double x_2, double y_2)
     {
         return (x_1 - x_2) * (x_1 - x_2) 
             + (y_1 - y_2) * (y_1 - y_2);
     }
 
+    /**
+     * \brief TODO
+     * \param x1_before TODO
+     * \param y1_before TODO
+     * \param x1_after TODO
+     * \param y1_after TODO
+     * \param x2_before TODO
+     * \param y2_before TODO
+     * \param x2_after TODO
+     * \param y2_after TODO
+     * \param tolerance TODO
+     */
     bool has_collision(double x1_before, double y1_before, double x1_after, double y1_after,
         double x2_before, double y2_before, double x2_after, double y2_after, double tolerance)
     {
@@ -86,6 +152,14 @@ private:
         return false;
     }
 
+    /**
+     * \brief TODO
+     * \param x1 TODO
+     * \param y1 TODO
+     * \param x2 TODO
+     * \param y2 TODO
+     * \param tolerance TODO
+     */
     bool has_collision(double x1, double y1, double x2, double y2, double tolerance)
     {
         double min_x1 = x1 - tolerance/2.0;
@@ -108,6 +182,12 @@ private:
         return false;
     }
 
+    /**
+     * \brief TODO
+     * \param old_index TODO
+     * \param next_index TODO
+     * \param vehicle_id TODO
+     */
     bool has_collision(size_t old_index, size_t next_index, uint8_t vehicle_id)
     {
         const TrajectoryPoint& old_pose = trajectory_points.at(old_index);
@@ -159,7 +239,12 @@ private:
     }
 
 public:
-    //Get references to data required for the computation
+    /**
+     * \brief Constructor. Get references to data required for the computation
+     * \param _trajectory_points TODO
+     * \param _observation_mutex TODO
+     * \param _vehicle_observations TODO
+     */
     TrajectoryIndex(std::vector<TrajectoryPoint>& _trajectory_points, std::mutex& _observation_mutex, std::map<uint8_t, VehicleObservation>& _vehicle_observations) :
         trajectory_points(_trajectory_points),
         observation_mutex(_observation_mutex),
@@ -168,6 +253,10 @@ public:
 
     }
 
+    /**
+     * \brief TODO
+     * \param id TODO
+     */
     void set_closest_trajectory_point(uint8_t id)
     {
         //Lock map so that it cannot be changed elsewhere, then get trajectory index
@@ -210,6 +299,7 @@ public:
     /**
      * \brief Returns the trajectory point for the given id OR tries to calculate one - this might fail, so no valid value is returned in that case
      *      Also return whether a collision would have occurred - in that case, the vehicle needs to s
+     * \param id TODO
      */
     std::pair<int64_t,bool> get_next_trajectory_index(uint8_t id)
     {
@@ -240,6 +330,13 @@ public:
     }
 };
 
+
+/**
+ * \brief Main function of the controller_test_loop scenario
+ * \param argc Command line param
+ * \param argv Command line param
+ * \ingroup controller_test_loop
+ */
 int main(int argc, char *argv[])
 {
     cpm::init(argc, argv);
@@ -280,48 +377,38 @@ int main(int argc, char *argv[])
 
     // receive vehicle pose from IPS
     cpm::AsyncReader<VehicleObservation> vehicleObservations_reader(
-        [&](dds::sub::LoanedSamples<VehicleObservation>& samples) {
+        [&](std::vector<VehicleObservation>& samples) {
             std::unique_lock<std::mutex> lock(observation_mutex);
             std::unique_lock<std::mutex> lock2(slot_mutex);
-            for(auto sample : samples) 
+            for(auto& data : samples) 
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    vehicleObservations[data.vehicle_id()] = data;
+                vehicleObservations[data.vehicle_id()] = data;
 
-                    bool vehicle_has_slot = false;
-                    for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
+                bool vehicle_has_slot = false;
+                for (size_t slot_idx = 0; slot_idx < slot_vehicle_ids.size(); ++slot_idx)
+                {
+                    if(data.vehicle_id() > 0 && slot_vehicle_ids[slot_idx] == data.vehicle_id())
                     {
-                        if(data.vehicle_id() > 0 && slot_vehicle_ids[slot_idx] == data.vehicle_id())
-                        {
-                            vehicle_has_slot = true;
-                            break;
-                        }
+                        vehicle_has_slot = true;
+                        break;
                     }
-                    if(!vehicle_has_slot) 
+                }
+                if(!vehicle_has_slot) 
+                {
+                    if(std::find(unassigned_vehicle_ids.begin(), unassigned_vehicle_ids.end(), data.vehicle_id()) 
+                        == unassigned_vehicle_ids.end()) 
                     {
-                        if(std::find(unassigned_vehicle_ids.begin(), unassigned_vehicle_ids.end(), data.vehicle_id()) 
-                            == unassigned_vehicle_ids.end()) 
-                        {
-                            unassigned_vehicle_ids.push_back(data.vehicle_id());
-                        }
+                        unassigned_vehicle_ids.push_back(data.vehicle_id());
                     }
                 }
             }
         }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<VehicleObservation>("vehicleObservation")
+        "vehicleObservation"
     );
 
 
     // Writer for sending trajectory commands
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
-
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
 

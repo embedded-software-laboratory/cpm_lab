@@ -33,6 +33,11 @@
 #include <unistd.h>
 #include <cmath>
 
+/**
+ * \file TimerSimulated.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
 
@@ -43,10 +48,8 @@ namespace cpm {
     )
     :period_nanoseconds(_period_nanoseconds)
     ,offset_nanoseconds(_offset_nanoseconds)
-    ,ready_topic(cpm::ParticipantSingleton::Instance(), "readyStatus")
-    ,trigger_topic(cpm::ParticipantSingleton::Instance(), "systemTrigger")
-    ,writer_ready_status(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), ready_topic, (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()))
-    ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), trigger_topic, (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
+    ,writer_ready_status("readyStatus", true)
+    ,reader_system_trigger(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()))
     ,node_id(_node_id)
     ,current_time(0)
     {
@@ -54,6 +57,9 @@ namespace cpm {
 
         dds::sub::cond::ReadCondition read_cond(reader_system_trigger, dds::sub::status::DataState::any());
         waitset += read_cond;
+
+        active.store(false);
+        cancelled.store(false);
     }
 
     TimerSimulated::Answer TimerSimulated::handle_system_trigger(uint64_t& deadline) {
@@ -87,7 +93,7 @@ namespace cpm {
                     }
                     else
                     {
-                        this->active = false;
+                        active.store(false);
                     }
                     
                     return Answer::STOP;
@@ -108,12 +114,23 @@ namespace cpm {
 
     void TimerSimulated::start(std::function<void(uint64_t t_now)> update_callback)
     {
-        if(this->active) {
-            Logging::Instance().write("%s", "TimerSimulated: The cpm::Timer can not be started twice.");
+        if(active.load()) {
+            Logging::Instance().write(
+                2,
+                "%s", 
+                "TimerSimulated: The cpm::Timer can not be started twice."
+            );
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
 
-        this->active = true;
+        active.store(true);
+        
+        //In the rare case that active was set too early to false in stop / deconstructor: we must check that these have already been called
+        if (cancelled.load())
+        {
+            return;
+        }
+
 
         m_update_callback = update_callback;
         
@@ -122,7 +139,7 @@ namespace cpm {
 
         //Send first ready signal until any signal has been received, process answer if necessary
         Answer system_trigger = Answer::NONE;
-        while (system_trigger == Answer::NONE) {
+        while (system_trigger == Answer::NONE && active.load()) {
             ReadyStatus ready_status;
             ready_status.next_start_stamp(TimeStamp(deadline));
             ready_status.source_id(node_id);
@@ -133,7 +150,7 @@ namespace cpm {
         }
 
         //Wait for the next relevant time step and call the callback function until the process has been stopped
-        while(this->active) {
+        while(active.load()) {
             //Wait for the next signals until the next start signal has been received
             dds::core::cond::WaitSet::ConditionSeq active_conditions = waitset.wait();
 
@@ -159,7 +176,11 @@ namespace cpm {
         }
         else
         {
-            Logging::Instance().write("%s", "TimerSimulated: The cpm::Timer can not be started twice.");
+            Logging::Instance().write(
+                2,
+                "%s", 
+                "TimerSimulated: The cpm::Timer can not be started twice."
+            );
             throw cpm::ErrorTimerStart("The cpm::Timer can not be started twice.");
         }
     }
@@ -172,26 +193,42 @@ namespace cpm {
 
     void TimerSimulated::stop()
     {
-        active = false;
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
+        active.store(false);
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
     }
 
     TimerSimulated::~TimerSimulated()
     {
-        active = false;
+        std::lock_guard<std::mutex> lock(join_mutex);
+
+        cancelled.store(true);
+        active.store(false);
         if(runner_thread.joinable())
         {
             runner_thread.join();
         }
+
+        cancelled.store(false);
     }
 
 
     uint64_t TimerSimulated::get_time()
     {
         return current_time;
+    }
+
+    uint64_t TimerSimulated::get_start_time()
+    {
+        //For a simulated timer, 0 is always the starting point of the simulation
+        return 0;
     }
 
 }

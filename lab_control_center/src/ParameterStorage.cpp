@@ -26,6 +26,11 @@
 
 #include "ParameterStorage.hpp"
 
+/**
+ * \file ParameterStorage.cpp
+ * \ingroup lcc
+ */
+
 ParameterStorage::ParameterStorage(std::string _filename, int precision) :
     PRECISION(precision),
     filename(_filename)
@@ -51,6 +56,7 @@ void ParameterStorage::loadFile(std::string _filename) {
 
     YAML::Node params = parsedFile["parameters"];
     YAML::Node params_bool = params["bool"];
+    YAML::Node params_uint64_t = params["uint64_t"];
     YAML::Node params_int = params["int"];
     YAML::Node params_double = params["double"];
     YAML::Node params_string = params["string"];
@@ -58,6 +64,7 @@ void ParameterStorage::loadFile(std::string _filename) {
     YAML::Node params_doubles = params["doubles"];
     
     if (!(params_bool.IsMap() 
+        && params_uint64_t.IsMap() 
         && params_int.IsMap() 
         && params_double.IsMap() 
         && params_string.IsMap() 
@@ -69,6 +76,9 @@ void ParameterStorage::loadFile(std::string _filename) {
 
     for (YAML::const_iterator it=params_bool.begin();it!=params_bool.end();++it) {
         set_parameter_bool(it->first.as<std::string>(), it->second["value"].as<bool>(), it->second["info"].as<std::string>());
+    }
+    for (YAML::const_iterator it=params_uint64_t.begin();it!=params_uint64_t.end();++it) {
+        set_parameter_uint64_t(it->first.as<std::string>(), it->second["value"].as<uint64_t>(), it->second["info"].as<std::string>());
     }
     for (YAML::const_iterator it=params_int.begin();it!=params_int.end();++it) {
         set_parameter_int(it->first.as<std::string>(), it->second["value"].as<int32_t>(), it->second["info"].as<std::string>());
@@ -83,6 +93,7 @@ void ParameterStorage::loadFile(std::string _filename) {
         std::vector<int32_t> ints;
 
         if (!outer_it->second["value"].IsSequence()) {
+            //Is this really a good idea, or would logging &ignoring the paramter be better in this case?
             throw std::domain_error("The input file is not conformant with the specification - ints must contain sequences");
         }
 
@@ -99,6 +110,7 @@ void ParameterStorage::loadFile(std::string _filename) {
         std::vector<double> doubles;
 
         if (!outer_it->second["value"].IsSequence()) {
+            //Is this really a good idea, or would logging &ignoring the paramter be better in this case?
             throw std::domain_error("The input file is not conformant with the specification - doubles must contain sequences");
         }
 
@@ -135,6 +147,22 @@ void ParameterStorage::storeFile(std::string _filename) {
 
         out << YAML::Key << "value";
         out << YAML::Value << param.parameter_data.value_bool();
+        out << YAML::Key << "info";
+        out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
+        out << YAML::EndMap;
+    }
+    out << YAML::EndMap;
+
+    out << YAML::Key << "uint64_t";
+    out << YAML::Value << YAML::BeginMap;
+    for (auto const& key : list_uint64_t()) {
+        ParameterWithDescription param;
+        get_parameter(key, param);
+        out << YAML::Key << key;
+        out << YAML::Value << YAML::BeginMap;
+
+        out << YAML::Key << "value";
+        out << YAML::Value << param.parameter_data.value_uint64_t();
         out << YAML::Key << "info";
         out << YAML::Value << YAML::DoubleQuoted << param.parameter_description;
         out << YAML::EndMap;
@@ -266,6 +294,17 @@ void ParameterStorage::set_parameter_bool(std::string name, bool value, std::str
     //Store the object
     set_parameter(name, param);
 }
+void ParameterStorage::set_parameter_uint64_t(std::string name, uint64_t value, std::string info) {
+    //Create parameter object
+    ParameterWithDescription param;
+    param.parameter_description = info;
+    param.parameter_data.name(name);
+    param.parameter_data.type(ParameterType::UInt64);
+    param.parameter_data.value_uint64_t(value);
+
+    //Store the object
+    set_parameter(name, param);
+}
 void ParameterStorage::set_parameter_int(std::string name, int32_t value, std::string info) {
     std::vector<int32_t> stdInts;
     stdInts.push_back(value);
@@ -351,6 +390,16 @@ bool ParameterStorage::get_parameter_bool(std::string name, bool& value) {
     }
     return false;
 }
+bool ParameterStorage::get_parameter_uint64_t(std::string name, uint64_t& value) {
+    std::lock_guard<std::mutex> u_lock(param_storage_mutex);
+    if (param_storage.find(name) != param_storage.end()) {
+        if ((param_storage[name]).parameter_data.type() == ParameterType::UInt64) {
+            value = (param_storage[name]).parameter_data.value_uint64_t();
+            return true;
+        }
+    }
+    return false;
+}
 bool ParameterStorage::get_parameter_int(std::string name, int32_t& value) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
@@ -417,6 +466,7 @@ bool ParameterStorage::get_parameter(std::string name, ParameterWithDescription&
         param.parameter_data.name(param_storage[name].parameter_data.name());
         param.parameter_data.type(param_storage[name].parameter_data.type());
         param.parameter_data.value_bool(param_storage[name].parameter_data.value_bool());
+        param.parameter_data.value_uint64_t(param_storage[name].parameter_data.value_uint64_t());
         param.parameter_data.value_string(param_storage[name].parameter_data.value_string());
         param.parameter_data.values_int32(param_storage[name].parameter_data.values_int32());
         param.parameter_data.values_double(param_storage[name].parameter_data.values_double());
@@ -431,12 +481,14 @@ void ParameterStorage::delete_parameter(std::string name) {
     std::lock_guard<std::mutex> u_lock(param_storage_mutex);
     if (param_storage.find(name) != param_storage.end()) {
         param_storage.erase(name);
-        std::cout << "Successfully deleted " << name << std::endl;
     }
 }
 
 std::vector<std::string> ParameterStorage::list_bool() {
     return list_names(ParameterType::Bool);
+}
+std::vector<std::string> ParameterStorage::list_uint64_t() {
+    return list_names(ParameterType::UInt64);
 }
 std::vector<std::string> ParameterStorage::list_int() {
     return list_names(ParameterType::Int32);

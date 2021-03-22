@@ -28,7 +28,11 @@
 #include "DetectVehicleID.hpp"
 
 
-
+/**
+ * \test Tests DetectVehicleID
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("test_DetectVehicleID")
 {
     // Create test data
@@ -83,4 +87,55 @@ TEST_CASE("test_DetectVehicleID")
     CHECK(((result.vehicles[0].id == 9 && result.vehicles[1].id == 4) 
         || (result.vehicles[0].id == 4 && result.vehicles[1].id == 9)));
 
+}
+
+
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
+TEST_CASE("TEST_apply_WITH_empty_input_SHOULD_return_empty_VehiclePoints")
+{
+    // Create test data
+    VehiclePointTimeseries input;
+    
+    // Act
+    DetectVehicleID detectVehicleID(
+        std::vector<uint8_t>{ 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 },
+        std::vector<uint8_t>{ 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 }
+    );
+
+    VehiclePoints result = detectVehicleID.apply(input);
+
+    // Assert
+    REQUIRE(result.vehicles.empty());
+}
+
+
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
+TEST_CASE("TEST_apply_WITH_0_vehicles_SHOULD_return_empty_VehiclePoints")
+{
+    // Create test data
+    VehiclePointTimeseries input;
+    VehiclePoints vehiclePoints;
+    vehiclePoints.timestamp = 159753789456123;
+    vehiclePoints.vehicles = {};
+    input.push_back(vehiclePoints);
+    
+    // Act
+    DetectVehicleID detectVehicleID(
+        std::vector<uint8_t>{ 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 },
+        std::vector<uint8_t>{ 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 }
+    );
+
+    VehiclePoints result = detectVehicleID.apply(input);
+
+    // Assert
+    REQUIRE(result.vehicles.empty());
+    REQUIRE(result.timestamp == vehiclePoints.timestamp);
 }

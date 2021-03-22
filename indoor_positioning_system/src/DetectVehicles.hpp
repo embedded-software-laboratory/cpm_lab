@@ -31,7 +31,13 @@
 #include <array>
 #include "types.hpp"
 #include <opencv2/core.hpp>
+#include "cpm/Logging.hpp"
 
+/**
+ * \class DetectVehicles
+ * \brief TODO
+ * \ingroup ips
+ */
 class DetectVehicles
 {
 public:
@@ -124,7 +130,7 @@ private:
      * @param point_distances 
      * @return std::vector< std::array<std::size_t, 3> > 
      */
-    std::vector< std::array<std::size_t, 3> >
+    std::vector< std::array<std::size_t, 4> >
     find_vehicle_candidates
     (
         const std::vector<cv::Point2d> &points,
@@ -137,10 +143,10 @@ private:
      * @param vehicle_candidates 
      * @return std::vector< std::array<std::size_t, 3> > 
      */
-    std::vector< std::array<std::size_t, 3> >
+    std::vector< std::array<std::size_t, 4> >
     resolve_conflicts
     (
-        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+        const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
     ) const;
 
     /**
@@ -153,7 +159,7 @@ private:
     cv::Mat_<bool>
     determine_conflicts
     (
-        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+        const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
     ) const;
 
     /**
@@ -167,8 +173,8 @@ private:
     bool
     arrays_have_common_element
     (
-        const std::array<std::size_t, 3> &array_1,
-        const std::array<std::size_t, 3> &array_2
+        const std::array<std::size_t, 4> &array_1,
+        const std::array<std::size_t, 4> &array_2
     ) const;
 
     /**
@@ -184,7 +190,7 @@ private:
     find_remaining_points
     (
         const std::vector<cv::Point2d> &floor_points,
-        const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+        const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
     ) const;
 
     /**
@@ -198,7 +204,7 @@ private:
     assign_vehicle_points
     (
         const std::vector<cv::Point2d> &floor_points,
-        const std::array<std::size_t, 3> &vehicle_candidate
+        const std::array<std::size_t, 4> &vehicle_candidate
     ) const;
 
     /**

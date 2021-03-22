@@ -45,20 +45,22 @@
  * \class IntervalOrExact
  * \brief This class is created as commonroad uses similar class types (easier to handle in translation and as return type)
  * It should also make other classes that use this type more readable.
+ * \ingroup lcc_commonroad
  */
 class IntervalOrExact : public InterfaceTransform
 {
 private:
-    std::optional<Interval> interval;
-    std::optional<double> exact;
+    //! Commonroad Interval; if this is set, there is no exact value set
+    std::optional<Interval> interval = std::nullopt;
+    //! Exact value; if this is set, no interval is set
+    std::optional<double> exact = std::nullopt;
 public:
     /**
      * \brief Constructor
      */
     IntervalOrExact(const xmlpp::Node* node)
     {
-        //TODO: Make sure that this is an interval node type
-        //Need to look for several interval types, as we here just use one interval type to cover all possible ones
+        //We do not assert the interval type here, as the name of the node in this case mostly refers to a specific datatype like 'time' or 'orientation', of which there are many throughout the documentation
 
         try
         {
@@ -92,26 +94,60 @@ public:
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
+
+    /**
+     * \brief Check if the data is exact or an interval
+     */
     bool is_exact()
     {
         return exact.has_value();
     }
 
+    /**
+     * \brief Get the exact value, if it exists (else: nullopt)
+     */
     const std::optional<double> get_exact_value()
     {
         return exact;
     }
 
+    /**
+     * \brief Check if the data is an interval or exact
+     */
     bool is_interval()
     {
         return interval.has_value();
     }
+
+    /**
+     * \brief Check if all the contained data (also for intervals) is greater than or equal to zero (equality only allowed for intervals)
+     */
+    bool is_greater_zero()
+    {
+        bool greater_zero = true;
+        if (is_exact())
+        {
+            greater_zero &= (exact.value() > 0);
+        }
+        if(is_interval())
+        {
+            greater_zero &= interval->is_greater_zero();
+        }
+
+        return greater_zero;
+    }
     
+    /**
+     * \brief Get interval data or nullopt if it does not exist
+     */
     const std::optional<Interval> get_interval()
     {
         return interval;
     }
 
+    /**
+     * \brief Get exact value or mean of the stored interval(s)
+     */
     double get_mean()
     {
         if (exact.has_value())
@@ -143,11 +179,12 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
-     * \param translate_x Currently ignored, must be changed if this is used for position values
-     * \param translate_y Currently ignored, must be changed if this is used for position values
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
         if (exact.has_value())
         {
@@ -160,7 +197,22 @@ public:
 
         if (interval.has_value())
         {
-            interval->transform_coordinate_system(scale, translate_x, translate_y);
+            interval->transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
+    }
+
+    /**
+     * \brief Translate to DDS interval, if not exact
+     * \param ratio Relevant to translate e.g. time information to actual time
+     */
+    CommonroadDDSIntervals to_dds_interval(double ratio = 1.0)
+    {
+        //Throw error if conversion is invalid because of interval type
+        if (!interval.has_value())
+        {
+            throw std::runtime_error("IntervalOrExact cannot be translated to DDS Interval, is exact");
+        }
+
+        return interval->to_dds_msg(ratio);
     }
 };

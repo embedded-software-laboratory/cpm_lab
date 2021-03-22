@@ -24,10 +24,16 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 
+//This example is also described at https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Central+Routing+Example
+
+#include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 #include "lane_graph_tools.hpp" //sw folder central routing
 
+/**
+ * \file VehicleTrajectoryPlanningState.cpp
+ * \ingroup central_routing
+ */
 
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     uint8_t _vehicle_id,
@@ -106,6 +112,7 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
     t_elapsed += dt_nanos;
 }
 
+//This function extends the route randomly for the next n indices
 void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
 {
     invariant();
@@ -118,6 +125,7 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     }
 }
 
+//This function gets the trajectory points from the lane graph
 TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 {
     TrajectoryPoint trajectory_point;
@@ -132,7 +140,7 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
 
 
 // Change the own speed profile so as not to collide with the other_vehicles.
-void VehicleTrajectoryPlanningState::avoid_collisions(
+bool VehicleTrajectoryPlanningState::avoid_collisions(
     vector< std::shared_ptr<VehicleTrajectoryPlanningState> > other_vehicles)
 {
     // TODO termination condition
@@ -156,10 +164,10 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
             {
                 if(laneGraphTools.edge_path_collisions
-                    .at(self_path[i].first)
-                    .at(self_path[i].second)
-                    .at(other_path[i].first)
-                    .at(other_path[i].second))
+                    [self_path[i].first]
+                    [self_path[i].second]
+                    [other_path[i].first]
+                    [other_path[i].second])
                 {
                     // collision detected
                     if(i < earliest_collision__speed_profile_index)
@@ -174,7 +182,7 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
         }
 
         // stop if there is no collision
-        if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return;
+        if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) return true;
 
 
         // fix speed profile to avoid collision
@@ -197,7 +205,11 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
 
         if(idx_speed_reduction < 15)
         {
-            std::cout << "Collision unavoidable between " << int(vehicle_id) << " and " << colliding_vehicle_id << std::endl;
+            cpm::Logging::Instance().write(
+                1,
+                "Collision unavoidable between %d and %d.",
+                int(vehicle_id), colliding_vehicle_id
+            );
 
             for(double spd:speed_profile)
             {
@@ -205,12 +217,12 @@ void VehicleTrajectoryPlanningState::avoid_collisions(
             }
             std::cout << std::endl;
 
-            exit(1);
-            return;
+            return false;
         }
 
         set_speed(idx_speed_reduction, reduced_speed);
     }
+    return true;
 }
 
 

@@ -42,20 +42,29 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
+
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "CommonroadDDSGoalState.hpp"
+
 /**
  * \struct PlanningProblemElement
  * \brief Not in specs, but these allow sequences of initialState and several goalStates in PlanningProblem
+ * \ingroup lcc_commonroad
  */
 struct PlanningProblemElement
 {
-    std::optional<StateExact> initial_state;
+    //! Initial state of the planning problem
+    std::optional<StateExact> initial_state = std::nullopt;
+
+    //! List of possible / allowed goal states for the planning problem, when starting at the given initial state
     std::vector<GoalState> goal_states;
 };
 
@@ -64,24 +73,46 @@ struct PlanningProblemElement
  * \class PlanningProblem
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a PlanningProblem specified in an XML file
+ * \ingroup lcc_commonroad
  */
-class PlanningProblem : public InterfaceTransform, public InterfaceDraw
+class PlanningProblem : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
+    //! List of planning problems stored within one planning problem ID (the specs allow more than one definition)
     std::vector<PlanningProblemElement> planning_problems;
 
 public:
-    PlanningProblem(const xmlpp::Node* node);
-
-    //TODO: Getter
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
+     * \param node A planning problem node
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \param _get_lanelet_center Function that returns a lanelet center
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
+     */
+    PlanningProblem(
+        const xmlpp::Node* node,
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
+        std::function<std::pair<double, double> (int)> _get_lanelet_center,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     */
+    void transform_timing(double time_scale) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -98,9 +129,15 @@ public:
      */
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
+    //Getter
     /**
-     * \brief Setter for drawing lanelet references (Can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \brief Get the list of planning problems with the same planning problem ID
      */
-    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+    const std::vector<PlanningProblemElement>& get_planning_problems() const;
+
+    /**
+     * \brief Translate the planning problem to a DDS msg
+     * \param time_step_size Relevant to translate time information to actual time
+     */
+    std::vector<CommonroadDDSGoalState> get_dds_goal_states(double time_step_size);
 };

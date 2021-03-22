@@ -61,11 +61,16 @@ using std::uint32_t;
 using std::int64_t;
 using std::uint64_t;
 
+/**
+ * \file defaults.hpp
+ * Contains some functions that might be used anywhere in the LCC
+ * \ingroup lcc
+ */
 
-uint64_t clock_gettime_nanoseconds();
-
-
-// from https://stackoverflow.com/a/26221725
+/**
+ * \brief Can be used similar to printf
+ * \ingroup lcc
+ */
 template<typename ... Args>
 string string_format( const std::string& format, Args ... args )
 {
@@ -75,4 +80,8 @@ string string_format( const std::string& format, Args ... args )
     return string( buf.get(), buf.get() + size - 1 );
 }
 
+/**
+ * \brief Get a random double in [0.0, 1.0] (using rand, dividing by RAND_MAX -> does not cover all possible double values)
+ * \ingroup lcc
+ */
 double frand();

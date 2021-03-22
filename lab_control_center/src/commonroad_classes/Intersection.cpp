@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/Intersection.hpp"
 
+/**
+ * \file Intersection.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Intersection::Intersection(const xmlpp::Node* node)
 {
     //Check if node is of type intersection
@@ -73,13 +78,14 @@ Intersection::Intersection(const xmlpp::Node* node)
         throw SpecificationError(error_msg_stream.str());
     }
 
-    std::cout << "Lanelet: " << std::endl;
-    std::cout << "\tIncoming references (only incomingLanelet shown): ";
-    for (const auto entry : incoming_map)
-    {
-        std::cout << " | " << entry.second.incoming_lanelet.value_or(-1);
-    }
-    std::cout << std::endl;
+    //Test output
+    // std::cout << "Lanelet: " << std::endl;
+    // std::cout << "\tIncoming references (only incomingLanelet shown): ";
+    // for (const auto entry : incoming_map)
+    // {
+    //     std::cout << " | " << entry.second.incoming_lanelet.value_or(-1);
+    // }
+    // std::cout << std::endl;
 }
 
 std::optional<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn)
@@ -91,4 +97,9 @@ std::optional<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node
     }
 
     return std::optional<int>();
+}
+
+const std::map<int, Incoming>& Intersection::get_incoming_map() const
+{
+    return incoming_map;
 }

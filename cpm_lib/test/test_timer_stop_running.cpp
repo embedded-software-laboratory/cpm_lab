@@ -30,9 +30,12 @@
 
 #include <thread>
 #include <string>
+#include <chrono>
 
+#include "cpm/get_topic.hpp"
 #include "cpm/ParticipantSingleton.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
+
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <dds/topic/ddstopic.hpp>
@@ -40,10 +43,11 @@
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD stop signal while running
+ * 
  * - Tests if the timer can be stopped by sending a stop signal
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_stop_signal_when_running");
@@ -56,12 +60,10 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     uint64_t starting_time = timer.get_time() + 3000000000;
 
     //Writer to send system triggers to the timer 
-    dds::pub::DataWriter<SystemTrigger> writer_SystemTrigger(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),          
-        dds::topic::find<dds::topic::Topic<SystemTrigger>>(cpm::ParticipantSingleton::Instance(), "systemTrigger"), 
-        (dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable()));
+    cpm::Writer<SystemTrigger> writer_SystemTrigger("systemTrigger", true);
     //Reader to receive ready signals from the timer
     dds::sub::DataReader<ReadyStatus> reader_ReadyStatus(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-        dds::topic::find<dds::topic::Topic<ReadyStatus>>(cpm::ParticipantSingleton::Instance(), "readyStatus"), 
+        cpm::get_topic<ReadyStatus>(cpm::ParticipantSingleton::Instance(), "readyStatus"), 
         (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable()));
     
     //Waitset to wait for any data
@@ -69,6 +71,20 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
     dds::sub::cond::ReadCondition read_cond(reader_ReadyStatus, dds::sub::status::DataState::any());
     waitset += read_cond;
 
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Timer Stop Signal While Running test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(100000); //Wait 100ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub = dds::sub::matched_publications(reader_ReadyStatus);
+
+        if (writer_SystemTrigger.matched_subscriptions_size() >= 1 && matched_pub.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Thread to receive the ready signal, send a start signal and then a stop signal after 100ms
     std::thread signal_thread = std::thread([&](){
@@ -88,7 +104,7 @@ TEST_CASE( "TimerFD_stop_signal_when_running" ) {
         writer_SystemTrigger.write(trigger);
 
         //Wait
-        rti::util::sleep(dds::core::Duration::from_millisecs(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         //Send stop signal
         trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));

@@ -26,26 +26,55 @@
 
 #ifndef PARAMETER_IDL
 #define PARAMETER_IDL
+
+/**
+ * \enum ParameterType
+ * \brief A parameter set in the network can have one of the following types. Further information can be found e.g. in Parameter.
+ * 
+ * https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?pageId=11698287
+ * \ingroup cpmlib_idl
+ */
 enum ParameterType 
 {
     Invalid = 0,
     Bool,
     Int32,
+    UInt64,
     Double,
     String,
     Vector_Int32,
     Vector_Double
 };
 
+/**
+ * \struct Parameter
+ * \brief Parameter values can be distributed by the LCC. This message contains the answer of it after a parameter request was sent.
+ * (This behaviour is already implemented, e.g. in cpm::parameter_bool to get a boolean parameter)
+ * 
+ * https://cpm.embedded.rwth-aachen.de/doc/pages/viewpage.action?pageId=11698287
+ * \ingroup cpmlib_idl
+ */
 struct Parameter 
 {
+    //! The name of the parameter
     string name; //@key
+
+    //! The parameter type
     ParameterType type;
 
-    // Since weak typing is not supported, we reserve a member for each type.
+    //! Since weak typing is not supported, we reserve a member for each type.
     boolean value_bool;
+
+    //! Since weak typing is not supported, we reserve a member for each type.
+    unsigned long long value_uint64_t;
+
+    //! Since weak typing is not supported, we reserve a member for each type.
     sequence<long>   values_int32;
+
+    //! Since weak typing is not supported, we reserve a member for each type.
     sequence<double> values_double;
+
+    //! Since weak typing is not supported, we reserve a member for each type.
     string value_string;
 };
 #endif

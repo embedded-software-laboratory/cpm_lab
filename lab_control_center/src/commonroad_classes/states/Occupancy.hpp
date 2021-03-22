@@ -44,23 +44,31 @@
 #include "commonroad_classes/InterfaceGeometry.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
+#include "LCCErrorLogger.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
  * \class Occupancy
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent an Occupancy specified in an XML file
+ * \ingroup lcc_commonroad
  */
 class Occupancy : public InterfaceTransform, public InterfaceDraw, public InterfaceGeometry
 {
 private:
     //Commonroad data
-    std::optional<Shape> shape;
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double, we did not want to define an extra type for this - gets transformed in getter to nanoseconds view
+    //! Occupied shape
+    std::optional<Shape> shape = std::nullopt;
+    //! Time of occupation (within commonroad time interpretation, not nanoseconds), must exist
+    std::optional<IntervalOrExact> time = std::nullopt;
 
+
+    //! Remember line in commonroad file for logging
+    int commonroad_line = 0;
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor, set up an occupancy object from a commonroad xml occupancy node
      */
     Occupancy(const xmlpp::Node* node);
 
@@ -68,9 +76,12 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override ;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override ;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -108,7 +119,17 @@ public:
      */
     void to_dds_msg(); 
 
-    //TODO: Getter
-    IntervalOrExact get_time(); //Must exist, throw error if it does not
-    std::optional<double> get_orientation();
+    //Getter
+    /**
+     * \brief Time of occupation, must exist, throws error if not
+     */
+    IntervalOrExact get_time();
+    /**
+     * \brief Occupied shape, nullopt if not set
+     */
+    const std::optional<Shape>& get_shape() const;
+    /**
+     * \brief Time of occupation, version that does not throw an error if it does not exist (although it should)
+     */
+    const std::optional<IntervalOrExact>& get_time() const;
 };

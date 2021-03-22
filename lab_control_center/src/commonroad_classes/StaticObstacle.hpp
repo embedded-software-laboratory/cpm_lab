@@ -41,18 +41,24 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
 
+#include "LCCErrorLogger.hpp"
+
+#include "ObstacleSimulationData.hpp"
+
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum class ObstacleTypeStatic
+ * \enum ObstacleTypeStatic
  * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
  * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic - Throw an error in case of wrong (dynamic) types if role was set to static
  * We do not need to store "role", as we already have two different classes for that
+ * \ingroup lcc_commonroad
  */
 enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary};
 
@@ -60,55 +66,80 @@ enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBou
  * \class StaticObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a StaticObstacle specified in an XML file
+ * \ingroup lcc_commonroad
  */
-class StaticObstacle : public InterfaceTransform, public InterfaceDraw
+class StaticObstacle : public InterfaceTransform, public InterfaceTransformTime
 {
 private:
+    //! The obstacle type, e.g. a parked vehicle
     ObstacleTypeStatic type;
+    //! The obstacle type as string
     std::string obstacle_type_text;
-    std::optional<Shape> shape;
-    std::optional<State> initial_state;
+    //! Shape of the object, must exist
+    std::optional<Shape> shape = std::nullopt;
+    //! Initial state of the object, must exist
+    std::optional<State> initial_state = std::nullopt;
+
     //Other 2018 obstacle-values should only be set for dynamic obstacles - nonetheless, we check for their existence in the constructor (and show warnings, if necessary)
 
-    //Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
+
+    //! Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs (TODO: Custom error type for this case)
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (static) obstacle node
+     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
-    StaticObstacle(const xmlpp::Node* node);
-    
-    //TODO: Getter
+    StaticObstacle(
+        const xmlpp::Node* node,
+        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
     /**
-     * \brief This function is used to draw the data structure that imports this interface
-     * If you want to set a color for drawing, perform this action on the context before using the draw function
-     * To change local translation, just transform the coordinate system beforehand
-     * As this does not always work with local orientation (where sometimes the translation in the object must be called before the rotation if performed, to rotate within the object's coordinate system),
-     * local_orientation was added as a parameter
-     * \param ctx A DrawingContext, used to draw on
-     * \param scale - optional: The factor by which to transform all number values related to position - this is not permanent, only for drawing (else, use InterfaceTransform's functions)
-     * \param global_orientation - optional: Rotation that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param global_translate_x - optional: Translation in x-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param global_translate_y - optional: Translation in y-direction that needs to be applied before drawing - set as global transformation to the whole coordinate system
-     * \param local_orientation - optional: Rotation that needs to be applied within the object's coordinate system
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
      */
-    void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
+    void transform_timing(double time_scale) override;
+
+    //No draw function, obstacles are handled by LCC directly via simulation
+
+    //Getter
+    /**
+     * \brief Returns a single trajectory point constructed from initial state, and further static obstacle information
+     * Throws errors if expected types are missing
+     */
+    ObstacleSimulationData get_obstacle_simulation_data();
 
     /**
-     * \brief Setter for drawing lanelet references (Can also be constructed without this)
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
+     * \brief Get the obstacle type
      */
-    void set_lanelet_ref_draw_function(std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs);
+    ObstacleTypeStatic get_type();
+    /**
+     * \brief Get the obstacle type as string
+     */
+    std::string get_obstacle_type_text();
+    /**
+     * \brief Get the obstacle shape, which must exist (optional due to no default constructor & potential translation issues)
+     */
+    const std::optional<Shape>& get_shape() const;
+    /**
+     * \brief Get the obstacle initial state, which must exist (optional due to no default constructor & potential translation issues)
+     */
+    const std::optional<State>& get_initial_state() const;
 };

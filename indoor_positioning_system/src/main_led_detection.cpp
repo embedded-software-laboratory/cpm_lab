@@ -39,9 +39,9 @@
 #include "LedPoints.hpp"
 #include "cpm/get_topic.hpp"
 #include "cpm/CommandLineReader.hpp"
-#include "cpm/Logging.hpp"
 #include "cpm/init.hpp"
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
+#include "cpm/get_time_ns.hpp"
 
 
 using namespace Pylon;
@@ -52,32 +52,40 @@ typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 typedef Pylon::CBaslerUsbImageEventHandler ImageEventHandler_t; // Or use Camera_t::ImageEventHandler_t
 typedef Pylon::CBaslerUsbGrabResultPtr GrabResultPtr_t; // Or use Camera_t::GrabResultPtr_t
 
+/**
+ * \struct FrameInfo
+ * \brief TODO
+ * \ingroup ips
+ */
 struct FrameInfo
 {
+    //! TODO
     cv::Mat image;
+    //! TODO
     uint64_t timestamp;
+    //! TODO
     std::vector<double> points_x;
+    //! TODO
     std::vector<double> points_y;
 };
 
+//! TODO
 bool enable_visualization;
+//! TODO
+bool enable_debug;
 
-
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
+//! TODO
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
 
-uint64_t get_time_ns()
-{
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return uint64_t(t.tv_sec) * 1000000000ull + uint64_t(t.tv_nsec);
-}
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_led_detection()
 {
-
-    auto LED_topic = cpm::get_topic<LedPoints>("ipsLedPoints");
-    dds::pub::DataWriter<LedPoints> LED_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), LED_topic);
+    cpm::Writer<LedPoints> LED_writer("ipsLedPoints");
 
     // Number of points in the previous frame.
     // Used for debug trigger.
@@ -110,9 +118,9 @@ void worker_led_detection()
         if( frame->points_x.size() < 3 && n_points_previous >= 3 )
         {
             std::cout << "contours " << contours.size() << "   points " << frame->points_x.size() << std::endl;
-            auto t =  std::to_string(get_time_ns());
-            //cv::imwrite("debug_" + t + "_raw.png",frame->image);
-            //cv::imwrite("debug_" + t + "_thresh.png",img_binary);
+            // auto t =  std::to_string(cpm::get_time_ns());
+            // cv::imwrite("debug_" + t + "_raw.png",frame->image);
+            // cv::imwrite("debug_" + t + "_thresh.png",img_binary);
         }
         n_points_previous = frame->points_x.size();
         
@@ -128,11 +136,31 @@ void worker_led_detection()
         }
         LED_writer.write(myledPoints);
 
+        
+        if (enable_debug)
+        {
+            cv::hconcat(frame->image, img_binary, frame->image);
+            
+            // Draw contours
+            cv::Mat img_contours = cv::Mat::zeros( img_binary.size(), CV_8UC1 );
+            for( size_t i = 0; i < contours.size(); i++ )
+            {
+                double size = cv::contourArea(contours[i]);
+                if (size < 60 && size > 3) {
+                    cv::Scalar color = cv::Scalar( 255,255,255 );
+                    cv::drawContours( img_contours, contours, i, color, 3);
+                }
+            }
+            cv::hconcat(frame->image, img_contours, frame->image);
+        }
         if(enable_visualization) queue_visualization.push(frame);
     }
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_visualization()
 {
     while (1)
@@ -154,10 +182,14 @@ void worker_visualization()
         if(cv::waitKey(1) == 27) // close on escape key
         {
             exit(0);
-        }
+        }        
     }
 }
 
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 void worker_grab_image()
 {
     // Before using any pylon methods, the pylon runtime must be initialized. 
@@ -222,16 +254,15 @@ void worker_grab_image()
         GrabResultPtr_t ptrGrabResult;
 
         int frameCount = 0;
-        uint64_t lastFrameReportTime = get_time_ns();
+        uint64_t lastFrameReportTime = cpm::get_time_ns();
 
 
         // The camera counts time in nanoseconds, from an arbitrary starting point.
         // Record the camera and computer clock at the same time.
         // Use the difference to correct the timestamps.
         camera.TimestampLatch();
-        const uint64_t startTime = get_time_ns();
+        const uint64_t startTime = cpm::get_time_ns();
         const int64_t startTicks = camera.TimestampLatchValue.GetValue();
-
         while(camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -241,7 +272,7 @@ void worker_grab_image()
 
             if(ptrGrabResult->GrabSucceeded())
             {
-                frameCount++;
+                ++frameCount;
 
                 // The result data is automatically filled with received chunk data.
                 // (Note:  This is not the case when using the low-level API)
@@ -275,7 +306,7 @@ void worker_grab_image()
                 // report actual FPS
                 if(frameCount % 100 == 0)
                 {
-                    uint64_t now = get_time_ns();
+                    uint64_t now = cpm::get_time_ns();
                     double fps = 100.0/((now - lastFrameReportTime)*1e-9);
                     std::cout << "FPS " << fps << std::endl;
                     lastFrameReportTime = now;
@@ -296,7 +327,10 @@ void worker_grab_image()
     PylonTerminate(); 
 }
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 int main(int argc, char* argv[])
 {
     if(argc < 2) {
@@ -304,9 +338,9 @@ int main(int argc, char* argv[])
     }
 
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("led_detection");
 
     enable_visualization = cpm::cmd_parameter_bool("visualization", false, argc, argv);
+    enable_debug = cpm::cmd_parameter_bool("debug", false, argc, argv);
 
     std::thread thread_led_detection([](){worker_led_detection();});
     std::thread thread_visualization;

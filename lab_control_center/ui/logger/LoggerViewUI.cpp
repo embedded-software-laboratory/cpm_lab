@@ -26,6 +26,11 @@
 
 #include "LoggerViewUI.hpp"
 
+/**
+ * \file LoggerViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_dispatcher(),
@@ -41,6 +46,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     ui_builder->get_widget("logs_search_entry", logs_search_entry);
     ui_builder->get_widget("logs_search_type", logs_search_type);
     ui_builder->get_widget("log_level_combobox", log_level_combobox);
+    ui_builder->get_widget("label_log_status", label_log_status);
 
     assert(parent);
     assert(logs_treeview);
@@ -50,6 +56,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     assert(logs_search_entry);
     assert(logs_search_type);
     assert(log_level_combobox);
+    assert(label_log_status);
 
     //Create model for view
     log_list_store = Gtk::ListStore::create(log_record);
@@ -109,6 +116,7 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
     {
         log_level_combobox->set_active_text(log_level_labels.at(1));
     }
+    log_level.store(1);
     //Set callback for log_level_combobox
     log_level_combobox->signal_changed().connect(sigc::mem_fun(*this, &LoggerViewUI::on_log_level_changed));
 
@@ -146,34 +154,45 @@ LoggerViewUI::~LoggerViewUI() {
 }
 
 void LoggerViewUI::on_log_level_changed()
-{
-    //Get the newly set log level
+{    
+    //Get the new log level
     auto set_log_level = log_level_combobox->get_active_text();
 
     //Find its position in the log_level vector (which is equal to the log_level, see constructor)
     auto pos_it = std::find(log_level_labels.begin(), log_level_labels.end(), set_log_level);
-    unsigned short log_level;
     if (pos_it != log_level_labels.end())
     {
-        log_level = std::distance(log_level_labels.begin(), pos_it);
+        log_level.store(std::distance(log_level_labels.begin(), pos_it));
     }
     else
     {
-        cpm::Logging::Instance().write(1, "ERROR: Log level set that does not exist!");
-        log_level = 1;
+        cpm::Logging::Instance().write(
+            1, 
+            "%s", 
+            "ERROR: Log level set that does not exist!"
+        );
+        log_level.store(1);
     }
-    
+
     //Set the new log level
-    LogLevelSetter::Instance().set_log_level(log_level);
+    LogLevelSetter::Instance().set_log_level(log_level.load());
+
+    //Lines for the UI dispatcher:
+
+    //Reset the list - abuse the search_reset boolean notation to make sure that also old entries are reloaded...
+    //... this time considering the new log level
+    search_reset.store(true);
+    //Also display log warnings depending on the set log level
+    log_level_changed.store(true);
+
+    ui_dispatcher.emit();
 }
 
 void LoggerViewUI::dispatcher_callback() {
-    if (reset_logs.load())
+    if (reset_logs.exchange(false))
     {
-        log_storage->reset();
         reset_list_store();
         std::cout << "LOGS RESET" << std::endl;
-        reset_logs.store(false);
     }
     else
     {
@@ -187,12 +206,12 @@ void LoggerViewUI::dispatcher_callback() {
                 search_reset.store(false);
                 reset_list_store();
 
-                for(const auto& entry : log_storage->get_recent_logs(max_log_amount)) {
+                for(const auto& entry : log_storage->get_recent_logs(max_log_amount, log_level.load())) {
                     add_log_entry(entry);
                 }
             }
             else {
-                for(const auto& entry : log_storage->get_new_logs()) {
+                for(const auto& entry : log_storage->get_new_logs(log_level.load())) {
                     add_log_entry(entry);
                 }
             }
@@ -226,6 +245,27 @@ void LoggerViewUI::dispatcher_callback() {
     //TODO: 
     // - More elegant solution for "searching...?"
     // - Search is never refreshed automatically - refresh button?
+
+    //Update entry that warns about high log levels depending on the current level, if it was changed
+    if (log_level_changed.exchange(false))
+    {
+        switch (log_level.load())
+        {
+        case 0:
+        case 1:
+            label_log_status->set_text("-");
+            break;
+        case 2:
+            label_log_status->set_text("Level 2: More messages are sent, this may lead to delays depending on the number of participants.");
+            break;
+        case 3:
+            label_log_status->set_text("Level 3: Much more messages are sent. The network may get overloaded quickly depending on the number of participants.");
+            break;
+        default:
+            label_log_status->set_text("Selecting higher log levels may lead to more messages sent within the network and thus to a possible overload.");
+            break;
+        }
+    }
 }
 
 //Suppress warning for unused parameter
@@ -356,7 +396,7 @@ void LoggerViewUI::start_new_search_thread() {
     lock.unlock();
 
     search_thread = std::thread([filter_value, filter_type, this]() {
-        search_promise.set_value(log_storage->perform_abortable_search(filter_value, filter_type, search_thread_running));
+        search_promise.set_value(log_storage->perform_abortable_search(filter_value, filter_type, log_level.load(), search_thread_running));
     });
 }
 
@@ -435,4 +475,5 @@ Gtk::Widget* LoggerViewUI::get_parent() {
 void LoggerViewUI::reset()
 {
     reset_logs.store(true);
+    log_storage->reset(); //Better reset here, else the 200ms in between reset and potential new logs after calling reset can be problematic
 }

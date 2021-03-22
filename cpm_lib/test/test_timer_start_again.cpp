@@ -34,18 +34,15 @@
 #include <vector>
 
 #include "cpm/ParticipantSingleton.hpp"
-#include <dds/pub/ddspub.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/core/ddscore.hpp>
-#include <dds/topic/ddstopic.hpp>
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
 
 /**
- * Tests:
+ * \test Tests TimerFD cannot be started twice
+ * 
  * - Calls start(_async) after the timer has been started -> exceptions should be thrown
+ * \ingroup cpmlib
  */
-
 TEST_CASE( "TimerFD_start_again" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_timerfd_start_again");

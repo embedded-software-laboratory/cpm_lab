@@ -28,30 +28,39 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
+#include "TimeSeriesAggregator.hpp"
 #include "ObstacleSimulationManager.hpp"
 #include "VehicleManualControl.hpp"
 #include "VehicleAutomatedControl.hpp"
 #include "cpm/CommandLineReader.hpp"
+#include "cpm/RTTTool.hpp"
+#include "cpm/get_time_ns.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/timer/TimerViewUI.hpp"
+#include "ui/setup/CrashChecker.hpp"
 #include "ui/setup/Deploy.hpp"
-#include "ui/setup/VehicleToggle.hpp"
+#include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
+#include "ui/setup/VehicleToggle.hpp"
 
 #ifndef SIMULATION
     #include "labcam/LabCamIface.hpp"
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <array>
 #include <cstdio> //For popen
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <sstream>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 /**
@@ -59,167 +68,262 @@
  * It is used to 
  * 1) Set the variables required to start a local / distributed lab run, e.g. selection of a script + parameters, usage of the IPS in lab mode etc
  * 2) Run the selected script + vehicles (real and simulated possible) either on the current machine or on the lab's HLCs
+ * 3) Reboot real vehicles
+ * \ingroup lcc_ui
  */
 class SetupViewUI
 {
 private:
-    //Builder and pointer to UI elements
+    //! GTK UI Builder
     Glib::RefPtr<Gtk::Builder> builder;
 
+    //! Parent window of the setup view, allows scrolling and integration in other UI elements
     Gtk::ScrolledWindow* parent = nullptr;
+    //! Contains all other UI elements
     Gtk::Widget* setup_box = nullptr;
 
     //Script and script parameters
+    //! Entry to set a script path manually
     Gtk::Entry* script_path = nullptr;
+    //! To specify command line parameters for the script
     Gtk::Entry* script_params = nullptr;
+    //! Button to set a script via a file chooser
     Gtk::Button* button_choose_script = nullptr;
     
     //Vehicle selection
+    //! Button to simulate no vehicle
     Gtk::Button* button_select_none = nullptr;
+    //! Button to simulate all vehicles (real vehicles stay real and are not replaced)
     Gtk::Button* button_select_all_simulated = nullptr;
-    Gtk::Button* button_select_all_real = nullptr;
 
-    //Set timer (simulated or real time)
+    //! Switch to set timer (simulated or real time)
     Gtk::Switch* switch_simulated_time = nullptr;
+    //! Switch to decide if recordings with the labcam should be done
     Gtk::Switch* switch_record_labcam = nullptr;
 
-    //(De)Activate IPS
+    //! Switch to (de)activate IPS
     Gtk::Switch* switch_lab_mode = nullptr;
 
-    //(De)Activate diagnosis
+    //! Switch to (de)activate diagnosis
     Gtk::Switch* switch_diagnosis = nullptr;
 
-    //(De)Activate remote deployment on HLCs (NUCs)
+    //! Switch to (de)activate remote deployment on HLCs (NUCs)
     Gtk::Switch* switch_deploy_remote = nullptr;
 
-    //Start / stop simulation
+    //! Button to start simulation
     Gtk::Button* button_deploy = nullptr;
+    //! Button to stop simulation
     Gtk::Button* button_kill = nullptr;
 
-    //Vehicles - toggles in box to turn them on/off/simulated
+    //! Box that shows vehicle toggles - these can be used to simulate vehicles, stop simulation or reboot real vehicles
     Gtk::FlowBox* vehicle_flowbox = nullptr;
-    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles;
+    //! Position in the vector and vehicle ID correlate (ID-1 = position)
+    std::vector<std::shared_ptr<VehicleToggle>> vehicle_toggles; 
+    //! For ui thread (UI changes should only be done there), to know that vehicle toggle states must be updated (because real vehicles have been added / removed)
+    std::atomic_bool update_vehicle_toggles;
+    //! Reboot timeout for vehicles in seconds (if the reboot cmd does not work within 5 seconds, it is aborted)
+    const unsigned int reboot_timeout = 5; 
+
+    /**
+     * \brief Callback for vehicle toggles, which is called when the toggle state changes. 
+     * 
+     * Simulated vehicles are created when the toggle is set to "simulated".
+     * Simulated vehicles are killed when the toggle is set to "off".
+     * Real vehicles are rebooted if the toggle is set to "real".
+     * 
+     * \param vehicle_id ID of the vehicle which is associated with the toggle
+     * \param state New toggle state
+     */
+    void vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state);
     
-    //Timer function - replace current timer in the whole system when user switches between simulated and real time
-    std::shared_ptr<TimerViewUI> timer_ui;
+    /**
+     * \brief Timer function - replace current timer in the whole system when user switches between simulated and real time
+     */
     void switch_timer_set();
 
-    //Class containing all functions that are relevant for deployment, local and remote
+    //! Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
-    unsigned int remote_deploy_timeout = 30; //Wait for 30s until the deployment is aborted (for each thread)
-    unsigned int remote_kill_timeout = 2; //Wait for 2 seconds until kill is aborted
+    //! Wait up to 30s until remote deployment is aborted if the upload was not finished until then (for each thread)
+    unsigned int remote_deploy_timeout = 30;
+    //! Wait up to 2 seconds until a kill command is aborted if it was not finished until then
+    unsigned int remote_kill_timeout = 2;
 
-    // Interface to LabCam
+    //! Used for kill_deployed_applications, so that it cannot be called more than once at a time
+    std::mutex kill_button_mutex;
+    //! To remember last kill button press - s.t. it can't be spammed (would not be beneficial / can lead to crashes)
+    std::thread kill_grey_out_thread;
+    //! If the kill_grey_out_thread is still running / used to stop the thread early
+    std::atomic_bool kill_grey_out_running;
+    //! Tells the UI thread to make the kill button sensitive again if true
+    std::atomic_bool undo_kill_grey_out;
+
 #ifndef SIMULATION
+    //! Interface to LabCam
     LabCamIface* labcam;
 #endif
 
-    //Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
+    //! Class to send automated vehicle commands to a list of vehicles, like stop signals after kill has been called
     std::shared_ptr<VehicleAutomatedControl> vehicle_control;
 
-    //Class to simulate obstacles based on the loaded commonroad file
-    std::shared_ptr<ObstacleSimulationManager> obstacle_simulation_manager;
+    //! Class to get a list of all currently online HLCs and if script / middleware are running on them
+    std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
 
-    //Function to get a list of all currently online HLCs
-    std::function<std::vector<uint8_t>()> get_hlc_ids;
+    //! Function to get IDs of real vehicles (and simulated ones) which are currently active
+    std::function<VehicleData()> get_vehicle_data;
+    //! List of currently online real (not simulated) vehicles
+    std::vector<unsigned int> active_real_vehicles;
+    //! Mutex to access active_real_vehicles
+    std::mutex active_real_vehicles_mutex;
+    /**
+     * \brief Check, using get_vehicle_data, if data from a real vehicle was received within the last 500ms for each ID. 
+     * If so, this vehicle ID is considered to be part of a "real" vehicle.
+     * If a simulated vehicle with the same ID is currently running, it is killed.
+     * Updates active_real_vehicles with the currently active real vehicles.
+     * The thread does not operate during simulation, because then the vehicle configuration is assumed to be fixed.
+     */
+    std::thread check_real_vehicle_data_thread;
+    //! The check_real_vehicle_data_thread thread only operates if this is false. Is true during simulation.
+    std::atomic_bool is_deployed;
+    //! Used as a stop condition for check_real_vehicle_data_thread
+    std::atomic_bool vehicle_data_thread_running;
 
     //Functions to reset all UI elements after a simulation was performed / before a new one is started
+    /**
+     * \brief Callback function to reset the timer after a simulation was stopped, 
+     * before a new one was started and in case of a switch between real and simulated time.
+     * Params: Simulated time (false if real time), send stop signal (false if none should be sent)
+     */
     std::function<void(bool, bool)> reset_timer;
-    std::function<void()> reset_time_series_aggregator;
-    std::function<void()> reset_obstacle_aggregator;
-    std::function<void()> reset_trajectories;
+    //! Already called in on_simulation_start and stop, but also required if a simulated vehicle is turned off, to remove it from monitoring ui
     std::function<void()> reset_vehicle_view;
-    std::function<void()> reset_visualization_commands;
-    std::function<void()> reset_logs;
+    //! Callback function that is called when a simulation is started
+    std::function<void()> on_simulation_start;
+    //! Callback function that is called when a simulation is stopped
+    std::function<void()> on_simulation_stop;
+    //! Callback function to disable / enable the commonroad tab
     std::function<void(bool)> set_commonroad_tab_sensitive;
 
-    //Function to get the main window
+    //! Callback function to get the main window, which is required for opening the file explorer (needs a parent window)
     std::function<Gtk::Window&()> get_main_window;
 
-    //Loading window while HLC scripts are being updated
-    //Also: Upload threads and GUI thread (to keep upload work separate from GUI)
-    Glib::Dispatcher ui_dispatcher; //to communicate between thread and GUI
-    std::vector<std::thread> upload_threads; //threads that are responsible for uploading scripts to the HLCs
-    std::shared_ptr<UploadWindow> upload_window; //window that shows an upload message
-    void ui_dispatch(); //dispatcher callback for the UI thread
+    //! To communicate between thread and GUI
+    Glib::Dispatcher ui_dispatcher;
+    //! Dispatcher callback for the UI thread
+    void ui_dispatch(); 
+
+    //! True if in remote deployment there were not sufficient HLCs for the selected vehicles. In that case, some scripts are deployed locally so that all vehicles have a running script.
+    std::atomic_bool both_local_and_remote_deploy;
+
+    //! For loading window while HLC scripts are being updated. Also: Upload threads and GUI thread (to keep upload work separate from GUI).
+    std::shared_ptr<Upload> upload_manager;
+    //! Watcher thread that checks if the deployed programs still run - else, an error message is displayed
+    std::shared_ptr<CrashChecker> crash_checker;
+
     /**
-     * \brief Notify function that gets called by the upload threads when they have finished their work
-     * \param hlc_id ID the thread was responsible for
-     * \param upload_success Whether the upload was successful
+     * \brief Resets the timer, calls on_simulation_stop callback, enables UI interaction again
      */
-    void notify_upload_finished(uint8_t hlc_id, bool upload_success);
-    void kill_all_threads(); //function to join all threads
-    bool check_if_online(uint8_t hlc_id); //Check if the HLC is still online
-    std::atomic_uint8_t thread_count; //thread counter, set before thread creation so that, if they finish before the next one is created, still threads are only joined after all upload threads that need to be created have finished their work
-    size_t notify_count; //counter for notify_upload_finished; if it does not match thread_count after all threads have called it, print an error message (means that there was a setup mistake made at thread creation)
-    std::mutex notify_callback_in_use; //the notify_upload_finished function should only be accessible by one thread at once, thus use this mutex
-    std::atomic_bool participants_available; //Used by deploy and ui_dispatch in case the upload fails because no HLC was online or no vehicle was selected
-    //Horrible way to log an error message, because the UI cannot be accessed directly - if error_msg.size() > 0, emit just triggers that an error msg is added
-    std::mutex error_msg_mutex;
-    std::vector<std::string> error_msg;
-    std::atomic_bool kill_called; //Must be known to the UI functions - undo grey out of the UI elements after the notification window is closed
     void perform_post_kill_cleanup();
 
-    //IPS switch callback (-> lab mode)
+    /**
+     * \brief IPS switch callback (-> lab mode)
+     */
     void switch_ips_set();
 
-    //diagnosis switch callback 
+    /**
+     * \brief Diagnosis switch callback 
+     */
     void switch_diagnosis_set();
 
-    //Overall deploy functions, to deploy / kill script + middleware + vehicle software locally /remotely
+    /**
+     * \brief Deploy function, to deploy / kill script + middleware + vehicle software locally /remotely
+     */
     void deploy_applications();
-    void kill_deployed_applications();
+    
+    //! If true, just try to kill processes locally - doing this remotely is not a good idea if the program is being shut down, because there is not time for that.
+    std::atomic_bool lcc_closed;
 
-    //Helper functions to get the currently selected vehicle IDs, IDs of real vehicles and IDs of simulated vehicles
+    /**
+     * \brief Helper function: Get all currently online vehicle IDs, both for simulated and for real ones
+     */
     std::vector<unsigned int> get_vehicle_ids_active();
+    /**
+     * \brief Helper function: Get all currently online real vehicle IDs
+     */
     std::vector<unsigned int> get_vehicle_ids_real();
+    /**
+     * \brief Helper function: Get all currently online simulated vehicle IDs
+     */
     std::vector<unsigned int> get_vehicle_ids_simulated();
 
-    //UI function - set sensitivity of the UI after pressing deploy (grey out fields in the Setup tab)
+    /**
+     * \brief UI function - set sensitivity of the UI after pressing deploy (grey out fields in the Setup tab)
+     * \param is_sensitive If true, make the UI interactable, else grey it out
+     */
     void set_sensitive(bool is_sensitive);
 
-    //Get parameters that were set in the command line (upon starting the LCC)
+    //! If simulated time should be used. Can be set in the command line (upon starting the LCC).
     bool cmd_simulated_time;
 
-    //File chooser to select script(s) + location
+    /**
+     * \brief Open file explorer to select script(s) + location
+     */
     void open_file_explorer();
+    /**
+     * \brief Callback called by file explorer after file selection / closing without selecting a file.
+     * \param file_string Path of the selected file
+     * \param has_file True if a file was selected, else file_string should be ignored and the currently selected file is not changed
+     */
     void file_explorer_callback(std::string file_string, bool has_file);
+    //! Reference to the file chooser object / window
     std::shared_ptr<FileChooserUI> file_chooser_window;
 
-    //Vehicle button toggle callbacks, to set which vehicles are real / simulated / deactivated
-    void select_all_vehicles_real();
+    /**
+     * \brief Vehicle button callback to set all vehicles in the toggle list that are not real to simulated
+     */
     void select_all_vehicles_sim();
+    /**
+     * \brief Vehicle button callback to kill all simulated vehicles
+     */
     void select_no_vehicles();
 
+    //! To remember if a simulation is currently running, relevant e.g. for the kill button
+    std::atomic_bool simulation_running;
+
+    //! Mutex for access to vehicle_to_hlc_map
+    std::mutex vehicle_to_hlc_mutex;
+    //! For vehicle<->HLC mapping - which HLC (ID, uint8_t) simulates the script for which vehicle (ID, uint32_t)
+    std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
+
 public:
+
+    /**
+     * \brief To kill all deployed scripts / middleware / ... locally and remotely
+     */
+    void kill_deployed_applications();
+
     /**
      * \brief Constructor
+     * \param _deploy_functions Manages all deploy technicalities, like creating tmux sessions, calling bash scripts etc
      * \param _vehicle_control Allows to send automated commands to the vehicles, like stopping them at their current position after simulation
-     * \param _obstacle_simulation_manager Used to simulate obstacles defined in currently loaded commonroad file - reference here for start(), stop()
-     * \param _get_hlc_ids Get all IDs of currently active HLCs for correct remote deployment
+     * \param _hlc_ready_aggregator Get all IDs of currently active HLCs for correct remote deployment, get currently running scripts etc
+     * \param _get_vehicle_data Used to get currently active vehicle IDs
      * \param _reset_timer Reset timer & set up a new one for the next simulation
-     * \param _reset_time_series_aggregator Reset received vehicle data
-     * \param _reset_obstacle_aggregator Reset received obstacle data
-     * \param _reset_trajectories Reset received vehicle trajectories / drawing them in the map
-     * \param _reset_vehicle_view Reset list of connected vehicles
-     * \param _reset_visualization_commands Reset all visualization commands that were sent before
-     * \param _reset_logs Reset all logs that were sent before
+     * \param _reset_vehicle_view Reset shown data for vehicles in monitoring ui, called when a simulated vehicle is turned off
+     * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
+     * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
     SetupViewUI(
-        std::shared_ptr<Deploy> deploy_functions, 
+        std::shared_ptr<Deploy> _deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
-        std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager,
-        std::function<std::vector<uint8_t>()> _get_hlc_ids, 
+        std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
+        std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
-        std::function<void()> _reset_time_series_aggregator,
-        std::function<void()> _reset_obstacle_aggregator,
-        std::function<void()> _reset_trajectories,
         std::function<void()> _reset_vehicle_view,
-        std::function<void()> _reset_visualization_commands,
-        std::function<void()> _reset_logs,
+        std::function<void()> _on_simulation_start,
+        std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
         unsigned int argc, 
         char *argv[]
@@ -232,6 +336,36 @@ public:
      */
     void set_main_window_callback(std::function<Gtk::Window&()> _get_main_window);
 
-    //Get the parent widget to put the view in a parent container
+    /**
+     * \brief Returns true if the given ID corresponds to an online real vehicle, else false
+     * \param vehicle_id The ID for which to determine if the corresponding vehicle is online and real
+     */
+    bool is_active_real(unsigned int vehicle_id);
+
+    /**
+     * \brief Get the parent widget of SetupViewUI to put it in a parent container
+     */
     Gtk::Widget* get_parent();
+
+    /**
+     * \brief This might be subject to change.
+     * Returns: True if a simulation is running, and in that case a map with mappings from vehicle ID to HLC ID.
+     * (During remote deployment, each vehicle gets commands from its own HLC. Thus, each vehicle ID is associated to an HLC ID.)
+     */
+    std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
+
+    /**
+     * \brief As the destructor does not seem to work as desired (it does not kill all remaining programs as desired), its
+     * functionality is implemented twice. This function can be called in main when a window close operation is detected, to kill
+     * all programs currently running due to this object (except remotely running programs - closing them can take a while,
+     * and thus too long for reacting to a LCC close event)
+     */
+    void on_lcc_close();
+
+    /**
+     * \brief Returns the crash checker object, which must be created in the SetupViewUI object because
+     * it internally relies on upload_manager, which in turn has direct access to UI elements of the setup object
+     * and is created in its constructor.
+     */
+    std::shared_ptr<CrashChecker> get_crash_checker();
 };

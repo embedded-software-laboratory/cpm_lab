@@ -27,46 +27,51 @@
 #include "Header.idl"
 #include "Pose2D.idl"
 
-/*
- * Provides calibrated vehicle sensor data.
- */
-
 #ifndef VEHICLESTATE_IDL
 #define VEHICLESTATE_IDL
 
+/**
+ * \struct VehicleState
+ * \brief Provides calibrated vehicle sensor data.
+ * \ingroup cpmlib_idl
+ */
 struct VehicleState {
+    //! ID of the vehicle that sends this message
     octet vehicle_id; //@key
+
+    //! Header information
     Header header;
 
-    /*
-     * The pose combines data from the IMU, odometer and the IPS
+    /**
+     * \brief The pose combines data from the IMU, odometer and the IPS
      * to give an estimate of the vehicle position and orientation.
      */
     Pose2D pose;
 
-    /*
-     * Elapsed time since the last pose update from the IPS.
+    /**
+     * \brief Elapsed time since the last pose update from the IPS.
      * For a value greater than 10,000,000,000 the pose should be
      * regarded as unreliable.
      */
     unsigned long long IPS_update_age_nanoseconds;
 
+    double odometer_distance;                         //!< meter
+    double imu_acceleration_forward;                  //!< m/s^2
+    double imu_acceleration_left;                     //!< m/s^2
+    double imu_acceleration_up;                       //!< m/s^2
+    double imu_yaw;                                   //!< radian, unfiltered yaw signal from IMU
+    double imu_yaw_rate;                              //!< radian per second
+    double speed;                                     //!< m/s
+    double battery_voltage;                           //!< volt
+    double motor_current;                             //!< ampere
 
-    double odometer_distance;                         // meter
-    double imu_acceleration_forward;                  // m/s^2
-    double imu_acceleration_left;                     // m/s^2
-    double imu_acceleration_up;                       // m/s^2
-    double imu_yaw;                                   // radian, unfiltered yaw signal from IMU
-    double imu_yaw_rate;                              // radian per second
-    double speed;                                     // m/s
-    double battery_voltage;                           // volt
-    double motor_current;                             // ampere
+    double motor_throttle;                            //!< dimensionless, in [-1, 1], control command determined by the mid level controller
+    double steering_servo;                            //!< dimensionless, in [-1, 1], control command determined by the mid level controller
 
-    /*
-     * Control commands, that are determined by the
-     * mid level controller.
+    /**
+     * \brief
+     * The lab control center is, without this variable, unable to differentiate between signals from a simulated and from a real vehicle
      */
-    double motor_throttle;                            // dimensionless, in [-1, 1]
-    double steering_servo;                            // dimensionless, in [-1, 1]
+    boolean is_real;
 };
 #endif

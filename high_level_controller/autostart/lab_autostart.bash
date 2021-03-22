@@ -8,6 +8,29 @@ export RTI_LICENSE_FILE=/opt/rti_connext_dds-6.0.0/rti_license.dat
 
 export DDS_INITIAL_PEER=rtps@udpv4://192.168.1.249:25598
 
+# --------------------------------- WAIT FOR TIME SYNC --------------------------------------------------------
+# Wait for clock sync before doing anything else, because starting any program before a clock sync would cause problems
+# The clock sync is performed in rc.local of the sudo user
+# We communicate via pipes, alternatively starting this script as another user would have been possible as well
+# Check for existing pipe, wait until it has been created
+nuc_ntp_pipe=/tmp/nuc_ntp_pipe
+nuc_lab_pipe=/tmp/nuc_lab_pipe
+
+while [[ ! (-p $nuc_ntp_pipe && -p $nuc_lab_pipe ) ]]; do
+        sleep 1
+done
+
+# Read msg from pipe, which is sent after the time sync, then answer
+# 1 -> time sync done, answer with 1 on other pipe
+while read sy < $nuc_ntp_pipe; do
+	if [[ $sy -eq 1 ]]; then
+		break
+	fi
+	sleep 1
+done
+echo "1" > $nuc_lab_pipe
+# ---------------------------------------------------------------------------------------------------------------
+
 # Ping to make sure that an internet connection is available
 # Write to /dev/null to suppress output
 while ! ping -c 1 -w 1 192.168.1.249 &>/dev/null
@@ -36,7 +59,7 @@ cd /home/guest/
 rm -rf ./dev
 mkdir -p dev/software/cpm_lib
 cd ./dev/software/cpm_lib
-mkdir build
+mkdir -p build
 cp /tmp/software/cpm_library_package/libcpm.so ./build
 cp -R /tmp/software/cpm_library_package/dds_idl_matlab ./
 
@@ -52,6 +75,9 @@ tar -xzvf autostart_package.tar.gz
 
 # Copy the autostart error logging software in the autostart folder, s.t. it can be started even if it is not available in a new package
 cp /tmp/software/autostart_package/download_error_logger /home/guest/autostart
+
+# Also replace the current lab_autostart bash file with the updated one; this will, of course, not be applied until the next restart
+cp /tmp/software/autostart_package/lab_autostart.bash /home/guest/autostart
 
 # Get the middleware & QoS
 out=$(wget http://192.168.1.249/nuc/middleware_package.tar.gz)
@@ -83,7 +109,11 @@ tar -xzvf matlab_package.tar.gz
 chmod -R a+rwx ../software # Make folder accessible to guest user
 
 # Put the init scripts for Matlab in the correct folder
-cd /home/guest/dev/software/high_level_controller
+cd /home/guest/dev/software
+mkdir high_level_controller
+cd ./high_level_controller
+mkdir examples
+cd ./examples
 mkdir matlab
 cd ./matlab
 cp /tmp/software/matlab_package/init_script.m ./
@@ -92,4 +122,4 @@ cp /tmp/software/matlab_package/QOS_READY_TRIGGER.xml ./
 cd ~
 
 # Default domain is 21, just like the vehicle default domain (-> domain for real lab tests)
-/tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER
+/tmp/software/autostart_package/autostart --dds_domain=21 --dds_initial_peer=$DDS_INITIAL_PEER  &> ~/autostart/log.log 

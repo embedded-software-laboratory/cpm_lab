@@ -28,9 +28,25 @@
 
 #ifndef LOG_IDL
 #define LOG_IDL
+
+/**
+ * \struct Log
+ * \brief A log message. These can be sent by any participant and are aggregated and shown in the LCC.
+ * \ingroup cpmlib_idl
+ */
 struct Log {
+    //! ID of the log message sender, e.g. middleware
     string id; //@key
+
+    //! Log content
     string content;
+
+    //! When the log was created
     TimeStamp stamp;
+
+    /**
+    * \brief Log level from 0 (log nothing) to e.g. 3 (high verbosity) for filtering after message was received
+    */
+    unsigned short log_level;
 };
 #endif

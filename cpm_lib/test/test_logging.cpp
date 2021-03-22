@@ -34,16 +34,17 @@
 #include <fstream>
 #include <thread>
 #include <vector>
-
-#include <dds/domain/DomainParticipant.hpp>
-#include <dds/sub/ddssub.hpp>
-#include <dds/core/ddscore.hpp>
-#include <dds/topic/ddstopic.hpp>
+#include <chrono>
 
 #include "Log.hpp"
 
+#include "cpm/ReaderAbstract.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 
+/**
+ * \test Tests Logging
+ * \ingroup cpmlib
+ */
 TEST_CASE( "Logging" ) {
     //Make sure that the Logging topic already exists
     cpm::Logging::Instance();
@@ -52,10 +53,20 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().set_id(id);
 
     //Create logging logs_reader
-    dds::sub::DataReader<Log> logs_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), dds::topic::find<dds::topic::Topic<Log>>(cpm::ParticipantSingleton::Instance(), "log"), (dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()));
+    cpm::ReaderAbstract<Log> logs_reader("log", true, true);
 
-    //Sleep 100ms to make sure that the logger reader is ready to receive messages
-    rti::util::sleep(dds::core::Duration::from_millisecs(100));
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Logging test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (logs_reader.matched_publications_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
@@ -84,7 +95,7 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(actual_content.str()) != std::string::npos);
 
     //Some milliseconds need to pass, else the order of the logs is not guaranteed
-    rti::util::sleep(dds::core::Duration::from_millisecs(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     //Write second message to Logger
     std::stringstream stream;
@@ -92,7 +103,7 @@ TEST_CASE( "Logging" ) {
     cpm::Logging::Instance().write("%s", stream.str().c_str());
     stream.clear();
 
-    rti::util::sleep(dds::core::Duration::from_millisecs(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     //Write C-style message
     cpm::Logging::Instance().write("Die Zahl %i nennt sich auch %s", 5, "fünf");
@@ -126,13 +137,22 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(third_test) != std::string::npos);
 
     //Get listener data to check if it logs were received via DDS
+    //Allow for some more waiting in between, in case the network is slow during testing
+    //Here: Up to 1 second or until all data has been received
     std::vector<std::string> listener_content;
     std::string thread_id;
-    for (auto sample : logs_reader.take()) {
-        if (sample.info().valid()) {
-            listener_content.push_back(sample.data().content());
-            thread_id = sample.data().id();
+    for (int i = 0; i < 10; ++i)
+    {
+        for (auto& data : logs_reader.take()) {
+            listener_content.push_back(data.content());
+            thread_id = data.id();
         }
+
+        if (listener_content.size() < 3)
+        {
+            usleep(100000);
+        }
+        else break;
     }
 
     //Compare thread content (received messages) with desired content (order irrelevant)

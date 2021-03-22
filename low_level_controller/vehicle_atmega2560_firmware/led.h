@@ -36,13 +36,45 @@
 #define LED_H_
 
 
+#include "servo_timer.h"
 #include "spi_packets.h"
 
+/**
+ * \brief TODO
+ * \param vehicle_id_in
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
+void led_set_state(uint8_t vehicle_id_in);
 
-void led_set_state(spi_mosi_data_t* spi_mosi_data);
-void toggle_led();
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
+void led_toggle();
+
+/**
+ * \brief TODO
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
 void led_setup();
-void test_led(uint8_t led1,uint8_t led2,uint8_t led3,uint8_t led4);
+
+/**
+ * \brief TODO
+ * \param led1
+ * \param led2
+ * \param led3
+ * \param led4
+ * 
+ * \author maczijewski
+ * \ingroup low_level_controller
+ */
+void led_test(uint8_t led1, uint8_t led2, uint8_t led3, uint8_t led4);
 
 
 #endif /* LED_H_ */

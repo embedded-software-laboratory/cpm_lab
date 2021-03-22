@@ -26,12 +26,17 @@
 
 #include "TimerTrigger.hpp"
 
+/**
+ * \file TimerTrigger.cpp
+ * \ingroup lcc
+ */
+
 using namespace std::placeholders;
 TimerTrigger::TimerTrigger(bool simulated_time) :
     use_simulated_time(simulated_time),
     /*Set up communication*/
     ready_status_reader(dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), cpm::get_topic<ReadyStatus>("readyStatus"), dds::sub::qos::DataReaderQos() << dds::core::policy::Reliability::Reliable() << dds::core::policy::History::KeepAll()),
-    system_trigger_writer(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<SystemTrigger>("systemTrigger"), dds::pub::qos::DataWriterQos() << dds::core::policy::Reliability::Reliable())
+    system_trigger_writer("systemTrigger", true)
 {    
     current_simulated_time = 0;
     simulation_started.store(false);
@@ -57,8 +62,31 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
             check_signals_and_send_next_signal();   
 
             //Now only continue if new messages are received
+            //If waiting time gets too long, investigate
+            unsigned int count = 0;
             while(!obtain_new_ready_signals()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                ++count;
+
+                //Each second of waiting, log which participants we are still waiting for
+                if (count > 100)
+                {
+                    count = 0;
+
+                    //Log all participants that are still working or out of sync
+                    std::stringstream id_stream;
+                    std::lock_guard<std::mutex> lock(ready_status_storage_mutex);
+                    std::lock_guard<std::mutex> lock2(simulated_time_mutex);
+                    for (auto& entry : ready_status_storage)
+                    {
+                        if (entry.second.next_timestep <= current_simulated_time)
+                        {
+                            id_stream << " | " << entry.first;
+                        }
+                    }
+
+                    cpm::Logging::Instance().write(2, "Simulated time - Participants that need to answer or are out of sync: %s", id_stream.str().c_str());
+                }
             }   
         }  
     });
@@ -103,6 +131,7 @@ bool TimerTrigger::obtain_new_ready_signals() {
                 } //If an old message is received and the entry in the storage is old as well, the participant is out of sync
                 else if (next_start_request < current_simulated_time && use_simulated_time) {
                     current_participant_status = OUT_OF_SYNC;
+                    cpm::Logging::Instance().write(1, "Participant with id '%s' is out of sync", id.c_str());
                 }
                 else if (next_start_request > current_simulated_time && use_simulated_time) {
                     current_participant_status = WAITING;
@@ -119,7 +148,11 @@ bool TimerTrigger::obtain_new_ready_signals() {
                 ready_status_storage[id] = data;
             }
             else {
-                cpm::Logging::Instance().write("LCC Timer: Received old timestamp from participant with ID %s", id.c_str());
+                cpm::Logging::Instance().write(
+                    1,
+                    "LCC Timer: Received old timestamp from participant with ID %s", 
+                    id.c_str()
+                );
             }
         }
     }
@@ -163,10 +196,18 @@ bool TimerTrigger::check_signals_and_send_next_signal() {
         std::lock_guard<std::mutex> lock(simulated_time_mutex);
         //React according to current data
         if (!has_data) {
-            cpm::Logging::Instance().write("LCC Timer: No data or only invalid data received!");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "LCC Timer: No data or only invalid data received!"
+            );
         }
         else if (next_simulated_time < current_simulated_time) {
-            cpm::Logging::Instance().write("LCC Timer: At least one participant is out of sync (or its answer was not received)!");
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "LCC Timer: At least one participant is out of sync (or its answer was not received)!"
+            );
         }
         else {
             //The timer can progress to the next smallest timestep as all participants have performed their computations
@@ -198,7 +239,11 @@ void TimerTrigger::send_stop_signal() {
     trigger.next_start(TimeStamp(cpm::TRIGGER_STOP_SYMBOL));
     system_trigger_writer.write(trigger);
 
-    cpm::Logging::Instance().write("LCC: Sent stop signal");
+    cpm::Logging::Instance().write(
+        1,
+        "%s", 
+        "LCC: Sent stop signal"
+    );
 
     timer_running.store(false);
     if(next_signal_thread.joinable()) {

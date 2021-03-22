@@ -26,6 +26,11 @@
 
 #include "VehicleAutomatedControl.hpp"
 
+/**
+ * \file VehicleAutomatedControl.cpp
+ * \ingroup lcc
+ */
+
 VehicleAutomatedControl::VehicleAutomatedControl() 
 :participant(cpm::ParticipantSingleton::Instance())
 ,topic_vehicleCommandSpeedCurvature(cpm::get_topic<VehicleCommandSpeedCurvature>("vehicleCommandSpeedCurvature"))
@@ -41,7 +46,7 @@ VehicleAutomatedControl::VehicleAutomatedControl()
     writer_vehicleCommandSpeedCurvature = make_shared<dds::pub::DataWriter<VehicleCommandSpeedCurvature>>(publisher, topic_vehicleCommandSpeedCurvature);
     
     //Initialize the timer (task loop) - here, different tasks like stopping the vehicle are performed
-    task_loop = std::make_shared<cpm::TimerFD>("LCCAutomatedControl", 20000000ull, 0, false);
+    task_loop = std::make_shared<cpm::TimerFD>("LCCAutomatedControl", 200000000ull, 0, false);
     
     //Suppress warning for unused parameter in timer (because we only want to show relevant warnings)
     #pragma GCC diagnostic push
@@ -58,7 +63,7 @@ VehicleAutomatedControl::VehicleAutomatedControl()
             stop_command.speed(0);
             stop_command.curvature(0);
 
-            cpm::stamp_message(stop_command, cpm::get_time_ns(), 1000000000ull);
+            cpm::stamp_message(stop_command, cpm::get_time_ns(), 100000000ull);
 
             writer_vehicleCommandSpeedCurvature->write(stop_command);
 
@@ -87,12 +92,12 @@ void VehicleAutomatedControl::stop_vehicles(std::vector<uint8_t> id_list)
     for (const auto& id : id_list)
     {
         stop_vehicle(id);
-            std::cout << "Stopping " << id << std::endl;
+        std::cout << "Stopping " << static_cast<int>(id) << std::endl;
     }
 }
 
 void VehicleAutomatedControl::stop_vehicle(uint8_t id)
 {
     std::lock_guard<std::mutex> lock(stop_list_mutex);
-    vehicle_stop_list[id] = 10; //How often the command should be sent
+    vehicle_stop_list[id] = 5; //How often the command should be sent
 }

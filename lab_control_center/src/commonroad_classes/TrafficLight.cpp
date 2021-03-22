@@ -26,7 +26,16 @@
 
 #include "commonroad_classes/TrafficLight.hpp"
 
-TrafficLight::TrafficLight(const xmlpp::Node* node)
+/**
+ * \file TrafficLight.cpp
+ * \ingroup lcc_commonroad
+ */
+
+TrafficLight::TrafficLight(
+    const xmlpp::Node* node,
+    std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+) :
+    get_position_from_lanelet(_get_position_from_lanelet)
 {
     //Check if node is of type trafficLight
     assert(node->get_name() == "trafficLight");
@@ -39,6 +48,9 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
 
     try
     {
+        //Translate ID again, to be used in draw() 
+        id = xml_translation::get_attribute_int(node, "id", true).value();
+
         //We use the XMLTranslation iteration functions here, as it is easier to operate on the vectors if we can use indices and .at()
         xml_translation::iterate_children(
             node,
@@ -95,11 +107,11 @@ TrafficLight::TrafficLight(const xmlpp::Node* node)
     //example: cycle | position | cycle | cycle -> I cannot tell whether "position" belongs to the first or the second cycle 
     
     //Test output
-    std::cout << "TrafficLight: " << std::endl;
-    std::cout << "\tActive size: " << actives.size() << std::endl;
-    std::cout << "\tPosition size: " << positions.size() << std::endl;
-    std::cout << "\tDirection size: " << directions.size() << std::endl;
-    std::cout << "\tCycle size: " << cycles.size() << std::endl;
+    // std::cout << "TrafficLight: " << std::endl;
+    // std::cout << "\tActive size: " << actives.size() << std::endl;
+    // std::cout << "\tPosition size: " << positions.size() << std::endl;
+    // std::cout << "\tDirection size: " << directions.size() << std::endl;
+    // std::cout << "\tCycle size: " << cycles.size() << std::endl;
 }
 
 Position TrafficLight::translate_position(const xmlpp::Node* position_node)
@@ -229,13 +241,13 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
     return cycle;
 }
 
-void TrafficLight::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void TrafficLight::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
     //TODO: Check if that's all
     
     for (auto& position : positions)
     {
-        position.transform_coordinate_system(scale, translate_x, translate_y);
+        position.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -244,15 +256,126 @@ void TrafficLight::transform_coordinate_system(double scale, double translate_x,
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation) 
 {
-    std::cerr << "TODO: Better warning // Drawing TrafficLights is currently unsupported" << std::endl;
+    ctx->save();
 
-    // for (auto position : positions)
-    // {
-    //     position.transform_context(ctx, scale);
+    //Perform required translation + rotation, local rotation is ignored (because the traffic light's orientation does not really have a meaning)
+    ctx->translate(global_translate_x, global_translate_y);
+    ctx->rotate(global_orientation);
 
-    //     //Draw lights next to each other
-    //     //TODO: Consider additional values
-    //     ctx->show_text("Light"); This is not sufficient, need draw matrix etc -> not worth it atm, as we currently only use 2018 files
-    // }
+    for (auto position : positions)
+    {
+        ctx->save();
+        position.transform_context(ctx, scale);
+
+        draw_traffic_light_symbol(ctx, scale);
+
+        ctx->restore();
+    }
+
+    //Now draw at position given by lanelet, where no position was given (cycle must always be defined according to specs)
+    if (cycles.size() > positions.size())
+    {
+        if (get_position_from_lanelet)
+        {
+            auto position = get_position_from_lanelet(id);
+            auto x = 0.0;
+            auto y = 0.0;
+            if (position.has_value())
+            {
+                x = position->first * scale;
+                y = position->second * scale;
+
+                ctx->save();
+                ctx->translate(x, y);
+                draw_traffic_light_symbol(ctx, scale);
+                ctx->restore();
+            }
+            else
+            {
+                //This log causes severe flickering - why? TODO
+                LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
+            }
+        }
+        else
+        {
+            LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
+        }
+    }
+
+    ctx->restore();
+
+    //TODO: Consider additional values
+    LCCErrorLogger::Instance().log_error("Warning: The specification for traffic lights does not allow for unique definitions (due to <xs:sequence> & no required order of the elements), so we do not show more than if the light exists at all");
 }
 #pragma GCC diagnostic pop
+
+void TrafficLight::draw_traffic_light_symbol(const DrawingContext& ctx, double scale)
+{
+    auto length = .04;
+    auto width = .1;
+    auto radius = .01;
+
+    //Draw a simple traffic light icon - rectangle
+    {
+        ctx->save();
+
+        ctx->set_source_rgb(.1, .1, .1);
+        ctx->set_line_width(0.005);
+
+        //Move to first corner from center
+        ctx->move_to((- (length/2)) * scale, (- (width/2)) * scale);
+
+        //Draw lines
+        ctx->line_to((- (length/2)) * scale, (  (width/2)) * scale);
+        ctx->line_to((  (length/2)) * scale, (  (width/2)) * scale);
+        ctx->line_to((  (length/2)) * scale, (- (width/2)) * scale);
+        ctx->line_to((- (length/2)) * scale, (- (width/2)) * scale);
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+    }
+
+    //Draw a simple traffic light icon - circles
+    {
+        ctx->save();
+        ctx->set_source_rgb(1.0, .1, .1);
+        ctx->set_line_width(0.005);
+
+        //Move to center
+        ctx->move_to(0, width/3 * scale);
+
+        //Draw circle
+        ctx->arc(0, width/3 * scale, radius * scale, 0.0, 2 * M_PI);
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+        ctx->save();
+        ctx->set_source_rgb(.8, .7, 0);
+        ctx->set_line_width(0.005);
+
+        //Move to center
+        ctx->move_to(0, 0);
+
+        //Draw circle
+        ctx->arc(0, 0, radius * scale, 0.0, 2 * M_PI);
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+        ctx->save();
+        ctx->set_source_rgb(.3, .5, .15);
+        ctx->set_line_width(0.005);
+
+        //Move to center
+        ctx->move_to(0, -width/3 * scale);
+
+        //Draw circle
+        ctx->arc(0, -width/3 * scale, radius * scale, 0.0, 2 * M_PI);
+        ctx->fill_preserve();
+        ctx->stroke();
+
+        ctx->restore();
+    }
+}

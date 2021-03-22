@@ -33,6 +33,15 @@
  *  Author: cfrauzem
  */ 
 
+/**
+ * \file servo_timer.c
+ *
+ * \author maczijewski, cfrauzem
+ * \date Created: 24.09.2018 16:26:48, Modified: 05.31.2019 11:32:19
+ * 
+ * \ingroup low_level_controller
+ */
+
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -40,28 +49,39 @@
 #include "servo_timer.h"
 #include "led.h"
 
-
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 #define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static volatile uint32_t tick_counter = 0;
 
+/**
+ * \brief TODO
+ * \ingroup low_level_controller
+ */
 static uint8_t consecutive_servo_center_command_count = 0;
 
 /* 
  * servo enable on pin PD7
  * servo pwm range:
- * 2000: negative limit
+ * 1800: negative limit which the servo can recognize
  * 3000: middle
- * 4000: positive limit
+ * 4200: positive limit which the servo can recognize
  */
 void set_servo_pwm(uint16_t pwm) {	
 	// cap command above servo command positive limit
-	if(pwm > 4000) {
-		pwm = 4000;
+	if(pwm > 4200) {
+		pwm = 4200;
 	}
 	// cap command below servo command negative limit
-	else if (pwm < 2000) {
-		pwm = 2000;
+	else if (pwm < 1800) {
+		pwm = 1800;
 	}
 	
 	OCR3C = pwm;
@@ -92,13 +112,18 @@ uint32_t get_tick() {
 }
 
 
-// timer 3 set to 20ms period
-// timer/counter3 overflow interrupt
-// used timer3 because convenient: could have used different timer
+/**
+ * \brief timer 3 set to 20ms period
+ * 
+ * timer/counter3 overflow interrupt
+ * 
+ * used timer3 because convenient: could have used different timer
+ * \ingroup low_level_controller
+ */
 ISR(TIMER3_OVF_vect) {
 	tick_counter++;
 	// use the same timer for LEDs, as it has the same frequency-requirements 
-	toggle_led();
+	led_toggle();
 }
 
 

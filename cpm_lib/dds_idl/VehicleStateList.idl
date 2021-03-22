@@ -30,9 +30,24 @@
 #ifndef VEHICLESTATELIST_IDL
 #define VEHICLESTATELIST_IDL
 //TODO rename
+
+/**
+ * \struct VehicleStateList
+ * \brief Messages sent from the Middleware to the HLC, containing relevant vehicle information, the current time and the periodicity of the calls
+ * Also functions as "wake up" call that means that the HLC can start computation with this data
+ * \ingroup cpmlib_idl
+ */
 struct VehicleStateList {
+    //!Current time, should be used by the HLC instead of using its own clock
     unsigned long long t_now;
+
+    //!Periodicity of calling the HLC
+    unsigned long long period_ms;
+
+    //!List of vehicle state information for all vehicles
     sequence<VehicleState> state_list;
+
+    //!List of vehicle observation information for all vehicles
     sequence<VehicleObservation> vehicle_observation_list;
 };
 #endif

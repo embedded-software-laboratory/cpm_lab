@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Rectangle.hpp"
 
+/**
+ * \file Rectangle.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Rectangle::Rectangle(const xmlpp::Node* node)
 {
     //Check if node is of type rectangle
@@ -35,6 +40,11 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     {
         length = xml_translation::get_child_child_double(node, "length", true).value(); //mandatory, so we can use .value() bc an error is thrown before anyway if it does not exist
         width = xml_translation::get_child_child_double(node, "width", true).value(); //mandatory, see above
+
+        if (length < 0 || width < 0)
+        {
+            throw SpecificationError(std::string("Could not translate Rectangle - length or width is smaller than zero"));
+        }
 
         //Get point value, which must not be specified
         const auto point_node = xml_translation::get_child_if_exists(node, "center", false);
@@ -49,7 +59,6 @@ Rectangle::Rectangle(const xmlpp::Node* node)
         }
 
         orientation = xml_translation::get_child_child_double(node, "orientation", false);
-        //TODO: Find out default value
     }
     catch(const SpecificationError& e)
     {
@@ -63,15 +72,21 @@ Rectangle::Rectangle(const xmlpp::Node* node)
     
 
     //Test output
-    std::cout << "Rectangle:" << std::endl;
-    std::cout << "\tLenght, width: " << length << ", " << width << std::endl;
-    std::cout << "\tOrientation set: " << orientation.has_value() << std::endl;
-    std::cout << "\tCenter set: " << center.has_value() << std::endl;
+    // std::cout << "Rectangle:" << std::endl;
+    // std::cout << "\tLenght, width: " << length << ", " << width << std::endl;
+    // std::cout << "\tOrientation set: " << orientation.has_value() << std::endl;
+    // std::cout << "\tCenter set: " << center.has_value() << std::endl;
 }
 
-void Rectangle::transform_coordinate_system(double scale, double translate_x, double translate_y)
+void Rectangle::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    center->transform_coordinate_system(scale, translate_x, translate_y);
+    center->transform_coordinate_system(scale, angle, translate_x, translate_y);
+
+    //Change rotation itself as well; rotation is counter-clockwise
+    //TODO: Is it okay to just add to the rotation in local coordinates if the points have already been converted correctly?
+    auto old_value = orientation.value_or(0.0);
+    orientation = std::optional<double>(rotate_orientation_around_z(old_value, angle));
+    
 
     if (scale > 0)
     {
@@ -133,7 +148,44 @@ std::pair<double, double> Rectangle::get_center()
     }
 }
 
+CommonroadDDSRectangle Rectangle::to_dds_msg()
+{
+    CommonroadDDSRectangle rectangle;
+
+    rectangle.length(length);
+    rectangle.width(width);
+
+    if(center.has_value())
+    {
+        rectangle.center(center->to_dds_msg());
+    }
+    else
+    {
+        rectangle.center(Point(-1).to_dds_msg()); //Default position
+    }
+    
+
+    rectangle.orientation(orientation.value_or(0)); //Orientation is 0 if not set
+
+    return rectangle;
+}
+
 std::optional<double> Rectangle::get_orientation()
 {
     return orientation;
+}
+
+const std::optional<Point>& Rectangle::get_center() const
+{
+    return center;
+}
+
+double Rectangle::get_length()
+{
+    return length;
+}
+
+double Rectangle::get_width()
+{
+    return width;
 }

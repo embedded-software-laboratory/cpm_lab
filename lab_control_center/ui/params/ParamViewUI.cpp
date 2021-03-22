@@ -26,6 +26,11 @@
 
 #include "ParamViewUI.hpp"
 
+/**
+ * \file ParamViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, int _float_precision) :
     parameter_storage(_parameter_storage),
     float_precision(_float_precision)
@@ -218,12 +223,16 @@ void ParamViewUI::open_param_create_window() {
     //Also, a reference to the main window must already exist
     if(! parameter_view_unchangeable.exchange(true) && get_main_window) {
         make_insensitive();
+        //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
+        get_main_window().set_sensitive(false);
+        
         create_window_open = true;
         create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
     } 
     else if (!get_main_window)
     {
-        cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param create dialog");
+        std::cerr << "ERROR: Main window reference is missing, cannot create param create window";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create param create window");
     }
 }
 
@@ -243,11 +252,17 @@ void ParamViewUI::open_param_edit_window() {
             ParameterWithDescription param;
             //Get the parameter
             if (parameter_storage->get_parameter(name, param) && get_main_window) {
+                //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
+                get_main_window().set_sensitive(false);
+
                 create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
             }
             else if (!get_main_window)
             {
-                cpm::Logging::Instance().write("%s", "ERROR: Main window reference is missing, cannot create param edit dialog");
+                make_sensitive();
+
+                std::cerr << "ERROR: Main window reference is missing, cannot create param edit window";
+                LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing, cannot create param edit window");
             }
         }
         else {
@@ -298,6 +313,16 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     parameter_view_unchangeable.store(false);
     create_window_open = false;
     make_sensitive();
+
+    //Make the main window sensitive again
+    if (get_main_window) {
+        get_main_window().set_sensitive(true);
+    }
+    else if (!get_main_window)
+    {
+        std::cerr << "ERROR: Main window reference is missing in ParamView";
+        LCCErrorLogger::Instance().log_error("ERROR: Main window reference is missing in ParamView");
+    }
 }
 
 bool ParamViewUI::check_param_exists_callback(std::string name) {
@@ -308,8 +333,7 @@ bool ParamViewUI::check_param_exists_callback(std::string name) {
 //Menu bar item handlers
 
 void ParamViewUI::params_reload_handler() {
-    parameter_storage->loadFile();
-    read_storage_data();
+    params_load_file_handler("");
 }
 
 void ParamViewUI::params_save_handler() {
@@ -321,8 +345,59 @@ void ParamViewUI::params_save_as_handler(std::string filename) {
 }
 
 void ParamViewUI::params_load_file_handler(std::string filename) {
-    parameter_storage->loadFile(filename);
-    read_storage_data();    
+    //Try to load the file; it might not be conformant to a param YAML file, in that case a domain error is thrown
+    std::string error_string = "";
+
+    try {
+        if (filename == "")
+        {
+            parameter_storage->loadFile();
+        }
+        else
+        {
+            parameter_storage->loadFile(filename);
+        }
+    }
+    catch (const std::domain_error& err)
+    {
+        error_string = err.what();
+    }
+    catch (const std::exception& err)
+    {
+        error_string = err.what();
+    }
+
+    if (error_string != "")
+    {
+        //Create new window
+        error_dialog = std::make_shared<Gtk::MessageDialog>(
+            get_main_window(),
+            error_string,
+            false,
+            Gtk::MessageType::MESSAGE_INFO,
+            Gtk::ButtonsType::BUTTONS_CLOSE,
+            false
+        );
+    
+        //Connect new window with parent, show window
+        error_dialog->set_transient_for(get_main_window());
+        error_dialog->property_destroy_with_parent().set_value(true);
+        error_dialog->show();
+
+        //Callback for closing
+        error_dialog->signal_response().connect(
+            [this] (auto response)
+            {
+                if (response == Gtk::ResponseType::RESPONSE_CLOSE)
+                {
+                    error_dialog->close();
+                }
+            }
+        );
+    }
+
+    //Load everything that could be loaded before an error was thrown or the whole file if no error was thrown
+    read_storage_data();
 }
 
 // void ParamViewUI::params_load_multiple_files_handler() {

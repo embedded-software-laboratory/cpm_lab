@@ -31,7 +31,6 @@
  *  Author: cfrauzem
  */ 
 
-
 #ifndef WATCHDOG_H_
 #define WATCHDOG_H_
 
@@ -40,10 +39,28 @@
 
 extern volatile uint8_t safe_mode_flag;
 
+/**
+ * \brief TODO
+ *
+ * \author cfrauzem
+ * \ingroup low_level_controller
+ */ 
 void watchdog_disable();
 
+/**
+ * \brief TODO
+ *
+ * \author cfrauzem
+ * \ingroup low_level_controller
+ */ 
 void watchdog_enable();
 
+/**
+ * \brief TODO
+ *
+ * \author cfrauzem
+ * \ingroup low_level_controller
+ */ 
 void watchdog_reset();
 
 #endif /* WATCHDOG_H_ */

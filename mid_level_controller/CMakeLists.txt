@@ -33,10 +33,14 @@ set(SOURCE_BASE
     src/Controller.hpp
     src/TrajectoryInterpolation.cxx
     src/TrajectoryInterpolation.hpp
+    src/PathInterpolation.cxx
+    src/PathInterpolation.hpp
     src/casadi_mpc_fn.c
     src/casadi_mpc_fn.h
     src/MpcController.hpp
     src/MpcController.cxx
+    src/PathTrackingController.hpp
+    src/PathTrackingController.cxx
     src/VehicleModel.hpp
     src/VehicleModel.cxx
     ../low_level_controller/vehicle_atmega2560_firmware/crc.h

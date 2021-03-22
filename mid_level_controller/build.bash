@@ -1,24 +1,10 @@
 #!/bin/bash
-simulation=0
+# exit when any command fails
+set -e
 
-#Get command line arguments
-for arg in "$@"
-do
-    case $arg in
-        -s|--simulation)
-        simulation=1
-        shift # Remove --simulation from processing
-        ;;
-        *)
-        shift # Remove generic argument from processing
-        ;;
-    esac
-done
-
-mkdir build_arm
-mkdir build_arm_sim
-mkdir build_x64_sim
-
+mkdir -p build_arm
+mkdir -p build_arm_sim
+mkdir -p build_x64_sim
 
 # Build for simulation on desktop
 pushd build_x64_sim
@@ -26,8 +12,7 @@ cmake .. -DBUILD_ARM=OFF -DBUILD_SIMULATION=ON
 make -j$(nproc)
 popd
 
-if [ $simulation == 0 ]
-then
+if [ -z $SIMULATION ]; then
     # Build for simulation on Raspberry
     pushd build_arm_sim
     cmake .. -DBUILD_ARM=ON -DBUILD_SIMULATION=ON -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake
@@ -50,8 +35,11 @@ then
     popd
     
     
-    
-    # # Publish package via http/apache for the vehicles to download
+    # Publish package via http/apache for the vehicles to download
+    if [ ! -d "/var/www/html/raspberry" ]; then
+        sudo mkdir -p "/var/www/html/raspberry"
+        sudo chmod a+rwx "/var/www/html/raspberry"
+    fi
     rm -f /var/www/html/raspberry/package.tar.gz
     #cp ./build_arm_sim/package.tar.gz /var/www/html/raspberry  # For onboard simulation
     cp ./build_arm/package.tar.gz /var/www/html/raspberry      # Normal case

@@ -30,9 +30,13 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
+/**
+ * \file IpsPipeline.cpp
+ * \ingroup ips
+ */
 
 IpsPipeline::IpsPipeline(const bool enable_visualization)
-:writer_vehicleObservation(dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), cpm::get_topic<VehicleObservation>("vehicleObservation"))
+:writer_vehicleObservation("vehicleObservation")
 {
     undistortPointsFn = std::make_shared<UndistortPoints>(
         std::vector<double>{4.641747e+00, -5.379232e+00, -3.469735e-01, 1.598328e+00, 9.661605e-01, 3.870296e-01, -1.125387e+00, -1.264416e-01, -9.323793e-01, 5.223107e-02, 5.771384e-02, 7.367979e-02, 5.512993e-02, 3.857936e-02, -2.401879e-02},
@@ -59,23 +63,38 @@ void IpsPipeline::apply(LedPoints led_points)
     VehiclePoints identifiedVehicles;
     std::vector<VehicleObservation> vehicleObservations;
 
+    // Check for continuity of camera stream
+    uint64_t t_current_nanos = led_points.time_stamp().nanoseconds();
+    uint64_t dt_nanos =  t_current_nanos - t_previous_nanos;
+    if (dt_nanos > 25*1e6)
+    {
+        cpm::Logging::Instance().write(
+            1,
+            "Time delta between frames is %.2f ms. Reset tracking...",
+            dt_nanos/1e6
+        );
+        vehiclePointTimeseries.clear();
+    }
+    t_previous_nanos = t_current_nanos;
 
     FloorPoints floorPoints = undistortPointsFn->apply(led_points);
     VehiclePoints vehiclePoints = detectVehiclesFn->apply(floorPoints);
+    
     vehiclePointTimeseries.push_back(vehiclePoints);
     if(vehiclePointTimeseries.size() > 50)
     {
         vehiclePointTimeseries.pop_front();
-        identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
-        vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
+    }
 
-        // Send via DDS
-        for(const auto &vehicleObservation:vehicleObservations)
+    identifiedVehicles = detectVehicleIDfn->apply(vehiclePointTimeseries);
+    vehicleObservations = poseCalculationFn->apply(identifiedVehicles);
+
+    // Send via DDS
+    for(const auto &vehicleObservation:vehicleObservations)
+    {
+        if(vehicleObservation.vehicle_id() > 0)
         {
-            if(vehicleObservation.vehicle_id() > 0)
-            {
-                writer_vehicleObservation.write(vehicleObservation);
-            }
+            writer_vehicleObservation.write(vehicleObservation);
         }
     }
 

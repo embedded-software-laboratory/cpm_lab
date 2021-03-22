@@ -26,6 +26,11 @@
 
 #include "TimeSeries.hpp"
 
+/**
+ * \file TimeSeries.cpp
+ * \ingroup lcc
+ */
+
 template<typename T>
 _TimeSeries<T>::_TimeSeries(string _name, string _format, string _unit)
 :name(_name)
@@ -74,8 +79,15 @@ T _TimeSeries<T>::get_latest_value() const
 template<typename T>
 bool _TimeSeries<T>::has_new_data(double dt) const 
 {
-    const uint64_t age = double(clock_gettime_nanoseconds() - get_latest_time());
+    const uint64_t age = double(cpm::get_time_ns() - get_latest_time());
     return age/1e9 < dt;
+}
+
+template<typename T>
+bool _TimeSeries<T>::has_data() const 
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return ! (values.empty());
 }
 
 template<typename T>

@@ -26,6 +26,11 @@
 
 #include "ParamsCreateView.hpp"
 
+/**
+ * \file ParamsCreateView.cpp
+ * \ingroup lcc_ui
+ */
+
 ParamsCreateView::ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> _on_close_callback, std::function<bool(std::string)> _check_param_exists, int _float_precision) :
     on_close_callback(_on_close_callback),
     check_param_exists(_check_param_exists),
@@ -80,6 +85,7 @@ void ParamsCreateView::create_inputs() {
     type_entry->append("Bool");
     type_entry->append("Double");
     type_entry->append("Double List");
+    type_entry->append("UInt64 (/Timestamp)");
     type_entry->append("Integer");
     type_entry->append("Integer List");
     type_entry->append("String");
@@ -137,7 +143,6 @@ void ParamsCreateView::on_type_changed() {
 void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder = Gtk::Builder::create_from_file("ui/params/params_create.glade");
 
-    params_create_builder->get_widget("params_create_dialog", parent);
     params_create_builder->get_widget("params_create_dialog", window);
     params_create_builder->get_widget("params_create_box", params_create_box);
     params_create_builder->get_widget("params_create_buttons", params_create_buttons);
@@ -145,7 +150,6 @@ void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder->get_widget("params_create_add_button", params_create_add_button);
     params_create_builder->get_widget("params_create_values_grid", params_create_values_grid);
 
-    assert(parent);
     assert(window);
     assert(params_create_box);
     assert(params_create_buttons);
@@ -239,6 +243,13 @@ void ParamsCreateView::on_add() {
         param.parameter_data.type(ParameterType::Int32);
         param.parameter_data.values_int32(ints);
     }
+    else if (type == "UInt64 (/Timestamp)") {
+        uint64_t value;
+        value_conversion_valid = string_to_uint64_t(value_string, value);
+
+        param.parameter_data.type(ParameterType::UInt64);
+        param.parameter_data.value_uint64_t(value);
+    }
     else if (type == "Double") {
         double value;
         value_conversion_valid = string_to_double(value_string, value);
@@ -312,6 +323,34 @@ bool ParamsCreateView::string_to_int(std::string str, int32_t& value) {
     }
 
     value = static_cast<int32_t>(long_value);
+    return true;
+}
+
+bool ParamsCreateView::string_to_uint64_t(std::string str, uint64_t& value) {
+    value = 0;
+    unsigned long long long_value = 0;
+    try {
+        long_value = std::stoull(str);
+
+        //Also check if the value was originally smaller than 0
+        if (str.find('-') != std::string::npos)
+        {
+            return false;
+        }
+    }
+    catch (std::invalid_argument const &e) {
+        return false;
+    }
+    catch (std::out_of_range const &e) {
+        return false;
+    }
+
+    //Just in case
+    if (long_value > MAX_UINT64_SYMBOL) {
+        return false;
+    }
+
+    value = static_cast<uint64_t>(long_value);
     return true;
 }
 

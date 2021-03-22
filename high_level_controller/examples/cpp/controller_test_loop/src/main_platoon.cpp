@@ -30,19 +30,32 @@
 #include <map>
 #include <stdlib.h>
 #include <unistd.h>
-#include <dds/pub/ddspub.hpp>
+#include <vector>
+
 #include "cpm/AsyncReader.hpp"
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/Timer.hpp"
 #include "cpm/get_topic.hpp"
-#include "VehicleState.hpp"
-#include "VehicleCommandTrajectory.hpp"
+#include "cpm/Writer.hpp"
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
 
+#include "VehicleState.hpp"
+#include "VehicleCommandTrajectory.hpp"
 
+/**
+ * \file main_platoon.cpp
+ * \brief TODO. Contains the other main function (without subgroups, Doxygen only includes one)
+ * \ingroup controller_test_loop
+ */
 
+/**
+ * \brief The other main function of the controller_test_loop scenario
+ * \param argc Command line param
+ * \param argv Command line param
+ * \ingroup controller_test_loop
+ */
 int main(int argc, char *argv[])
 {
     cpm::init(argc, argv);
@@ -54,27 +67,18 @@ int main(int argc, char *argv[])
     std::map<uint8_t, VehicleState> vehicleStates;
 
     cpm::AsyncReader<VehicleState> vehicleStates_reader(
-        [&](dds::sub::LoanedSamples<VehicleState>& samples) {
+        [&](std::vector<VehicleState>& samples) {
             std::unique_lock<std::mutex> lock(_mutex);
-            for(auto sample : samples) 
+            for(auto& data : samples) 
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    vehicleStates[data.vehicle_id()] = data;
-                }
+                vehicleStates[data.vehicle_id()] = data;
             }
         }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<VehicleState>("vehicleState")
+        "vehicleState"
     );
 
 
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory
-    (
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory")
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
 
 
     std::map<uint8_t, uint8_t> follower_vehicle_id_map;

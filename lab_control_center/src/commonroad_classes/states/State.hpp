@@ -40,7 +40,10 @@
 
 #include "commonroad_classes/InterfaceDraw.hpp"
 #include "commonroad_classes/InterfaceTransform.hpp"
+#include "commonroad_classes/InterfaceTransformTime.hpp"
 #include "commonroad_classes/XMLTranslation.hpp"
+
+#include "LCCErrorLogger.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
@@ -48,55 +51,94 @@
  * \class State
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a state specified in an XML file
+ * \ingroup lcc_commonroad
  */
-class State : public InterfaceTransform, public InterfaceDraw
+class State : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
     //Commonroad data
-    std::optional<Position> position;
-    std::optional<IntervalOrExact> orientation;
-    std::optional<IntervalOrExact> time; //Time values should probably be within the range of double - gets transformed in getter to nanoseconds view; also: State and InitialState differ in spec, as in InitialState time must be exact - we did not make an extra type for this here, as we expect conform xml types
-    std::optional<IntervalOrExact> velocity;
-    std::optional<IntervalOrExact> acceleration;
-    std::optional<IntervalOrExact> yaw_rate;
-    std::optional<IntervalOrExact> slip_angle;
+    //! Position in this state, must be set, 2018/2020 specs
+    std::optional<Position> position = std::nullopt;
+    //! Optional orientation in this state, 2018/2020 specs
+    std::optional<IntervalOrExact> orientation = std::nullopt;
+    //! Time (commonroad representation, not nanoseconds) in this state, must be set, 2018/2020 specs
+    std::optional<IntervalOrExact> time = std::nullopt; 
+    //! Optional velocity in this state, 2018/2020 specs
+    std::optional<IntervalOrExact> velocity = std::nullopt;
+    //! Optional acceleration in this state, 2018/2020 specs
+    std::optional<IntervalOrExact> acceleration = std::nullopt;
+    //! Optional yaw_rate in this state, 2018/2020 specs
+    std::optional<IntervalOrExact> yaw_rate = std::nullopt;
+    //! Optional slip_angle in this state, 2018/2020 specs
+    std::optional<IntervalOrExact> slip_angle = std::nullopt;
 
     //2020 specs only
-    std::optional<IntervalOrExact> steering_angle;
-    std::optional<IntervalOrExact> roll_angle;
-    std::optional<IntervalOrExact> roll_rate;
-    std::optional<IntervalOrExact> pitch_angle;
-    std::optional<IntervalOrExact> pitch_rate;
-    std::optional<IntervalOrExact> velocity_y;
-    std::optional<IntervalOrExact> position_z;
-    std::optional<IntervalOrExact> velocity_z;
-    std::optional<IntervalOrExact> roll_angle_front;
-    std::optional<IntervalOrExact> roll_rate_front;
-    std::optional<IntervalOrExact> velocity_y_front;
-    std::optional<IntervalOrExact> position_z_front;
-    std::optional<IntervalOrExact> velocity_z_front;
-    std::optional<IntervalOrExact> roll_angle_rear;
-    std::optional<IntervalOrExact> roll_rate_rear;
-    std::optional<IntervalOrExact> velocity_y_rear;
-    std::optional<IntervalOrExact> position_z_rear;
-    std::optional<IntervalOrExact> velocity_z_rear;
-    std::optional<IntervalOrExact> left_front_wheel_angular_speed;
-    std::optional<IntervalOrExact> right_front_wheel_angular_speed;
-    std::optional<IntervalOrExact> left_rear_wheel_angular_speed;
-    std::optional<IntervalOrExact> right_rear_wheel_angular_speed;
-    std::optional<IntervalOrExact> delta_y_front;
-    std::optional<IntervalOrExact> delta_y_rear;
-    std::optional<IntervalOrExact> curvature;
-    std::optional<IntervalOrExact> curvature_change;
-    std::optional<IntervalOrExact> jerk;
-    std::optional<IntervalOrExact> jounce;
+    //! Optional steering angle in this state, 2020 specs only
+    std::optional<IntervalOrExact> steering_angle = std::nullopt;
+    //! Optional roll angle in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_angle = std::nullopt;
+    //! Optional roll rate in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_rate = std::nullopt;
+    //! Optional pitch angle in this state, 2020 specs only
+    std::optional<IntervalOrExact> pitch_angle = std::nullopt;
+    //! Optional pitch angle in this state, 2020 specs only
+    std::optional<IntervalOrExact> pitch_rate = std::nullopt;
+    //! Optional velocity in y direction in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_y = std::nullopt;
+    //! Optional position on the z axis in this state, 2020 specs only
+    std::optional<IntervalOrExact> position_z = std::nullopt;
+    //! Optional velocity on the z axis in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_z = std::nullopt;
+    //! Optional roll angle in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_angle_front = std::nullopt;
+    //! Optional roll rate in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_rate_front = std::nullopt;
+    //! Optional velocity in y direction in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_y_front = std::nullopt;
+    //! Optional position on the z axis in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> position_z_front = std::nullopt;
+    //! Optional velocity on the z axis in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_z_front = std::nullopt;
+    //! Optional roll angle in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_angle_rear = std::nullopt;
+    //! Optional roll rate in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> roll_rate_rear = std::nullopt;
+    //! Optional velocity in y direction in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_y_rear = std::nullopt;
+    //! Optional position on the z axis in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> position_z_rear = std::nullopt;
+    //! Optional velocity on the z axis in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> velocity_z_rear = std::nullopt;
+    //! Optional angular speed of the left front wheel in this state, 2020 specs only
+    std::optional<IntervalOrExact> left_front_wheel_angular_speed = std::nullopt;
+    //! Optional angular speed of the right front wheel in this state, 2020 specs only
+    std::optional<IntervalOrExact> right_front_wheel_angular_speed = std::nullopt;
+    //! Optional angular speed of the left rear wheel in this state, 2020 specs only
+    std::optional<IntervalOrExact> left_rear_wheel_angular_speed = std::nullopt;
+    //! Optional angular speed of the right rear wheel in this state, 2020 specs only
+    std::optional<IntervalOrExact> right_rear_wheel_angular_speed = std::nullopt;
+    //! Optional delta y in the front in this state, 2020 specs only
+    std::optional<IntervalOrExact> delta_y_front = std::nullopt;
+    //! Optional delta y in the rear in this state, 2020 specs only
+    std::optional<IntervalOrExact> delta_y_rear = std::nullopt;
+    //! Optional curvature in this state, 2020 specs only
+    std::optional<IntervalOrExact> curvature = std::nullopt;
+    //! Optional curvature change in this state, 2020 specs only
+    std::optional<IntervalOrExact> curvature_change = std::nullopt;
+    //! Optional jerk in this state, 2020 specs only
+    std::optional<IntervalOrExact> jerk = std::nullopt;
+    //! Optional jounce in this state, 2020 specs only
+    std::optional<IntervalOrExact> jounce = std::nullopt;
 
-    //Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
+    //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
+
+    //! Remember line in commonroad file for logging
+    int commonroad_line = 0;
 
 public:
     /**
-     * \brief Constructor - we do not want the user to be able to set values after the class has been created
+     * \brief Constructor that creates a state object from a commonroad xml state node
      */
     State(const xmlpp::Node* node);
 
@@ -112,9 +154,18 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
-    void transform_coordinate_system(double scale, double translate_x, double translate_y) override;
+    void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
+
+    /**
+     * \brief This function is used to change timing-related values, like velocity, where needed
+     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     */
+    void transform_timing(double time_scale) override;
 
     /**
      * \brief This function is used to draw the data structure that imports this interface
@@ -152,9 +203,150 @@ public:
      */
     void to_dds_msg() {} 
 
-    //TODO: Getter
-    Position get_position(); //Must exist, throw error if it does not
-    IntervalOrExact get_time(); //Must exist, throw error if it does not
+    //Getter
+    /**
+     * \brief Get the set position, which must exist - throws an error if it does not
+     */
+    Position get_position(); 
+    /**
+     * \brief Get the set time, which must exist - throws an error if it does not
+     */
+    IntervalOrExact get_time();
+    /**
+     * \brief Get the orientation mean or nullopt if orientation was not set
+     */
     std::optional<double> get_orientation_mean();
-    std::optional<IntervalOrExact> get_velocity();
+    /**
+     * \brief Get the velocity or nullopt if it was not set
+     */
+    std::optional<IntervalOrExact>& get_velocity();
+    
+    /**
+     * \brief Get the orientation or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_orientation() const;
+    /**
+     * \brief Get the acceleration or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_acceleration() const;
+    /**
+     * \brief Get the yaw rate or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_yaw_rate() const;
+    /**
+     * \brief Get the slip angle or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_slip_angle() const;
+    /**
+     * \brief Get the steering angle or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_steering_angle() const;
+    /**
+     * \brief Get the roll angle or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_angle() const;
+    /**
+     * \brief Get the roll rate or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_rate() const;
+    /**
+     * \brief Get the pitch angle or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_pitch_angle() const;
+    /**
+     * \brief Get the pitch rate or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_pitch_rate() const;
+    /**
+     * \brief Get the velocity in y direction or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_y() const;
+    /**
+     * \brief Get the position on the z axis or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_position_z() const;
+    /**
+     * \brief Get the velocity on the z axis or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_z() const;
+    /**
+     * \brief Get the roll angle in the front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_angle_front() const;
+    /**
+     * \brief Get the roll rate in the front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_rate_front() const;
+    /**
+     * \brief Get the velocity in y direction in the front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_y_front() const;
+    /**
+     * \brief Get the position on the z axis in the front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_position_z_front() const;
+    /**
+     * \brief Get the velocity on the z axis in the front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_z_front() const;
+    /**
+     * \brief Get the roll angle in the rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_angle_rear() const;
+    /**
+     * \brief Get the roll rate in the rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_roll_rate_rear() const;
+    /**
+     * \brief Get the velocity in y direction in the rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_y_rear() const;
+    /**
+     * \brief Get the position on the z axis in the rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_position_z_rear() const;
+    /**
+     * \brief Get the velocity on the z axis in the rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_velocity_z_rear() const;
+    /**
+     * \brief Get the angular speed of the left front wheel or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_left_front_wheel_angular_speed() const;
+    /**
+     * \brief Get the angular speed of the right front wheel or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_right_front_wheel_angular_speed() const;
+    /**
+     * \brief Get the angular speed of the left rear wheel or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_left_rear_wheel_angular_speed() const;
+    /**
+     * \brief Get the angular speed of the right rear wheel or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_right_rear_wheel_angular_speed() const;
+    /**
+     * \brief Get delta y front or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_delta_y_front() const;
+    /**
+     * \brief Get delta y rear or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_delta_y_rear() const;
+    /**
+     * \brief Get the curvature or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_curvature() const;
+    /**
+     * \brief Get the curvature change or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_curvature_change() const;
+    /**
+     * \brief Get the jerk or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_jerk() const;
+    /**
+     * \brief Get the jounce or nullopt if it was not set
+     */
+    const std::optional<IntervalOrExact>& get_jounce() const;
 };

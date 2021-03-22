@@ -27,6 +27,11 @@
 #include "DetectVehicleID.hpp"
 #include <iostream>
 
+/**
+ * \file DetectVehicleID.cpp
+ * \ingroup ips
+ */
+
 DetectVehicleID::DetectVehicleID(
     std::vector<uint8_t> _identification_LED_period_ticks,
     std::vector<uint8_t> _identification_LED_enabled_ticks
@@ -37,21 +42,36 @@ DetectVehicleID::DetectVehicleID(
     assert(identification_LED_enabled_ticks.size() == identification_LED_period_ticks.size());
 }
 
+/**
+ * \struct VehicleTrackingInfo
+ * \brief TODO
+ * \ingroup ips
+ */
 struct VehicleTrackingInfo
 {
+    //! TODO
     bool center_present = false;
+    //! TODO
     cv::Point2d centroid;
 };
 
+/**
+ * \struct SignalEdge
+ * \brief TODO
+ * \ingroup ips
+ */
 struct SignalEdge
 {
+    //! TODO
     int position;
+    //! TODO
     bool is_rising;
 };
 
 VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointTimeseries)
 {
-    assert(vehiclePointTimeseries.size() > 30);
+    VehiclePoints result;
+    if (vehiclePointTimeseries.empty()) return result;
 
     // We want to identify the vehicles in the most recent frame: vehiclePointTimeseries.back().
     // Algorithm: Iterate backwards in time, and track which vehicle is
@@ -92,13 +112,15 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
             // This happens when a vehicle is not detected in a frame.
             if(tracked_vehicle.size() == step_count)
             {
+                bool is_previous_vehicle_found = false;
                 // Search for the vehicle, which corresponds to "tracked_vehicle".
                 for(VehiclePointSet previous_vehicle : iter->vehicles)
                 {
                     const cv::Point2d centroid = (1.0/3) * (previous_vehicle.front + previous_vehicle.back_left + previous_vehicle.back_right);
                     const auto delta = tracked_vehicle.back().centroid - centroid;
                     const double max_distance_per_frame_squared = 0.09 * 0.09;
-
+                    
+                    // TODO: Check for smallest distance? Log warning if more than one candidate is found
                     if(delta.dot(delta) < max_distance_per_frame_squared)
                     {
                         // Matching vehicle found, add to tracking.
@@ -106,8 +128,21 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
                         vehicleTrackingInfo.centroid = centroid;
                         vehicleTrackingInfo.center_present = previous_vehicle.center_present;
                         tracked_vehicle.push_back(vehicleTrackingInfo);
-                        break;
+                        // break;
+                        if (is_previous_vehicle_found) {
+                            cpm::Logging::Instance().write(
+                                2,
+                                "%s", "IPS: found multiple vehicle candidates"
+                            );
+                        }
+                        is_previous_vehicle_found = true;
                     }
+                }
+                if (!is_previous_vehicle_found){
+                    cpm::Logging::Instance().write(
+                        2,
+                        "%s", "IPS: new vehicle or unstable detection"
+                    );
                 }
             }
             else
@@ -122,7 +157,7 @@ VehiclePoints DetectVehicleID::apply(const VehiclePointTimeseries &vehiclePointT
     // corresponds to a particular physical vehicle.
     // Now extract the ID of each vehicle.
 
-    VehiclePoints result = vehiclePointTimeseries.back();
+    result = vehiclePointTimeseries.back();
 
     for (size_t vehicle_index = 0; vehicle_index < vehicles_tracked_by_proximity.size(); ++vehicle_index)
     {

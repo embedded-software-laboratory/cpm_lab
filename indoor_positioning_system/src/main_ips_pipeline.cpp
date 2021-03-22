@@ -28,6 +28,7 @@
 #include <thread>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "cpm/AsyncReader.hpp"
 #include "LedPoints.hpp"
 #include "cpm/ParticipantSingleton.hpp"
@@ -38,7 +39,10 @@
 #include "IpsPipeline.hpp"
 
 
-
+/**
+ * \brief TODO
+ * \ingroup ips
+ */
 int main(int argc, char* argv[])
 {
     if(argc < 2) {
@@ -53,13 +57,11 @@ int main(int argc, char* argv[])
 
 
     cpm::AsyncReader<LedPoints> ipsLedPoints_reader(
-        [&](dds::sub::LoanedSamples<LedPoints>& samples){
-            for(auto sample : samples) 
-                if(sample.info().valid()) 
-                    ipsPipeline.apply(sample.data());
+        [&](std::vector<LedPoints>& samples){
+            for(auto& data : samples) 
+                ipsPipeline.apply(data);
         }, 
-        cpm::ParticipantSingleton::Instance(), 
-        cpm::get_topic<LedPoints>("ipsLedPoints")
+        "ipsLedPoints"
     );
 
     if(argc > 1 && std::string(argv[1]) == "replay")

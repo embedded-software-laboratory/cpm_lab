@@ -25,18 +25,17 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
+ * \file main.cpp
  * \brief This file includes a reader that receives NUC messages
  */
 
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <functional>
 
-#include <dds/pub/ddspub.hpp>
-
-#include "ReadyStatus.hpp"
+#include "HLCHello.hpp"
 
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -51,19 +50,15 @@ int main (int argc, char *argv[]) {
     cpm::Logging::Instance().set_id("hlc_hello");
 
     //Create DataReader that reads NUC ready messages
-    cpm::AsyncReader<ReadyStatus> reader(
-        [](dds::sub::LoanedSamples<ReadyStatus>& samples){
-            for (auto sample : samples)
+    cpm::AsyncReader<HLCHello> reader(
+        [](std::vector<HLCHello>& samples){
+            for (auto& data : samples)
             {
-                if(sample.info().valid())
-                {
-                    auto data = sample.data();
-                    std::cout << "Received: " << data << std::endl;
-                }
+                std::cout << "Received: " << data << std::endl;
             }
         },
-        cpm::ParticipantSingleton::Instance(),
-        cpm::get_topic<ReadyStatus>("hlc_startup")
+        "hlc_hello",
+        true
     );
 
     std::cout << "Press Enter to stop the program" << std::endl;

@@ -26,6 +26,16 @@
 
 #include "DetectVehicles.hpp"
 
+/**
+ * \file DetectVehicles.cpp
+ * \ingroup ips
+ */
+
+/**
+ * \brief TODO
+ * \param p TODO
+ * \ingroup ips
+ */
 static inline double length(cv::Point2d p)
 {
     return sqrt(p.dot(p));
@@ -47,28 +57,21 @@ VehiclePoints DetectVehicles::apply(const FloorPoints &floor_points) const
     const cv::Mat_<double> point_distances = 
         calc_point_distances(floor_points.points);
     // find point tripel resembling a vehicle point set
-    std::vector< std::array<std::size_t, 3> > vehicle_candidates = 
+    std::vector< std::array<std::size_t, 4> > vehicle_candidates = 
         find_vehicle_candidates(floor_points.points,
                                 point_distances);
     // filter candidates so that every point is uniquely assigned to one vehicle
-    std::vector< std::array<std::size_t, 3> > vehicles =
+    std::vector< std::array<std::size_t, 4> > vehicles =
         resolve_conflicts(vehicle_candidates);
-
-    // remove points assigned to vehicles from input floor_points
-    std::list<cv::Point2d> remaining_points = 
-        find_remaining_points(floor_points.points,
-                              vehicles);
 
     VehiclePoints vehicle_points;
     vehicle_points.timestamp = floor_points.timestamp;
-    for (const std::array<std::size_t, 3> &veh : vehicles)
+    for (const std::array<std::size_t, 4> &veh : vehicles)
     {
-        // assign point tripel to vehicle point set
+        // assign points to vehicle point set
         VehiclePointSet vehicle_point_set = 
             assign_vehicle_points(floor_points.points,
                                   veh);
-        // look for a center point
-        find_center_point(vehicle_point_set, remaining_points);
         // add vehicle point set to vehicle_points
         vehicle_points.vehicles.push_back(vehicle_point_set);
     }
@@ -94,14 +97,14 @@ cv::Mat_<double> DetectVehicles::calc_point_distances
 }
 
 
-std::vector< std::array<std::size_t, 3> > 
+std::vector< std::array<std::size_t, 4> > 
 DetectVehicles::find_vehicle_candidates
 (
     const std::vector<cv::Point2d> &points,
     const cv::Mat_<double> &point_distances
 ) const
 {
-    std::vector< std::array<std::size_t, 3> > vehicle_candidates;
+    std::vector< std::array<std::size_t, 4> > vehicle_candidates;
     // 3 points are necessary to consitute a vehicle
     if (points.size() < 3) return {};
 
@@ -116,8 +119,8 @@ DetectVehicles::find_vehicle_candidates
                 int num_rear_rear = 0;
                 int num_front_rear = 0;
                 std::array<double, 3> distances = {point_distances(i, j),
-                                                   point_distances(i, k),
-                                                   point_distances(j, k)};
+                                                point_distances(i, k),
+                                                point_distances(j, k)};
                 // check distances
                 for (const double &d : distances)
                 {
@@ -136,7 +139,39 @@ DetectVehicles::find_vehicle_candidates
                 // one rear pair and two front-rear pairs are required for a vehicle
                 if (num_rear_rear == 1 && num_front_rear == 2)
                 {
-                    std::array<std::size_t, 3> vehicle_candidate = {i, j, k};
+                    std::array<std::size_t, 4> vehicle_candidate = {i, j, k, ULONG_MAX};
+
+                    // Check for ID LED 
+                    // weighted average: 70/152.5 for front point, 82.5/152.5/2 for rear points
+                    VehiclePointSet vehicle_point_set = assign_vehicle_points(points, vehicle_candidate);  
+                    cv::Point2d center_point = 0.270491803 * (vehicle_point_set.back_left + vehicle_point_set.back_right)
+                                                + 0.459016393 * vehicle_point_set.front;
+                        
+
+                    // is front point in correct angle to vehicle back? 
+                    double mod1   = sqrt(pow(vehicle_point_set.back_left.y-vehicle_point_set.front.y,2)+pow(vehicle_point_set.back_left.x-vehicle_point_set.front.x,2));
+                    double mod2   = sqrt(pow(vehicle_point_set.back_right.y-vehicle_point_set.front.y,2)+pow(vehicle_point_set.back_right.x-vehicle_point_set.front.x,2));
+                    double innerp = (vehicle_point_set.back_left.x-vehicle_point_set.front.x)*(vehicle_point_set.back_right.x-vehicle_point_set.front.x) + (vehicle_point_set.back_left.y-vehicle_point_set.front.y)*(vehicle_point_set.back_right.y-vehicle_point_set.front.y);
+                    double angle  = acos(innerp / (mod1 * mod2)) * 180 / M_PI;
+
+                    if (!(angle-0.9 <= 11.8613 && angle+0.9 >= 11.8613))
+                    {
+                        // incorrect orientation - front point does not match to vehicle back
+                        continue; 
+                    }
+
+
+                    // add ID LED
+                    for (std::size_t l = 0; l < points.size(); l++) 
+                    {
+                        if (fabs(length(center_point - points[l])) < 0.03) 
+                        {
+                            // correct distances  
+                            vehicle_candidate = {i,j,k,l}; 
+                            break;
+                        }
+                    }
+
                     vehicle_candidates.push_back(vehicle_candidate);
                 }
             }
@@ -146,10 +181,10 @@ DetectVehicles::find_vehicle_candidates
 }
 
 
-std::vector< std::array<std::size_t, 3> >
+std::vector< std::array<std::size_t, 4> >
 DetectVehicles::resolve_conflicts
 (
-    const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
 ) const
 {
     // Matrix stores conflicts between vehicle candidates, i.e. when a point is used by both
@@ -157,7 +192,7 @@ DetectVehicles::resolve_conflicts
     // if there is one or less vehicle candidates, there are no conflicts
     if (mat_conflicts.total() <= 1) return vehicle_candidates;
 
-    std::vector< std::array<std::size_t, 3> > vehicles;
+    std::vector< std::array<std::size_t, 4> > vehicles;
     // vector indicating that a vehicle candidate is resolved
     std::vector<bool> resolved;
     resolved.insert(resolved.begin(), vehicle_candidates.size(), 0);
@@ -169,7 +204,10 @@ DetectVehicles::resolve_conflicts
         is_conflict_solvable = 0;
         for (std::size_t m = 0; m < mat_conflicts.col(0).total(); ++m)
         {
-            if (resolved[m]) continue;
+            if (resolved[m]) 
+            {
+                continue;
+            }
             
             // sum conflicts
             std::vector<std::size_t> conflicts;
@@ -186,6 +224,7 @@ DetectVehicles::resolve_conflicts
                 resolved[m] = 1;
                 // add vehicle candidate to vehicles
                 vehicles.push_back(vehicle_candidates[m]);
+                continue;
             }
             // one conflict
             else if (conflicts.size() == 1)
@@ -205,17 +244,33 @@ DetectVehicles::resolve_conflicts
                     mat_conflicts.col(conflicts[0]) = 0;
                     // change has occurred, so mark conflicts as solvable
                     is_conflict_solvable = 1;
-                }
+                }                
             }
+            
         }
     }
+
+    //all conflicts resolved?
+    for (std::size_t m = 0; m < mat_conflicts.col(0).total(); ++m)
+    {
+        if(!resolved[m])
+        {
+            cpm::Logging::Instance().write(
+                1,
+                "%s",
+                "IPS conflict not solvable"
+            );
+            break;
+        }
+    }
+
     return vehicles;
 }
 
 
 cv::Mat_<bool> DetectVehicles::determine_conflicts
 (
-    const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
+    const std::vector< std::array<std::size_t, 4> > &vehicle_candidates
 ) const
 {
     cv::Mat_<bool> mat_conflicts = cv::Mat_<bool>::zeros(vehicle_candidates.size(),
@@ -240,12 +295,15 @@ cv::Mat_<bool> DetectVehicles::determine_conflicts
 
 bool DetectVehicles::arrays_have_common_element
 (
-    const std::array<std::size_t, 3> &array_1,
-    const std::array<std::size_t, 3> &array_2
+    const std::array<std::size_t, 4> &array_1,
+    const std::array<std::size_t, 4> &array_2
 ) const
 {
     for (const std::size_t &i : array_1)
     {
+        // ULONG_MAX if no ID LED is present - no conflict 
+        if (i == ULONG_MAX) continue;
+        
         for (const std::size_t &j : array_2)
         {
             if (i == j)
@@ -257,50 +315,18 @@ bool DetectVehicles::arrays_have_common_element
     return false;
 }
 
-
-std::list<cv::Point2d> DetectVehicles::find_remaining_points
-(
-    const std::vector<cv::Point2d> &floor_points,
-    const std::vector< std::array<std::size_t, 3> > &vehicle_candidates
-) const
-{
-    // determine all indices of floor points that belong to vehicles
-    std::vector<std::size_t> all_vehicle_indices;
-    for (const auto &vehicle_candidate : vehicle_candidates)
-    {
-        for (const auto &idx : vehicle_candidate)
-        {
-            all_vehicle_indices.push_back(idx);
-        }
-    }
-    // find points that do not belong to vehicles
-    std::list<cv::Point2d> remaining_points;
-    for (std::size_t i = 0; i < floor_points.size(); ++i)
-    {
-        // current index is not assigned to a vehicle
-        if (std::find(all_vehicle_indices.begin(),
-                      all_vehicle_indices.end(),
-                      i)
-                == all_vehicle_indices.end())
-        {
-            remaining_points.push_back(floor_points[i]);
-        }
-    }
-    return remaining_points;
-}
-
-
 VehiclePointSet DetectVehicles::assign_vehicle_points
 (
     const std::vector<cv::Point2d> &floor_points,
-    const std::array<std::size_t, 3> &vehicle_candidate
+    const std::array<std::size_t, 4> &vehicle_candidate
 ) const
 {
     // find rear points
     std::vector<std::size_t> rear_edge_pair;
-    for (std::size_t i = 0; i < vehicle_candidate.size() - 1; ++i)
+    // ignore ID LED 
+    for (std::size_t i = 0; i < vehicle_candidate.size() - 2; ++i)
     {
-        for (std::size_t j = i + 1; j < vehicle_candidate.size(); ++j)
+        for (std::size_t j = i + 1; j < vehicle_candidate.size() -1; ++j)
         {
             cv::Point2d point1 = floor_points[vehicle_candidate[i]];
             cv::Point2d point2 = floor_points[vehicle_candidate[j]];
@@ -318,7 +344,8 @@ VehiclePointSet DetectVehicles::assign_vehicle_points
     cv::Point2d front;
     for (const std::size_t i : vehicle_candidate)
     {
-        if (i != rear_edge_pair[0] && i != rear_edge_pair[1])
+        // ignore ID LED 
+        if (i != rear_edge_pair[0] && i != rear_edge_pair[1] && i != vehicle_candidate[3])
         {
             front = floor_points[i];
         }
@@ -346,28 +373,19 @@ VehiclePointSet DetectVehicles::assign_vehicle_points
     vehicle_point_set.back_left = rear_left;
     vehicle_point_set.back_right = rear_right;    
 
-    return vehicle_point_set;
-}
-
-
-void DetectVehicles::find_center_point(VehiclePointSet &vehicle_point_set,
-                                       std::list<cv::Point2d> &remaining_points) const
-{
-    // weighted average: 70/152.5 for front point, 82.5/152.5/2 for rear points
-    cv::Point2d point_center = 
-          0.270491803 * (vehicle_point_set.back_left + vehicle_point_set.back_right)
-        + 0.459016393 * vehicle_point_set.front;
-    for (auto it = remaining_points.begin(); it != remaining_points.end(); ++it)
+    // determine ID LED
+    if (vehicle_candidate[3] == ULONG_MAX) 
     {
-        // if point is near vehicle center point, assign it to vehicle
-        if (fabs(length(*it - point_center)) < 0.03)
-        {
-            vehicle_point_set.center_present = 1;
-            vehicle_point_set.center = *it;
-            remaining_points.erase(it);
-            return;
-        }
+        // no ID LED
+        vehicle_point_set.center_present = 0; 
     }
-    vehicle_point_set.center_present = 0;
-    return;
+    else
+    {
+        // ID LED 
+        vehicle_point_set.center_present = 1;
+        vehicle_point_set.center = floor_points[vehicle_candidate[3]];
+    }
+    
+
+    return vehicle_point_set;
 }

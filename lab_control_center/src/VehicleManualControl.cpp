@@ -29,9 +29,39 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
 
-#define AXIS_THROTTLE (1)
-#define AXIS_STEERING (3)
+/**
+ * \file VehicleManualControl.cpp
+ * \ingroup lcc
+ */
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
+#define AXIS_THROTTLE (5)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
+#define AXIS_BRAKE (2)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
+#define AXIS_STEERING (0)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define BUTTON_SPEED_1MS (4)
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 #define BUTTON_SPEED_CONST (5)
 
 VehicleManualControl::VehicleManualControl()
@@ -93,8 +123,11 @@ void VehicleManualControl::start(uint8_t vehicleId, string joystick_device_file)
             VehicleCommandDirect sample;
             sample.vehicle_id(vehicle_id);
 
-            sample.motor_throttle(joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15)));
-            sample.steering_servo(joystick->getAxis(AXIS_STEERING) / (-double(1<<15)));
+            double motor_throttle = 0;
+            double steering_servo = 0;
+            get_state(motor_throttle, steering_servo);
+            sample.motor_throttle(motor_throttle);
+            sample.steering_servo(steering_servo);
 
             cpm::stamp_message(sample, t_now, 40000000ull);
             writer_vehicleCommandDirect->write(sample);
@@ -125,7 +158,7 @@ void VehicleManualControl::stop()
 void VehicleManualControl::get_state(double& throttle, double& steering) 
 {
     if(joystick) {
-        throttle = joystick->getAxis(AXIS_THROTTLE) / (-double(1<<15));
+        throttle = (joystick->getAxis(AXIS_THROTTLE) - joystick->getAxis(AXIS_BRAKE)) / (double(1<<16));
         steering = joystick->getAxis(AXIS_STEERING) / (-double(1<<15));
     }
 }
