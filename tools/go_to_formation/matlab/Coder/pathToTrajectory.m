@@ -41,7 +41,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
 
     %% Set trajectory points from transition and intermitting poses
     %TODO: smoothing of start and stop process.
-     trajectory_points = repmat(TrajectoryPoint, length(allSegmentLengths)+1, 1);
+     trajectory_points = repmat(TrajectoryPoint, length(allSegmentLengths)+2, 1);
     
     %First trajectory point 
     trajectory_points(1).px = intermittingPoses(1, 1);
@@ -67,12 +67,18 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
                                         (allSegmentLengths(nPoints-1) / speed * 1e9); % [ns]
     end
 
-    %Last TrajectoryPoint - correct home position guaranteed?
+    %Second Last TrajectoryPoint
+    trajectory_points(end-1).px = intermittingPoses(end, 1);
+    trajectory_points(end-1).py = intermittingPoses(end, 2);
+    trajectory_points(end-1).vx = 0;
+    trajectory_points(end-1).vy = 1;
+    trajectory_points(end-1).t  = uint64(trajectory_points(2).t) +...
+                                (allSegmentLengths(end) / speed * 1e9); %[ns]
+    %Last Trajectory Point
     trajectory_points(end).px = intermittingPoses(end, 1);
     trajectory_points(end).py = intermittingPoses(end, 2);
     trajectory_points(end).vx = 0;
     trajectory_points(end).vy = 0;
-    trajectory_points(end).t  = uint64(trajectory_points(2).t) +...
-                                (allSegmentLengths(end) / speed * 1e9); %[ns]
+    trajectory_points(end).t  = uint64(trajectory_points(end-1).t + 1e8); %[ns]
 
 end

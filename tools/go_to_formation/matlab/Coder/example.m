@@ -32,14 +32,14 @@ goalPose.x = 0.2;
 goalPose.y = 3.6;
 goalPose.yaw = 90;
 
-[trajectory_points, isPathValid, refPath, planner] = planTrajectory(maxVehicleIdList, startPoses, goalPose, egoVehicleId, speed);
+[trajectory_points, isPathValid] = planTrajectory(maxVehicleIdList, startPoses, goalPose, egoVehicleId, speed);
 %% Visualization
-
-Fig = 1;
-transitionPoses = interpolate(refPath);
-figure(Fig);
-plot(planner);
-hold on
-scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
-     'DisplayName','Transition Poses')
-hold off
+% 
+% Fig = 1;
+% transitionPoses = interpolate(refPath);
+% figure(Fig);
+% plot(planner);
+% hold on
+% scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
+%      'DisplayName','Transition Poses')
+% hold off
