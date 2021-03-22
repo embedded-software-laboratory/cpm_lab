@@ -1,4 +1,4 @@
-function [trajectory_points, isPathValid, refPath, planner] = planTrajectory(vehicleIdList, vehiclePoses, goalPose, egoVehicleId, speed)
+function [trajectory_points, isPathValid] = planTrajectory(vehicleIdList, vehiclePoses, goalPose, egoVehicleId, speed)
     
     egoVehicleIndex = 0;
     for nVehicles = 1:length(vehicleIdList)
@@ -9,7 +9,7 @@ function [trajectory_points, isPathValid, refPath, planner] = planTrajectory(veh
     end  
                 
     costmap = setCostmap(vehiclePoses, egoVehicleId);
-    [refPath, isPathValid, planner] = PlanRRTPath(vehiclePoses(egoVehicleIndex).pose, goalPose, costmap);
+    [refPath, isPathValid] = PlanRRTPath(vehiclePoses(egoVehicleIndex).pose, goalPose, costmap);
 
     if isPathValid
        trajectory_points = pathToTrajectory(refPath, speed);
