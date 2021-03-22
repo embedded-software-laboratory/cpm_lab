@@ -47,11 +47,11 @@ link_libraries(dl nsl m pthread rt)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Go to formation
-add_executable(mlib_test 
+add_executable(go_to_formation 
                src/main.cpp 
                src/mgen_init.cpp
 )
-target_include_directories(mlib_test PRIVATE 
+target_include_directories(go_to_formation PRIVATE 
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
     /usr/local/MATLAB/R2020a/extern/include/
     /usr/local/MATLAB/R2020a/extern/include/shared_autonomous
@@ -60,11 +60,11 @@ target_include_directories(mlib_test PRIVATE
 )
 
 link_directories(/usr/local/MATLAB/R2020a/bin/glnxa64/)
-target_link_libraries(mlib_test ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
-target_link_libraries(mlib_test /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so)
+target_link_libraries(go_to_formation ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
+target_link_libraries(go_to_formation /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so)
 
-target_link_libraries(mlib_test cpm)
-target_link_libraries(mlib_test iomp5)
+target_link_libraries(go_to_formation cpm)
+target_link_libraries(go_to_formation iomp5)
 # target_link_libraries(mlib_test planTrajectory)
 #target_include_directories(mlib_test PRIVATE ${CMAKE_SOURCE_DIR}/matlab_dll/planTrajectory)
 

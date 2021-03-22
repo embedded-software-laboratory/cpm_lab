@@ -226,7 +226,7 @@ static void main_planTrajectory()
   mgen::struct0_T vehiclePoses_data[256];
   int vehiclePoses_size[2];
   mgen::Pose2D r;
-  coder::array<mgen::struct1_T, 1U> trajectory_points;
+  coder::array<mgen::struct1_T, 1U> generated_trajectory;
   boolean_T isPathValid;
 
   // Initialize function 'planTrajectory' input arguments.
@@ -264,13 +264,13 @@ static void main_planTrajectory()
  
   mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
                        vehiclePoses_size, &r, vehicle_id, speed,
-                       trajectory_points, &isPathValid);
+                       generated_trajectory, &isPathValid);
   
-  auto len = *(trajectory_points).size();
+  auto len = *(generated_trajectory).size();
   
   for (int i = 0; i < len; i++) {
-    std::cout << " t: " << trajectory_points[i].t << " px: " << trajectory_points[i].px << " py: " << trajectory_points[i].py << " vx: " << 
-              trajectory_points[i].vx << " vy: " << trajectory_points[i].vy << std::endl;
+    std::cout << " t: " << generated_trajectory[i].t << " px: " << generated_trajectory[i].px << " py: " << generated_trajectory[i].py << " vx: " << 
+              generated_trajectory[i].vx << " vy: " << generated_trajectory[i].vy << std::endl;
   }
   std::cout << "path validity: " << (isPathValid == 1) << std::endl;
 
