@@ -459,7 +459,6 @@ void SetupViewUI::deploy_applications() {
         std::replace(file_name.begin(), file_name.end(), ':', '_');
 
         deploy_functions->deploy_labcam("/tmp/", file_name);
-        //labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
         std::cerr << "NOT RECORDING LABCAM" << std::endl;
     }
