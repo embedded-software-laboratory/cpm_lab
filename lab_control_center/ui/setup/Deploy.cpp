@@ -635,7 +635,7 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
 
 
 void Deploy::kill_labcam() {
-    kill_session(labcam_session);
+    kill_session(labcam_session, 2.0);
 }
 
 
@@ -770,15 +770,28 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     return crashed_participants;
 }
 
-void Deploy::kill_session(std::string session_id)
+void Deploy::kill_session(std::string session_id, float delay) // delay default is 0 (see Deploy.hpp)
 {
     if (session_exists(session_id))
     {
         std::stringstream command;
-        command 
-            << "tmux kill-session -t \"" << session_id << "\""
-            << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt";
 
+        if (delay==0)
+        {
+            command 
+                << "tmux kill-session -t \"" << session_id << "\""
+                << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt";
+        }
+        else
+        {
+            // delay specified. So open a background task which sleeps initially and then starts the kill command
+            command
+                << "( sleep " << delay << " ; " 
+                << "tmux kill-session -t \"" << session_id << "\""
+                << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt"
+                << ") &";
+        }
+        
         //Execute command
         program_executor->execute_command(command.str());
     }

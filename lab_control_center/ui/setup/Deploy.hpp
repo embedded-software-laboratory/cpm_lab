@@ -264,8 +264,9 @@ private:
     /**
      * \brief Kill a tmux session with the given session_id - only if it exists (uses session_exists)
      * \param session_id ID of the tmux session
+     * \param delay If specified, the kill-command is executed after sleeping for the specified number of seconds
      */
-    void kill_session(std::string session_id);
+    void kill_session(std::string session_id, float delay=0);
 
     /**
      * \brief Convert boolean to string - used for command line parameters (for deployment)

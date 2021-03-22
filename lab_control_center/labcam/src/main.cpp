@@ -33,14 +33,16 @@
 
 static LabCamIface labcam;
 
-void sigterm_handler(int){
+void stop_signal_handler(int){
+    std::cout << "Stop-signal recognized" << std::endl;
     labcam.stopRecording();
 };
 
 int main(int argc, char *argv[])
 {
     // Connect signal handler for termination signal
-    signal(SIGTERM, sigterm_handler);
+    signal(SIGTERM, stop_signal_handler);
+    signal(SIGHUP, stop_signal_handler);
 
     // Read command line input
     // If no path is given, the default location is software/lab_control_center/build/labcam (due to "." and creation of tmux session)
