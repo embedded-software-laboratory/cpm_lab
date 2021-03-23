@@ -791,7 +791,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         ctx->translate(global_translate_x, global_translate_y);
         ctx->rotate(global_orientation);
 
-        ctx->set_source_rgb(0.5,0.5,0.5);
+        ctx->set_source_rgb(0.5,0.5,0.5); //Also used within lanelets as default color
         for (auto &lanelet_entry : lanelets)
         {
             lanelet_entry.second.draw(ctx, scale);

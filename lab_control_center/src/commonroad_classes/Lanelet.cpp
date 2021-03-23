@@ -449,10 +449,20 @@ LineMarking Lanelet::translate_line_marking(const xmlpp::Node* line_node)
         //2020 only
         return LineMarking::BroadSolid;
     }
+    else if (line_marking_text.compare("unknown") == 0)
+    {
+        //2020 only
+        return LineMarking::Unknown;
+    }
+    else if (line_marking_text.compare("no_marking") == 0)
+    {
+        //2020 only
+        return LineMarking::NoMarking;
+    }
     else
     {
         std::stringstream error_msg_stream;
-        error_msg_stream << "Specified line marking not part of specs, in " << line_node->get_line();
+        error_msg_stream << "Specified line marking not part of specs, in line " << line_node->get_line();
         throw SpecificationError(error_msg_stream.str());
     }
 }
@@ -503,6 +513,23 @@ void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMa
         else
         {
             ctx->set_line_width(0.005);
+        }
+
+        //Set line color for unknown and no_marking (the latter should still be shown to the user, but almost-white)
+        if (line_marking.value() == LineMarking::Unknown)
+        {
+            //More red
+            ctx->set_source_rgb(0.9,0.4,0.4);
+        }
+        else if (line_marking.value() == LineMarking::NoMarking)
+        {
+            //Almost-transparent
+            ctx->set_source_rgba(0.5,0.5,0.5,0.1);
+        }
+        else
+        {
+            //Default lanelet color
+            ctx->set_source_rgb(0.5,0.5,0.5);
         }
     }
     else

@@ -82,7 +82,7 @@ enum class DrivingDirection {
  * \ingroup lcc_commonroad
  */
 enum class LineMarking {
-    Dashed, Solid, BroadDashed, BroadSolid
+    Dashed, Solid, BroadDashed, BroadSolid, Unknown, NoMarking
 };
 
 /**
