@@ -184,8 +184,6 @@ public:
      */
     TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node);
 
-    //TODO: Getter
-
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits

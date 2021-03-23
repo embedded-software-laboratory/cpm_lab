@@ -58,8 +58,6 @@ public:
      */
     Crossing(const xmlpp::Node* node);
 
-    //TODO: Getter
-
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"

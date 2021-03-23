@@ -115,7 +115,7 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
     ctx->set_line_width(0.005);
 
-    //TODO: Rotation of combined forms is more complex than just rotation of the parts
+    // Rotation of combined forms is more complex than just rotation of the parts, so this might need to be changed
     // for (auto circle : circles)
     // {
     //     circle.draw(ctx, scale, 0, 0, 0, local_orientation);
@@ -133,8 +133,8 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
     // if (circles.size() + polygons.size() + rectangles.size() > 1)
     // {
-    //     std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
-    //     //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+    //     ERROR
+    //     //Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
     // }
 
     //Alternative rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
@@ -199,25 +199,6 @@ std::pair<double, double> Shape::get_center()
 
 void Shape::transform_context(const DrawingContext& ctx, double scale)
 {
-    //Just move the coordinate system's center to one of the shape's centroids
-    //TODO: Find better point than just some random point within a part of the shape
-    // if (circles.size() > 0)
-    // {
-    //     auto center = circles.at(0).get_center();
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-    // else if (polygons.size() > 0)
-    // {
-    //     auto center = polygons.at(0).get_center();
-    //     //Center is computed from vertices, type is not std::optional and not const
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-    // else if (rectangles.size() > 0)
-    // {
-    //     auto center = rectangles.at(0).get_center();
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-
     //TODO: Is the center the best point to choose?
     auto center = get_center();
     ctx->translate(center.first * scale, center.second * scale);
