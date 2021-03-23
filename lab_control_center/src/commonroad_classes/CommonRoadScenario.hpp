@@ -63,10 +63,6 @@
 #include "cpm/Writer.hpp"
 #include "CommonroadDDSGoalState.hpp"
 
-///////////////////////////////////////////////
-//TODO: Put Enums etc inside class definition??
-///////////////////////////////////////////////
-
 /**
  * \enum ObstacleRole
  * \brief Obstacle types according to spec, for 2018 specs Obstacle
@@ -409,7 +405,7 @@ public:
      */
     std::shared_ptr<CommonroadDrawConfiguration> get_draw_configuration();
 
-    //TODO: Getter, by type and by ID, and constructor
+    //Getter
     /**
      * \brief Get the set author of the currently loaded commonroad file
      */

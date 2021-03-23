@@ -562,7 +562,7 @@ std::optional<double> xml_translation::string_to_double(std::string text)
     }
 }
 
-void xml_translation::iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "")
+void xml_translation::iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name)
 {
     //Check if it is an element node
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);

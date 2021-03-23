@@ -33,10 +33,6 @@
 
 CommonRoadScenario::CommonRoadScenario()
 {
-    //TODO: Warn in case of unknown attributes set? E.g. if attribute list is greater than 8?
-
-    //TODO: translate_element -> replace by behaviour like in translate_attributes, where we explicitly look up values?
-
     //Sets up YAML storage for transformations of XML files stored in between sessions, done implicitly (yaml_transformation_storage)
 }
 
@@ -131,10 +127,10 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         std::cout << "Cancelled" << std::endl;
         return;
     }
-    //Else: File_is_loading has been set to true with this operation as well, so other load_file calls
+    //File_is_loading has been set to true with this operation as well, so other load_file calls
     //that got to the if(...) after the atomic operation are stopped
 
-    //This mutex exists for other operations than loading a file
+    //This mutex exists for other operations than loading a file (e.g. drawing)
     //While a file loads, these operations either wait or abort (with try_lock)
     std::unique_lock<std::mutex> lock(xml_translation_mutex);
 
@@ -158,25 +154,11 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         //Get parent node
         const auto pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
 
-        //Get desired parent node parts
-        // const auto nodename = pNode->get_name();
-        // const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(pNode);
-        //Throw an error if the parent node does not meet the expectation (-> is not conform to commonroad specs)
-        // if(nodename.empty() || !(nodeElement))
-        // {
-        //      TODO: Add custom error if desired, should lead to a translation error elsewhere though anyway
-        // }
-        // if (nodename.compare("commonRoad") != 0)
-        // {
-        // }
-
         //Store scenario attributes
         translate_attributes(pNode);
 
         //We want to go through the first layer of the CommonRoadScenario only - the objects that we want to store take the parsing from here 
         //Thus, we go through the children of the scenario and parse each of them using according constructors
-
-        //TODO: Maybe use XMLTranslation units here as well instead!
         for(const auto& child : pNode->get_children())
         {
             translate_element(child);
@@ -291,6 +273,39 @@ void CommonRoadScenario::translate_attributes(const xmlpp::Node* root_node)
             tags.push_back(tag);
         }
     }
+
+    //---------------------------------------------------------------------------------------------
+    //Check for attributes that were not translated
+    std::vector<std::string> expected_attributes = {
+        "commonRoadVersion",
+        "benchmarkID",
+        "date",
+        "author",
+        "affiliation",
+        "source",
+        "timeStepSize",
+        "tags"
+    };
+    const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(root_node);
+    if(!(node_element))
+    {
+        //This error is thrown on purpose, as it shows a design flaw in the XML document and does not have anything to do with the existence of the node
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Node " << root_node->get_name() << " not of expected type 'element' (XML 'structure' type, not commonroad), line: " << root_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
+    
+    //Get the attribute and check if it exists
+    for (auto attribute : node_element->get_attributes())
+    {
+        if (std::find(expected_attributes.begin(), expected_attributes.end(), std::string(attribute->get_name())) == expected_attributes.end())
+        {
+            std::stringstream error_stream;
+            error_stream << "Unexpected commonroad attribute " << attribute->get_name();
+            LCCErrorLogger::Instance().log_error(error_stream.str());
+        }
+    }
+    //---------------------------------------------------------------------------------------------
 }
 
 using namespace std::placeholders;
@@ -301,7 +316,6 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
 
     if(node_name.empty())
     {
-        //TODO: Throw error or keep it this way?
         std::stringstream error_stream;
         error_stream << "Node element empty in scenario parse, from line " << node->get_line();
         LCCErrorLogger::Instance().log_error(error_stream.str());
@@ -434,7 +448,26 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
 
     location = std::optional<Location>(translated_location);
 
-    //TODO: Warning in case of unexpected nodes? (Except for geotransformation)
+    //Warning in case of unexpected nodes (Except for geotransformation)
+    std::vector<std::string> expected_nodes = {
+        "country",
+        "federalState",
+        "gpsLatitude",
+        "gpsLongitude",
+        "geoNameId",
+        "zipcode",
+        "name",
+        "geoTransformation"
+    };
+    xml_translation::iterate_children(node, [this, expected_nodes](xmlpp::Node* child)
+    {
+        if (std::find(expected_nodes.begin(), expected_nodes.end(), std::string(child->get_name())) == expected_nodes.end())
+        {
+            std::stringstream error_stream;
+            error_stream << "Unexpected commonroad location child " << child->get_name();
+            LCCErrorLogger::Instance().log_error(error_stream.str());
+        }
+    });
 }
 
 void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node) 
@@ -820,7 +853,7 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
             } 
         }
 
-        //TODO: Intersections - do these need to be drawn specifically? They are already visible, because they are based on references only; but: Would allow to draw arrows on e.g. crossings to successor roads
+        //Intersections are already visible, because they are based on references only, thus they are not drawn specifically (although arrows for where the car is allowed to take a turn etc. could be interesting)
 
         ctx->restore();
 
@@ -943,13 +976,6 @@ void CommonRoadScenario::calculate_center()
 
     center.first = (0.5 * x_min) + (0.5 * x_max);
     center.second = (0.5 * y_min) + (0.5 * y_max);
-
-    //Center should be w.r.t. LCC IPS coordinates, which has its center at (2.25, 2), not at (0, 0)
-    //Now handled in transform function
-    // center.first -= 2.25;
-    // center.second -= 2.0;
-
-    // std::cout << "New center: " << center.first << ", " << center.second << std::endl;
 }
 
 const std::string& CommonRoadScenario::get_author()
@@ -1025,7 +1051,7 @@ std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 {
     std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    //TODO: Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
+    //Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
     {
         return std::optional<DynamicObstacle>(dynamic_obstacles.at(id));
@@ -1082,7 +1108,7 @@ std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
 std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
 {
     std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    //TODO: Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
+    //Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
     if (lanelets.find(id) != lanelets.end())
     {
         return std::optional<Lanelet>(lanelets.at(id));
