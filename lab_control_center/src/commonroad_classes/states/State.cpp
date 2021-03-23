@@ -255,7 +255,6 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->rotate(global_orientation);
     
     //Rotate, if necessary
-    //TODO: Find out what orientation exactly means, here it seems to apply to shapes as well (see scenario server (commonroad))
     if(orientation->is_exact())
     {
         position->draw(ctx, scale, 0, 0, 0, orientation->get_exact_value().value() + local_orientation);

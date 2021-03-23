@@ -112,12 +112,24 @@ TrafficLight::TrafficLight(
     // std::cout << "\tPosition size: " << positions.size() << std::endl;
     // std::cout << "\tDirection size: " << directions.size() << std::endl;
     // std::cout << "\tCycle size: " << cycles.size() << std::endl;
+
+    LCCErrorLogger::Instance().log_error("Warning: The specification for traffic lights does not allow for unique definitions (due to <xs:sequence> & no required order of the elements), so we do not show more than if the light exists at all");
 }
 
 Position TrafficLight::translate_position(const xmlpp::Node* position_node)
 {
     //Get position value, which must not be specified
-    return Position(position_node);
+    auto pos = Position(position_node);
+
+    //According to specs, the position must always be exact
+    if (!pos.is_exact())
+    {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Position in TrafficLight not conformant to specs (must be exact), line: " << position_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
+
+    return pos;
 }
 
 Direction TrafficLight::translate_direction(const xmlpp::Node* direction_node)
@@ -243,8 +255,6 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
 
 void TrafficLight::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
-    
     for (auto& position : positions)
     {
         position.transform_coordinate_system(scale, angle, translate_x, translate_y);
@@ -303,9 +313,6 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
     }
 
     ctx->restore();
-
-    //TODO: Consider additional values
-    LCCErrorLogger::Instance().log_error("Warning: The specification for traffic lights does not allow for unique definitions (due to <xs:sequence> & no required order of the elements), so we do not show more than if the light exists at all");
 }
 #pragma GCC diagnostic pop
 

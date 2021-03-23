@@ -90,23 +90,24 @@ struct TrafficLightCycle
     std::optional<unsigned int> time_offset = std::nullopt;
 };
 
-/**
- * \struct TrafficLightElement
- * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
- * \ingroup lcc_commonroad
- */
-struct TrafficLightElement
-{
-    //Commonroad types
-    //! Traffic light cycle, defining when which color is shown
-    TrafficLightCycle cycle;
-    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
-    std::optional<Position> position = std::nullopt; //TODO: Position is specified as being always exact
-    //! Direction shown by the light
-    Direction direction;
-    //! Indicated if the traffic light is currently active. Is assumed to default to true
-    bool is_active; 
-};
+//Currently unused, as the specification is not clear enough
+// /**
+//  * \struct TrafficLightElement
+//  * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
+//  * \ingroup lcc_commonroad
+//  */
+// struct TrafficLightElement
+// {
+//     //Commonroad types
+//     //! Traffic light cycle, defining when which color is shown
+//     TrafficLightCycle cycle;
+//     //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
+//     std::optional<Position> position = std::nullopt;
+//     //! Direction shown by the light
+//     Direction direction;
+//     //! Indicated if the traffic light is currently active. Is assumed to default to true
+//     bool is_active; 
+// };
 
 /**
  * \class TrafficLight
@@ -119,7 +120,7 @@ class TrafficLight : public InterfaceTransform, public InterfaceDraw
 private:
     //std::vector<TrafficLightElement> traffic_light_elements;
 
-    //TODO: Current structure (as, in my opinion, the specification does not allow for unique definitions)
+    //Current structure (as, in my opinion, the specification does not allow for unique definitions)
     //! Positions of the traffic lights
     std::vector<Position> positions;
     //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)

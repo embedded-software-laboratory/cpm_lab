@@ -177,7 +177,6 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
     
     //Also draw "inexact" positional values, not only the point value
     {
-        //TODO?
         //Rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
         ctx->save();
 
