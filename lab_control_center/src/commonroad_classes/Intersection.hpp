@@ -45,6 +45,8 @@
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
+#include "LCCErrorLogger.hpp"
+
 /**
  * \struct Incoming
  * \brief Specifies a part of the intersection, as in commonroad
@@ -52,18 +54,16 @@
  */
 struct Incoming
 {
-    //! Lanelet ref for an incoming lanelet - must exist, optional in case of faulty XML-file
-    std::optional<int> incoming_lanelet = std::nullopt;
+    //! Lanelet ref for an incoming lanelet - at least one value must exist
+    std::vector<int> incoming_lanelet;
     //! Lanelet ref for right successors
-    std::optional<int> successors_right = std::nullopt;
+    std::vector<int> successors_right;
     //! Lanelet ref for straight successors
-    std::optional<int> successors_straight = std::nullopt;
+    std::vector<int> successors_straight;
     //! Lanelet ref for left successors
-    std::optional<int> successors_left = std::nullopt;
+    std::vector<int> successors_left;
     //! Incoming ref
-    std::optional<int> is_left_of = std::nullopt;
-
-    //TODO: Change to vectors
+    std::vector<int> is_left_of;
 };
 
 /**
@@ -85,12 +85,12 @@ public:
     Intersection(const xmlpp::Node* node);
 
     /**
-     * \brief Get attribute value of child of node with name child_name
+     * \brief Get attribute value(s) of child of node with name child_name
      * \param node The parent node
      * \param child_name Name of the child
      * \param warn Warn if the child or attribute does not exist
      */
-    std::optional<int> get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn);
+    std::vector<int> get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn);
 
     //Suppress warning for unused parameter (s)
     #pragma GCC diagnostic push

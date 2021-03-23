@@ -88,15 +88,40 @@ Intersection::Intersection(const xmlpp::Node* node)
     // std::cout << std::endl;
 }
 
-std::optional<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn)
+std::vector<int> Intersection::get_child_attribute_ref(const xmlpp::Node* node, std::string child_name, bool warn)
 {
-    const auto child_node = xml_translation::get_child_if_exists(node, child_name, warn);
-    if (child_node)
+    //Refs are optional, so this element might not exist in the XML file
+    std::vector<int> refs;
+    
+    //Get refs
+    xml_translation::iterate_elements_with_attribute(
+        node,
+        [&] (std::string text) {
+            auto optional_integer = xml_translation::string_to_int(text);
+            if (optional_integer.has_value())
+            {
+                refs.push_back(optional_integer.value());
+            }
+            else
+            {
+                std::stringstream error_msg_stream;
+                error_msg_stream << "At least one Intersection value is not an integer - line " << node->get_line();
+                throw SpecificationError(error_msg_stream.str());
+            }
+        },
+        child_name,
+        "ref"
+    );
+
+    //Warn if at least on reference should be there
+    if (warn && refs.size() == 0)
     {
-        return std::optional<int>(xml_translation::get_attribute_int(child_node, "ref", true));
+        std::stringstream error_stream;
+        error_stream << "Missing value in Intersection, line " << node->get_line() << " for entry " << child_name << "!";
+        LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 
-    return std::optional<int>();
+    return refs;
 }
 
 const std::map<int, Incoming>& Intersection::get_incoming_map() const
