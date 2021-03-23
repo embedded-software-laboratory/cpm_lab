@@ -57,7 +57,7 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        throw e;
+        throw;
     }
     catch(...)
     {
@@ -76,7 +76,7 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     }
     catch(const SpecificationError& e)
     {
-        throw e;
+        throw;
     }
     catch(...)
     {
@@ -96,7 +96,7 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        throw e;
+        throw;
     }
     catch(...)
     {
@@ -164,7 +164,7 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        throw e;
+        throw;
     }
     catch(...)
     {
@@ -184,7 +184,7 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        throw e;
+        throw;
     }
     catch(...)
     {
@@ -204,7 +204,7 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        throw e;
+        throw;
     }
     catch(...)
     {
