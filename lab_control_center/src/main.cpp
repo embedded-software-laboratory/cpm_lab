@@ -228,14 +228,11 @@ int main(int argc, char *argv[])
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
     //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
-    std::string filepath_2018 = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_2020 = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_parked_vehicles = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_occupancy = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_lab_map = "./ui/map_view/LabMapCommonRoad.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
     try
     {
-        commonroad_scenario->load_file(filepath_2018);
+        commonroad_scenario->load_file(filepath_lab_map);
     }
     catch(const std::exception& e)
     {

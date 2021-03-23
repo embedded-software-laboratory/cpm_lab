@@ -186,12 +186,16 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     catch(const SpecificationError& e)
     {
         clear_data();
+        //Allow the load_file function to be called again
+        file_is_loading.store(false);
         throw SpecificationError(std::string("Could not translate CommonRoadScenario, file incompatible to specifications:\n") + e.what());
     }
     catch(...)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         clear_data();
+        //Allow the load_file function to be called again
+        file_is_loading.store(false);
         throw;
     }
     
@@ -203,11 +207,15 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     {
         //-> One of the fields version, author, affiliation should be set (they are all required)
         clear_data();
+        //Allow the load_file function to be called again
+        file_is_loading.store(false);
         throw SpecificationError("Translation failed / Invalid XML file chosen. None of commonRoadVersion / author / affiliation information could be found in your XML file. Translation will not be used.");
     }
     else if (time_step_size == -1.0)
     {
         clear_data();
+        //Allow the load_file function to be called again
+        file_is_loading.store(false);
         throw SpecificationError("Translation failed / Invalid XML file chosen. Time step size must be set. Translation will not be used.");
     }
     else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && planning_problems.size() == 0)
@@ -257,7 +265,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     yaml_transformation_storage.set_scenario_name(xml_filepath);
     //Change regarding center_coordinate is not stored in the transform profile (it is either done by default at loading or disabled, so it must not be stored as well)
 
-    //Allow the load_file function to be called again
+    //Allow the load_file function to be called again - is called before throwing as well
     file_is_loading.store(false);
 }
 
