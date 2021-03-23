@@ -110,8 +110,8 @@ Lanelet::Lanelet(
 
     //Test output
     // std::cout << "Lanelet ------------------------------" << std::endl;
-    // std::cout << "Left bound marking: TODO" << std::endl;
-    // std::cout << "Right bound marking: TODO" << std::endl;
+    // std::cout << "Left bound marking: (Not shown here)" << std::endl;
+    // std::cout << "Right bound marking: (Not shown here)" << std::endl;
 
     // std::cout << "Predecessors refs: ";
     // for (int ref : predecessors)
@@ -247,11 +247,27 @@ std::optional<StopLine> Lanelet::translate_stopline(const xmlpp::Node* node, std
             "point"
         );
 
-        if (line->points.size() != 2)
+        if (line->points.size() > 2)
         {
             std::stringstream error_msg_stream;
             error_msg_stream << "Specified stop line has too many points, not part of specs, in line " << line_node->get_line();
             throw SpecificationError(error_msg_stream.str());
+        }
+
+        //If not enough points (2) are given, the spec says that the lanelet end points define the stop line
+        if (line->points.size() < 2)
+        {
+            if (left_bound.points.size() < 1 || right_bound.points.size() < 1)
+            {
+                std::stringstream error_msg_stream;
+                error_msg_stream << "Specified stop line has < 2 points, and lanelet has not bounds, in line " << line_node->get_line();
+                throw SpecificationError(error_msg_stream.str());
+            }
+
+            //Set points to lanelet points
+            line->points.clear();
+            line->points.push_back(left_bound.points.back());
+            line->points.push_back(right_bound.points.back());
         }
 
         //Translate line marking
@@ -701,6 +717,8 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->begin_new_path();
         ctx->set_source_rgb(.9,.3,.3);
         set_boundary_style(ctx, std::optional<LineMarking>{stop_line->line_marking}, 0.03);
+
+        
         ctx->move_to(stop_line->points.at(0).get_x() * scale, stop_line->points.at(0).get_y() * scale);
         ctx->line_to(stop_line->points.at(1).get_x() * scale, stop_line->points.at(1).get_y() * scale);
         ctx->stroke();
@@ -730,11 +748,11 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->restore();
     }
 
-    //TODO: Line markings, stop lines etc
+    //TODO: Draw user restrictions somehow?
     if (user_one_way.size() > 0 || user_bidirectional.size() > 0)
     {
         std::stringstream error_stream;
-        error_stream << "Speed limit and user restrictions are currently not drawn for lanelets, from line " << commonroad_line;
+        error_stream << "User restrictions (one way / bidirectional) are currently not drawn for lanelets, from line " << commonroad_line;
         LCCErrorLogger::Instance().log_error(error_stream.str());
     }
 

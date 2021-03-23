@@ -120,7 +120,7 @@ struct Bound
  */
 struct StopLine
 {
-    //! Position of the stop line. Must consist of exactly two points.
+    //! Position of the stop line. Must consist of up to two points.
     std::vector<Point> points;
     //! Line marking of the stop line, e.g. dashed
     LineMarking line_marking;
@@ -195,6 +195,8 @@ private:
 
     /**
      * \brief This function translates a stopLine node to StopLine (2020 only)
+     * NOTE: Lanelet bounds need to be translated before calling this function! 
+     * (If no stop line points are defined, bound end points define the stop line)
      * \param node A stopLine node
      * \param name The name of the node
      */
@@ -305,7 +307,7 @@ public:
      */
     void to_dds_msg() {}
 
-    //TODO: Getter (no setter, bc we do not want to manipulate data except for transformation)
+    //Getter (no setter, bc we do not want to manipulate data except for transformation)
 
     /**
      * \brief Get center (positional value) of the shape, if one exists
