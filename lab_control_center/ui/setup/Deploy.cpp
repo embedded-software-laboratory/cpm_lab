@@ -815,8 +815,9 @@ void Deploy::create_log_folder(std::string name)
     //Generate command
     std::stringstream command_folder;
     command_folder 
-        << "rm -rf ~/dev/" << name << ";"
-        << "mkdir -p ~/dev/" << name;
+        << "mkdir -p ~/dev/" << name << ";"
+        << "cd ~/dev/" << name << ";"
+        << "rm !(\"stderr_ips.txt\"|\"stdout_ips.txt\"|\"stderr_basler.txt\"|\"stdout_basler.txt\")" ;
 
     //Execute command
     program_executor->execute_command(command_folder.str());
