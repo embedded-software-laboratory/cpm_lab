@@ -32,6 +32,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -216,8 +217,10 @@ private:
     std::optional<std::pair<double, double>> get_lanelet_light_position(int id);
 
     //Not commonroad
-    //! Mutex to lock the object while it is being translated from an XML file
-    std::mutex xml_translation_mutex;
+    //! Mutex to lock the object while it is being translated from an XML file. All other operations lock in shared mode, while load_file() locks exclusively
+    std::shared_mutex load_file_mutex;
+    //! Mutex to lock when writing changes, so that reading and writing are not performed simultaneously. Write changes are exclusive.
+    std::shared_mutex write_changes_mutex;    
 
     //! Storage to load / store translation in YAML
     CommonRoadTransformation yaml_transformation_storage;
@@ -405,31 +408,6 @@ public:
     std::shared_ptr<CommonroadDrawConfiguration> get_draw_configuration();
 
     //Getter
-    /**
-     * \brief Get the set author of the currently loaded commonroad file
-     */
-    const std::string& get_author();
-    /**
-     * \brief Get the set affiliation of the currently loaded commonroad file
-     */
-    const std::string& get_affiliation();
-    /**
-     * \brief Get the set benchmark id of the currently loaded commonroad file
-     */
-    const std::string& get_benchmark_id();
-    /**
-     * \brief Get the set commonroad version of the currently loaded commonroad file
-     */
-    const std::string& get_common_road_version();
-    /**
-     * \brief Get the set date of the currently loaded commonroad file
-     */
-    const std::string& get_date();
-    /**
-     * \brief Get the set source of the currently loaded commonroad file
-     */
-    const std::string& get_source();
-
     //We need to be able to get and set time_step_size, to change the speed of the simulation
     /**
      * \brief Get the size of a time step (in seconds) of the currently loaded scenario. Required e.g. to display it, for transformation to time stamps etc.
@@ -442,11 +420,6 @@ public:
     void set_time_step_size(double new_time_step_size); 
     // const std::vector<const std::string>& get_scenario_tags_2018();
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
-
-    /**
-     * \brief Get the location information of the scenario, if defined, else nullopt
-     */
-    const std::optional<Location> get_location();
 
     /**
      * \brief Get all IDs of dynamic obstacles of the currently loaded scenario

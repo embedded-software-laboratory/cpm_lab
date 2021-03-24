@@ -132,7 +132,8 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
 
     //This mutex exists for other operations than loading a file (e.g. drawing)
     //While a file loads, these operations either wait or abort (with try_lock)
-    std::unique_lock<std::mutex> lock(xml_translation_mutex);
+    //Before throwing errors, we don't need to call unlock (follows RAII)
+    std::unique_lock<std::shared_mutex> load_lock(load_file_mutex);
 
     //Delete all old data
     clear_data();
@@ -207,21 +208,17 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         LCCErrorLogger::Instance().log_error("CommonRoadScenario: All relevant data fields are empty (except for version / author / affiliation)");
     }
 
-    lock.unlock();
-
     //Apply transformation from location, if that exists
     if (location.has_value())
     {
         if (location->geo_transformation.has_value())
         {
-            lock.lock();
             transform_coordinate_system_helper(
                 location->geo_transformation->x_translation,
                 location->geo_transformation->y_translation,
                 location->geo_transformation->z_rotation,
                 location->geo_transformation->scaling
             );
-            lock.unlock();
         }
     }
 
@@ -232,10 +229,11 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
     //This "default" transformation is not explicitly stored in the YAML file
     if (center_coordinates)
     {
-        lock.lock();
         transform_coordinate_system_helper(- center.first + 2.25, - center.second + 2.0);
-        lock.unlock();
     }
+
+    //Unlock the file write mutex for the following functions, which might need access to the data
+    load_lock.unlock();
 
     //Load new obstacle simulations
     if (setup_obstacle_sim_manager)
@@ -737,8 +735,10 @@ std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_light_p
 
 void CommonRoadScenario::transform_coordinate_system(double lane_width, double angle, double translate_x, double translate_y) 
 {
-    //Do not block the UI if locked, needs to be done again then
-    if (xml_translation_mutex.try_lock())
+    //If a file is loading, do not block the UI, needs to be done again then
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex, std::try_to_lock);
+
+    if (load_lock.owns_lock())
     {
         double scale = get_scale(lane_width);
 
@@ -747,6 +747,9 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
         auto old_center = center;
         translate_x -= old_center.first;
         translate_y -= old_center.second;
+
+        //Also: No getter or other setter should access the object during a transformation
+        std::unique_lock<std::shared_mutex> write_lock(write_changes_mutex);
 
         //Perform transformation in local coordinate system, then transform back
         //Update database entry for transformation
@@ -762,7 +765,8 @@ void CommonRoadScenario::transform_coordinate_system(double lane_width, double a
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
 
-        xml_translation_mutex.unlock();
+        write_lock.unlock();
+        load_lock.unlock();
 
         //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
         if (reset_obstacle_sim_manager)
@@ -781,31 +785,40 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
     //Only accept physically meaningful & useful values
     if (new_time_step_size <= 0) return;
 
-    std::unique_lock<std::mutex> lock(xml_translation_mutex);
-    double time_scale = time_step_size / new_time_step_size;
-    time_step_size = new_time_step_size;
+    //If a file is loading, do not block the UI, needs to be done again then
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex, std::try_to_lock);
 
-    //Change velocity, acceleration
-    for (auto &planning_problem : planning_problems)
+    if (load_lock.owns_lock())
     {
-        planning_problem.second.transform_timing(time_scale);
-    }
+        double time_scale = time_step_size / new_time_step_size;
+        time_step_size = new_time_step_size;
 
-    //Time values themselves will currently still be defined w.r.t. time steps, so they need to be multiplied with time step size to obtain the actual time value
+        //No getter or other setter should access the object during a transformation
+        std::unique_lock<std::shared_mutex> write_lock(write_changes_mutex);
 
-    //Update database entry for transformation
-    yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
+        //Change velocity, acceleration
+        for (auto &planning_problem : planning_problems)
+        {
+            planning_problem.second.transform_timing(time_scale);
+        }
 
-    lock.unlock();
+        //Time values themselves will currently still be defined w.r.t. time steps, so they need to be multiplied with time step size to obtain the actual time value
 
-    //Need to reset the simulation and aggregator as well (as the timing was changed)
-    if (reset_obstacle_sim_manager)
-    {
-        reset_obstacle_sim_manager();
-    }
-    if (setup_obstacle_sim_manager)
-    {
-        setup_obstacle_sim_manager();
+        //Update database entry for transformation
+        yaml_transformation_storage.add_change_to_transform_profile(new_time_step_size, 0.0, 0.0, 0.0, 0.0);
+
+        write_lock.unlock();
+        load_lock.unlock();
+
+        //Need to reset the simulation and aggregator as well (as the timing was changed)
+        if (reset_obstacle_sim_manager)
+        {
+            reset_obstacle_sim_manager();
+        }
+        if (setup_obstacle_sim_manager)
+        {
+            setup_obstacle_sim_manager();
+        }
     }
 }
 
@@ -814,7 +827,13 @@ void CommonRoadScenario::set_time_step_size(double new_time_step_size)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
-    if (xml_translation_mutex.try_lock())
+    //Need to acquire shared mutex to prevent from writing changes and reloading during draw
+    //Is RAII, so I won't call unlock
+    //To not block the UI:
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex, std::try_to_lock);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex, std::try_to_lock);
+
+    if (load_lock.owns_lock() && read_lock.owns_lock())
     {
         //Draw lanelets
         ctx->save();
@@ -856,8 +875,6 @@ void CommonRoadScenario::draw(const DrawingContext& ctx, double scale, double gl
         //Intersections are already visible, because they are based on references only, thus they are not drawn specifically (although arrows for where the car is allowed to take a turn etc. could be interesting)
 
         ctx->restore();
-
-        xml_translation_mutex.unlock();
     }
 }
 #pragma GCC diagnostic pop
@@ -893,22 +910,32 @@ void CommonRoadScenario::apply_stored_transformation()
     double rotation = 0.0;
     yaml_transformation_storage.load_transformation_from_profile(time_scale, scale, translate_x, translate_y, rotation);
 
-    std::unique_lock<std::mutex> lock(xml_translation_mutex);
-    transform_coordinate_system_helper(translate_x, translate_y, rotation, scale);
-    lock.unlock();
-
-    //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
-    if (reset_obstacle_sim_manager)
+    //Need to acquire shared mutex to prevent from writing changes and reloading during draw
+    //Is RAII, so I won't call unlock
+    //To not block the UI:
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex, std::try_to_lock);
+    if (load_lock.owns_lock())
     {
-        reset_obstacle_sim_manager();
-    }
-    if (setup_obstacle_sim_manager)
-    {
-        setup_obstacle_sim_manager();
-    }
+        std::unique_lock<std::shared_mutex> write_lock(write_changes_mutex);
 
-    std::cout << "Transform worked" << std::endl;
-    set_time_step_size(time_scale);
+        transform_coordinate_system_helper(translate_x, translate_y, rotation, scale);
+
+        write_lock.unlock();
+        load_lock.unlock();
+
+        //Need to reset the simulation and aggregator as well (as the coordinate system was changed)
+        if (reset_obstacle_sim_manager)
+        {
+            reset_obstacle_sim_manager();
+        }
+        if (setup_obstacle_sim_manager)
+        {
+            setup_obstacle_sim_manager();
+        }
+
+        std::cout << "Transform worked" << std::endl;
+        set_time_step_size(time_scale);
+    }
 }
 
 void CommonRoadScenario::store_applied_transformation()
@@ -978,45 +1005,13 @@ void CommonRoadScenario::calculate_center()
     center.second = (0.5 * y_min) + (0.5 * y_max);
 }
 
-const std::string& CommonRoadScenario::get_author()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return author;
-}
-
-const std::string& CommonRoadScenario::get_affiliation()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return affiliation;
-}
-
-const std::string& CommonRoadScenario::get_benchmark_id()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return benchmark_id;
-}
-
-const std::string& CommonRoadScenario::get_common_road_version()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return common_road_version;
-}
-
-const std::string& CommonRoadScenario::get_date()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return date;
-}
-
-const std::string& CommonRoadScenario::get_source()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return source;
-}
-
 double CommonRoadScenario::get_time_step_size()
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     return time_step_size;
 }
 
@@ -1030,15 +1025,13 @@ double CommonRoadScenario::get_time_step_size()
 //     return scenario_tags;
 // }
 
-const std::optional<Location> CommonRoadScenario::get_location()
-{
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
-    return location;
-}
-
 std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     std::vector<int> ids;
     for (const auto& entry : dynamic_obstacles)
     {
@@ -1050,7 +1043,11 @@ std::vector<int> CommonRoadScenario::get_dynamic_obstacle_ids()
 
 std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     //Alternative: Return DynamicObstacle& for performance reasons and throw error if id does not exist in map
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
     {
@@ -1061,7 +1058,11 @@ std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
 
 std::vector<int> CommonRoadScenario::get_static_obstacle_ids()
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     std::vector<int> ids;
     for (const auto& entry : static_obstacles)
     {
@@ -1073,7 +1074,11 @@ std::vector<int> CommonRoadScenario::get_static_obstacle_ids()
 
 std::optional<StaticObstacle> CommonRoadScenario::get_static_obstacle(int id)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     if (static_obstacles.find(id) != static_obstacles.end())
     {
         return std::optional<StaticObstacle>(static_obstacles.at(id));
@@ -1084,7 +1089,11 @@ std::optional<StaticObstacle> CommonRoadScenario::get_static_obstacle(int id)
 
 std::vector<int> CommonRoadScenario::get_planning_problem_ids()
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     std::vector<int> ids;
     for (const auto& entry : planning_problems)
     {
@@ -1096,7 +1105,11 @@ std::vector<int> CommonRoadScenario::get_planning_problem_ids()
 
 std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     if (planning_problems.find(id) != planning_problems.end())
     {
         return std::optional<PlanningProblem>(planning_problems.at(id));
@@ -1107,7 +1120,11 @@ std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
 
 std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
 {
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
     //Alternative: Return Lanelet& for performance reasons and throw error if id does not exist in map
     if (lanelets.find(id) != lanelets.end())
     {
@@ -1141,7 +1158,11 @@ std::pair<double, double> CommonRoadScenario::get_lanelet_center(int id)
 void CommonRoadScenario::send_planning_problems(std::shared_ptr<cpm::Writer<CommonroadDDSGoalState>> writer_planning_problems)
 {
     assert(writer_planning_problems);
-    std::lock_guard<std::mutex> lock(xml_translation_mutex);
+
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
 
     //Due to the size of each planning problem (contains again list of planning problems which contains lists of goal states)
     //we had to break things apart in order for DDS messages to still work without causing errors
