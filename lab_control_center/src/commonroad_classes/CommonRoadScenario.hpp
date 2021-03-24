@@ -136,9 +136,9 @@ struct Location
     int gps_longitude = -1;
     //! Optional Geo Name ID, new 2020 (added to spec after some time)
     std::optional<int> geo_name_id = -1;
-    //! Optional Zipcode
+    //! Optional Zipcode, removed in 2020 specs
     std::optional<std::string> zipcode = std::nullopt;
-    //! Optional location name
+    //! Optional location name, removed in 2020 specs
     std::optional<std::string> name = std::nullopt;
     //! Optional geo transformation, which gets applied to the translated scenario after translation
     std::optional<GeoTransformation> geo_transformation = std::nullopt;
