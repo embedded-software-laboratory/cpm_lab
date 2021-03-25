@@ -19,6 +19,13 @@ case $i in
 esac
 done
 
+# Get middlware build directory and environment variables directory relative to this script's directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/"
+RELATIVE_MIDDLEWARE_DIR="${DIR}../../middleware/build"
+ABSOLUTE_MIDDLEWARE_DIR="$(realpath "${RELATIVE_MIDDLEWARE_DIR}")"
+RELATIVE_LOG_DIR="${DIR}../../../lcc_script_logs"
+ABSOLUTE_LOG_DIR="$(realpath "${RELATIVE_LOG_DIR}")"
+
 #Extract script name and script path from SCRIPT_PATH
 SCRIPT_NAME="${SCRIPT_PATH##*/}" #Get string after last /
 
@@ -28,14 +35,15 @@ PATH_TO_SCRIPT="~/${PATH_TO_SCRIPT#*/}"
 PATH_TO_SCRIPT="${PATH_TO_SCRIPT%/*}" #Get string before last / (omit name of script)
 
 #Load environment variables, like RTI location, library location, Matlab location...
+cd $DIR
 . ./environment_variables.bash
 
 # Copy local communication XML - eval must be used to evaluate the script, as it is given as a string and not as a bash command
-eval "cp -rf ~/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml  ${PATH_TO_SCRIPT}"
+eval "cp -rf '${ABSOLUTE_MIDDLEWARE_DIR}'/QOS_LOCAL_COMMUNICATION.xml  ${PATH_TO_SCRIPT}"
 
 cd /tmp/
 #Create debug log file to check if the script path and name were extracted correctly
-echo "Path to script: ${PATH_TO_SCRIPT} and script name: ${SCRIPT_NAME}" > ~/dev/lcc_script_logs/script_path.log
+echo "Path to script: ${PATH_TO_SCRIPT} and script name: ${SCRIPT_NAME}" > ${ABSOLUTE_LOG_DIR}/script_path.log
 
 #Start either a Matlab script using Matlab or a C++ script
 if [[ ${SCRIPT_NAME} =~ ".m" ]]
@@ -45,5 +53,5 @@ then
     /opt/MATLAB/R2019a/bin/matlab -logfile matlab.log -sd "${PATH_TO_SCRIPT}" -batch "${SCRIPT_NAME}(${SCRIPT_ARGS})"
 else
     #Evaluate the C++ script
-    eval "${PATH_TO_SCRIPT}/${SCRIPT_NAME} ${SCRIPT_ARGS} &> ~/dev/lcc_script_logs/script.log"
+    eval "${PATH_TO_SCRIPT}/${SCRIPT_NAME} ${SCRIPT_ARGS} &> '${ABSOLUTE_LOG_DIR}'/script.log"
 fi
