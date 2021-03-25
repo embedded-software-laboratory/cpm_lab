@@ -446,8 +446,8 @@ void SetupViewUI::deploy_applications() {
 
     simulation_running.store(true);
 
-    //Re-create log folder for all applications that are started on this machine (-> delete old entries, recreate folder)
-    deploy_functions->create_log_folder("lcc_script_logs");
+    //Delete old script / HLC / recording... log entries in the log folder lcc_script_logs
+    deploy_functions->delete_old_logs();
 
     //Reset old UI elements etc (call all functions that registered for this callback in main)
     reset_timer(switch_simulated_time->get_active(), false); //We do not need to send a stop signal here (might be falsely received by newly started participants)

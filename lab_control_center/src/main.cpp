@@ -284,6 +284,7 @@ int main(int argc, char *argv[])
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
+
     //Create deploy class
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
@@ -292,6 +293,8 @@ int main(int argc, char *argv[])
         program_executor,
         absolute_executable_path
     );
+
+    //UI classes
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         commonroad_scenario,
