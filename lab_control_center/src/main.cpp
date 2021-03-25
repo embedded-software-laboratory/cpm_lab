@@ -384,6 +384,7 @@ int main(int argc, char *argv[])
             rtt_aggregator->restart_measurement();
         },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
+        absolute_executable_path,
         argc, 
         argv
     );

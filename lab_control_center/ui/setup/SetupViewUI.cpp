@@ -46,6 +46,7 @@ SetupViewUI::SetupViewUI
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
+    std::string _absolute_exec_path,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -172,7 +173,26 @@ SetupViewUI::SetupViewUI
 
     //Set initial text of script path (from previous program execution, if that existed)
     //We use the default config location here
-    script_path->set_text(FileChooserUI::get_last_execution_path("script"));
+    auto last_exec_path = FileChooserUI::get_last_execution_path("script");
+    if (last_exec_path.size() == 0)
+    {
+        //In case of an empty path, set the HLC folder location as default path
+        //Construct the path to the folder by erasing all parts to the executable that are obsolete
+        //Executable path: .../software/lab_control_center/build/lab_control_center
+        //-> Remove everything up to the third-last slash
+        last_exec_path = _absolute_exec_path;
+        for (int i = 0; i < 3; ++i)
+        {
+            auto last_slash = last_exec_path.find_last_of('/');
+            if (last_slash != std::string::npos)
+            {
+                last_exec_path = last_exec_path.substr(0, last_slash);
+            }
+        }
+
+        last_exec_path.append("/high_level_controller/examples/");
+    }
+    script_path->set_text(last_exec_path);
 
     simulation_running.store(false);
     
@@ -350,7 +370,8 @@ void SetupViewUI::open_file_explorer()
             get_main_window(), 
             std::bind(&SetupViewUI::file_explorer_callback, this, _1, _2), 
             std::vector<FileChooserUI::Filter> { application_filter, all_filter },
-            "script"
+            "script",
+            std::string(script_path->get_text())
         );
     }
     else
