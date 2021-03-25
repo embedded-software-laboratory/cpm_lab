@@ -505,7 +505,8 @@ void SetupViewUI::deploy_applications() {
             try
             {
                 filepath_str = std::experimental::filesystem::absolute(filepath);
-                file_exists = true;
+                //We do not want a directory
+                file_exists = ! (std::experimental::filesystem::is_directory(filepath));
             }
             catch(const std::experimental::filesystem::filesystem_error& e)
             {
@@ -581,8 +582,7 @@ void SetupViewUI::deploy_applications() {
     }
     else
     {
-        cpm::Logging::Instance().write(1, "%s", "Script path is empty or invalid, thus neither script nor middleware could be started");
-        //Possible TODO: Stop in UI immediately (annoying if you want to use commonroad without script, so maybe do not warn at all?)
+        cpm::Logging::Instance().write(1, "%s", "Script path is empty / invalid / a directory, thus neither script nor middleware could be started");
     }
     
 
