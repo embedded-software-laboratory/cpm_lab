@@ -328,6 +328,12 @@ public:
     std::optional<std::pair<double, double>> get_stopline_center();
 
     /**
+     * \brief Get the center of the end of the lanelet, e.g. useful for traffic lights
+     * \return Center of the end points of the bounds
+     */
+    std::pair<double, double> get_end_center()
+
+    /**
      * \brief Get min. and max. x and y value of all points of the lanelet, if such points exist
      * \return [[min_x, max_x], [min_y, max_y]]
      */

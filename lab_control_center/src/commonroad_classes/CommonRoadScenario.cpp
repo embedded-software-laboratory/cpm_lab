@@ -698,7 +698,9 @@ std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_sign_po
         }
         else
         {
-            //Is normal lanelet entry
+            //Is normal lanelet entry. In TrafficLight, we use the end value here, but for TrafficSign, both lanelet
+            //start and end are possible positions (this depends on the sign type, e.g. speed limit is valid at the
+            //beginning, priority sign at the end. We do not parse these semantics)
             return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
         }
     }
@@ -710,18 +712,21 @@ std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_sign_po
 
 std::optional<std::pair<double, double>> CommonRoadScenario::get_lanelet_light_position(int id)
 {
+    //Get the position value of a TrafficLight from the lanelet, either at the position of the stopline or the lanelet end
     if (lanelet_traffic_light_positions.find(id) != lanelet_traffic_light_positions.end())
     {
         auto& entry = lanelet_traffic_light_positions.at(id);
         if (entry.second)
         {
             //Is stopline entry, lanelet ID must exist (because else it could not have been stored here)
+            //We only assume that the TrafficLight is supposed to be drawn at the stopline if it is referred to there
+            //But: The specs PDF seems to indicate that (despite the quote in the 'else' below)
             return lanelets.at(entry.first).get_stopline_center();
         }
         else
         {
-            //Is normal lanelet entry
-            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_center());
+            //Is normal lanelet entry. According to specs: "Traffic lights are always valid starting from the end of a lanelet."
+            return std::optional<std::pair<double, double>>(lanelets.at(entry.first).get_end_center());
         }
     }
     else

@@ -77,6 +77,16 @@ Lanelet::Lanelet(
 
         //Add positional values for each traffic sign / light ref
         auto lanelet_id = xml_translation::get_attribute_int(node, "id", true).value();
+        //First: Add positions stored for the lanelet itself
+        for (const auto ref : traffic_sign_refs)
+        {
+            traffic_sign_positions[ref] = {lanelet_id, false};
+        }
+        for (const auto ref : traffic_light_refs)
+        {
+            traffic_light_positions[ref] = {lanelet_id, false};
+        }
+        //Then: Add or update positions defined for the stop_line
         if (stop_line.has_value())
         {
             for (const auto ref : stop_line->traffic_sign_refs)
@@ -87,14 +97,6 @@ Lanelet::Lanelet(
             {
                 traffic_light_positions[ref] = {lanelet_id, true};
             }
-        }
-        for (const auto ref : traffic_sign_refs)
-        {
-            traffic_sign_positions[ref] = {lanelet_id, false};
-        }
-        for (const auto ref : traffic_light_refs)
-        {
-            traffic_light_positions[ref] = {lanelet_id, false};
         }
     }
     catch(const SpecificationError& e)
@@ -828,7 +830,7 @@ void Lanelet::draw_ref(const DrawingContext& ctx, double scale, double global_or
 
 std::pair<double, double> Lanelet::get_center()
 {
-    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    //The calculation of the center follows a simple assumption: Center = Mean of middle segment (middle value of all points might not be within the lanelet boundaries)
     assert(left_bound.points.size() == right_bound.points.size());
 
     size_t vec_size = left_bound.points.size();
@@ -842,7 +844,7 @@ std::pair<double, double> Lanelet::get_center()
 
 std::pair<double, double> Lanelet::get_center_of_all_points()
 {
-    //The calculation of the center follows a simple assumption: Center = Middle of middle segment (middle value of all points might not be within the lanelet boundaries)
+    //The calculation of the center follows a simple assumption: Center = Mean of all points
     assert(left_bound.points.size() == right_bound.points.size());
 
     size_t vec_size = left_bound.points.size();
@@ -873,6 +875,17 @@ std::optional<std::pair<double, double>> Lanelet::get_stopline_center()
     {
         return std::nullopt;
     }
+}
+
+std::pair<double, double> Lanelet::get_end_center()
+{
+    auto left_end = left_bound.points.back();
+    auto right_end = right_bound.points.back();
+
+    return std::pair<double, double>(
+        left_end.get_x() * 0.5 + right_end.get_x() * 0.5, 
+        left_end.get_y() * 0.5 + right_end.get_y() * 0.5
+    );
 }
 
 std::optional<std::array<std::array<double, 2>, 2>> Lanelet::get_range_x_y()
