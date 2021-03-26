@@ -45,138 +45,68 @@ TrafficSign::TrafficSign(
         //Translate ID again, to be used in draw() 
         id = xml_translation::get_attribute_int(node, "id", true).value();
 
-        //We can have multiple sign elements for one sign, consisting of multiple posts
-        //Each element has its own position and can either be virtual or not virtual
+        //TrafficSigns are defined in a certain order:
+        //- trafficSignElement consisting of what we called TrafficSignPost (must exist), in form of a list
+        //- Position (optional)
+        //- Virtual (optional), in form of a list
+        //-> Start a new definition of our TrafficSignElement with each new TrafficSignPost (their / specs trafficSignElement). 
+        size_t pos = -1; //To know which element to fill with new info
+        std::vector<std::string> allowed_next_values = { "trafficSignElement" }; //Indicates which next values are allowed, to check for spec consistency
+
         xml_translation::iterate_children(
             node,
             [&] (xmlpp::Node* child)
             {
-                TrafficSignElement element;
+                auto child_name = std::string(child->get_name());
 
-                //TrafficSignElement groups several trafficSignPosts
-                //We may have none or multiple additional values per ID
-                //Thus, we take a look at the line number as well s.t. we know how these values are connected
-                std::vector<std::string> traffic_sign_ids;
-                std::vector<int> traffic_sign_id_lines;
-                std::vector<std::string> additional_values;
-                std::vector<int> additional_values_lines;
-
-                xml_translation::iterate_children(
-                    child,
-                    [&] (xmlpp::Node* id_child)
-                    {
-                        traffic_sign_ids.push_back(xml_translation::get_first_child_text(id_child));
-                        traffic_sign_id_lines.push_back(id_child->get_line());
-                    },
-                    "trafficSignID"
-                );
-                xml_translation::iterate_children(
-                    child,
-                    [&] (xmlpp::Node* value_child)
-                    {
-                        additional_values.push_back(xml_translation::get_first_child_text(value_child));
-                        additional_values_lines.push_back(value_child->get_line());
-                    },
-                    "additionalValue"
-                );
-
-                //Create TrafficSignPost elements depending on the line values (use std bound functions for search etc!)
-                size_t values_index = 0; //Store up to which index additional_values have already been stored in previous elements
-                for (size_t sign_index = 0; sign_index < traffic_sign_ids.size(); ++sign_index)
+                //Check if the allowed order is kept
+                if (std::find(allowed_next_values.begin(), allowed_next_values.end(), child_name) == allowed_next_values.end())
                 {
-                    //Set up traffic post consisting of one ID and possibly several additional values
-                    TrafficSignPost traffic_post;
-                    traffic_post.traffic_sign_id = traffic_sign_ids.at(sign_index);
-
-                    if (sign_index == traffic_sign_ids.size() - 1)
-                    {
-                        //Last element, take all remaining additional values
-                        if (additional_values.size() > values_index)
-                        {
-                            std::copy(additional_values.begin() + values_index, additional_values.end(), std::back_inserter(traffic_post.additional_values));
-                        }
-                    }
-                    else
-                    {
-                        //Take all additional values up to upper bound (using the starting line of the next traffic post)
-                        int next_post_line = traffic_sign_id_lines.at(sign_index + 1);
-                        auto next_additional_it = std::upper_bound(additional_values_lines.begin(), additional_values_lines.end(), next_post_line);
-
-                        if (next_additional_it != additional_values_lines.end())
-                        {
-                            //There is an upper bound, copy up to next additional values of next element
-                            auto next_additional_index = std::distance(additional_values_lines.begin(), next_additional_it);
-                            std::copy(additional_values.begin() + values_index, additional_values.begin() + next_additional_index, std::back_inserter(traffic_post.additional_values));
-
-                            values_index = next_additional_index;
-                        }
-                        else if (additional_values.size() > values_index)
-                        {
-                            //There is no upper bound, but there are still elements left - take all remaining values
-                            std::copy(additional_values.begin() + values_index, additional_values.end(), std::back_inserter(traffic_post.additional_values));
-
-                            values_index = additional_values.size();
-                        }
-                    }
-                    
-                    element.traffic_sign_posts.push_back(traffic_post);
+                    std::stringstream error_stream;
+                    error_stream << "TrafficSign in line " << child->get_line() << ", child " << child->get_name() << " does not fulfill specs, order of elements not kept / is empty."
+                        << "If the order is not kept, the specification is no longer consistent and the TrafficSign cannot be translated properly!";
+                    throw SpecificationError(error_stream.str());
                 }
 
-                //Get position value, which must not be specified
-                const auto position_node = xml_translation::get_child_if_exists(child, "position", false);
-                if (position_node)
+                //Go through possible types at this level, check that the order is kept
+                if (child_name == "trafficSignElement")
                 {
-                    element.position = std::optional<Position>{std::in_place, position_node};
+                    //Create next entry
+                    ++pos;
+                    traffic_sign_elements.push_back(TrafficSignElement());
 
-                    //Assert that position is exact (due to specs)
-                    if (! element.position->is_exact())
-                    {
-                        std::stringstream error_msg_stream;
-                        error_msg_stream << "Position of TrafficSign must be exact, not conformant to specs, line: " << position_node->get_line();
-                        throw SpecificationError(error_msg_stream.str());
-                    }
+                    //Add all trafficSignElement (commonroad) / TrafficSignPost (here) elements
+                    traffic_sign_elements[pos].traffic_sign_posts = translate_traffic_sign_posts(child);
+
+                    allowed_next_values = { "trafficSignElement", "position", "virtual" };
+                }
+                else if (child_name == "position")
+                {
+                    traffic_sign_elements[pos].position = std::optional<Position>{translate_position(child)};
+
+                    allowed_next_values = { "trafficSignElement", "virtual" };
+                }
+                else if (child_name == "virtual")
+                {
+                    traffic_sign_elements[pos].is_virtual.push_back(translate_virtual(child));
+
+                    allowed_next_values = { "trafficSignElement", "virtual" }; //Multiple virtual definitions are possible
                 }
                 else
                 {
-                    //Do NOT use default position here, we have to assume that the position in this case is given by the lanelet reference
-                    element.position = std::nullopt;
+                    std::stringstream error_stream;
+                    error_stream << "TrafficLight in line " << child->get_line() << " does not fulfill specs, unknown element: " << child_name;
+                    throw SpecificationError(error_stream.str());
                 }
-                
-
-                //The nodes can be set to be virtual as well in another array
-                xml_translation::iterate_children(
-                    child, 
-                    [&] (xmlpp::Node* virtual_child)
-                    {
-                        std::string virtual_string = xml_translation::get_first_child_text(virtual_child);
-                        if (virtual_string.compare("true") == 0)
-                        {
-                            element.is_virtual.push_back(true);
-                        }
-                        else if (virtual_string.compare("false") == 0)
-                        {
-                            element.is_virtual.push_back(false);
-                        } 
-                        else 
-                        {
-                            std::stringstream error_msg_stream;
-                            error_msg_stream << "Value of node element 'virtual' not conformant to specs, line: " << virtual_child->get_line();
-                            throw SpecificationError(error_msg_stream.str());
-                        }
-                    },
-                    "virtual"
-                );
-
-                traffic_sign_elements.push_back(element);
             },
-            "trafficSignElement"
+            "" //Iterate all children
         );
 
         //Make sure that the translation is not empty
         if(traffic_sign_elements.size() == 0)
         {
             std::stringstream error_msg_stream;
-            error_msg_stream << "Is empty: " << node->get_line();
+            error_msg_stream << "TrafficSign is empty, line: " << node->get_line();
             throw SpecificationError(error_msg_stream.str());
         }
     }
@@ -212,6 +142,106 @@ TrafficSign::TrafficSign(
     //         std::cout << std::endl;
     //     }
     // }
+}
+
+std::vector<TrafficSignPost> TrafficSign::translate_traffic_sign_posts(const xmlpp::Node* element_node)
+{
+    //As for the whole TrafficSign definition, we need to iterate all children
+    //For two entries with one being optional, checking for consistency does not make sense
+
+    //A trafficSignElement entry is defined in a certain order:
+    //- trafficSignID (must exist)
+    //- additionalValue (optional), list
+    //-> Start a new definition with every new trafficSignID definition. 
+    size_t pos = -1; //To know which element to fill with new info
+    std::vector<TrafficSignPost> traffic_sign_posts;
+
+    bool is_first_element = true; //We need to make sure that the first element is trafficSignID (consistency check for first element)
+
+    xml_translation::iterate_children(
+        element_node,
+        [&] (xmlpp::Node* child)
+        {
+            auto child_name = std::string(child->get_name());
+
+            if (child_name == "trafficSignID")
+            {
+                //Create next entry
+                ++pos;
+                traffic_sign_posts.push_back(TrafficSignPost());
+
+                traffic_sign_posts[pos].traffic_sign_id = xml_translation::get_first_child_text(child);
+            }
+            else if (child_name == "additionalValue")
+            {
+                if (is_first_element)
+                {
+                    //We cannot check for consistency after the first element, because after an additional value, more additional values
+                    //or an ID might follow, and the same goes for ID
+                    //BUT: According to the spec, the first element must be an ID. Otherwise, this implementation would also break
+                    std::stringstream error_stream;
+                    error_stream << "TrafficSign in line " << child->get_line() << " does not fulfill specs, order not kept: " << child_name;
+                    throw SpecificationError(error_stream.str());
+                }
+
+                traffic_sign_posts[pos].additional_values.push_back(xml_translation::get_first_child_text(child));
+            }
+            else
+            {
+                std::stringstream error_stream;
+                error_stream << "TrafficSign in line " << child->get_line() << " does not fulfill specs, unknown element: " << child_name;
+                throw SpecificationError(error_stream.str());
+            }
+
+            is_first_element = false;
+        },
+        "" //Iterate all children
+    );
+
+    //We do not accept empty trafficSignElements (don't make sense)
+    if (traffic_sign_posts.size() < 1)
+    {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "trafficSignElement is empty, line: " << element_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
+
+    return traffic_sign_posts;
+}
+
+Position TrafficSign::translate_position(const xmlpp::Node* position_node)
+{
+    //Get position value, which must not be specified
+    auto pos = Position(position_node);
+
+    //According to specs, the position must always be exact
+    if (!pos.is_exact())
+    {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Position in TrafficLight not conformant to specs (must be exact), line: " << position_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
+
+    return pos;
+}
+
+bool TrafficSign::translate_virtual(const xmlpp::Node* virtual_node)
+{
+    std::string active_string = xml_translation::get_first_child_text(virtual_node);
+    if (active_string.compare("true") == 0)
+    {
+        return true;
+    }
+    else if (active_string.compare("false") == 0)
+    {
+        return false;
+    } 
+    else 
+    {
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Value of node element 'virtual' not conformant to specs, line: " << virtual_node->get_line();
+        throw SpecificationError(error_msg_stream.str());
+    }
 }
 
 void TrafficSign::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)

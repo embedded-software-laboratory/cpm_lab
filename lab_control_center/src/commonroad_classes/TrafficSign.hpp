@@ -55,8 +55,8 @@
 
 /**
  * \struct TrafficSignPost
- * \brief Specifies a traffic sign element
- * The commonroad XML file specifies specific string values, this restriction is not applied here (for simplicity)
+ * \brief Specifies a part of traffic sign element.
+ * The commonroad XML file specifies specific string values for the sign ID, this restriction is not applied here (for simplicity)
  * \ingroup lcc_commonroad
  */
 struct TrafficSignPost
@@ -69,8 +69,9 @@ struct TrafficSignPost
 
 /**
  * \struct TrafficSignElement
- * \brief Specifies a traffic sign post
- * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
+ * \brief Specifies multiple traffic sign posts.
+ * Not defined like that in Commonroad (put together "their" TrafficSignElement
+ * with position and is_virtual, use list of TrafficSignPost for "their" Element)
  * \ingroup lcc_commonroad
  */
 struct TrafficSignElement
@@ -97,6 +98,24 @@ private:
     std::vector<TrafficSignElement> traffic_sign_elements;
     //! ID of the traffic sign(s)
     int id;
+
+    //Translation helper functions
+    //Helper functions for better readability
+    /**
+     * \brief Helper function to translate a Commonroad trafficSignElement, here consisting of multiple TrafficSignPost
+     * \param element_node trafficSignElement node
+     */
+    std::vector<TrafficSignPost> translate_traffic_sign_posts(const xmlpp::Node* element_node);
+    /**
+     * \brief Helper function to translate an xml position node
+     * \param position_node The Commonroad XML position node 
+     */
+    Position translate_position(const xmlpp::Node* position_node);
+    /**
+     * \brief Helper function to translate an xml virtual node
+     * \param virtual_node The Commonroad XML active node 
+     */
+    bool translate_virtual(const xmlpp::Node* virtual_node);
 
     //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;

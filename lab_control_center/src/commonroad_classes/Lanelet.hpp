@@ -331,7 +331,7 @@ public:
      * \brief Get the center of the end of the lanelet, e.g. useful for traffic lights
      * \return Center of the end points of the bounds
      */
-    std::pair<double, double> get_end_center()
+    std::pair<double, double> get_end_center();
 
     /**
      * \brief Get min. and max. x and y value of all points of the lanelet, if such points exist

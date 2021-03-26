@@ -78,8 +78,10 @@ TrafficLight::TrafficLight(
 
                 if (child_name == "cycle")
                 {
+                    //Create next entry
                     ++pos;
                     traffic_light_elements.push_back(TrafficLightElement());
+
                     traffic_light_elements[pos].cycle = translate_cycle(child);
                     allowed_next_values = { "cycle", "position", "direction", "active" };
                 }
@@ -97,6 +99,12 @@ TrafficLight::TrafficLight(
                 {
                     traffic_light_elements[pos].is_active = translate_active(child);
                     allowed_next_values = { "cycle" };
+                }
+                else
+                {
+                    std::stringstream error_stream;
+                    error_stream << "TrafficLight in line " << child->get_line() << " does not fulfill specs, unknown element: " << child_name;
+                    throw SpecificationError(error_stream.str());
                 }
             },
             "" //Iterate all children
@@ -185,7 +193,7 @@ bool TrafficLight::translate_active(const xmlpp::Node* active_node)
     else 
     {
         std::stringstream error_msg_stream;
-        error_msg_stream << "Value of node element 'virtual' not conformant to specs, line: " << active_node->get_line();
+        error_msg_stream << "Value of node element 'active' not conformant to specs, line: " << active_node->get_line();
         throw SpecificationError(error_msg_stream.str());
     }
 }
