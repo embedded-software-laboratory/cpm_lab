@@ -52,41 +52,54 @@ TrafficLight::TrafficLight(
         id = xml_translation::get_attribute_int(node, "id", true).value();
 
         //We use the XMLTranslation iteration functions here, as it is easier to operate on the vectors if we can use indices and .at()
+        //TrafficLights are defined in a certain order:
+        //- Cycle (must exist)
+        //- Position (optional)
+        //- Direction (optional)
+        //- Active (optional)
+        //-> Start a new definition with every new cycle definition. 
+        size_t pos = -1; //To know which element to fill with new info
+        std::vector<std::string> allowed_next_values = { "cycle" }; //Indicates which next values are allowed, to check for spec consistency
+
         xml_translation::iterate_children(
             node,
             [&] (xmlpp::Node* child)
             {
-                positions.push_back(translate_position(child));
-                position_lines.push_back(child->get_line());
+                auto child_name = std::string(child->get_name());
+
+                //Check if the allowed order is kept
+                if (std::find(allowed_next_values.begin(), allowed_next_values.end(), child_name) == allowed_next_values.end())
+                {
+                    std::stringstream error_stream;
+                    error_stream << "TrafficLight in line " << child->get_line() << " does not fulfill specs, order of elements not kept (cycle, position etc.)."
+                        << "If the order is not kept, the specification is no longer consistent and the TrafficLight cannot be translated properly!";
+                    throw SpecificationError(error_stream.str());
+                }
+
+                if (child_name == "cycle")
+                {
+                    ++pos;
+                    traffic_light_elements.push_back(TrafficLightElement());
+                    traffic_light_elements[pos].cycle = translate_cycle(child);
+                    allowed_next_values = { "cycle", "position", "direction", "active" };
+                }
+                else if (child_name == "position")
+                {
+                    traffic_light_elements[pos].position = translate_position(child);
+                    allowed_next_values = { "cycle", "direction", "active" };
+                }
+                else if (child_name == "direction")
+                {
+                    traffic_light_elements[pos].direction = translate_direction(child);
+                    allowed_next_values = { "cycle", "active" };
+                }
+                else if (child_name == "active")
+                {
+                    traffic_light_elements[pos].is_active = translate_active(child);
+                    allowed_next_values = { "cycle" };
+                }
             },
-            "position"
-        );
-        xml_translation::iterate_children(
-            node,
-            [&] (xmlpp::Node* child)
-            {
-                directions.push_back(translate_direction(child));
-                direction_lines.push_back(child->get_line());
-            },
-            "direction"
-        );
-        xml_translation::iterate_children(
-            node,
-            [&] (xmlpp::Node* child)
-            {
-                actives.push_back(translate_active(child));
-                active_lines.push_back(child->get_line());
-            },
-            "active"
-        );
-        xml_translation::iterate_children(
-            node,
-            [&] (xmlpp::Node* child)
-            {
-                cycles.push_back(translate_cycle(child));
-                cycle_lines.push_back(child->get_line());
-            },
-            "cycle"
+            "" //Iterate all children
         );
     }
     catch(const SpecificationError& e)
@@ -98,20 +111,6 @@ TrafficLight::TrafficLight(
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
     }
-    
-
-    //TODO: I have absolutely no idea how to put these together
-    //Line numbers are not enough without a reference
-    //Even if "cycle" always appears, it might appear at any position in between the three other optional arguments
-    //Thus, a position node specified before a cycle node could just as much be part of that cycle node as a position node located after a cycle node
-    //example: cycle | position | cycle | cycle -> I cannot tell whether "position" belongs to the first or the second cycle 
-    
-    //Test output
-    // std::cout << "TrafficLight: " << std::endl;
-    // std::cout << "\tActive size: " << actives.size() << std::endl;
-    // std::cout << "\tPosition size: " << positions.size() << std::endl;
-    // std::cout << "\tDirection size: " << directions.size() << std::endl;
-    // std::cout << "\tCycle size: " << cycles.size() << std::endl;
 
     LCCErrorLogger::Instance().log_error("Warning: The specification for traffic lights does not allow for unique definitions (due to <xs:sequence> & no required order of the elements), so we do not show more than if the light exists at all");
 }
@@ -255,9 +254,12 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
 
 void TrafficLight::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    for (auto& position : positions)
+    for (auto& element : traffic_light_elements)
     {
-        position.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        if (element.position.has_value())
+        {
+            element.position->transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
     }
 }
 
@@ -272,45 +274,48 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    for (auto position : positions)
+    for (auto& element : traffic_light_elements)
     {
-        ctx->save();
-        position.transform_context(ctx, scale);
-
-        draw_traffic_light_symbol(ctx, scale);
-
-        ctx->restore();
-    }
-
-    //Now draw at position given by lanelet, where no position was given (cycle must always be defined according to specs)
-    if (cycles.size() > positions.size())
-    {
-        if (get_position_from_lanelet)
+        //If a value for the position is given, use that instead of the lanelet reference position
+        if (element.position.has_value())
         {
-            auto position = get_position_from_lanelet(id);
-            auto x = 0.0;
-            auto y = 0.0;
-            if (position.has_value())
-            {
-                x = position->first * scale;
-                y = position->second * scale;
+            ctx->save();
+            element.position->transform_context(ctx, scale);
 
-                ctx->save();
-                ctx->translate(x, y);
-                draw_traffic_light_symbol(ctx, scale);
-                ctx->restore();
-            }
-            else
-            {
-                //This log causes severe flickering - why? TODO
-                LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-            }
+            draw_traffic_light_symbol(ctx, scale);
+
+            ctx->restore();
         }
         else
         {
-            LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
+            //Draw at position given by lanelet, where no position was given
+            if (get_position_from_lanelet)
+            {
+                auto position = get_position_from_lanelet(id);
+                auto x = 0.0;
+                auto y = 0.0;
+                if (position.has_value())
+                {
+                    x = position->first * scale;
+                    y = position->second * scale;
+
+                    ctx->save();
+                    ctx->translate(x, y);
+                    draw_traffic_light_symbol(ctx, scale);
+                    ctx->restore();
+                }
+                else
+                {
+                    //This log causes severe flickering - why? TODO
+                    LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from definition (also no lanelet reference exists)");
+                }
+            }
+            else
+            {
+                LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from definition (also no lanelet reference exists)");
+            }
         }
-    }
+    }    
 
     ctx->restore();
 }

@@ -90,24 +90,23 @@ struct TrafficLightCycle
     std::optional<unsigned int> time_offset = std::nullopt;
 };
 
-//Currently unused, as the specification is not clear enough
-// /**
-//  * \struct TrafficLightElement
-//  * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
-//  * \ingroup lcc_commonroad
-//  */
-// struct TrafficLightElement
-// {
-//     //Commonroad types
-//     //! Traffic light cycle, defining when which color is shown
-//     TrafficLightCycle cycle;
-//     //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
-//     std::optional<Position> position = std::nullopt;
-//     //! Direction shown by the light
-//     Direction direction;
-//     //! Indicated if the traffic light is currently active. Is assumed to default to true
-//     bool is_active; 
-// };
+/**
+ * \struct TrafficLightElement
+ * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
+ * \ingroup lcc_commonroad
+ */
+struct TrafficLightElement
+{
+    //Commonroad types
+    //! Traffic light cycle, defining when which color is shown
+    TrafficLightCycle cycle;
+    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
+    std::optional<Position> position = std::nullopt;
+    //! Direction shown by the light, default is all
+    Direction direction = Direction::All;
+    //! Indicated if the traffic light is currently active. Is assumed to default to true
+    bool is_active = true; 
+};
 
 /**
  * \class TrafficLight
@@ -118,25 +117,8 @@ struct TrafficLightCycle
 class TrafficLight : public InterfaceTransform, public InterfaceDraw
 {
 private:
-    //std::vector<TrafficLightElement> traffic_light_elements;
-
-    //Current structure (as, in my opinion, the specification does not allow for unique definitions)
-    //! Positions of the traffic lights
-    std::vector<Position> positions;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> position_lines;
-    //! Directions of the traffic lights
-    std::vector<Direction> directions;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> direction_lines;
-    //! Values if each traffic light is active
-    std::vector<bool> actives;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> active_lines;
-    //! Cycles of the traffic lights
-    std::vector<TrafficLightCycle> cycles;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> cycle_lines;
+    //! Contains all seperate traffic lights defined for this ID
+    std::vector<TrafficLightElement> traffic_light_elements;
 
     //! ID of the traffic light(s)
     int id;
