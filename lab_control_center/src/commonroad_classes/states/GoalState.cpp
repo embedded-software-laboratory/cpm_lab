@@ -33,12 +33,10 @@
 
 GoalState::GoalState(
     const xmlpp::Node* node,
-    int _planning_problem_id,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
     std::function<std::pair<double, double> (int)> _get_lanelet_center,
     std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     ) :
-    planning_problem_id(_planning_problem_id),
     draw_configuration(_draw_configuration)
 {
     //2018 and 2020 specs are the same
@@ -148,6 +146,7 @@ void GoalState::transform_timing(double time_scale)
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     assert(draw_configuration);
+    assert(unique_id != "ERR");
 
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
@@ -189,7 +188,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
     if (draw_configuration->draw_goal_description.load())
     {
         std::stringstream descr_stream;
-        descr_stream << "ID (" << planning_problem_id << "): ";
+        descr_stream << "ID (" << unique_id << "): ";
         if (time.has_value())
         {
             descr_stream << "t (mean): " << time.value().get_mean();
@@ -292,4 +291,14 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
     goal_state.velocities(velocities);
 
     return goal_state;
+}
+
+void GoalState::set_unique_id(std::string _unique_id)
+{
+    unique_id = _unique_id;
+}
+
+const std::string& GoalState::get_unique_id() const
+{
+    return unique_id;
 }

@@ -249,10 +249,6 @@ void CommonroadViewUI::dispatcher_callback() {
                 break;
             }
 
-            std::stringstream id_stream; 
-            id_stream << planning_problem_id;
-            Glib::ustring id_ustring(id_stream.str());
-
             for (auto planning_problem_element : planning_problem->get_planning_problems())
             {
                 for (auto goal_state : planning_problem_element.goal_states)
@@ -308,7 +304,7 @@ void CommonroadViewUI::dispatcher_callback() {
                     Gtk::TreeModel::Row row;
                     row = *(problem_list_store->append());
                     
-                    row[problem_record.problem_id] = id_ustring;
+                    row[problem_record.problem_id] = Glib::ustring(goal_state.get_unique_id());
                     row[problem_record.problem_goal_speed] = goal_speed_ustring;
                     row[problem_record.problem_goal_time] = goal_time_ustring;
                 }

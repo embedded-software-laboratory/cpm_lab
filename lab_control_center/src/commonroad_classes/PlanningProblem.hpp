@@ -81,6 +81,9 @@ private:
     //! List of planning problems stored within one planning problem ID (the specs allow more than one definition)
     std::vector<PlanningProblemElement> planning_problems;
 
+    //! Required for drawing
+    int planning_problem_id;
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure

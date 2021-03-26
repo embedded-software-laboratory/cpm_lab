@@ -51,7 +51,7 @@ PlanningProblem::PlanningProblem(
         std::vector<int> goal_state_lines;
 
         //Get the lanelet ID to tell it to the goal states (to be able to show the user the goal state ID in the UI)
-        auto planning_problem_id = xml_translation::get_attribute_int(node, "id", true).value();
+        planning_problem_id = xml_translation::get_attribute_int(node, "id", true).value();
 
         xml_translation::iterate_children(
             node,
@@ -66,7 +66,7 @@ PlanningProblem::PlanningProblem(
             node,
             [&] (const xmlpp::Node* child)
             {
-                goal_states.push_back(GoalState(child, planning_problem_id, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
+                goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
                 goal_state_lines.push_back(child->get_line());
             },
             "goalState"
@@ -136,11 +136,24 @@ PlanningProblem::PlanningProblem(
         }
     }
 
-    //Set lanelet_ref functions
+    //Set lanelet_ref functions and also unique goal IDs
+    size_t planning_pos = 0;
     for (auto& planning_prob : planning_problems)
     {
         planning_prob.initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-        //planning_prob.initial_state->set_lanelet_get_center_function(_get_lanelet_center);
+        
+        size_t goal_pos = 0;
+        for (auto& goal : planning_prob.goal_states)
+        {
+            //Create unique ID for each goal state (for identification in the table of goal state information)
+            std::stringstream goal_id_stream;
+            goal_id_stream << planning_problem_id << "." << planning_pos << "." << goal_pos;
+            goal.set_unique_id(goal_id_stream.str());
+
+            ++goal_pos;
+        }
+
+        ++planning_pos;
     }
 
     //Test output
@@ -188,16 +201,29 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
+    size_t problem_pos = 0;
     for (auto problem : planning_problems)
     {
+        //Draw initial state
         ctx->set_source_rgb(0.0,0.5,0.05);
         problem.initial_state->draw(ctx, scale, 0, 0, 0, local_orientation);
 
+        //Draw initial state description (planning problem ID)
+        ctx->save();
+        std::stringstream descr_stream;
+        descr_stream << "ID (" << planning_problem_id << "." << problem_pos << "): ";
+        problem.initial_state->transform_context(ctx, scale);
+        draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+        ctx->restore();
+
+        //Draw goal state + description
         ctx->set_source_rgba(1.0,0.5,0.8, 0.3);
         for (auto goal : problem.goal_states)
         {
             goal.draw(ctx, scale, 0, 0, 0, local_orientation);
         }
+
+        ++problem_pos;
     }
 
     ctx->restore();

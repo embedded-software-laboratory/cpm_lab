@@ -72,8 +72,8 @@ private:
     std::optional<Interval> orientation = std::nullopt;
     //! Allowed velocity range within the goal state. Must not be defined
     std::optional<Interval> velocity = std::nullopt;
-    //! ID of the planning problem, can be used when drawing the goal state
-    int planning_problem_id;
+    //! ID of the planning problem + unique ID for each goal state within, can be used when drawing the goal state
+    std::string unique_id = "ERR";
     
     //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
@@ -85,14 +85,12 @@ public:
     /**
      * \brief Constructor, set up a goalstate object from a commonroad xml goalstate node
      * \param node Goal state node to translate
-     * \param planning_problem_id ID of the planning problem, to show the GoalState ID when drawing
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      * \param _get_lanelet_center Function to get the center (x, y) of a lanelet, given its ID
      * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
         const xmlpp::Node* node,
-        int planning_problem_id,
         std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
         std::function<std::pair<double, double> (int)> _get_lanelet_center,
         std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
@@ -136,6 +134,15 @@ public:
      */
     CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
+    //Setter
+    /**
+     * \brief Set a unique ID for this goal state for drawing, to 
+     * be able to connect planning problem entries in the view with
+     * planning problems shown on the map.
+     * \param _unique_id Unique goal state ID, should be: Planning problem ID + planning problem pos. in vector + goal state pos. in vector
+     */
+    void set_unique_id(std::string _unique_id);
+
     //Getter
     /**
      * \brief Get the point or interval in time within which the goal state must be reached, or nullopt if not set
@@ -153,4 +160,8 @@ public:
      * \brief Get the allowed velocity within the goal state, or nullopt if not set
      */
     const std::optional<Interval>& get_velocity() const;
+    /**
+     * \brief Get the unique ID of the goal state (planning problem ID + unique goal state ID)
+     */
+    const std::string& get_unique_id() const;
 };
