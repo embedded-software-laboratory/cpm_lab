@@ -55,7 +55,7 @@
  * \brief Specifies a traffic light color, as in commonroad
  * \ingroup lcc_commonroad
  */
-enum class TrafficLightColor {Red, RedYellow, Yellow, Green};
+enum class TrafficLightColor {Red, RedYellow, Yellow, Green, Inactive};
 
 /**
  * \enum Direction

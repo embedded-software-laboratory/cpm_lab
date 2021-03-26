@@ -231,6 +231,10 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
                     {
                         element.colors.push_back(TrafficLightColor::Yellow);
                     }
+                    else if (color.compare("inactive") == 0)
+                    {
+                        element.colors.push_back(TrafficLightColor::Inactive);
+                    }
                     else
                     {
                         std::stringstream error_msg_stream;
