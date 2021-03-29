@@ -51,11 +51,6 @@ namespace cpm
      */
     class RTTTool
     {
-        RTTTool(RTTTool const&) = delete;
-        RTTTool(RTTTool&&) = delete; 
-        RTTTool& operator=(RTTTool const&) = delete;
-        RTTTool& operator=(RTTTool &&) = delete;
-
     private:
         //! DDS Writer to send an RTT request or an answer to a request
         cpm::Writer<RoundTripTime> rtt_writer;
@@ -82,6 +77,11 @@ namespace cpm
         RTTTool();
 
     public:
+        RTTTool(RTTTool const&) = delete;
+        RTTTool(RTTTool&&) = delete; 
+        RTTTool& operator=(RTTTool const&) = delete;
+        RTTTool& operator=(RTTTool &&) = delete;
+
         /**
          * \brief Interface to create / get access to the singleton
          */ 

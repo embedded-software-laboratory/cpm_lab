@@ -159,6 +159,17 @@ void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_c
     crash_checker = _crash_checker;
 }
 
+int MonitoringUi::get_column_id(uint8_t vehicle_id)
+{
+    //Find the position in the vector
+    auto it = std::find(grid_vehicle_ids.begin(), grid_vehicle_ids.end(), vehicle_id);
+    assert(it != grid_vehicle_ids.end()); //Fails if entry does not yet exist, so be careful!
+    auto pos = std::distance(grid_vehicle_ids.begin(), it);
+
+    //Add 1 when returning, because position 0 is used for row descriptions (-> counting starts at one for vehicle entries)
+    return pos + 1;
+}
+
 void MonitoringUi::init_ui_thread()
 {
     //Set UI dispatcher function, create UI update thread
@@ -166,20 +177,46 @@ void MonitoringUi::init_ui_thread()
 
         auto vehicle_data = this->get_vehicle_data();
 
+        //For newly added columns: Remember vehicle ID, to insert new cells
+        std::unordered_set<uint8_t> added_ids;
+
         // Top header
         for(const auto& entry : vehicle_data) {
             const auto vehicle_id = entry.first;
 
-            Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id + 1, 0));
+            auto it = std::find(grid_vehicle_ids.begin(), grid_vehicle_ids.end(), vehicle_id);
 
-            if(!label)
+            if(it == grid_vehicle_ids.end())
             {
-                label = Gtk::manage(new Gtk::Label()); 
+                Gtk::Label* label = Gtk::manage(new Gtk::Label()); 
                 label->set_width_chars(10);
                 label->set_xalign(1);
                 label->set_text(string_format("Vehicle %02i", static_cast<int>(vehicle_id)));
                 label->show_all();
-                grid_vehicle_monitor->attach(*label, static_cast<int>(vehicle_id) + 1, 0, 1, 1);
+
+                //First put the vehicle_id in the vector that mimics the grid, in a sorted manner. Then, get_column_id can be used to get the correct row id for it.
+                auto next_highest_id = std::lower_bound(grid_vehicle_ids.begin(), grid_vehicle_ids.end(), vehicle_id);
+                auto neighbor_pos = -1; //Position of neighbor to attach next to
+                if (next_highest_id == grid_vehicle_ids.end())
+                {
+                    //Entry is higher than all other, insert at end
+                    grid_vehicle_ids.push_back(vehicle_id);
+                }
+                else
+                {
+                    //Insert before lower bound
+                    neighbor_pos = std::distance(grid_vehicle_ids.begin(), next_highest_id) + 1; //Counting starts at 1 due to row descriptions
+                    grid_vehicle_ids.insert(next_highest_id, vehicle_id);
+
+                    //Now we know that we have to insert the row
+                    grid_vehicle_monitor->insert_next_to(*(grid_vehicle_monitor->get_child_at(neighbor_pos, 0)), static_cast<Gtk::PositionType>(0));
+                }
+
+                //Remember - to add correct column later on - the added vehicle ID
+                added_ids.insert(vehicle_id);
+
+                //Attach entry to the grid
+                grid_vehicle_monitor->attach(*label, static_cast<int>(get_column_id(vehicle_id)), 0, 1, 1);
             }
         }
 
@@ -237,33 +274,38 @@ void MonitoringUi::init_ui_thread()
             auto vehicle_sensor_timeseries = entry.second;
             for (size_t i = 0; i < rows_restricted.size(); ++i)
             {
+                Gtk::Label* label = nullptr;
+
                 //Ignore rows that serve as separator -> only set empty strings there
                 if (rows_restricted[i] == "")
                 {
                     //Add empty row, which only serves as a separator for better readability
-                    Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
-
-                    if(!label)
+                    if(added_ids.find(vehicle_id) != added_ids.end())
                     {
                         label = Gtk::manage(new Gtk::Label()); 
                         label->set_width_chars(10);
                         label->set_xalign(1);
                         label->get_style_context()->add_class("small_text");
                         label->show_all();
-                        grid_vehicle_monitor->attach(*label, static_cast<int>(vehicle_id)+1, i+1, 1, 1);
+                        
+                        grid_vehicle_monitor->attach(*label, static_cast<int>(get_column_id(vehicle_id)), i+1, 1, 1);
                     }
                     continue;
                 }
 
-                Gtk::Label* label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(vehicle_id+1, i+1));
-
-                if(!label)
+                if(added_ids.find(vehicle_id) != added_ids.end())
                 {
                     label = Gtk::manage(new Gtk::Label()); 
                     label->set_width_chars(10);
                     label->set_xalign(1);
                     label->show_all();
-                    grid_vehicle_monitor->attach(*label, vehicle_id+1, i+1, 1, 1);
+                    
+                    grid_vehicle_monitor->attach(*label, get_column_id(vehicle_id), i+1, 1, 1);
+                }
+
+                if (label == nullptr)
+                {
+                    label = (Gtk::Label*)(grid_vehicle_monitor->get_child_at(get_column_id(vehicle_id), i+1));
                 }
 
                 //Special case for nuc connected, which is not in the time series (not part of vehicle data)
@@ -770,6 +812,31 @@ void MonitoringUi::init_ui_thread()
         {
             label_experiment_time->set_text("Exp time: ---");
         }
+
+        /////////////////////////////////////////////////////////////////////////
+        //Delete outdated entries
+        //To remember for which already shown vehicles data is missing - in this case, the column can be deleted
+        std::vector<uint8_t> deleted_vehicle_ids;
+        for (const auto& vehicle_id : grid_vehicle_ids)
+        {
+            //If the vehicle currently shown in the UI is no longer present in our data, its data has been removed bc it was outdated (~seconds old)
+            //Thus, we will remove this ID from the UI as well, first we aggregate all deleted IDs though
+            if (vehicle_data.find(vehicle_id) == vehicle_data.end())
+            {
+                deleted_vehicle_ids.push_back(vehicle_id);
+            }
+        }
+
+        //Delete outdated rows in the UI
+        for (const auto& vehicle_id : deleted_vehicle_ids)
+        {
+            grid_vehicle_monitor->remove_column(get_column_id(vehicle_id));
+
+            //Erase from vector as well
+            auto it = std::find(grid_vehicle_ids.begin(), grid_vehicle_ids.end(), vehicle_id);
+            assert(it != grid_vehicle_ids.end());
+            grid_vehicle_ids.erase(it);
+        }
         
     });
 
@@ -786,6 +853,7 @@ void MonitoringUi::reset_ui_thread()
     
     //Clear grid view, create new one
     viewport_monitoring->remove();
+    grid_vehicle_ids.clear();
     grid_vehicle_monitor = Gtk::manage(new Gtk::Grid());
     grid_vehicle_monitor->set_name("grid_vehicle_monitor");
     viewport_monitoring->add(*grid_vehicle_monitor);

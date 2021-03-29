@@ -182,14 +182,15 @@ void TimeSeriesAggregator::handle_new_vehicleState_samples(std::vector<VehicleSt
         timeseries_vehicles[state.vehicle_id()]["last_msg_state"]           ->push_sample(now, static_cast<double>(1e-6*now)); //Just remember the latest msg time and calculate diff in the UI
 
         //Check for deviation from expected update frequency once, reset if deviation was detected
-        auto it = last_vehicle_state_time.find(state.vehicle_id());
-        if (it != last_vehicle_state_time.end())
+        auto it = last_vehicle_state_time_dev.find(state.vehicle_id());
+        if (it != last_vehicle_state_time_dev.end())
         {
             check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
         }
 
         //Set (first time) or update the value for this ID
         last_vehicle_state_time[state.vehicle_id()] = now;
+        last_vehicle_state_time_dev[state.vehicle_id()] = now;
     }
 }
 
@@ -250,9 +251,26 @@ VehicleData TimeSeriesAggregator::get_vehicle_data() {
     //--------------------------------------------------------------------------- CHECKS ------------------------------------
     //This function is called regularly in the UI, so we make sure that everything is checked regularly just by putting the tests in here as well
     // - Check for deviations in vehicle state msgs
-    for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); ++it)
+    for (auto it = last_vehicle_state_time.begin(); it != last_vehicle_state_time.end(); /*No ++ because this depends on whether a deletion took place*/)
     {
-        check_for_deviation(now, it, expected_period_nanoseconds + allowed_deviation);
+        //We use another structure for check_for_deviation here, because that function manipulates the entries given the iterator (may set to zero)
+        auto it_dev = last_vehicle_state_time_dev.find(it->first);
+        if (it_dev != last_vehicle_state_time_dev.end())
+        {
+            check_for_deviation(now, it_dev, expected_period_nanoseconds + allowed_deviation);
+        }
+
+        //Remove entry (also from timeseries) if outdated
+        if (now - it->second > max_allowed_age)
+        {
+            last_vehicle_observation_time.erase(it->first);
+            timeseries_vehicles.erase(it->first);
+            it = last_vehicle_state_time.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
     }
     //--------------------------------------------------------------------------- ------- ------------------------------------
 
@@ -264,7 +282,18 @@ VehicleTrajectories TimeSeriesAggregator::get_vehicle_trajectory_commands() {
     std::map<uint8_t, uint64_t> trajectory_sample_age;
     vehicle_commandTrajectory_reader->get_samples(cpm::get_time_ns(), trajectory_sample, trajectory_sample_age);
 
-    //TODO: Could check for age of each sample by looking at the header & log if received trajectory commands are outdated
+    //Only return data that is not fully outdated
+    for(auto it = trajectory_sample.begin(); it != trajectory_sample.end(); /*No ++ because this depends on whether a deletion took place*/)
+    {
+        if(trajectory_sample_age.at(it->first) > max_allowed_age)
+        {
+            it = trajectory_sample.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 
     return trajectory_sample;
 }
@@ -274,7 +303,18 @@ VehiclePathTracking TimeSeriesAggregator::get_vehicle_path_tracking_commands() {
     std::map<uint8_t, uint64_t> path_tracking_sample_age;
     vehicle_commandPathTracking_reader->get_samples(cpm::get_time_ns(), path_tracking_sample, path_tracking_sample_age);
 
-    //TODO: Could check for age of each sample by looking at the header & log if received path tracking commands are outdated
+    //Only return data that is not fully outdated
+    for(auto it = path_tracking_sample.begin(); it != path_tracking_sample.end(); /*No ++ because this depends on whether a deletion took place*/)
+    {
+        if(path_tracking_sample_age.at(it->first) > max_allowed_age)
+        {
+            it = path_tracking_sample.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 
     return path_tracking_sample;
 }

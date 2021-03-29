@@ -48,13 +48,10 @@ namespace cpm
     template<typename T>
     class Writer
     {
+    private:
+    
         //! Internal DDS Writer to be abstracted
         dds::pub::DataWriter<T> dds_writer;
-
-        Writer(const Writer&) = delete;
-        Writer& operator=(const Writer&) = delete;
-        Writer(const Writer&&) = delete;
-        Writer& operator=(const Writer&&) = delete;
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
@@ -87,6 +84,11 @@ namespace cpm
         }
 
     public:
+        Writer(const Writer&) = delete;
+        Writer& operator=(const Writer&) = delete;
+        Writer(const Writer&&) = delete;
+        Writer& operator=(const Writer&&) = delete;
+        
         /**
          * \brief Constructor for a writer which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings

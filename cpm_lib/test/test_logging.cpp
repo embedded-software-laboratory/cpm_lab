@@ -55,8 +55,18 @@ TEST_CASE( "Logging" ) {
     //Create logging logs_reader
     cpm::ReaderAbstract<Log> logs_reader("log", true, true);
 
-    //Sleep 100ms to make sure that the logger reader is ready to receive messages
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Logging test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (logs_reader.matched_publications_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     //Get Stringstream version to check if the Logger treats data like a stringstream (which it should)
     std::stringstream actual_content;
@@ -127,11 +137,22 @@ TEST_CASE( "Logging" ) {
     CHECK(file_content.str().find(third_test) != std::string::npos);
 
     //Get listener data to check if it logs were received via DDS
+    //Allow for some more waiting in between, in case the network is slow during testing
+    //Here: Up to 1 second or until all data has been received
     std::vector<std::string> listener_content;
     std::string thread_id;
-    for (auto& data : logs_reader.take()) {
-        listener_content.push_back(data.content());
-        thread_id = data.id();
+    for (int i = 0; i < 10; ++i)
+    {
+        for (auto& data : logs_reader.take()) {
+            listener_content.push_back(data.content());
+            thread_id = data.id();
+        }
+
+        if (listener_content.size() < 3)
+        {
+            usleep(100000);
+        }
+        else break;
     }
 
     //Compare thread content (received messages) with desired content (order irrelevant)
