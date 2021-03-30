@@ -1,4 +1,4 @@
-function [refPath, isPathValid] = PlanRRTPath (startPose, goalPose, costmap)
+function [refPath, isPathValid, planner] = PlanRRTPath (startPose, goalPose, costmap)
     %% Path Planning
         
     startPose = [startPose.x, startPose.y, startPose.yaw];
@@ -7,7 +7,8 @@ function [refPath, isPathValid] = PlanRRTPath (startPose, goalPose, costmap)
     planner = pathPlannerRRT(costmap,...
         'GoalTolerance', [0.01 0.01 3],...
         'MinTurningRadius', 0.4,...
-        'ConnectionMethod', 'Dubins');
+        'ConnectionMethod', 'Dubins',...
+        'ConnectionDistance', 0.3);
 
     [refPath] = plan(planner,startPose,goalPose);
     isPathValid = checkPathValidity(refPath, costmap);

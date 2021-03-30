@@ -29,7 +29,7 @@ goalPose.x = 0.2;
 goalPose.y = 3.6;
 goalPose.yaw = 90;
 
-[trajectory_points, isPathValid] = planTrajectory(maxVehicleIdList, startPoses, goalPose, egoVehicleId, speed);
+[trajectory_points, isPathValid, planner, refPath] = planTrajectory(maxVehicleIdList, startPoses, goalPose, egoVehicleId, speed);
 %% Visualization
 % This code can be used to visualize generated paths when working 
 % on the functions in Matlab. Only paths are shown, not trajectories, as 
@@ -38,11 +38,11 @@ goalPose.yaw = 90;
 % function planTrajectory. Then add both arguments as outputs of function
 % PlanRRTPath, which is called in planTrajectory. 
 %
-% Fig = 1;
-% transitionPoses = interpolate(refPath);
-% figure(Fig);
-% plot(planner);
-% hold on
-% scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
-%      'DisplayName','Transition Poses')
-% hold off
+Fig = 1;
+transitionPoses = interpolate(refPath);
+figure(Fig);
+plot(planner);
+hold on
+scatter(transitionPoses(1:end-1,1),transitionPoses(1:end-1,2),[],'filled', ...
+     'DisplayName','Transition Poses')
+hold off
