@@ -449,6 +449,10 @@ public:
     std::optional<PlanningProblem> get_planning_problem(int id);
 
     /**
+     * \brief Get all lanelet IDs of the currently loaded scenario
+     */
+    std::vector<int> get_lanelet_ids();
+    /**
      * \brief Get a lanelet of the currently loaded scenario with the given ID, if it exists, else a nullopt
      */
     std::optional<Lanelet> get_lanelet(int id);

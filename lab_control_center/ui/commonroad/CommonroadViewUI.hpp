@@ -49,6 +49,7 @@
 #include <vector>
 
 #include "ProblemModelRecord.hpp"
+#include "LaneletModelRecord.hpp"
 
 /**
  * \brief This UI class is responsible for the Commonroad Tab in the LCC
@@ -109,7 +110,7 @@ private:
     //! Check button to (not) see traffic lights defined in the current scenario
     Gtk::CheckButton* check_traffic_lights;
     //! Check button to (not) see descriptions of the lanelet type within each lanelet defined in the current scenario
-    Gtk::CheckButton* check_lanelet_types;
+    Gtk::CheckButton* check_lanelet_id;
     //! Check button to (not) see the orientation of each lanelet defined in the current scenario
     Gtk::CheckButton* check_lanelet_orientation;
     //! Check button to (not) see descriptions within each initial state defined in the current scenario
@@ -152,6 +153,13 @@ private:
     ProblemModelRecord problem_record;
     //! Contains all current entries of problem_treeview
     Glib::RefPtr<Gtk::ListStore> problem_list_store;
+
+    //! Treeview that shows information about planning problems
+    Gtk::TreeView* lanelet_treeview;
+    //! TreeView "layout", data defintion to define rows
+    LaneletModelRecord lanelet_record;
+    //! Contains all current entries of problem_treeview
+    Glib::RefPtr<Gtk::ListStore> lanelet_list_store;
     
     /**
      * \brief Function to update the UI, running in ui_thread, calling the UI update dispatcher frequently
@@ -175,9 +183,17 @@ private:
      * \param keyboard_tooltip If activated by the keyboard
      * \param tooltip Reference to the GTK tooltip that will be shown
      */
-    bool tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
-    //! Variable for the reset action, to reload / reset a commonroad problem (is performed within the UI thread)
-    std::atomic_bool reload_problems;
+    bool problem_tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+    /**
+     * \brief Callback for tooltip of problem_treeview (to show full message without scrolling)
+     * \param x x coordinate of the mouse
+     * \param y y coordinate of the mouse
+     * \param keyboard_tooltip If activated by the keyboard
+     * \param tooltip Reference to the GTK tooltip that will be shown
+     */
+    bool lanelet_tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip);
+    //! Variable for the reset action, to reload / reset all tables (for problem, lanelet etc. info) (is performed within the UI thread)
+    std::atomic_bool reload_tables;
 
     //! Function to get the main window of the LCC, required e.g. to show dialogs properly
     std::function<Gtk::Window&()> get_main_window;

@@ -47,6 +47,9 @@ Lanelet::Lanelet(
 
     try
     {
+        //Get the lanelet ID
+        lanelet_id = xml_translation::get_attribute_int(node, "id", true).value();
+
         //2018 and 2020
         left_bound = translate_bound(node, "leftBound");
         right_bound = translate_bound(node, "rightBound");
@@ -550,49 +553,49 @@ std::string Lanelet::to_text(LaneletType lanelet_type)
     switch (lanelet_type)
     {
         case LaneletType::AccessRamp:
-            return "Acc";
+            return "AccessRamp";
             break;
         case LaneletType::BicycleLane:
-            return "Bic";
+            return "BicycleLane";
             break;
         case LaneletType::BusLane:
-            return "BusL";
+            return "BusLane";
             break;
         case LaneletType::BusStop:
-            return "BusS";
+            return "BusStop";
             break;
         case LaneletType::Country:
-            return "Cou";
+            return "Country";
             break;
         case LaneletType::Crosswalk:
-            return "Cro";
+            return "Crosswalk";
             break;
         case LaneletType::DriveWay:
-            return "Dri";
+            return "DriveWay";
             break;
         case LaneletType::ExitRamp:
-            return "Ex";
+            return "ExitRamp";
             break;
         case LaneletType::Highway:
-            return "Hi";
+            return "Highway";
             break;
         case LaneletType::Interstate:
-            return "Int";
+            return "Interstate";
             break;
         case LaneletType::MainCarriageWay:
-            return "Mai";
+            return "MainCarriageWay";
             break;
         case LaneletType::Sidewalk:
-            return "Sid";
+            return "Sidewalk";
             break;
         case LaneletType::Unknown:
-            return "Unk";
+            return "Unknown";
             break;
         case LaneletType::Unspecified:
-            return "Uns";
+            return "Unspecified";
             break;
         case LaneletType::Urban:
-            return "Ur";
+            return "Urban";
             break;
     }
 
@@ -604,7 +607,7 @@ std::string Lanelet::to_text(VehicleType vehicle_type)
     switch ((vehicle_type))
     {
     case VehicleType::Bicycle:
-        return "Bic";
+        return "Bicycle";
         break;
     case VehicleType::Bus:
         return "Bus";
@@ -613,22 +616,22 @@ std::string Lanelet::to_text(VehicleType vehicle_type)
         return "Car";
         break;
     case VehicleType::Motorcycle:
-        return "Mot";
+        return "Motorcycle";
         break;
     case VehicleType::Pedestrian:
-        return "Ped";
+        return "Pedestrian";
         break;
     case VehicleType::PriorityVehicle:
-        return "Pri";
+        return "PriorityVehicle";
         break;
     case VehicleType::Train:
-        return "Tra";
+        return "Train";
         break;
     case VehicleType::Truck:
-        return "Tru";
+        return "Truck";
         break;
     case VehicleType::Vehicle:
-        return "Veh";
+        return "Vehicle";
         break;
     }
 
@@ -685,6 +688,8 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     //Draw lines between points
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
+        //Draw left bound with set line marking / boundary style
+        ctx->save();
         ctx->begin_new_path();
         set_boundary_style(ctx, left_bound.line_marking, 0.03);
         ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
@@ -694,7 +699,10 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
             ctx->line_to(point.get_x() * scale, point.get_y() * scale);
         }
         ctx->stroke();
+        ctx->restore();
 
+        //Draw right bound with set line marking / boundary style
+        ctx->save();
         ctx->begin_new_path();
         set_boundary_style(ctx, right_bound.line_marking, 0.03);
         ctx->move_to(right_bound.points.at(0).get_x() * scale, right_bound.points.at(0).get_y() * scale);
@@ -704,6 +712,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
             ctx->line_to(point.get_x() * scale, point.get_y() * scale);
         }
         ctx->stroke();
+        ctx->restore();
     }
 
 
@@ -773,18 +782,13 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->stroke();
     }
 
-    //Draw time, velocity description
-    if (draw_configuration->draw_lanelet_types.load())
+    //Draw lanelet ID
+    if (draw_configuration->draw_lanelet_id.load())
     {
         ctx->save();
 
         std::stringstream descr_stream;
-        descr_stream << "T: " << to_text(lanelet_type);
-
-        if (speed_limit.has_value())
-        {
-            descr_stream << " | Speed: " << speed_limit.value();
-        }
+        descr_stream << "ID: " << lanelet_id;
         
         //Move to lanelet center for text, draw centered around it, rotate by angle of lanelet
         auto center = get_center();
@@ -797,13 +801,7 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->restore();
     }
 
-    //TODO: Draw user restrictions somehow?
-    if (user_one_way.size() > 0 || user_bidirectional.size() > 0)
-    {
-        std::stringstream error_stream;
-        error_stream << "User restrictions (one way / bidirectional) are currently not drawn for lanelets, from line " << commonroad_line;
-        LCCErrorLogger::Instance().log_error(error_stream.str());
-    }
+    //Type, speed, user restriction etc. are all shown in a table within the UI, if present, w.r.t. the lanelet ID
 
     ctx->restore();
 }
@@ -971,4 +969,60 @@ std::vector<Point> Lanelet::get_shape()
     }
 
     return shape;
+}
+
+std::string Lanelet::get_speed_limit()
+{
+    std::stringstream speed_limit_stream;
+    if (speed_limit.has_value())
+    {
+        speed_limit_stream << speed_limit.value();
+    }
+
+    return speed_limit_stream.str();
+}
+
+std::string Lanelet::get_lanelet_type()
+{
+    return to_text(lanelet_type);
+}
+
+std::string Lanelet::get_user_one_way()
+{
+    std::stringstream user_stream;
+    for (size_t i = 0; i < user_one_way.size(); ++i)
+    {
+        user_stream << to_text(user_one_way[i]);
+
+        if (i < user_one_way.size() - 1)
+        {
+            user_stream << ", ";
+        }
+    }
+
+    return user_stream.str();
+}
+
+std::string Lanelet::get_user_bidirectional()
+{
+    std::stringstream user_stream;
+    for (size_t i = 0; i < user_bidirectional.size(); ++i)
+    {
+        user_stream << to_text(user_bidirectional[i]);
+
+        if (i < user_bidirectional.size() - 1)
+        {
+            user_stream << ", ";
+        }
+    }
+
+    return user_stream.str();
+}
+
+bool Lanelet::has_relevant_table_info()
+{
+    return user_bidirectional.size() > 0
+        || user_one_way.size() > 0
+        || speed_limit.has_value()
+        || (lanelet_type != LaneletType::Unspecified && lanelet_type != LaneletType::Unknown);
 }

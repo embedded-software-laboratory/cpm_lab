@@ -1122,6 +1122,21 @@ std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
     return std::nullopt;
 }
 
+std::vector<int> CommonRoadScenario::get_lanelet_ids()
+{
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
+    std::vector<int> ids;
+    for (const auto& entry : lanelets)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
 
 std::optional<Lanelet> CommonRoadScenario::get_lanelet(int id)
 {

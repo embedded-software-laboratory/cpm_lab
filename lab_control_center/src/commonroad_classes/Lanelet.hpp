@@ -147,9 +147,9 @@ private:
     std::vector<int> predecessors;
     //! Lanelet references to successors of the lanelet, multiple possible e.g. in case of a fork
     std::vector<int> successors;  
-    //! Adjacent lanelets on the left, optional
+    //! Adjacent lanelet on the left, optional
     std::optional<Adjacent> adjacent_left = std::nullopt; 
-    //! Adjacent lanelets on the right, optional
+    //! Adjacent lanelet on the right, optional
     std::optional<Adjacent> adjacent_right = std::nullopt;
     //! Stop line on the lanelet, optional
     std::optional<StopLine> stop_line = std::nullopt;
@@ -168,6 +168,9 @@ private:
 
     //! Remember line in commonroad file for logging
     int commonroad_line = 0;
+
+    //! ID of the lanelet
+    int lanelet_id;
 
     //! Look up in draw if some parts should be drawn or not
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
@@ -344,4 +347,30 @@ public:
      * \return Polygon of lanelet shape
      */
     std::vector<Point> get_shape();
+
+    //For table entries
+    /**
+     * \brief Get the lanelet speed limit or an empty string
+     */
+    std::string get_speed_limit();
+
+    /**
+     * \brief Get the lanelet type
+     */
+    std::string get_lanelet_type();
+
+    /**
+     * \brief Get the lanelet one way users (list in string)
+     */
+    std::string get_user_one_way();
+
+    /**
+     * \brief Get the lanelet bidirectional users (list in string)
+     */
+    std::string get_user_bidirectional();
+
+    /**
+     * \brief A lanelet should only appear in the table if its type or other information is more than just unspecified
+     */
+    bool has_relevant_table_info();
 };

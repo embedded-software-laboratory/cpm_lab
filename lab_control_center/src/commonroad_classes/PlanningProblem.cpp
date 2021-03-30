@@ -51,7 +51,7 @@ PlanningProblem::PlanningProblem(
         std::vector<GoalState> goal_states;
         std::vector<int> goal_state_lines;
 
-        //Get the lanelet ID to tell it to the goal states (to be able to show the user the goal state ID in the UI)
+        //Get the planning problem ID to tell it to the goal states (to be able to show the user the goal state ID in the UI)
         planning_problem_id = xml_translation::get_attribute_int(node, "id", true).value();
 
         xml_translation::iterate_children(
