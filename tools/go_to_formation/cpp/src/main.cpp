@@ -67,14 +67,18 @@
 using std::vector;
 
 void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses);
+void set_goal_poses_from_argc(vector<mgen::Pose2D> &poses, vector<double> &x, vector<double> &y, vector<double> &yaw);
+void sample_to_matlabType(std::map<uint8_t, VehicleObservation> &sample, 
+                          mgen::struct0_T (&vehiclePoses)[256], std::vector<uint8_t> &vehicle_ids);
 int find_veh_index(vector<uint8_t> &vehicle_ids, int ego_vehicle_id);
 
+//mgen::struct0_T vehiclePoses_data[256]
 
 int main(int argc, char *argv[])
 {
 
   //Initialize cpm library
-  const std::string node_id = "mlib_test";
+  const std::string node_id = "go_to_formation";
   cpm::init(argc, argv);
   cpm::Logging::Instance().set_id(node_id);
   const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
@@ -111,6 +115,13 @@ int main(int argc, char *argv[])
       vehicle_ids
   );
 
+  // Take goal poses from command line arguments
+  vector<double> goal_poses_x = cpm::cmd_parameter_doubles("x", {0.0}, argc, argv);
+  vector<double> goal_poses_y = cpm::cmd_parameter_doubles("y", {0.0}, argc, argv);
+  vector<double> goal_poses_yaw = cpm::cmd_parameter_doubles("yaw", {0.0}, argc, argv);
+
+  std::cout << "length x: " << goal_poses_x.size() << std::endl;
+
   // Initialization of variables needed as arguments by matlab generated function
   double vehicleIdList_data[256];
   int vehicleIdList_size[2];
@@ -129,9 +140,26 @@ int main(int argc, char *argv[])
   }
   vehicleIdList_size[1] = 20;
 
-  // Setting of home poses
+  // Setting of goal poses
   vector<mgen::Pose2D> goal_poses; // Needs to be initialized as Matlab defined type via argInit_Pose2D(), done here in set_home_poses
-  set_home_poses(20, goal_poses);
+
+  //TODO: More sophisticated check of cmd args needed
+  if(goal_poses_x.size() == 1){
+
+    set_home_poses(20, goal_poses);
+  }
+  else if(goal_poses_x.size() == vehicle_ids.size() &&
+          goal_poses_y.size() == vehicle_ids.size() &&
+          goal_poses_yaw.size() == vehicle_ids.size()){
+
+    set_goal_poses_from_argc(goal_poses, goal_poses_x, goal_poses_y, goal_poses_yaw);
+  }
+  else{
+    std::cout << "Poses passed as command line arguments are not valid.";
+    return 1;
+  }
+  
+  
  
   // Initialization of variables needed for main behaviour
   // Flags
@@ -154,7 +182,7 @@ int main(int argc, char *argv[])
   
   
    //////////////Go to formation trajectory planning/////////////////////////////////
-  auto timer = cpm::Timer::create("mlib_test", dt_nanos, 0, false, true, enable_simulated_time); 
+  auto timer = cpm::Timer::create("go_to_formation", dt_nanos, 0, false, true, enable_simulated_time); 
   timer->start([&](uint64_t t_now)
   {
 
@@ -203,35 +231,9 @@ int main(int argc, char *argv[])
         std::map<uint8_t, VehicleObservation> ips_sample;
         std::map<uint8_t, uint64_t> ips_sample_age;
         ips_reader.get_samples(t_now, ips_sample, ips_sample_age);                
-
         
-        //sample_to_matlabType(ips_sample, vehiclePoses_data, vehicle_ids);
-        {
-            vector<std::pair<int, Pose2D>> help_vector;
-            int new_id;
-            Pose2D new_pose;
-
-            // Transformation of sample into format needed by matlab generated function                
-            for(auto i = ips_sample.begin(); i != ips_sample.end(); i++){
-              auto data = i->second;
-              help_vector.emplace_back(data.vehicle_id(), data.pose());
-            }
-
-            for(int i = 0; i < vehicle_ids.size(); i++){
-              new_id = help_vector[i].first;
-              new_pose = help_vector[i].second;
-
-              // Conversion from rad[-pi,pi] to deg [0, 4pi] (+360° used to get only positive angles)
-              double new_yaw = 360 + new_pose.yaw()*180/M_PI; 
-              
-              vehiclePoses_data[i].vehicle_id = new_id;
-              vehiclePoses_data[i].pose.x = new_pose.x();
-              vehiclePoses_data[i].pose.y = new_pose.y();
-              vehiclePoses_data[i].pose.yaw = new_yaw;
-            }
-        }
-        
-
+        sample_to_matlabType(ips_sample, vehiclePoses_data, vehicle_ids);
+      
         int index = find_veh_index(vehicle_ids, ego_vehicle_id);
 
         std::cout << "index: " << index << std::endl;
@@ -250,7 +252,7 @@ int main(int argc, char *argv[])
         if(is_path_valid){
             trajectory_points.clear();
 
-          for (size_t i = 0; i < len; ++i)
+          for (int i = 0; i < len; ++i)
           {
             TrajectoryPoint trajectory_point;
             trajectory_point.px(generated_trajectory[i].px);
@@ -337,10 +339,24 @@ void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses)
     }
 }
 
+// Setting vehicle goal poses to cmd line args 
+void set_goal_poses_from_argc(vector<mgen::Pose2D> &poses, vector<double> &x, vector<double> &y, vector<double> &yaw){
+  
+  mgen::Pose2D pose = argInit_Pose2D();
 
-/*
+  for(uint8_t i = 0; i < x.size(); i++){
+      
+      pose.x = x[i];
+      pose.y = y[i];
+      pose.yaw = yaw[i];
+      poses.push_back(pose);
+  }
+
+}
+
+
 void sample_to_matlabType(std::map<uint8_t, VehicleObservation> &sample, 
-                          mgen::struct0_T &vehiclePoses, std::vector<uint8_t> &vehicle_ids)
+                          mgen::struct0_T (&vehiclePoses)[256], std::vector<uint8_t> &vehicle_ids)
 {
         vector<std::pair<int, Pose2D>> help_vector;
         int new_id;
@@ -365,7 +381,7 @@ void sample_to_matlabType(std::map<uint8_t, VehicleObservation> &sample,
           vehiclePoses[i].pose.yaw = new_yaw;
         }
 }
-*/
+
 
 int find_veh_index(vector<uint8_t> &vehicle_ids, int ego_vehicle_id)
 {
