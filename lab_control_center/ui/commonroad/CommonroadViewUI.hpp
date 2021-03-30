@@ -112,6 +112,8 @@ private:
     Gtk::CheckButton* check_lanelet_types;
     //! Check button to (not) see the orientation of each lanelet defined in the current scenario
     Gtk::CheckButton* check_lanelet_orientation;
+    //! Check button to (not) see descriptions within each initial state defined in the current scenario
+    Gtk::CheckButton* check_initial_state;
     //! Check button to (not) see descriptions within each goal state defined in the current scenario
     Gtk::CheckButton* check_goal_description;
     //! Check button to (not) see descriptions within each obstacle defined in the current scenario

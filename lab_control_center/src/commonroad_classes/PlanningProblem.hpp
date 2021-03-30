@@ -84,6 +84,9 @@ private:
     //! Required for drawing
     int planning_problem_id;
 
+    //! Draw configuration to know if the init state description should be drawn
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure

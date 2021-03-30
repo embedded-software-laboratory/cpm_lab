@@ -36,7 +36,8 @@ PlanningProblem::PlanningProblem(
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
     std::function<std::pair<double, double> (int)> _get_lanelet_center,
     std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
-    )
+    ) :
+    draw_configuration(_draw_configuration)
 {
     //Check if node is of type planningProblem
     assert(node->get_name() == "planningProblem");
@@ -194,6 +195,8 @@ void PlanningProblem::transform_timing(double time_scale)
 
 void PlanningProblem::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
+    assert(draw_configuration);
+
     ctx->save();
 
     //Perform required translation + rotation
@@ -209,12 +212,15 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
         problem.initial_state->draw(ctx, scale, 0, 0, 0, local_orientation);
 
         //Draw initial state description (planning problem ID)
-        ctx->save();
-        std::stringstream descr_stream;
-        descr_stream << "ID (" << planning_problem_id << "." << problem_pos << "): ";
-        problem.initial_state->transform_context(ctx, scale);
-        draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
-        ctx->restore();
+        if (draw_configuration->draw_init_state.load())
+        {
+            ctx->save();
+            std::stringstream descr_stream;
+            descr_stream << "ID (" << planning_problem_id << "." << problem_pos << "): ";
+            problem.initial_state->transform_context(ctx, scale);
+            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+            ctx->restore();
+        }
 
         //Draw goal state + description
         ctx->set_source_rgba(1.0,0.5,0.8, 0.3);

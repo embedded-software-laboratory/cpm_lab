@@ -64,6 +64,7 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("check_traffic_lights", check_traffic_lights);
     builder->get_widget("check_lanelet_types", check_lanelet_types);
     builder->get_widget("check_lanelet_orientation", check_lanelet_orientation);
+    builder->get_widget("check_initial_state", check_initial_state);
     builder->get_widget("check_goal_description", check_goal_description);
     builder->get_widget("check_obstacle_description", check_obstacle_description);
 
@@ -90,6 +91,7 @@ CommonroadViewUI::CommonroadViewUI
     assert(check_traffic_lights);
     assert(check_lanelet_types);
     assert(check_lanelet_orientation);
+    assert(check_initial_state);
     assert(check_goal_description);
     assert(check_obstacle_description);
 
@@ -165,6 +167,16 @@ CommonroadViewUI::CommonroadViewUI
                 auto draw_configuration = commonroad_scenario->get_draw_configuration();
                 assert(draw_configuration);
                 draw_configuration->draw_goal_description.store(check_goal_description->get_active());
+            }
+        }
+    );
+    check_initial_state->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_init_state.store(check_initial_state->get_active());
             }
         }
     );

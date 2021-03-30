@@ -49,6 +49,8 @@ struct CommonroadDrawConfiguration
     std::atomic_bool draw_lanelet_orientation{false};
     //! Sets if goal descriptions should be drawn on the goal states in the LCC Map View
     std::atomic_bool draw_goal_description{false};
+    //! Sets if initial state descriptions should be drawn on the goal states in the LCC Map View
+    std::atomic_bool draw_init_state{false};
     //! Sets if obstacle descriptions should be drawn on the obstacles in the LCC Map View
     std::atomic_bool draw_obstacle_description{false};
 };
