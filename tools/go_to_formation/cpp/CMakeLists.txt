@@ -38,6 +38,7 @@ target_include_directories(go_to_formation PRIVATE
 target_link_libraries(go_to_formation ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
 target_link_libraries(go_to_formation /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so 
                                       /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so 
-                                      /usr/local/MATLAB/R2020a/bin/glnxa64/libiom.so)                                                                          
+                                      /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so
+)                                                                          
 target_link_libraries(go_to_formation cpm)
 
