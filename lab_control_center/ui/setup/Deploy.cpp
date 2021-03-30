@@ -248,6 +248,41 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
     }
     vehicle_ids_stream << active_vehicle_ids.at(active_vehicle_ids.size() - 1);
 
+    // Update middleware QOS
+    std::string qos_path_in = std::getenv("HOME");
+    qos_path_in.append("/dev/software/middleware/QOS_LOCAL_COMMUNICATION.xml.template");
+    std::ifstream xml_qos_template(qos_path_in);
+    
+    std::string xml_qos_str;
+    {
+        std::stringstream buffer;
+        if (xml_qos_template.is_open()) {
+            buffer << xml_qos_template.rdbuf();
+        }
+        xml_qos_template.close();
+        xml_qos_str = buffer.str();
+    }
+
+    // extract public IP of current machine from cmd_dds_initial_peer
+    std::smatch ip_matched;
+    std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    std::string ip_string;
+    bool is_ip_contained = std::regex_search (cmd_dds_initial_peer,ip_matched,ip_regex);
+    assert(is_ip_contained);
+    ip_string = ip_matched.str(0);
+    xml_qos_str = std::regex_replace(
+        xml_qos_str,
+        std::regex("TEMPLATE_IP"),
+        ip_string
+    );
+
+    std::string qos_path_out = std::getenv("HOME");
+    qos_path_out.append("/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml");
+    std::ofstream xml_qos(qos_path_out);
+    xml_qos << xml_qos_str;
+
+    xml_qos.close();
+
     //Generate command
     std::stringstream middleware_command;
     middleware_command 
