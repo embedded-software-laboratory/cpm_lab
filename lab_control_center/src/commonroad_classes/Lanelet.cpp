@@ -672,7 +672,6 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
 {
     assert(draw_configuration);
 
-    //Current state: Only draw boundaries
     //Local orientation does not really make sense here, so it is ignored
     ctx->save();
 
@@ -682,17 +681,6 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     ctx->rotate(global_orientation);
 
     ctx->set_line_width(0.005);
-
-    //Draw points - I do not know why save() and restore() exist, but we cannot pause drawing a line and do something else between even though they are used in Point
-    //Thus, points must be drawn before the line is drawn
-    // for (auto point : left_bound.points)
-    // {
-    //     point.draw(ctx, scale);
-    // }
-    // for (auto point : right_bound.points)
-    // {
-    //     point.draw(ctx, scale);
-    // }
 
     //Draw lines between points
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
@@ -719,13 +707,21 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     }
 
 
-   if (draw_configuration->draw_lanelet_orientation.load()) {
-        //Draw arrows for lanelet orientation
+    //Draw arrows for lanelet orientation
+   if (draw_configuration->draw_lanelet_orientation.load())
+    {
         //These things must be true, or else the program should already have thrown an error before / the calculation above is wrong
         assert(left_bound.points.size() == right_bound.points.size());
         size_t arrow_start_pos = 0;
         size_t arrow_end_pos = 1;
-        ctx->set_source_rgba(0.0, 0.0, 0.0, 0.05);
+
+        //Set arrow color
+        ctx->set_source_rgba(0.0, 0.0, 0.0, 0.1);
+
+        //Use another form for bidirectional lanelets - TODO @Max: Filter by User?
+        bool is_bidirectional = user_bidirectional.size() > 0;
+
+        //Draw arrows
         while (arrow_end_pos < left_bound.points.size())
         {
             double x_1 = (0.5 * left_bound.points.at(arrow_start_pos).get_x() + 0.5 * right_bound.points.at(arrow_start_pos).get_x());
@@ -733,7 +729,31 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
             double x_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_x() + 0.5 * right_bound.points.at(arrow_end_pos).get_x());
             double y_2 = (0.5 * left_bound.points.at(arrow_end_pos).get_y() + 0.5 * right_bound.points.at(arrow_end_pos).get_y());
 
-            draw_arrow(ctx, x_1, y_1, x_2, y_2, scale);
+            //Don't draw an arrow for bidirectional users, but another form
+            //Drawing nothing would be confusing (arrows don't always have the same distance, so this could be misinterpreted)
+            if (!is_bidirectional)
+            {
+                draw_arrow(ctx, x_1, y_1, x_2, y_2, scale * 0.33); //0.33 because they are a bit too large
+            }
+            else
+            {
+                ctx->save();
+
+                ctx->set_source_rgba(0.0, 0.0, 0.0, 0.2);
+
+                double center_x = 0.5 * x_1 + 0.5 * x_2;
+                double center_y = 0.5 * y_1 + 0.5 * y_2;
+                double radius = 0.1 * std::max(abs(x_2 - x_1), abs(y_2 - y_1));
+
+                //Move to center
+                ctx->move_to(center_x, center_y);
+
+                //Draw circle
+                ctx->arc(center_x, center_y, radius * scale, 0.0, 2 * M_PI);
+                ctx->stroke();
+
+                ctx->restore();
+            }
 
             ++arrow_start_pos;
             ++arrow_end_pos;
