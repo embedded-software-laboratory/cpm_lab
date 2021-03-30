@@ -132,28 +132,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             program_executor->execute_command(command.str());
         }
 
-        //Check if old session already exists - if so, kill it
-        kill_session(middleware_session);
-
-        //Generate command to start the middleware
-        std::stringstream middleware_command;
-        middleware_command 
-            << "tmux new-session -d "
-            << "-s \"" << middleware_session << "\" "
-            << "\". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;./middleware"
-            << " --node_id=middleware"
-            << " --simulated_time=" << sim_time_string
-            << " --vehicle_ids=" << vehicle_ids_stream.str()
-            << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
-            middleware_command 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
-        }
-        middleware_command 
-            << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
-
-        //Execute command
-        program_executor->execute_command(middleware_command.str());
+        deploy_middleware(sim_time_string, vehicle_ids_stream);
     }
 }
 
@@ -238,9 +217,6 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         program_executor->execute_command(command.str());
     }
 
-    //Check if old session already exists - if so, kill it
-    kill_session("middleware");
-
     std::stringstream vehicle_ids_stream;
     for (size_t index = 0; index < active_vehicle_ids.size() - 1; ++index)
     {
@@ -248,10 +224,30 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
     }
     vehicle_ids_stream << active_vehicle_ids.at(active_vehicle_ids.size() - 1);
 
+    deploy_middleware(sim_time_string, vehicle_ids_stream);
+}
+
+void Deploy::kill_separate_local_hlcs() 
+{
+    for( unsigned int hlc : deployed_local_hlcs ) {
+        std::string session_name = "high_level_controller_";
+        session_name += std::to_string(hlc);
+        kill_session(session_name);
+    }
+    kill_session(middleware_session);
+    deployed_local_hlcs.clear();
+}
+
+void Deploy::deploy_middleware(std::string sim_time_string, std::stringstream& vehicle_ids_stream)
+{
+    //Check if old session already exists - if so, kill it
+    kill_session(middleware_session);
+
     // Update middleware QOS
     std::string qos_path_in = std::getenv("HOME");
     qos_path_in.append("/dev/software/middleware/QOS_LOCAL_COMMUNICATION.xml.template");
     std::ifstream xml_qos_template(qos_path_in);
+    assert(xml_qos_template.good());
     
     std::string xml_qos_str;
     {
@@ -262,8 +258,9 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         xml_qos_template.close();
         xml_qos_str = buffer.str();
     }
+    assert(xml_qos_template.good());
 
-    // extract public IP of current machine from cmd_dds_initial_peer
+    // extract IP of current machine from cmd_dds_initial_peer
     std::smatch ip_matched;
     std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     std::string ip_string;
@@ -279,7 +276,9 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
     std::string qos_path_out = std::getenv("HOME");
     qos_path_out.append("/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml");
     std::ofstream xml_qos(qos_path_out);
+    assert(xml_qos.good());
     xml_qos << xml_qos_str;
+    assert(xml_qos.good());
 
     xml_qos.close();
 
@@ -302,17 +301,6 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
 
     //Execute command
     program_executor->execute_command(middleware_command.str());
-}
-
-void Deploy::kill_separate_local_hlcs() 
-{
-    for( unsigned int hlc : deployed_local_hlcs ) {
-        std::string session_name = "high_level_controller_";
-        session_name += std::to_string(hlc);
-        kill_session(session_name);
-    }
-    kill_session("middleware");
-    deployed_local_hlcs.clear();
 }
 
 void Deploy::deploy_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids, bool use_simulated_time) 
