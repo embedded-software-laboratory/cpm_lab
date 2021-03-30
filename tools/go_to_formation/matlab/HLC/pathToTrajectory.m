@@ -57,7 +57,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
         trajectory_points(nPoints).py = intermittingPoses(nPoints-1, 2); % [m]
         trajectory_points(nPoints).vx = cosd(intermittingPoses(nPoints-1, 3)) * speed; % [m/s]
         trajectory_points(nPoints).vy = sind(intermittingPoses(nPoints-1, 3)) * speed; % [m/s]
-        trajectory_points(nPoints).t  = trajectory_points(2).t +...
+        trajectory_points(nPoints).t  = trajectory_points(nPoints-1).t +...
                                         allSegmentLengths(nPoints-1) / speed * 1e9; % [ns]
     end
 

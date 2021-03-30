@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Mex files generated for code analysis by matlab
+matlab/Coder/codegen/mex/
+
 # User-specific files
 *.rsuser
 *.suo
