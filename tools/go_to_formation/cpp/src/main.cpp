@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
         vehicle_command_trajectory.vehicle_id(ego_vehicle_id);
         vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
         vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-        vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 1000000000ull);
+        vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 500000000ull);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
     } 
   
