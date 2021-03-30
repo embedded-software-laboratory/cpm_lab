@@ -26,13 +26,6 @@
 
 #pragma once
 
-/**
- * \class Writer.hpp
- * \brief Creates a DDS Writer that can be used for writing / publishing messages
- * This encapsulation allows for changes e.g. in the participant or QoS without 
- * the need to change the implementation across the whole project
- */
-
 #include <dds/pub/ddspub.hpp>
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_topic.hpp"
@@ -46,18 +39,19 @@
 namespace cpm
 {
     /**
-     * \brief Class Writer
-     * Use this to get a simple writer with a write() function for writing messages
+     * \class Writer
+     * \brief Creates a DDS Writer that can be used for writing / publishing messages
+     * This encapsulation allows for changes e.g. in the participant or QoS without 
+     * the need to change the implementation across the whole project
+     * \ingroup cpmlib
      */
     template<typename T>
     class Writer
     {
+    private:
+    
+        //! Internal DDS Writer to be abstracted
         dds::pub::DataWriter<T> dds_writer;
-
-        Writer(const Writer&) = delete;
-        Writer& operator=(const Writer&) = delete;
-        Writer(const Writer&&) = delete;
-        Writer& operator=(const Writer&&) = delete;
 
         /**
          * \brief Returns qos for the settings s.t. the constructor becomes more readable
@@ -90,6 +84,11 @@ namespace cpm
         }
 
     public:
+        Writer(const Writer&) = delete;
+        Writer& operator=(const Writer&) = delete;
+        Writer(const Writer&&) = delete;
+        Writer& operator=(const Writer&&) = delete;
+        
         /**
          * \brief Constructor for a writer which is communicating within the ParticipantSingleton
          * Allows to set the topic name and some QoS settings
@@ -138,6 +137,10 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Send a message in the DDS network using the writer
+         * \param msg The message to send
+         */
         void write(T msg)
         {
             dds_writer.write(msg);

@@ -33,13 +33,33 @@
 #include "spi.h"
 #include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 
+/**
+ * \file spi.c
+ * \ingroup vehicle
+ */
+
+/**
+ * \brief TODO
+ * \param spi_miso_data TODO
+ * \ingroup vehicle
+ */
 static bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
     uint16_t mosi_CRC = spi_miso_data.CRC;
     spi_miso_data.CRC = 0;
     return mosi_CRC == crcFast((uint8_t*)(&spi_miso_data), sizeof(spi_miso_data_t));
 }
 
+/**
+ * \brief TODO
+ * \ingroup vehicle
+ */
 static volatile int dummy = 0;
+
+/**
+ * \brief TODO
+ * \param n TODO
+ * \ingroup vehicle
+ */
 static void busy_wait(int n) {
     for (int i = 0; i < n; ++i)
     {

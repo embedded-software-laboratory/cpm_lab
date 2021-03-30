@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/State.hpp"
 
+/**
+ * \file State.cpp
+ * \ingroup lcc_commonroad
+ */
+
 State::State(const xmlpp::Node* node)
 {
     //Check if node is of type state

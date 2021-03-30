@@ -24,7 +24,14 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+/**
+ * \struct Point2D
+ * \brief 2D point without rotation
+ * \ingroup cpmlib_idl
+ */
 struct Point2D {
+    //! x position
     double x;    
+    //! y position
     double y;    
 };

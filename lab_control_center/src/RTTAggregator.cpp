@@ -26,6 +26,11 @@
 
 #include "RTTAggregator.hpp"
 
+/**
+ * \file RTTAggregator.cpp
+ * \ingroup lcc
+ */
+
 RTTAggregator::RTTAggregator()
 {
     create_rtt_thread();

@@ -57,10 +57,13 @@
  * \struct TrafficSignPost
  * \brief Specifies a traffic sign element
  * The commonroad XML file specifies specific string values, this restriction is not applied here (for simplicity)
+ * \ingroup lcc_commonroad
  */
 struct TrafficSignPost
 {
+    //! ID of the sign post, relating to the IDs defined in the commonroad specs e.g. for a speed limit sign
     std::string traffic_sign_id;
+    //! Optional additional values, e.g. the speed limit
     std::vector<std::string> additional_values;
 };
 
@@ -68,11 +71,15 @@ struct TrafficSignPost
  * \struct TrafficSignElement
  * \brief Specifies a traffic sign post
  * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
+ * \ingroup lcc_commonroad
  */
 struct TrafficSignElement
 {
+    //! List of traffic signs at the traffic sign's position
     std::vector<TrafficSignPost> traffic_sign_posts;
-    std::optional<Position> position = std::nullopt; //Must be exact according to spec! Ptr because we do not have a default constructor
+    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
+    std::optional<Position> position = std::nullopt;
+    //! If the traffic sign only exists virtually, not physically
     std::vector<bool> is_virtual;
 };
 
@@ -81,14 +88,17 @@ struct TrafficSignElement
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic sign specified in an XML file
  * 2020 only! (Not specified in 2018 specs)
+ * \ingroup lcc_commonroad
  */
 class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
+    //! List of traffic signs with the same ID
     std::vector<TrafficSignElement> traffic_sign_elements;
+    //! ID of the traffic sign(s)
     int id;
 
-    //Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
+    //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
 
 public:
@@ -107,7 +117,10 @@ public:
      * \brief This function is used to fit the imported XML scenario to a given min. lane width
      * The lane with min width gets assigned min. width by scaling the whole scenario up until it fits
      * This scale value is used for the whole coordinate system
-     * \param scale The factor by which to transform all number values related to position
+     * \param scale The factor by which to transform all number values related to position, or the min lane width (for commonroadscenario) - 0 means: No transformation desired
+     * \param angle Rotation of the coordinate system, around the origin, w.r.t. right-handed coordinate system (according to commonroad specs), in radians
+     * \param translate_x Move the coordinate system's origin along the x axis by this value
+     * \param translate_y Move the coordinate system's origin along the y axis by this value
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
@@ -127,5 +140,8 @@ public:
     void draw(const DrawingContext& ctx, double scale = 1.0, double global_orientation = 0.0, double global_translate_x = 0.0, double global_translate_y = 0.0, double local_orientation = 0.0) override;
 
     //Getter
+    /**
+     * \brief Get the stored list of traffic signs with the same ID
+     */
     const std::vector<TrafficSignElement>& get_traffic_sign_elements() const;
 };

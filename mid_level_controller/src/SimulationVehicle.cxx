@@ -29,6 +29,11 @@
 #include <math.h>
 #include <iostream>
 
+/**
+ * \file SimulationVehicle.cxx
+ * \ingroup vehicle
+ */
+
 extern "C" {
 #include "../../low_level_controller/vehicle_atmega2560_firmware/crc.h"
 }
@@ -131,7 +136,7 @@ VehicleState SimulationVehicle::update(
         cpm::Logging::Instance().write(
             1,
             "Warning: Simulation: Collision with vehicle %u at time %llu.", 
-            colli.first, colli.second);
+            static_cast<unsigned int>(colli.first), colli.second);
     }
     // Erase trajectory points which are older than 0.5 seconds
     const uint64_t past_threshold_time = t_now - 500000000ull;

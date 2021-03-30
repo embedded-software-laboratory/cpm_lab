@@ -28,7 +28,7 @@
 % queries {JSON} formatted sample of vehicle state and vehicle pose.
 
 % todo filtern nach valid stamp beim auslesen der db (WHERE)
-function [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = ...
+function ddsJsonSample = ...
     dbConnection(dds_domain, recording_file)
 
 assert(isfile(recording_file));
@@ -41,11 +41,24 @@ getVehicleStateJsonSample = ['SELECT rti_json_sample FROM "vehicleState@', ...
 getVehiclePoseJsonSample = ['SELECT rti_json_sample FROM "vehicleObservation@', ...
                             num2str(dds_domain), ...
                             '"'];
+getVehicleCommandPathTrackingJsonSample = ['SELECT rti_json_sample FROM "vehicleCommandPathTracking@', ...
+                            num2str(dds_domain), ...
+                            '"'];
 
 % Apply SQLite queries to database and fetch corresponding data.
-ddsVehicleStateJsonSample = fetch(conn,getVehicleStateJsonSample);
-ddsVehiclePoseJsonSample = fetch(conn,getVehiclePoseJsonSample);
+ddsJsonSample = struct;
+ddsJsonSample.VehicleState = robustFetch(conn,getVehicleStateJsonSample);
+ddsJsonSample.VehiclePose = robustFetch(conn,getVehiclePoseJsonSample);
+ddsJsonSample.VehicleCommandPathTracking = robustFetch(conn,getVehicleCommandPathTrackingJsonSample);
 
-save ('dds_json_sample', 'ddsVehicleStateJsonSample', 'ddsVehiclePoseJsonSample')
+save ('dds_json_sample', 'ddsJsonSample')
 
+end
+
+function result = robustFetch(conn, sqlquery)
+try
+	result = fetch(conn, sqlquery);
+catch
+	result = [];
+end
 end

@@ -25,7 +25,7 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 /**
- * \class main.cpp
+ * \file main.cpp
  * \brief This file includes a reader that receives NUC messages
  */
 

@@ -28,6 +28,11 @@
 #include "DetectVehicles.hpp"
 #include "cpm/Logging.hpp"
 
+/**
+ * \test Tests TODO 
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_0_points_SHOULD_not_crash")
 {
     // Setup
@@ -50,6 +55,11 @@ TEST_CASE("TEST_apply_WITH_0_points_SHOULD_not_crash")
     CHECK(vehicle_points_act.vehicles.size()==vehicle_points_exp.vehicles.size());
 }
 
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_3_points_of_1_vehicle_SHOULD_detect_1_vehicle")
 {
     // Setup    
@@ -88,7 +98,11 @@ TEST_CASE("TEST_apply_WITH_3_points_of_1_vehicle_SHOULD_detect_1_vehicle")
     CHECK(vehicle_points_act.vehicles[0].front == vehicle_points_exp.vehicles[0].front);
 }
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_4_points_of_1_vehicle_translated_SHOULD_detect_1_vehicle")
 {
     // Setup
@@ -136,7 +150,11 @@ TEST_CASE("TEST_apply_WITH_4_points_of_1_vehicle_translated_SHOULD_detect_1_vehi
     CHECK(vehicle_points_act.vehicles[0].front == vehicle_points_exp.vehicles[0].front);
 }
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_4_points_of_1_vehicle_translated_and_rotated_SHOULD_detect_1_vehicle")
 {
     // Setup
@@ -194,7 +212,11 @@ TEST_CASE("TEST_apply_WITH_4_points_of_1_vehicle_translated_and_rotated_SHOULD_d
     CHECK(vehicle_points_act.vehicles[0].front == vehicle_points_exp.vehicles[0].front);
 }
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_SHOULD_detect_2_vehicles")
 {
     // Setup
@@ -275,7 +297,11 @@ TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_SHOULD_detect_2_vehicles")
 }
 
 
-
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_4_points_1_vehicle_and_ghost_vehicle_SHOULD_detect_0_vehicle")
 {
     /**          vehicle 1
@@ -323,6 +349,11 @@ TEST_CASE("TEST_apply_WITH_4_points_1_vehicle_and_ghost_vehicle_SHOULD_detect_0_
     CHECK(vehicle_points_act.vehicles.size()==0);
 }
 
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_7_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detect_2_vehicles")
 {
     /**     vehicle 1       vehicle 2
@@ -398,6 +429,11 @@ TEST_CASE("TEST_apply_WITH_7_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detec
             vehicle_points_act.vehicles[1].center == vehicle_points_exp.vehicles[1].center)));
 }
 
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detect_2_vehicles")
 {
     /**     vehicle 1   vehicle 2
@@ -477,6 +513,11 @@ TEST_CASE("TEST_apply_WITH_8_points_of_2_vehicles_and_ghost_vehicle_SHOULD_detec
             vehicle_points_act.vehicles[1].center == vehicle_points_exp.vehicles[0].center)));
 }
 
+/**
+ * \test TODO
+ * TODO
+ * \ingroup ips
+ */
 TEST_CASE("TEST_apply_WITH_8_points_of_2_rotated_vehicles_and_ghost_vehicle_SHOULD_detect_2_vehicles")
 {
     /**     vehicle 1   vehicle 2

@@ -26,6 +26,11 @@
 
 #include "SensorCalibration.hpp"
 
+/**
+ * \file SensorCalibration.cxx
+ * \ingroup vehicle
+ */
+
 
 VehicleState SensorCalibration::convert(spi_miso_data_t spi_miso_data) {
     const double odometer_meter_per_step = 0.0031225604996;

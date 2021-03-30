@@ -68,7 +68,10 @@ using std::vector;
 
 #include "bcm2835.h"
 
-
+/**
+ * \brief Main function of the vehicle software, for real and simulated usage
+ * \ingroup vehicle
+ */
 int main(int argc, char *argv[])
 {
     //rti::config::Logger::instance().verbosity(rti::config::Verbosity::STATUS_ALL);

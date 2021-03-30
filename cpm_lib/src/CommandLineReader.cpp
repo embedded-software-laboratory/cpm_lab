@@ -26,6 +26,11 @@
 
 #include "cpm/CommandLineReader.hpp"
 
+/**
+ * \file CommandLineReader.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
     bool cmd_parameter_bool(std::string name, bool default_value, int argc, char *argv[]) {

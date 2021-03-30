@@ -26,10 +26,16 @@
 
 #include "Deploy.hpp"
 
-Deploy::Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle) :
+Deploy::Deploy(
+    unsigned int _cmd_domain_id, 
+    std::string _cmd_dds_initial_peer, 
+    std::function<void(uint8_t)> _stop_vehicle, 
+    std::shared_ptr<ProgramExecutor> _program_executor
+) :
     cmd_domain_id(_cmd_domain_id),
     cmd_dds_initial_peer(_cmd_dds_initial_peer),
-    stop_vehicle(_stop_vehicle)
+    stop_vehicle(_stop_vehicle),
+    program_executor(_program_executor)
 {
 
 }
@@ -120,10 +126,10 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 return;
             }
 
-            std::cout << command.str() << std::endl;
+            //std::cout << command.str() << std::endl;
 
             //Execute command
-            system(command.str().c_str());
+            program_executor->execute_command(command.str());
         }
 
         //Check if old session already exists - if so, kill it
@@ -147,7 +153,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
             << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
 
         //Execute command
-        system(middleware_command.str().c_str());
+        program_executor->execute_command(middleware_command.str());
     }
 }
 
@@ -220,16 +226,16 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             return;
         }
 
-        std::cout << command.str() << std::endl;
+        //std::cout << command.str() << std::endl;
 
         // Debugging only
-        std::string test_string = command.str();
+        //std::string test_string = command.str();
 
         //Document, that we started this HLC
         deployed_local_hlcs.push_back(vehicle_id);
 
         //Execute command
-        system(command.str().c_str());
+        program_executor->execute_command(command.str());
     }
 
     //Check if old session already exists - if so, kill it
@@ -260,7 +266,7 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         << " >~/dev/lcc_script_logs/stdout_middleware.txt 2>~/dev/lcc_script_logs/stderr_middleware.txt\"";
 
     //Execute command
-    system(middleware_command.str().c_str());
+    program_executor->execute_command(middleware_command.str());
 }
 
 void Deploy::kill_separate_local_hlcs() 
@@ -310,7 +316,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
 
     //Execute command
     //TODO: (nach Besprechung, ob das so okay ist) - nutze fork/execl/kill um das abbrechen zu können (merke PIDs, breche bei Kill ab)
-    system(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 void Deploy::stop_vehicles(std::vector<unsigned int> vehicle_ids)
@@ -368,13 +374,9 @@ void Deploy::reboot_real_vehicle(unsigned int vehicle_id, unsigned int timeout_s
                 //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                 std::stringstream command_kill_real_vehicle;
                 command_kill_real_vehicle 
-                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\"";
-                bool msg_success = spawn_and_manage_process(command_kill_real_vehicle.str().c_str(), timeout_seconds, 
-                    [] () { 
-                        //Ignore the check if the vehicle is still online
-                        return true; 
-                    }
-                );
+                    << "sshpass -p cpmcpmcpm ssh -o StrictHostKeyChecking=no -o ConnectTimeout=" << (timeout_seconds + 10) << " -t pi@" << ip << " \"sudo reboot now\""
+                    << " >~/dev/lcc_script_logs/stdout_vehicle_reboot.txt 2>~/dev/lcc_script_logs/stderr_vehicle_reboot.txt";
+                bool msg_success = program_executor->execute_command(command_kill_real_vehicle.str().c_str(), timeout_seconds);
 
                 if(!msg_success)
                 {
@@ -426,13 +428,9 @@ void Deploy::reboot_hlcs(std::vector<uint8_t> hlc_ids, unsigned int timeout_seco
                     //We want a too long connect timeout to be able to detect connection errors (if it takes too long, assume that connection was not possible)
                     std::stringstream command_reboot_hlc;
                     command_reboot_hlc 
-                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\"";
-                    bool msg_success = spawn_and_manage_process(command_reboot_hlc.str().c_str(), timeout_seconds, 
-                        [] () { 
-                            //Ignore the check if the HLC is still online
-                            return true; 
-                        }
-                    );
+                        << "sshpass ssh -o ConnectTimeout=" << (timeout_seconds + 10) << " -t guest@" << ip << " \"sudo reboot\""
+                        << " >~/dev/lcc_script_logs/stdout_hlc_reboot.txt 2>~/dev/lcc_script_logs/stderr_hlc_reboot.txt";
+                    bool msg_success = program_executor->execute_command(command_reboot_hlc.str().c_str(), timeout_seconds);
 
                     if(!msg_success)
                     {
@@ -487,7 +485,7 @@ void Deploy::join_finished_hlc_reboot_threads()
     }
 }
 
-bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online) 
+bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds) 
 {
     // //TODO: WORK WITH TEMPLATE STRINGS AND PUT LOGIC INTO SEPARATE CLASS
 
@@ -543,13 +541,14 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
     copy_command << "~/dev/software/lab_control_center/bash/copy_to_remote.bash --ip=" << ip_stream.str() 
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
-        << " --middleware_arguments='" << middleware_argument_stream.str() << "'";
+        << " --middleware_arguments='" << middleware_argument_stream.str() << "'"
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_deploy.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_deploy.txt";
 
     //Spawn and manage new process
-    return spawn_and_manage_process(copy_command.str().c_str(), timeout_seconds, is_online);
+    return program_executor->execute_command(copy_command.str().c_str(), timeout_seconds);
 }
 
-bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online) 
+bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds) 
 {
     //Get the IP address from the current id
     std::stringstream ip_stream;
@@ -562,10 +561,11 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, 
 
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
-    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str();
+    kill_command << "~/dev/software/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str()
+        << " >~/dev/lcc_script_logs/stdout_remote_hlc_kill.txt 2>~/dev/lcc_script_logs/stderr_remote_hlc_kill.txt";
 
     //Spawn and manage new process
-    return spawn_and_manage_process(kill_command.str().c_str(), timeout_seconds, is_online);
+    return program_executor->execute_command(kill_command.str().c_str(), timeout_seconds);
 }
 
 void Deploy::deploy_ips() 
@@ -605,13 +605,37 @@ void Deploy::deploy_ips()
         << " >~/dev/lcc_script_logs/stdout_basler.txt 2>~/dev/lcc_script_logs/stderr_basler.txt\"";
 
     //Execute command
-    system(command_ips.str().c_str());
-    system(command_basler.str().c_str());
+    program_executor->execute_command(command_ips.str());
+    program_executor->execute_command(command_basler.str());
 }
 
 void Deploy::kill_ips() {
     kill_session(ips_session);
     kill_session(basler_session);
+}
+
+
+void Deploy::deploy_labcam(std::string path, std::string file_name){
+    //Check if old session already exists - if so, kill it
+    kill_session(labcam_session);
+
+    //Generate command
+    std::stringstream command;
+    command
+        << "tmux new-session -d "
+        << "-s \"" << labcam_session << "\" "
+        << "\"cd ~/dev/software/lab_control_center/build/labcam;./labcam_recorder "
+        << " --path=" << path
+        << " --file_name=" << file_name
+        << " >~/dev/lcc_script_logs/stdout_labcam.txt 2>~/dev/lcc_script_logs/stderr_labcam.txt\"";
+    
+    //Execute command
+    system(command.str().c_str());
+}
+
+
+void Deploy::kill_labcam() {
+    kill_session(labcam_session);
 }
 
 
@@ -680,11 +704,12 @@ void Deploy::deploy_recording()
         << "-s \"" << recording_session << "\" "
         << "rtirecordingservice "
         << "-cfgFile " << config_path_out << " "
-        << "-cfgName cpm_recorder";
+        << "-cfgName cpm_recorder" << " "
+        << ">~/dev/lcc_script_logs/stdout_recording.txt 2>~/dev/lcc_script_logs/stderr_recording.txt";
     
-    std::cout << command.str() << std::endl;
+    //std::cout << command.str() << std::endl;
     //Execute command
-    system(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 void Deploy::kill_recording() 
@@ -696,20 +721,29 @@ void Deploy::kill_recording()
 
 bool Deploy::session_exists(std::string session_id)
 {
-    std::string running_sessions = execute_command("tmux ls");
+    std::string running_sessions = program_executor->get_command_output("tmux ls");
     session_id += ":";
+
+    if (running_sessions.find("ERROR") != std::string::npos)
+    {
+        std::cerr << "Could not determine running sessions, assuming no crash..." << std::endl;
+        return true;
+    }
+
     return running_sessions.find(session_id) != std::string::npos;
 }
 
 std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
+    //std::cout << "Gets called with: " << script_started << ", " << deploy_remote << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
     std::vector<std::string> crashed_participants;
-    if (!deploy_remote && has_local_hlc && script_started)
+    if ((!(deploy_remote) || has_local_hlc))
     {
         if (script_started)
         {
             if(! session_exists(hlc_session)) crashed_participants.push_back("HLC");
         }
+
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
     if (deploy_remote && has_local_hlc && script_started)
@@ -729,7 +763,8 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     }
     if (check_for_recording)
     {
-        if(! session_exists(recording_session)) crashed_participants.push_back("Recording");
+        if(! session_exists(recording_session)) crashed_participants.push_back("DDS Recording");
+        if(! session_exists(labcam_session)) crashed_participants.push_back("LabCam");
     }
 
     return crashed_participants;
@@ -741,26 +776,12 @@ void Deploy::kill_session(std::string session_id)
     {
         std::stringstream command;
         command 
-            << "tmux kill-session -t \"" << session_id << "\"";
+            << "tmux kill-session -t \"" << session_id << "\""
+            << " >~/dev/lcc_script_logs/stdout_tmux_kill.txt 2>~/dev/lcc_script_logs/stderr_tmux_kill.txt";
 
         //Execute command
-        system(command.str().c_str());
+        program_executor->execute_command(command.str());
     }
-}
-
-std::string Deploy::execute_command(const char* cmd) 
-{
-    //Code from stackoverflow
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("Could not use popen - deployment failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
 }
 
 void Deploy::get_path_name(std::string& in, std::string& out_path, std::string& out_name)
@@ -798,138 +819,5 @@ void Deploy::create_log_folder(std::string name)
         << "mkdir -p ~/dev/" << name;
 
     //Execute command
-    system(command_folder.str().c_str());
-}
-
-bool Deploy::spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online)
-{
-    cpm::Logging::Instance().write(3, "Executing '%s'", cmd);
-
-    //Spawn and manage new process
-    int process_id = execute_command_get_pid(cmd);
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    auto time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-    //Regularly check status during execution until timeout - exit early if everything worked as planned, else run until error / timeout and return error
-    while (time_passed_ms < static_cast<int64_t>(timeout_seconds) * 1000)
-    {
-        //Check current program state
-        PROCESS_STATE state = get_child_process_state(process_id);
-
-        if (state == PROCESS_STATE::DONE)
-        {
-            cpm::Logging::Instance().write(3, "Success: execution of '%s'", cmd);
-            return true;
-        }
-        else if (state == PROCESS_STATE::ERROR)
-        {
-            kill_process(process_id);
-            cpm::Logging::Instance().write(2, "Error state in execution of '%s'", cmd);
-            return false;
-        }
-        else if (! is_online())
-        {
-            //The HLC is no longer online, so abort
-            kill_process(process_id);
-            cpm::Logging::Instance().write(2, "No longer online - stopped execution of '%s'", cmd);
-            return false;
-        }
-
-        //Use longer sleep time until short before end of timeout
-        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-        auto remaining_time = static_cast<int64_t>(timeout_seconds) * 1000 - time_passed_ms;
-        if (remaining_time > 1000)
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        else if (remaining_time > 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(remaining_time));
-        }
-        
-        time_passed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
-    }
-
-    //Now kill the process, as it has not yet finished its execution
-    //std::cout << "Killing" << std::endl;
-    kill_process(process_id);
-    cpm::Logging::Instance().write(2, "Could not execute in time: '%s'", cmd);
-    return false;
-}
-
-int Deploy::execute_command_get_pid(const char* cmd)
-{
-    int process_id = fork();
-    if (process_id == 0)
-    {
-        //Tell the child to set its group process ID to its process ID, or else things like kill(-pid) to kill a ping-while-loop won't work
-        setpgid(0, 0);
-        
-        //Actions to take within the new child process
-        //ACHTUNG: NUTZE chmod u+x für die Files, sonst: permission denied
-        execl("/bin/sh", "bash", "-c", cmd, NULL);
-
-        //Error if execlp returns
-        cpm::Logging::Instance().write(1, "Execl error in Deploy class: %s, for execution of '%s'", std::strerror(errno), cmd);
-
-        exit(1);
-    }
-    else if (process_id > 0)
-    {
-        //We are in the parent process and got the child's PID
-        return process_id;
-    }
-    else 
-    {
-        //We could not spawn a new process - usually, the program should not just break at this point, unless that behaviour is desired
-        //TODO: Change behaviour
-        cpm::Logging::Instance().write(1, "Error in Deploy class: Could not create child process for '%s'", cmd);
-        exit(1);
-    }
-}
-
-Deploy::PROCESS_STATE Deploy::get_child_process_state(int process_id)
-{
-    int process_status;
-    pid_t result = waitpid(process_id, &process_status, WNOHANG);
-
-    if (result == 0)
-    {
-        return PROCESS_STATE::RUNNING;
-    }
-    else if (result == -1)
-    {
-        return PROCESS_STATE::ERROR;
-    }
-    else
-    {
-        return PROCESS_STATE::DONE;
-    }
-    
-}
-
-void Deploy::kill_process(int process_id)
-{
-    //Tell the process to terminate - this way, it can terminate gracefully
-    //We mostly use bash, were whole process groups might be created - to kill those, we need the negative id
-    if (process_id > 0)
-    {
-        process_id *= (-1);
-    }
-
-    kill(process_id, SIGTERM);
-
-    //Wait for the process to terminate
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-
-    //Check if the process terminated as desired
-    PROCESS_STATE state = get_child_process_state(process_id);
-
-    //If the process has not yet terminated, force a termination and clean up
-    if (state != PROCESS_STATE::DONE)
-    {
-        kill(process_id, SIGKILL);
-        int status;
-        waitpid(process_id, &status, 0); //0 -> no flags here
-    }
+    program_executor->execute_command(command_folder.str());
 }

@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/geometry/Position.hpp"
 
+/**
+ * \file Position.cpp
+ * \ingroup lcc_commonroad
+ */
+
 Position::Position(const xmlpp::Node* node)
 {
     //Check if node is of type position
