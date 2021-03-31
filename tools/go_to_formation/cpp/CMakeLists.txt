@@ -27,6 +27,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(go_to_formation 
                src/main.cpp 
                src/mgen_init.cpp
+               src/go_to_formation.cpp
 )
 target_include_directories(go_to_formation PRIVATE 
                            ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory

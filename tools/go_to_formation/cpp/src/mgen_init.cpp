@@ -68,19 +68,6 @@ mgen::Pose2D argInit_Pose2D()
   return result;
 }
 
-//
-// Arguments    : double b_x
-//                double b_y
-//                double b_yaw
-// Return Type  : void
-
-/*
-void Pose2D::init(double b_x, double b_y, double b_yaw)
-{
-  this->x = b_x;
-  this->y = b_y;
-  this->yaw = b_yaw;
-}*/
 
 //
 // Arguments    : void

@@ -65,7 +65,7 @@ int go_to_formation(int argc, char *argv[])
     std::string vehicle_ids_string = vehicle_ids_stream.str();
     std::cout << vehicle_ids_string << std::endl;
 
-    //////////////Initialization for trajectory planning/////////////////////////////////
+    //////////////Initialization for trajectory planning/////////////////////////////////////////////
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     const uint64_t dt_nanos = 400000000ull;
     
@@ -126,7 +126,7 @@ int go_to_formation(int argc, char *argv[])
     coder::array<mgen::struct1_T, 1U> generated_trajectory;
 
     // Driving speed of vehicles [m/s]
-    double speed = 1.0; 
+    const double speed = 1.0; 
     
     argInit_1xd256_real_T(vehicleIdList_data, vehicleIdList_size);
     argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
@@ -135,6 +135,7 @@ int go_to_formation(int argc, char *argv[])
         vehicleIdList_data[i] = i+1;
     }
     vehicleIdList_size[1] = 20;
+
 
     ////////////////////// Setting of goal poses////////////////////////////
     vector<mgen::Pose2D> goal_poses;
@@ -160,6 +161,7 @@ int go_to_formation(int argc, char *argv[])
         return 1;
     }
     
+
     ////////////////////Initialization of variables needed for main behaviour//////////////////
     // Flags
     bool planning_started = false;
@@ -178,7 +180,8 @@ int go_to_formation(int argc, char *argv[])
     
     int ego_vehicle_id = 1;
     vector<TrajectoryPoint> trajectory_points;
-       
+
+
     //////////////Go to formation trajectory planning///////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
     auto timer = cpm::Timer::create("go_to_formation", dt_nanos, 0, false, true, enable_simulated_time); 
@@ -285,190 +288,6 @@ int go_to_formation(int argc, char *argv[])
             // If there is a currently valid trajectory, send it again.
             if(trajectory_is_active){
 
-                    std::cout << "sending trajectory" << std::endl;
-                    // Send the current trajectory
-                    rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
-                    VehicleCommandTrajectory vehicle_command_trajectory;
-                    vehicle_command_trajectory.vehicle_id(ego_vehicle_id);
-                    vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
-                    vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-                    vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 200000000ull);
-                    writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
-
-            } 
-        
-        
-    });
-
-    std::cout << "Finished" << std::endl;
-    // Terminate the Matlab application.
-    mgen::planTrajectory_terminate();
-    return 0;es [m/s]
-    double speed = 1.0; 
-    
-    argInit_1xd256_real_T(vehicleIdList_data, vehicleIdList_size);
-    argInit_1xd256_struct0_T(vehiclePoses_data, vehiclePoses_size);
-
-    // List of possibly used vehicles
-    for (int i = 0; i < 20; i++) {
-        vehicleIdList_data[i] = i+1;
-    }
-    vehicleIdList_size[1] = 20;
-
-    /////////////////////////// Setting of goal poses///////////////////
-    vector<mgen::Pose2D> goal_poses; // Needs to be initialized as Matlab defined type via argInit_Pose2D(), done here in set_home_poses
-    
-    // Take goal poses from command line arguments
-    vector<double> goal_poses_x = cpm::cmd_parameter_doubles("x", {0.0}, argc, argv);
-    vector<double> goal_poses_y = cpm::cmd_parameter_doubles("y", {0.0}, argc, argv);
-    vector<double> goal_poses_yaw = cpm::cmd_parameter_doubles("yaw", {0.0}, argc, argv);
-
-    //TODO: More sophisticated check of cmd args needed
-    // If goal poses have been passed as cmd args, use these. Else use home poses at upper left corner of map.
-    if(goal_poses_x.size() == 1){
-
-        set_home_poses(20, goal_poses);
-    }
-    else if(goal_poses_x.size() == vehicle_ids.size() &&
-            goal_poses_y.size() == vehicle_ids.size() &&
-            goal_poses_yaw.size() == vehicle_ids.size()){
-
-        set_goal_poses_from_argc(goal_poses, goal_poses_x, goal_poses_y, goal_poses_yaw);
-    }
-    else{
-        std::cout << "Poses passed as command line arguments are not valid.";
-        return 1;
-    }
-    
-    /////////////////Initialization of variables needed for main behaviour//////////////////
-    // Flags
-    bool planning_started = false;
-    bool trajectory_is_active = false;
-    boolean_T is_path_valid; // Used by matlab generated function
-    bool stop_now = false;
-
-    // Time tracking
-    uint64_t reference_time;
-    uint64_t invalid_after_stamp;
-
-    // Vehicle tracking
-    vector<uint8_t> active_vehicle_ids = vehicle_ids; // Vector of vehicles that have to be positioned
-    vector<uint8_t> pending_vehicle_ids; // Vector of vehicles, that could not be positioned at last try
-    vector<uint8_t> old_pending_vehicle_ids; // Vector of vehicles that could not be positioned at forelast try
-    
-
-    int ego_vehicle_id = 1;
-    vector<TrajectoryPoint> trajectory_points;
-    
-    
-    //////////////Go to formation trajectory planning//////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    auto timer = cpm::Timer::create("go_to_formation", dt_nanos, 0, false, true, enable_simulated_time); 
-    timer->start([&](uint64_t t_now)
-    {
-
-            // At first timeout set 't_now' as reference time
-            if(! planning_started){
-                    reference_time = t_now;
-                    invalid_after_stamp = reference_time;
-                    planning_started = true;
-            }
-            
-
-            // Check if lastly sent trajectory is still valid
-            if(t_now >= invalid_after_stamp){
-                    trajectory_is_active = false;
-            }
-
-            
-            // If no valid trajectory present check termination criterion and calculate new trajectory if necessary
-            if(! trajectory_is_active){
-
-                    // Check if there are still vehicles to be positioned.
-                    if(active_vehicle_ids.empty()){
-
-                            if(pending_vehicle_ids.empty()){
-
-                                    std::cout << "All vehicles in position. Stopping timer." << std::endl;
-                                    timer->stop();
-                                    stop_now = true;
-                            }
-                            else if(pending_vehicle_ids == old_pending_vehicle_ids){
-
-                                    std::cout << "All vehicles in position or unmovable. Stopping timer." << std::endl;
-                                    timer->stop();
-                                    stop_now = true;
-                            }
-                            else{   // There are still vehicles to be positioned, which were not movable the last time,
-                                    // e.g. because they were blocked by other vehicles.
-                                    active_vehicle_ids = pending_vehicle_ids;
-                                    old_pending_vehicle_ids = pending_vehicle_ids;
-                                    pending_vehicle_ids.clear();
-                            }
-                    }
-            
-                    // Generate a new trajectory
-                    if(! stop_now){
-                        
-                            ego_vehicle_id = active_vehicle_ids[0];
-                            generated_trajectory.clear();
-
-                            std::map<uint8_t, VehicleObservation> ips_sample;
-                            std::map<uint8_t, uint64_t> ips_sample_age;
-                            ips_reader.get_samples(t_now, ips_sample, ips_sample_age);                
-                            
-                            sample_to_matlab_type(ips_sample, vehiclePoses_data, vehicle_ids);
-
-                            // Find index of ego vehicle in vehicle_ids to choose 'goal_pose' by this index
-                            int index = find_veh_index(vehicle_ids, ego_vehicle_id);
-
-                            // Call trajectroy planning function
-                            // If a valid trajectory could be planned, 'is_path_valid' = true
-                            mgen::planTrajectory(vehicleIdList_data, vehicleIdList_size, vehiclePoses_data,
-                                                vehiclePoses_size, &goal_poses[index], ego_vehicle_id, speed,
-                                                generated_trajectory, &is_path_valid);
-                            
-                            auto len = *(generated_trajectory).size();
-                            std::cout << "path validity: " << (is_path_valid == 1) << std::endl;
-                        
-
-                            // If calculated trajectory is valid, turn into DDS formatted vector of trajectory points
-                            if(is_path_valid){
-                                    
-                                    trajectory_points.clear();
-
-                                    for (int i = 0; i < len; ++i)
-                                    {
-                                            TrajectoryPoint trajectory_point;
-                                            trajectory_point.px(generated_trajectory[i].px);
-                                            trajectory_point.py(generated_trajectory[i].py);
-                                            trajectory_point.vx(generated_trajectory[i].vx);
-                                            trajectory_point.vy(generated_trajectory[i].vy);
-                                            trajectory_point.t().nanoseconds(generated_trajectory[i].t + t_now);
-                                            trajectory_points.push_back(trajectory_point);
-                                    } 
-                                    // Define timestamp, until which current trajectory should be sent
-                                    invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
-                                    std::cout << "invalid after: " << invalid_after_stamp << std::endl;
-                                    trajectory_is_active = true;
-                                    active_vehicle_ids.erase(active_vehicle_ids.begin());
-                            }
-                            // If no valid path was generated, remember vehicle to try again later
-                            else{
-                                    trajectory_is_active = false;
-                                    pending_vehicle_ids.push_back(active_vehicle_ids[0]);
-                                    active_vehicle_ids.erase(active_vehicle_ids.begin());
-                            }
-                        
-                    }
-
-            }
-
-            // If there is a currently valid trajectory, send it again.
-            if(trajectory_is_active){
-
-                    std::cout << "sending trajectory" << std::endl;
-                    // Send the current trajectory
                     rti::core::vector<TrajectoryPoint> rti_trajectory_points(trajectory_points);
                     VehicleCommandTrajectory vehicle_command_trajectory;
                     vehicle_command_trajectory.vehicle_id(ego_vehicle_id);
@@ -486,7 +305,6 @@ int go_to_formation(int argc, char *argv[])
     // Terminate the Matlab application.
     mgen::planTrajectory_terminate();
     return 0;
-
 }
 
 
