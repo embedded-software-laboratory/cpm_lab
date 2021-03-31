@@ -68,7 +68,7 @@ using std::vector;
 
 void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses);
 void set_goal_poses_from_argc(vector<mgen::Pose2D> &poses, vector<double> &x, vector<double> &y, vector<double> &yaw);
-void sample_to_matlabType(std::map<uint8_t, VehicleObservation> &sample, 
+void sample_to_matlab_type(std::map<uint8_t, VehicleObservation> &sample, 
                           mgen::struct0_T (&vehiclePoses)[256], std::vector<uint8_t> &vehicle_ids);
 int find_veh_index(vector<uint8_t> &vehicle_ids, int ego_vehicle_id);
 
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
         std::map<uint8_t, uint64_t> ips_sample_age;
         ips_reader.get_samples(t_now, ips_sample, ips_sample_age);                
         
-        sample_to_matlabType(ips_sample, vehiclePoses_data, vehicle_ids);
+        sample_to_matlab_type(ips_sample, vehiclePoses_data, vehicle_ids);
       
         int index = find_veh_index(vehicle_ids, ego_vehicle_id);
 
@@ -355,7 +355,7 @@ void set_goal_poses_from_argc(vector<mgen::Pose2D> &poses, vector<double> &x, ve
 }
 
 
-void sample_to_matlabType(std::map<uint8_t, VehicleObservation> &sample, 
+void sample_to_matlab_type(std::map<uint8_t, VehicleObservation> &sample, 
                           mgen::struct0_T (&vehiclePoses)[256], std::vector<uint8_t> &vehicle_ids)
 {
         vector<std::pair<int, Pose2D>> help_vector;
