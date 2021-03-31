@@ -49,6 +49,7 @@
 #include "commonroad_classes/Intersection.hpp"
 #include "commonroad_classes/StaticObstacle.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
+#include "commonroad_classes/EnvironmentObstacle.hpp"
 #include "commonroad_classes/PlanningProblem.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
@@ -192,6 +193,8 @@ private:
     std::map<int, StaticObstacle> static_obstacles;
     //! All scenario dynamic obstacles, stored by ID
     std::map<int, DynamicObstacle> dynamic_obstacles;
+    //! All scenario environment obstacles, stored by ID
+    std::map<int, EnvironmentObstacle> environment_obstacles;
     //! All scenario planning problems, stored by ID
     std::map<int, PlanningProblem> planning_problems;
 
@@ -429,6 +432,15 @@ public:
      * \brief Get a dynamic obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
      */
     std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
+
+    /**
+     * \brief Get all IDs of environment obstacles of the currently loaded scenario
+     */
+    std::vector<int> get_environment_obstacle_ids();
+    /**
+     * \brief Get a environment obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
+    std::optional<EnvironmentObstacle> get_environment_obstacle(int id);
 
     /**
      * \brief Get all IDs of static obstacles of the currently loaded scenario

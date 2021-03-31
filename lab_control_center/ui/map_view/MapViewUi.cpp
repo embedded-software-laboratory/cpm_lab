@@ -1201,6 +1201,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::Train:
                     description_stream << "Train: ";
                     break;
+                case ObstacleType::Taxi:
+                    description_stream << "Taxi: ";
+                    break;
                 case ObstacleType::ConstructionZone:
                     description_stream << "Constr: ";
                     break;
@@ -1210,11 +1213,17 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::RoadBoundary:
                     description_stream << "Boundary: ";
                     break;
-                case ObstacleType::Taxi:
-                    description_stream << "Taxi: ";
+                case ObstacleType::Building:
+                    description_stream << "Building: ";
+                    break;
+                case ObstacleType::Pillar:
+                    description_stream << "Pillar: ";
+                    break;
+                case ObstacleType::MedianStrip:
+                    description_stream << "Median: ";
                     break;
                 default:
-                    description_stream << "TODO: ";
+                    throw std::runtime_error("Programming Error in MapViewUI: Unsupported Obstacle Type");
                     break;
             }
             description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle

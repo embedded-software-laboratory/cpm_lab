@@ -39,6 +39,7 @@
 enum ObstacleType 
 {
     Unknown=0,
+    //Dynamic
     Car, 
     Truck, 
     Bus, 
@@ -47,11 +48,16 @@ enum ObstacleType
     Pedestrian, 
     PriorityVehicle, 
     Train,
+    Taxi,
+    //Static
     ParkedVehicle, 
     ConstructionZone, 
     RoadBoundary,
-    Taxi
-}; //TODO: Think about whether static obstacles need to be represented this way
+    //Environment
+    Building,
+    Pillar,
+    MedianStrip
+}; //Contains types of all obstacle types (dynamic, static, environment)
 
 
 /**

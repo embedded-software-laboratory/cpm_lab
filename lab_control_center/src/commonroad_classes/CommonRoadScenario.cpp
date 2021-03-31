@@ -94,6 +94,7 @@ void CommonRoadScenario::clear_data()
     intersections.clear();
     static_obstacles.clear();
     dynamic_obstacles.clear();
+    environment_obstacles.clear();
     planning_problems.clear();
 
     if (reset_obstacle_sim_manager)
@@ -201,7 +202,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         file_is_loading.store(false);
         throw SpecificationError("Translation failed / Invalid XML file chosen. Time step size must be set. Translation will not be used.");
     }
-    else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && planning_problems.size() == 0)
+    else if (lanelets.size() == 0 && traffic_signs.size() == 0 && traffic_lights.size() == 0 && intersections.size() == 0 && static_obstacles.size() == 0 && dynamic_obstacles.size() == 0 && environment_obstacles.size() == 0 && planning_problems.size() == 0)
     {
         //Check if all relevant fields are empty - reset the object in that case as well
         std::cerr << "WARNING: All relevant data fields are empty (except for version / author / affiliation)." << std::endl;
@@ -364,6 +365,15 @@ void CommonRoadScenario::translate_element(const xmlpp::Node* node)
             DynamicObstacle(
                 node,
                 std::bind(&CommonRoadScenario::draw_lanelet_ref, this, _1, _2, _3, _4, _5, _6)
+            )}
+        );
+    }
+    else if (node_name.compare("environmentObstacle") == 0)
+    {
+        environment_obstacles.insert({
+            xml_translation::get_attribute_int(node, "id", true).value(), 
+            EnvironmentObstacle(
+                node
             )}
         );
     }
@@ -633,6 +643,11 @@ void CommonRoadScenario::transform_coordinate_system_helper(double translate_x, 
         for (auto &dynamic_obstacle : dynamic_obstacles)
         {
             dynamic_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
+        }
+
+        for (auto &environment_obstacle : environment_obstacles)
+        {
+            environment_obstacle.second.transform_coordinate_system(scale, angle, translate_x, translate_y);
         }
 
         for (auto &planning_problem : planning_problems)
@@ -1057,6 +1072,36 @@ std::optional<DynamicObstacle> CommonRoadScenario::get_dynamic_obstacle(int id)
     if (dynamic_obstacles.find(id) != dynamic_obstacles.end())
     {
         return std::optional<DynamicObstacle>(dynamic_obstacles.at(id));
+    }
+    return std::nullopt;
+}
+
+std::vector<int> CommonRoadScenario::get_environment_obstacle_ids()
+{
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
+    std::vector<int> ids;
+    for (const auto& entry : environment_obstacles)
+    {
+        ids.push_back(entry.first);
+    }
+
+    return ids;
+}
+
+std::optional<EnvironmentObstacle> CommonRoadScenario::get_environment_obstacle(int id)
+{
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
+    if (environment_obstacles.find(id) != environment_obstacles.end())
+    {
+        return std::optional<EnvironmentObstacle>(environment_obstacles.at(id));
     }
     return std::nullopt;
 }
