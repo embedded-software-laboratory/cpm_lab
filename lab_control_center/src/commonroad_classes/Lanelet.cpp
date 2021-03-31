@@ -537,12 +537,12 @@ void Lanelet::set_boundary_style(const DrawingContext& ctx, std::optional<LineMa
         }
 
         //Set line color for unknown and no_marking (the latter should still be shown to the user, but almost-white)
-        if (line_marking.value() == LineMarking::Unknown)
+        /* if (line_marking.value() == LineMarking::Unknown)
         {
             //More red
             ctx->set_source_rgb(0.9,0.4,0.4);
         }
-        else if (line_marking.value() == LineMarking::NoMarking)
+        else*/ if (line_marking.value() == LineMarking::NoMarking)
         {
             //Almost-transparent
             ctx->set_source_rgba(0.5,0.5,0.5,0.1);
@@ -707,10 +707,23 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
     //Draw lines between points
     if (left_bound.points.size() > 0 && right_bound.points.size() > 0)
     {
+        //From the Commonroad specs: All laterally adjacent lanes have the same length -> 
+        //if we want to modify the boundary based on adjacent lanes, we just need to check
+        //the content of adjacent
+
         //Draw left bound with set line marking / boundary style
         ctx->save();
         ctx->begin_new_path();
         set_boundary_style(ctx, left_bound.line_marking, 0.03);
+        if (adjacent_left.has_value())
+        {
+            //Adjust boundary style to make adjacency to other lanelet more visible
+            if (adjacent_left->direction == DrivingDirection::Same)
+            {
+                //Adjacent lanelet boundaries are drawn in blue
+                ctx->set_source_rgb(0.03, 0.65, 0.74);
+            }
+        }
         ctx->move_to(left_bound.points.at(0).get_x() * scale, left_bound.points.at(0).get_y() * scale);
         for (auto point : left_bound.points)
         {
@@ -724,6 +737,15 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         ctx->save();
         ctx->begin_new_path();
         set_boundary_style(ctx, right_bound.line_marking, 0.03);
+        if (adjacent_right.has_value())
+        {
+            //Adjust boundary style to make adjacency to other lanelet more visible
+            if (adjacent_right->direction == DrivingDirection::Same)
+            {
+                //Adjacent lanelet boundaries are drawn in blue
+                ctx->set_source_rgb(0.03, 0.65, 0.74);
+            }
+        }
         ctx->move_to(right_bound.points.at(0).get_x() * scale, right_bound.points.at(0).get_y() * scale);
         for (auto point : right_bound.points)
         {
