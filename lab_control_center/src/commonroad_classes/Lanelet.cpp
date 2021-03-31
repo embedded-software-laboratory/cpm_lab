@@ -292,79 +292,91 @@ std::optional<StopLine> Lanelet::translate_stopline(const xmlpp::Node* node, std
     return std::nullopt;
 }
 
-LaneletType Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
+std::vector<LaneletType> Lanelet::translate_lanelet_type(const xmlpp::Node* node, std::string name)
 {
-    //get_child_child_text is not used here to be able to show the line where the error occured if the value matches none of the enumeration values
-    const auto lanelet_type_node = xml_translation::get_child_if_exists(node, name, false);
-    if (lanelet_type_node)
-    {
-        std::string lanelet_type_string = xml_translation::get_first_child_text(lanelet_type_node);
+    std::vector<LaneletType> lanelet_vector;
 
-        if (lanelet_type_string.compare("urban") == 0)
+    //Fill vector with existing values
+    xml_translation::iterate_children(
+        node, 
+        [&] (const xmlpp::Node* child) 
         {
-            return LaneletType::Urban;
-        }
-        else if (lanelet_type_string.compare("interstate") == 0)
-        {
-            return LaneletType::Interstate;
-        }
-        else if (lanelet_type_string.compare("country") == 0)
-        {
-            return LaneletType::Country;
-        }
-        else if (lanelet_type_string.compare("highway") == 0)
-        {
-            return LaneletType::Highway;
-        }
-        else if (lanelet_type_string.compare("sidewalk") == 0)
-        {
-            return LaneletType::Sidewalk;
-        }
-        else if (lanelet_type_string.compare("crosswalk") == 0)
-        {
-            return LaneletType::Crosswalk;
-        }
-        else if (lanelet_type_string.compare("busLane") == 0)
-        {
-            return LaneletType::BusLane;
-        }
-        else if (lanelet_type_string.compare("bicycleLane") == 0)
-        {
-            return LaneletType::BicycleLane;
-        }
-        else if (lanelet_type_string.compare("exitRamp") == 0)
-        {
-            return LaneletType::ExitRamp;
-        }
-        else if (lanelet_type_string.compare("mainCarriageWay") == 0)
-        {
-            return LaneletType::MainCarriageWay;
-        }
-        else if (lanelet_type_string.compare("accessRamp") == 0)
-        {
-            return LaneletType::AccessRamp;
-        }
-        else if (lanelet_type_string.compare("driveWay") == 0)
-        {
-            return LaneletType::DriveWay;
-        }
-        else if (lanelet_type_string.compare("busStop") == 0)
-        {
-            return LaneletType::BusStop;
-        }
-        else if (lanelet_type_string.compare("unknown") == 0)
-        {
-            return LaneletType::Unknown;
-        }
-        else 
-        {
-            std::stringstream error_msg_stream;
-            error_msg_stream << "Specified lanelet type not part of specs, in line " << lanelet_type_node->get_line();
-            throw SpecificationError(error_msg_stream.str());
-        }
-    }
+            std::string lanelet_type_string = xml_translation::get_first_child_text(child);
+            LaneletType type_out;
 
-    return LaneletType::Unspecified;
+            if (lanelet_type_string.compare("urban") == 0)
+            {
+                type_out = LaneletType::Urban;
+            }
+            else if (lanelet_type_string.compare("interstate") == 0)
+            {
+                type_out = LaneletType::Interstate;
+            }
+            else if (lanelet_type_string.compare("country") == 0)
+            {
+                type_out = LaneletType::Country;
+            }
+            else if (lanelet_type_string.compare("highway") == 0)
+            {
+                type_out = LaneletType::Highway;
+            }
+            else if (lanelet_type_string.compare("sidewalk") == 0)
+            {
+                type_out = LaneletType::Sidewalk;
+            }
+            else if (lanelet_type_string.compare("crosswalk") == 0)
+            {
+                type_out = LaneletType::Crosswalk;
+            }
+            else if (lanelet_type_string.compare("busLane") == 0)
+            {
+                type_out = LaneletType::BusLane;
+            }
+            else if (lanelet_type_string.compare("bicycleLane") == 0)
+            {
+                type_out = LaneletType::BicycleLane;
+            }
+            else if (lanelet_type_string.compare("exitRamp") == 0)
+            {
+                type_out = LaneletType::ExitRamp;
+            }
+            else if (lanelet_type_string.compare("mainCarriageWay") == 0)
+            {
+                type_out = LaneletType::MainCarriageWay;
+            }
+            else if (lanelet_type_string.compare("accessRamp") == 0)
+            {
+                type_out = LaneletType::AccessRamp;
+            }
+            else if (lanelet_type_string.compare("shoulder") == 0)
+            {
+                type_out = LaneletType::Shoulder;
+            }
+            else if (lanelet_type_string.compare("driveWay") == 0)
+            {
+                type_out = LaneletType::DriveWay;
+            }
+            else if (lanelet_type_string.compare("busStop") == 0)
+            {
+                type_out = LaneletType::BusStop;
+            }
+            else if (lanelet_type_string.compare("unknown") == 0)
+            {
+                type_out = LaneletType::Unknown;
+            }
+            else 
+            {
+                std::stringstream error_msg_stream;
+                error_msg_stream << "Specified lanelet type not part of specs, in line " << child->get_line();
+                throw SpecificationError(error_msg_stream.str());
+            }
+
+            lanelet_vector.push_back(type_out);
+        }, 
+        name
+    );
+
+    return lanelet_vector;
 }
 
 std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::string name)
@@ -415,6 +427,10 @@ std::vector<VehicleType> Lanelet::translate_users(const xmlpp::Node* node, std::
             else if (user_string.compare("train") == 0)
             {
                 type_out = VehicleType::Train;
+            }
+            else if (user_string.compare("taxi") == 0)
+            {
+                type_out = VehicleType::Taxi;
             }
             else 
             {
@@ -585,14 +601,14 @@ std::string Lanelet::to_text(LaneletType lanelet_type)
         case LaneletType::MainCarriageWay:
             return "MainCarriageWay";
             break;
+        case LaneletType::Shoulder:
+            return "Shoulder";
+            break;
         case LaneletType::Sidewalk:
             return "Sidewalk";
             break;
         case LaneletType::Unknown:
             return "Unknown";
-            break;
-        case LaneletType::Unspecified:
-            return "Unspecified";
             break;
         case LaneletType::Urban:
             return "Urban";
@@ -623,6 +639,9 @@ std::string Lanelet::to_text(VehicleType vehicle_type)
         break;
     case VehicleType::PriorityVehicle:
         return "PriorityVehicle";
+        break;
+    case VehicleType::Taxi:
+        return "Taxi";
         break;
     case VehicleType::Train:
         return "Train";
@@ -984,7 +1003,18 @@ std::string Lanelet::get_speed_limit()
 
 std::string Lanelet::get_lanelet_type()
 {
-    return to_text(lanelet_type);
+    std::stringstream lanelet_stream;
+    for (size_t i = 0; i < lanelet_type.size(); ++i)
+    {
+        lanelet_stream << to_text(lanelet_type[i]);
+
+        if (i < lanelet_type.size() - 1)
+        {
+            lanelet_stream << ", ";
+        }
+    }
+
+    return lanelet_stream.str();
 }
 
 std::string Lanelet::get_user_one_way()
@@ -1024,5 +1054,7 @@ bool Lanelet::has_relevant_table_info()
     return user_bidirectional.size() > 0
         || user_one_way.size() > 0
         || speed_limit.has_value()
-        || (lanelet_type != LaneletType::Unspecified && lanelet_type != LaneletType::Unknown);
+        ||
+            (! (std::find(lanelet_type.begin(), lanelet_type.end(), LaneletType::Unknown) != lanelet_type.end() &&
+            lanelet_type.size() == 1));
 }

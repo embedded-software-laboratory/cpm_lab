@@ -55,7 +55,7 @@
  * \ingroup lcc_commonroad
  */
 enum class LaneletType {
-    Unspecified, Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, Unknown
+    Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, Shoulder, DriveWay, BusStop, Unknown
 };
 
 /**
@@ -64,7 +64,7 @@ enum class LaneletType {
  * \ingroup lcc_commonroad
  */
 enum class VehicleType {
-    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train
+    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, Taxi
 };
 
 /**
@@ -126,7 +126,7 @@ struct StopLine
     LineMarking line_marking;
     //! References to traffic signs that might be next to the stop line
     std::vector<int> traffic_sign_refs;
-    //! References to traffic lights that might be next to the stop line; only one possible, but a vector easier to handle if nonexistent
+    //! References to traffic lights that might be next to the stop line
     std::vector<int> traffic_light_ref;
 };
 
@@ -153,8 +153,8 @@ private:
     std::optional<Adjacent> adjacent_right = std::nullopt;
     //! Stop line on the lanelet, optional
     std::optional<StopLine> stop_line = std::nullopt;
-    //! Type of the lanelet
-    LaneletType lanelet_type; 
+    //! Type(s) of the lanelet
+    std::vector<LaneletType> lanelet_type; 
     //! For which vehicles the lanelet is one-way
     std::vector<VehicleType> user_one_way; 
     //! For which vehicles the lanelet is bidirectional
@@ -210,7 +210,7 @@ private:
      * \param node A laneletType node
      * \param name The name of the node
      */
-    LaneletType translate_lanelet_type(const xmlpp::Node* node, std::string name);
+    std::vector<LaneletType> translate_lanelet_type(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a vehicleType node to VehicleType (2020 only)
