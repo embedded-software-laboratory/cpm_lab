@@ -85,6 +85,10 @@ DynamicObstacle::DynamicObstacle(
         {
             type = ObstacleTypeDynamic::Train;
         }
+        else if (obstacle_type_text.compare("taxi") == 0)
+        {
+            type = ObstacleTypeDynamic::Taxi;
+        }
         else if (obstacle_type_text.compare("parkedVehicle") == 0 || 
             obstacle_type_text.compare("constructionZone") == 0 || 
             obstacle_type_text.compare("roadBoundary") == 0)
@@ -398,6 +402,9 @@ ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
         case ObstacleTypeDynamic::PriorityVehicle:
             commonroad_trajectory.obstacle_type = ObstacleType::PriorityVehicle;
             break;
+        case ObstacleTypeDynamic::Taxi:
+            commonroad_trajectory.obstacle_type = ObstacleType::Taxi;
+            break;
         case ObstacleTypeDynamic::Train:
             commonroad_trajectory.obstacle_type = ObstacleType::Train;
             break;
@@ -406,6 +413,9 @@ ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
             break;
         case ObstacleTypeDynamic::Unknown:
             commonroad_trajectory.obstacle_type = ObstacleType::Unknown;
+            break;
+        default:
+            throw std::runtime_error("Translation to DDS type failed, unsupported type (-> programming error, add this type!)");
             break;
     }
     

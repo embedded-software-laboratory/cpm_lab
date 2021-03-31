@@ -64,7 +64,7 @@
  * We do not need to store "role", as we already have two different classes for that
  * \ingroup lcc_commonroad
  */
-enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
+enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, Taxi};
 
 /**
  * \class DynamicObstacle
