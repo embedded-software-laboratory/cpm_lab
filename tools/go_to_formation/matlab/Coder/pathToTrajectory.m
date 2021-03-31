@@ -1,7 +1,7 @@
 function [trajectory_points] = pathToTrajectory (refPath, speed)
 
     TrajectoryPoint = struct('t', uint64(0), 'px', 0, 'py', 0, 'vx', 0, 'vy', 0); % single trajectory point
-   
+    
     % Additionally to transition poses of path segments 
     % interpolate intermitting poses for more exact translation into spline.
     lengths = 0 : 0.5 : refPath.Length; % Path length between two intermitting poses.
@@ -67,19 +67,12 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
                                         (allSegmentLengths(nPoints-1) / speed * 1e9); % [ns]
     end
 
-    %Second Last TrajectoryPoint
-%     trajectory_points(end-1).px = intermittingPoses(end, 1);
-%     trajectory_points(end-1).py = intermittingPoses(end, 2);
-%     trajectory_points(end-1).vx = 0;
-%     trajectory_points(end-1).vy = 1;
-%     trajectory_points(end-1).t  = uint64(trajectory_points(2).t) +...
-%                                 (allSegmentLengths(end) / speed * 1e9); %[ns]
     %Last Trajectory Point
     trajectory_points(end).px = intermittingPoses(end, 1);
     trajectory_points(end).py = intermittingPoses(end, 2);
     trajectory_points(end).vx = 0;
     trajectory_points(end).vy = 0;
     trajectory_points(end).t  = uint64(trajectory_points(2).t) +...
-                                 (allSegmentLengths(end)/(0.5 * speed) * 1e9); %[ns]
+                                 (allSegmentLengths(end) / speed * 1e9); %[ns]
 
 end

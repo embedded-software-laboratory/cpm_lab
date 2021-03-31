@@ -5,7 +5,7 @@
 // File: planTrajectory_types.h
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 08-Mar-2021 12:18:40
+// C/C++ source code generated on  : 31-Mar-2021 23:01:38
 //
 #ifndef PLANTRAJECTORY_TYPES_H
 #define PLANTRAJECTORY_TYPES_H
@@ -61,6 +61,7 @@ namespace mgen
   class Pose2D
   {
    public:
+    void init(double b_x, double b_y, double b_yaw);
     double x;
     double y;
     double yaw;

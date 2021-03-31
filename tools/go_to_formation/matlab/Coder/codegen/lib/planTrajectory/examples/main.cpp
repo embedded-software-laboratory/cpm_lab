@@ -5,7 +5,7 @@
 // File: main.cpp
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 01-Feb-2021 11:34:31
+// C/C++ source code generated on  : 31-Mar-2021 23:01:38
 //
 
 //***********************************************************************
@@ -52,7 +52,18 @@ static void main_planTrajectory();
 
 // Function Definitions
 
-
+//
+// Arguments    : double b_x
+//                double b_y
+//                double b_yaw
+// Return Type  : void
+//
+void Pose2D::init(double b_x, double b_y, double b_yaw)
+{
+  this->x = b_x;
+  this->y = b_y;
+  this->yaw = b_yaw;
+}
 
 //
 // Arguments    : double result_data[]
@@ -107,26 +118,9 @@ static mgen::Pose2D argInit_Pose2D()
   // Set the value of each structure field.
   // Change this value to the value that the application requires.
   result_tmp = argInit_real_T();
-  result.x = result_tmp;
-  result.y = result_tmp;
-  result.yaw = result_tmp;
-  //result.init(result_tmp, result_tmp, result_tmp);
+  result.init(result_tmp, result_tmp, result_tmp);
   return result;
 }
-
-//
-// Arguments    : double b_x
-//                double b_y
-//                double b_yaw
-// Return Type  : void
-
-/*
-void Pose2D::init(double b_x, double b_y, double b_yaw)
-{
-  this->x = b_x;
-  this->y = b_y;
-  this->yaw = b_yaw;
-}*/
 
 //
 // Arguments    : void

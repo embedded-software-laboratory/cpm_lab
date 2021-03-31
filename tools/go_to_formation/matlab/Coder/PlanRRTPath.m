@@ -8,7 +8,6 @@ function [refPath, isPathValid] = PlanRRTPath (startPose, goalPose, costmap)
         'GoalTolerance', [0.01 0.01 3],...
         'MinTurningRadius', 0.4,...
         'ConnectionMethod', 'Dubins');
-%         'ConnectionDistance', 0.3);
 
     [refPath] = plan(planner,startPose,goalPose);
     isPathValid = checkPathValidity(refPath, costmap);

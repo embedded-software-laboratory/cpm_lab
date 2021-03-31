@@ -5,7 +5,7 @@
 // File: pathToTrajectory.cpp
 //
 // MATLAB Coder version            : 5.0
-// C/C++ source code generated on  : 08-Mar-2021 12:18:40
+// C/C++ source code generated on  : 31-Mar-2021 23:01:38
 //
 
 // Include Files
@@ -119,7 +119,6 @@ namespace mgen
     static const unsigned long t = 0UL;
     signed char ii_data_idx_0;
     unsigned long qY;
-    unsigned long q0;
 
     //  single trajectory point
     //  Additionally to transition poses of path segments
@@ -317,8 +316,8 @@ namespace mgen
 
     //     %% Set trajectory points from transition and intermitting poses
     // TODO: smoothing of start and stop process.
-    trajectory_points.set_size((allSegmentLengths.size(0) + 2));
-    nm1d2 = allSegmentLengths.size(0) + 2;
+    trajectory_points.set_size((allSegmentLengths.size(0) + 1));
+    nm1d2 = allSegmentLengths.size(0) + 1;
     for (i = 0; i < nm1d2; i++) {
       trajectory_points[i].t = t;
       trajectory_points[i].px = 0.0;
@@ -377,18 +376,6 @@ namespace mgen
       //  [ns]
     }
 
-    // Second Last TrajectoryPoint
-    trajectory_points[trajectory_points.size(0) - 2].px =
-      intermittingPoses[intermittingPoses.size(0) - 1];
-    trajectory_points[trajectory_points.size(0) - 2].py = intermittingPoses
-      [(intermittingPoses.size(0) + intermittingPoses.size(0)) - 1];
-    trajectory_points[trajectory_points.size(0) - 2].vx = 0.0;
-    trajectory_points[trajectory_points.size(0) - 2].vy = 1.0;
-    trajectory_points[trajectory_points.size(0) - 2].t = eml_i64dplus
-      (trajectory_points[1].t, allSegmentLengths[allSegmentLengths.size(0) - 1] /
-       speed * 1.0E+9);
-
-    // [ns]
     // Last Trajectory Point
     trajectory_points[trajectory_points.size(0) - 1].px =
       intermittingPoses[intermittingPoses.size(0) - 1];
@@ -396,13 +383,9 @@ namespace mgen
       [(intermittingPoses.size(0) + intermittingPoses.size(0)) - 1];
     trajectory_points[trajectory_points.size(0) - 1].vx = 0.0;
     trajectory_points[trajectory_points.size(0) - 1].vy = 0.0;
-    q0 = trajectory_points[trajectory_points.size(0) - 2].t;
-    qY = q0 + 100000000UL;
-    if (qY < q0) {
-      qY = MAX_uint64_T;
-    }
-
-    trajectory_points[trajectory_points.size(0) - 1].t = qY;
+    trajectory_points[trajectory_points.size(0) - 1].t = eml_i64dplus
+      (trajectory_points[1].t, allSegmentLengths[allSegmentLengths.size(0) - 1] /
+       speed * 1.0E+9);
 
     // [ns]
   }
