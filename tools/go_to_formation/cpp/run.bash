@@ -10,5 +10,5 @@ if [ $# -eq 0 ]
 else
   cd build
 	./go_to_formation --dds_domain=$DDS_DOMAIN --dds_initial_peer=$DDS_INITIAL_PEER --vehicle_ids=$1 \
-  --x=1,2,3 --y=3,2,1 --yaw=90,120,150
+  --x=1,2,3,1.5,2.5,3.3 --y=3,2,1,1.6,2.5,3.1 --yaw=90,120,150,10,30,60
 fi

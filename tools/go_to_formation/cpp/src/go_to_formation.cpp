@@ -65,44 +65,6 @@ int go_to_formation(int argc, char *argv[])
     std::string vehicle_ids_string = vehicle_ids_stream.str();
     std::cout << vehicle_ids_string << std::endl;
 
-    //////////////Initialization for trajectory planning/////////////////////////////////////////////
-    // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
-    const uint64_t dt_nanos = 400000000ull;
-    
-    ///////////// writer and reader for sending trajectory commands////////////////////////
-    //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
-    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
-    //the reader will read the pose of a vehicle given by its vehicle ID
-    cpm::MultiVehicleReader<VehicleObservation> ips_reader(
-        cpm::get_topic<VehicleObservation>("vehicleObservation"),
-        vehicle_ids
-    );
-
-    //Initialize cpm library
-    const std::string node_id = "go_to_formation";
-    cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id(node_id);
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
-    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {1}, argc, argv);
-    std::vector<uint8_t> vehicle_ids;
-    for (auto i : vehicle_ids_int)
-    {
-        assert(i > 0);
-        assert(i < 255);
-        vehicle_ids.push_back(i);
-    }
-    assert(vehicle_ids.size() > 0);
-
-    ////////////////Outstream in shell which vehicles were selected/////////////////////////////////
-    std::stringstream vehicle_ids_stream;
-    vehicle_ids_stream << "Vehicle IDs: ";
-    for (uint8_t id : vehicle_ids)
-    {
-        vehicle_ids_stream << static_cast<uint32_t>(id) << "|"; //Cast s.t. uint8_t is not interpreted as a character
-    }
-    std::string vehicle_ids_string = vehicle_ids_stream.str();
-    std::cout << vehicle_ids_string << std::endl;
-
     //////////////Initialization for trajectory planning/////////////////////////////////
     // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
     const uint64_t dt_nanos = 400000000ull;
@@ -270,6 +232,7 @@ int go_to_formation(int argc, char *argv[])
                                     } 
                                     // Define timestamp, until which current trajectory should be sent
                                     invalid_after_stamp = trajectory_points.back().t().nanoseconds() + 2000000000ull;
+                                                                                                 
                                     std::cout << "invalid after: " << invalid_after_stamp << std::endl;
                                     trajectory_is_active = true;
                                     active_vehicle_ids.erase(active_vehicle_ids.begin());
@@ -293,7 +256,7 @@ int go_to_formation(int argc, char *argv[])
                     vehicle_command_trajectory.vehicle_id(ego_vehicle_id);
                     vehicle_command_trajectory.trajectory_points(rti_trajectory_points);
                     vehicle_command_trajectory.header().create_stamp().nanoseconds(t_now);
-                    vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now + 200000000ull);
+                    vehicle_command_trajectory.header().valid_after_stamp().nanoseconds(t_now);
                     writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
 
             } 
@@ -376,7 +339,7 @@ void sample_to_matlab_type(std::map<uint8_t, VehicleObservation> &sample,
           help_vector.emplace_back(data.vehicle_id(), data.pose());
         }
 
-        for(int i = 0; i < vehicle_ids.size(); i++){
+        for(uint8_t i = 0; i < vehicle_ids.size(); i++){
           new_id = help_vector[i].first;
           new_pose = help_vector[i].second;
 
