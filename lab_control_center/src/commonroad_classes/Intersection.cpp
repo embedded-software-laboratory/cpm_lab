@@ -39,6 +39,7 @@ Intersection::Intersection(const xmlpp::Node* node)
 
     try
     {
+        //Translate incoming definitions
         xml_translation::iterate_children(
             node, 
             [&] (const xmlpp::Node* child) 
@@ -55,9 +56,27 @@ Intersection::Intersection(const xmlpp::Node* node)
                 incoming.successors_left = get_child_attribute_ref(child, "successorsLeft", false);
                 incoming.is_left_of = get_child_attribute_ref(child, "isLeftOf", false);
 
-                incoming_map.insert({xml_translation::get_attribute_int(child, "id", true).value(), incoming}); //As mentioned in other classes: Value must exist, else error is thrown, so .value() can be used safely here
+                //As mentioned in other classes: ID value must exist, else error is thrown, so .value() can be used safely here
+                incoming_map.insert({xml_translation::get_attribute_int(child, "id", true).value(), incoming});
             }, 
             "incoming"
+        );
+
+        //Translate crossing definitions
+        xml_translation::iterate_children(
+            node, 
+            [&] (const xmlpp::Node* child) 
+            {
+                //Translate crossing node
+                Crossing crossing;
+
+                //Mandatory argument
+                crossing.crossing_lanelets = get_child_attribute_ref(child, "crossingLanelet", true);
+                
+                //As mentioned in other classes: ID value must exist, else error is thrown, so .value() can be used safely here
+                crossing_map.insert({xml_translation::get_attribute_int(child, "id", true).value(), crossing});
+            }, 
+            "crossing"
         );
     }
     catch(const SpecificationError& e)
@@ -70,7 +89,7 @@ Intersection::Intersection(const xmlpp::Node* node)
         throw;
     }
     
-
+    //We need at least one incoming definition, but not necessarily a crossing definition
     if (incoming_map.size() == 0)
     {
         std::stringstream error_msg_stream;
