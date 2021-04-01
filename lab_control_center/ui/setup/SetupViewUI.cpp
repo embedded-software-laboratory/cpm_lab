@@ -42,6 +42,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
+    std::function<void()> _reset_vehicle_view,
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
@@ -55,6 +56,7 @@ SetupViewUI::SetupViewUI
     hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
+    reset_vehicle_view(_reset_vehicle_view),
     on_simulation_start(_on_simulation_start),
     on_simulation_stop(_on_simulation_stop),
     set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
@@ -278,6 +280,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else if (state == VehicleToggle::ToggleState::Off)
     {
         deploy_functions->kill_sim_vehicle(vehicle_id);
+        reset_vehicle_view(); //Remove sim. vehicle entry in map view
     }
     else
     {
@@ -795,6 +798,8 @@ void SetupViewUI::select_no_vehicles()
             deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
         }
     }
+
+    reset_vehicle_view(); //Remove sim. vehicle entry in map view
 }
 
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

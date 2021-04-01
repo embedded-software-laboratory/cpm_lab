@@ -59,6 +59,7 @@ namespace cpm
     template<typename T>
     class Reader
     {
+    private:
         //! Internal DDS Reader to receive messages of type T
         dds::sub::DataReader<T> dds_reader;
         //! Mutex for access to get_sample and removing old messages
@@ -151,12 +152,12 @@ namespace cpm
             }
         }
 
+    public:
         Reader(const Reader&) = delete;
         Reader& operator=(const Reader&) = delete;
         Reader(const Reader&&) = delete;
         Reader& operator=(const Reader&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor using a topic to create a Reader
          * \param topic the topic of the communication
@@ -201,6 +202,15 @@ namespace cpm
             //TODO: At reviewer: Should messages that are too old regarding their creation stamp be deleted as well?
             //      If so: A 'timeout' for this could be set in the constructor
             remove_old_msgs(sample_out);
+        }
+
+        /**
+         * \brief Returns # of matched writers, needs template parameter for topic type
+         */
+        size_t matched_publications_size()
+        {
+            auto matched_pub = dds::sub::matched_publications(dds_reader);
+            return matched_pub.size();
         }
     };
 

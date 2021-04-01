@@ -90,8 +90,14 @@ TEST_CASE( "RTT" ) {
     fake_request.source_id("fake_request");
     rtt_writer.write(fake_request);
 
-    //Hopefully, all sent data is received within this time
-    usleep(500000);
+    //Wait up to 1 second to check if all sent data was received
+    for (int i = 0; i < 10; ++i)
+    {
+        usleep(100000);
+
+        std::lock_guard<std::mutex> lock(receive_mutex);
+        if (received_ids.size() >= 3) break;
+    }
 
     //Now make sure that all required data samples were actually received by the RTT reader
     std::lock_guard<std::mutex> lock(receive_mutex);

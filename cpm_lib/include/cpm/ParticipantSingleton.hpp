@@ -47,13 +47,13 @@ namespace cpm
      */
     class ParticipantSingleton
     {
+    public:
         ParticipantSingleton() = delete;
         ParticipantSingleton(ParticipantSingleton const&) = delete;
         ParticipantSingleton(ParticipantSingleton&&) = delete; 
         ParticipantSingleton& operator=(ParticipantSingleton const&) = delete;
         ParticipantSingleton& operator=(ParticipantSingleton &&) = delete;
 
-    public:
         /**
          * \brief Retrieve the participant singleton with this function
          * \return A participant

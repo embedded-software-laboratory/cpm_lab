@@ -62,9 +62,8 @@ MapViewUi::MapViewUi(
 ,get_visualization_msgs_callback(_get_visualization_msgs_callback)
 ,get_obstacle_data(_get_obstacle_data)
 {
-    //container = new Gtk::Fixed();
+    //Create a drawing area to draw on (for showing vehicles, trajectories, obstacles etc.)
     drawingArea = Gtk::manage(new Gtk::DrawingArea());
-    //container.put(drawingArea, 0,0);
     drawingArea->set_double_buffered();
     drawingArea->show();
     

@@ -50,11 +50,23 @@ TEST_CASE( "Reader" ) {
     // receiver - the cpm reader that receives the sample sent by the writer above
     cpm::Reader<VehicleState> reader(cpm::get_topic<VehicleState>("asldkjfhslakdj"));
 
-
     const uint64_t second = 1000000000ull;
     const uint64_t millisecond = 1000000ull;
     const uint64_t t0 = 1500000000ull * second;
     const uint64_t expected_delay = 400 * millisecond;
+
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in Reader test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (reader.matched_publications_size() > 0 && sample_writer.matched_subscriptions_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     // send samples with different time stamps and data
     for (uint64_t t_now = t0; t_now <= t0 + 10*second; t_now += second)
@@ -67,15 +79,18 @@ TEST_CASE( "Reader" ) {
         usleep(10000);
     }
 
-    sleep(1);
-
-
-
     // example read, should contain the newest valid data depending on the value on t_now and the data sent before
+    // Wait up to 1 second before "giving up"
     VehicleState sample;
     uint64_t sample_age;
-    const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
-    reader.get_sample(t_now, sample, sample_age);
+    for (int i = 0; i < 10; ++i)
+    {
+        const uint64_t t_now = t0 + 5 * second + 300 * millisecond;
+        reader.get_sample(t_now, sample, sample_age);
+
+        if (sample.odometer_distance() == 4) break;
+        else usleep(100000);
+    }
 
     REQUIRE( sample_age == 900 * millisecond );
     REQUIRE( sample.odometer_distance() == 4 );
