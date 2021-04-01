@@ -57,10 +57,12 @@
 	*/
 
 #include "labcam/CInstantCameraAppSrc.h"
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace Pylon;
 using namespace GenApi;
 using namespace std;
+using namespace cv;
 
 /**
  * \file CInstantCameraAppSrc.cpp
@@ -473,16 +475,30 @@ bool CInstantCameraAppSrc::retrieve_image()
 			incorrect_pictures = 0;
 		}
 
+		// Convert pylon image to opencv image for putting timestamp on image
+		Mat openCvImage;
+		openCvImage = Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC3, (uint8_t *)m_Image.GetBuffer());
+		putText(openCvImage, "Timestamp: " + to_string(ptrGrabResult->GetTimeStamp()), Point(15, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 255, 255), 1);
 
-		// create a gst buffer wrapping the image container's buffer
+		// create a gst buffer wrapping the openCv image container's buffer
 		m_gstBuffer = gst_buffer_new_wrapped_full(
-			(GstMemoryFlags)GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS,
-			(gpointer)m_Image.GetBuffer(),
-			m_Image.GetImageSize(),
-			0,
-			m_Image.GetImageSize(),
-			NULL,
-			NULL);
+		(GstMemoryFlags)GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS,
+		(gpointer)openCvImage.data,
+		openCvImage.total() * openCvImage.elemSize(),
+		0,
+		openCvImage.total() * openCvImage.elemSize(),
+		NULL,
+		NULL);
+
+		// // create a gst buffer wrapping the image container's buffer
+		// m_gstBuffer = gst_buffer_new_wrapped_full(
+		// 	(GstMemoryFlags)GST_MEMORY_FLAG_PHYSICALLY_CONTIGUOUS,
+		// 	(gpointer)m_Image.GetBuffer(),
+		// 	m_Image.GetImageSize(),
+		// 	0,
+		// 	m_Image.GetImageSize(),
+		// 	NULL,
+		// 	NULL);
 
 		// Push the gst buffer wrapping the image buffer to the source pads of the AppSrc element, where it's picked up by the rest of the pipeline
 		GstFlowReturn ret;
