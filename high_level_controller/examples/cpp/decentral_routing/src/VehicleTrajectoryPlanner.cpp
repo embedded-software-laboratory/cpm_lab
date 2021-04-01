@@ -36,14 +36,8 @@
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(){}
 
-VehicleTrajectoryPlanner::~VehicleTrajectoryPlanner(){
-    if ( planning_thread.joinable() ) planning_thread.join();
-}
-
 VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64_t t_now)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     VehicleCommandTrajectory vehicleCommandTrajectory;
     vehicleCommandTrajectory.vehicle_id(trajectoryPlan->get_vehicle_id());
     vehicleCommandTrajectory.trajectory_points(
@@ -54,13 +48,6 @@ VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64
 
     return vehicleCommandTrajectory;
 }
-
-void VehicleTrajectoryPlanner::set_real_time(uint64_t t)
-{
-    std::lock_guard<std::mutex> lock(mutex);
-    t_real_time = t;
-}
-
 
 void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle)
 {
@@ -121,7 +108,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
         if(t_start == 0)
         {
-            t_start = t_real_time;// + 2000000000ull;
+            t_start = t_real_time;
         }
         else {
             clear_past_trajectory_point_buffer();

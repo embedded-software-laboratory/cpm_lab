@@ -84,12 +84,12 @@ using std::vector;
 
 /**
  * \page d_r_run run.bash
- * \brief Run script for decentral_routing
+ * \brief Default run script for decentral_routing, do not use.
  */
 
 /**
  * \page d_r_run_distr run_distributed.bash
- * \brief TODO
+ * \brief Run script to start one or more decentral HLCs with middlewares.
  */
 
 /**
@@ -139,7 +139,6 @@ int main(int argc, char *argv[]) {
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
     system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
-    //TODO: QOS_READY_TRIGGER xml is currently only local, not on the NUC - right?
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
@@ -167,15 +166,6 @@ int main(int argc, char *argv[]) {
             true
     );
 
-    //dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
-    //        local_comms_publisher,
-    //        cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-    //        (local_comms_qos_provider.datawriter_qos()
-    //            << dds::core::policy::Reliability::Reliable()
-    //            << dds::core::policy::History::KeepAll()
-    //            << dds::core::policy::Durability::TransientLocal())
-    //);
-
     // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
     cpm::ReaderAbstract<SystemTrigger> reader_systemTrigger(
             local_comms_participant.get_participant(),
@@ -184,26 +174,11 @@ int main(int argc, char *argv[]) {
             true
     );
 
-    //dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
-    //        local_comms_subscriber,
-    //        cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
-    //        (dds::sub::qos::DataReaderQos()
-    //            << dds::core::policy::Reliability::Reliable()
-    //            << dds::core::policy::History::KeepAll())
-    //);
-
     // VehicleStateList is our timing signal from the middleware
     cpm::ReaderAbstract<VehicleStateList> reader_vehicleStateList(
             local_comms_participant.get_participant(),
             "vehicleStateList"
     );
-
-    //dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
-    //        local_comms_subscriber,
-    //        cpm::get_topic<VehicleStateList>(
-    //            local_comms_participant,
-    //            "vehicleStateList")
-    //);
      
     // Writer to send trajectory to middleware
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
@@ -211,18 +186,6 @@ int main(int argc, char *argv[]) {
             "vehicleCommandTrajectory"
     );
 
-    //dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-    //    local_comms_publisher,
-    //    cpm::get_topic<VehicleCommandTrajectory>(
-    //        local_comms_participant,
-    //        "vehicleCommandTrajectory")
-    //);
-
-    // Writer to send a StopRequest to LCC (in case of failure)
-    //dds::pub::DataWriter<StopRequest> writer_stopRequest(
-    //        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-    //        cpm::get_topic<StopRequest>("stopRequest")
-    //);
     cpm::Writer<StopRequest> writer_stopRequest("stopRequest");
 
     /* 

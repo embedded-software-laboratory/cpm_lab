@@ -326,9 +326,6 @@ vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(i
     return result;
 }
 
-/*
- * Write our planned path into a HlcCommunication object
- */
 void VehicleTrajectoryPlanningState::get_lane_graph_positions(
         HlcCommunication *lane_graph_trajectory)
 {
