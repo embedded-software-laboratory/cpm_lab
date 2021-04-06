@@ -53,4 +53,6 @@ struct CommonroadDrawConfiguration
     std::atomic_bool draw_init_state{false};
     //! Sets if obstacle descriptions should be drawn on the obstacles in the LCC Map View
     std::atomic_bool draw_obstacle_description{false};
+    //! Set and read current zoom factor in map view to re-scale text properly depending on the zoom level
+    std::atomic<double> zoom_factor{100};
 };

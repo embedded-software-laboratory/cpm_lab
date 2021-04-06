@@ -33,9 +33,11 @@
 
 TrafficSign::TrafficSign(
     const xmlpp::Node* node,
-    std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+    std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet,
+    std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
 ) :
-    get_position_from_lanelet(_get_position_from_lanelet)
+    get_position_from_lanelet(_get_position_from_lanelet),
+    draw_configuration(_draw_configuration)
 {
     //Check if node is of type trafficSign
     assert(node->get_name() == "trafficSign");
@@ -323,7 +325,9 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
 
             //Draw IDs
             ctx->translate(x, y);
-            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+
+            //Draw set text. Re-scale text based on current zoom factor
+            draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
         }
         else
         {

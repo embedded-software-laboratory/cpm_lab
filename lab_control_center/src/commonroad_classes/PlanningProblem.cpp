@@ -218,7 +218,9 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
             std::stringstream descr_stream;
             descr_stream << "ID (" << planning_problem_id << "." << problem_pos << "): ";
             problem.initial_state->transform_context(ctx, scale);
-            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+
+            //Draw set text. Re-scale text based on current zoom factor
+            draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
             ctx->restore();
         }
 

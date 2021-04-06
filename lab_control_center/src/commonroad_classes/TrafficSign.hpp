@@ -48,6 +48,7 @@
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
 
 #include "LCCErrorLogger.hpp"
 
@@ -120,16 +121,21 @@ private:
     //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
 
+    //! Look up current zoom factor for drawing text
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
+
 public:
     /**
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A trafficSign node
      * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     TrafficSign(
         const xmlpp::Node* node,
-        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     );
 
     /**

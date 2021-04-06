@@ -837,7 +837,8 @@ void Lanelet::draw(const DrawingContext& ctx, double scale, double global_orient
         //Calculate lanelet angle (trivial solution used here will not work properly for arcs etc)
         auto alpha = atan((left_bound.points.rbegin()->get_y() - left_bound.points.at(0).get_y()) / (left_bound.points.rbegin()->get_x() - left_bound.points.at(0).get_x())); //alpha = arctan(dy / dx)
         
-        draw_text_centered(ctx, 0, 0, alpha, 4, descr_stream.str());
+        //Draw set text. Re-scale text based on current zoom factor
+        draw_text_centered(ctx, 0, 0, alpha, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
 
         ctx->restore();
     }

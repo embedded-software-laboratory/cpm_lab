@@ -101,6 +101,14 @@ MapViewUi::MapViewUi(
 
     drawingArea->set_can_focus(true);
 
+    //Store initial zoom factor in the draw config. of commonroad
+    if (commonroad_scenario)
+    {
+        auto draw_configuration = commonroad_scenario->get_draw_configuration();
+        assert(draw_configuration);
+        draw_configuration->zoom_factor.store(zoom);
+    }
+
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
         double zoom_speed = 1;
@@ -122,6 +130,13 @@ MapViewUi::MapViewUi(
             pan_x = event->x - zoom_speed * (event->x - pan_x);
             pan_y = event->y - zoom_speed * (event->y - pan_y);
             zoom *= zoom_speed;
+        }
+
+        if (commonroad_scenario)
+        {
+            auto draw_configuration = commonroad_scenario->get_draw_configuration();
+            assert(draw_configuration);
+            draw_configuration->zoom_factor.store(zoom);
         }
 
         //std::cout << pan_x << " " << pan_y << " " << zoom << std::endl;
@@ -1236,7 +1251,7 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
             description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
 
             ctx->translate(-0.03, 0);
-            const double scale = 0.01;
+            const double scale = 1.8 / zoom;
             ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
