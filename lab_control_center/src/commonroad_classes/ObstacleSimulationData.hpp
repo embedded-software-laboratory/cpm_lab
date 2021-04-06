@@ -55,4 +55,6 @@ struct ObstacleSimulationData
     std::vector<ObstacleSimulationSegment> trajectory;
     //! Type of obstacle, which does not change over time
     ObstacleType obstacle_type;
+    //! Class of obstacle: Dynamic, static or environment
+    ObstacleClass obstacle_class;
 };

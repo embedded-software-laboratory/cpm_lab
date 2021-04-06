@@ -418,6 +418,9 @@ ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
             throw std::runtime_error("Translation to DDS type failed, unsupported type (-> programming error, add this type!)");
             break;
     }
+
+    //Add class type
+    commonroad_trajectory.obstacle_class = ObstacleClass::Dynamic;
     
     return commonroad_trajectory;
 }

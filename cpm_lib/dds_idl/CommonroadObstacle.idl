@@ -59,6 +59,17 @@ enum ObstacleType
     MedianStrip
 }; //Contains types of all obstacle types (dynamic, static, environment)
 
+/**
+ * \enum ObstacleClass
+ * \brief Describes which obstacle class (w.r.t. Commonroad) an obstacle belongs to: Dynamic, Static, Environment
+ * \ingroup cpmlib_idl
+ */
+enum ObstacleClass
+{
+    Dynamic,
+    Static,
+    Environment
+};
 
 /**
  * \struct CommonroadObstacle
@@ -81,6 +92,9 @@ struct CommonroadObstacle {
 
     //! The type of obstacle, e.g. car
     ObstacleType type;
+
+    //! The obstacle class the obstacle belongs to (dynamic, static, environment)
+    ObstacleClass obstacle_class;
 
     //! Optional value which defines a shape, especially useful if the occupancy type was used. But: also useful for visualizing lanelet references or inexact positional values
     CommonroadDDSShape shape; 

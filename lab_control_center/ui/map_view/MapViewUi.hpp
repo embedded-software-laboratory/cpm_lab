@@ -211,8 +211,9 @@ class MapViewUi
      * \brief Draw vehicles that were received in form of commonroad shape messages ('static' vehicles defined by the commonroad file)
      * \param ctx The drawing context, to draw on the map view
      * \param shape Commonroad shape to draw, e.g. a rectangle
+     * \param obstacle_class Decides draw style (different for dynamic <-> static, environment obstacle)
      */
-    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
+    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape, ObstacleClass obstacle_class);
 
     /**
      * \brief Get the center (x, y) of a commonroad shape, i.e. the mean value of its corner points etc.

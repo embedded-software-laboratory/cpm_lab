@@ -96,7 +96,7 @@ void EnvironmentObstacle::transform_coordinate_system(double scale, double angle
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 #pragma GCC diagnostic pop
@@ -131,6 +131,9 @@ ObstacleSimulationData EnvironmentObstacle::get_obstacle_simulation_data()
             simulation_data.obstacle_type = ObstacleType::Unknown;
             break;
     }
+
+    //Add class type
+    simulation_data.obstacle_class = ObstacleClass::Environment;
     
     return simulation_data;
 }

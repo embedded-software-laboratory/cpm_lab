@@ -201,6 +201,9 @@ ObstacleSimulationData StaticObstacle::get_obstacle_simulation_data()
             simulation_data.obstacle_type = ObstacleType::Unknown;
             break;
     }
+
+    //Add class type
+    simulation_data.obstacle_class = ObstacleClass::Static;
     
     return simulation_data;
 }

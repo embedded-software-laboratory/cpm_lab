@@ -978,7 +978,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
-void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape)
+void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape, ObstacleClass obstacle_class)
 {
     ctx->save();
     ctx->set_line_width(0.005);
@@ -992,8 +992,15 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
 
         //Draw circle
         ctx->arc(circle.center().x(), circle.center().y(), circle.radius(), 0.0, 2 * M_PI);
-        ctx->stroke();
 
+        //Only fill shapes of dynamic obstacles
+        if (obstacle_class == ObstacleClass::Dynamic)
+        {
+            ctx->fill_preserve();
+        }
+
+        //Draw created circle
+        ctx->stroke();
         ctx->restore();
     }
 
@@ -1018,9 +1025,15 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
             }
             //Finish polygon by drawing a line to the starting point
             ctx->line_to(polygon.points().at(0).x(), polygon.points().at(0).y());
-            ctx->fill_preserve();
-            ctx->stroke();
+            
+            //Only fill shapes of dynamic obstacles
+            if (obstacle_class == ObstacleClass::Dynamic)
+            {
+                ctx->fill_preserve();
+            }
 
+            //Draw created lines
+            ctx->stroke();
             ctx->restore();
         }
     }
@@ -1041,19 +1054,22 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
         //Move to first corner from center
         ctx->move_to((- (length/2)), (- (width/2)));
 
-        //Draw lines
+        //Create lines
         ctx->line_to((- (length/2)), (  (width/2)));
         ctx->line_to((  (length/2)), (  (width/2)));
         ctx->line_to((  (length/2)), (- (width/2)));
         ctx->line_to((- (length/2)), (- (width/2)));
-        ctx->fill_preserve();
-        ctx->stroke();
 
+        //Only fill shapes of dynamic obstacles
+        if (obstacle_class == ObstacleClass::Dynamic)
+        {
+            ctx->fill_preserve();
+        }
+
+        //Draw lines
+        ctx->stroke();
         ctx->restore();
     }
-
-    //TODO: Improve shape drawing
-    //For example: Color coding instead of longer names (e.g. for (non-)moving objects)
 
     ctx->restore();
 }
@@ -1123,26 +1139,17 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         ctx->translate(x,y);
         ctx->rotate(yaw);
 
-        // const double LF = 0.115;
-        // const double LR = 0.102;
-        //const double WH = 0.054;
-
-        // Draw car image (TODO: Change this later, e.g. to shape)
+        // Draw shape of the obstacle
         ctx->save();
         {
-            // const double scale = 0.224/image_object->get_width();
-            // ctx->translate( (LF+LR)/2-LR ,0);
-            // ctx->scale(scale, scale);
-            // ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
-            // ctx->set_source(image_object,0,0);
-            // ctx->paint();
             //Make vehicle a bit transparent if the position is not exact
-            if (! entry.pose_is_exact())
+            //Don't do this for environment obstacles, which do not have a pose definition
+            if (!(entry.pose_is_exact()) && entry.obstacle_class().underlying() != ObstacleClass::Environment)
             {
-                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+                ctx->set_source_rgba(.7,.2,.7,.8); //Color used for inexact values
             }
 
-            draw_vehicle_shape(ctx, entry.shape());
+            draw_vehicle_shape(ctx, entry.shape(), entry.obstacle_class().underlying());
         }
         ctx->restore();
 
