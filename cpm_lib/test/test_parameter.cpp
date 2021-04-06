@@ -37,20 +37,22 @@
 
 #include "cpm/Writer.hpp"
 
-/**
- * Tests:
- * - If parameter requests are processed correctly by the lib
- * - If the ParameterServer answers correctly
- * - If different types are supported
- */
-
 using namespace std::placeholders;
-class ParameterServer {
+/**
+ * \brief Small helper class that creates a "dummy" parameter server for reading and writing parameters
+ */
+class ParameterServerDummy {
     private:
+        //! DDS Writer to write parameters
         cpm::Writer<Parameter> parameter_writer;
+        //! DDS Reader to read parameters async. with a callback
         cpm::AsyncReader<ParameterRequest> parameter_request_subscriber;
     public:
-        ParameterServer(std::function<void(std::vector<ParameterRequest>& samples)> callback) :
+        /**
+         * \brief Constructor, allows to register a callback for the parameter reader
+         * \param callback Gets called whenever the parameter reader receives a new message
+         */
+        ParameterServerDummy(std::function<void(std::vector<ParameterRequest>& samples)> callback) :
             parameter_writer(
                 "parameter",
                 true
@@ -64,12 +66,23 @@ class ParameterServer {
 
         }
 
+        /**
+         * \brief Provides access to the parameter writer
+         */
         cpm::Writer<Parameter>& get_writer()
         {
             return parameter_writer;
         }
 };
 
+/**
+ * \test Tests Parameters with double values
+ * 
+ * - If parameter requests are processed correctly by the lib
+ * - If the ParameterServerDummy answers correctly
+ * - If different types are supported
+ * \ingroup cpmlib
+ */
 TEST_CASE( "parameter_double" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_parameter_double");
@@ -85,8 +98,10 @@ TEST_CASE( "parameter_double" ) {
         received_parameter_value = cpm::parameter_double(param_name);
     });
 
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
+
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+    ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
         for (auto data : samples) {
             if (data.name() == param_name) {
                 Parameter param = Parameter();
@@ -113,7 +128,14 @@ TEST_CASE( "parameter_double" ) {
 }
 
 
-
+/**
+ * \test Tests Parameters with string values
+ * 
+ * - If parameter requests are processed correctly by the lib
+ * - If the ParameterServerDummy answers correctly
+ * - If different types are supported
+ * \ingroup cpmlib
+ */
 TEST_CASE( "parameter_strings" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_parameter_strings");
@@ -132,8 +154,10 @@ TEST_CASE( "parameter_strings" ) {
         received_parameter_value_2 = cpm::parameter_string(param_name_2);
     });
 
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
+
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+    ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
         for (auto data : samples) {
             if (data.name() == param_name_1) {
                 Parameter param = Parameter();
@@ -158,6 +182,14 @@ TEST_CASE( "parameter_strings" ) {
     REQUIRE( received_parameter_value_2 == string_param_2 );
 }
 
+/**
+ * \test Tests Parameters with boolean values
+ * 
+ * - If parameter requests are processed correctly by the lib
+ * - If the ParameterServerDummy answers correctly
+ * - If different types are supported
+ * \ingroup cpmlib
+ */
 TEST_CASE( "parameter_bool" ) {
     //Set the Logger ID
     cpm::Logging::Instance().set_id("test_parameter_bool");
@@ -176,8 +208,10 @@ TEST_CASE( "parameter_bool" ) {
         received_parameter_value_false = cpm::parameter_bool(param_name_2);
     });
 
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
+
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
-    ParameterServer server([&](std::vector<ParameterRequest>& samples){
+    ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
         for (auto data : samples) {
             if (data.name() == param_name_1) {
                 Parameter param = Parameter();

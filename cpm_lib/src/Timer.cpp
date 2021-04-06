@@ -30,6 +30,11 @@
 #include "cpm/TimerFD.hpp"
 #include "TimerSimulated.hpp"
 
+/**
+ * \file Timer.cpp
+ * \ingroup cpmlib
+ */
+
 namespace cpm {
 
 std::shared_ptr<Timer> Timer::create(

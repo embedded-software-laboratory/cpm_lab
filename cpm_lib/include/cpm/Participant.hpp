@@ -26,12 +26,6 @@
 
 #pragma once
 
-/**
- * \class Participant.hpp
- * \brief Creates a DDS Participant, use this for abstraction
- * Also allows for loading .xml QoS files
- */
-
 #include <dds/core/QosProvider.hpp>
 #include <dds/dds.hpp>
 #include <dds/core/ddscore.hpp>
@@ -42,19 +36,23 @@
 namespace cpm
 {
     /**
-     * \brief Class Participant
-     * Use this to get a participant, possibly with some custom QoS settings
+     * \class Participant
+     * \brief Creates a DDS Participant, use this for abstraction
+     * Also allows for loading .xml QoS files
+     * \ingroup cpmlib
      */
     class Participant
     {
+    private:
+        //! Internal DDS participant that is abstracted by this class
         dds::domain::DomainParticipant dds_participant;
 
+    public:
         Participant(const Participant&) = delete;
         Participant& operator=(const Participant&) = delete;
         Participant(const Participant&&) = delete;
         Participant& operator=(const Participant&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor for a participant 
          * \param domain_number Set the domain ID of the domain within which the communication takes place
@@ -89,6 +87,9 @@ namespace cpm
             
         }
         
+        /**
+         * \brief Function to get the internally stored DDS-representation of the participant
+         */
         dds::domain::DomainParticipant& get_participant()
         {
             return dds_participant;

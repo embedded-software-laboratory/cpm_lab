@@ -58,9 +58,12 @@
 #include "Communication.hpp"
 
 /**
- * \brief Tests getLastHLCResponseTime and sendToHLC (middleware functions). Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \test Tests communication from middleware to simulated HLC
+ * 
+ * Tests getLastHLCResponseTime and sendToHLC (middleware functions). 
+ * Creates a fake HLC and a fake middleware to do so and skips one period on purpose. 
+ * \ingroup middleware
  */
-
 TEST_CASE( "MiddlewareToHLCCommunication" ) {
     cpm::Logging::Instance().set_id("middleware_test");
     
@@ -68,6 +71,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
     int hlcDomainNumber = 1; 
     std::string vehicleStateListTopicName = "vehicleStateList"; 
     std::string vehicleTrajectoryTopicName = "vehicleCommandTrajectory"; 
+    std::string vehiclePathTrackingTopicName = "vehicleCommandPathTracking"; 
     std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
     std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
     int vehicleID = 0; 
@@ -88,6 +92,7 @@ TEST_CASE( "MiddlewareToHLCCommunication" ) {
         hlcDomainNumber,
         vehicleStateListTopicName,
         vehicleTrajectoryTopicName,
+        vehiclePathTrackingTopicName,
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,

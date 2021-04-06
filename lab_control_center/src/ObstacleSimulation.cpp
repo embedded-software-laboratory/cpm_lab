@@ -26,11 +26,16 @@
 
 #include "ObstacleSimulation.hpp"
 
+/**
+ * \file ObstacleSimulation.cpp
+ * \ingroup lcc
+ */
+
 ObstacleSimulation::ObstacleSimulation(ObstacleSimulationData _trajectory, int _id)
 :
 trajectory(_trajectory)
 {
-    obstacle_id = static_cast<uint8_t>(_id % 255);
+    obstacle_id = static_cast<uint8_t>(_id % 256);
 
     //We do not accept empty trajectories
     assert(trajectory.trajectory.size() > 0);

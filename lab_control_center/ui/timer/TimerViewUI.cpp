@@ -26,14 +26,17 @@
 
 #include "TimerViewUI.hpp"
 
+/**
+ * \file TimerViewUI.cpp
+ * \ingroup lcc_ui
+ */
+
 using namespace std::placeholders;
 TimerViewUI::TimerViewUI(
-    std::shared_ptr<TimerTrigger> timerTrigger,
-    std::shared_ptr<ObstacleSimulationManager> _obstacle_simulation_manager
+    std::shared_ptr<TimerTrigger> timerTrigger
     ) :
     timer_trigger(timerTrigger),
-    ui_dispatcher(),
-    obstacle_simulation_manager(_obstacle_simulation_manager)
+    ui_dispatcher()
  {
     ui_builder = Gtk::Builder::create_from_file("ui/timer/timer.glade");
 
@@ -77,8 +80,8 @@ TimerViewUI::TimerViewUI(
     //Create thread and register dispatcher callback
     start_ui_thread();
 
-    //Boolean variable to find out if the system has been started
-    system_is_running.store(false);
+    //Boolean variable to find out if the timer has been started
+    participant_status_timer_started.store(false);
 }
 
 TimerViewUI::~TimerViewUI() {
@@ -86,8 +89,9 @@ TimerViewUI::~TimerViewUI() {
 }
 
 void TimerViewUI::button_reset_callback() {
-    //Stop obstacle simulation
-    // obstacle_simulation_manager->stop();
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
 
     //Kill current UI thread as it might rely on other values that need to be reset
     stop_ui_thread();
@@ -141,7 +145,7 @@ void TimerViewUI::stop_ui_thread() {
 void TimerViewUI::reset_ui() {
     //Reset values that are connected to the timer
     timer_list_storage->clear();
-    system_is_running.store(false);
+    participant_status_timer_started.store(false);
 
     //Change UI button sensitivity
     button_start->set_sensitive(true);
@@ -202,20 +206,26 @@ void TimerViewUI::update_ui() {
 }
 
 void TimerViewUI::button_start_callback() {
-    // //Start simulated obstacles - they will also wait for a start signal, so they are just activated to do so at this point
-    // obstacle_simulation_manager->start();
-
     timer_trigger->send_start_signal();
 
     button_start->set_sensitive(false);
-    system_is_running.store(true);
+    participant_status_timer_started.store(true);
 }
 
 void TimerViewUI::button_stop_callback() {
+    //Stop checking for program chrashes
+    assert(crash_checker);
+    crash_checker->stop_checking();
+
     timer_trigger->send_stop_signal();
 
     //Stop obstacle simulation
     // obstacle_simulation_manager->stop();
+
+    //We do not set participant_status_timer_started here, as it is only used to set the correct value for the timer labels
+    //(Makes more sense to keep the last label while running instead of going back to READY)
+    //The timer cannot be restarted without being reset, where participant_status_timer_started is reset as well, so 
+    //this is not problematic
 
     std::string label_msg = "stopped";
     Glib::ustring label_msg_ustring(label_msg);
@@ -225,7 +235,7 @@ void TimerViewUI::button_stop_callback() {
 }
 
 std::string TimerViewUI::participant_status_to_ustring(ParticipantStatus response) {
-    if (system_is_running.load() == false) {
+    if (participant_status_timer_started.load() == false) {
         return "READY";
     }
     else {
@@ -278,4 +288,9 @@ std::string TimerViewUI::get_human_readable_time_diff(uint64_t other_time) {
 
 Gtk::Widget* TimerViewUI::get_parent() {
     return parent;
+}
+
+void TimerViewUI::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+{
+    crash_checker = _crash_checker;
 }

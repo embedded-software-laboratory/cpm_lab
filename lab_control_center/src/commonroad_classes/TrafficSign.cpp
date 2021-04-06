@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/TrafficSign.hpp"
 
+/**
+ * \file TrafficSign.cpp
+ * \ingroup lcc_commonroad
+ */
+
 TrafficSign::TrafficSign(
     const xmlpp::Node* node,
     std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet

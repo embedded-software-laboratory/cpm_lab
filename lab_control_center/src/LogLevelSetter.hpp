@@ -40,15 +40,15 @@
  * \brief This Singleton is nothing more than a writer that allows to set the log level for all participants within the domain of the cpm library participant Singleton
  * It is used by UI tools, after a user interaction where the log level is modified
  * This class is currently only used in the 'Logs' Tab
+ * \ingroup lcc
  */
-
 class LogLevelSetter {
 private:
-    //The writer is set to be transient local and reliable, s.t. a participant that joins the domain after the log level was set can still receive the last set value
+    //! Writer to send log level to all other participants in the network. Set to be transient local and reliable, s.t. a participant that joins the domain after the log level was set can still receive the last set value
     cpm::Writer<LogLevel> log_level_writer;
 
     /**
-     * \brief The constructor sets up the DDS Writer
+     * \brief The constructor sets up the DDS Writer, private as this is a Singleton
      */
     LogLevelSetter();
 

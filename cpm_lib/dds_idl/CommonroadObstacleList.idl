@@ -26,14 +26,16 @@
 
 #include "CommonroadObstacle.idl"
 
-/*
- * Provides simulated commonroad obstacle state data for all obstacles
- */
-
 #ifndef COMMONROAD_OBSTACLE_LIST_IDL
 #define COMMONROAD_OBSTACLE_LIST_IDL
 
+/**
+ * \struct CommonroadObstacleList
+ * \brief Provides commonroad obstacle state data for all simulated obstacles
+ * \ingroup cpmlib_idl
+ */
 struct CommonroadObstacleList {
+    //! List of commonroad obstacle data
     sequence<CommonroadObstacle> commonroad_obstacle_list;
 };
 #endif

@@ -26,7 +26,28 @@
 
 #include "Header.idl"
 
-/*
+#ifndef VEHICLECOMMANDTRAJECTORY_IDL
+#define VEHICLECOMMANDTRAJECTORY_IDL
+
+/**
+ * \struct TrajectoryPoint
+ * \brief Point of a trajectory, including time, position and velocity
+ * More information can be found in VehicleCommandTrajectory
+ * \ingroup cpmlib_idl
+ */
+struct TrajectoryPoint 
+{
+    TimeStamp t; //!< Current timestamp (nanoseconds since epoch)
+    double px;  //!<  meter
+    double py;  //!<  meter
+    double vx;  //!<  m/s
+    double vy;  //!<  m/s
+};
+
+/**
+ * \struct VehicleCommandTrajectory
+ * \brief Trajectory sent to a vehicle; the vehicle should ideally follow this trajectory, if it is not outdated and already valid
+ * 
  * The vehicle has feedback controllers for both longitudinal and 
  * lateral motion which keep it on the given reference trajectory.
  * The reference trajectory is a continuous function of time. It is
@@ -49,24 +70,17 @@
  * trajectory parameters may lead to physically impossible curvatures and
  * accelerations. The trajectory interpolation formulas can be found in
  *     rti_raspberry/src/TrajectoryInterpolation.cxx
+ * \ingroup cpmlib_idl
  */
-
-#ifndef VEHICLECOMMANDTRAJECTORY_IDL
-#define VEHICLECOMMANDTRAJECTORY_IDL
-
-struct TrajectoryPoint 
-{
-    TimeStamp t;
-    double px;  //  meter
-    double py;  //  meter
-    double vx;  //  m/s
-    double vy;  //  m/s
-};
-
 struct VehicleCommandTrajectory 
 {
+    //! ID of the vehicle that should follow the trajectory
     octet vehicle_id; //@key
+
+    //! Header info, e.g. to determine if the trajectory is still / already valid
     Header header;
+
+    //! Trajectory points to follow
     sequence<TrajectoryPoint> trajectory_points;
 };
 #endif

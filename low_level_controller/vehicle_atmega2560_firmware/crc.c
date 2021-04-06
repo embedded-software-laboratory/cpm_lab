@@ -15,6 +15,13 @@
  * expressed or implied by its publication or distribution.
  **********************************************************************/
 
+/**
+ * \file crc.c
+ *
+ * \author Copyright (c) 2000 by Michael Barr
+ * 
+ * \ingroup low_level_controller
+ */ 
 
 #include "crc.h"
 

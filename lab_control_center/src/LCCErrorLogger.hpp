@@ -1,3 +1,29 @@
+// MIT License
+// 
+// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+// This file is part of cpm_lab.
+// 
+// Author: i11 - Embedded Software, RWTH Aachen University
+
 #pragma once
 
 #include "defaults.hpp"
@@ -20,6 +46,7 @@
  * \brief LCCErrorLogger is a Singleton class that is used throughout the LCC to log error messages that would else be shown in the console, which might not be directly related to the simulation
  * (For this reason, cpm::Logging is not used)
  * It is e.g. used in some CommonRoad drawing classes to log errors when draw() is called but some conditions are not fulfilled
+ * \ingroup lcc
  */
 class LCCErrorLogger {
     LCCErrorLogger(LCCErrorLogger const&) = delete;
@@ -28,13 +55,18 @@ class LCCErrorLogger {
     LCCErrorLogger& operator=(LCCErrorLogger &&) = delete;
 
 private:
-    //Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
-    std::unordered_map<std::string, std::string> error_storage; //For already requested error messages
-    std::unordered_map<std::string, std::string> new_error_storage; //For new error messages that have not yet been requested
+    //! For already taken error messages (using get_new_errors). Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
+    std::unordered_map<std::string, std::string> error_storage;
+    //! For new error messages that have not yet been taken (using get_new_errors). Unordered maps are used because we only want to show and store each error message (key) once. Error timestamps (value) may change if the same message gets emitted again
+    std::unordered_map<std::string, std::string> new_error_storage;
+    //! Mutex for error_storage
     std::mutex error_storage_mutex;
+    //! Mutex for new_error_storage
     std::mutex new_error_storage_mutex;
 
-    //Made private s.t. singleton property is fulfilled
+    /**
+     * \brief Constructor, made private s.t. singleton property is fulfilled
+     */
     LCCErrorLogger() {};
 
     /**

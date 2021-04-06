@@ -26,6 +26,11 @@
 
 #include "ObstacleSimulationManager.hpp"
 
+/**
+ * \file ObstacleSimulationManager.cpp
+ * \ingroup lcc
+ */
+
 ObstacleSimulationManager::ObstacleSimulationManager(std::shared_ptr<CommonRoadScenario> _scenario, bool _use_simulated_time) 
 :
 scenario(_scenario),
@@ -75,6 +80,26 @@ void ObstacleSimulationManager::stop_timers()
         standby_timer->stop();
     }
     standby_timer.reset();
+
+    //Send empty trajectories for all obstacles that are in trajectory mode
+    //Might not work as desired in case of simulated time, but that does not really
+    //matter because the preview itself would not work for simulated time
+    auto t_now = cpm::get_time_ns();
+    VehicleCommandTrajectory trajectory;
+    Header header;
+    header.create_stamp(TimeStamp(t_now));
+    header.valid_after_stamp(TimeStamp(t_now));
+    trajectory.header(header);
+    
+    std::lock_guard<std::mutex> lock(map_mutex);
+    for (auto& obstacle : simulated_obstacles)
+    {
+        if (get_obstacle_simulation_state(obstacle.second.get_id()) == ObstacleToggle::ToggleState::On) //TODO: Let the user choose which obstacle should be real in the UI
+        {
+            trajectory.vehicle_id(obstacle.second.get_id());
+            writer_vehicle_trajectory.write(trajectory);
+        }
+    }
 }
 
 void ObstacleSimulationManager::send_init_states()

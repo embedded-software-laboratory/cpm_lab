@@ -37,7 +37,11 @@
 #include "Color.hpp"
 #include "Visualization.hpp"
 
-//In this test scenario, the timers are not stopped by the program but by the LCC stop signal
+/**
+ * \file VisualizationTest.cpp
+ * \brief Test scenario: Creates and sends visualization messages that should be visible in the LCC' MapViewUi
+ * \ingroup lcc
+ */
 
 int main(int argc, char *argv[]) {
     cpm::init(argc, argv);
@@ -190,7 +194,7 @@ int main(int argc, char *argv[]) {
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::BottomRight);
     usleep(100000);
-    std::cout << "Sending visualization BottomLeft string..." << std::endl;
+    std::cout << "Sending visualization BottomRight string..." << std::endl;
     viz_writer.write(viz5);
     usleep(1000000);
     viz5.string_message_anchor(StringMessageAnchor::BottomCenter);

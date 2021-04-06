@@ -26,6 +26,11 @@
 
 #include "HLCReadyAggregator.hpp"
 
+/**
+ * \file HLCReadyAggregator.cpp
+ * \ingroup lcc
+ */
+
 //The reader callback is initialized in the init list of the constructor; store all IDs in a map together with the current time in nanoseconds
 HLCReadyAggregator::HLCReadyAggregator() :
     async_hlc_reader(
@@ -56,14 +61,15 @@ HLCReadyAggregator::HLCReadyAggregator() :
                 }
                 catch (const std::runtime_error& err)
                 {
-                    cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string, err.what());
+                    cpm::Logging::Instance().write(2, "Error on converting HLC ID %s: %s", id_string.c_str(), err.what());
                 }
                 catch (...) {
-                    cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string);
+                    cpm::Logging::Instance().write(2, "Error: Could not convert HLC ID %s to int in HLCReadyAggregator", id_string.c_str());
                 }
             }
         },
-        "hlc_hello")
+        "hlc_hello",
+        true)
 {
 }
 

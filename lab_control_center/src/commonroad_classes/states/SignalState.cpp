@@ -26,6 +26,11 @@
 
 #include "commonroad_classes/states/SignalState.hpp"
 
+/**
+ * \file SignalState.cpp
+ * \ingroup lcc_commonroad
+ */
+
 SignalState::SignalState(const xmlpp::Node* node)
 {
     //Check if node is of type signalState

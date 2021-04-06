@@ -26,6 +26,15 @@
 
 #include "TrajectoryCommand.hpp"
 
+/**
+ * \file TrajectoryCommand.cpp
+ * \ingroup lcc
+ */
+
+/**
+ * \brief TODO
+ * \ingroup lcc
+ */
 const uint64_t dt_nanos = 100000000ull;
 
 TrajectoryCommand::TrajectoryCommand()
@@ -48,6 +57,12 @@ TrajectoryCommand::~TrajectoryCommand()
     timer->stop();
 }
 
+/**
+ * \brief Computes the Euclidian length of a 2D vector
+ * \param x x coordinate of the vector
+ * \param y y coordinate of the vector
+ * \ingroup lcc
+ */
 inline double vector_length(double x, double y)
 {
     return sqrt(x*x+y*y);

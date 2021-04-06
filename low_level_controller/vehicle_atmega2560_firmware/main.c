@@ -26,10 +26,16 @@
 
 /*
  * vehicle_atmega2560_firmware.c
- *
- * Created: 17.09.2018 13:43:43
- * Author : maczijewski
  */
+
+/**
+ * \file main.c
+ *
+ * \author maczijewski
+ * \date Created: 17.09.2018 13:43:43
+ * 
+ * \ingroup low_level_controller
+ */ 
 
 
 #include <avr/io.h>
