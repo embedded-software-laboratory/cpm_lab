@@ -541,7 +541,7 @@ void CommonRoadScenario::translate_scenario_tags(const xmlpp::Node* node)
         {
             scenario_tags.push_back(ScenarioTag::NoOncomingTraffic);
         }
-        else if (node_name.compare("on_coming_traffic") == 0)
+        else if (node_name.compare("on_coming_traffic") == 0 || node_name.compare("oncoming_traffic") == 0) //Both allowed due to spec change
         {
             scenario_tags.push_back(ScenarioTag::OnComingTraffic);
         }
