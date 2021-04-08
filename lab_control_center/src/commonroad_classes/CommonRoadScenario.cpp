@@ -465,7 +465,8 @@ void CommonRoadScenario::translate_location(const xmlpp::Node* node)
         "geoNameId",
         "zipcode",
         "name",
-        "geoTransformation"
+        "geoTransformation",
+        "environment"
     };
     xml_translation::iterate_children(node, [this, expected_nodes](xmlpp::Node* child)
     {

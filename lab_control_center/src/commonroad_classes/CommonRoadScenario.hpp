@@ -120,9 +120,10 @@ struct GeoTransformation
 
 /**
  * \struct Location
- * \brief Holds location information for class CommonRoadScenario
- * Mostly relevant for UI, probably irrelevant for HLCs
- * Initial values in case it does not exist
+ * \brief Holds location information for class CommonRoadScenario.
+ * Mostly relevant for UI, probably irrelevant for HLCs.
+ * Initial values in case it does not exist.
+ * Missing (on purpose): Environment information (time of day, weather etc.), geoReference in GeoTransformation.
  * \ingroup lcc_commonroad
  */
 struct Location 
