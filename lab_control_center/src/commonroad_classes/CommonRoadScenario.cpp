@@ -146,7 +146,7 @@ void CommonRoadScenario::load_file(std::string xml_filepath, bool center_coordin
         //Parse XML file (DOM parser)
         //xmlpp::KeepBlanks::KeepBlanks(false);
         //Ignore whitespaces (see http://xmlsoft.org/html/libxml-parser.html#xmlParserOption)
-        parser.set_parser_options(256);
+        parser.set_parser_options(256); //Remove blank nodes
         parser.parse_file(xml_filepath);
         if(!parser) {
             std::cerr << "Cannot parse file!" << std::endl;
