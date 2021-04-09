@@ -72,6 +72,14 @@ Intersection::Intersection(const xmlpp::Node* node)
 
                 //Mandatory argument
                 crossing.crossing_lanelets = get_child_attribute_ref(child, "crossingLanelet", true);
+
+                //We need at least one lanelet definition
+                if (crossing.crossing_lanelets.size() == 0)
+                {
+                    std::stringstream error_msg_stream;
+                    error_msg_stream << "Intersection - Crossing should contain at least one lanelet reference - line " << node->get_line();
+                    throw SpecificationError(error_msg_stream.str());
+                }
                 
                 //As mentioned in other classes: ID value must exist, else error is thrown, so .value() can be used safely here
                 crossing_map.insert({xml_translation::get_attribute_int(child, "id", true).value(), crossing});

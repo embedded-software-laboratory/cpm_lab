@@ -78,6 +78,15 @@ Shape::Shape(const xmlpp::Node* node)
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
     }
+
+    //According to the PDF Commonroad specs (not the actual XML .xsd specs), at least one of the entries should contain an element
+    //This makes sense - an empty shape is meaningless
+    if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
+    {
+        std::stringstream error_stream;
+        error_stream << "Error in Shape: Is empty. Line: " << commonroad_line;
+        throw SpecificationError(error_stream.str());
+    }
     
 
     //Test output

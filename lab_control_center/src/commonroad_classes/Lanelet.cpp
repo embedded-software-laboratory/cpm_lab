@@ -112,6 +112,14 @@ Lanelet::Lanelet(
         throw;
     }
     
+    //According to the PDF Commonroad specs (not the actual XML .xsd specs), the size of the left and right bound
+    //should be the same
+    if (left_bound.points.size() != right_bound.points.size())
+    {
+        std::stringstream error_stream;
+        error_stream << "Error in Lanelet: Left and right bound size does not match. Line: " << commonroad_line;
+        throw SpecificationError(error_stream.str());
+    }
 
     //Test output
     // std::cout << "Lanelet ------------------------------" << std::endl;
@@ -265,7 +273,7 @@ std::optional<StopLine> Lanelet::translate_stopline(const xmlpp::Node* node, std
             if (left_bound.points.size() < 1 || right_bound.points.size() < 1)
             {
                 std::stringstream error_msg_stream;
-                error_msg_stream << "Specified stop line has < 2 points, and lanelet has not bounds, in line " << line_node->get_line();
+                error_msg_stream << "Specified stop line has < 2 points, and lanelet has no bounds, in line " << line_node->get_line();
                 throw SpecificationError(error_msg_stream.str());
             }
 

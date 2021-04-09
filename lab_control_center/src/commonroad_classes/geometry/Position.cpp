@@ -94,6 +94,17 @@ Position::Position(const xmlpp::Node* node)
         throw;
     }
 
+    //According to the PDF Commonroad specs (not the actual XML .xsd specs), at least one of the entries should contain an element
+    //This makes sense - an empty position is meaningless
+    if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0 && lanelet_refs.size() == 0 && !(point.has_value()))
+    {
+        std::stringstream error_stream;
+        error_stream << "Error in Position: Is empty. Line: " << commonroad_line;
+        throw SpecificationError(error_stream.str());
+    }
+
+    //Also, point / rectangle etc. / lanelet ref are mutually exclusive, but the .xsd specs don't reflect this, thus this is not checked here
+
     //Test output
     // std::cout << "Position:" << std::endl;
     // std::cout << "\tPoint exists: " << point.has_value() << std::endl;
