@@ -29,7 +29,6 @@
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
-#include "CouplingGraph.hpp"
 
 // CPM Wrappers and functions
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
@@ -38,6 +37,8 @@
 #include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
 #include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "cpm/get_topic.hpp"
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
 
 // IDL files
 #include "VehicleCommandTrajectory.hpp"
@@ -46,12 +47,6 @@
 #include "SystemTrigger.hpp"
 #include "VehicleStateList.hpp"
 #include "StopRequest.hpp"
-
-// DDS files
-#include <dds/pub/ddspub.hpp>                   //rti folder
-#include <dds/sub/ddssub.hpp>                   //rti folder
-#include <dds/domain/DomainParticipant.hpp>         // Required for communication with middleware
-#include <dds/core/QosProvider.hpp>             // Required for communication with middleware
 
 // General C++ libs
 #include <chrono>
@@ -62,6 +57,7 @@
 #include <thread>
 #include <limits>                           // To get maximum integer value (for stop condition)
 
+#include "CouplingGraph.hpp"
 // Planner
 #include "VehicleTrajectoryPlanner.hpp"    //sw-folder central routing
 
@@ -147,98 +143,115 @@ int main(int argc, char *argv[]) {
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
-    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
-    dds::domain::DomainParticipant local_comms_participant(
+    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
+    //dds::domain::DomainParticipant local_comms_participant(
+    //        middleware_domain,
+    //        local_comms_qos_provider.participant_qos()
+    //);
+    cpm::Participant local_comms_participant(
             middleware_domain,
-            local_comms_qos_provider.participant_qos()
+            "./QOS_LOCAL_COMMUNICATION.xml",
+            "MatlabLibrary::LocalCommunicationProfile"
     );
-    dds::pub::Publisher local_comms_publisher(local_comms_participant);
-    dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
-
-    local_comms_participant.qos();
-    local_comms_qos_provider.participant_qos();
-    local_comms_qos_provider.delegate();
-    auto library_names = local_comms_qos_provider->qos_profile_libraries();
-    auto default_library = local_comms_qos_provider->default_profile_library();
 
     /* --------------------------------------------------------------------------------- 
      * Create readers and writers for communication with middleware
      * ---------------------------------------------------------------------------------
      */
     // These QoS Settings are taken from the QOS_READY_TRIGGER.xml used in matlab example
-    dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
-            local_comms_publisher,
-            cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-            (local_comms_qos_provider.datawriter_qos()
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll()
-                << dds::core::policy::Durability::TransientLocal())
+    cpm::Writer<ReadyStatus> writer_readyStatus(
+            local_comms_participant.get_participant(),
+            "readyStatus",
+            true,
+            true,
+            true
     );
+
+    //dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
+    //        local_comms_publisher,
+    //        cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
+    //        (local_comms_qos_provider.datawriter_qos()
+    //            << dds::core::policy::Reliability::Reliable()
+    //            << dds::core::policy::History::KeepAll()
+    //            << dds::core::policy::Durability::TransientLocal())
+    //);
 
     // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
-    dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
-            local_comms_subscriber,
-            cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
-            (dds::sub::qos::DataReaderQos()
-                << dds::core::policy::Reliability::Reliable()
-                << dds::core::policy::History::KeepAll())
+    cpm::ReaderAbstract<SystemTrigger> reader_systemTrigger(
+            local_comms_participant.get_participant(),
+            "systemTrigger",
+            true,
+            true
     );
+
+    //dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
+    //        local_comms_subscriber,
+    //        cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
+    //        (dds::sub::qos::DataReaderQos()
+    //            << dds::core::policy::Reliability::Reliable()
+    //            << dds::core::policy::History::KeepAll())
+    //);
 
     // VehicleStateList is our timing signal from the middleware
-    dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
-            local_comms_subscriber,
-            cpm::get_topic<VehicleStateList>(
-                local_comms_participant,
-                "vehicleStateList")
-    );
-     
-    // Writer to send trajectory to middleware
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-        local_comms_publisher,
-        cpm::get_topic<VehicleCommandTrajectory>(
-            local_comms_participant,
-            "vehicleCommandTrajectory")
+    cpm::ReaderAbstract<VehicleStateList> reader_vehicleStateList(
+            local_comms_participant.get_participant(),
+            "vehicleStateList"
     );
 
-    // Writer to send a StopRequest to LCC (in case of failure)
-    // Currently not implemented in LCC
-    dds::pub::DataWriter<StopRequest> writer_stopRequest(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<StopRequest>("stopRequest")
+    //dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
+    //        local_comms_subscriber,
+    //        cpm::get_topic<VehicleStateList>(
+    //            local_comms_participant,
+    //            "vehicleStateList")
+    //);
+     
+    // Writer to send trajectory to middleware
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+            local_comms_participant.get_participant(),
+            "vehicleCommandTrajectory"
     );
+
+    //dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+    //    local_comms_publisher,
+    //    cpm::get_topic<VehicleCommandTrajectory>(
+    //        local_comms_participant,
+    //        "vehicleCommandTrajectory")
+    //);
+
+    // Writer to send a StopRequest to LCC (in case of failure)
+    //dds::pub::DataWriter<StopRequest> writer_stopRequest(
+    //        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
+    //        cpm::get_topic<StopRequest>("stopRequest")
+    //);
+    cpm::Writer<StopRequest> writer_stopRequest("stopRequest");
 
     /* 
      * Reader/Writers for comms between vehicles directly
      */
     // Writer to communicate plans with other vehicles
-    dds::pub::DataWriter<LaneGraphTrajectory> writer_laneGraphTrajectory(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
+    cpm::Writer<LaneGraphTrajectory> writer_laneGraphTrajectory(
+            "laneGraphTrajectory");
 
     // Reader to receive planned trajectories of other vehicles
-    dds::sub::DataReader<LaneGraphTrajectory> reader_laneGraphTrajectory(
-            dds::sub::Subscriber(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<LaneGraphTrajectory>("laneGraphTrajectory")
-    );
+    cpm::ReaderAbstract<LaneGraphTrajectory> reader_laneGraphTrajectory(
+            "laneGraphTrajectory");
     
     
     /* ---------------------------------------------------------------------------------
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    auto planner = std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
+    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
-    std::shared_ptr<dds::pub::DataWriter<LaneGraphTrajectory>>(
-        &writer_laneGraphTrajectory
+    std::unique_ptr<cpm::Writer<LaneGraphTrajectory>>(
+        new cpm::Writer<LaneGraphTrajectory>("laneGraphTrajectory")
         )
     );
     planner->set_reader(
-    std::make_shared<dds::sub::DataReader<LaneGraphTrajectory>>(
-        reader_laneGraphTrajectory
+    std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory>>(
+        new cpm::ReaderAbstract<LaneGraphTrajectory>("laneGraphTrajectory")
         )
     );
 
@@ -273,17 +286,12 @@ int main(int argc, char *argv[]) {
 #endif
 
     while( !stop ) {
-        dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
+        auto state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
-            if( sample.info().valid() ) {
-                
-                // We received a StateList, which is our timing signal
-                // to send commands to vehicle
-                new_vehicleStateList = true;
-                vehicleStateList = sample.data();
-                std::cout << "StateList.info: "
-                    << sample.info().publication_handle() << std::endl;
-            }
+            // We received a StateList, which is our timing signal
+            // to send commands to vehicle
+            new_vehicleStateList = true;
+            vehicleStateList = sample;
         }
 
         // The first time we receive a sample, we need to initialize our position on the laneGraph
@@ -318,10 +326,12 @@ int main(int argc, char *argv[]) {
 
                         // Initialize PlanningState with starting position
                         planner->set_vehicle(
-                                std::make_shared<VehicleTrajectoryPlanningState>(
-                                    vehicle_id,
-                                    out_edge_index,
-                                    out_edge_path_index
+                                std::unique_ptr<VehicleTrajectoryPlanningState>(
+                                    new VehicleTrajectoryPlanningState(
+                                        vehicle_id,
+                                        out_edge_index,
+                                        out_edge_path_index
+                                        )
                                 )
                         );
                         cpm::Logging::Instance().write(
@@ -350,14 +360,22 @@ int main(int argc, char *argv[]) {
 #if TIMED
                 end_time = std::chrono::steady_clock::now();
                 auto diff = end_time - start_time;
-                std::cout << "TIMING: Aborting planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+                std::cout
+                    << "TIMING: Aborting planning after "
+                    << std::chrono::duration<double, std::milli>(diff).count()
+                    << " ms"
+                    << std::endl;
 #endif
                 planner->stop();
                 planning = false;
             }
 
 #if TIMED
-            std::cout << "------------- Timestep " << vehicleStateList.t_now() << " -------------" << std::endl;
+            std::cout
+                << "------------- Timestep "
+                << vehicleStateList.t_now()
+                << " -------------"
+                << std::endl;
             start_time = std::chrono::steady_clock::now();
 #endif
             // Start async job for planning
@@ -377,7 +395,11 @@ int main(int argc, char *argv[]) {
 #if TIMED
                 end_time = std::chrono::steady_clock::now();
                 auto diff = end_time - start_time;
-                std::cout << "TIMING: Finished planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+                std::cout
+                    << "TIMING: Finished planning after "
+                    << std::chrono::duration<double, std::milli>(diff).count()
+                    << " ms"
+                    << std::endl;
 #endif
                 // Get commands and send to vehicle
                 std::unique_ptr<VehicleCommandTrajectory> cmd = cmd_future.get();
@@ -392,11 +414,9 @@ int main(int argc, char *argv[]) {
         }
 
         // Check if we received a SystemTrigger to stop
-        dds::sub::LoanedSamples<SystemTrigger> systemTrigger_samples = reader_systemTrigger.take();
-        for(auto sample : systemTrigger_samples) {
-            if( sample.info().valid() && 
-                   (sample.data().next_start().nanoseconds() == trigger_stop)
-              ) {
+        auto systemTrigger_samples = reader_systemTrigger.take();
+        for (auto sample : systemTrigger_samples) {
+            if (sample.next_start().nanoseconds() == trigger_stop) {
                 cpm::Logging::Instance().write(
                     2,
                     "Received stop signal, stopping"
