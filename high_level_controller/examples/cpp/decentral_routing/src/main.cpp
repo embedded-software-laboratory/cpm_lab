@@ -24,9 +24,12 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+// Set to true to get additional information about execution time in stdout
+#define TIMED true
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
+#include "CouplingGraph.hpp"
 
 // CPM Wrappers and functions
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
@@ -37,7 +40,6 @@
 #include "cpm/get_topic.hpp"
 
 // IDL files
-#include "VehicleObservation.hpp" 
 #include "VehicleCommandTrajectory.hpp"
 #include "TimeStamp.hpp"
 #include "ReadyStatus.hpp"
@@ -134,29 +136,31 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
-    // Initialize Planner and constants necessary for planning
-    // Definition of a timesegment in nano seconds and a trajecotry planner for more than one vehicle
-    uint64_t dt_nanos = 400000000ull; // Needs to match period of planner
-
-    // SystemTrigger msg that means "stop" (as defined in SystemTrigger.idl)
+    // SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
-    TimeStamp timestamp_stop(trigger_stop);
-    SystemTrigger stop_trigger(timestamp_stop);
 
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
     system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
+    //TODO: QOS_READY_TRIGGER xml is currently only local, not on the NUC - right?
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
-    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
+    dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile");
+    //dds::core::QosProvider local_comms_qos_provider("./QOS_LOCAL_COMMUNICATION.xml");
     dds::domain::DomainParticipant local_comms_participant(
             middleware_domain,
             local_comms_qos_provider.participant_qos()
     );
     dds::pub::Publisher local_comms_publisher(local_comms_participant);
     dds::sub::Subscriber local_comms_subscriber(local_comms_participant);
+
+    local_comms_participant.qos();
+    local_comms_qos_provider.participant_qos();
+    local_comms_qos_provider.delegate();
+    auto library_names = local_comms_qos_provider->qos_profile_libraries();
+    auto default_library = local_comms_qos_provider->default_profile_library();
 
     /* --------------------------------------------------------------------------------- 
      * Create readers and writers for communication with middleware
@@ -166,7 +170,7 @@ int main(int argc, char *argv[]) {
     dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
             local_comms_publisher,
             cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-            (dds::pub::qos::DataWriterQos()
+            (local_comms_qos_provider.datawriter_qos()
                 << dds::core::policy::Reliability::Reliable()
                 << dds::core::policy::History::KeepAll()
                 << dds::core::policy::Durability::TransientLocal())
@@ -220,28 +224,16 @@ int main(int argc, char *argv[]) {
     );
     
     
-    //FIXME: This should be replaced by a request to LCC
-    // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
-    dds::pub::DataWriter<SystemTrigger> writer_systemTrigger(
-            dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-            cpm::get_topic<SystemTrigger>("systemTrigger")
-    );
-
     /* ---------------------------------------------------------------------------------
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    /* Soll-Verhalten:
-     *   - Wir starten erst, wenn eine StateList von der Middleware kommt
-     *   - Wir schicken dann auch erst VehicleTrajectories an die Middleware, wenn eine
-     *   weitere StateList kommt
-     */
-    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(dt_nanos));
+    auto planner = std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner());
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
-    std::make_shared<dds::pub::DataWriter<LaneGraphTrajectory>>(
-        writer_laneGraphTrajectory
+    std::shared_ptr<dds::pub::DataWriter<LaneGraphTrajectory>>(
+        &writer_laneGraphTrajectory
         )
     );
     planner->set_reader(
@@ -254,7 +246,7 @@ int main(int argc, char *argv[]) {
      * Compose and send Ready message
      * ---------------------------------------------------------------------------------
      */
-    // TODO: Why do we need this 5 seconds wait?
+    // TODO: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
     std::this_thread::sleep_for(std::chrono::seconds(5));
     // Create arbitrary timestamp as per ReadyStatus.idl
     TimeStamp timestamp(11111);
@@ -268,99 +260,134 @@ int main(int argc, char *argv[]) {
      * main loop to regularly send commands
      * ---------------------------------------------------------------------------------
      */
-    bool stop = false;
-    uint64_t t_now;
-    // This loop could be replaced by an AsyncReader with callback for the VehicleStateList
-    while( !stop ) {
+    bool matched = false; // Status if we initialized vehicle on the LaneGraph
+    bool planning = false; // Status if we are currently planning
+    bool new_vehicleStateList = false; // If we received a new VehicleStateList
+    bool stop = false; // Exit from main loop
+    VehicleStateList vehicleStateList;
+    std::future<std::unique_ptr<VehicleCommandTrajectory>> cmd_future;
 
+#if TIMED
+    auto start_time = std::chrono::steady_clock::now();
+    auto end_time = std::chrono::steady_clock::now();
+#endif
+
+    while( !stop ) {
         dds::sub::LoanedSamples<VehicleStateList> state_samples = reader_vehicleStateList.take();
         for(auto sample : state_samples) {
             if( sample.info().valid() ) {
-
+                
                 // We received a StateList, which is our timing signal
                 // to send commands to vehicle
-                t_now = sample.data().t_now();
+                new_vehicleStateList = true;
+                vehicleStateList = sample.data();
+                std::cout << "StateList.info: "
+                    << sample.info().publication_handle() << std::endl;
+            }
+        }
 
-                // middleware period needs to be manually set to 400ms
-                // on parameter server
-                if( sample.data().period_ms()*1e6 != dt_nanos ) {
-                    cpm::Logging::Instance().write(
-                            1,
-                            "Error: middleware_period_ms needs to be 400ms");
-                    StopRequest request(vehicle_id);
-                    writer_stopRequest.write(request);
-                    writer_systemTrigger.write(stop_trigger);
-                    return 1;
-                }
+        // The first time we receive a sample, we need to initialize our position on the laneGraph
+        if(new_vehicleStateList && !planner->is_started()) {
+            cpm::Logging::Instance().write(3,
+                "Preparing to start planner");
 
-                // The first time we receive a sample, we need to start the planner
-                if(!planner->is_started()) {
-                    cpm::Logging::Instance().write(3,
-                        "Preparing to start planner");
-                    // Set real time
-                    planner->set_real_time(t_now);
-
-                    /* ---------------------------------------------------------------------
-                    * Check for start position of our vehicle
-                    * ----------------------------------------------------------------------
-                    */
-                    bool matched = false;
-                    // This probably does not require a loop,
-                    // we just need to find the one VehicleState with our vehicle_id
-                    for(auto vehicle_state : sample.data().state_list())
-                    {
-                        if( vehicle_id == vehicle_state.vehicle_id() ) {
-                            auto pose = vehicle_state.pose();
-                            int out_edge_index = -1;
-                            int out_edge_path_index = -1;
-                            matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
-                            if( !matched ) {
-                                cpm::Logging::Instance().write(1,
-                                    "Couldn't find starting position,\
-                                    try moving the vehicle if this persists.");
-                                StopRequest request(vehicle_id);
-                                writer_stopRequest.write(request);
-                                //writer_systemTrigger.write(stop_trigger);
-                            } else {
-
-                                planner->set_vehicle(
-                                        std::make_shared<VehicleTrajectoryPlanningState>(
-                                            vehicle_id,
-                                            out_edge_index,
-                                            out_edge_path_index
-                                        )
-                                );
-                                cpm::Logging::Instance().write(
-                                        3,
-                                        "Vehicle %d matched.",
-                                        int(vehicle_id)
-                                );
-
-                                //Start the Planner. That includes collision avoidance. In this case we avoid collisions by priority assignment
-                                //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
-                                planner->start();
-                            }
-                        }
-                    }
-
+            /* ---------------------------------------------------------------------
+            * Check for start position of our vehicle
+            * ----------------------------------------------------------------------
+            */
+            // This probably does not require a loop,
+            // we just need to find the one VehicleState with our vehicle_id
+            for(auto vehicle_state : vehicleStateList.state_list())
+            {
+                if( vehicle_id == vehicle_state.vehicle_id() ) {
+                    auto pose = vehicle_state.pose();
+                    int out_edge_index = -1;
+                    int out_edge_path_index = -1;
+                    matched = laneGraphTools.map_match_pose(pose, out_edge_index, out_edge_path_index);
                     if( !matched ) {
                         cpm::Logging::Instance().write(1,
-                            "Couldn't find vehicle in \
-                            VehicleStateList.");
-                        StopRequest request(vehicle_id);
-                        writer_stopRequest.write(request);
-                        //writer_systemTrigger.write(stop_trigger);
+                            "Couldn't find starting position,\
+                            try moving the vehicle if this persists.");
+                    } else {
+
+                        // This graphs gives the priorities, as well as the order of planning
+                        // Currently we only plan sequentially, with lower vehicle ids first
+                        std::vector<int> vec(vehicleStateList.active_vehicle_ids());
+                        CouplingGraph coupling_graph(vec);
+                        planner->set_coupling_graph(coupling_graph);
+
+                        // Initialize PlanningState with starting position
+                        planner->set_vehicle(
+                                std::make_shared<VehicleTrajectoryPlanningState>(
+                                    vehicle_id,
+                                    out_edge_index,
+                                    out_edge_path_index
+                                )
+                        );
+                        cpm::Logging::Instance().write(
+                                2,
+                                "Vehicle %d matched.",
+                                int(vehicle_id)
+                        );
                     }
                 }
+            }
 
-                // If we received a StateList and are already started, get commands
-                if( planner->is_started() ) {
-                    // Set real time
-                    planner->set_real_time(t_now);
-                    //get trajectory commands from VehicleTrajectoryPlanner with new points
-                    auto command = planner->get_trajectory_command(t_now);
-                    writer_vehicleCommandTrajectory.write(command);
+            if( !matched ) {
+                // We might want to stop everything here, but it happens too
+                // often for that
+                cpm::Logging::Instance().write(2,
+                    "Couldn't find vehicle in VehicleStateList.");
+            }
+        }
+
+        if( new_vehicleStateList && matched ) {
+            // We are using the stateList now, so it isn't new anymore
+            new_vehicleStateList = false;
+
+            // Stop planning of previous timestep, if necessary
+            if(planning) {
+#if TIMED
+                end_time = std::chrono::steady_clock::now();
+                auto diff = end_time - start_time;
+                std::cout << "TIMING: Aborting planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
+                planner->stop();
+                planning = false;
+            }
+
+#if TIMED
+            std::cout << "------------- Timestep " << vehicleStateList.t_now() << " -------------" << std::endl;
+            start_time = std::chrono::steady_clock::now();
+#endif
+            // Start async job for planning
+            cmd_future = std::async(std::launch::async,
+                    [&]{
+                        return planner->plan(vehicleStateList.t_now(), vehicleStateList.period_ms()*1e6);
+                    }
+                );
+            planning = true;
+        }
+
+        // Check status of async planning
+        if( planning && cmd_future.valid() ) {
+            // Waits 1ms for result (or just get it instantly?)
+            std::future_status future_status = cmd_future.wait_for(std::chrono::milliseconds(1));
+            if( future_status == std::future_status::ready ) {
+#if TIMED
+                end_time = std::chrono::steady_clock::now();
+                auto diff = end_time - start_time;
+                std::cout << "TIMING: Finished planning after " << std::chrono::duration<double, std::milli>(diff).count() << " ms" << std::endl;
+#endif
+                // Get commands and send to vehicle
+                std::unique_ptr<VehicleCommandTrajectory> cmd = cmd_future.get();
+                if( cmd.get() != nullptr ) {
+                    writer_vehicleCommandTrajectory.write(*cmd.get());
+                } else {
+                    cpm::Logging::Instance().write(2,
+                            "Unexpected missing value from planner");
                 }
+                planning = false;
             }
         }
 
@@ -378,10 +405,16 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        // Check if the planner encountered a problem
         if( planner->is_crashed() ) {
             stop = true;
-            writer_systemTrigger.write(stop_trigger);
+            StopRequest request(vehicle_id);
+            writer_stopRequest.write(request);
         }
+
+        // Rate limit main while loop to 10-times per dt_nanos
+        // Arbitrary, but larger waits should decrease cpu load of this loop
+        std::this_thread::sleep_for(std::chrono::nanoseconds(vehicleStateList.period_ms()/10));
     }
 
     return 0;

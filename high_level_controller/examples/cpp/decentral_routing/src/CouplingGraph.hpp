@@ -24,31 +24,34 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "VehicleState.idl"
-#include "VehicleObservation.idl"
+#pragma once
 
-#ifndef VEHICLESTATELIST_IDL
-#define VEHICLESTATELIST_IDL
-//TODO rename
+#include <vector>
+#include <map>
+#include <set>
+#include <cstdint>
+#include <cassert>
 
-/**
- * \struct VehicleStateList
- * \brief Messages sent from the Middleware to the HLC, containing relevant vehicle information, the current time and the periodicity of the calls
- * Also functions as "wake up" call that means that the HLC can start computation with this data
- * \ingroup cpmlib_idl
- */
-struct VehicleStateList {
-    //!Current time, should be used by the HLC instead of using its own clock
-    unsigned long long t_now;
+class CouplingGraph
+{
+    std::set<uint8_t> vehicleSet;
+    std::map<uint8_t,std::set<uint8_t>> couplingData;
+    
+    void setPreviousVehiclesToDefault(uint8_t vehicleId);
+    std::set<uint8_t> vectorToSet(std::vector<uint8_t> vector);
 
-    //!Periodicity of calling the HLC
-    unsigned long long period_ms;
+    public:
+        CouplingGraph(){};
+        CouplingGraph(
+               std::vector<uint8_t> vehicleIds,
+               bool useDefaultOrder = 1);
+        // Alternative constructor, because nothing else uses uint8_t
+        CouplingGraph(
+               std::vector<int> vehicleIds,
+               bool useDefaultOrder = 1);
 
-    //!List of vehicle state information for all vehicles
-    sequence<VehicleState> state_list;
-
-    //!List of vehicle observation information for all vehicles
-    sequence<VehicleObservation> vehicle_observation_list;
-    sequence<long> active_vehicle_ids;
+        void setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data);
+        void setPreviousVehicles(uint8_t vehicleId, std::vector<uint8_t> previousVehicles);
+        std::set<uint8_t> getPreviousVehicles(uint8_t vehicleId);
+        std::set<uint8_t> getVehicles();
 };
-#endif
