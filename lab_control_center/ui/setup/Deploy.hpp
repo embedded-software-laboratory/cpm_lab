@@ -315,4 +315,10 @@ private:
      * called whenever a new reboot is asked for. Also, all threads are killed on closing the LCC.
      */
     void join_finished_hlc_reboot_threads();
+
+    /**
+     * \brief Function to deploy the middleware, 
+     * called by deploy_local_hlcs and deploy_separate_local_hlcs.
+     */
+    void deploy_middleware(std::string sim_time_string, std::stringstream& vehicle_ids_stream);
 };
