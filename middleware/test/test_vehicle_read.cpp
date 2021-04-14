@@ -135,6 +135,6 @@ TEST_CASE( "VehicleCommunication_Read" ) {
         CHECK(received_timestamps_vehicle_1.at(i) - received_timestamps_vehicle_1.at(i - 1) <= 2);
     }
     //Check that the last message (-> newest message in the last step) was received
-   CHECK(received_timestamps_vehicle_0.at(received_timestamps_vehicle_0.size() - 1) == testMessagesAmount);
-   CHECK(received_timestamps_vehicle_1.at(received_timestamps_vehicle_1.size() - 1) == testMessagesAmount);
+    CHECK(received_timestamps_vehicle_0.at(received_timestamps_vehicle_0.size() - 1) == testMessagesAmount);
+    CHECK(received_timestamps_vehicle_1.at(received_timestamps_vehicle_1.size() - 1) == testMessagesAmount);
 }

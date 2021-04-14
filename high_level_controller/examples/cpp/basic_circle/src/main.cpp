@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
     //For more information see our documentation about RTI DDS
-      cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
-      
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
+
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
     //They are relative to the defined center point defined below as map_center_x and map_center_y
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
     vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
     vector<uint64_t> segment_duration = vector<uint64_t>{1570800000ull, 1570800000ull, 1570800000ull, 1570800000ull};
-    
+
     /*
     // Figure eight trajectory data
     vector<double> trajectory_px        = vector<double>{           -1,             0,             1,             0};
