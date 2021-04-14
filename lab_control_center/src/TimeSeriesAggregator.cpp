@@ -130,44 +130,31 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 }
 
 /**
- * \brief TODO
- * \param v TODO
+ * \brief return battery level based on voltage. Approximates remaining runtime
+          see tools/battery_level/main.m
+ * \param v battery voltage
  * \ingroup lcc
  */
 static inline double voltage_to_percent(const double& v)
 {
-    // approximate discharge curve with six linear segments,
-    // see tools/plot_battery_discharge/linear_discharge.m
-    if (v >= 7.48)
-    {
-        return std::min({((7.48-8.17)/150* v +8.17)/8.17*100, 100.0});
+    double u1 = 8.17;
+    double l1 = 100;
+    double u2 = 7.38;
+    double l2 = 50;
+    double u3 = 7.3;
+    double l3 = 12;
+    double u4 = 6.3;
+    double l4 = 0;
+
+    double battery_level;
+    if (v >= u2) {
+        battery_level = std::min(100.0, l2 + (l1-l2)/(u1-u2) * (v-u2));
+    } else if (v > u3) {
+        battery_level = l3 + (l2-l3)/(u2-u3) * (v-u3);
+    } else {
+        battery_level = std::max(0.0, l4 + (l3-l4)/(u3-u4) * (v-u4));
     }
-    else if (v >= 7.37)
-    {
-        return ((7.37-7.48)/(50)*v +7.37)/8.17*100;
-    }
-    else if (v >= 7.35)
-    {
-        return ((7.35-7.37)/(240-190)*v +7.35)/8.17*100;
-    }
-     else if (v >= 7.17)
-    {
-        return ((7.17-7.37)/(300-240)*v +7.17)/8.17*100;
-    }
-     else if (v >= 6.8)
-    {
-        return ((6.8-7.17)/(329-300)*v +6.8)/8.17*100;
-    }
-    else if (0<= v < 6.3)
-    {
-        return std::max({((6.3-6.8)/(340-329)*v +6.3)/8.17*100, 0.0});
-    }
-    else
-        {
-           cpm::Logging::Instance().write(3, "no battery voltage measurement available");
-        }
-    
-    
+    return battery_level;
 }
 
 
