@@ -24,15 +24,6 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * spi.c
- *
- * Created: 21.09.2018 17:50:29
- *  Author: maczijewski
- * Modified 19.06.2019
- *  Author: cfrauzem
- */ 
-
 /**
  * \file spi.c
  *
@@ -58,31 +49,37 @@
 // spi_exchange() blocks until the transfer is complete.
 
 /**
- * \brief TODO
+ * \brief Index of byte which is to be transferred next.
  * \ingroup low_level_controller
  */
 static volatile uint8_t spi_buffer_index = 0;
 
 /**
- * \brief TODO
+ * \brief Buffer for data which will be sent to mid_level_controller.
  * \ingroup low_level_controller
  */
 static volatile uint8_t* miso_buffer = 0;
 
 /**
- * \brief TODO
+ * \brief Dependent on whether low_level_controller received the bytes of
+ * 	      mid_level_controller correctly, its answer message will differ
+ * 		  to indicate the success/failure to mid_level_controller. The data
+ * 	      in this buffer here will be sent, if mosi-data is received correctly.
  * \ingroup low_level_controller
  */
 static volatile uint8_t miso_correct_CRC[SPI_BUFFER_SIZE];
 
 /**
- * \brief TODO
+ * \brief Dependent on whether low_level_controller received the bytes of
+ * 	      mid_level_controller correctly, its answer message will differ
+ * 		  to indicate the success/failure to mid_level_controller. The data
+ * 	      in this buffer here will be sent, if mosi-data is NOT received correctly.
  * \ingroup low_level_controller
  */
 static volatile uint8_t miso_wrong_CRC[SPI_BUFFER_SIZE];
 
 /**
- * \brief TODO
+ * \brief Buffer for data which will be received from mid_level_controller.
  * \ingroup low_level_controller
  */
 static volatile uint8_t mosi_buffer[SPI_BUFFER_SIZE];

@@ -24,11 +24,16 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * tests.h
+/**
+ * \file tests.h
  *
- * Created: 09/08/2019 09:48:25
- *  Author: Janis
+ * \date 09/08/2019 09:48:25
+ * \author maczijewski
+ * 
+ * \brief This module provides a basic test for relevant hardware components which
+ *        can be enabled by using a jumper.
+ * 
+ * \ingroup low_level_controller
  */ 
 
 
@@ -39,7 +44,7 @@
 #include <avr/io.h>
 
 /**
- * \brief TODO
+ * \brief Setup registers such that the tests can be enabled by using a jumper.
  * 
  * \author maczijewski
  * \ingroup low_level_controller
@@ -47,9 +52,20 @@
 void tests_setup();
 
 /**
- * \brief TODO
- * \param packet_send
- * \param packet_received
+ * \brief Performes technical tests.
+ * 
+ * It uses the odometer and the IMU to measure external movement applied to the vehicle.
+ * Afterwards, it computes motor and servo control values which try to compensate the
+ * external movement. In case that this test mode is active, no communication with the
+ * mid_level_controller takes place.
+ * For resulting behaviour see video at CPM Lab's confluence at
+ * topic "ATmega Flashing" > "5. Tests".
+ * 
+ * \param packet_send Package containing all relevant sensor readings (in normal mode
+ *                    sent to mid_level_controller)
+ * \param packet_received Package constructed by this function and containing the control
+ *                        values which try to compensate the external movement (in normal
+ *                        mode received from mid_level_controller)
  * 
  * \author maczijewski
  * \ingroup low_level_controller
