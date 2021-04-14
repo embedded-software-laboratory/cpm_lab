@@ -471,8 +471,8 @@ void SetupViewUI::deploy_applications() {
 
     // LabCam
 #ifndef SIMULATION
-    if(lab_mode_on && labcam_toggled){
-        std::cerr << "RECORDING LABCAM" << std::endl;
+    if(labcam_toggled){
+        std::cout << "RECORDING LABCAM" << std::endl;
         // Use current time as file name of the recording
         auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         std::string file_name = ctime(&timenow);
@@ -482,9 +482,8 @@ void SetupViewUI::deploy_applications() {
         std::replace(file_name.begin(), file_name.end(), '\n', '_');
 
         deploy_functions->deploy_labcam("/tmp/", file_name);
-        //labcam->startRecording("/tmp/", ctime(&timenow));
     }else{
-        std::cerr << "NOT RECORDING LABCAM" << std::endl;
+        std::cout << "NOT RECORDING LABCAM" << std::endl;
     }
 
 #endif
