@@ -54,33 +54,34 @@ typedef Pylon::CBaslerUsbGrabResultPtr GrabResultPtr_t; // Or use Camera_t::Grab
 
 /**
  * \struct FrameInfo
- * \brief TODO
+ * \brief Stores important information of a frame, i.e., timestamp, image itself, and detected points.
  * \ingroup ips
  */
 struct FrameInfo
 {
-    //! TODO
+    //! Image created by the camera
     cv::Mat image;
-    //! TODO
+    //! Timestamp at which the image was created by the camera
     uint64_t timestamp;
-    //! TODO
+    //! x-coordinate of point detected in image
     std::vector<double> points_x;
-    //! TODO
+    //! y-coordinate of point detected in image
     std::vector<double> points_y;
 };
 
-//! TODO
+//! Saves, whether the user enabled visualization
 bool enable_visualization;
-//! TODO
+//! Saves, whether the user enabled additional debugging output
 bool enable_debug;
 
-//! TODO
+//! Used from \link worker_grab_image \endlink to provide the retreived images for \link worker_led_detection \endlink.
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_frames;
-//! TODO
+//! If visualization is enabled, the detected points are given here to \link worker_visualization \endlink.
 ThreadSafeQueue< std::shared_ptr<FrameInfo> > queue_visualization;
 
 /**
- * \brief TODO
+ * \brief This method retrieves images provided by the thread executing \link worker_grab_image \endlink,
+ * finds contours of LED points in these images, and outputs these points via the DDS topic "ipsLedPoints".
  * \ingroup ips
  */
 void worker_led_detection()
@@ -158,7 +159,7 @@ void worker_led_detection()
 }
 
 /**
- * \brief TODO
+ * \brief If enabled this method visualizes the detected points until ESC is pressed.
  * \ingroup ips
  */
 void worker_visualization()
@@ -187,7 +188,9 @@ void worker_visualization()
 }
 
 /**
- * \brief TODO
+ * \brief This method sets up all relevant parameters for the IPS camera and retreives frames until
+ * the process gets terminated. The images are given via a queue to the thread executing
+ * \link worker_led_detection \endlink.
  * \ingroup ips
  */
 void worker_grab_image()
@@ -328,7 +331,11 @@ void worker_grab_image()
 }
 
 /**
- * \brief TODO
+ * \brief This process retreives images from the camera, detects LEDs of the vehicles and sends
+ * a list with these detected points via DDS to the process \link main_ips_pipeline.cpp \endlink. It starts all
+ * relevant workers in separate threads. For debugging purposes the parameter --visualization=1
+ * can be used to activate a visualization of the detected points and the parameter --debug can be used
+ * to get additionally information.
  * \ingroup ips
  */
 int main(int argc, char* argv[])

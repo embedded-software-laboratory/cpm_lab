@@ -40,7 +40,8 @@
 
 
 /**
- * \brief TODO
+ * \brief This process receives the LED points provided in \link main_led_detection.cpp \endlink
+ * and uses them to detect the vehicles, their IDs, and their positions.
  * \ingroup ips
  */
 int main(int argc, char* argv[])

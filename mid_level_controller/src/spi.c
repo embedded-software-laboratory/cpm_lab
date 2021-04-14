@@ -39,8 +39,8 @@
  */
 
 /**
- * \brief TODO
- * \param spi_miso_data TODO
+ * \brief Checks whether the crc value provided by the low_level_controller is correct.
+ * \param spi_miso_data Data, which has been sent from low_level_controller.
  * \ingroup vehicle
  */
 static bool check_CRC_miso(spi_miso_data_t spi_miso_data) { 
@@ -50,14 +50,15 @@ static bool check_CRC_miso(spi_miso_data_t spi_miso_data) {
 }
 
 /**
- * \brief TODO
+ * \brief The purpose of this variable is just to make sure that for-loop in busy wait
+ *        is not optimized away.
  * \ingroup vehicle
  */
 static volatile int dummy = 0;
 
 /**
- * \brief TODO
- * \param n TODO
+ * \brief Busy Wait in terms of for-loop cycles.
+ * \param n The number of for-loop cycles which should be done to wait.
  * \ingroup vehicle
  */
 static void busy_wait(int n) {
@@ -104,7 +105,7 @@ void spi_transfer(
     // CS low => transmission start
     bcm2835_gpio_clr(RPI_GPIO_P1_24);
 
-    for (int i = 1; i < 4; ++i)
+    for (int i = 1; i < 4; ++i) // Try transmission 3 times at most
     {
         uint8_t SPI_recv_buffer[SPI_BUFFER_SIZE];
         uint8_t* mosi_data_ptr = (uint8_t*)(&spi_mosi_data);

@@ -45,7 +45,7 @@
 #include "watchdog.h"
 
 /**
- * \brief TODO
+ * \brief This flag indicates whether the controller is in safe-mode or not.
  * \ingroup low_level_controller
  */
 volatile uint8_t safe_mode_flag = 0;
@@ -104,7 +104,8 @@ void watchdog_reset() {
 }
 
 /**
- * \brief TODO
+ * \brief In case the watchdog reaches zero, the vehicle is put into safe-mode to avoid
+ * 		  driving without up-to-date information of the mid_level_controller.
  * \ingroup low_level_controller
  */
 ISR(WDT_vect) {

@@ -24,6 +24,15 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+/**
+ * \file main_stand-alone.cpp
+ * 
+ * \brief Starts labcam recording in an interactive way for testing purposes. The labcam
+ *        can be stopped by pressing enter and restarted once before the program terminates.
+ * 
+ * \ingroup lcc_labcam
+ */
+
 #include <stdlib.h>
 #include <iostream>
 #include <string>
