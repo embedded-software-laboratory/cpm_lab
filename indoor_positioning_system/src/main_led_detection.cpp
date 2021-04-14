@@ -252,8 +252,12 @@ void worker_grab_image()
         camera.ExposureAuto.SetValue(ExposureAuto_Off);
         camera.ExposureTime.SetValue(120);
 
-
-        camera.StartGrabbing();
+        // Start grabbing by using the strategy OneByOne. This strategy is chosen to
+        // avoid intentional frame drops because frame drops would lead to a tracking
+        // reset due to the vehicle ID-detection via different LED-frequencies.
+        // Additionally, the strategy LatestImageOnly is not needed here, since the
+        // program is fast enough to handle "old" images in just a few milliseconds.
+        camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne);
         GrabResultPtr_t ptrGrabResult;
 
         int frameCount = 0;
