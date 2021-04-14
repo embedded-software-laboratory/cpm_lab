@@ -56,11 +56,11 @@
 int main (int argc, char *argv[]) { 
     //Initialize the cpm logger, set domain id etc
     cpm::init(argc, argv);
-    cpm::Logging::Instance().set_id("middleware_main"); 
 
     //Initial parameters that can partially be set in the command line
     //Timer parameters
     std::string node_id = cpm::cmd_parameter_string("node_id", "middleware", argc, argv);
+    cpm::Logging::Instance().set_id(node_id); 
     uint64_t offset_nanoseconds = cpm::cmd_parameter_uint64_t("offset_nanoseconds", 1, argc, argv);
     //uint64_t period_nanoseconds = cpm::cmd_parameter_uint64_t("period_nanoseconds", 250000000, argc, argv);
     bool simulated_time_allowed = true;
@@ -72,6 +72,10 @@ int main (int argc, char *argv[]) {
     uint64_t period_ms = cpm::parameter_uint64_t("middleware_period_ms");
     uint64_t period_nanoseconds = period_ms * 1e6;
 
+    std::cout << "Waiting for parameter 'active_vehicle_ids' set by LCC ..." << std::endl;
+    std::vector<int32_t> active_vehicle_ids = cpm::parameter_ints("active_vehicle_ids");
+
+    std::cout << std::endl;
     //Communication parameters
     int hlcDomainNumber = cpm::cmd_parameter_int("domain_number", 1, argc, argv); 
     
@@ -185,6 +189,7 @@ int main (int argc, char *argv[]) {
         state_list.vehicle_observation_list(rti_observations);
         state_list.t_now(t_now);
         state_list.period_ms(period_ms);
+        state_list.active_vehicle_ids(active_vehicle_ids);
 
         //Send newest vehicle state list to the HLC
         communication->sendToHLC(state_list);

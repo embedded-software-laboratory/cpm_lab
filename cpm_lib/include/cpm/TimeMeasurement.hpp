@@ -38,20 +38,22 @@ namespace cpm
 
     /**
      * \class MeasurementData
-     * Just for internal use.
+     * \brief Just for internal use.
+     * 
+     * Contains the data of one measurement.
      */
     class MeasurementData {
         public:
-            //! TODO
+            //! Start time of measurement
             uint64_t start_time = 0;
-            //! TODO
+            //! End time of measurement
             uint64_t end_time = 0;
-            //! TODO
+            //! Linux clock used for both measurements
             clockid_t clockid;
 
             /**
-             * \brief TODO
-             * \param clockid TODO
+             * \brief Constructor, which directly fixes the start time.
+             * \param clockid ClockID which is used for both measurements.
              */
             MeasurementData(clockid_t clockid);
     };
@@ -60,9 +62,9 @@ namespace cpm
 
 
     /**
-     * \class TimeMeasurement.hpp
-     * This class comprises functions with which time measurements between specific points in the code can be made.
-     * One instance saves all measurements which are currently done (Singleton).
+     * \class TimeMeasurement
+     * \brief This class comprises functions with which time measurements between specific points in the code can be made.
+     *        One instance saves all measurements which are currently done (Singleton).
      */
     class TimeMeasurement {
         public:
@@ -102,7 +104,7 @@ namespace cpm
 
             /**
              * \brief Configure the clockid which is used as default when calling start() without specifying the clockid.
-             * \param clockid TODO
+             * \param clockid Clockid of the corresponding clock under Linux.
              */
             void set_default_clockid(clockid_t clockid);
 
@@ -121,9 +123,9 @@ namespace cpm
             //! Singleton instance
             static TimeMeasurement& instance;
 
-            //! TODO
+            //! Use monotonic clock as default, since we are interested in time differences and not in one correct timestamp
             clockid_t default_clockid = CLOCK_MONOTONIC;
-            //! TODO
+            //! Map which saves all measurements according to their names.
             std::map<std::string, MeasurementData> measurements;
 
     };

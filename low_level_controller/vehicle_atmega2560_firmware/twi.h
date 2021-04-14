@@ -22,6 +22,9 @@
  *
  * \author Copyright (c) 2006 Nicholas Zambetti
  * 
+ * \brief This module provides an interface for the TWI aka I2C protocol, which is
+ *        used by the low_level_controller to communicate with the IMU.
+ * 
  * \ingroup low_level_controller
  */
 

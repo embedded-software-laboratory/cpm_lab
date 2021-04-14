@@ -24,27 +24,34 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-//Doxygen software group and file descriptions for camera calibration
+#pragma once
 
-/**
- * \defgroup plot_battery_discharge Plot Battery Discharge
- * \brief Includes matlab files for these plots
- * \ingroup tools
- */
+#include <vector>
+#include <map>
+#include <set>
+#include <cstdint>
+#include <cassert>
 
-/**
-* \page pbd_files Plot Battery Discharge Files
-* \subpage pbd_lin <br>
-* \subpage pbd_main <br>
-* \ingroup plot_battery_discharge
-*/
+class CouplingGraph
+{
+    std::set<uint8_t> vehicleSet;
+    std::map<uint8_t,std::set<uint8_t>> couplingData;
+    
+    void setPreviousVehiclesToDefault(uint8_t vehicleId);
+    std::set<uint8_t> vectorToSet(std::vector<uint8_t> vector);
 
-/**
- * \page pbd_lin linear_discharge.m
- * \brief TODO
- */
+    public:
+        CouplingGraph(){};
+        CouplingGraph(
+               std::vector<uint8_t> vehicleIds,
+               bool useDefaultOrder = 1);
+        // Alternative constructor, because nothing else uses uint8_t
+        CouplingGraph(
+               std::vector<int> vehicleIds,
+               bool useDefaultOrder = 1);
 
-/**
- * \page pbd_main main.m
- * \brief TODO
- */
+        void setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data);
+        void setPreviousVehicles(uint8_t vehicleId, std::vector<uint8_t> previousVehicles);
+        std::set<uint8_t> getPreviousVehicles(uint8_t vehicleId);
+        std::set<uint8_t> getVehicles();
+};

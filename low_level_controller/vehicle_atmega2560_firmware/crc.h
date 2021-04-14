@@ -21,6 +21,10 @@
  *
  * \author Copyright (c) 2000 by Michael Barr
  * 
+ * \brief This module provides an interface for computing the cyclic redundancy check (crc).
+ *        By computing the crc and sending it with the original message the receiver is able
+ *        to detect transmission errors by recomputing the crc on the received message.
+ * 
  * \ingroup low_level_controller
  */ 
 
@@ -29,7 +33,19 @@
 
 typedef uint16_t crc;
 
+/**
+ * \brief Initializes crc
+ */
 void  crcInit(void);
+
+/**
+ * \brief Computes crc on a message
+ * 
+ * \param message message for which the crc should be computed
+ * \param nBytes length of message
+ * 
+ * \return the message's crc
+ */
 crc   crcFast(uint8_t const message[], int nBytes);
 
 

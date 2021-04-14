@@ -41,19 +41,27 @@
 #include "watchdog.h"
 
 /**
- * \brief TODO
+ * \brief This array determines how many ticks one ID-LED flashing period lasts. Together with
+ * 		  \link identification_LED_enabled_ticks \endlink this specifies the pattern with which
+ * 		  the ID-LED flashes dependend on the vehicle ID.
  * \ingroup low_level_controller
  */
 uint8_t identification_LED_period_ticks[26]  = { 1, 4, 7, 10, 13, 16, 7, 10, 13, 16, 19, 10, 13, 16, 19, 22, 13, 16, 19, 22, 25, 16, 19, 22, 25, 28 };
 
 /**
- * \brief TODO
+ * \brief This array determines for how many ticks in one period the ID-LED is on. Together with
+ * 		  \link identification_LED_period_ticks \endlink this specifies the pattern with which
+ * 		  the ID-LED flashes dependend on the vehicle ID.
+ * 
+ * \example Let * indicate that the ID-LED is on, while . indicates that it is off. Then we get
+ * 			for vehicle 3 the following pattern running in a loop: **........
+ * 
  * \ingroup low_level_controller
  */
 uint8_t identification_LED_enabled_ticks[26] = { 0, 2, 2,  2,  2,  2, 5,  5,  5,  5,  5,  8,  8,  8,  8,  8, 11, 11, 11, 11, 11, 14, 14, 14, 14, 14 };
 
 /**
- * \brief TODO
+ * \brief saves the ID assigned to the vehicle (received from mid_level_controller)
  * \ingroup low_level_controller
  */
 uint8_t vehicle_id = 0;

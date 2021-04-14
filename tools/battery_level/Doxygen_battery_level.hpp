@@ -24,49 +24,21 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/**
- * \file servo_timer.h
- *
- * \date 24.09.2018 16:18:47
- * \author: maczijewski
- * 
- * \brief This module provides an interface for setting up and controlling the servo via PWM,
- *        where the servo PWM signal runs at 50 Hz
- */ 
-
-
-#ifndef SERVO_TIMER_H_
-#define SERVO_TIMER_H_
-
-
-#include <stdint.h>
-
+//Doxygen software group and file descriptions for camera calibration
 
 /**
- * \brief Returns the time since chip startup, in 20 msec increments.
- * 
- * \author maczijewski
- * \ingroup low_level_controller
+ * \defgroup battery_level Battery Level
+ * \brief Relation between battery level and voltage. Includes experiment data.
+ * \ingroup tools
  */
-uint32_t get_tick();
 
 /**
- * \brief Sets up all relevant registers such that the pwm for the servo works properly.
- * 
- * \author maczijewski
- * \ingroup low_level_controller
- */
-void servo_timer_setup();
+* \page bl_files Files
+* \subpage bl_main <br>
+* \ingroup battery_level
+*/
 
 /**
- * \brief Sets the position of the servo by providing a PWM value in the range [1800,4200]
- *        where 3000 is the middle value where the vehicle drives straight.
- * \param pwm
- * 
- * \author maczijewski
- * \ingroup low_level_controller
+ * \page bl_main main.m
+ * \brief TODO
  */
-void set_servo_pwm(uint16_t pwm);
-
-
-#endif /* SERVO_TIMER_H_ */

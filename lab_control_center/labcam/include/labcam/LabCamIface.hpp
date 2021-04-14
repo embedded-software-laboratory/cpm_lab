@@ -31,30 +31,30 @@
 class LabCam;
 
 /**
- * \brief TODO
+ * \brief This module provides standardized access to the LabCam.
  * \ingroup lcc_labcam
  */
 class LabCamIface {
 	private:
-		//! TODO
+		//! Contains the actual LabCam object.
 		LabCam* impl_;
 
 	public:
 		/**
-		 * \brief TODO Constructor
+		 * \brief Default Constructor
 		 */
 		LabCamIface();
 		~LabCamIface() = default;
 
 		/**
-		 * \brief TODO
-		 * \param path TODO
-		 * \param file_name TODO
+		 * \brief Starts recording of LabCam.
+		 * \param path Folder in which the resulting video will be saved.
+		 * \param file_name Filename of the recording.
 		 */
 		void startRecording(std::string path, std::string file_name);
 
 		/**
-		 * \brief TODO
+		 * \brief Stops current recording.
 		 */
 		void stopRecording();
 };

@@ -203,6 +203,9 @@ private:
     //! Callback function to disable / enable the commonroad tab
     std::function<void(bool)> set_commonroad_tab_sensitive;
 
+    //! Function to update active vehicles on the parameter server
+    std::function<void(std::vector<int32_t>)> update_vehicle_ids_parameter;
+
     //! Callback function to get the main window, which is required for opening the file explorer (needs a parent window)
     std::function<Gtk::Window&()> get_main_window;
 
@@ -325,6 +328,7 @@ public:
         std::function<void()> _on_simulation_start,
         std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
+        std::function<void(std::vector<int32_t>)> _update_vehicle_ids_parameter,
         unsigned int argc, 
         char *argv[]
         );

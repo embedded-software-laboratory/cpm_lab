@@ -24,15 +24,6 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * servo_timer.c
- *
- * Created: 24.09.2018 16:26:48
- *  Author: maczijewski
- * Modified: 05.31.2019 11:32:19
- *  Author: cfrauzem
- */ 
-
 /**
  * \file servo_timer.c
  *
@@ -50,19 +41,23 @@
 #include "led.h"
 
 /**
- * \brief TODO
+ * \brief Defines after how many steps in which the PWM signal for the servo did not change
+ * 		  the servo gets disabled. Avoids unpleasant noises in high frequencies.
  * \ingroup low_level_controller
  */
 #define SERVO_CENTER_COMMAND_COUNT_THRESHOLD 100
 
 /**
- * \brief TODO
+ * \brief Counts ticks of this low_level_controller in 20ms periods. This variable is also
+ * 		  used by the LEDs to control their flashing patterns.
  * \ingroup low_level_controller
  */
 static volatile uint32_t tick_counter = 0;
 
 /**
- * \brief TODO
+ * \brief Counts the number of consecutive commands in which the wanted servo PWM stays the same.
+ *   	  As soon as it reaches \link SERVO_CENTER_COMMAND_COUNT_THRESHOLD \endlink the servo
+ * 		  gets disabled.
  * \ingroup low_level_controller
  */
 static uint8_t consecutive_servo_center_command_count = 0;
@@ -113,7 +108,8 @@ uint32_t get_tick() {
 
 
 /**
- * \brief timer 3 set to 20ms period
+ * \brief Timer 3 set to 20ms period. Used for PWM of servo but also for the
+ * 		  flashing behaviour of the LEDs since they have the same frequency-requirements.
  * 
  * timer/counter3 overflow interrupt
  * 
