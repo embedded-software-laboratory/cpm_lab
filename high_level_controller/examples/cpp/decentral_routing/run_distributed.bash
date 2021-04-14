@@ -66,19 +66,6 @@ cd build
 for vehicle_id in "${vehicle_array[@]}"
 do
 
-    # Start middleware
-    middleware_cmd="./middleware \
-        --node_id=middleware_${vehicle_id} \
-        --simulated_time=false \
-        --vehicle_ids=${vehicle_id} \
-        --domain_number=${vehicle_id} \
-        --dds_domain=${DDS_DOMAIN} \
-        --dds_initial_peer=${DDS_INITIAL_PEER}  \
-        >~/dev/lcc_script_logs/stdout_middleware_${vehicle_ids}.txt \
-        2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_ids}.txt"
-    tmux new-session -d -s "middleware_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
-    printf "\tStarting middleware_${vehicle_id} ...\n"
-
 
     # Special debug option: if debug is enabled, the 5th vehicle will be started directly in gdb
     # This is useful, when the HLC is crashing before we have time to attach a debugger
@@ -95,6 +82,19 @@ do
 	    --middleware_domain=${vehicle_id} \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}"
+
+        # Start middleware
+        middleware_cmd="gdb -ex=r --args ./middleware \
+            --node_id=middleware_${vehicle_id} \
+            --simulated_time=false \
+            --vehicle_ids=${vehicle_id} \
+            --domain_number=${vehicle_id} \
+            --dds_domain=${DDS_DOMAIN} \
+            --dds_initial_peer=${DDS_INITIAL_PEER}"
+            #>~/dev/lcc_script_logs/stdout_middleware_${vehicle_id}.txt \
+            #2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_id}.txt"
+        tmux new-session -d -s "middleware_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
+    printf "\tStarting middleware_${vehicle_id} ...\n"
     else
         # This starts the high level controller
         ./decentral_routing \
@@ -107,6 +107,18 @@ do
             --dds_initial_peer=${DDS_INITIAL_PEER}  \
             >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt \
             2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt&
+	
+        # Start middleware
+        middleware_cmd="./middleware \
+            --node_id=middleware_${vehicle_id} \
+            --simulated_time=false \
+            --vehicle_ids=${vehicle_id} \
+            --domain_number=${vehicle_id} \
+            --dds_domain=${DDS_DOMAIN} \
+            --dds_initial_peer=${DDS_INITIAL_PEER} \
+            >~/dev/lcc_script_logs/stdout_middleware_${vehicle_id}.txt \
+            2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_id}.txt"
+        tmux new-session -d -s "middleware_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
     fi
     printf "\tStarting high_level_controller_${vehicle_id}.\n"
 done

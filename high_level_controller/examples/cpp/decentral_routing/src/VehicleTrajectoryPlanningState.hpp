@@ -68,7 +68,7 @@ class VehicleTrajectoryPlanningState
     //! TODO
     static constexpr double min_speed = 0.5;
     //! TODO
-    static constexpr uint64_t dt_speed_profile_nanos = 5*16000000ull;
+    static constexpr uint64_t dt_speed_profile_nanos = 5*10000000ull;
     //! TODO
     static constexpr double dt_speed_profile = (dt_speed_profile_nanos * 1e-9);
     //! TODO
@@ -120,7 +120,8 @@ public:
     VehicleTrajectoryPlanningState(
         uint8_t _vehicle_id,
         size_t _edge_index,
-        size_t _edge_path_index);
+        size_t _edge_path_index
+        );
 
     /**
      * \brief TODO
@@ -130,14 +131,35 @@ public:
 
     /**
      * \brief TODO
+     * \param time
+     * \param edge_index
+     * \param edge_path_index
+     * \param speed
      */
-    TrajectoryPoint get_trajectory_point();
+    TrajectoryPoint get_trajectory_point(uint64_t time, size_t edge_index, size_t edge_path_index, double speed);
+
+    /**
+     * \brief TODO
+     * \param max_length
+     * \param dt_nanos
+     */
+    vector<TrajectoryPoint> get_planned_trajectory(int max_length, uint64_t dt_nanos);
 
     /**
      * \brief TODO
      * \param dt_nanos
      */
     void apply_timestep(uint64_t dt_nanos);
+
+    /**
+     * \brief TODO
+     */
+    uint64_t get_dt_speed_profile_nanos() {return dt_speed_profile_nanos;};
+
+    /**
+     * \brief TODO
+     */
+    void debug_writeOutOwnTrajectory(); // Debugging method
 
     /**
      * \brief Change the own speed profile so as not to collide with the other_vehicles.
@@ -149,4 +171,5 @@ public:
      * \brief TODO
      */
     uint8_t get_vehicle_id(){return vehicle_id;}
+
 };

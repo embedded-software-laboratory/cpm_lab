@@ -143,6 +143,7 @@ namespace cpm
          */
         void write(T msg)
         {
+            //DDS operations are assumed to be thread safe, so don't use a mutex here
             dds_writer.write(msg);
         }
 

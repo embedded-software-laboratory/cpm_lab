@@ -24,31 +24,21 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "VehicleState.idl"
-#include "VehicleObservation.idl"
-
-#ifndef VEHICLESTATELIST_IDL
-#define VEHICLESTATELIST_IDL
-//TODO rename
+//Doxygen software group and file descriptions for camera calibration
 
 /**
- * \struct VehicleStateList
- * \brief Messages sent from the Middleware to the HLC, containing relevant vehicle information, the current time and the periodicity of the calls
- * Also functions as "wake up" call that means that the HLC can start computation with this data
- * \ingroup cpmlib_idl
+ * \defgroup battery_level Battery Level
+ * \brief Relation between battery level and voltage. Includes experiment data.
+ * \ingroup tools
  */
-struct VehicleStateList {
-    //!Current time, should be used by the HLC instead of using its own clock
-    unsigned long long t_now;
 
-    //!Periodicity of calling the HLC
-    unsigned long long period_ms;
+/**
+* \page bl_files Files
+* \subpage bl_main <br>
+* \ingroup battery_level
+*/
 
-    //!List of vehicle state information for all vehicles
-    sequence<VehicleState> state_list;
-
-    //!List of vehicle observation information for all vehicles
-    sequence<VehicleObservation> vehicle_observation_list;
-    sequence<long> active_vehicle_ids;
-};
-#endif
+/**
+ * \page bl_main main.m
+ * \brief TODO
+ */

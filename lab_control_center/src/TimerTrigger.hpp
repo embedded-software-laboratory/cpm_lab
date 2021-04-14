@@ -43,10 +43,12 @@
 #include "cpm/ParticipantSingleton.hpp"
 #include "cpm/get_time_ns.hpp"
 #include "cpm/Writer.hpp"
+#include "cpm/AsyncReader.hpp"
 #include "dds/sub/DataReader.hpp"
 
 #include "ReadyStatus.hpp"
 #include "SystemTrigger.hpp"
+#include "StopRequest.hpp"
 
 /**
  * \enum ParticipantStatus
@@ -93,9 +95,23 @@ private:
      * \brief Get ReadyStatus messages and new start requests, if they are newer than the current time (mostly used for simulated time).
      * In real-time, this is only relevant for the initial ready messages, which are also displayed in the UI to see which timer is ready.
      */
+
     bool obtain_new_ready_signals();
+
+    /**
+     * \brief TODO
+     */
+    bool obtain_new_stop_request_signals();
+
+    /**
+     * \brief TODO
+     * \param samples
+     */
+    void stop_request_callback(std::vector<StopRequest>& samples);
     //! DDS Reader to obtain ReadyStatus messages sent within the network
     dds::sub::DataReader<ReadyStatus> ready_status_reader;
+    //! TODO
+    cpm::AsyncReader<StopRequest> stop_request_reader;
     //! DDS Writer to send SystemTrigger messages, with which timers in the network can be started / controlled (simulated time) / stopped
     cpm::Writer<SystemTrigger> system_trigger_writer;
     //! Always stores the highest timestamp that was sent by each participant
