@@ -37,6 +37,8 @@ namespace cpm
      */
     class InternalConfiguration
     {
+    private: 
+    
         //! The actual Singleton instance
         static InternalConfiguration the_instance;
 

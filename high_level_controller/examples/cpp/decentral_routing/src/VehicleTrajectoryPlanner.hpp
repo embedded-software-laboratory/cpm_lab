@@ -26,16 +26,20 @@
 
 #pragma once
 
+#include <algorithm>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include "cpm/Logging.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include <dds/sub/ddssub.hpp>
-#include <dds/pub/ddspub.hpp>
+#include "cpm/Writer.hpp"
+#include "cpm/ReaderAbstract.hpp"
+
 #include "VehicleCommandTrajectory.hpp"
 #include "LaneGraphTrajectory.hpp"
+
 #include "VehicleTrajectoryPlanningState.hpp"
+#include "CouplingGraph.hpp"
 
 using std::vector;
 
@@ -47,45 +51,63 @@ using std::vector;
 class VehicleTrajectoryPlanner
 {
     //! TODO
-    std::shared_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
+    std::unique_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
     //! TODO
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles_buffer;
     //! TODO
-    std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer_laneGraphTrajectory;
+    std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer_laneGraphTrajectory;
     //! TODO
-    std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader_laneGraphTrajectory;
+    std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader_laneGraphTrajectory;
     //! TODO
     bool started = false;
     //! TODO
     bool crashed = false;
     //! TODO
+    bool volatile stopFlag = false;
+    //! TODO
+    bool volatile isStopped = true;
+    //! TODO
     uint64_t t_start = 0;
     //! TODO
     uint64_t t_real_time = 0;
     //! TODO
-    uint64_t t_planning;
+    uint64_t t_prev = 0;
     //! TODO
     std::mutex mutex;
     //! TODO
     std::thread planning_thread;
     //! TODO
-    const uint64_t dt_nanos;
+    uint64_t dt_nanos;
+    //! TODO
+    const int planning_horizont = 5;
+    //! TODO
+    const uint64_t dt_keep_past_trajectories = 1000000000;
     //! TODO
     vector<TrajectoryPoint> trajectory_point_buffer;
+    //! TODO
+    CouplingGraph coupling_graph;
+    //! TODO
+    std::set<uint8_t> messages_received; // Which vehicles have sent LaneGraphTrajs to us this timestep
+    //! TODO
+    short no_trajectory_counter = 0;
+ 
+    // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
+    //! TODO
+    static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
+    //! TODO
+    static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
 
     /**
      * \brief TODO
      */
     void read_other_vehicles();
-
     /**
      * \brief TODO
      */
-    void apply_timestep();
-
+    bool wait_for_other_vehicles();
     /**
      * \brief TODO
-     * \param trajectory TODO
+     * \param trajectory
      */
     void write_trajectory( LaneGraphTrajectory trajectory );
 
@@ -102,46 +124,51 @@ class VehicleTrajectoryPlanner
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
- 
-    // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
-    //! Maximum length of RTI DDS msg
-    static constexpr int msg_max_length = 100;
-    //! Constant from geometry.hpp
-    static constexpr int edge_paths_per_edge = 25;
-    //! For each dt_nanos, each HLC has 5 points planned
-    static constexpr int timesteps_per_planningstep = 5;
-    
-public:
-    /**
-     * \brief TODO
-     * \param dt_nanos TODO
-     */
-    VehicleTrajectoryPlanner(uint64_t dt_nanos);
 
     /**
      * \brief TODO
      */
-    ~VehicleTrajectoryPlanner();
+    void clear_past_trajectory_point_buffer();
 
     /**
      * \brief TODO
-     * \param t_now TODO
+     * \param t_now
      */
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
 
     /**
      * \brief TODO
-     * \param t TODO
+     */
+    void debug_writeOutReceivedTrajectories(); // Debugging method
+
+    /**
+     * \brief TODO
+     */
+    void debug_analyzeTrajectoryPointBuffer(); // Debugging method
+    
+public:
+
+    /**
+     * \brief TODO
+     */
+    VehicleTrajectoryPlanner();
+    ~VehicleTrajectoryPlanner();
+
+    /**
+     * \brief TODO
+     * \param t
      */
     void set_real_time(uint64_t t);
 
     /**
      * \brief TODO
+     * \param started TODO
      */
     bool is_started() {return started;}
 
     /**
      * \brief TODO
+     * \param crashed TODO
      */
     bool is_crashed() {return crashed;}
 
@@ -149,23 +176,41 @@ public:
      * \brief TODO
      * \param vehicle TODO
      */
-    void set_vehicle(std::shared_ptr<VehicleTrajectoryPlanningState> vehicle);
+    void set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle);
+
+    /**
+     * \brief TODO
+     * \param graph TODO
+     */
+    void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
 
     /**
      * \brief TODO
      * \param writer TODO
      */
-    void set_writer(std::shared_ptr< dds::pub::DataWriter<LaneGraphTrajectory> > writer);
+    void set_writer(std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer);
 
     /**
      * \brief TODO
      * \param reader TODO
      */
-    void set_reader(std::shared_ptr< dds::sub::DataReader<LaneGraphTrajectory> > reader);
+    void set_reader(std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader);
+
+    /**
+     * \brief TODO
+     * \param t_real_time TODO
+     * \param dt TODO
+     */
+    std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time, uint64_t dt);
 
     /**
      * \brief TODO
      */
-    void start();
+    void stop();
+
+    /**
+     * \brief TODO
+     */
+    void start(){started = true;};
 
 };

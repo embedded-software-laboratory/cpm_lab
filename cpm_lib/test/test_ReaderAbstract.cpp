@@ -49,8 +49,19 @@ TEST_CASE( "ReaderAbstract" ) {
 
     std::vector<double> expected_odometer_values;
 
-    //Wait for reader setup
-    usleep(10000);
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in ReaderAbstract test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        if (reader.matched_publications_size() > 0 && sample_writer.matched_subscriptions_size() > 0)
+            wait = false;
+    }
+    std::cout << std::endl;
+
 
     // send samples with different time stamps and data
     for (size_t i = 0; i < 5; ++i)
@@ -61,15 +72,22 @@ TEST_CASE( "ReaderAbstract" ) {
         sample_writer.write(vehicleState);
         usleep(10000);
     }
-
-    sleep(1);
     
-    //Read should contain desired data
-    auto samples = reader.take();
+    //Read should contain desired dataexpected_odometer_values
+    //Continue reading until all data has been received or 1 second has passed (to compensate test for machines with slow DDS / net. / VMs)
     std::vector<double> received_odometer_values;
-    for (auto& sample : samples)
+    for (int i = 0; i < 10; ++i)
     {
-        received_odometer_values.push_back(sample.odometer_distance());
+        auto samples = reader.take();
+        for (auto& sample : samples)
+        {
+            received_odometer_values.push_back(sample.odometer_distance());
+        }
+
+        if (received_odometer_values.size() >= 5)
+            break;
+        else
+            usleep(100000);
     }
 
     for( auto expected_value : expected_odometer_values )

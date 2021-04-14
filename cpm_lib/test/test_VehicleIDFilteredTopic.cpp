@@ -54,8 +54,21 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     dds::sub::DataReader<VehicleState> reader_vehicle42(dds::sub::Subscriber(participant), topic_vehicle42_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
     dds::sub::DataReader<VehicleState> reader_vehicle11(dds::sub::Subscriber(participant), topic_vehicle11_state, (dds::sub::qos::DataReaderQos() << dds::core::policy::History::KeepAll()));
 
-    // allow time for DDS discovery
-    sleep(1);
+    //It usually takes some time for all instances to see each other - wait until then
+    std::cout << "Waiting for DDS entity match in VehicleIDFilteredTopic test" << std::endl << "\t";
+    bool wait = true;
+    while (wait)
+    {
+        usleep(10000); //Wait 10ms
+        std::cout << "." << std::flush;
+
+        auto matched_pub_1 = dds::sub::matched_publications(reader_vehicle42);
+        auto matched_pub_2 = dds::sub::matched_publications(reader_vehicle11);
+
+        if (writer_vehicleState.matched_subscriptions_size() > 0 && matched_pub_1.size() >=1 && matched_pub_2.size() >= 1)
+            wait = false;
+    }
+    std::cout << std::endl;
 
     // send state packages with different IDs, also those that should be ignored
     {
@@ -87,24 +100,39 @@ TEST_CASE( "VehicleIDFilteredTopic" ) {
     }
 
 
-    // wait for 'transmission'
-    usleep(1000);
+    // wait for 'transmission' for up to 1 second
+    std::vector<VehicleState> reader_samples11;
+    std::vector<VehicleState> reader_samples42;
+    for (int i = 0; i < 10; ++i)
+    {
+        auto reader_samples11_dds = reader_vehicle11.take();
+        auto reader_samples42_dds = reader_vehicle42.take();
 
+        for (auto& sample : reader_samples11_dds)
+        {
+            if (sample.info().valid()) reader_samples11.push_back(sample.data());
+        }
+        for (auto& sample : reader_samples42_dds)
+        {
+            if (sample.info().valid()) reader_samples42.push_back(sample.data());
+        }
 
-    // receive the data sent before and check if they match the ID
-    auto reader_samples11 = reader_vehicle11.read();
-    auto reader_samples42 = reader_vehicle42.read();
+        //Abort early if condition is fulfilled, else wait and repeat read
+        if (reader_samples11.size() >=1 && reader_samples42.size() >= 2) break;
+        else usleep(100000);
+    }
 
-    REQUIRE( reader_samples11.length() == 1 );
-    REQUIRE( reader_samples42.length() == 2 );
+    // Look at the data sent before and check if they match the ID
+    REQUIRE( reader_samples11.size() == 1 );
+    REQUIRE( reader_samples42.size() == 2 );
 
-    REQUIRE( reader_samples42[0].data().vehicle_id() == 42 );
-    REQUIRE( reader_samples42[0].data().odometer_distance() == 2 );
+    REQUIRE( reader_samples42[0].vehicle_id() == 42 );
+    REQUIRE( reader_samples42[0].odometer_distance() == 2 );
 
-    REQUIRE( reader_samples42[1].data().vehicle_id() == 42 );
-    REQUIRE( reader_samples42[1].data().odometer_distance() == 6 );
+    REQUIRE( reader_samples42[1].vehicle_id() == 42 );
+    REQUIRE( reader_samples42[1].odometer_distance() == 6 );
 
-    REQUIRE( reader_samples11[0].data().vehicle_id() == 11 );
-    REQUIRE( reader_samples11[0].data().odometer_distance() == 3 );
+    REQUIRE( reader_samples11[0].vehicle_id() == 11 );
+    REQUIRE( reader_samples11[0].odometer_distance() == 3 );
 
 }

@@ -94,16 +94,6 @@ public:
     std::shared_ptr<ParamViewUI> get_param_view();
 
     /**
-     * \brief Deprecated. Was true if the current page is the manual control page. No longer workable due to changed structure.
-     */
-    bool manual_control_page_active();
-
-    /**
-     * \brief Deprecated. Was true if the current page is the param page. No longer workable due to changed structure.
-     */
-    bool param_page_active();
-
-    /**
      * \brief Returns the parent widget of this UI element, to be able to put it within another UI element.
      */
     Gtk::Widget* get_parent();

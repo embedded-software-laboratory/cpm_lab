@@ -73,10 +73,8 @@ using namespace std::placeholders;
  */
 class Communication {
     private:
-        //HLC communication
-        //! DDS participant for communication to the HLC
+        //For HLC - communication
         cpm::Participant hlcParticipant;
-        //! DDS writer for communication of current vehicle states to the HLC
         cpm::Writer<VehicleStateList> hlcStateWriter;
         //! DDS reader for getting ready status messages from the HLC (sent when it has finished its initialization)
         cpm::ReaderAbstract<ReadyStatus> hlc_ready_status_reader;
@@ -136,7 +134,7 @@ class Communication {
             std::shared_ptr<cpm::Timer> _timer,
             std::vector<uint8_t> vehicle_ids
         ) 
-        :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml")
+        :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile")
         ,hlcStateWriter(hlcParticipant.get_participant(), vehicleStateListTopicName)
         ,hlc_ready_status_reader(hlcParticipant.get_participant(), "readyStatus", true, true, true)
 

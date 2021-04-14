@@ -43,15 +43,16 @@ namespace cpm
      */
     class Participant
     {
+    private:
         //! Internal DDS participant that is abstracted by this class
         dds::domain::DomainParticipant dds_participant;
 
+    public:
         Participant(const Participant&) = delete;
         Participant& operator=(const Participant&) = delete;
         Participant(const Participant&&) = delete;
         Participant& operator=(const Participant&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor for a participant 
          * \param domain_number Set the domain ID of the domain within which the communication takes place
@@ -71,6 +72,19 @@ namespace cpm
         Participant(int domain_number, std::string qos_file)
         :
             dds_participant(domain_number, dds::core::QosProvider(qos_file).participant_qos())
+        { 
+            
+        }
+
+        /**
+         * \brief Constructor for a participant 
+         * \param domain_number Set the domain ID of the domain within which the communication takes place
+         * \param qos_file QoS settings to be imported from an .xml file
+         * \param qos_profile QoS profile from the .xml file that should be applied
+         */
+        Participant(int domain_number, std::string qos_file, std::string qos_profile)
+        :
+            dds_participant(domain_number, dds::core::QosProvider(qos_file, qos_profile).participant_qos())
         { 
             
         }

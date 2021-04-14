@@ -64,7 +64,7 @@ TEST_CASE( "AsyncReader" ) {
     bool wait = true;
     while (wait)
     {
-        usleep(100000); //Wait 100ms
+        usleep(10000); //Wait 10ms
         std::cout << "." << std::flush;
 
         if (test_writer.matched_subscriptions_size() > 0 && async_reader.matched_publications_size() > 0)
@@ -81,8 +81,16 @@ TEST_CASE( "AsyncReader" ) {
         test_writer.write(test_msg);
     }
 
-    //Wait a bit, then check if the messages were actually received
-    usleep(100000);
+    //Wait up to 1 second before checking if the messages were actually received
+    //Abort waiting if all messages are already there
+    for (int i = 0; i < 10; ++i)
+    {
+        usleep(100000);
+
+        std::lock_guard<std::mutex> lock(receive_mutex);
+        if (received_ids.size() >= 3) break;
+    }
+
     std::lock_guard<std::mutex> lock(receive_mutex);
     for (auto& sent_id : sent_ids)
     {

@@ -42,9 +42,11 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
+    std::function<void()> _reset_vehicle_view,
     std::function<void()> _on_simulation_start,
     std::function<void()> _on_simulation_stop,
     std::function<void(bool)> _set_commonroad_tab_sensitive,
+    std::function<void(std::vector<int32_t>)> _update_vehicle_ids_parameter,
     unsigned int argc, 
     char *argv[]
     ) 
@@ -54,9 +56,11 @@ SetupViewUI::SetupViewUI
     hlc_ready_aggregator(_hlc_ready_aggregator),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
+    reset_vehicle_view(_reset_vehicle_view),
     on_simulation_start(_on_simulation_start),
     on_simulation_stop(_on_simulation_stop),
-    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive)
+    set_commonroad_tab_sensitive(_set_commonroad_tab_sensitive),
+    update_vehicle_ids_parameter(_update_vehicle_ids_parameter)
 {
     builder = Gtk::Builder::create_from_file("ui/setup/setup.glade");
 
@@ -178,11 +182,17 @@ SetupViewUI::SetupViewUI
     is_deployed.store(false);
     vehicle_data_thread_running.store(true);
     check_real_vehicle_data_thread = std::thread([&]{
+        // So we can later check if anything changed
+        std::vector<unsigned int> old_active_vehicles;
+        std::vector<unsigned int> active_vehicles;
         while(vehicle_data_thread_running.load())
         {
+            active_vehicles = get_vehicle_ids_active();
+
             //Don't update data during experiment
             if (! is_deployed.load())
             {
+            
                 //Check if vehicle data has changed, flag all vehicles that are active and not simulated as real vehicles
                 auto currently_simulated_vehicles = get_vehicle_ids_simulated();
 
@@ -216,11 +226,27 @@ SetupViewUI::SetupViewUI
                     }
                 }
 
+                // If the active vehicle ids changed, update the parameter server
+                if (active_vehicles != old_active_vehicles) {
+                    // Transform to signed int for parameter server
+                    // We do not check if this is safe, because ids are small
+                    std::vector<int32_t> active_vehicles_signed(
+                            active_vehicles.size());
+                    std::transform(
+                            active_vehicles.begin(),
+                            active_vehicles.end(), 
+                            active_vehicles_signed.begin(), [](unsigned int id) { return (int32_t)id;});
+                    // Update the vehicle ids on the ParameterServer
+                    update_vehicle_ids_parameter(active_vehicles_signed);
+                }
+
                 //The vehicle toggles must be updated in the UI thread
                 update_vehicle_toggles.store(true);
                 ui_dispatcher.emit();
             }
 
+            old_active_vehicles = active_vehicles;
+            
             //Sleep for a while, then update again
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
@@ -254,6 +280,7 @@ void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle
     else if (state == VehicleToggle::ToggleState::Off)
     {
         deploy_functions->kill_sim_vehicle(vehicle_id);
+        reset_vehicle_view(); //Remove sim. vehicle entry in map view
     }
     else
     {
@@ -771,6 +798,8 @@ void SetupViewUI::select_no_vehicles()
             deploy_functions->kill_sim_vehicle(vehicle_toggle->get_id());
         }
     }
+
+    reset_vehicle_view(); //Remove sim. vehicle entry in map view
 }
 
 void SetupViewUI::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

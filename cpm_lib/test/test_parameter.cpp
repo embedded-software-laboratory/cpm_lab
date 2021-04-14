@@ -98,6 +98,8 @@ TEST_CASE( "parameter_double" ) {
         received_parameter_value = cpm::parameter_double(param_name);
     });
 
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
+
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
     ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
         for (auto data : samples) {
@@ -152,6 +154,8 @@ TEST_CASE( "parameter_strings" ) {
         received_parameter_value_2 = cpm::parameter_string(param_name_2);
     });
 
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
+
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
     ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
         for (auto data : samples) {
@@ -203,6 +207,8 @@ TEST_CASE( "parameter_bool" ) {
         received_parameter_value_true = cpm::parameter_bool(param_name_1);
         received_parameter_value_false = cpm::parameter_bool(param_name_2);
     });
+
+    //Requesting parameters in the cpm lib also includes its own waiting mechanism, so we skip waiting for an entity match
 
     //Create a callback function that acts similar to the parameter server - only send data if the expected request was received
     ParameterServerDummy server([&](std::vector<ParameterRequest>& samples){
