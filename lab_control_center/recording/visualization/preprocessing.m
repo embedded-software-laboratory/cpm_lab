@@ -40,38 +40,53 @@ function [DataByVehicle] = preprocessing(dds_domain, recording_file)
 % else 
 %    [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
 % end
-[ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
-%% Parse {JSON} formatted sample into structs for further processing.
-VehicleStateRaw = cellfun(@jsondecode, ddsVehicleStateJsonSample);
-VehicleObservationRaw = cellfun(@jsondecode, ddsVehiclePoseJsonSample);
+ddsJsonSample = dbConnection(dds_domain, recording_file);
 
-%% Create tables from decoded structs to enable filtering by logical operation and vectorized access of nested fields.
-VehicleStateTable = struct2table(VehicleStateRaw);
-VehicleObservationTable = struct2table(VehicleObservationRaw);
+t_start_list = [];
 
-% Create tables from nested struct field 'header'.
-HeaderObservation = struct2table([VehicleObservationRaw.header]);
-HeaderState = struct2table([VehicleStateRaw.header]);
+VehicleStateTable = [];
+VehicleObservationTable = [];
+VehicleCommandPathTrackingTable = [];
 
-%% Find timepoint zero, i.e. smallest timestamp in recording
-t_start_state_nanos = min([HeaderState.create_stamp.nanoseconds]);
-t_start_observation_nanos = min([HeaderObservation.create_stamp.nanoseconds]);
-t_start_nanos = min(t_start_state_nanos, t_start_observation_nanos);
+HeaderState = [];
+HeaderObservation = [];
+HeaderCommandPathTracking = [];
+
+
+try
+[VehicleStateTable, HeaderState, t_start_state_nanos] = jsonDeconstruct(ddsJsonSample.VehicleState);
+t_start_list = [t_start_list, t_start_state_nanos];
+catch
+
+end
+
+try
+[VehicleObservationTable, HeaderObservation, t_start_observation_nanos] = jsonDeconstruct(ddsJsonSample.VehiclePose);
+t_start_list = [t_start_list, t_start_observation_nanos];
+catch
+
+end
+
+try
+[VehicleCommandPathTrackingTable, HeaderCommandPathTracking, t_start_pathtracking_nanos] = jsonDeconstruct(ddsJsonSample.VehicleCommandPathTracking);
+t_start_list = [t_start_list, t_start_pathtracking_nanos];
+catch
+
+end
+
+t_start_nanos = min(t_start_list);
 
 %% Sort data by vehicle ids, resolve nested structures and store into struct DataByVehicle.
 
 DataByVehicle = struct;
 
-for iVehicles = 1:max([VehicleStateRaw.vehicle_id]) % Loop over vehicle ids.
-
-    % Build logical array of all rows in data tables corresponding to current vehicle.
-    currentRowsState = VehicleStateTable.vehicle_id == iVehicles;
-    currentRowsObservation = VehicleObservationTable.vehicle_id == iVehicles; 
-
+for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     currentVehicle = ['vehicle_' int2str(iVehicles)]; % Create fieldname from current vehicle id.
 
     % Read out and store nested data of vehicle observation filtered by
     % current vehicle id via logical table operation.
+    try
+    currentRowsObservation = VehicleObservationTable.vehicle_id == iVehicles; 
 
     DataByVehicle.(currentVehicle).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
     DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
@@ -80,9 +95,13 @@ for iVehicles = 1:max([VehicleStateRaw.vehicle_id]) % Loop over vehicle ids.
     DataByVehicle.(currentVehicle).observation.x = [VehicleObservationTable.pose(currentRowsObservation).x]';
     DataByVehicle.(currentVehicle).observation.y = [VehicleObservationTable.pose(currentRowsObservation).y]';
     DataByVehicle.(currentVehicle).observation.yaw = [VehicleObservationTable.pose(currentRowsObservation).yaw]';
+    catch
+    end
 
     % Read out and store nested data of vehicle state filtered by
     % current vehicle id via logical table operation.
+    try
+    currentRowsState = VehicleStateTable.vehicle_id == iVehicles;
     DataByVehicle.(currentVehicle).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
     DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
     DataByVehicle.(currentVehicle).state.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).state.create_stamp_nanos;
@@ -97,9 +116,62 @@ for iVehicles = 1:max([VehicleStateRaw.vehicle_id]) % Loop over vehicle ids.
         currentField = VehicleStateTable.Properties.VariableNames{jFields};
         DataByVehicle.(currentVehicle).state.(currentField) = VehicleStateTable.(currentField)(currentRowsState);
     end
-   
+    catch
+    end
+    
+    % Read out and store nested data of vehicle path tracking commands filtered by
+    % current vehicle id via logical table operation.
+    try
+    currentRowsPathTracking = VehicleCommandPathTrackingTable.vehicle_id == iVehicles;
+    DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos = [HeaderCommandPathTracking.create_stamp(currentRowsPathTracking).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]' - t_start_nanos;
+    DataByVehicle.(currentVehicle).pathtracking.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos;
+    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos;
+    
+    % TODO: Array with path points
+    allPTCommands = VehicleCommandPathTrackingTable.path(currentRowsPathTracking);
+    path_table = [];
+    for i = 1:numel(allPTCommands)
+        path_struct = VehicleCommandPathTrackingTable.path(i);
+        path_list = [];
+        s = [path_struct{1}(:).s];
+        pose = [path_struct{1}(:).pose];
+        x = [pose(:).x];
+        y = [pose(:).y];
+        yaw = [pose(:).yaw];
+
+        for i=1:numel(s)
+            pp = PathPoint;
+            pp.s = s(i);
+            pp.pose.x = x(i);
+            pp.pose.y = y(i);
+            pp.pose.yaw = yaw(i);
+            path_list = [path_list pp];
+        end
+        path_table = [path_table; path_list];
+    end
+    DataByVehicle.(currentVehicle).pathtracking.path = path_table;
+    DataByVehicle.(currentVehicle).pathtracking.speed = [VehicleCommandPathTrackingTable.speed(currentRowsPathTracking)]';
+    catch
+        disp("no pt commands");
+    end
 end
 
 save ('dds_record', 'DataByVehicle')
 
+end
+
+
+function [Table, Header, t_start_nanos] = jsonDeconstruct(JSONData)
+%% Parse {JSON} formatted sample into structs for further processing.
+DataRaw = cellfun(@jsondecode, JSONData);
+
+%% Create tables from decoded structs to enable filtering by logical operation and vectorized access of nested fields.
+Table = struct2table(DataRaw);
+
+% Create tables from nested struct field 'header'.
+Header = struct2table([DataRaw.header]);
+
+%% Find timepoint zero, i.e. smallest timestamp in recording
+t_start_nanos = min([Header.create_stamp.nanoseconds]);
 end

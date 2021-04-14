@@ -49,6 +49,7 @@ namespace cpm {
      */
     class SimpleTimer : public cpm::Timer
     {
+    private:
         //! Internally, TimerFD is used, with a 50ms interval
         std::shared_ptr<cpm::TimerFD> internal_timer;
         //! A counter is used to call the actual callback function only every period_milliseconds (rounded up to 50ms)

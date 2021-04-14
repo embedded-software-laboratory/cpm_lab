@@ -92,7 +92,7 @@ private:
     void reset();
 
     /**
-     * \brief Stop cpm timers, if they are running
+     * \brief Stop cpm timers, if they are running, and send empty trajectories to overwrite / kill existing ones (required due to preview button)
      */
     void stop_timers();
 

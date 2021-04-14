@@ -50,6 +50,7 @@
 #include <unistd.h>
 
 #include "cpm/Logging.hpp"
+#include "ProgramExecutor.hpp"
 
 /**
  * \brief This class is responsible for managing deployment of HLC and vehicle scripts / programs and other participants that are launched from the LCC
@@ -63,8 +64,14 @@ public:
      * \param _cmd_domain_id domain ID set in the command line (when starting the LCC)
      * \param _cmd_dds_initial_peer dds initial peer set in the command line (when starting the LCC)
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
+     * \param _program_executor Class object that gives "safer" access to fork etc., to prevent memory leaks etc. that may occur in multi threaded programs
      */
-    Deploy(unsigned int _cmd_domain_id, std::string _cmd_dds_initial_peer, std::function<void(uint8_t)> _stop_vehicle);
+    Deploy(
+        unsigned int _cmd_domain_id, 
+        std::string _cmd_dds_initial_peer, 
+        std::function<void(uint8_t)> _stop_vehicle, 
+        std::shared_ptr<ProgramExecutor> _program_executor
+    );
 
     /**
      * \brief Deconstructor required because of reboot threads
@@ -154,6 +161,18 @@ public:
      */
     void kill_ips();
 
+
+    /**
+     * \brief Deploy the labcam. After executing this command the labcam will immediately start the recording.
+     * \param path The path where the video is to be saved.
+     * \param file_name The name of the video file.
+     */
+    void deploy_labcam(std::string path, std::string file_name);
+
+    // Kill the labcam. After executing this command the labcam will immediately stop the recording and save the result.
+    void kill_labcam();
+
+
     //! For diagnosis of data done in MonitoringUi, is set in SetupViewUI
     bool diagnosis_switch = false; 
 
@@ -177,18 +196,16 @@ public:
      * \param script_path Path to the script, including the script name (and possible file ending) - MUST BE ABSOLUTE
      * \param script_params Additional script parameters
      * \param timeout_seconds Time to wait until the exection is aborted
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds, std::function<bool()> is_online);
+    bool deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, bool use_simulated_time, std::string script_path, std::string script_params, unsigned int timeout_seconds);
     /**
      * \brief Kill the script + middleware on the given HLC (again determine the IP from the HLC ID)
      * \param hlc_id ID of the HLC on which to kill the programs
      * \param timeout_seconds Timeout in seconds until the kill process should be terminated
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
      * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise
      */
-    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds, std::function<bool()> is_online);
+    bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds);
 
     /**
      * \brief Used to create the folder ~/dev/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
@@ -222,6 +239,9 @@ private:
     //! Callback function to send a vehicle stop signal / control to the specified vehicle
     std::function<void(uint8_t)> stop_vehicle;
 
+    //! Provides safer access to deploying functions (uses a child process that was forked before creation of DDS threads etc.)
+    std::shared_ptr<ProgramExecutor> program_executor;
+    
     //! In case of remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
     std::vector<unsigned int> deployed_local_hlcs;
 
@@ -254,48 +274,13 @@ private:
      */
     std::string bool_to_string(bool var);
 
-    /**
-     * \brief Function to execute a shell command and get its output
-     * \param cmd A shell command as C-String
-     * \return Output of the shell command
-     */
-    std::string execute_command(const char* cmd);
-
-    /**
-     * \brief Creates a command and manages it until it finished or a timeout occured or the HLC is no longer online; uses the three functions below
-     * \param cmd Command string to be executed
-     * \param timeout_seconds Timout until the process termination is forced
-     * \param is_online Function to check whether the HLC on which to deploy is still online (else: abort early)
-     * \return True if the execution (of the bash script) did not have to be aborted and no process-related error occured, false otherwise 
-     */
-    bool spawn_and_manage_process(const char* cmd, unsigned int timeout_seconds, std::function<bool()> is_online);
-
-    /**
-     * \brief Function to execute a shell command that returns the processes PID, so that the process can be controlled / monitored further
-     * \param cmd A shell command as C-String
-     * \return Output of the shell command
-     */
-    int execute_command_get_pid(const char* cmd);
-
-    /**
-     * \brief Function to find out which state a process spawned before is currently in
-     * \param process_id The process id of the child process that was spawned before
-     * \return The current state of the process
-     */
-    PROCESS_STATE get_child_process_state(int process_id);
-
-    /**
-     * \brief Kill a process - first allow it to terminate gracefully, else force-kill it
-     * \param process_id The ID of the process
-     */
-    void kill_process(int process_id);
-
-    //! Tmux session name for the recording service
+    // Session name for recording service
     const std::string recording_session = "dds_record";
     //! Tmux session name for the IPS Pipeline
     const std::string ips_session = "ips_pipeline";
     //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
+    const std::string labcam_session = "labcam";
     //! Tmux session name for the middleware
     const std::string middleware_session = "middleware";
     //! Tmux session name for the HLC

@@ -109,10 +109,6 @@ private:
 
     //Further helper functions
     /**
-     * \brief Deprecated / unused
-     */
-    void send_remote_check_msg();
-    /**
      * \brief Used by the crash check thread, checks for program crashes on HLCs / HLC crashes after an upload of the script was performed
      */
     std::vector<std::string> check_for_remote_crashes();

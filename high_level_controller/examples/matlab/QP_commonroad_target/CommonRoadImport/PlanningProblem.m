@@ -24,34 +24,45 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function main
-
-    data = [ ... % Time(minutes), voltage
-                    0         8.25   ; ...
-                    18         8.05   ; ...
-                    40         7.83   ; ...
-                    60        7.68    ; ...
-                    80        7.55    ; ...
-                    101       7.47   ; ...
-                    120       7.42   ; ...
-                    140       7.35   ; ...
-                    150       7.27   ; ...
-                    160       7.22   ; ...
-                    164       7.0   ; ...
-                    167       6.8   ; ...
-                    168       6.5   ; ...
-                    169       6.4    ...
-    ];
+classdef PlanningProblem < handle
     
+   properties
+       id;
+       initialState;
+       numGoalState = int8(0);
+       goalState;
+       
+       
+   end
+   methods
+       
+       function obj = PlanningProblem(New_PlanningProblem)
+           numAttributes = size(New_PlanningProblem.Attributes,1);
+           for k=1:numAttributes
+               if strcmp(New_PlanningProblem.Attributes.Name, 'id')
+                   obj.id = New_PlanningProblem.Attributes.Value;
+               end
+           end
+           numChildren = size(New_PlanningProblem.Children,2);
+           for k=1:numChildren
+               switch New_PlanningProblem.Children(k).Name
+                   
+                   case 'initialState'
+                       obj.initialState = stateTostruct(New_PlanningProblem.Children(k));
+                       
+                   case 'goalState'
+                       obj.numGoalState = obj.numGoalState+1;
+                       obj.goalState{1,obj.numGoalState} = goalstateTostruct(New_PlanningProblem.Children(k));
+                       
+               end
+               
+           end
+       end
+   end
+       
 
-    clf
-    box on
-    plot(data(:,1), data(:,2))
-    grid on
-    xlabel('t [min]','FontSize',20)
-    ylabel('Volt','FontSize',20)
-    print('discharge_curve.png','-dpng')
-
+    
+    
+    
     
 end
-

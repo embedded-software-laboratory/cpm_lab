@@ -27,6 +27,7 @@
 #pragma once
 
 #include <dds/domain/DomainParticipant.hpp>
+#include <mutex>
 
 namespace cpm 
 {
@@ -47,13 +48,16 @@ namespace cpm
      */
     class ParticipantSingleton
     {
+    private:
+        //! The instance creation is not atomic. Thus: Use a mutex to make sure that the Singleton is not created twice.
+        static std::mutex creation_mutex;
+    public:
         ParticipantSingleton() = delete;
         ParticipantSingleton(ParticipantSingleton const&) = delete;
         ParticipantSingleton(ParticipantSingleton&&) = delete; 
         ParticipantSingleton& operator=(ParticipantSingleton const&) = delete;
         ParticipantSingleton& operator=(ParticipantSingleton &&) = delete;
 
-    public:
         /**
          * \brief Retrieve the participant singleton with this function
          * \return A participant

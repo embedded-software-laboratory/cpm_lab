@@ -158,8 +158,7 @@ namespace cpm
          * \param samples Samples to be processed by the callback function (received messages)
          */
         void callback(std::vector<Parameter>& samples);
-
-    private:
+        
         //! Internal writer to requrest parameter values
         cpm::Writer<ParameterRequest> writer;
         //! Internal async reader to receive any parameter values that are sent in the network

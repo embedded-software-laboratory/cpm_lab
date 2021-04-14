@@ -76,14 +76,6 @@ std::shared_ptr<ParamViewUI> TabsViewUI::get_param_view() {
     return param_view_ui;
 }
 
-bool TabsViewUI::manual_control_page_active() {
-    return right_notebook->get_current_page() == 0;
-}
-
-bool TabsViewUI::param_page_active() {
-    return right_notebook->get_current_page() == 1;
-}
-
 Gtk::Widget* TabsViewUI::get_parent() {
     return right_notebook;
 }

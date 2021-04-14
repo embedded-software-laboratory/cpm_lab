@@ -59,6 +59,7 @@ namespace cpm
     template<typename T>
     class Reader
     {
+    private:
         //! Internal DDS Reader to receive messages of type T
         dds::sub::DataReader<T> dds_reader;
         //! Mutex for access to get_sample and removing old messages
@@ -95,8 +96,6 @@ namespace cpm
          */
         void remove_old_msgs(const T& current_newest_sample)
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
             //Delete all messages that are older than the currently newest sample
             //Take a look at the create_stamp only for this
             //We do this because we do not need these messages anymore, and as they take up space
@@ -127,8 +126,6 @@ namespace cpm
          */
         void get_newest_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
             sample_out = T();
             sample_out.header().create_stamp().nanoseconds(0);
             sample_age_out = t_now;
@@ -151,12 +148,12 @@ namespace cpm
             }
         }
 
+    public:
         Reader(const Reader&) = delete;
         Reader& operator=(const Reader&) = delete;
         Reader(const Reader&&) = delete;
         Reader& operator=(const Reader&&) = delete;
-
-    public:
+        
         /**
          * \brief Constructor using a topic to create a Reader
          * \param topic the topic of the communication
@@ -193,6 +190,9 @@ namespace cpm
          */
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
+            //Lock mutex to make whole get_sample function thread safe
+            std::lock_guard<std::mutex> lock(m_mutex);
+
             flush_dds_reader();
 
             get_newest_sample(t_now, sample_out, sample_age_out);
@@ -201,6 +201,15 @@ namespace cpm
             //TODO: At reviewer: Should messages that are too old regarding their creation stamp be deleted as well?
             //      If so: A 'timeout' for this could be set in the constructor
             remove_old_msgs(sample_out);
+        }
+
+        /**
+         * \brief Returns # of matched writers, needs template parameter for topic type
+         */
+        size_t matched_publications_size()
+        {
+            auto matched_pub = dds::sub::matched_publications(dds_reader);
+            return matched_pub.size();
         }
     };
 

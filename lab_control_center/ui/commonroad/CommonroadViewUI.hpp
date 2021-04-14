@@ -239,7 +239,7 @@ private:
      */
     bool apply_entry_rotate(GdkEventKey* event);
 
-    //! Config file that stores the previously selected script, so that one is always shown when the LCC is restarted
+    //! A config file stores the previously selected commonroad scenario, so that one is always shown when the LCC is restarted. The key for accessing this data is stored in this variable.
     const std::string config_file_location = "commonroad";
 
     /**

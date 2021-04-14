@@ -143,7 +143,6 @@ void ParamsCreateView::on_type_changed() {
 void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder = Gtk::Builder::create_from_file("ui/params/params_create.glade");
 
-    params_create_builder->get_widget("params_create_dialog", parent);
     params_create_builder->get_widget("params_create_dialog", window);
     params_create_builder->get_widget("params_create_box", params_create_box);
     params_create_builder->get_widget("params_create_buttons", params_create_buttons);
@@ -151,7 +150,6 @@ void ParamsCreateView::init_members(Gtk::Window& main_window) {
     params_create_builder->get_widget("params_create_add_button", params_create_add_button);
     params_create_builder->get_widget("params_create_values_grid", params_create_values_grid);
 
-    assert(parent);
     assert(window);
     assert(params_create_box);
     assert(params_create_buttons);

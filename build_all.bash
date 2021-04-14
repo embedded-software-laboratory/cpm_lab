@@ -77,6 +77,9 @@ pushd high_level_controller
     pushd examples/cpp/two_vehicles_drive
         bash build.bash
     popd
+    pushd examples/cpp/eight_zero
+        bash build.bash
+    popd
 popd
 
 pushd middleware
