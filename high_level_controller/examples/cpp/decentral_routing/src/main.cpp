@@ -222,6 +222,7 @@ int main(int argc, char *argv[]) {
      * ---------------------------------------------------------------------------------
      */
     // FIXME: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
+    // We could replace this by checking for how many other DDS participants we found. But are we 100% sure how many we need to find?
     std::this_thread::sleep_for(std::chrono::seconds(5));
     // Create arbitrary timestamp as per ReadyStatus.idl
     TimeStamp timestamp(11111);
