@@ -93,7 +93,7 @@ using std::vector;
  */
 
 /**
- * \brief TODO
+ * \brief Main method to start a decentral HLC
  * \ingroup decentral_routing
  */
 int main(int argc, char *argv[]) {   
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
      * Compose and send Ready message
      * ---------------------------------------------------------------------------------
      */
-    // TODO: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
+    // FIXME: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
     std::this_thread::sleep_for(std::chrono::seconds(5));
     // Create arbitrary timestamp as per ReadyStatus.idl
     TimeStamp timestamp(11111);
