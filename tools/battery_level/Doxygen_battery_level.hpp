@@ -24,37 +24,21 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include <stdlib.h>
-#include <iostream>
-#include <string>
-#include "labcam/LabCam.hpp"
+//Doxygen software group and file descriptions for camera calibration
 
-//Suppress warning for unused parameter of main
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+/**
+ * \defgroup battery_level Battery Level
+ * \brief Relation between battery level and voltage. Includes experiment data.
+ * \ingroup tools
+ */
 
-int main(int argc, char *argv[])
-{
-    LabCam labcam;
+/**
+* \page bl_files Files
+* \subpage bl_main <br>
+* \ingroup battery_level
+*/
 
-    labcam.startRecording(".", "awesome_recording1");
-
-    std::cout << "." << std::endl;
-    std::cin.get();
-
-    std::cout << "stopping lab cam" << std::endl;
-    labcam.stopRecording();
-    std::cout << "Press enter to start recording again" << std::endl;
-
-    
-    std::cin.get();
-    labcam.startRecording(".", "awesome_recording2");
-
-
-    std::cin.get();
-    labcam.stopRecording();
-
-    while(1);
-}
-
-#pragma GCC diagnostic pop
+/**
+ * \page bl_main main.m
+ * \brief TODO
+ */

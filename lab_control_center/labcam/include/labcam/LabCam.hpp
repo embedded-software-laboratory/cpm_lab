@@ -32,13 +32,13 @@
 
 
 /**
- * \brief TODO
+ * \brief Contains the actual implementation of the LabCam.
  * \ingroup lcc_labcam
  */
 class LabCam {
 	public:
 		/**
-		 * \brief TODO
+		 * \brief Type for specifying the current status of the labcam.
 		 */
 		typedef enum {
 			CAM_STATUS_RECORDING,
@@ -63,9 +63,9 @@ class LabCam {
 		//! TODO
 		GstElement *pipeline = nullptr;
 
-		//! TODO
+		//! Filename of the recording
 		std::string file_name_;
-		//! TODO
+		//! Folder in which the resulting video will be saved
 		std::string path_;
 
         //! A pipeline needs a source element. The InstantCameraForAppSrc will create, configure, and provide an AppSrc which fits the camera.
@@ -84,7 +84,7 @@ class LabCam {
 		static void jumppad(gpointer data);
 
 		/**
-		 * \brief TODO
+		 * \brief Starts recording
 		 */
 		bool startRecordingImpl();
 
@@ -93,14 +93,14 @@ class LabCam {
 		~LabCam() = default;
 
 		/**
-		 * \brief TODO
-		 * \param path TODO
-		 * \param file_name TODO
+		 * \brief Wrapper to specify the output folder/file and to start the recording of the LabCam.
+		 * \param path Folder in which the resulting video will be saved
+		 * \param file_name Filename of the recording
 		 */
 		void startRecording(std::string path, std::string file_name);
 
 		/**
-		 * \brief TODO
+		 * \brief Stops current recording
 		 */
 		void stopRecording();
 };

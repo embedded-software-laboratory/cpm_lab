@@ -88,10 +88,10 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     try
     currentRowsObservation = VehicleObservationTable.vehicle_id == iVehicles; 
 
-    DataByVehicle.(currentVehicle).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).observation.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).observation.create_stamp_nanos;
-    DataByVehicle.(currentVehicle).observation.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos;
+    DataByVehicle.(currentVehicle).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]';
+    DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]';
+    DataByVehicle.(currentVehicle).observation.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).observation.create_stamp_nanos-t_start_nanos);
+    DataByVehicle.(currentVehicle).observation.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos-t_start_nanos);
     DataByVehicle.(currentVehicle).observation.x = [VehicleObservationTable.pose(currentRowsObservation).x]';
     DataByVehicle.(currentVehicle).observation.y = [VehicleObservationTable.pose(currentRowsObservation).y]';
     DataByVehicle.(currentVehicle).observation.yaw = [VehicleObservationTable.pose(currentRowsObservation).yaw]';
@@ -102,10 +102,10 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     % current vehicle id via logical table operation.
     try
     currentRowsState = VehicleStateTable.vehicle_id == iVehicles;
-    DataByVehicle.(currentVehicle).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).state.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).state.create_stamp_nanos;
-    DataByVehicle.(currentVehicle).state.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos;
+    DataByVehicle.(currentVehicle).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]';
+    DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]';
+    DataByVehicle.(currentVehicle).state.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).state.create_stamp_nanos-t_start_nanos);
+    DataByVehicle.(currentVehicle).state.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos-t_start_nanos);
     DataByVehicle.(currentVehicle).state.x = [VehicleStateTable.pose(currentRowsState).x]';
     DataByVehicle.(currentVehicle).state.y = [VehicleStateTable.pose(currentRowsState).y]';
     DataByVehicle.(currentVehicle).state.yaw = [VehicleStateTable.pose(currentRowsState).yaw]';
@@ -123,10 +123,10 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     % current vehicle id via logical table operation.
     try
     currentRowsPathTracking = VehicleCommandPathTrackingTable.vehicle_id == iVehicles;
-    DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos = [HeaderCommandPathTracking.create_stamp(currentRowsPathTracking).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]' - t_start_nanos;
-    DataByVehicle.(currentVehicle).pathtracking.create_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos;
-    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp = 1e-9 * DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos;
+    DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos = [HeaderCommandPathTracking.create_stamp(currentRowsPathTracking).nanoseconds]';
+    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]';
+    DataByVehicle.(currentVehicle).pathtracking.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos-t_start_nanos);
+    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos-t_start_nanos);
     
     % TODO: Array with path points
     allPTCommands = VehicleCommandPathTrackingTable.path(currentRowsPathTracking);

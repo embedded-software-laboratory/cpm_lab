@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * motor.h
+/**
+ * \file motor.h
+ * 
+ * \brief This module provides an interface for setting up and controlling speed and direction of motor movement.
  *
- * Created: 20.09.2018 10:02:02
- *  Author: maczijewski
+ * \date 20.09.2018 10:02:02
+ * \author maczijewski
  */ 
 
 
@@ -38,13 +40,28 @@
 
 #include <stdint.h>
 
-
+/**
+ * \brief Can be used in \link motor_set_direction \endlink to force motor to brake.
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_BRAKE 0
+
+/**
+ * \brief Can be used in \link motor_set_direction \endlink to set motor direction to forward.
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_FORWARD 1
+
+/**
+ * \brief Can be used in \link motor_set_direction \endlink to set motor direction to backwards.
+ * \ingroup low_level_controller
+ */
 #define MOTOR_DIRECTION_REVERSE 2
 
 /**
- * \brief TODO
+ * \brief Set the direction in which the vehicle should move. Three values are possible,
+ *        see \link MOTOR_DIRECTION_BRAKE \endlink, \link MOTOR_DIRECTION_FORWARD \endlink,
+ *        and \link MOTOR_DIRECTION_REVERSE \endlink.
  * \param direction
  * 
  * \author maczijewski
@@ -53,16 +70,16 @@
 void motor_set_direction(uint8_t direction);
 
 /**
- * \brief TODO
- * \param duty
+ * \brief Allows to set the duty of the motor. Direction of movement depends on \link motor_set_direction \endlink.
+ * \param duty PWM signal within a range of [0,400]
  * 
  * \author maczijewski
  * \ingroup low_level_controller
  */
-void motor_set_duty(uint16_t duty); // values from 0 to 400
+void motor_set_duty(uint16_t duty);
 
 /**
- * \brief TODO
+ * \brief Sets up all relevant registers such that the motor can be controlled afterwards.
  * 
  * \author maczijewski
  * \ingroup low_level_controller

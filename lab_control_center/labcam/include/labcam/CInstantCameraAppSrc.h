@@ -86,4 +86,8 @@ private:
 	// For measuring the amount of framedrops
 	int correct_pictures = 0;
 	int incorrect_pictures=0;
+
+    // Determine unix timestamp
+    uint64_t startTime;
+    int64_t startTicks;
 };

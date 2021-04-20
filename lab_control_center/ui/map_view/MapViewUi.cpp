@@ -285,9 +285,55 @@ MapViewUi::MapViewUi(
 
 
     drawingArea->signal_draw().connect([&](const DrawingContext& ctx)->bool {
+        //Center the view if this has not happened before
+        if (this->map_tick >= 0)
+        {
+            //Get current width and height of the map view
+            auto width = drawingArea->get_width();
+            auto height = drawingArea->get_height();
+
+            //Width and height need to "settle in", as the window elements are put together after creation, so look out for changes
+            bool values_final = false;
+            //Usually: Return 1 (not created) -> return value_1 (not final size) -> return value_2 (hopefully final and, due to added elements, smaller size)
+            if ((width < this->map_width || height < this->map_height) && this->map_width > 1 && this->map_height > 1)
+            {
+                values_final = true;
+            }
+            //Don't wait longer than 20 draw ticks
+            this->map_tick -= 1;
+            if (map_tick < 0)
+            {
+                values_final = true;
+            }
+
+            //Store new values
+            this->map_width = width;
+            this->map_height = height;
+
+            //Only center if the obtained values for width and height are final
+            if (values_final)
+            {
+                this->map_tick = -1; //Do not center again during program run
+                auto smaller_dim = std::min(width, height);
+
+                //Adapt the zoom to the window size w.r.t. the lab map height (use a bit more so that the map does not take up the full screen)
+                zoom = static_cast<double>(smaller_dim) / 6.0;
+
+                //Using 1/2 does not give us useful values for the standard map due to the position of the origin
+                pan_x = (static_cast<double>(width)) / 3.0; 
+                pan_y = (static_cast<double>(height)) - (0.5 * zoom); //LCC Map starts at origin, add a bit of offset though
+            }
+        }
+
         this->draw(ctx); 
         return true;
     });
+
+    //Rotate the map view by 90 degrees counterclockwise, to match the camera view
+    rotate_by(90);
+
+    //Center the view
+    //This is done in signal_draw(), because in the constructor the width and height value of the drawing area are not yet set to their final value
 }
 
 int MapViewUi::find_vehicle_id_in_focus()
