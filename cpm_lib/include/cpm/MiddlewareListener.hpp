@@ -48,6 +48,14 @@
 #include "StopRequest.hpp"
 
 class MiddlewareListener{
+    /**
+     * \class MiddlewareListener
+     * \brief This class handles communication of a High Level Controller
+     * with the Middleware. Thus it also dictates the timing of when the HLC
+     * is supposed to plan a timestep.
+     * \ingroup cpmlib
+     */
+
     //! Vehicle ID; needed for the ready message 
     int vehicle_id;
 
@@ -79,7 +87,7 @@ class MiddlewareListener{
     std::function<void(VehicleStateList)>   on_first_timestep;
     //! Callback function for when we need to take every timestep (including the first one)
     std::function<void(VehicleStateList)>   on_each_timestep;
-    //! Callback function for when we need to cancel planning before it's finished
+    //! Callback function for when we need to cancel a planning timestep before it's finished
     std::function<void()>                   on_cancel_timestep;
     //! Callback function for when we have to completely stop planning
     std::function<void()>                   on_stop;
