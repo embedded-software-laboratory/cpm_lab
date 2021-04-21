@@ -48,6 +48,8 @@ set(SOURCE_CPM
     src/RTTTool.cpp
     include/cpm/TimeMeasurement.hpp
     src/TimeMeasurement.cpp
+    include/cpm/MiddlewareListener.hpp
+    src/MiddlewareListener.cpp
 )
 
 

@@ -33,8 +33,6 @@ add_executable(decentral_routing
     src/VehicleTrajectoryPlanner.cpp
     src/CouplingGraph.cpp
     src/CouplingGraph.hpp
-    src/MiddlewareListener.cpp
-    src/MiddlewareListener.hpp
 )
 target_include_directories(decentral_routing PUBLIC
     include/lane_graph_full)

@@ -24,15 +24,20 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+#include <iostream>
+#include <memory>
+
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Timer.hpp"
+#include "cpm/Participant.hpp"
 #include "cpm/Writer.hpp"
+#include "cpm/MiddlewareListener.hpp"
+
+// Import the DDS message types we will use
 #include "VehicleCommandTrajectory.hpp"
-#include <iostream>
-#include <memory>
+#include "VehicleStateList.hpp"
+#include "ReadyStatus.hpp"
 
 using std::vector;
 
@@ -86,10 +91,25 @@ int main(int argc, char *argv[])
     //(The vehicle does not consider 'mixed' trajectories as before, when trajectories were sent e.g. by both the LCC and the program)
     sleep(10);
 
+    // Ease-of-life class to communicate with the middleware.
+    // This participant should only communicate on this system, so its messages are not directly send to the vehicles.
+    // Instead we communicate with the middleware, and the middleware relays these messages to the vehicle.
+    // These settings are saved in the Quality of Service (QoS) xml-file and are identical to the ones the middleware uses.
+    // One QoS file can define multiple profiles, which is why we need to specify that we want to use the
+    // LocalCommunicationProfile, from the MatlabLibrary.
+    MiddlewareListener middlewareListener(
+            vehicle_id,
+            1,
+            "./QOS_LOCAL_COMMUNICATION.xml",
+            "MatlabLibrary::LocalCommunicationProfile"
+    );
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
+    // Instead of creating a new participant, we can just use the one created by the MiddlewareListener
     //For more information see our documentation about RTI DDS
-    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+            middlewareListener.getLocalParticipant()->get_participant(),
+            "vehicleCommandTrajectory");
 
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set. 
@@ -99,6 +119,8 @@ int main(int argc, char *argv[])
     //These vecotrs define the speed in x and y direction. Together the define the starting direction from the current trajectory point,
     // for example: vx = 1 and vy = 1 will lead to a positive diagonal starting vector from the starting point. For more informations see
     //our documentation website
+    // For these we assume that we send trajectories every 200ms
+    // This means we need to manually set the middleware_period_ms parameter in the LCC to 200ms.
     vector<double> trajectory_vx        = vector<double>{            0,            -1,             0,             1};
     vector<double> trajectory_vy        = vector<double>{            1,             0,            -1,             0};
     vector<uint64_t> segment_duration = vector<uint64_t>{1570800000ull, 1570800000ull, 1570800000ull, 1570800000ull};
@@ -142,10 +164,9 @@ int main(int argc, char *argv[])
     // The code inside the cpm::Timer is executed every 200 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
-    const uint64_t dt_nanos = 200000000ull; // 200 milliseconds == 200000000 nanoseconds
-    auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
-    timer->start([&](uint64_t t_now)
+    middlewareListener.setOnEachTimestep([&](VehicleStateList vehicleStateList)
     {
+        uint64_t t_now = vehicleStateList.t_now();
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 1000000000ull;
 
@@ -187,4 +208,6 @@ int main(int argc, char *argv[])
         }
 
     });
+
+    middlewareListener.start();
 }

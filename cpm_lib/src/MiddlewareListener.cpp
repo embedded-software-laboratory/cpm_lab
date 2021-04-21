@@ -24,29 +24,31 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "MiddlewareListener.hpp"
+#include "cpm/MiddlewareListener.hpp"
 
 MiddlewareListener::MiddlewareListener(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
     vehicle_id(_vehicle_id),
-    local_comms_participant(
-            middleware_domain,
-            qos_file,
-            qos_profile
+    p_local_comms_participant(
+            new cpm::Participant(
+                middleware_domain,
+                qos_file,
+                qos_profile
+            )
     ),
     writer_readyStatus(
-            local_comms_participant.get_participant(),
+            p_local_comms_participant->get_participant(),
             "readyStatus",
             true,
             true,
             true),
     writer_stopRequest(
-            local_comms_participant.get_participant(),
+            p_local_comms_participant->get_participant(),
             "stopRequest"),
     reader_vehicleStateList(
-            local_comms_participant.get_participant(),
+            p_local_comms_participant->get_participant(),
             "vehicleStateList"),
     reader_systemTrigger(
-            local_comms_participant.get_participant(),
+            p_local_comms_participant->get_participant(),
             "systemTrigger"){
         cpm::Logging::Instance().set_id("middleware_listener_"+std::to_string(vehicle_id));
     }
@@ -78,24 +80,24 @@ void MiddlewareListener::start(){
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
  
-    // If onStop is defined, call it now before we finish
-    if( onStop.target_type() != typeid(void) ){ 
-        onStop();
+    // If on_stop is defined, call it now before we finish
+    if( on_stop.target_type() != typeid(void) ){ 
+        on_stop();
     }
 }
 
 void MiddlewareListener::runTimestep(){
     // If this is the first timestep and the respective callback is defined, call it now
-    if( first_timestep && onFirstTimestep.target_type() != typeid(void) ){
-        onFirstTimestep(vehicleStateList);
+    if( first_timestep && on_first_timestep.target_type() != typeid(void) ){
+        on_first_timestep(vehicleStateList);
         first_timestep = false;
     }
 
     if( planning_future.valid() ){
         std::future_status future_status = planning_future.wait_for(std::chrono::milliseconds(1));
         if( future_status != std::future_status::ready ) {
-            if( onCancelTimestep.target_type() != typeid(void) ) {
-                onCancelTimestep();
+            if( on_cancel_timestep.target_type() != typeid(void) ) {
+                on_cancel_timestep();
             } else {
                 // If we're here that means we did not manage to calculate a plan in time,
                 // and we don't have a callback to stop planning early
@@ -107,10 +109,10 @@ void MiddlewareListener::runTimestep(){
         planning_future.get();
     }
 
-    // onEachTimestep should pretty much always be defined, but we check anyway
-    if( onEachTimestep.target_type() != typeid(void) ) {
+    // on_each_timestep should pretty much always be defined, but we check anyway
+    if( on_each_timestep.target_type() != typeid(void) ) {
         planning_future = std::async(
-                onEachTimestep,
+                on_each_timestep,
                 vehicleStateList
             );
     }
@@ -139,28 +141,28 @@ void MiddlewareListener::writeInfoMessage(){
     std::stringstream set_callbacks;
     std::stringstream unset_callbacks;
 
-    if( onFirstTimestep.target_type() == typeid(void)) { 
-        unset_callbacks << "onFirstTimestep ";
+    if( on_first_timestep.target_type() == typeid(void)) { 
+        unset_callbacks << "on_first_timestep ";
     } else {
-        set_callbacks << "onFirstTimestep ";
+        set_callbacks << "on_first_timestep ";
     }
 
-    if( onEachTimestep.target_type() == typeid(void)) { 
-        unset_callbacks << "onEachTimestep ";
+    if( on_each_timestep.target_type() == typeid(void)) { 
+        unset_callbacks << "on_each_timestep ";
     } else {
-        set_callbacks << "onEachTimestep ";
+        set_callbacks << "on_each_timestep ";
     }
 
-    if( onCancelTimestep.target_type() == typeid(void)) { 
-        unset_callbacks << "onCancelTimestep ";
+    if( on_cancel_timestep.target_type() == typeid(void)) { 
+        unset_callbacks << "on_cancel_timestep ";
     } else {
-        set_callbacks << "onCancelTimestep ";
+        set_callbacks << "on_cancel_timestep ";
     }
 
-    if( onStop.target_type() == typeid(void)) { 
-        unset_callbacks << "onStop ";
+    if( on_stop.target_type() == typeid(void)) { 
+        unset_callbacks << "on_stop ";
     } else {
-        set_callbacks << "onStop ";
+        set_callbacks << "on_stop ";
     }
 
     std::stringstream ss;

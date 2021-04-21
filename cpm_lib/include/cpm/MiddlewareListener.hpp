@@ -47,14 +47,12 @@
 #include "VehicleStateList.hpp"
 #include "StopRequest.hpp"
 
-using std::unique_ptr;
-
 class MiddlewareListener{
     //! Vehicle ID; needed for the ready message 
     int vehicle_id;
 
     //! Participant to communicate with the middleware
-    cpm::Participant local_comms_participant;
+    std::shared_ptr<cpm::Participant> p_local_comms_participant;
 
     //! SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
@@ -78,13 +76,13 @@ class MiddlewareListener{
     cpm::ReaderAbstract<SystemTrigger>      reader_systemTrigger;
 
     //! Callback function for when we need to take on the first timestep
-    std::function<void(VehicleStateList)>   onFirstTimestep;
+    std::function<void(VehicleStateList)>   on_first_timestep;
     //! Callback function for when we need to take every timestep (including the first one)
-    std::function<void(VehicleStateList)>   onEachTimestep;
+    std::function<void(VehicleStateList)>   on_each_timestep;
     //! Callback function for when we need to cancel planning before it's finished
-    std::function<void()>                   onCancelTimestep;
+    std::function<void()>                   on_cancel_timestep;
     //! Callback function for when we have to completely stop planning
-    std::function<void()>                   onStop;
+    std::function<void()>                   on_stop;
 
     //! Future object to check if onEachTimestep has finished yet
     std::future<void> planning_future;
@@ -120,31 +118,39 @@ public:
      * \brief Constructor for MiddlewareListener
      */
     MiddlewareListener(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile);
+
+    /**
+     * \brief Returns a participant that can communicate with the middleware
+     *
+     * This can be used to e.g. create a writer to write VehicleCommandTrajectories
+     */
+    std::shared_ptr<cpm::Participant> getLocalParticipant(){ return p_local_comms_participant; };
+
     /**
      * \brief Additional steps that need to be taken on the first timestep
      * \param TODO
      *
      * Used for initial setup, that couldn't be done earlier.
      */
-    void setOnFirstTimestep(std::function<void(VehicleStateList)> callback) { onFirstTimestep = callback; };
+    void setOnFirstTimestep(std::function<void(VehicleStateList)> callback) { on_first_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnEachTimestep(std::function<void(VehicleStateList)> callback) { onEachTimestep = callback; };
+    void setOnEachTimestep(std::function<void(VehicleStateList)> callback) { on_each_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnCancelTimestep(std::function<void()> callback) { onCancelTimestep = callback; };
+    void setOnCancelTimestep(std::function<void()> callback) { on_cancel_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnStop(std::function<void()> callback) { onStop = callback; };
+    void setOnStop(std::function<void()> callback) { on_stop = callback; };
 
     /**
      * \brief Communicate that we're ready and start planning

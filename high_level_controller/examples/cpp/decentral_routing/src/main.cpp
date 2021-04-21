@@ -39,6 +39,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/Writer.hpp"
 #include "cpm/ReaderAbstract.hpp"
+#include "cpm/MiddlewareListener.hpp"
 
 // IDL files
 #include "VehicleCommandTrajectory.hpp"
@@ -60,7 +61,6 @@
 #include "CouplingGraph.hpp"
 // Planner
 #include "VehicleTrajectoryPlanner.hpp"    //sw-folder central routing
-#include "MiddlewareListener.hpp"
 
 using std::vector;
 
