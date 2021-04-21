@@ -31,9 +31,15 @@
 #include <functional>                       // So we can use std::function
 #include <limits>                           // To get maximum integer value (for stop condition)
 #include <future>                           // So we can use std::async, std::future etc
-#include <chrono>                           // For sleep duration
-#include <thread>                           // For sleep
+#include <thread>                           // For std::this_thread::sleep_for
 #include <sstream>                          // For std::stringstream
+
+/* FIXME: This define is only necessary because
+ * on some operation systems sleep_for doesn't work without.
+ * https://stackoverflow.com/questions/4438084/stdthis-threadsleep-for-and-gcc
+ */
+#define _GLIBCXX_USE_NANOSLEEP
+#include <chrono>                           // For sleep duration (std::chrono::milliseconds)
 
 // cpm_lib
 #include "cpm/get_topic.hpp"
