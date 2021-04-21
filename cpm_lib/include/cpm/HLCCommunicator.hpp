@@ -31,7 +31,8 @@
 #include <functional>                       // So we can use std::function
 #include <limits>                           // To get maximum integer value (for stop condition)
 #include <future>                           // So we can use std::async, std::future etc
-#include <chrono>                           // For sleep
+#include <chrono>                           // For sleep duration
+#include <thread>                           // For sleep
 #include <sstream>                          // For std::stringstream
 
 // cpm_lib
