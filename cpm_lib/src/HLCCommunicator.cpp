@@ -107,6 +107,8 @@ void HLCCommunicator::runTimestep(){
                 cpm::Logging::Instance().write(1,
                         "HLC is taking too long to plan and we have no way to stop it"
                         );
+                // We wait until planning has finished
+                planning_future.wait();
             }
         }
         planning_future.get();
