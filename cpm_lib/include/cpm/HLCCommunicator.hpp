@@ -32,14 +32,8 @@
 #include <limits>                           // To get maximum integer value (for stop condition)
 #include <future>                           // So we can use std::async, std::future etc
 #include <thread>                           // For std::this_thread::sleep_for
-#include <sstream>                          // For std::stringstream
-
-/* FIXME: This define is only necessary because
- * on some operation systems sleep_for doesn't work without.
- * https://stackoverflow.com/questions/4438084/stdthis-threadsleep-for-and-gcc
- */
-#define _GLIBCXX_USE_NANOSLEEP
 #include <chrono>                           // For sleep duration (std::chrono::milliseconds)
+#include <sstream>                          // For std::stringstream
 
 // cpm_lib
 #include "cpm/get_topic.hpp"
@@ -63,8 +57,8 @@ class HLCCommunicator{
      * \ingroup cpmlib
      */
 
-    //! Vehicle ID; needed for the ready message 
-    int vehicle_id;
+    //! Vehicle IDs; needed for the ready message 
+    std::vector<uint8_t> vehicle_ids;
 
     //! Participant to communicate with the middleware
     std::shared_ptr<cpm::Participant> p_local_comms_participant;
@@ -132,7 +126,10 @@ public:
     /**
      * \brief Constructor for HLCCommunicator
      */
-    HLCCommunicator(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile);
+    HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middleware_domain, std::string qos_file, std::string qos_profile);
+
+    HLCCommunicator(uint8_t _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
+            HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, middleware_domain, qos_file, qos_profile){}
 
     /**
      * \brief Returns a participant that can communicate with the middleware

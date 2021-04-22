@@ -25,9 +25,8 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "cpm/HLCCommunicator.hpp"
-
-HLCCommunicator::HLCCommunicator(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
-    vehicle_id(_vehicle_id),
+HLCCommunicator::HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middleware_domain, std::string qos_file, std::string qos_profile):
+    vehicle_ids(_vehicle_ids),
     p_local_comms_participant(
             new cpm::Participant(
                 middleware_domain,
@@ -50,7 +49,11 @@ HLCCommunicator::HLCCommunicator(int _vehicle_id, int middleware_domain, std::st
     reader_systemTrigger(
             p_local_comms_participant->get_participant(),
             "systemTrigger"){
-        cpm::Logging::Instance().set_id("middleware_listener_"+std::to_string(vehicle_id));
+        std::stringstream vehicle_ids_string;
+        for( auto vehicle_id : vehicle_ids ) {
+            vehicle_ids_string << "_" << vehicle_id;
+        }
+        cpm::Logging::Instance().set_id("middleware_listener"+vehicle_ids_string.str());
     }
 
 void HLCCommunicator::start(){
@@ -121,10 +124,12 @@ void HLCCommunicator::runTimestep(){
 void HLCCommunicator::sendReadyMessage(){
     TimeStamp timestamp(11111);
     // The middleware expects a message like "hlc_${vehicle_id}", e.g. hlc_1
-    std::string hlc_identification("hlc_");
-    hlc_identification.append(std::to_string(vehicle_id));
-    ReadyStatus readyStatus(hlc_identification, timestamp);
-    writer_readyStatus.write(readyStatus);
+    for( auto vehicle_id : vehicle_ids ) {
+        std::string hlc_identification("hlc_");
+        hlc_identification.append(std::to_string(vehicle_id));
+        ReadyStatus readyStatus(hlc_identification, timestamp);
+        writer_readyStatus.write(readyStatus);
+    }
 }
 
 bool HLCCommunicator::stopSignalReceived(){
@@ -166,7 +171,11 @@ void HLCCommunicator::writeInfoMessage(){
     }
 
     std::stringstream ss;
-    ss << "Started HLCCommunicator for Vehicle ID " << vehicle_id  << std::endl;
+    ss << "Started HLCCommunicator for Vehicle ID ";
+    for( auto vehicle_id : vehicle_ids ) {
+        ss << vehicle_id << " ";
+    }
+    ss << std::endl;
     ss << "The following callback methods were set: " << set_callbacks.rdbuf()  << std::endl;
 
     ss << "The following callback methods were not set: "  << unset_callbacks.rdbuf() << std::endl;
