@@ -124,10 +124,18 @@ class HLCCommunicator{
 public:
 
     /**
-     * \brief Constructor for HLCCommunicator
+     * \brief Constructor for HLCCommunicator for multiple vehicle IDs.
+     *
+     * To be used when one HLC controls multiple vehicles (e.g. central_routing_example)
      */
     HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middleware_domain, std::string qos_file, std::string qos_profile);
 
+    /**
+     * \brief Constructor for HLCCommunicator for one vehicle ID.
+     *
+     * To be used, when there's one HLC per vehicle (e.g. decentral_routing_example),
+     * or when there's just one vehicle and HLC overall (e.g. basic_circle).
+     */
     HLCCommunicator(uint8_t _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
             HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, middleware_domain, qos_file, qos_profile){}
 
