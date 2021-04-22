@@ -132,6 +132,8 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
+    const bool iterative_planning_enabled = false;
+
     // SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
 
@@ -286,7 +288,9 @@ int main(int argc, char *argv[]) {
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
                         CouplingGraph coupling_graph(vec);
                         // For testing, make all planning one iterative block
-                        coupling_graph.addIterativeBlock(std::vector<int>( vec.begin(), vec.end()));
+                        if( iterative_planning_enabled ) {
+                            coupling_graph.addIterativeBlock(std::vector<int>( vec.begin(), vec.end()));
+                        }
 
                         planner->set_coupling_graph(coupling_graph);
 
