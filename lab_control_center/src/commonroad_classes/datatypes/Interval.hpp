@@ -49,7 +49,7 @@ class Interval : public InterfaceTransform
 {
 private:
     //! Internal commonroad interval representation
-    std::vector<std::pair<double, double>> intervals;
+    std::pair<double, double> interval;
 
 public:
     /**
@@ -59,29 +59,11 @@ public:
     {
         //We do not assert the interval type here, as the name of the node in this case mostly refers to a specific datatype like 'time' or 'orientation', of which there are many throughout the documentation
 
-        //Sadly, sequences are allowed here as well, so we can have more than one interval
-        std::vector<double> interval_start;
-        std::vector<double> interval_end;
-
         try
         {
-            xml_translation::iterate_children(
-                node, 
-                [&] (const xmlpp::Node* child) 
-                {
-                    interval_start.push_back(xml_translation::get_first_child_double(child));
-                }, 
-                "intervalStart"
-            );
-            
-            xml_translation::iterate_children(
-                node, 
-                [&] (const xmlpp::Node* child) 
-                {
-                    interval_end.push_back(xml_translation::get_first_child_double(child));
-                }, 
-                "intervalEnd"
-            );
+            //Both values must exist
+            interval.first = xml_translation::get_child_child_double(node, "intervalStart", true).value();
+            interval.second = xml_translation::get_child_child_double(node, "intervalEnd", true).value();
         }
         catch(const SpecificationError& e)
         {
@@ -91,26 +73,6 @@ public:
         {
             //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
             throw;
-        }
-        
-
-        if (interval_start.size() != interval_end.size())
-        {
-            std::stringstream error_msg_stream;
-            error_msg_stream << "Different amount of start and end nodes in Interval, line " << node->get_line();
-            throw SpecificationError(error_msg_stream.str());
-        }
-
-        if (interval_start.size() == 0)
-        {
-            std::stringstream error_msg_stream;
-            error_msg_stream << "Unexpected empty Interval, line " << node->get_line();
-            throw SpecificationError(error_msg_stream.str());
-        }
-
-        for(size_t i = 0; i < interval_start.size(); ++i)
-        {
-            intervals.push_back(std::make_pair(interval_start.at(i), interval_end.at(i)));
         }
 
         //Test output
@@ -124,41 +86,27 @@ public:
     //Getter (no setter, as we only want to set Interval at translation or change it using transform_...)
 
     /**
-     * \brief Determine how many intervals are stored in this data structure
+     * \brief Get interval start
      */
-    size_t get_intervals_size()
+    double get_start() const
     {
-        return intervals.size();
+        return interval.first;
     }
 
     /**
-     * \brief For constant for loop - interval type: std::pair<double, double>
+     * \brief Get interval end
      */
-    std::vector<std::pair<double, double>>::const_iterator cbegin() const
+    double get_end() const
     {
-        return intervals.cbegin();
-    }
-
-    /**
-     * \brief For constant for loop - interval type: std::pair<double, double>
-     */
-    std::vector<std::pair<double, double>>::const_iterator cend() const
-    {
-        return intervals.cend();
+        return interval.second;
     }
 
     /**
      * \brief Use these functions to get the list of values in the middle of each interval
      */
-    std::vector<double> get_interval_avg() const
+    double get_interval_avg() const
     {
-        std::vector<double> avgs;
-        for (const auto interval : intervals)
-        {
-            avgs.push_back((interval.first + interval.second) / 2.0);
-        }
-
-        return avgs;
+        return 0.5 * interval.first + 0.5 * interval.second;
     }
 
     /**
@@ -167,13 +115,8 @@ public:
     bool is_greater_zero()
     {
         bool greater_zero = true;
-        for (auto interval : intervals)
-        {
-            greater_zero &= (interval.first >= 0); //Due to sample files, this seems to be allowed to be zero
-            greater_zero &= (interval.second > 0);
-
-            if (!greater_zero) break;
-        }
+        greater_zero &= (interval.first >= 0); //Due to sample files, this seems to be allowed to be zero
+        greater_zero &= (interval.second > 0);
 
         return greater_zero;
     }
@@ -194,13 +137,10 @@ public:
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override
     {
-        for (auto &interval : intervals)
+        if (scale > 0)
         {
-            if (scale > 0)
-            {
-                interval.first *= scale;
-                interval.second *= scale;
-            }
+            interval.first *= scale;
+            interval.second *= scale;
         }
     }
 
@@ -208,20 +148,11 @@ public:
      * \brief Translate to DDS
      * \param ratio Relevant to translate e.g. time information to actual time
      */
-    CommonroadDDSIntervals to_dds_msg(double ratio = 1.0)
+    CommonroadDDSInterval to_dds_msg(double ratio = 1.0)
     {
-        CommonroadDDSIntervals dds_interval;
-        
-        std::vector<CommonroadDDSInterval> vector_intervals;
-        for (auto& interval : intervals)
-        {
-            CommonroadDDSInterval dds_interval;
-            dds_interval.interval_start(interval.first * ratio);
-            dds_interval.interval_end(interval.second * ratio);
-            vector_intervals.push_back(dds_interval);
-        }
-
-        dds_interval.intervals(rti::core::vector<CommonroadDDSInterval>(vector_intervals));
+        CommonroadDDSInterval dds_interval;
+        dds_interval.interval_start(interval.first * ratio);
+        dds_interval.interval_end(interval.second * ratio);
 
         return dds_interval;
     }

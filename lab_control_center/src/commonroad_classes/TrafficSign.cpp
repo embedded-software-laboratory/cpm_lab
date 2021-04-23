@@ -75,24 +75,23 @@ TrafficSign::TrafficSign(
                 {
                     //Create next entry
                     ++pos;
-                    traffic_sign_elements.push_back(TrafficSignElement());
 
                     //Add all trafficSignElement (commonroad) / TrafficSignPost (here) elements
-                    traffic_sign_elements[pos].traffic_sign_posts = translate_traffic_sign_posts(child);
+                    traffic_sign_elements.push_back(translate_traffic_sign_element(child));
 
                     allowed_next_values = { "trafficSignElement", "position", "virtual" };
                 }
                 else if (child_name == "position")
                 {
-                    traffic_sign_elements[pos].position = std::optional<Position>{translate_position(child)};
+                    position = std::optional<Position>{translate_position(child)};
 
-                    allowed_next_values = { "trafficSignElement", "virtual" };
+                    allowed_next_values = { "virtual" };
                 }
                 else if (child_name == "virtual")
                 {
-                    traffic_sign_elements[pos].is_virtual.push_back(translate_virtual(child));
+                    is_virtual.push_back(translate_virtual(child));
 
-                    allowed_next_values = { "trafficSignElement", "virtual" }; //Multiple virtual definitions are possible
+                    allowed_next_values = { "virtual" }; //Multiple virtual definitions are possible
                 }
                 else
                 {
@@ -146,7 +145,7 @@ TrafficSign::TrafficSign(
     // }
 }
 
-std::vector<TrafficSignPost> TrafficSign::translate_traffic_sign_posts(const xmlpp::Node* element_node)
+TrafficSignElement TrafficSign::translate_traffic_sign_element(const xmlpp::Node* element_node)
 {
     //As for the whole TrafficSign definition, we need to iterate all children
     //For two entries with one being optional, checking for consistency does not make sense
@@ -156,7 +155,7 @@ std::vector<TrafficSignPost> TrafficSign::translate_traffic_sign_posts(const xml
     //- additionalValue (optional), list
     //-> Start a new definition with every new trafficSignID definition. 
     size_t pos = -1; //To know which element to fill with new info
-    std::vector<TrafficSignPost> traffic_sign_posts;
+    TrafficSignElement traffic_sign_element;
 
     bool is_first_element = true; //We need to make sure that the first element is trafficSignID (consistency check for first element)
 
@@ -168,25 +167,28 @@ std::vector<TrafficSignPost> TrafficSign::translate_traffic_sign_posts(const xml
 
             if (child_name == "trafficSignID")
             {
+                if (!is_first_element)
+                {
+                    std::stringstream error_stream;
+                    error_stream << "TrafficSign in line " << child->get_line() << " does not fulfill specs, order not kept / too many definitions of: " 
+                        << child_name << "(only one allowed)";
+                    throw SpecificationError(error_stream.str());
+                }
+
                 //Create next entry
                 ++pos;
-                traffic_sign_posts.push_back(TrafficSignPost());
-
-                traffic_sign_posts[pos].traffic_sign_id = xml_translation::get_first_child_text(child);
+                traffic_sign_element.traffic_sign_id = xml_translation::get_first_child_text(child);
             }
             else if (child_name == "additionalValue")
             {
                 if (is_first_element)
                 {
-                    //We cannot check for consistency after the first element, because after an additional value, more additional values
-                    //or an ID might follow, and the same goes for ID
-                    //BUT: According to the spec, the first element must be an ID. Otherwise, this implementation would also break
                     std::stringstream error_stream;
                     error_stream << "TrafficSign in line " << child->get_line() << " does not fulfill specs, order not kept: " << child_name;
                     throw SpecificationError(error_stream.str());
                 }
 
-                traffic_sign_posts[pos].additional_values.push_back(xml_translation::get_first_child_text(child));
+                traffic_sign_element.additional_values.push_back(xml_translation::get_first_child_text(child));
             }
             else
             {
@@ -201,14 +203,14 @@ std::vector<TrafficSignPost> TrafficSign::translate_traffic_sign_posts(const xml
     );
 
     //We do not accept empty trafficSignElements (don't make sense)
-    if (traffic_sign_posts.size() < 1)
+    if (is_first_element)
     {
         std::stringstream error_msg_stream;
         error_msg_stream << "trafficSignElement is empty, line: " << element_node->get_line();
         throw SpecificationError(error_msg_stream.str());
     }
 
-    return traffic_sign_posts;
+    return traffic_sign_element;
 }
 
 Position TrafficSign::translate_position(const xmlpp::Node* position_node)
@@ -248,12 +250,9 @@ bool TrafficSign::translate_virtual(const xmlpp::Node* virtual_node)
 
 void TrafficSign::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {    
-    for (auto& element : traffic_sign_elements)
+    if (position)
     {
-        if (element.position)
-        {
-            element.position->transform_coordinate_system(scale, angle, translate_x, translate_y);
-        }
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -269,70 +268,67 @@ void TrafficSign::draw(const DrawingContext& ctx, double scale, double global_or
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    for (auto element : traffic_sign_elements)
+    double x = 0.0;
+    double y = 0.0;
+    bool position_exists = false;
+
+    if (position.has_value())
     {
-        double x = 0.0;
-        double y = 0.0;
-        bool position_exists = false;
+        //Position must be exact, this was made sure during translation
+        x = position->get_point().value().get_x() * scale;
+        y = position->get_point().value().get_y() * scale;
+        position_exists = true;
 
-        if (element.position.has_value())
+        std::cout << "using position" << std::endl;
+    }
+    else if (get_position_from_lanelet)
+    {
+        auto position = get_position_from_lanelet(id);
+        if (position.has_value())
         {
-            //Position must be exact, this was made sure during translation
-            x = element.position->get_point().value().get_x() * scale;
-            y = element.position->get_point().value().get_y() * scale;
+            x = position->first * scale;
+            y = position->second * scale;
             position_exists = true;
-
-            std::cout << "using position" << std::endl;
         }
-        else if (get_position_from_lanelet)
-        {
-            auto position = get_position_from_lanelet(id);
-            if (position.has_value())
-            {
-                x = position->first * scale;
-                y = position->second * scale;
-                position_exists = true;
-            }
-        }
-        
-        if (position_exists)
-        {
-            //Draw test-circle
-            double radius = 0.05;
-            ctx->set_source_rgb(0.6, 0.9, 0.2);
-            ctx->set_line_width(0.005);
-            ctx->move_to(x, y);
-            ctx->begin_new_path();
-            ctx->arc(x, y, radius * scale, 0.0, 2 * M_PI);
-            ctx->close_path();
-            ctx->fill_preserve();
-            ctx->stroke();
+    }
+    
+    if (position_exists)
+    {
+        //Draw test-circle
+        double radius = 0.05;
+        ctx->set_source_rgb(0.6, 0.9, 0.2);
+        ctx->set_line_width(0.005);
+        ctx->move_to(x, y);
+        ctx->begin_new_path();
+        ctx->arc(x, y, radius * scale, 0.0, 2 * M_PI);
+        ctx->close_path();
+        ctx->fill_preserve();
+        ctx->stroke();
 
-            std::stringstream descr_stream;
-            for(auto post : element.traffic_sign_posts)
+        std::stringstream descr_stream;
+        for(auto post : traffic_sign_elements)
+        {
+            descr_stream << post.traffic_sign_id << " ";
+            if (post.additional_values.size() > 0)
             {
-                descr_stream << post.traffic_sign_id << " ";
-                if (post.additional_values.size() > 0)
+                descr_stream << "( ";
+                for (auto add_val : post.additional_values)
                 {
-                    descr_stream << "( ";
-                    for (auto add_val : post.additional_values)
-                    {
-                        descr_stream << add_val << " ";
-                    }
-                    descr_stream << ")";
+                    descr_stream << add_val << " ";
                 }
+                descr_stream << ")";
             }
-
-            //Draw IDs
-            ctx->translate(x, y);
-
-            //Draw set text. Re-scale text based on current zoom factor
-            draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
         }
-        else
-        {
-            LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
-        }
+
+        //Draw IDs
+        ctx->translate(x, y);
+
+        //Draw set text. Re-scale text based on current zoom factor
+        draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
+    }
+    else
+    {
+        LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from defintion (also no lanelet reference exists)");
     }
 
     ctx->restore();

@@ -91,24 +91,6 @@ struct TrafficLightCycle
 };
 
 /**
- * \struct TrafficLightElement
- * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
- * \ingroup lcc_commonroad
- */
-struct TrafficLightElement
-{
-    //Commonroad types
-    //! Traffic light cycle, defining when which color is shown
-    TrafficLightCycle cycle;
-    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
-    std::optional<Position> position = std::nullopt;
-    //! Direction shown by the light, default is all
-    Direction direction = Direction::All;
-    //! Indicated if the traffic light is currently active. Is assumed to default to true
-    bool is_active = true; 
-};
-
-/**
  * \class TrafficLight
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic light specified in an XML file
@@ -117,8 +99,14 @@ struct TrafficLightElement
 class TrafficLight : public InterfaceTransform, public InterfaceDraw
 {
 private:
-    //! Contains all seperate traffic lights defined for this ID
-    std::vector<TrafficLightElement> traffic_light_elements;
+    //! Traffic light cycle, defining when which color is shown
+    TrafficLightCycle cycle;
+    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
+    std::optional<Position> position = std::nullopt;
+    //! Direction shown by the light, default is all
+    Direction direction = Direction::All;
+    //! Indicated if the traffic light is currently active. Is assumed to default to true
+    bool is_active = true; 
 
     //! ID of the traffic light(s)
     int id;

@@ -261,28 +261,27 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
     }
     else
     {
-        //Try to draw the position for every possible middle value of the orientation
+        //Try to draw the position for middle value of the orientation
         //TODO: Find out how to properly draw interval values
         if (orientation->get_interval().has_value())
         {
-            for (auto &middle : orientation->get_interval()->get_interval_avg())
-            {
-                //Draw position
-                ctx->save();
-                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
-                position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
-                ctx->restore();
+            auto middle = orientation->get_interval()->get_interval_avg();
+            
+            //Draw position
+            ctx->save();
+            ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+            position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
+            ctx->restore();
 
-                //Draw arrow with correct position / orientation
-                ctx->save();
-                position->transform_context(ctx, scale);
-                ctx->rotate(middle + local_orientation);
+            //Draw arrow with correct position / orientation
+            ctx->save();
+            position->transform_context(ctx, scale);
+            ctx->rotate(middle + local_orientation);
 
-                double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-                draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
+            double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
+            draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
 
-                ctx->restore();
-            }
+            ctx->restore();
         }
         else
         {

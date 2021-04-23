@@ -161,27 +161,26 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         position->draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
-    //Rotation is an interval - draw position for every possible orientation middle value
+    //Rotation is an interval - draw position for orientation middle value
     if(orientation.has_value())
     {
-        for (auto& middle : orientation->get_interval_avg())
+        auto middle = orientation->get_interval_avg();
+
+        ctx->save();
+        ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
+
+        if(position.has_value())
         {
-            ctx->save();
-            ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
-
-            if(position.has_value())
-            {
-                //Try to draw in the middle of the shape of the goal
-                position->transform_context(ctx, scale);
-            }
-            ctx->rotate(middle + local_orientation);
-
-            //Draw arrow
-            double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-            draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
-            
-            ctx->restore();
+            //Try to draw in the middle of the shape of the goal
+            position->transform_context(ctx, scale);
         }
+        ctx->rotate(middle + local_orientation);
+
+        //Draw arrow
+        double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
+        draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
+        
+        ctx->restore();
     }
 
     //Draw time, velocity description
@@ -195,19 +194,7 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         }
         if (velocity.has_value())
         {
-            auto velocity_values = velocity.value().get_interval_avg();
-            double sum = 0.0;
-            double cnt = 0.0;
-            for (auto value : velocity_values)
-            {
-                sum += value;
-                cnt += 1;
-            }
-            double avg = 0.0;
-            if (cnt > 0)
-            {
-                avg = sum /cnt;
-            }
+            auto avg = velocity.value().get_interval_avg();
 
             if (time.has_value())
             {
@@ -262,8 +249,8 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
     }
 
     std::vector<CommonroadDDSPositionInterval> positions;
-    std::vector<CommonroadDDSIntervals> orientations;
-    std::vector<CommonroadDDSIntervals> velocities; 
+    std::vector<CommonroadDDSInterval> orientations;
+    std::vector<CommonroadDDSInterval> velocities; 
 
     if (position.has_value())
     {

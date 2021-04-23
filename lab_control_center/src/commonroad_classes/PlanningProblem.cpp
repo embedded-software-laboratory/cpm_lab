@@ -44,76 +44,40 @@ PlanningProblem::PlanningProblem(
 
     try
     {
-        //Initial state and goal state can be sequences, which are here translated separately and then put together
-        //As there might be several goal states for one initial state, we save line numbers here as well
-        std::vector<std::optional<StateExact>> initial_states;
-        std::vector<int> initial_states_lines;
-        std::vector<GoalState> goal_states;
-        std::vector<int> goal_state_lines;
-
         //Get the planning problem ID to tell it to the goal states (to be able to show the user the goal state ID in the UI)
         planning_problem_id = xml_translation::get_attribute_int(node, "id", true).value();
 
+        //Due to ambiguities regarding the use of xs:sequence in the specs
+        //compared to the implications made in the spec PDF, we make sure
+        //that really only one entry for initial state exists
+        //(interpretation of the .xsd file alone could be different)
+        bool first_initial_state = true;
         xml_translation::iterate_children(
             node,
             [&] (const xmlpp::Node* child)
             {
-                initial_states.push_back(std::optional<StateExact>(std::in_place, child));
-                initial_states_lines.push_back(child->get_line());
+                if (!first_initial_state)
+                {
+                    std::stringstream error_msg_stream;
+                    error_msg_stream << "Only one initial state allowed in a planning problem, line: " << node->get_line();
+                    throw SpecificationError(error_msg_stream.str());
+                }
+
+                initial_state = std::optional<StateExact>(std::in_place, child);
+                
+                first_initial_state = false;
             },
             "initialState"
         );
+
         xml_translation::iterate_children(
             node,
             [&] (const xmlpp::Node* child)
             {
                 goal_states.push_back(GoalState(child, _draw_lanelet_refs, _get_lanelet_center, _draw_configuration));
-                goal_state_lines.push_back(child->get_line());
             },
             "goalState"
         );
-
-        //Create PlanningProblem elements depending on the line values (use std bound functions for search etc!)
-        size_t goals_index = 0; //Store up to which index additional_values have already been stored in previous elements
-        for (size_t state_index = 0; state_index < initial_states.size(); ++state_index)
-        {
-            //Set up traffic post consisting of one ID and possibly several additional values
-            PlanningProblemElement planning_problem;
-            planning_problem.initial_state = initial_states.at(state_index);
-
-            if (state_index == initial_states.size() - 1)
-            {
-                //Last element, take all remaining additional values
-                if (goal_states.size() > goals_index)
-                {
-                    std::copy(goal_states.begin() + goals_index, goal_states.end(), std::back_inserter(planning_problem.goal_states));
-                }
-            }
-            else
-            {
-                //Take all additional values up to upper bound (using the starting line of the next traffic post)
-                int next_problem_line = goal_state_lines.at(state_index + 1);
-                auto next_goal_it = std::upper_bound(goal_state_lines.begin(), goal_state_lines.end(), next_problem_line);
-
-                if (next_goal_it != goal_state_lines.end())
-                {
-                    //There is an upper bound, copy up to next additional values of next element
-                    auto next_goal_index = std::distance(goal_state_lines.begin(), next_goal_it);
-                    std::copy(goal_states.begin() + goals_index, goal_states.begin() + next_goal_index, std::back_inserter(planning_problem.goal_states));
-
-                    goals_index = next_goal_index;
-                }
-                else if (goal_states.size() > goals_index)
-                {
-                    //There is no upper bound, but there are still elements left - take all remaining values
-                    std::copy(goal_states.begin() + goals_index, goal_states.end(), std::back_inserter(planning_problem.goal_states));
-
-                    goals_index = goal_states.size();
-                }
-            }
-            
-            planning_problems.push_back(planning_problem);
-        }
     }
     catch(const SpecificationError& e)
     {
@@ -126,35 +90,27 @@ PlanningProblem::PlanningProblem(
     }
     
 
-    //Require at least one goal state for each planning problem element (according to specs)
-    for (const auto planning_problem : planning_problems)
+    //Require at least one goal state (according to specs)
+    if(goal_states.size() == 0)
     {
-        if(planning_problem.goal_states.size() == 0)
-        {
-            std::stringstream error_msg_stream;
-            error_msg_stream << "Goal states missing in translated planning problem: " << node->get_name() << "; line: " << node->get_line();
-            throw SpecificationError(error_msg_stream.str());
-        }
+        std::stringstream error_msg_stream;
+        error_msg_stream << "Goal states missing in translated planning problem: " << node->get_name() << "; line: " << node->get_line();
+        throw SpecificationError(error_msg_stream.str());
     }
 
-    //Set lanelet_ref functions and also unique goal IDs
-    size_t planning_pos = 0;
-    for (auto& planning_prob : planning_problems)
+    //Set lanelet_ref function
+    initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
+    
+    //Set unique goal ID
+    size_t goal_pos = 0;
+    for (auto& goal : goal_states)
     {
-        planning_prob.initial_state->set_lanelet_ref_draw_function(_draw_lanelet_refs);
-        
-        size_t goal_pos = 0;
-        for (auto& goal : planning_prob.goal_states)
-        {
-            //Create unique ID for each goal state (for identification in the table of goal state information)
-            std::stringstream goal_id_stream;
-            goal_id_stream << planning_problem_id << "." << planning_pos << "." << goal_pos;
-            goal.set_unique_id(goal_id_stream.str());
+        //Create unique ID for each goal state (for identification in the table of goal state information)
+        std::stringstream goal_id_stream;
+        goal_id_stream << planning_problem_id << "." << goal_pos;
+        goal.set_unique_id(goal_id_stream.str());
 
-            ++goal_pos;
-        }
-
-        ++planning_pos;
+        ++goal_pos;
     }
 
     //Test output
@@ -163,33 +119,27 @@ PlanningProblem::PlanningProblem(
 
 void PlanningProblem::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    for (auto& planning_problem : planning_problems)
+    if (initial_state.has_value())
     {
-        if (planning_problem.initial_state.has_value())
-        {
-            planning_problem.initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
-        }
+        initial_state->transform_coordinate_system(scale, angle, translate_x, translate_y);
+    }
 
-        for (auto& goal_state : planning_problem.goal_states)
-        {
-            goal_state.transform_coordinate_system(scale, angle, translate_x, translate_y);
-        }
+    for (auto& goal_state : goal_states)
+    {
+        goal_state.transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
 void PlanningProblem::transform_timing(double time_scale)
 {
-    for (auto& planning_problem : planning_problems)
+    if (initial_state.has_value())
     {
-        if (planning_problem.initial_state.has_value())
-        {
-            planning_problem.initial_state->transform_timing(time_scale);
-        }
+        initial_state->transform_timing(time_scale);
+    }
 
-        for (auto& goal_state : planning_problem.goal_states)
-        {
-            goal_state.transform_timing(time_scale);
-        }
+    for (auto& goal_state : goal_states)
+    {
+        goal_state.transform_timing(time_scale);
     }
 }
 
@@ -204,58 +154,53 @@ void PlanningProblem::draw(const DrawingContext& ctx, double scale, double globa
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    size_t problem_pos = 0;
-    for (auto problem : planning_problems)
+    //Draw initial state
+    ctx->set_source_rgb(0.0,0.5,0.05);
+    initial_state->draw(ctx, scale, 0, 0, 0, local_orientation);
+
+    //Draw initial state description (planning problem ID)
+    if (draw_configuration->draw_init_state.load())
     {
-        //Draw initial state
-        ctx->set_source_rgb(0.0,0.5,0.05);
-        problem.initial_state->draw(ctx, scale, 0, 0, 0, local_orientation);
+        ctx->save();
+        std::stringstream descr_stream;
+        descr_stream << "ID (" << planning_problem_id << "): ";
+        initial_state->transform_context(ctx, scale);
 
-        //Draw initial state description (planning problem ID)
-        if (draw_configuration->draw_init_state.load())
-        {
-            ctx->save();
-            std::stringstream descr_stream;
-            descr_stream << "ID (" << planning_problem_id << "." << problem_pos << "): ";
-            problem.initial_state->transform_context(ctx, scale);
+        //Draw set text. Re-scale text based on current zoom factor
+        draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
+        ctx->restore();
+    }
 
-            //Draw set text. Re-scale text based on current zoom factor
-            draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
-            ctx->restore();
-        }
-
-        //Draw goal state + description
-        ctx->set_source_rgba(1.0,0.5,0.8, 0.3);
-        for (auto goal : problem.goal_states)
-        {
-            goal.draw(ctx, scale, 0, 0, 0, local_orientation);
-        }
-
-        ++problem_pos;
+    //Draw goal state + description
+    ctx->set_source_rgba(1.0,0.5,0.8, 0.3);
+    for (auto goal : goal_states)
+    {
+        goal.draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
     ctx->restore();
 }
 
-const std::vector<PlanningProblemElement>& PlanningProblem::get_planning_problems() const
+const std::optional<StateExact>& PlanningProblem::get_initial_state() const
 {
-    return planning_problems;
+    return initial_state;
+}
+
+const std::vector<GoalState>& PlanningProblem::get_goal_states() const
+{
+    return goal_states;
 }
 
 std::vector<CommonroadDDSGoalState> PlanningProblem::get_dds_goal_states(double time_step_size)
 {
-    std::vector<CommonroadDDSGoalState> goal_states;
+    std::vector<CommonroadDDSGoalState> commonroad_goal_states;
 
-    for (size_t planning_pos = 0; planning_pos < planning_problems.size(); ++planning_pos)
-    {
-        for (size_t goal_pos = 0; goal_pos < planning_problems.at(planning_pos).goal_states.size(); ++ goal_pos)
-        { 
-            auto dds_goal_state = planning_problems.at(planning_pos).goal_states.at(goal_pos).to_dds_msg(time_step_size);
-            dds_goal_state.goal_state_pos(goal_pos);
-            dds_goal_state.planning_problem_pos(planning_pos);
-            goal_states.push_back(dds_goal_state);
-        }
+    for (size_t goal_pos = 0; goal_pos < goal_states.size(); ++ goal_pos)
+    { 
+        auto dds_goal_state = goal_states.at(goal_pos).to_dds_msg(time_step_size);
+        dds_goal_state.goal_state_pos(goal_pos);
+        commonroad_goal_states.push_back(dds_goal_state);
     }
 
-    return goal_states;
+    return commonroad_goal_states;
 }

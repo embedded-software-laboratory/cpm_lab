@@ -296,65 +296,56 @@ void CommonroadViewUI::dispatcher_callback() {
                 break;
             }
 
-            for (auto planning_problem_element : planning_problem->get_planning_problems())
+            for (auto goal_state : planning_problem->get_goal_states())
             {
-                for (auto goal_state : planning_problem_element.goal_states)
+                //Get goal speed(s)
+                std::stringstream goal_stream; 
+
+                auto goal_velocity = goal_state.get_velocity();
+                if (goal_velocity.has_value())
                 {
-                    //Get goal speed(s)
-                    std::stringstream goal_stream; 
-
-                    auto goal_velocity = goal_state.get_velocity();
-                    if (goal_velocity.has_value())
-                    {
-                        for (auto it = goal_velocity.value().cbegin(); it != goal_velocity.value().cend(); ++it)
-                        {
-                            goal_stream << " [" << it->first << ", " << it->second << "] ";
-                        }
-                    }
-                    else
-                    {
-                        goal_stream << "Not specified";
-                    }
-
-                    Glib::ustring goal_speed_ustring(goal_stream.str());
-
-                    //Get goal time(s)
-                    goal_stream.str( std::string() );
-                    goal_stream.clear();
-                    auto time_step_size = commonroad_scenario->get_time_step_size();
-
-                    auto goal_time = goal_state.get_time();
-                    if (goal_time.has_value())
-                    {
-                        auto exact_value = goal_time->get_exact_value();
-                        if (exact_value.has_value())
-                        {
-                            goal_stream << exact_value.value() * time_step_size;
-                        }
-
-                        auto interval = goal_time->get_interval();
-                        if (interval.has_value())
-                        {
-                            for (auto it = interval->cbegin(); it != interval->cend(); ++it)
-                            {
-                                goal_stream << " [" << it->first * time_step_size << ", " << it->second * time_step_size << "] ";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        goal_stream << "Not specified";
-                    }
-
-                    Glib::ustring goal_time_ustring(goal_stream.str());
-
-                    Gtk::TreeModel::Row row;
-                    row = *(problem_list_store->append());
-                    
-                    row[problem_record.problem_id] = Glib::ustring(goal_state.get_unique_id());
-                    row[problem_record.problem_goal_speed] = goal_speed_ustring;
-                    row[problem_record.problem_goal_time] = goal_time_ustring;
+                    goal_stream << " [" << goal_velocity.value().get_start() << ", " << goal_velocity.value().get_end() << "] ";
                 }
+                else
+                {
+                    goal_stream << "Not specified";
+                }
+
+                Glib::ustring goal_speed_ustring(goal_stream.str());
+
+                //Get goal time(s)
+                goal_stream.str( std::string() );
+                goal_stream.clear();
+                auto time_step_size = commonroad_scenario->get_time_step_size();
+
+                auto goal_time = goal_state.get_time();
+                if (goal_time.has_value())
+                {
+                    auto exact_value = goal_time->get_exact_value();
+                    if (exact_value.has_value())
+                    {
+                        goal_stream << exact_value.value() * time_step_size;
+                    }
+
+                    auto interval = goal_time->get_interval();
+                    if (interval.has_value())
+                    {
+                        goal_stream << " [" << interval.value().get_start() * time_step_size << ", " << interval.value().get_end() * time_step_size << "] ";
+                    }
+                }
+                else
+                {
+                    goal_stream << "Not specified";
+                }
+
+                Glib::ustring goal_time_ustring(goal_stream.str());
+
+                Gtk::TreeModel::Row row;
+                row = *(problem_list_store->append());
+                
+                row[problem_record.problem_id] = Glib::ustring(goal_state.get_unique_id());
+                row[problem_record.problem_goal_speed] = goal_speed_ustring;
+                row[problem_record.problem_goal_time] = goal_time_ustring;
             }
         }
 

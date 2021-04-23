@@ -55,34 +55,17 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \struct TrafficSignPost
- * \brief Specifies a part of traffic sign element.
+ * \struct TrafficSignElement
+ * \brief Specifies a part of traffic sign (a single sign)
  * The commonroad XML file specifies specific string values for the sign ID, this restriction is not applied here (for simplicity)
  * \ingroup lcc_commonroad
  */
-struct TrafficSignPost
+struct TrafficSignElement
 {
     //! ID of the sign post, relating to the IDs defined in the commonroad specs e.g. for a speed limit sign
     std::string traffic_sign_id;
     //! Optional additional values, e.g. the speed limit
     std::vector<std::string> additional_values;
-};
-
-/**
- * \struct TrafficSignElement
- * \brief Specifies multiple traffic sign posts.
- * Not defined like that in Commonroad (put together "their" TrafficSignElement
- * with position and is_virtual, use list of TrafficSignPost for "their" Element)
- * \ingroup lcc_commonroad
- */
-struct TrafficSignElement
-{
-    //! List of traffic signs at the traffic sign's position
-    std::vector<TrafficSignPost> traffic_sign_posts;
-    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
-    std::optional<Position> position = std::nullopt;
-    //! If the traffic sign only exists virtually, not physically
-    std::vector<bool> is_virtual;
 };
 
 /**
@@ -95,18 +78,22 @@ struct TrafficSignElement
 class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
-    //! List of traffic signs with the same ID
+    //! List of traffic signs at the traffic sign's position
     std::vector<TrafficSignElement> traffic_sign_elements;
-    //! ID of the traffic sign(s)
+    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
+    std::optional<Position> position = std::nullopt;
+    //! If the traffic sign(s) only exists virtually, not physically
+    std::vector<bool> is_virtual;
+    //! ID of the traffic sign
     int id;
 
     //Translation helper functions
     //Helper functions for better readability
     /**
-     * \brief Helper function to translate a Commonroad trafficSignElement, here consisting of multiple TrafficSignPost
+     * \brief Helper function to translate a Commonroad trafficSignElement
      * \param element_node trafficSignElement node
      */
-    std::vector<TrafficSignPost> translate_traffic_sign_posts(const xmlpp::Node* element_node);
+    TrafficSignElement translate_traffic_sign_element(const xmlpp::Node* element_node);
     /**
      * \brief Helper function to translate an xml position node
      * \param position_node The Commonroad XML position node 

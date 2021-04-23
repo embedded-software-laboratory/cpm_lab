@@ -80,25 +80,24 @@ TrafficLight::TrafficLight(
                 {
                     //Create next entry
                     ++pos;
-                    traffic_light_elements.push_back(TrafficLightElement());
-
-                    traffic_light_elements[pos].cycle = translate_cycle(child);
-                    allowed_next_values = { "cycle", "position", "direction", "active" };
+                    
+                    cycle = translate_cycle(child);
+                    allowed_next_values = { "position", "direction", "active" };
                 }
                 else if (child_name == "position")
                 {
-                    traffic_light_elements[pos].position = translate_position(child);
-                    allowed_next_values = { "cycle", "direction", "active" };
+                    position = translate_position(child);
+                    allowed_next_values = { "direction", "active" };
                 }
                 else if (child_name == "direction")
                 {
-                    traffic_light_elements[pos].direction = translate_direction(child);
-                    allowed_next_values = { "cycle", "active" };
+                    direction = translate_direction(child);
+                    allowed_next_values = { "active" };
                 }
                 else if (child_name == "active")
                 {
-                    traffic_light_elements[pos].is_active = translate_active(child);
-                    allowed_next_values = { "cycle" };
+                    is_active = translate_active(child);
+                    allowed_next_values = { };
                 }
                 else
                 {
@@ -266,12 +265,9 @@ TrafficLightCycle TrafficLight::translate_cycle(const xmlpp::Node* cycle_node)
 
 void TrafficLight::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    for (auto& element : traffic_light_elements)
+    if (position.has_value())
     {
-        if (element.position.has_value())
-        {
-            element.position->transform_coordinate_system(scale, angle, translate_x, translate_y);
-        }
+        position->transform_coordinate_system(scale, angle, translate_x, translate_y);
     }
 }
 
@@ -286,48 +282,45 @@ void TrafficLight::draw(const DrawingContext& ctx, double scale, double global_o
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    for (auto& element : traffic_light_elements)
+    //If a value for the position is given, use that instead of the lanelet reference position
+    if (position.has_value())
     {
-        //If a value for the position is given, use that instead of the lanelet reference position
-        if (element.position.has_value())
-        {
-            ctx->save();
-            element.position->transform_context(ctx, scale);
+        ctx->save();
+        position->transform_context(ctx, scale);
 
-            draw_traffic_light_symbol(ctx, scale);
+        draw_traffic_light_symbol(ctx, scale);
 
-            ctx->restore();
-        }
-        else
+        ctx->restore();
+    }
+    else
+    {
+        //Draw at position given by lanelet, where no position was given
+        if (get_position_from_lanelet)
         {
-            //Draw at position given by lanelet, where no position was given
-            if (get_position_from_lanelet)
+            auto position = get_position_from_lanelet(id);
+            auto x = 0.0;
+            auto y = 0.0;
+            if (position.has_value())
             {
-                auto position = get_position_from_lanelet(id);
-                auto x = 0.0;
-                auto y = 0.0;
-                if (position.has_value())
-                {
-                    x = position->first * scale;
-                    y = position->second * scale;
+                x = position->first * scale;
+                y = position->second * scale;
 
-                    ctx->save();
-                    ctx->translate(x, y);
-                    draw_traffic_light_symbol(ctx, scale);
-                    ctx->restore();
-                }
-                else
-                {
-                    //This log causes severe flickering - why? TODO
-                    LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from definition (also no lanelet reference exists)");
-                }
+                ctx->save();
+                ctx->translate(x, y);
+                draw_traffic_light_symbol(ctx, scale);
+                ctx->restore();
             }
             else
             {
+                //This log causes severe flickering - why? TODO
                 LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from definition (also no lanelet reference exists)");
             }
         }
-    }    
+        else
+        {
+            LCCErrorLogger::Instance().log_error("Could not draw traffic sign: Could not obtain any valid position from definition (also no lanelet reference exists)");
+        }
+    } 
 
     ctx->restore();
 }

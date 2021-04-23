@@ -46,15 +46,6 @@ struct CommonroadDDSInterval {
 };
 
 /**
- * \struct CommonroadDDSIntervals
- * \brief Commonroad interval defintion
- * \ingroup cpmlib_idl
- */
-struct CommonroadDDSIntervals {
-    sequence<CommonroadDDSInterval> intervals; //!< List of intervals
-};
-
-/**
  * \struct CommonroadDDSPositionInterval
  * \brief Commonroad inexact (combined from shapes for a position area) position definition
  * \ingroup cpmlib_idl
@@ -72,22 +63,19 @@ struct CommonroadDDSPositionInterval {
  * \ingroup cpmlib_idl
  */
 struct CommonroadDDSGoalState {
-    CommonroadDDSIntervals time; //!< Time (interval) when the goal state should be reached, can be undefined (see time_set)
+    CommonroadDDSInterval time; //!< Time (interval) when the goal state should be reached, can be undefined (see time_set)
     boolean time_set; //!< If false, ignore time
     boolean has_exact_position; //!< Ignore values in exact_position if this is false, and use positions instead
     CommonroadDDSPoint exact_position; //!< Exact position of the goal state, as a point. Not part of the specs in the documentation, but nice to have
     sequence<CommonroadDDSPositionInterval> positions; //!< Inexact position of the goal state, can be undefined
-    sequence<CommonroadDDSIntervals> orientations; //!< Possible orientation values within the goal state, can be undefined
-    sequence<CommonroadDDSIntervals> velocities; //!< Possible velocity values when the goal state is reached, can be undefined
+    sequence<CommonroadDDSInterval> orientations; //!< Possible orientation values within the goal state, can be undefined
+    sequence<CommonroadDDSInterval> velocities; //!< Possible velocity values when the goal state is reached, can be undefined
 
     //IDs to relate to planning problem and position in list planning problems and of goal states in planning problems in a single planning problem definition
     //We could not send the whole planning problem due to size issues because of the sequences used
 
     //! Part of the ID of the goal state: ID of the planning problem
     long planning_problem_id; //@key
-
-    //! Part of the ID of the goal state: Place within the list of planning "sub"-problems with the same ID
-    long planning_problem_pos; //@key
 
     //! Part of the ID of the goal state: Place within the list of goal states within a planning "sub"-problem
     long goal_state_pos; //@key

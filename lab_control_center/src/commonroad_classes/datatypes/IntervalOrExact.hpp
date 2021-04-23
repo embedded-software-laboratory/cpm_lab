@@ -90,7 +90,14 @@ public:
             //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
             throw;
         }
-        
+
+        //Make sure that the object is not empty
+        if (!interval && !exact)
+        {
+            std::stringstream err_stream;
+            err_stream << "Neither interval nor exact value provided in line " << node->get_line() << "!";
+            throw SpecificationError(err_stream.str());
+        }
     }
 
     //Getter (no setter, as we only want to set IntervalOrExact at translation or change it using transform_...)
@@ -156,22 +163,7 @@ public:
         }
         else
         {
-            double sum;
-            double amnt;
-            for (auto value : interval.value().get_interval_avg())
-            {
-                sum += value;
-                amnt += 1;
-            }
-
-            if (amnt > 0)
-            {
-                return sum / amnt;
-            }
-            else
-            {
-                return 0.0;
-            }
+            return interval.value().get_interval_avg();
         }
     }
 
@@ -205,7 +197,7 @@ public:
      * \brief Translate to DDS interval, if not exact
      * \param ratio Relevant to translate e.g. time information to actual time
      */
-    CommonroadDDSIntervals to_dds_interval(double ratio = 1.0)
+    CommonroadDDSInterval to_dds_interval(double ratio = 1.0)
     {
         //Throw error if conversion is invalid because of interval type
         if (!interval.has_value())
