@@ -253,6 +253,14 @@ class MapViewUi
     void draw_received_visualization_commands(const DrawingContext& ctx);
 
     /**
+     * \brief Helper function to draw text surrounded by a small filled rectangle with white background and transparency
+     * to make the text more readable in case it is drawn on top of e.g. a black figure
+     * \param ctx The drawing context, to draw on the map view
+     * \param extents To compute the bounding box
+     */
+    void draw_text_bounding_box(const DrawingContext& ctx, Cairo::TextExtents extents);
+
+    /**
      * \brief TODO! Deprecated? Never used or defined.
      * \param x x coordinate
      * \param y y coordinate

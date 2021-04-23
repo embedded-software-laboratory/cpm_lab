@@ -425,7 +425,10 @@ void MapViewUi::draw_lab_boundaries(const DrawingContext& ctx)
     //Flip font
     Cairo::Matrix font_matrix(0.1, 0.0, 0.0, -0.1, 0.0, 0.0);
     ctx->set_font_matrix(font_matrix);
-    //Draw text
+    //Draw text w. bounding box for better readability
+    Cairo::TextExtents extents;
+    ctx->get_text_extents("IPS boundary", extents);
+    draw_text_bounding_box(ctx, extents);
     ctx->show_text("IPS boundary");
 
     ctx->restore();
@@ -734,12 +737,32 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
             ctx->set_font_matrix(font_matrix);
 
+            //Draw bounding box around text
+            draw_text_bounding_box(ctx, ext);
+
             //Draw text
             ctx->show_text(entry.string_message().c_str());
 
             ctx->restore();
         }
     }
+}
+
+void MapViewUi::draw_text_bounding_box(const DrawingContext& ctx, Cairo::TextExtents extents)
+{
+    //Draw rectangle around text
+    //Move to first corner from center
+    ctx->save();
+    ctx->set_source_rgba(1, 1, 1, 0.5);
+    ctx->set_line_width(0);
+    ctx->move_to(0, 0);
+    ctx->line_to(0, extents.height * 1.05);
+    ctx->line_to(extents.width * 1.05, extents.height * 1.05);
+    ctx->line_to(extents.width * 1.05, 0);
+    ctx->line_to(0, 0);
+    ctx->fill_preserve();
+    ctx->stroke();
+    ctx->restore();
 }
 
 /**
@@ -1258,12 +1281,14 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
             Cairo::TextExtents extents;
             ctx->get_text_extents(description_stream.str(), extents);
 
+            //Draw bounding box for better readability
+            ctx->save();
+            ctx->translate(-extents.width/2 - extents.x_bearing, extents.height/2 + extents.y_bearing);
+            draw_text_bounding_box(ctx, extents);
+            ctx->restore();
+
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(.1,.1,.1);
-            ctx->show_text(description_stream.str());
-
-            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-            ctx->set_source_rgb(.1,.9,.1);
             ctx->show_text(description_stream.str());
         }
 

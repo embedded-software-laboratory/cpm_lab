@@ -125,6 +125,21 @@ public:
 
         ctx->translate(x, y);
 
+        //Draw rectangle around text
+        //Move to first corner from center
+        ctx->save();
+        ctx->set_source_rgba(1, 1, 1, 0.5);
+        ctx->set_line_width(0);
+        ctx->move_to(- extents.width/2, - extents.height/2);
+        ctx->line_to(- extents.width/2,   extents.height/2);
+        ctx->line_to(  extents.width/2,   extents.height/2);
+        ctx->line_to(  extents.width/2, - extents.height/2);
+        ctx->line_to(- extents.width/2, - extents.height/2);
+        ctx->fill_preserve();
+        ctx->stroke();
+        ctx->restore();
+
+        //Draw text centered
         ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
         ctx->set_source_rgb(.2,.1,.1);
         ctx->show_text(text);
