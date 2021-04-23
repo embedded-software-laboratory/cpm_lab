@@ -31,6 +31,7 @@
 #include <cassert>
 #include <chrono>       //For time measurements (timeout for remote deployment)
 #include <cstdio>       //For popen
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <functional>
 #include <fstream>
 #include <iomanip>      // put_time
@@ -211,9 +212,17 @@ public:
 
     /**
      * \brief Used to create the folder software_top_folder_path(value of variable)/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
-     * \param name name of the log folder
+     * \param folder_name Name of the log folder, default is lcc_script_logs (better change the default if you want to change the folder name)
      */
-    void create_log_folder(std::string name);
+    void create_log_folder(std::string folder_name = "lcc_script_logs");
+
+    /**
+     * \brief Delete logs in the log folder (as in create_log_folder) that are "outdated" (logs of script and middleware)
+     * because the simulation was stopped / a new one is started.
+     * If the log folder does not yet exist, it is created.
+     * \param folder_name Name of the log folder, default is lcc_script_logs (better change the default if you want to change the folder name)
+     */
+    void delete_old_logs(std::string folder_name = "lcc_script_logs");
 
     /**
      * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
@@ -288,11 +297,19 @@ private:
     const std::string ips_session = "ips_pipeline";
     //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
+    //! Tmux session name for the labcam
     const std::string labcam_session = "labcam";
     //! Tmux session name for the middleware
     const std::string middleware_session = "middleware";
     //! Tmux session name for the HLC
     const std::string hlc_session = "high_level_controller";
+    //! Tmux session name for the vehicle (followed by ID)
+    const std::string vehicle_session = "vehicle";
+
+    //! Log file name part for remote copy
+    const std::string remote_copy_log_name = "remote_copy_command";
+    //! Log file name part for remote kill
+    const std::string remote_kill_log_name = "remote_kill_command";
 
     //To reboot real vehicles
     //! Map to have access to vehicle IDs <-> reboot thread; threads are used to reboot vehicles s.t. the shell commands do not block the UI; they must be joined at some time
