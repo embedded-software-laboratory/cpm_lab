@@ -269,7 +269,7 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
             
             //Draw position
             ctx->save();
-            ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+            ctx->set_source_rgba(.7,.2,.7,.8); //Color used for inexact values
             position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
             ctx->restore();
 

@@ -147,7 +147,7 @@ void StateExact::draw(const DrawingContext& ctx, double scale, double global_ori
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    position->draw(ctx, scale);
+    position->draw(ctx, scale, 0, 0, 0, orientation + local_orientation);
 
     //Draw arrow with correct position / rotation
     position->transform_context(ctx, scale);
