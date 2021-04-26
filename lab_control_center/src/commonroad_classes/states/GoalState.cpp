@@ -248,10 +248,6 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
         goal_state.time(time->to_dds_interval(time_step_size));
     }
 
-    std::vector<CommonroadDDSPositionInterval> positions;
-    std::vector<CommonroadDDSInterval> orientations;
-    std::vector<CommonroadDDSInterval> velocities; 
-
     if (position.has_value())
     {
         goal_state.has_exact_position(position->is_exact());
@@ -263,21 +259,17 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
         }
         else
         {
-            positions.push_back(position->to_dds_position_interval());
+            goal_state.position(position->to_dds_position_interval());
         }
     }
     if (orientation.has_value())
     {
-        orientations.push_back(orientation->to_dds_msg());
+        goal_state.orientation(orientation->to_dds_msg());
     }
     if (velocity.has_value())
     {
-        velocities.push_back(velocity->to_dds_msg());
+        goal_state.velocity(velocity->to_dds_msg());
     }
-
-    goal_state.positions(positions);
-    goal_state.orientations(orientations);
-    goal_state.velocities(velocities);
 
     return goal_state;
 }
