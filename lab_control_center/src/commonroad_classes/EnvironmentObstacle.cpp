@@ -41,6 +41,15 @@ EnvironmentObstacle::EnvironmentObstacle(
     
     commonroad_line = node->get_line();
 
+    //Print warning if ID is not within allowed uint8_t range [0, 255]
+    auto id = xml_translation::get_attribute_int(node, "id", true).value();
+    if (id > 255 || id < 0)
+    {
+        std::stringstream err_stream;
+        err_stream << "Environment obstacle - ID is not within desired bounds ([0, 255]) - will be taken modulo 256 in simulation, line: " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
+    }
+
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
