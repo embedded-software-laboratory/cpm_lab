@@ -318,8 +318,10 @@ void State::transform_context(const DrawingContext& ctx, double scale)
         }
         else
         {
+            ctx->rotate(orientation->get_mean());
+
             std::stringstream error_stream;
-            error_stream << "Orientation from state for rotation of other objects ignored, as it is an interval value" << commonroad_line;
+            error_stream << "Orientation from state for rotation of other objects is an interval value, might lead to confusing drawing (mean used), line in Commonroad is: " << commonroad_line;
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
         

@@ -170,40 +170,41 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
 std::pair<double, double> Shape::get_center()
 {
-    double x, y = 0.0;
-    double center_count = 0.0;
+    //Take the mean of min and max value for x and y coordinates, might not work for all shapes
+    assert(std::numeric_limits<double>::has_infinity);
+    double min_x = std::numeric_limits<double>::infinity();
+    double min_y = std::numeric_limits<double>::infinity();
+    double max_x = - std::numeric_limits<double>::infinity();
+    double max_y = - std::numeric_limits<double>::infinity();
 
     for (auto circle : circles)
     {
         auto center = circle.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto polygon : polygons)
     {
         auto center = polygon.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto rectangle : rectangles)
     {
         auto center = rectangle.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
-    if (center_count > 0)
-    {
-        x /= center_count;
-        y /= center_count;
-    }
-
-    return std::pair<double, double>(x, y);
+    return std::pair<double, double>(0.5 * min_x + 0.5 * max_x, 0.5 * min_y + 0.5 * max_y);
 }
 
 void Shape::transform_context(const DrawingContext& ctx, double scale)
