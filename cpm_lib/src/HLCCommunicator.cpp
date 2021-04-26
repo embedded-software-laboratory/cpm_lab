@@ -53,7 +53,7 @@ HLCCommunicator::HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middlewa
         for( auto vehicle_id : vehicle_ids ) {
             vehicle_ids_string << "_" << vehicle_id;
         }
-        cpm::Logging::Instance().set_id("middleware_listener"+vehicle_ids_string.str());
+        cpm::Logging::Instance().set_id("hlc_communicator"+vehicle_ids_string.str());
     }
 
 void HLCCommunicator::start(){
@@ -105,6 +105,7 @@ void HLCCommunicator::runTimestep(){
                 // If we're here that means we did not manage to calculate a plan in time,
                 // and we don't have a callback to stop planning early
                 cpm::Logging::Instance().write(1,
+                        "%s",
                         "HLC is taking too long to plan and we have no way to stop it"
                         );
                 // We wait until planning has finished
@@ -183,6 +184,6 @@ void HLCCommunicator::writeInfoMessage(){
     ss << "The following callback methods were not set: "  << unset_callbacks.rdbuf() << std::endl;
 
     // Write to Log as an info message and to stdout, so it appears in the text logs
-    cpm::Logging::Instance().write(3, ss.str().c_str());
+    cpm::Logging::Instance().write(3, "%s", ss.str().c_str());
     std::cout << ss.str() << std::endl;
 }
