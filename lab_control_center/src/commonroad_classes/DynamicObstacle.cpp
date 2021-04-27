@@ -221,7 +221,7 @@ void DynamicObstacle::transform_coordinate_system(double scale, double angle, do
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, 0.0, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
