@@ -194,6 +194,26 @@ public:
     }
 
     /**
+     * \brief Rotates the exact value or interval by angle around z (gets interpreted as orientation)
+     * Takes mod. 2 * PI, but also makes sure afterwards that the interval end is always greater than the start
+     * (to compute the mean properly)
+     * \param angle Angle to rotate by, in radians
+     */
+    void rotate_orientation(double angle)
+    {
+        if (exact.has_value())
+        {
+            auto old_value = exact.value_or(0.0);
+            exact = std::optional<double>(rotate_orientation_around_z(old_value, angle));
+        }
+
+        if (interval.has_value())
+        {
+            interval->rotate_orientation(angle);
+        }
+    }
+
+    /**
      * \brief Translate to DDS interval, if not exact
      * \param ratio Relevant to translate e.g. time information to actual time
      */

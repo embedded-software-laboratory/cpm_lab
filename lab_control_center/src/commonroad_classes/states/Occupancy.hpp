@@ -60,7 +60,7 @@ private:
     //Commonroad data
     //! Occupied shape
     std::optional<Shape> shape = std::nullopt;
-    //! Time of occupation (within commonroad time interpretation, not nanoseconds), must exist
+    //! Time of occupation (within commonroad time interpretation / time step size (which may be changed), not nanoseconds), must exist
     std::optional<IntervalOrExact> time = std::nullopt;
 
 

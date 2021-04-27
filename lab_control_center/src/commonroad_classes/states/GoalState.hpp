@@ -64,7 +64,7 @@ class GoalState : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    //! Time values should probably be within the range of unsigned doubles; Can only be defined as interval according to spec
+    //! Time values should probably be within the range of unsigned doubles; Can only be defined as interval according to spec. Is defined w.r.t. global time step size
     std::optional<IntervalOrExact> time = std::nullopt;
     //! Position of the goal state. Must not be defined
     std::optional<Position> position = std::nullopt; 
@@ -109,7 +109,7 @@ public:
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
      */
     void transform_timing(double time_scale) override;
 

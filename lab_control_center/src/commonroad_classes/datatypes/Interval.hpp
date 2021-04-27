@@ -145,6 +145,24 @@ public:
     }
 
     /**
+     * \brief Rotates the interval by angle around z (gets interpreted as orientation)
+     * Takes mod. 2 * PI, but also makes sure afterwards that the interval end is always greater than the start
+     * (to compute the mean properly)
+     * \param angle Angle to rotate by, in radians
+     */
+    void rotate_orientation(double angle)
+    {
+        auto start = std::fmod((interval.first - angle), 2.0 * M_PI);
+        auto end = std::fmod((interval.second - angle), 2.0 * M_PI);
+
+        //Make sure that start <= end (makes mean computation easier / no special cases)
+        if (end < start) end += 2.0 * M_PI;
+
+        interval.first = start;
+        interval.second = end;
+    }
+
+    /**
      * \brief Translate to DDS
      * \param ratio Relevant to translate e.g. time information to actual time
      */

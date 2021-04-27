@@ -107,7 +107,10 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
 
 void State::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
+    if (orientation.has_value())
+    {
+        orientation->rotate_orientation(angle);
+    }
     
     if (position.has_value())
     {
@@ -148,6 +151,10 @@ void State::transform_coordinate_system(double scale, double angle, double trans
     {
         acceleration->transform_coordinate_system(scale, angle, 0, 0);
     }
+    if (jerk.has_value())
+    {
+        jerk->transform_coordinate_system(scale, angle, 0, 0);
+    }
     if (velocity_y.has_value())
     {
         velocity_y->transform_coordinate_system(scale, angle, 0, 0);
@@ -172,6 +179,36 @@ void State::transform_coordinate_system(double scale, double angle, double trans
     {
         velocity_z_rear->transform_coordinate_system(scale, angle, 0, 0);
     }
+    if (left_front_wheel_angular_speed.has_value())
+    {
+        left_front_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (right_front_wheel_angular_speed.has_value())
+    {
+        right_front_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (left_rear_wheel_angular_speed.has_value())
+    {
+        left_rear_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (right_rear_wheel_angular_speed.has_value())
+    {
+        right_rear_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+
+    //Curvature: 1 / radius of oscilating circle -> New radius is r' = scale * r 
+    //-> new curvature = 1 / scale * 1/ radius
+    auto scale_inv = 1.0 / scale;
+    if (curvature.has_value())
+    {
+        curvature->transform_coordinate_system(scale_inv, angle, 0, 0);
+    }
+    if (curvature_change.has_value())
+    {
+        curvature_change->transform_coordinate_system(scale_inv, angle, 0, 0);
+    }
+
+    //...rate and ...angle values do not get transformed (rather describe vehicle properties than values that can easily be adapted)
 
     if (scale > 0)
     {
@@ -181,13 +218,21 @@ void State::transform_coordinate_system(double scale, double angle, double trans
 
 void State::transform_timing(double time_scale)
 {
+    //time_scale: t_step_size_prev / t_step_size_new
+    //Thus e.g. for velocity:
+    // v_old * time_scale = distance / (t * t_step_size_prev) * time_scale = distance / (t * t_step_size_new)
+
     if (velocity.has_value())
     {
         velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (acceleration.has_value())
     {
-        acceleration->transform_coordinate_system(time_scale, 0, 0, 0);
+        acceleration->transform_coordinate_system(time_scale * time_scale, 0, 0, 0);
+    }
+    if (jerk.has_value())
+    {
+        jerk->transform_coordinate_system(time_scale * time_scale * time_scale, 0, 0, 0);
     }
     if (velocity_y.has_value())
     {
@@ -233,8 +278,12 @@ void State::transform_timing(double time_scale)
     {
         yaw_rate->transform_coordinate_system(time_scale, 0, 0, 0);
     }
-    
-    //TODO: Scale curvature change as well?
+    if (curvature_change.has_value())
+    {
+        curvature_change->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+
+    //Other ...rate and ...angle values do not get transformed (rather describe vehicle properties than values that can easily be adapted)
 }
 
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)

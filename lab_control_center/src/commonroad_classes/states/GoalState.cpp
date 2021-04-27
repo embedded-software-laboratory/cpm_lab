@@ -118,6 +118,11 @@ GoalState::GoalState(
 
 void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
+    if (orientation.has_value())
+    {
+        orientation->rotate_orientation(angle);
+    }
+
     if (position.has_value())
     {
         position->transform_coordinate_system(scale, angle, translate_x, translate_y);
@@ -137,6 +142,10 @@ void GoalState::transform_coordinate_system(double scale, double angle, double t
 
 void GoalState::transform_timing(double time_scale)
 {
+    //time_scale: t_step_size_prev / t_step_size_new
+    //Thus e.g. for velocity:
+    // v_old * time_scale = distance / (t * t_step_size_prev) * time_scale = distance / (t * t_step_size_new)
+
     if (velocity.has_value())
     {
         velocity->transform_coordinate_system(time_scale, 0, 0, 0);
