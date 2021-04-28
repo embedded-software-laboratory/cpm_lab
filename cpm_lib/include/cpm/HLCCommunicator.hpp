@@ -148,7 +148,11 @@ public:
      * and uses the default middleware domain 1
      */
     HLCCommunicator(uint8_t _vehicle_id):
-            HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, 1, "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml","MatlabLibrary::LocalCommunicationProfile"){} //FIXME: Do not hardcode the path
+            HLCCommunicator(
+                    std::vector<uint8_t>{_vehicle_id},
+                    1,
+                    "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml", //FIXME: Do not hardcode the path
+                    "MatlabLibrary::LocalCommunicationProfile"){}
 
     /**
      * \brief Constructor for HLCCommunicator for one vehicle ID.
@@ -158,7 +162,11 @@ public:
      * and uses the default middleware domain 1
      */
     HLCCommunicator(std::vector<uint8_t> _vehicle_ids):
-            HLCCommunicator(_vehicle_ids, 1, "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml","MatlabLibrary::LocalCommunicationProfile"){} //FIXME: Do not hardcode the path
+            HLCCommunicator(
+                    _vehicle_ids,
+                    1,
+                    "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml", //FIXME: Do not hardcode the path
+                    "MatlabLibrary::LocalCommunicationProfile"){}
 
     /**
      * \brief Returns a participant that can communicate with the middleware
