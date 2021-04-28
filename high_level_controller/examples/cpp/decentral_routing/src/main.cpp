@@ -177,9 +177,8 @@ int main(int argc, char *argv[]) {
      */
     HLCCommunicator hlc_communicator(
             vehicle_id,
-            middleware_domain,
-            "./QOS_LOCAL_COMMUNICATION.xml",
-            "MatlabLibrary::LocalCommunicationProfile");
+            middleware_domain
+    );
 
     // Writer to send trajectory to middleware
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(

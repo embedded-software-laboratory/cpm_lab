@@ -79,7 +79,6 @@ int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing");
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
     ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
@@ -108,11 +107,8 @@ int main(int argc, char *argv[])
     std::unique_ptr<MultiVehicleTrajectoryPlanner> planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
 
 
-    HLCCommunicator hlc_communicator(
-            vehicle_ids,
-            1,
-            "./QOS_LOCAL_COMMUNICATION.xml",
-            "MatlabLibrary::LocalCommunicationProfile");
+    HLCCommunicator hlc_communicator(vehicle_ids);
+
 
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
