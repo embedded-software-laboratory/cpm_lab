@@ -266,6 +266,12 @@ void MonitoringUi::init_ui_thread()
         //Get currently online HLCs / NUCs
         auto hlc_data = this->get_hlc_data();
 
+        //When a problem gets found, the simulation should be killed
+        //We want to do this at the end of the UI thread though, to 
+        //not get into an inconsistent state in case part of the UI
+        //data gets reset as well
+        bool error_occured = false;
+
         //Print actual information for each vehicle, using the const string vector rows_restricted to get the desired content
         for(const auto& entry: vehicle_data)
         {
@@ -377,8 +383,8 @@ void MonitoringUi::init_ui_thread()
                                             static_cast<int>(hlc_id)
                                             );
                                         this->kill_deployed_applications();
-                                        error_triggered[0][0] = true; 
-                                        return;
+                                        error_triggered[0][0] = true;
+                                        error_occured = true;
                                     }
                                 }
                                 else if (program_crashed && label->get_text() != "Offline" && label->get_text() != "Prog. crash")
@@ -457,7 +463,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
-                                return;
+                                error_occured = true;
                             }
                         }
                     }
@@ -498,7 +504,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
-                                return;
+                                error_occured = true;
                             }
                         }
                     }
@@ -535,7 +541,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
-                                return;
+                                error_occured = true;
                             }
                         }
                     }
@@ -572,7 +578,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
-                                return;
+                                error_occured = true;
                             }
                         }
                     }
@@ -679,7 +685,7 @@ void MonitoringUi::init_ui_thread()
                                     );
                                     this->kill_deployed_applications();
                                     error_triggered[i][vehicle_id] = true;
-                                    return;
+                                    error_occured = true;
                                 }
                             }
                             else if (error > 0.05)
@@ -842,6 +848,12 @@ void MonitoringUi::init_ui_thread()
             auto it = std::find(grid_vehicle_ids.begin(), grid_vehicle_ids.end(), vehicle_id);
             assert(it != grid_vehicle_ids.end());
             grid_vehicle_ids.erase(it);
+        }
+
+        //If diagnosis was turned on and an error was registered, kill the simulation (and the UI thread here as well, which gets restarted after some resets)
+        if (error_occured)
+        {
+            this->kill_deployed_applications();
         }
         
     });
