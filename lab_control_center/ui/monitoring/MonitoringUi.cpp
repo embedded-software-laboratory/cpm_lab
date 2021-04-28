@@ -378,6 +378,7 @@ void MonitoringUi::init_ui_thread()
                                             );
                                         this->kill_deployed_applications();
                                         error_triggered[0][0] = true; 
+                                        return;
                                     }
                                 }
                                 else if (program_crashed && label->get_text() != "Offline" && label->get_text() != "Prog. crash")
@@ -456,6 +457,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
+                                return;
                             }
                         }
                     }
@@ -496,6 +498,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
+                                return;
                             }
                         }
                     }
@@ -532,6 +535,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
+                                return;
                             }
                         }
                     }
@@ -568,6 +572,7 @@ void MonitoringUi::init_ui_thread()
                                 );
                                 this->kill_deployed_applications();
                                 error_triggered[i][vehicle_id] = true;
+                                return;
                             }
                         }
                     }
@@ -674,6 +679,7 @@ void MonitoringUi::init_ui_thread()
                                     );
                                     this->kill_deployed_applications();
                                     error_triggered[i][vehicle_id] = true;
+                                    return;
                                 }
                             }
                             else if (error > 0.05)
@@ -850,14 +856,6 @@ void MonitoringUi::reset_ui_thread()
 {
     //Kill UI thread before clearing data
     stop_ui_thread();
-    
-    //Clear grid view, create new one
-    viewport_monitoring->remove();
-    grid_vehicle_ids.clear();
-    grid_vehicle_monitor = Gtk::manage(new Gtk::Grid());
-    grid_vehicle_monitor->set_name("grid_vehicle_monitor");
-    viewport_monitoring->add(*grid_vehicle_monitor);
-    grid_vehicle_monitor->show();
 
     //Reset data in underlying data structure
     this->reset_data();

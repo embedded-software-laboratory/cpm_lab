@@ -631,7 +631,6 @@ void SetupViewUI::kill_deployed_applications() {
     {
         //Do only a part of the logic below
         deploy_functions->stop_vehicles(get_vehicle_ids_active());
-        perform_post_kill_cleanup(); //Even this part is not really required
 
         return;
     }
