@@ -57,7 +57,6 @@ HLCCommunicator::HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middlewa
     }
 
 void HLCCommunicator::start(){
-    //TODO: Write a short message, with "Starting now with these callbacks set, and these callbacks unset"
     writeInfoMessage();
     sendReadyMessage(); 
  
