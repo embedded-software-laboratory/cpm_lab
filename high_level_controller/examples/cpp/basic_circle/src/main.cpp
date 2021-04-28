@@ -91,16 +91,13 @@ int main(int argc, char *argv[])
     sleep(10);
 
     // Ease-of-life class to communicate with the middleware.
-    // This participant should only communicate on this system, so its messages are not directly send to the vehicles.
+    // This participant should only communicate on this system, so its messages are not directly sent to the vehicles.
     // Instead we communicate with the middleware, and the middleware relays these messages to the vehicle.
     // These settings are saved in the Quality of Service (QoS) xml-file and are identical to the ones the middleware uses.
     // One QoS file can define multiple profiles, which is why we need to specify that we want to use the
     // LocalCommunicationProfile, from the MatlabLibrary.
     HLCCommunicator hlc_communicator(
-            vehicle_id,
-            1,
-            "./QOS_LOCAL_COMMUNICATION.xml",
-            "MatlabLibrary::LocalCommunicationProfile"
+            vehicle_id
     );
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
@@ -160,7 +157,8 @@ int main(int argc, char *argv[])
     uint64_t reference_trajectory_time = 0;
 
 
-    // The code inside the cpm::Timer is executed every 200 milliseconds.
+    // The code inside onEachTimestep is executed every each timestep sent by the middleware.
+    // We assume it to be 200ms here.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
     hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list)
