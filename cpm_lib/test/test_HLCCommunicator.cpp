@@ -30,6 +30,7 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <cstdlib>
 
 #include "cpm/HLCCommunicator.hpp"
 #include "cpm/ReaderAbstract.hpp"
@@ -53,7 +54,7 @@ TEST_CASE( "HLCCommunicator" ) {
     uint64_t period_nanos = 47000000ull; // 47ms; arbitrary
     uint64_t period_ms = period_nanos/1000000;
 
-    std::string local_qos_path = "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml";
+    std::string local_qos_path = std::string(getenv("HOME"))+"/dev/software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml",
     std::string local_qos_profile = "MatlabLibrary::LocalCommunicationProfile";
 
     cpm::Participant local_participant(

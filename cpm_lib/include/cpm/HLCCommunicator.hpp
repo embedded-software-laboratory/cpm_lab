@@ -134,7 +134,7 @@ public:
      */
     HLCCommunicator(std::vector<uint8_t> _vehicle_ids,
             int middleware_domain=DEFAULT_MIDDLEWARE_DOMAIN,
-            std::string qos_file=std::string(getenv("HOME"))+"/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml",
+            std::string qos_file=std::string(getenv("HOME"))+"/dev/software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml",
             std::string qos_profile="MatlabLibrary::LocalCommunicationProfile"
             );
 
@@ -146,7 +146,7 @@ public:
      */
     HLCCommunicator(uint8_t _vehicle_id,
             int middleware_domain=DEFAULT_MIDDLEWARE_DOMAIN,
-            std::string qos_file=std::string(getenv("HOME"))+"/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml",
+            std::string qos_file=std::string(getenv("HOME"))+"/dev/software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml",
             std::string qos_profile="MatlabLibrary::LocalCommunicationProfile"):
             HLCCommunicator(std::vector<uint8_t>{_vehicle_id},
                     middleware_domain,
