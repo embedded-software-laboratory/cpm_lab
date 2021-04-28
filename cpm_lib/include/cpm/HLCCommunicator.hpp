@@ -96,12 +96,8 @@ class HLCCommunicator{
     //! Future object to check if onEachTimestep has finished yet
     std::future<void> planning_future;
 
-    //! Default value for middleware domain
-    static const int      default_middleware_domain = 1;
-    //! Default value for file path of the local QOS file
-    static constexpr char default_qos_file[] = "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml";
-    //! Default value for which QOS profile inside our QOS file we use
-    static constexpr char default_qos_profile[] = "MatlabLibrary::LocalCommunicationProfile";
+    //! Which DDS domain is used to communicate with middleware by default
+    static const int DEFAULT_MIDDLEWARE_DOMAIN = 1;
 
     /**
      * \brief Run a timestep
@@ -136,9 +132,9 @@ public:
      * To be used when one HLC controls multiple vehicles (e.g. central_routing_example)
      */
     HLCCommunicator(std::vector<uint8_t> _vehicle_ids,
-            int middleware_domain=default_middleware_domain,
-            std::string qos_file=default_qos_file,
-            std::string qos_profile=default_qos_profile
+            int middleware_domain=DEFAULT_MIDDLEWARE_DOMAIN,
+            std::string qos_file="/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml",
+            std::string qos_profile="MatlabLibrary::LocalCommunicationProfile"
             );
 
     /**
@@ -148,9 +144,9 @@ public:
      * or when there's just one vehicle and HLC overall (e.g. basic_circle).
      */
     HLCCommunicator(uint8_t _vehicle_id,
-            int middleware_domain=default_middleware_domain,
-            std::string qos_file=default_qos_file,
-            std::string qos_profile=default_qos_profile):
+            int middleware_domain=DEFAULT_MIDDLEWARE_DOMAIN,
+            std::string qos_file="/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml",
+            std::string qos_profile="MatlabLibrary::LocalCommunicationProfile"):
             HLCCommunicator(std::vector<uint8_t>{_vehicle_id},
                     middleware_domain,
                     qos_file,
