@@ -175,7 +175,7 @@ void HLCCommunicator::writeInfoMessage(){
     std::stringstream ss;
     ss << "Started HLCCommunicator for Vehicle ID ";
     for( auto vehicle_id : vehicle_ids ) {
-        ss << vehicle_id << " ";
+        ss << static_cast<int>(vehicle_id) << " ";
     }
     ss << std::endl;
     ss << "The following callback methods were set: " << set_callbacks.rdbuf()  << std::endl;
