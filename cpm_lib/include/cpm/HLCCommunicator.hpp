@@ -96,6 +96,13 @@ class HLCCommunicator{
     //! Future object to check if onEachTimestep has finished yet
     std::future<void> planning_future;
 
+    //! Default value for middleware domain
+    static const int      default_middleware_domain = 1;
+    //! Default value for file path of the local QOS file
+    static constexpr char default_qos_file[] = "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml";
+    //! Default value for which QOS profile inside our QOS file we use
+    static constexpr char default_qos_profile[] = "MatlabLibrary::LocalCommunicationProfile";
+
     /**
      * \brief Run a timestep
      */
@@ -128,7 +135,11 @@ public:
      *
      * To be used when one HLC controls multiple vehicles (e.g. central_routing_example)
      */
-    HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middleware_domain, std::string qos_file, std::string qos_profile);
+    HLCCommunicator(std::vector<uint8_t> _vehicle_ids,
+            int middleware_domain=default_middleware_domain,
+            std::string qos_file=default_qos_file,
+            std::string qos_profile=default_qos_profile
+            );
 
     /**
      * \brief Constructor for HLCCommunicator for one vehicle ID.
@@ -136,37 +147,15 @@ public:
      * To be used, when there's one HLC per vehicle (e.g. decentral_routing_example),
      * or when there's just one vehicle and HLC overall (e.g. basic_circle).
      */
-    HLCCommunicator(uint8_t _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
-            HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, middleware_domain, qos_file, qos_profile){}
-
-    /**
-     * \brief Constructor for HLCCommunicator for one vehicle ID.
-     *
-     * To be used, when there's one HLC per vehicle (e.g. decentral_routing_example),
-     * or when there's just one vehicle and HLC overall (e.g. basic_circle).
-     * Tries to use the middleware QOS file instead of a passed one,
-     * and uses the default middleware domain 1
-     */
-    HLCCommunicator(uint8_t _vehicle_id):
-            HLCCommunicator(
-                    std::vector<uint8_t>{_vehicle_id},
-                    1,
-                    "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml", //FIXME: Do not hardcode the path
-                    "MatlabLibrary::LocalCommunicationProfile"){}
-
-    /**
-     * \brief Constructor for HLCCommunicator for one vehicle ID.
-     *
-     * To be used when one HLC controls multiple vehicles (e.g. central_routing_example)
-     * Tries to use the middleware QOS file instead of a passed one,
-     * and uses the default middleware domain 1
-     */
-    HLCCommunicator(std::vector<uint8_t> _vehicle_ids):
-            HLCCommunicator(
-                    _vehicle_ids,
-                    1,
-                    "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml", //FIXME: Do not hardcode the path
-                    "MatlabLibrary::LocalCommunicationProfile"){}
+    HLCCommunicator(uint8_t _vehicle_id,
+            int middleware_domain=default_middleware_domain,
+            std::string qos_file=default_qos_file,
+            std::string qos_profile=default_qos_profile):
+            HLCCommunicator(std::vector<uint8_t>{_vehicle_id},
+                    middleware_domain,
+                    qos_file,
+                    qos_profile
+                    ){}
 
     /**
      * \brief Returns a participant that can communicate with the middleware
@@ -177,32 +166,51 @@ public:
 
     /**
      * \brief Additional steps that need to be taken on the first timestep
-     * \param TODO
+     * \param callback Callback function (e.g. a lambda or a std::function), that takes a VehicleStateList
+     * as a parameter. This function will get called once before the first timestep.
      *
      * Used for initial setup, that couldn't be done earlier.
      */
     void onFirstTimestep(std::function<void(VehicleStateList)> callback) { on_first_timestep = callback; };
 
     /**
-     * \brief TODO
-     * \param TODO
+     * \brief What our HLC should do each timestep.
+     * \param callback Callback function (e.g. a lambda or a std::function), that takes a VehicleStateList
+     * as a parameter. This function will get called once per timestep.
+     *
+     * The callback function will in most cases involve planning of the current timestep,
+     * and sending commands to one or multiple vehicles e.g. using a cpm::Writer<VehicleCommandTrajectory>
      */
     void onEachTimestep(std::function<void(VehicleStateList)> callback) { on_each_timestep = callback; };
 
     /**
-     * \brief TODO
-     * \param TODO
+     * \brief What our HLC should do, when it needs to abort planning a timestep early.
+     * \param callback Callback function without parameters that will be called, when our HLC is
+     * taking too long for a timestep.
+     *
+     * This is only necessary for more complex HLCs, e.g. decentral_routing.
+     * If a timestep takes 100ms, and the HLC hasn't finished it's calculations inside onEachTimestep
+     * in that time, this method will be called.
+     * It should signal the HLC, that it should stop planning and just skip this timestep.
+     *
+     * If this callback is not set, and your HLC takes e.g. 50ms too long for one timestep, it will
+     * have 50ms less time to plan the next timestep. This can add up.
      */
     void onCancelTimestep(std::function<void()> callback) { on_cancel_timestep = callback; };
 
     /**
-     * \brief TODO
-     * \param TODO
+     * \brief What to do, when the scenario is stopped entirely.
+     * \param callback Callback function without parameters, that will be called once after the last timestep.
+     *
+     * If you need to clean up behind your HLC, this is where to put those steps.
      */
     void onStop(std::function<void()> callback) { on_stop = callback; };
 
     /**
-     * \brief Communicate that we're ready and start planning
+     * \brief Communicate to the middleware that we're ready and can start planning
+     *
+     * This method will block until all planning is finished,
+     * e.g. if someone pressed the stop or kill button in the LCC.
      */
     void start();
 };
