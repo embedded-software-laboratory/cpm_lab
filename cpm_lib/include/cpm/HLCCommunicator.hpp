@@ -140,6 +140,27 @@ public:
             HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, middleware_domain, qos_file, qos_profile){}
 
     /**
+     * \brief Constructor for HLCCommunicator for one vehicle ID.
+     *
+     * To be used, when there's one HLC per vehicle (e.g. decentral_routing_example),
+     * or when there's just one vehicle and HLC overall (e.g. basic_circle).
+     * Tries to use the middleware QOS file instead of a passed one,
+     * and uses the default middleware domain 1
+     */
+    HLCCommunicator(uint8_t _vehicle_id):
+            HLCCommunicator(std::vector<uint8_t>{_vehicle_id}, 1, "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml","MatlabLibrary::LocalCommunicationProfile"){} //FIXME: Do not hardcode the path
+
+    /**
+     * \brief Constructor for HLCCommunicator for one vehicle ID.
+     *
+     * To be used when one HLC controls multiple vehicles (e.g. central_routing_example)
+     * Tries to use the middleware QOS file instead of a passed one,
+     * and uses the default middleware domain 1
+     */
+    HLCCommunicator(std::vector<uint8_t> _vehicle_ids):
+            HLCCommunicator(_vehicle_ids, 1, "/home/dev/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml","MatlabLibrary::LocalCommunicationProfile"){} //FIXME: Do not hardcode the path
+
+    /**
      * \brief Returns a participant that can communicate with the middleware
      *
      * This can be used to e.g. create a writer to write VehicleCommandTrajectories
