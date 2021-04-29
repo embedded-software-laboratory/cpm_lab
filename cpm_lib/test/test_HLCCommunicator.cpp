@@ -54,7 +54,7 @@ TEST_CASE( "HLCCommunicator" ) {
     uint64_t period_nanos = 47000000ull; // 47ms; arbitrary
     uint64_t period_ms = period_nanos/1000000;
 
-    std::string local_qos_path = std::string(getenv("HOME"))+"/dev/software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml",
+    std::string local_qos_path = std::string(getenv("HOME"))+"/dev/software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml";
     std::string local_qos_profile = "MatlabLibrary::LocalCommunicationProfile";
 
     cpm::Participant local_participant(
@@ -154,6 +154,11 @@ TEST_CASE( "HLCCommunicator" ) {
             false);
 
     mock_middleware_timer->start_async([&](uint64_t t_now){
+            VehicleStateList vehicle_state_list;
+            vehicle_state_list.t_now(t_now);
+            vehicle_state_list.period_ms(period_ms);
+            writer_vehicleStateList.write(vehicle_state_list);
+
             timer_timestep++;
 
             cpm::Logging::Instance().write(1,
@@ -163,15 +168,11 @@ TEST_CASE( "HLCCommunicator" ) {
             for( auto sample : reader_readyStatus.take()){
                 cpm::Logging::Instance().write(1,
                         "Mock middleware received ready message from %s",
-                        sample.source_id());
+                        sample.source_id().c_str());
                 if( sample.source_id() == std::string("hlc_")+std::to_string(vehicle_id) ) {
                     first_timer_timestep.store(timer_timestep.load());
                 }
             }
-            VehicleStateList vehicle_state_list;
-            vehicle_state_list.t_now(t_now);
-            vehicle_state_list.period_ms(period_ms);
-            writer_vehicleStateList.write(vehicle_state_list);
             });
 
     int timesteps_passed;
@@ -183,7 +184,9 @@ TEST_CASE( "HLCCommunicator" ) {
                     mock_middleware_timer->stop();
                     break;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+                // Slow down the loop a bit
+                rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(10)));
             }
             });
 

@@ -77,9 +77,9 @@ void HLCCommunicator::start(){
         }
          
         stop = stopSignalReceived();
- 
-        // Rate-limit this loop; usually we only get a VehicleStateList every 100-400ms
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Slow down the loop a bit
+        rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(10)));
     }
  
     // If on_stop is defined, call it now before we finish

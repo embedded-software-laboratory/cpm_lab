@@ -31,8 +31,6 @@
 #include <functional>                       // So we can use std::function
 #include <limits>                           // To get maximum integer value (for stop condition)
 #include <future>                           // So we can use std::async, std::future etc
-#include <thread>                           // For std::this_thread::sleep_for
-#include <chrono>                           // For sleep duration (std::chrono::milliseconds)
 #include <sstream>                          // For std::stringstream
 #include <cstdlib>                          // For getenv("HOME"), so get the default QOS path
 
