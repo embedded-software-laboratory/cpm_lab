@@ -100,7 +100,6 @@ if(NOT BUILD_ARM)
         test/test_MultiVehicleReader.cpp
         test/test_CommandLineReader.cpp
         test/test_InternalConfiguration.cpp
-        test/test_HLCCommunicator.cpp
     )
 
     target_link_libraries(unittest cpm)
