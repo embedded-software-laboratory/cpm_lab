@@ -27,10 +27,10 @@
 #include "catch.hpp"
 
 #include <limits>
-#include <thread>
 #include <chrono>
 #include <atomic>
 #include <cstdlib>
+#include <future>
 
 #include "cpm/HLCCommunicator.hpp"
 #include "cpm/ReaderAbstract.hpp"
