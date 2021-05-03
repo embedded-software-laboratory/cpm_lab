@@ -792,9 +792,18 @@ bool Deploy::session_exists(std::string session_id)
 
 std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_distributed, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
-    //std::cout << "Gets called with: " << script_started << ", " << deploy_distributed << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
+    //std::cout << "Gets called with: " << script_started << ", " << deploy_remote << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
+
+    //Explanation:
+    //- If we don't deploy distributed / remote, we only have one local HLC and Middleware running, so check for that
+    //- If we deploy remote, usually we do not have to check for HLC and Middleware locally, UNLESS:
+    //- If more vehicles than HLCs are online, the remaining distributed programs all run on the current machine and "has_local_hlc" is true
+    //  In that case: Check for all currently running local HLCs (deployed_local_hlcs) if they are still online (plus check w.r.t. Middleware)
+    //If script_started is false, no HLC script was started, so we do not need to check for that
+    //The same holds for lab_mode_on, check_for_recording and their associated programs
+
     std::vector<std::string> crashed_participants;
-    if ((!(deploy_distributed) || has_local_hlc))
+    if (!(deploy_remote))
     {
         if (script_started)
         {
@@ -803,13 +812,16 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
 
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
-    if (deploy_distributed && has_local_hlc && script_started)
+    if (deploy_remote && has_local_hlc)
     {
-        for( unsigned int local_hlc : deployed_local_hlcs ) {
-            std::string tmp_session_name = hlc_session+"_"+std::to_string(local_hlc);
-            if(! session_exists(tmp_session_name)){
-		    crashed_participants.push_back(tmp_session_name);
-	    }
+        if (script_started)
+        {
+            for( unsigned int local_hlc : deployed_local_hlcs ) {
+                std::string tmp_session_name = hlc_session+"_"+std::to_string(local_hlc);
+                if(! session_exists(tmp_session_name)){
+                    crashed_participants.push_back(tmp_session_name);
+                }
+            }   
         }
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
