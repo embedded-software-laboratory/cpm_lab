@@ -32,6 +32,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -48,6 +49,7 @@
 #include "commonroad_classes/Intersection.hpp"
 #include "commonroad_classes/StaticObstacle.hpp"
 #include "commonroad_classes/DynamicObstacle.hpp"
+#include "commonroad_classes/EnvironmentObstacle.hpp"
 #include "commonroad_classes/PlanningProblem.hpp"
 
 #include "commonroad_classes/InterfaceTransform.hpp"
@@ -62,10 +64,6 @@
 
 #include "cpm/Writer.hpp"
 #include "CommonroadDDSGoalState.hpp"
-
-///////////////////////////////////////////////
-//TODO: Put Enums etc inside class definition??
-///////////////////////////////////////////////
 
 /**
  * \enum ObstacleRole
@@ -122,9 +120,10 @@ struct GeoTransformation
 
 /**
  * \struct Location
- * \brief Holds location information for class CommonRoadScenario
- * Mostly relevant for UI, probably irrelevant for HLCs
- * Initial values in case it does not exist
+ * \brief Holds location information for class CommonRoadScenario.
+ * Mostly relevant for UI, probably irrelevant for HLCs.
+ * Initial values in case it does not exist.
+ * Missing (on purpose): Environment information (time of day, weather etc.), geoReference in GeoTransformation.
  * \ingroup lcc_commonroad
  */
 struct Location 
@@ -139,9 +138,9 @@ struct Location
     int gps_longitude = -1;
     //! Optional Geo Name ID, new 2020 (added to spec after some time)
     std::optional<int> geo_name_id = -1;
-    //! Optional Zipcode
+    //! Optional Zipcode, removed in 2020 specs
     std::optional<std::string> zipcode = std::nullopt;
-    //! Optional location name
+    //! Optional location name, removed in 2020 specs
     std::optional<std::string> name = std::nullopt;
     //! Optional geo transformation, which gets applied to the translated scenario after translation
     std::optional<GeoTransformation> geo_transformation = std::nullopt;
@@ -195,6 +194,8 @@ private:
     std::map<int, StaticObstacle> static_obstacles;
     //! All scenario dynamic obstacles, stored by ID
     std::map<int, DynamicObstacle> dynamic_obstacles;
+    //! All scenario environment obstacles, stored by ID
+    std::map<int, EnvironmentObstacle> environment_obstacles;
     //! All scenario planning problems, stored by ID
     std::map<int, PlanningProblem> planning_problems;
 
@@ -220,8 +221,10 @@ private:
     std::optional<std::pair<double, double>> get_lanelet_light_position(int id);
 
     //Not commonroad
-    //! Mutex to lock the object while it is being translated from an XML file
-    std::mutex xml_translation_mutex;
+    //! Mutex to lock the object while it is being translated from an XML file. All other operations lock in shared mode, while load_file() locks exclusively
+    std::shared_mutex load_file_mutex;
+    //! Mutex to lock when writing changes, so that reading and writing are not performed simultaneously. Write changes are exclusive.
+    std::shared_mutex write_changes_mutex;    
 
     //! Storage to load / store translation in YAML
     CommonRoadTransformation yaml_transformation_storage;
@@ -386,7 +389,6 @@ public:
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
      * Due to the different return types for each class, no interface was defined for this function.
      * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
-     * TODO: Change return type to whatever the name of the IDL type is
      */
     void to_dds_msg() {}
 
@@ -409,32 +411,7 @@ public:
      */
     std::shared_ptr<CommonroadDrawConfiguration> get_draw_configuration();
 
-    //TODO: Getter, by type and by ID, and constructor
-    /**
-     * \brief Get the set author of the currently loaded commonroad file
-     */
-    const std::string& get_author();
-    /**
-     * \brief Get the set affiliation of the currently loaded commonroad file
-     */
-    const std::string& get_affiliation();
-    /**
-     * \brief Get the set benchmark id of the currently loaded commonroad file
-     */
-    const std::string& get_benchmark_id();
-    /**
-     * \brief Get the set commonroad version of the currently loaded commonroad file
-     */
-    const std::string& get_common_road_version();
-    /**
-     * \brief Get the set date of the currently loaded commonroad file
-     */
-    const std::string& get_date();
-    /**
-     * \brief Get the set source of the currently loaded commonroad file
-     */
-    const std::string& get_source();
-
+    //Getter
     //We need to be able to get and set time_step_size, to change the speed of the simulation
     /**
      * \brief Get the size of a time step (in seconds) of the currently loaded scenario. Required e.g. to display it, for transformation to time stamps etc.
@@ -449,11 +426,6 @@ public:
     // const std::vector<const ScenarioTag>& get_scenario_tags_2020();
 
     /**
-     * \brief Get the location information of the scenario, if defined, else nullopt
-     */
-    const std::optional<Location> get_location();
-
-    /**
      * \brief Get all IDs of dynamic obstacles of the currently loaded scenario
      */
     std::vector<int> get_dynamic_obstacle_ids();
@@ -461,6 +433,15 @@ public:
      * \brief Get a dynamic obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
      */
     std::optional<DynamicObstacle> get_dynamic_obstacle(int id);
+
+    /**
+     * \brief Get all IDs of environment obstacles of the currently loaded scenario
+     */
+    std::vector<int> get_environment_obstacle_ids();
+    /**
+     * \brief Get a environment obstacle of the currently loaded scenario with the given ID, if it exists, else a nullopt
+     */
+    std::optional<EnvironmentObstacle> get_environment_obstacle(int id);
 
     /**
      * \brief Get all IDs of static obstacles of the currently loaded scenario
@@ -480,6 +461,10 @@ public:
      */
     std::optional<PlanningProblem> get_planning_problem(int id);
 
+    /**
+     * \brief Get all lanelet IDs of the currently loaded scenario
+     */
+    std::vector<int> get_lanelet_ids();
     /**
      * \brief Get a lanelet of the currently loaded scenario with the given ID, if it exists, else a nullopt
      */

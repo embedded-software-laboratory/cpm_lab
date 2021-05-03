@@ -218,8 +218,9 @@ class MapViewUi
      * \brief Draw vehicles that were received in form of commonroad shape messages ('static' vehicles defined by the commonroad file)
      * \param ctx The drawing context, to draw on the map view
      * \param shape Commonroad shape to draw, e.g. a rectangle
+     * \param obstacle_class Decides draw style (different for dynamic <-> static, environment obstacle)
      */
-    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
+    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape, ObstacleClass obstacle_class);
 
     /**
      * \brief Get the center (x, y) of a commonroad shape, i.e. the mean value of its corner points etc.
@@ -257,6 +258,14 @@ class MapViewUi
      * \param ctx The drawing context, to draw on the map view
      */
     void draw_received_visualization_commands(const DrawingContext& ctx);
+
+    /**
+     * \brief Helper function to draw text surrounded by a small filled rectangle with white background and transparency
+     * to make the text more readable in case it is drawn on top of e.g. a black figure
+     * \param ctx The drawing context, to draw on the map view
+     * \param extents To compute the bounding box
+     */
+    void draw_text_bounding_box(const DrawingContext& ctx, Cairo::TextExtents extents);
 
     /**
      * \brief TODO! Deprecated? Never used or defined.

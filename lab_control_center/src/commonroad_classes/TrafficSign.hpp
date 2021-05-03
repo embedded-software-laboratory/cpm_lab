@@ -48,39 +48,24 @@
 
 #include <sstream>
 #include "commonroad_classes/SpecificationError.hpp"
+#include "commonroad_classes/CommonroadDrawConfiguration.hpp"
 
 #include "LCCErrorLogger.hpp"
 
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \struct TrafficSignPost
- * \brief Specifies a traffic sign element
- * The commonroad XML file specifies specific string values, this restriction is not applied here (for simplicity)
+ * \struct TrafficSignElement
+ * \brief Specifies a part of traffic sign (a single sign)
+ * The commonroad XML file specifies specific string values for the sign ID, this restriction is not applied here (for simplicity)
  * \ingroup lcc_commonroad
  */
-struct TrafficSignPost
+struct TrafficSignElement
 {
     //! ID of the sign post, relating to the IDs defined in the commonroad specs e.g. for a speed limit sign
     std::string traffic_sign_id;
     //! Optional additional values, e.g. the speed limit
     std::vector<std::string> additional_values;
-};
-
-/**
- * \struct TrafficSignElement
- * \brief Specifies a traffic sign post
- * Not directly specified in commonroad, but multiple elements can have the same position and 'virtual' tags
- * \ingroup lcc_commonroad
- */
-struct TrafficSignElement
-{
-    //! List of traffic signs at the traffic sign's position
-    std::vector<TrafficSignPost> traffic_sign_posts;
-    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
-    std::optional<Position> position = std::nullopt;
-    //! If the traffic sign only exists virtually, not physically
-    std::vector<bool> is_virtual;
 };
 
 /**
@@ -93,13 +78,38 @@ struct TrafficSignElement
 class TrafficSign : public InterfaceTransform, public InterfaceDraw
 {
 private:
-    //! List of traffic signs with the same ID
+    //! List of traffic signs at the traffic sign's position
     std::vector<TrafficSignElement> traffic_sign_elements;
-    //! ID of the traffic sign(s)
+    //! Position of the traffic sign, which can be undefined - then, the position is given within some lanelet referencing to the traffic sign. Must be exact according to spec!
+    std::optional<Position> position = std::nullopt;
+    //! If the traffic sign(s) only exists virtually, not physically
+    std::vector<bool> is_virtual;
+    //! ID of the traffic sign
     int id;
+
+    //Translation helper functions
+    //Helper functions for better readability
+    /**
+     * \brief Helper function to translate a Commonroad trafficSignElement
+     * \param element_node trafficSignElement node
+     */
+    TrafficSignElement translate_traffic_sign_element(const xmlpp::Node* element_node);
+    /**
+     * \brief Helper function to translate an xml position node
+     * \param position_node The Commonroad XML position node 
+     */
+    Position translate_position(const xmlpp::Node* position_node);
+    /**
+     * \brief Helper function to translate an xml virtual node
+     * \param virtual_node The Commonroad XML active node 
+     */
+    bool translate_virtual(const xmlpp::Node* virtual_node);
 
     //! Helper function from commonroadscenario to get position defined by lanelet if no position was defined for the traffic sign
     std::function<std::optional<std::pair<double, double>>(int)> get_position_from_lanelet;
+
+    //! Look up current zoom factor for drawing text
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
 
 public:
     /**
@@ -107,10 +117,12 @@ public:
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A trafficSign node
      * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
+     * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     TrafficSign(
         const xmlpp::Node* node,
-        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet,
+        std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     );
 
     /**

@@ -47,6 +47,15 @@ StaticObstacle::StaticObstacle(
     
     commonroad_line = node->get_line();
 
+    //Print warning if ID is not within allowed uint8_t range [0, 255]
+    auto id = xml_translation::get_attribute_int(node, "id", true).value();
+    if (id > 255 || id < 0)
+    {
+        std::stringstream err_stream;
+        err_stream << "Static obstacle - ID is not within desired bounds ([0, 255]) - will be taken modulo 256 in simulation, line: " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
+    }
+
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, error thrown anyway, so we can use .value() here
@@ -138,7 +147,7 @@ void StaticObstacle::transform_coordinate_system(double scale, double angle, dou
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, 0.0, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
@@ -201,6 +210,9 @@ ObstacleSimulationData StaticObstacle::get_obstacle_simulation_data()
             simulation_data.obstacle_type = ObstacleType::Unknown;
             break;
     }
+
+    //Add class type
+    simulation_data.obstacle_class = ObstacleClass::Static;
     
     return simulation_data;
 }

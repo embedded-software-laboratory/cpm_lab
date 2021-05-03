@@ -64,7 +64,7 @@
  * We do not need to store "role", as we already have two different classes for that
  * \ingroup lcc_commonroad
  */
-enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train};
+enum class ObstacleTypeDynamic {Unknown, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, Taxi};
 
 /**
  * \class DynamicObstacle
@@ -126,7 +126,7 @@ public:
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
      */
     void transform_timing(double time_scale) override;
 

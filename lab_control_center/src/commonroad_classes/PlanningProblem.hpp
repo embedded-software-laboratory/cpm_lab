@@ -54,20 +54,6 @@
 
 #include "CommonroadDDSGoalState.hpp"
 
-/**
- * \struct PlanningProblemElement
- * \brief Not in specs, but these allow sequences of initialState and several goalStates in PlanningProblem
- * \ingroup lcc_commonroad
- */
-struct PlanningProblemElement
-{
-    //! Initial state of the planning problem
-    std::optional<StateExact> initial_state = std::nullopt;
-
-    //! List of possible / allowed goal states for the planning problem, when starting at the given initial state
-    std::vector<GoalState> goal_states;
-};
-
 
 /**
  * \class PlanningProblem
@@ -78,8 +64,17 @@ struct PlanningProblemElement
 class PlanningProblem : public InterfaceTransform, public InterfaceDraw, public InterfaceTransformTime
 {
 private:
-    //! List of planning problems stored within one planning problem ID (the specs allow more than one definition)
-    std::vector<PlanningProblemElement> planning_problems;
+    //! Initial state of the planning problem
+    std::optional<StateExact> initial_state = std::nullopt;
+
+    //! List of possible / allowed goal states for the planning problem, when starting at the given initial state
+    std::vector<GoalState> goal_states;
+
+    //! Required for drawing
+    int planning_problem_id;
+
+    //! Draw configuration to know if the init state description should be drawn
+    std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
 
 public:
     /**
@@ -110,7 +105,7 @@ public:
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
      */
     void transform_timing(double time_scale) override;
 
@@ -131,9 +126,14 @@ public:
 
     //Getter
     /**
-     * \brief Get the list of planning problems with the same planning problem ID
+     * \brief Get the initial state
      */
-    const std::vector<PlanningProblemElement>& get_planning_problems() const;
+    const std::optional<StateExact>& get_initial_state() const;
+
+    /**
+     * \brief Get the list of goal states with the same planning problem ID
+     */
+    const std::vector<GoalState>& get_goal_states() const;
 
     /**
      * \brief Translate the planning problem to a DDS msg

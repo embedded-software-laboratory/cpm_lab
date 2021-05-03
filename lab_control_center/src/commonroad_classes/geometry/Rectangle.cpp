@@ -83,7 +83,7 @@ void Rectangle::transform_coordinate_system(double scale, double angle, double t
     center->transform_coordinate_system(scale, angle, translate_x, translate_y);
 
     //Change rotation itself as well; rotation is counter-clockwise
-    //TODO: Is it okay to just add to the rotation in local coordinates if the points have already been converted correctly?
+    //It seems to be okay to just add to the rotation in local coordinates if the points have already been converted correctly
     auto old_value = orientation.value_or(0.0);
     orientation = std::optional<double>(rotate_orientation_around_z(old_value, angle));
     
