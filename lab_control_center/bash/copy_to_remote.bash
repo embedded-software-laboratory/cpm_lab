@@ -30,6 +30,9 @@ case $i in
 esac
 done
 
+# Get directory of the script (use before first use of cd)
+LCC_BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/"
+
 # Create scripts directory in remote /tmp folder
 ssh guest@${IP} << 'EOF'
     cd /tmp
@@ -46,10 +49,10 @@ cd ~
 tar czvf - ./${PATH_TO_SCRIPT} | ssh guest@${IP} "cd ~;tar xzvf -"
 
 # Copy further file modification orders to the NUC
-scp ~/dev/software/lab_control_center/bash/remote_start.bash guest@${IP}:/tmp/scripts
-scp ~/dev/software/lab_control_center/bash/environment_variables.bash guest@${IP}:/tmp/scripts
-scp ~/dev/software/lab_control_center/bash/tmux_middleware.bash guest@${IP}:/tmp/scripts
-scp ~/dev/software/lab_control_center/bash/tmux_script.bash guest@${IP}:/tmp/scripts
+scp ${LCC_BASH_DIR}remote_start.bash guest@${IP}:/tmp/scripts
+scp ${LCC_BASH_DIR}environment_variables.bash guest@${IP}:/tmp/scripts
+scp ${LCC_BASH_DIR}tmux_middleware.bash guest@${IP}:/tmp/scripts
+scp ${LCC_BASH_DIR}tmux_script.bash guest@${IP}:/tmp/scripts
 
 # Let the NUC handle the rest
 sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"

@@ -44,7 +44,16 @@ can lead to unexpected results\n"
     # per domain on a single machine per default.
 fi
 
-. ~/dev/software/lab_control_center/bash/environment_variables_local.bash
+# Get environment variables directory relative to this script's directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/"
+RELATIVE_BASH_FOLDER_DIR="${DIR}../../../../lab_control_center/bash"
+ABSOLUTE_BASH_FOLDER_DIR="$(realpath "${RELATIVE_BASH_FOLDER_DIR}")"
+RELATIVE_SOFTWARE_FOLDER_DIR="${DIR}../../../../"
+ABSOLUTE_SOFTWARE_FOLDER_DIR="$(realpath "${RELATIVE_SOFTWARE_FOLDER_DIR}")"
+RELATIVE_LOGS_FOLDER_DIR="${DIR}../../../../../lcc_script_logs"
+ABSOLUTE_LOGS_FOLDER_DIR="$(realpath "${RELATIVE_LOGS_FOLDER_DIR}")"
+
+. ${ABSOLUTE_BASH_FOLDER_DIR}/environment_variables_local.bash
 
 cleanup(){
     printf "Cleaning up ... "
@@ -73,7 +82,7 @@ do
         # This starts every HLC with a debugger attached and in separate tmux sessions
         # Use e.g. 'tmux attach-session -t decentral_routing_2' to start debugging
         # HLC 2
-        tmux new-session -d -s "decentral_routing_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/dev/dev/software/high_level_controller/examples/cpp/decentral_routing/build/;\
+        tmux new-session -d -s "decentral_routing_${vehicle_id}" ". ${ABSOLUTE_SOFTWARE_FOLDER_DIR}/lab_control_center/bash/environment_variables_local.bash;cd ${ABSOLUTE_SOFTWARE_FOLDER_DIR}/high_level_controller/examples/cpp/decentral_routing/build/;\
             gdb -ex=r --args ./decentral_routing \
             --node_id=high_level_controller${vehicle_id} \
             --simulated_time=false \
@@ -105,20 +114,22 @@ do
 	    --middleware_domain=${vehicle_id} \
             --dds_domain=${DDS_DOMAIN} \
             --dds_initial_peer=${DDS_INITIAL_PEER}  \
-            >~/dev/lcc_script_logs/stdout_hlc${vehicle_id}.txt \
-            2>~/dev/lcc_script_logs/stderr_hlc${vehicle_id}.txt&
+            >${ABSOLUTE_LOGS_FOLDER_DIR}/stdout_hlc${vehicle_id}.txt \
+            2>${ABSOLUTE_LOGS_FOLDER_DIR}/stderr_hlc${vehicle_id}.txt&
 	
         # Start middleware
-        middleware_cmd="./middleware \
-            --node_id=middleware_${vehicle_id} \
-            --simulated_time=false \
-            --vehicle_ids=${vehicle_id} \
-            --domain_number=${vehicle_id} \
-            --dds_domain=${DDS_DOMAIN} \
-            --dds_initial_peer=${DDS_INITIAL_PEER} \
-            >~/dev/lcc_script_logs/stdout_middleware_${vehicle_id}.txt \
-            2>~/dev/lcc_script_logs/stderr_middleware_${vehicle_id}.txt"
-        tmux new-session -d -s "middleware_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd ~/dev/software/middleware/build/;${middleware_cmd}"
+    middleware_cmd="./middleware \
+        --node_id=middleware_${vehicle_id} \
+        --simulated_time=false \
+        --vehicle_ids=${vehicle_id} \
+        --domain_number=${vehicle_id} \
+        --dds_domain=${DDS_DOMAIN} \
+        --dds_initial_peer=${DDS_INITIAL_PEER}  \
+        >${ABSOLUTE_LOGS_FOLDER_DIR}/stdout_middleware_${vehicle_ids}.txt \
+        2>${ABSOLUTE_LOGS_FOLDER_DIR}/stderr_middleware_${vehicle_ids}.txt"
+    tmux new-session -d -s "middleware_${vehicle_id}" ". ${ABSOLUTE_BASH_FOLDER_DIR}/environment_variables_local.bash;cd ${ABSOLUTE_SOFTWARE_FOLDER_DIR}/middleware/build/;${middleware_cmd}"
+    printf "\tStarting middleware_${vehicle_id} ...\n"
+
     fi
     printf "\tStarting high_level_controller_${vehicle_id}.\n"
 done
@@ -130,7 +141,7 @@ printf "To abort, press Ctrl+C\n"
 # This may be more than we actually created
 if [ $show_logs ]; then
     printf "Displaying stdout and stderr of all started High Level Controller\n"
-    tail -f ~/dev/lcc_script_logs/*.txt
+    tail -f ${ABSOLUTE_LOGS_FOLDER_DIR}/*.txt
 fi
 
 while true

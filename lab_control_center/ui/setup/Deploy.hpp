@@ -65,12 +65,14 @@ public:
      * \param _cmd_dds_initial_peer dds initial peer set in the command line (when starting the LCC)
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
      * \param _program_executor Class object that gives "safer" access to fork etc., to prevent memory leaks etc. that may occur in multi threaded programs
+     * \param _absolute_exec_path Path of the executable. Is required to construct paths to other important programs in the software repo
      */
     Deploy(
         unsigned int _cmd_domain_id, 
         std::string _cmd_dds_initial_peer, 
         std::function<void(uint8_t)> _stop_vehicle, 
-        std::shared_ptr<ProgramExecutor> _program_executor
+        std::shared_ptr<ProgramExecutor> _program_executor,
+        std::string _absolute_exec_path
     );
 
     /**
@@ -208,7 +210,7 @@ public:
     bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds);
 
     /**
-     * \brief Used to create the folder ~/dev/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
+     * \brief Used to create the folder software_top_folder_path(value of variable)/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
      * \param name name of the log folder
      */
     void create_log_folder(std::string name);
@@ -230,6 +232,12 @@ private:
      * \brief Used for process forking, when spawning and managing spawned processes
      */
     enum PROCESS_STATE {DONE, RUNNING, ERROR};
+
+    //! Contains the path to the software folder of the repo, from which paths to all relevant contained programs can be constructed (e.g. to vehicles, IPS etc.)
+    std::string software_folder_path;
+
+    //! Path above software folder, for lcc_script_logs folder
+    std::string software_top_folder_path;
 
     //! DDS Domain ID. This value is set once at startup (as command line parameters).
     unsigned int cmd_domain_id; 

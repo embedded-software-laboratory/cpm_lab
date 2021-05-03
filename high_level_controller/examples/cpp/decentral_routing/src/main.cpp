@@ -98,6 +98,34 @@ using std::vector;
  */
 int main(int argc, char *argv[]) {   
 
+    //We need to get the path to the executable, and argv[0] is not
+    //reliable enough for that (and sometimes also only returns a relative path)
+    std::array<char, 128> buffer;
+    std::string absolute_executable_path;
+    ssize_t len = ::readlink("/proc/self/exe", buffer.data(), buffer.size()-1);
+    if (len >= 0) {
+      buffer[len] = '\0';
+      std::string temp(buffer.data());
+      absolute_executable_path = temp;
+    }
+    else
+    {
+        std::cerr << "ERROR: Could not obtain executable path, thus deploying functions would not work. Shutting down..." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    //Get from the executable path to the software folder path of the whole project / repo
+    //Executable path: .../software/high_level_controller/examples/cpp/decentral_routing/build/name_of_executable
+    //-> Remove everything up to the third-last slash
+    auto software_folder_path = absolute_executable_path;
+    for (int i = 0; i < 6; ++i)
+    {
+        auto last_slash = software_folder_path.find_last_of('/');
+        if (last_slash != std::string::npos)
+        {
+            software_folder_path = software_folder_path.substr(0, last_slash);
+        }
+    }
+
     // Read command line arguments
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
 
@@ -138,8 +166,9 @@ int main(int argc, char *argv[]) {
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.
-    system("cp $HOME/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml .");
-    //TODO: QOS_READY_TRIGGER xml is currently only local, not on the NUC - right?
+    std::stringstream command_stream;
+    command_stream << "cp " << software_folder_path << "/middleware/build/QOS_LOCAL_COMMUNICATION.xml .";
+    system(command_stream.str().c_str());
 
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
