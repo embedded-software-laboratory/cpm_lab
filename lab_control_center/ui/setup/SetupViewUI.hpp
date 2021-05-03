@@ -107,8 +107,8 @@ private:
     //! Switch to (de)activate diagnosis
     Gtk::Switch* switch_diagnosis = nullptr;
 
-    //! Switch to (de)activate remote deployment on HLCs (NUCs)
-    Gtk::Switch* switch_deploy_remote = nullptr;
+    //! Switch to (de)activate distributed / remote deployment on HLCs (NUCs) and locally
+    Gtk::Switch* switch_deploy_distributed = nullptr;
 
     //! Button to start simulation
     Gtk::Button* button_deploy = nullptr;
@@ -143,7 +143,7 @@ private:
 
     //! Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
-    //! Wait up to 30s until remote deployment is aborted if the upload was not finished until then (for each thread)
+    //! Wait up to 30s until distributed / remote deployment is aborted if the remote upload was not finished until then (for each thread)
     unsigned int remote_deploy_timeout = 30;
     //! Wait up to 2 seconds until a kill command is aborted if it was not finished until then
     unsigned int remote_kill_timeout = 2;
@@ -214,7 +214,7 @@ private:
     //! Dispatcher callback for the UI thread
     void ui_dispatch(); 
 
-    //! True if in remote deployment there were not sufficient HLCs for the selected vehicles. In that case, some scripts are deployed locally so that all vehicles have a running script.
+    //! True if in distributed / remote deployment there were not sufficient HLCs for the selected vehicles. In that case, some scripts are deployed locally so that all vehicles have a running script.
     std::atomic_bool both_local_and_remote_deploy;
 
     //! For loading window while HLC scripts are being updated. Also: Upload threads and GUI thread (to keep upload work separate from GUI).
@@ -356,7 +356,7 @@ public:
     /**
      * \brief This might be subject to change.
      * Returns: True if a simulation is running, and in that case a map with mappings from vehicle ID to HLC ID.
-     * (During remote deployment, each vehicle gets commands from its own HLC. Thus, each vehicle ID is associated to an HLC ID.)
+     * (During distributed / remote deployment, each vehicle gets commands from its own HLC. Thus, each vehicle ID is associated to an HLC ID.)
      */
     std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
 

@@ -1,7 +1,7 @@
 
 #!/bin/bash
 # IP must be set
-# This file is called by the LCC when remote deployment was selected and kill has been pressed
+# This file is called by the LCC when distributed / remote deployment was selected and kill has been pressed
 # DESCRIPTION: Kill the middleware and script sessions that were started on the NUCs remotely
 for i in "$@"
 do

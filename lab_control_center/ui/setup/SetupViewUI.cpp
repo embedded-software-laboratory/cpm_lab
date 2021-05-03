@@ -76,7 +76,7 @@ SetupViewUI::SetupViewUI
 
     builder->get_widget("switch_simulated_time", switch_simulated_time);
 
-    builder->get_widget("switch_deploy_remote", switch_deploy_remote);
+    builder->get_widget("switch_deploy_distributed", switch_deploy_distributed);
 
     builder->get_widget("switch_lab_mode", switch_lab_mode);
     builder->get_widget("switch_record_labcam", switch_record_labcam);
@@ -97,7 +97,7 @@ SetupViewUI::SetupViewUI
     assert(button_select_all_simulated);
     
     assert(switch_simulated_time);
-    assert(switch_deploy_remote);
+    assert(switch_deploy_distributed);
     assert(switch_lab_mode);
     assert(switch_record_labcam);
     assert(switch_diagnosis);
@@ -446,8 +446,8 @@ void SetupViewUI::ui_dispatch()
     }
 
     //Kill has a timeout s.t. a kill button can not be "spammed"
-    //But: grey-out should not be undone during remote simulation, because Deploy then already has control over when Kill should become sensitive again
-    if (undo_kill_grey_out.exchange(false) && !(simulation_running.load() && switch_deploy_remote->get_active()))
+    //But: grey-out should not be undone during distributed / remote simulation, because Deploy then already has control over when Kill should become sensitive again
+    if (undo_kill_grey_out.exchange(false) && !(simulation_running.load() && switch_deploy_distributed->get_active()))
     {
         button_kill->set_sensitive(true);
     }
@@ -486,7 +486,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Remember these also for crash check thread
-    bool deploy_remote_toggled = switch_deploy_remote->get_active();
+    bool deploy_distributed_toggled = switch_deploy_distributed->get_active();
     bool lab_mode_on = switch_lab_mode->get_active();
     bool labcam_toggled = switch_record_labcam->get_active();
 
@@ -524,7 +524,7 @@ void SetupViewUI::deploy_applications() {
 
         if (std::experimental::filesystem::exists(filepath))
         {
-            //Update path to absolute path, s.t. deploy remote does not have any problems
+            //Update path to absolute path, s.t. distributed deploy does not have any problems
             try
             {
                 filepath_str = std::experimental::filesystem::absolute(filepath);
@@ -542,12 +542,12 @@ void SetupViewUI::deploy_applications() {
 
     //Also check if an empty string was passed - in this case, we only want to start the middleware
     //We only do this in case of local deployment (e.g. for debug purposes of locally running programs) - 
-    //  for remote deployment, we require a valid script to be set
+    //  for distributed / remote deployment, we require a valid script to be set
     bool start_middleware_without_hlc = (filepath_str.size() == 0);
 
     std::vector<uint8_t> remote_hlc_ids; //Remember IDs of all HLCs where software actually is deployed
-    //Remote deployment of scripts on HLCs or local deployment depending on switch state
-    if(deploy_remote_toggled && file_exists)
+    //Distributed / remote deployment of scripts on HLCs or local deployment depending on switch state
+    if(deploy_distributed_toggled && file_exists)
     {
         //Deploy on each HLC
         button_kill->set_sensitive(false);
@@ -572,11 +572,11 @@ void SetupViewUI::deploy_applications() {
         remote_hlc_ids = hlc_ids;
         remote_hlc_ids.erase(remote_hlc_ids.begin() + min_hlc_vehicle, remote_hlc_ids.end());
 
-        //Deploy remote
+        //Deploy distributed / remote
         auto simulated_time = switch_simulated_time->get_active();
         std::string params = script_params->get_text().c_str();
 
-        upload_manager->deploy_remote(simulated_time, filepath_str, params, hlc_ids, vehicle_ids);
+        upload_manager->deploy_distributed(simulated_time, filepath_str, params, hlc_ids, vehicle_ids);
 
         //Now those vehicles that could not be matched are treated as in the local case
         if (vehicle_ids.size() > hlc_ids.size())
@@ -610,7 +610,7 @@ void SetupViewUI::deploy_applications() {
     
 
     //Start performing crash checks for deployed applications
-    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_remote_toggled, lab_mode_on, labcam_toggled);
+    crash_checker->start_checking(file_exists, start_middleware_without_hlc, remote_hlc_ids, both_local_and_remote_deploy.load(), deploy_distributed_toggled, lab_mode_on, labcam_toggled);
 }
 
 std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_matching()
@@ -675,7 +675,7 @@ void SetupViewUI::kill_deployed_applications() {
     is_deployed.store(false);
 
     //Kill scripts locally or remotely - do not perform remote kill (with new UI window creations etc) if the whole lcc is in the process of being destructed
-    if(switch_deploy_remote->get_active() && !lcc_closed.load())
+    if(switch_deploy_distributed->get_active() && !lcc_closed.load())
     {
         //Performs post_kill_cleanup after remote kill
         upload_manager->kill_remote();
@@ -698,7 +698,7 @@ void SetupViewUI::kill_deployed_applications() {
     deploy_functions->kill_recording();
 
     //The rest is done in perform_post_kill_cleanup when the UI window closed (when all threads are killed) 
-    //But only if threads are used, so only in case of remote deployment
+    //But only if threads are used, so only in case of distributed / remote deployment
     //For local deployment, perform_post_kill_cleanup is called directly
 
 }
@@ -782,7 +782,7 @@ void SetupViewUI::set_sensitive(bool is_sensitive) {
     switch_record_labcam->set_sensitive(is_sensitive);
     switch_lab_mode->set_sensitive(is_sensitive);
     switch_diagnosis->set_sensitive(is_sensitive);
-    switch_deploy_remote->set_sensitive(is_sensitive);
+    switch_deploy_distributed->set_sensitive(is_sensitive);
     switch_simulated_time->set_sensitive(is_sensitive);
 
     for (auto& vehicle_toggle : vehicle_toggles)
