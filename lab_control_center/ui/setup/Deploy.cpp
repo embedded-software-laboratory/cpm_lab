@@ -803,7 +803,7 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     //The same holds for lab_mode_on, check_for_recording and their associated programs
 
     std::vector<std::string> crashed_participants;
-    if (!(deploy_remote))
+    if (!(deploy_distributed))
     {
         if (script_started)
         {
@@ -812,7 +812,7 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
 
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
-    if (deploy_remote && has_local_hlc)
+    if (deploy_distributed && has_local_hlc)
     {
         if (script_started)
         {
