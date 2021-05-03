@@ -59,8 +59,8 @@ Deploy::Deploy(
     }    
 
     //Create the log folder for the first time (or delete an outdated version of it)
-    //Gets re-created with every deploy in the Setup class
-    create_log_folder("lcc_script_logs");
+    //Some parts get deleted with every deploy in Setup (using delete_old_logs)
+    create_log_folder();
 }
 
 Deploy::~Deploy()
@@ -122,7 +122,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 << "matlab -logfile matlab.log"
                 << " -sd \"" << script_path_string
                 << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
-                << " >" << software_top_folder_path << "/lcc_script_logs/stdout_hlc.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_hlc.txt'";
+                << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ".txt'";
             }
             else if (script_name_string.find(".") == std::string::npos)
             {
@@ -141,7 +141,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                     << " --dds_initial_peer=" << cmd_dds_initial_peer;
             }
             command 
-                << " " << script_params << " >" << software_top_folder_path << "/lcc_script_logs/stdout_hlc.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_hlc.txt\"";
+                << " " << script_params << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ".txt\"";
             }
             else 
             {
@@ -199,8 +199,7 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             << "'. " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;"
             << "matlab -logfile matlab.log"
             << " -sd \"" << script_path_string
-            << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << std::to_string(vehicle_id) << ")\""
-            << " >" << software_top_folder_path << "/lcc_script_logs/stdout_hlc.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_hlc.txt'";
+            << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << std::to_string(vehicle_id) << ")\"";
         }
         else if (script_name_string.find(".") == std::string::npos)
         {
@@ -221,9 +220,9 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
                 << " --dds_initial_peer=" << cmd_dds_initial_peer;
         }
         command 
-            << " " << script_params << " >" << software_top_folder_path << "/lcc_script_logs/stdout_hlc"
+            << " " << script_params << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ""
             << std::to_string(vehicle_id) 
-            << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_hlc"
+            << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ""
             << std::to_string(vehicle_id) 
             << ".txt\"";
         }
@@ -329,7 +328,7 @@ void Deploy::deploy_middleware(std::string sim_time_string, std::stringstream& v
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     middleware_command 
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_middleware.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_middleware.txt\"";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << middleware_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << middleware_session << ".txt\"";
 
     //Execute command
     program_executor->execute_command(middleware_command.str());
@@ -348,7 +347,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
     std::string sim_time_string = bool_to_string(use_simulated_time);
 
     std::stringstream session_name;
-    session_name << "vehicle_" << id;
+    session_name << vehicle_session << "_" << id;
 
     //Check if old session already exists - if so, kill it
     kill_session(session_name.str());
@@ -367,7 +366,7 @@ void Deploy::deploy_sim_vehicle(unsigned int id, bool use_simulated_time)
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command 
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_vehicle" << id << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_vehicle" << id << ".txt\"";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << vehicle_session << id << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << vehicle_session << id << ".txt\"";
 
     //Execute command
     program_executor->execute_command(command.str());
@@ -394,7 +393,7 @@ void Deploy::kill_sim_vehicles(std::vector<unsigned int> simulated_vehicle_ids)
 void Deploy::kill_sim_vehicle(unsigned int id) 
 {
     std::stringstream vehicle_id;
-    vehicle_id << "vehicle_" << id;
+    vehicle_id << vehicle_session << "_" << id;
     
     kill_session(vehicle_id.str());
 }
@@ -596,7 +595,7 @@ bool Deploy::deploy_remote_hlc(unsigned int hlc_id, std::string vehicle_ids, boo
         << " --script_path=" << script_path 
         << " --script_arguments='" << script_argument_stream.str() << "'"
         << " --middleware_arguments='" << middleware_argument_stream.str() << "'"
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_remote_hlc_deploy.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_remote_hlc_deploy.txt";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << remote_copy_log_name << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << remote_copy_log_name << ".txt";
 
     //Spawn and manage new process
     return program_executor->execute_command(copy_command.str().c_str(), timeout_seconds);
@@ -616,7 +615,7 @@ bool Deploy::kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds)
     //Kill the middleware and script tmux sessions running on the remote system
     std::stringstream kill_command;
     kill_command << software_folder_path << "/lab_control_center/bash/remote_kill.bash --ip=" << ip_stream.str()
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_remote_hlc_kill.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_remote_hlc_kill.txt";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << remote_kill_log_name << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << remote_kill_log_name << ".txt";
 
     //Spawn and manage new process
     return program_executor->execute_command(kill_command.str().c_str(), timeout_seconds);
@@ -639,7 +638,7 @@ void Deploy::deploy_ips()
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command_ips 
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_ips.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_ips.txt\"";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << ips_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << ips_session << ".txt\"";
 
     //Kill previous ips basler session if it still exists
     kill_session(basler_session);
@@ -656,7 +655,7 @@ void Deploy::deploy_ips()
             << " --dds_initial_peer=" << cmd_dds_initial_peer;
     }
     command_basler 
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_basler.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_basler.txt\"";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << basler_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << basler_session << ".txt\"";
 
     //Execute command
     program_executor->execute_command(command_ips.str());
@@ -681,7 +680,7 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
         << "\"cd " << software_folder_path << "/lab_control_center/build/labcam;./labcam_recorder "
         << " --path=" << path
         << " --file_name=" << file_name
-        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_labcam.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_labcam.txt\"";
+        << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << labcam_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << labcam_session << ".txt\"";
     
     //Execute command
     program_executor->execute_command(command.str().c_str());
@@ -868,14 +867,64 @@ std::string Deploy::bool_to_string(bool var)
     }
 }
 
-void Deploy::create_log_folder(std::string name)
+void Deploy::create_log_folder(std::string folder_name)
 {
     //Generate command
     std::stringstream command_folder;
     command_folder 
-        << "rm -rf " << software_top_folder_path << "/" << name << ";"
-        << "mkdir -p " << software_top_folder_path << "/" << name;
+        << "rm -rf " << software_top_folder_path << "/" << folder_name << ";"
+        << "mkdir -p " << software_top_folder_path << "/" << folder_name;
 
     //Execute command
     program_executor->execute_command(command_folder.str());
+}
+
+void Deploy::delete_old_logs(std::string folder_name)
+{
+    //Check if the log folder exists
+    std::string log_folder = software_top_folder_path;
+    log_folder.append("/");
+    log_folder.append(folder_name);
+
+    if (! std::experimental::filesystem::exists(log_folder.c_str()))
+    {
+        create_log_folder(folder_name);
+    }
+
+    //Now delete files in that folder that are outdated
+    //These are: Middleware and HLC files, Labcam, Recording
+    std::vector<std::string> deletion_keywords = {
+        recording_session,
+        labcam_session,
+        middleware_session,
+        hlc_session,
+        remote_copy_log_name,
+        remote_kill_log_name
+    };
+
+    //First: Get list of all files to delete
+    std::vector<std::string> files_to_delete;
+    for(const auto& element : std::experimental::filesystem::directory_iterator(log_folder.c_str()))
+    {
+        std::string file_path = element.path();
+
+        //Only delete the file if it contains one of the deletion keywords, e.g. the HLC session name
+        //(these are used when creating the .txt log files)
+        for (const auto& deletion_keyword : deletion_keywords)
+        {
+            if (file_path.find(deletion_keyword) != std::string::npos)
+            {
+                files_to_delete.push_back(file_path);
+                break;
+            }
+        }
+    }
+
+    //Now delete all accumulated files 
+    //(remove instead of remove_all, although we did not check for directory, sufficient because 
+    //we should be in control of the content of that folder anyway and it gets re-created w. LCC start)
+    for (const auto& file : files_to_delete)
+    {
+        std::experimental::filesystem::remove(file.c_str());
+    }
 }

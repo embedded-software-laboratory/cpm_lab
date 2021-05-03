@@ -315,6 +315,7 @@ public:
      * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
      * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
+     * \param _absolute_exec_path Path of the executable. Is required to construct default path for HLC script selection
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
@@ -329,6 +330,7 @@ public:
         std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
         std::function<void(std::vector<int32_t>)> _update_vehicle_ids_parameter,
+        std::string _absolute_exec_path,
         unsigned int argc, 
         char *argv[]
         );

@@ -76,7 +76,7 @@ private:
     FileDialogPaths();
 
     //! Default load path if no previous file is present
-    const std::string default_load_path = "../";
+    const std::string default_load_path = "";
     //! Location of the config file for this file chooser, which tells the previously selected file of the last program execution
     const std::string config_location = "./file_dialog_open_config.yaml";
 
