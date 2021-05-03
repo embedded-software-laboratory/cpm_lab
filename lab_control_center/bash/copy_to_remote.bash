@@ -1,7 +1,7 @@
 #!/bin/bash
 # IP and SCRIPT_PATH must be set, SCRIPT_ARGS and MIDDLEWARE_ARGS are not mandatory. If MIDDLEWARE_ARGS is set, the middleware is used, else it isn't (you must set a node id for the middleware).
 # SCRIPT_PATH must contain the script name + type-ending as well
-# This file is called by the LCC if remote deployment is selected
+# This file is called by the LCC if distributed / remote deployment is selected
 # DESCRIPTION: The given script is uploaded to the guest account on the specified NUC (IP), all other scripts within this folder (lab_control_center/bash) are uploaded as well.
 #   Then, remote_start.bash is executed on the remote system.
 #Get command line arguments

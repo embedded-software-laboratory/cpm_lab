@@ -62,7 +62,7 @@ void Upload::set_main_window_callback(std::function<Gtk::Window&()> _get_main_wi
     get_main_window = _get_main_window;
 }
 
-void Upload::deploy_remote(
+void Upload::deploy_distributed(
         bool simulated_time,
         std::string script_path,
         std::string script_params,

@@ -227,13 +227,13 @@ public:
     /**
      * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
      * \param script_started False if middleware+script are not running / should not be checked
-     * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
-     * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
+     * \param deploy_distributed Set to true if distributed / remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
+     * \param has_local_hlc Special case for distributed deploy, in which case existence of a local HLC will be checked 
      * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
      * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
      * \return Empty array if everything is fine, else: string of the crashed module
      */
-    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
+    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_distributed, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     /**
@@ -259,7 +259,7 @@ private:
     //! Provides safer access to deploying functions (uses a child process that was forked before creation of DDS threads etc.)
     std::shared_ptr<ProgramExecutor> program_executor;
     
-    //! In case of remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
+    //! In case of distributed / remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
     std::vector<unsigned int> deployed_local_hlcs;
 
     //Helper functions

@@ -790,11 +790,11 @@ bool Deploy::session_exists(std::string session_id)
     return running_sessions.find(session_id) != std::string::npos;
 }
 
-std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
+std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool deploy_distributed, bool has_local_hlc, bool lab_mode_on, bool check_for_recording)
 {
-    //std::cout << "Gets called with: " << script_started << ", " << deploy_remote << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
+    //std::cout << "Gets called with: " << script_started << ", " << deploy_distributed << ", " << has_local_hlc << ", " << lab_mode_on << ", " << check_for_recording << std::endl;
     std::vector<std::string> crashed_participants;
-    if ((!(deploy_remote) || has_local_hlc))
+    if ((!(deploy_distributed) || has_local_hlc))
     {
         if (script_started)
         {
@@ -803,7 +803,7 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
 
         if(! session_exists(middleware_session)) crashed_participants.push_back("Middleware");
     }
-    if (deploy_remote && has_local_hlc && script_started)
+    if (deploy_distributed && has_local_hlc && script_started)
     {
         for( unsigned int local_hlc : deployed_local_hlcs ) {
             std::string tmp_session_name = hlc_session+"_"+std::to_string(local_hlc);
