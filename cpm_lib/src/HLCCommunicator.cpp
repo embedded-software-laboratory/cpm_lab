@@ -51,7 +51,7 @@ HLCCommunicator::HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middlewa
             "systemTrigger"){
         std::stringstream vehicle_ids_string;
         for( auto vehicle_id : vehicle_ids ) {
-            vehicle_ids_string << "_" << vehicle_id;
+            vehicle_ids_string << "_" << static_cast<int>(vehicle_id);
         }
         cpm::Logging::Instance().set_id("hlc_communicator"+vehicle_ids_string.str());
     }
