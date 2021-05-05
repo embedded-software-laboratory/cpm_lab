@@ -44,6 +44,7 @@ if [ -z $SIMULATION ]; then
         sudo chmod a+rwx "/var/www/html/nuc"
     fi
     cp $DIR/build/libcpm.so $DIR/cpm_library_package
+    cp ${DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./cpm_library_package
     tar -czf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
     rm -f /var/www/html/nuc/cpm_library_package.tar.gz
     mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc

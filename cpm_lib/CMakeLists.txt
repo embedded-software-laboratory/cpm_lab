@@ -48,6 +48,9 @@ set(SOURCE_CPM
     src/RTTTool.cpp
     include/cpm/TimeMeasurement.hpp
     src/TimeMeasurement.cpp
+)
+# These are not required on the RPi
+set(SOURCE_CPM_NON_ARM
     include/cpm/HLCCommunicator.hpp
     src/HLCCommunicator.cpp
 )
@@ -71,11 +74,18 @@ else()
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 endif()
 
-
-add_library(cpm SHARED
-    ${SOURCE_DDS}
-    ${SOURCE_CPM}
-)
+if(NOT BUILD_ARM)
+    add_library(cpm SHARED
+        ${SOURCE_DDS}
+        ${SOURCE_CPM}
+        ${SOURCE_CPM_NON_ARM}
+    )
+else()
+    add_library(cpm SHARED
+        ${SOURCE_DDS}
+        ${SOURCE_CPM}
+    )
+endif()
 
 
 if(NOT BUILD_ARM)
