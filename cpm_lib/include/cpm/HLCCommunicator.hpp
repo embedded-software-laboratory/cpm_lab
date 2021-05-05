@@ -58,6 +58,9 @@ class HLCCommunicator{
 
     //! Vehicle IDs; needed for the ready message 
     std::vector<uint8_t> vehicle_ids;
+    
+    //! String containing all vehicle ids; used for identification in messages
+    std::string vehicle_ids_string;
 
     //! Participant to communicate with the middleware
     std::shared_ptr<cpm::Participant> p_local_comms_participant;
@@ -208,4 +211,12 @@ public:
      * e.g. if someone pressed the stop or kill button in the LCC.
      */
     void start();
+
+    /**
+     * \brief Communicate to the middleware that we have to stop planning
+     * \param vehicle_id Which vehicle id is requesting the stop
+     *
+     * This will send a request that every vehicle should stop.
+     */
+    void stop(int vehicle_id);
 };

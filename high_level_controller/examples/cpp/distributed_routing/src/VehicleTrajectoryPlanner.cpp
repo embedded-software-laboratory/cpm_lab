@@ -100,7 +100,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         crashed = true;
         started = false; // end planning
         isStopped = true;
-        return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
+        throw std::runtime_error("Found unavoidable collision");
     }
 
     if( !stopFlag ) {
@@ -132,6 +132,19 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
             trajectory_point_buffer.erase(trajectory_point_buffer.begin());
         }
     }
+
+    debug_analyzeTrajectoryPointBuffer();
+
+    // Get our current trajectory
+    LaneGraphTrajectory lane_graph_trajectory;
+    trajectoryPlan->get_lane_graph_positions(
+            &lane_graph_trajectory
+    );
+
+    write_trajectory(lane_graph_trajectory);
+
+    // Advance trajectoryPlanningState by 1 timestep
+    trajectoryPlan->apply_timestep(dt_nanos);
     
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
@@ -158,6 +171,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
                     "Planner missed too many timesteps");
             crashed = true;
             started = false; // end planning
+            throw std::runtime_error("Planner missed too many timesteps");
         }
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);

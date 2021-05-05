@@ -43,11 +43,7 @@
 
 // IDL files
 #include "VehicleCommandTrajectory.hpp"
-#include "TimeStamp.hpp"
-#include "ReadyStatus.hpp"
-#include "SystemTrigger.hpp"
 #include "VehicleStateList.hpp"
-#include "StopRequest.hpp"
 
 // General C++ libs
 #include <chrono>
@@ -57,6 +53,7 @@
 #include <mutex>
 #include <thread>
 #include <limits>                           // To get maximum integer value (for stop condition)
+#include <exception>
 
 #include "CouplingGraph.hpp"
 // Planner
@@ -273,12 +270,22 @@ int main(int argc, char *argv[]) {
             }
             });
     hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list){
-                auto trajectory = planner->plan(vehicle_state_list.t_now(), vehicle_state_list.period_ms()*1e6);
-                if( trajectory.get() != nullptr ) {
-                    writer_vehicleCommandTrajectory.write(*trajectory.get());
-                } else {
-                    cpm::Logging::Instance().write(2,
-                            "Planner didn't return a value this timestep");
+                try{
+                    auto trajectory = planner->plan(vehicle_state_list.t_now(), vehicle_state_list.period_ms()*1e6);
+                    if( trajectory.get() != nullptr ) {
+                        writer_vehicleCommandTrajectory.write(*trajectory.get());
+                    } else {
+                        cpm::Logging::Instance().write(2,
+                                "Planner didn't return a value this timestep");
+                    }
+                }
+                catch( const std::runtime_error& e ) {
+                    cpm::Logging::Instance().write(1,
+                            "Planner encountered exception: %s",
+                            e.what()
+                    );
+                    // Tell everyone to stop
+                    hlc_communicator.stop(vehicle_id);
                 }
             });
     hlc_communicator.onCancelTimestep([&]{

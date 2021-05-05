@@ -40,20 +40,19 @@ HLCCommunicator::HLCCommunicator(std::vector<uint8_t> _vehicle_ids, int middlewa
             true,
             true,
             true),
-    writer_stopRequest(
-            p_local_comms_participant->get_participant(),
-            "stopRequest"),
+    writer_stopRequest("stopRequest"),
     reader_vehicleStateList(
             p_local_comms_participant->get_participant(),
             "vehicleStateList"),
     reader_systemTrigger(
             p_local_comms_participant->get_participant(),
             "systemTrigger"){
-        std::stringstream vehicle_ids_string;
+        std::stringstream vehicle_ids_ss;
         for( auto vehicle_id : vehicle_ids ) {
-            vehicle_ids_string << "_" << static_cast<int>(vehicle_id);
+            vehicle_ids_ss << "_" << static_cast<int>(vehicle_id);
         }
-        cpm::Logging::Instance().set_id("hlc_communicator"+vehicle_ids_string.str());
+        vehicle_ids_string = vehicle_ids_ss.str();
+        cpm::Logging::Instance().set_id("hlc_communicator"+vehicle_ids_string);
     }
 
 void HLCCommunicator::start(){
@@ -142,6 +141,12 @@ bool HLCCommunicator::stopSignalReceived(){
         }
     }
     return false;
+}
+
+void HLCCommunicator::stop(int vehicle_id){
+    StopRequest request(vehicle_id);
+    writer_stopRequest.write(request);
+    // Our own planning will stop once we get the SystemTrigger
 }
 
 void HLCCommunicator::writeInfoMessage(){
