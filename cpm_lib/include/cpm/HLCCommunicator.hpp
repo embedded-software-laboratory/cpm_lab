@@ -47,9 +47,9 @@
 #include "VehicleStateList.hpp"
 #include "StopRequest.hpp"
 
-class MiddlewareListener{
+class HLCCommunicator{
     /**
-     * \class MiddlewareListener
+     * \class HLCCommunicator
      * \brief This class handles communication of a High Level Controller
      * with the Middleware. Thus it also dictates the timing of when the HLC
      * is supposed to plan a timestep.
@@ -72,7 +72,7 @@ class MiddlewareListener{
     bool new_vehicleStateList = false;
 
     //! The latest VehicleStateList we have received
-    VehicleStateList vehicleStateList;
+    VehicleStateList vehicle_state_list;
 
     //! Writer to write a ReadyStatus message to Middleware (to signal we can start)
     cpm::Writer<ReadyStatus>    writer_readyStatus;
@@ -123,9 +123,9 @@ class MiddlewareListener{
 public:
 
     /**
-     * \brief Constructor for MiddlewareListener
+     * \brief Constructor for HLCCommunicator
      */
-    MiddlewareListener(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile);
+    HLCCommunicator(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile);
 
     /**
      * \brief Returns a participant that can communicate with the middleware
@@ -140,25 +140,25 @@ public:
      *
      * Used for initial setup, that couldn't be done earlier.
      */
-    void setOnFirstTimestep(std::function<void(VehicleStateList)> callback) { on_first_timestep = callback; };
+    void onFirstTimestep(std::function<void(VehicleStateList)> callback) { on_first_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnEachTimestep(std::function<void(VehicleStateList)> callback) { on_each_timestep = callback; };
+    void onEachTimestep(std::function<void(VehicleStateList)> callback) { on_each_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnCancelTimestep(std::function<void()> callback) { on_cancel_timestep = callback; };
+    void onCancelTimestep(std::function<void()> callback) { on_cancel_timestep = callback; };
 
     /**
      * \brief TODO
      * \param TODO
      */
-    void setOnStop(std::function<void()> callback) { on_stop = callback; };
+    void onStop(std::function<void()> callback) { on_stop = callback; };
 
     /**
      * \brief Communicate that we're ready and start planning

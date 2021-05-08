@@ -24,9 +24,9 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "cpm/MiddlewareListener.hpp"
+#include "cpm/HLCCommunicator.hpp"
 
-MiddlewareListener::MiddlewareListener(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
+HLCCommunicator::HLCCommunicator(int _vehicle_id, int middleware_domain, std::string qos_file, std::string qos_profile):
     vehicle_id(_vehicle_id),
     p_local_comms_participant(
             new cpm::Participant(
@@ -53,7 +53,7 @@ MiddlewareListener::MiddlewareListener(int _vehicle_id, int middleware_domain, s
         cpm::Logging::Instance().set_id("middleware_listener_"+std::to_string(vehicle_id));
     }
 
-void MiddlewareListener::start(){
+void HLCCommunicator::start(){
     //TODO: Write a short message, with "Starting now with these callbacks set, and these callbacks unset"
     writeInfoMessage();
     sendReadyMessage(); 
@@ -66,7 +66,7 @@ void MiddlewareListener::start(){
             // We received a StateList, which is our timing signal
             // to send commands to vehicle
             new_vehicleStateList = true;
-            vehicleStateList = sample;
+            vehicle_state_list = sample;
         }
  
         if(new_vehicleStateList){
@@ -86,10 +86,10 @@ void MiddlewareListener::start(){
     }
 }
 
-void MiddlewareListener::runTimestep(){
+void HLCCommunicator::runTimestep(){
     // If this is the first timestep and the respective callback is defined, call it now
     if( first_timestep && on_first_timestep.target_type() != typeid(void) ){
-        on_first_timestep(vehicleStateList);
+        on_first_timestep(vehicle_state_list);
         first_timestep = false;
     }
 
@@ -113,12 +113,12 @@ void MiddlewareListener::runTimestep(){
     if( on_each_timestep.target_type() != typeid(void) ) {
         planning_future = std::async(
                 on_each_timestep,
-                vehicleStateList
+                vehicle_state_list
             );
     }
 }
 
-void MiddlewareListener::sendReadyMessage(){
+void HLCCommunicator::sendReadyMessage(){
     TimeStamp timestamp(11111);
     // The middleware expects a message like "hlc_${vehicle_id}", e.g. hlc_1
     std::string hlc_identification("hlc_");
@@ -127,7 +127,7 @@ void MiddlewareListener::sendReadyMessage(){
     writer_readyStatus.write(readyStatus);
 }
 
-bool MiddlewareListener::stopSignalReceived(){
+bool HLCCommunicator::stopSignalReceived(){
     auto systemTrigger_samples = reader_systemTrigger.take();
     for (auto sample : systemTrigger_samples) {
         if (sample.next_start().nanoseconds() == trigger_stop) {
@@ -137,7 +137,7 @@ bool MiddlewareListener::stopSignalReceived(){
     return false;
 }
 
-void MiddlewareListener::writeInfoMessage(){
+void HLCCommunicator::writeInfoMessage(){
     std::stringstream set_callbacks;
     std::stringstream unset_callbacks;
 
@@ -166,7 +166,7 @@ void MiddlewareListener::writeInfoMessage(){
     }
 
     std::stringstream ss;
-    ss << "Started MiddlewareListener for Vehicle ID " << vehicle_id  << std::endl;
+    ss << "Started HLCCommunicator for Vehicle ID " << vehicle_id  << std::endl;
     ss << "The following callback methods were set: " << set_callbacks.rdbuf()  << std::endl;
 
     ss << "The following callback methods were not set: "  << unset_callbacks.rdbuf() << std::endl;

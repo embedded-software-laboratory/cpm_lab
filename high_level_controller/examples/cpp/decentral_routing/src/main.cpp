@@ -39,7 +39,7 @@
 #include "cpm/get_topic.hpp"
 #include "cpm/Writer.hpp"
 #include "cpm/ReaderAbstract.hpp"
-#include "cpm/MiddlewareListener.hpp"
+#include "cpm/HLCCommunicator.hpp"
 
 // IDL files
 #include "VehicleCommandTrajectory.hpp"
@@ -171,20 +171,25 @@ int main(int argc, char *argv[]) {
     // Initialize everything needed for communication with middleware
     const int middleware_domain = cpm::cmd_parameter_int("middleware_domain", 1, argc, argv);
 
-    cpm::Participant local_comms_participant(
+    /* --------------------------------------------------------------------------------- 
+     * Create HLCCommunicator and a writer for communication with middleware
+     * ---------------------------------------------------------------------------------
+     */
+    HLCCommunicator hlc_communicator(
+            vehicle_id,
             middleware_domain,
             "./QOS_LOCAL_COMMUNICATION.xml",
             "MatlabLibrary::LocalCommunicationProfile");
+
     // Writer to send trajectory to middleware
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-            local_comms_participant.get_participant(),
+            hlc_communicator.getLocalParticipant()->get_participant(),
             "vehicleCommandTrajectory"
     );
 
-    cpm::Writer<StopRequest> writer_stopRequest("stopRequest");
-
-    /* 
-     * Reader/Writers for comms between vehicles directly
+    /* --------------------------------------------------------------------------------- 
+     * Reader/Writers for direct comms between vehicles
+     * ---------------------------------------------------------------------------------
      */
     // Writer to communicate plans with other vehicles
     cpm::Writer<HlcCommunication> writer_HlcCommunication(
@@ -212,15 +217,20 @@ int main(int argc, char *argv[]) {
         )
     );
 
-    MiddlewareListener middleware_listener(
-            vehicle_id,
-            middleware_domain,
-            "./QOS_LOCAL_COMMUNICATION.xml",
-            "MatlabLibrary::LocalCommunicationProfile");
+    /* ---------------------------------------------------------------------------------
+     * Set the appropriate callback methods on the HLCCommunicator
+     * ---------------------------------------------------------------------------------
+     */
 
-    middleware_listener.setOnFirstTimestep([&](VehicleStateList vehicleStateList){
+    /*
+     * This is additional initial setup of the planner.
+     * We cannot do this before we received a VehicleStateList, but we only want to do it once.
+     * We use the 'onFirstTimestep' method of the HLCCommunicator for this.
+     * This will get executed just before 'onEachTimestep' is executed for the first time.
+     */
+    hlc_communicator.onFirstTimestep([&](VehicleStateList vehicle_state_list){
             bool matched = false;
-            for(auto vehicle_state : vehicleStateList.state_list())
+            for(auto vehicle_state : vehicle_state_list.state_list())
             {
                 if( vehicle_id == vehicle_state.vehicle_id() ) {
                     auto pose = vehicle_state.pose();
@@ -235,7 +245,7 @@ int main(int argc, char *argv[]) {
 
                         // This graphs gives the priorities, as well as the order of planning
                         // Currently we only plan sequentially, with lower vehicle ids first
-                        std::vector<int> vec(vehicleStateList.active_vehicle_ids());
+                        std::vector<int> vec(vehicle_state_list.active_vehicle_ids());
                         CouplingGraph coupling_graph(vec);
                         // For testing, make all planning one iterative block
                         if( iterative_planning_enabled ) {
@@ -263,8 +273,8 @@ int main(int argc, char *argv[]) {
                 }
             }
             });
-    middleware_listener.setOnEachTimestep([&](VehicleStateList vehicleStateList){
-                auto trajectory = planner->plan(vehicleStateList.t_now(), vehicleStateList.period_ms()*1e6);
+    hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list){
+                auto trajectory = planner->plan(vehicle_state_list.t_now(), vehicle_state_list.period_ms()*1e6);
                 if( trajectory.get() != nullptr ) {
                     writer_vehicleCommandTrajectory.write(*trajectory.get());
                 } else {
@@ -272,14 +282,14 @@ int main(int argc, char *argv[]) {
                             "Planner didn't return a value this timestep");
                 }
             });
-    middleware_listener.setOnCancelTimestep([&]{
+    hlc_communicator.onCancelTimestep([&]{
                 planner->stop(); 
             });
-    middleware_listener.setOnStop([&]{
+    hlc_communicator.onStop([&]{
                 planner->stop(); 
             });
 
-    middleware_listener.start();
+    hlc_communicator.start();
 
     return 0;
 }

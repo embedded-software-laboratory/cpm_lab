@@ -32,7 +32,7 @@
 #include "cpm/init.hpp"
 #include "cpm/Participant.hpp"
 #include "cpm/Writer.hpp"
-#include "cpm/MiddlewareListener.hpp"
+#include "cpm/HLCCommunicator.hpp"
 
 // Import the DDS message types we will use
 #include "VehicleCommandTrajectory.hpp"
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     // These settings are saved in the Quality of Service (QoS) xml-file and are identical to the ones the middleware uses.
     // One QoS file can define multiple profiles, which is why we need to specify that we want to use the
     // LocalCommunicationProfile, from the MatlabLibrary.
-    MiddlewareListener middlewareListener(
+    HLCCommunicator hlc_communicator(
             vehicle_id,
             1,
             "./QOS_LOCAL_COMMUNICATION.xml",
@@ -105,10 +105,10 @@ int main(int argc, char *argv[])
     );
 
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
-    // Instead of creating a new participant, we can just use the one created by the MiddlewareListener
+    // Instead of creating a new participant, we can just use the one created by the HLCCommunicator
     //For more information see our documentation about RTI DDS
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-            middlewareListener.getLocalParticipant()->get_participant(),
+            hlc_communicator.getLocalParticipant()->get_participant(),
             "vehicleCommandTrajectory");
 
     // Circle trajectory data
@@ -164,9 +164,9 @@ int main(int argc, char *argv[])
     // The code inside the cpm::Timer is executed every 200 milliseconds.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
-    middlewareListener.setOnEachTimestep([&](VehicleStateList vehicleStateList)
+    hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list)
     {
-        uint64_t t_now = vehicleStateList.t_now();
+        uint64_t t_now = vehicle_state_list.t_now();
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 1000000000ull;
 
@@ -209,5 +209,5 @@ int main(int argc, char *argv[])
 
     });
 
-    middlewareListener.start();
+    hlc_communicator.start();
 }
