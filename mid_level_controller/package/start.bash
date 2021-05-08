@@ -6,6 +6,11 @@ export IP_SELF="$(hostname -I)"
 echo IP_SELF
 echo $IP_SELF
 
+# Copy local communication QoS, use correct IP
+sed -e "s/TEMPLATE_IP/${IP_SELF}/g" \
+<$DIR/QOS_LOCAL_COMMUNICATION.xml.template \
+>$DIR/build/QOS_LOCAL_COMMUNICATION.xml
+
 export VEHICLE_ID="$(hostname -I | tail -c 4)"
 export VEHICLE_ID="$(echo $VEHICLE_ID)"
 
