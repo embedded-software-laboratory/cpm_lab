@@ -26,11 +26,11 @@
 
 #include "VehicleTrajectoryPlanningState.hpp" //sw folder central routing
 
-#include "lane_graph_tools.hpp" //sw folder decentral routing
+#include "lane_graph_tools.hpp" //sw folder distributed routing
 
 /**
  * \file VehicleTrajectoryPlanningState.cpp
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(

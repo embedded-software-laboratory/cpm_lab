@@ -139,7 +139,7 @@ public:
     /**
      * \brief Constructor for HLCCommunicator for one vehicle ID.
      *
-     * To be used, when there's one HLC per vehicle (e.g. decentral_routing_example),
+     * To be used, when there's one HLC per vehicle (e.g. distributed_routing_example),
      * or when there's just one vehicle and HLC overall (e.g. basic_circle).
      */
     HLCCommunicator(uint8_t _vehicle_id,
@@ -183,7 +183,7 @@ public:
      * \param callback Callback function without parameters that will be called, when our HLC is
      * taking too long for a timestep.
      *
-     * This is only necessary for more complex HLCs, e.g. decentral_routing.
+     * This is only necessary for more complex HLCs, e.g. distributed_routing.
      * If a timestep takes 100ms, and the HLC hasn't finished it's calculations inside onEachTimestep
      * in that time, this method will be called.
      * It should signal the HLC, that it should stop planning and just skip this timestep.

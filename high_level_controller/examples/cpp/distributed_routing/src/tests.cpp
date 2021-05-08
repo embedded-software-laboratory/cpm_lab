@@ -29,7 +29,7 @@
 
 /**
  * \file tests.cpp
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 
 int main()

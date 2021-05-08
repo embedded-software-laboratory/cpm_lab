@@ -78,7 +78,7 @@ public:
 
 /**
  * \brief TODO
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 extern const LaneGraphTools laneGraphTools;
 extern const LaneGraphTools laneGraphTools;

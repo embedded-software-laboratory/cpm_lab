@@ -66,21 +66,21 @@ using std::vector;
 
 //Description for bash files
 /**
- * \defgroup decentral_routing_files Additional Files
- * \ingroup decentral_routing
+ * \defgroup distributed_routing_files Additional Files
+ * \ingroup distributed_routing
  */
 
 /**
- * \page decentral_routing_files_page Additional Files for Decentral Routing
+ * \page distributed_routing_files_page Additional Files for distributed Routing
  * \subpage d_r_build <br>
  * \subpage d_r_run <br>
  * \subpage d_r_run_distr <br>
- * \ingroup decentral_routing_files
+ * \ingroup distributed_routing_files
 */
 
 /**
  * \page d_r_build build.bash
- * \brief Build script for decentral_routing
+ * \brief Build script for distributed_routing
  */
 
 /**
@@ -145,10 +145,10 @@ int main(int argc, char *argv[]) {
         vehicle_id = i;
         vehicle_ids.push_back(i);
     }
-    cpm::Logging::Instance().set_id("decentral_routing_"+std::to_string(vehicle_id));
+    cpm::Logging::Instance().set_id("distributed_routing_"+std::to_string(vehicle_id));
 
     cpm::Logging::Instance().write(3,
-            "decentral_routing_%d coming online",
+            "distributed_routing_%d coming online",
             static_cast<int>(vehicle_id)
     );
 

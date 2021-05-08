@@ -30,7 +30,7 @@
 
 /**
  * \file lane_graph_tools.cpp
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 
 const LaneGraphTools laneGraphTools;

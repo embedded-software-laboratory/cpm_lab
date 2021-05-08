@@ -31,7 +31,7 @@
 
 /**
  * \file VehicleTrajectoryPlanner.cpp
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(){}
