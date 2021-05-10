@@ -74,6 +74,7 @@ endif()
 add_library(cpm SHARED
     ${SOURCE_DDS}
     ${SOURCE_CPM}
+    )
 
 
 if(NOT BUILD_ARM)

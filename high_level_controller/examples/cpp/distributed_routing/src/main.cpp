@@ -158,6 +158,8 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
+    const bool iterative_planning_enabled = true;
+
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
     // and RTI DDS doesn't want to load it from there, so we copy it to our working dir.

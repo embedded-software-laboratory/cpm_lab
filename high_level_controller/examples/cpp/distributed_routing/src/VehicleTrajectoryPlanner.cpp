@@ -135,17 +135,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     debug_analyzeTrajectoryPointBuffer();
 
-    // Get our current trajectory
-    LaneGraphTrajectory lane_graph_trajectory;
-    trajectoryPlan->get_lane_graph_positions(
-            &lane_graph_trajectory
-    );
-
-    write_trajectory(lane_graph_trajectory);
-
-    // Advance trajectoryPlanningState by 1 timestep
-    trajectoryPlan->apply_timestep(dt_nanos);
-    
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
     //debug_writeOutReceivedTrajectories();
