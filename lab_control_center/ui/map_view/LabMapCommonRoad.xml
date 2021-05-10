@@ -2202,10 +2202,6 @@
             <x>3.050000000</x>
             <y>2.000000000</y>
          </point>
-         <point>
-            <x>3.050000000</x>
-            <y>2.000000000</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -2248,10 +2244,6 @@
          <point>
             <x>3.136225622</x>
             <y>2.150026990</y>
-         </point>
-         <point>
-            <x>3.050000000</x>
-            <y>2.150000000</y>
          </point>
          <point>
             <x>3.050000000</x>
@@ -2312,10 +2304,6 @@
             <x>3.050000000</x>
             <y>2.150000000</y>
          </point>
-         <point>
-            <x>3.050000000</x>
-            <y>2.150000000</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -2358,10 +2346,6 @@
          <point>
             <x>3.136059783</x>
             <y>2.300026899</y>
-         </point>
-         <point>
-            <x>3.050000000</x>
-            <y>2.300000000</y>
          </point>
          <point>
             <x>3.050000000</x>
@@ -2422,10 +2406,6 @@
             <x>3.050012865</x>
             <y>2.000000001</y>
          </point>
-         <point>
-            <x>3.050012865</x>
-            <y>2.000000001</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -2468,10 +2448,6 @@
          <point>
             <x>3.129904370</x>
             <y>2.153424184</y>
-         </point>
-         <point>
-            <x>3.049987135</x>
-            <y>2.149999999</y>
          </point>
          <point>
             <x>3.049987135</x>
@@ -2531,10 +2507,6 @@
             <x>3.049987136</x>
             <y>2.150000001</y>
          </point>
-         <point>
-            <x>3.049987136</x>
-            <y>2.150000001</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -2577,10 +2549,6 @@
          <point>
             <x>3.142411567</x>
             <y>2.296094112</y>
-         </point>
-         <point>
-            <x>3.050012864</x>
-            <y>2.299999999</y>
          </point>
          <point>
             <x>3.050012864</x>
@@ -3046,10 +3014,6 @@
             <x>3.153765736</x>
             <y>3.813909352</y>
          </point>
-         <point>
-            <x>3.153765736</x>
-            <y>3.813909352</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -3092,10 +3056,6 @@
          <point>
             <x>3.075237300</x>
             <y>3.666683658</y>
-         </point>
-         <point>
-            <x>3.146252764</x>
-            <y>3.664097619</y>
          </point>
          <point>
             <x>3.146252764</x>
@@ -3155,10 +3115,6 @@
             <x>3.146247087</x>
             <y>3.664097904</y>
          </point>
-         <point>
-            <x>3.146247087</x>
-            <y>3.664097904</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -3201,10 +3157,6 @@
          <point>
             <x>3.072492839</x>
             <y>3.516708767</y>
-         </point>
-         <point>
-            <x>3.138734114</x>
-            <y>3.514286171</y>
          </point>
          <point>
             <x>3.138734114</x>
@@ -3263,10 +3215,6 @@
             <x>3.153750640</x>
             <y>3.813910107</y>
          </point>
-         <point>
-            <x>3.153750640</x>
-            <y>3.813910107</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -3309,10 +3257,6 @@
          <point>
             <x>3.082603738</x>
             <y>3.663246952</y>
-         </point>
-         <point>
-            <x>3.146267860</x>
-            <y>3.664096864</y>
          </point>
          <point>
             <x>3.146267860</x>
@@ -3371,10 +3315,6 @@
             <x>3.146262791</x>
             <y>3.664097115</y>
          </point>
-         <point>
-            <x>3.146262791</x>
-            <y>3.664097115</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -3417,10 +3357,6 @@
          <point>
             <x>3.064449783</x>
             <y>3.520967496</y>
-         </point>
-         <point>
-            <x>3.138718410</x>
-            <y>3.514286960</y>
          </point>
          <point>
             <x>3.138718410</x>
@@ -6640,10 +6576,6 @@
             <x>0.568744295</x>
             <y>2.127898976</y>
          </point>
-         <point>
-            <x>0.568744295</x>
-            <y>2.127898976</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -6686,10 +6618,6 @@
          <point>
             <x>0.710577864</x>
             <y>2.226808067</y>
-         </point>
-         <point>
-            <x>0.640064926</x>
-            <y>2.259858696</y>
          </point>
          <point>
             <x>0.640064926</x>
@@ -6750,10 +6678,6 @@
             <x>0.640096319</x>
             <y>2.259841724</y>
          </point>
-         <point>
-            <x>0.640096319</x>
-            <y>2.259841724</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -6796,10 +6720,6 @@
          <point>
             <x>0.766685626</x>
             <y>2.365919242</y>
-         </point>
-         <point>
-            <x>0.711416948</x>
-            <y>2.391801445</y>
          </point>
          <point>
             <x>0.711416948</x>
@@ -6860,10 +6780,6 @@
             <x>0.640082053</x>
             <y>2.259849437</y>
          </point>
-         <point>
-            <x>0.640082053</x>
-            <y>2.259849437</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -6906,10 +6822,6 @@
          <point>
             <x>0.772260612</x>
             <y>2.359289019</y>
-         </point>
-         <point>
-            <x>0.711431214</x>
-            <y>2.391793732</y>
          </point>
          <point>
             <x>0.711431214</x>
@@ -6969,10 +6881,6 @@
             <x>0.568755613</x>
             <y>2.127892861</y>
          </point>
-         <point>
-            <x>0.568755613</x>
-            <y>2.127892861</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -7015,10 +6923,6 @@
          <point>
             <x>0.705989828</x>
             <y>2.232330398</y>
-         </point>
-         <point>
-            <x>0.640053608</x>
-            <y>2.259864812</y>
          </point>
          <point>
             <x>0.640053608</x>
@@ -7484,10 +7388,6 @@
             <x>2.070595909</x>
             <y>3.546931394</y>
          </point>
-         <point>
-            <x>2.070595909</x>
-            <y>3.546931394</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -7530,10 +7430,6 @@
          <point>
             <x>1.909853146</x>
             <y>3.502615364</y>
-         </point>
-         <point>
-            <x>1.952562872</x>
-            <y>3.454366810</y>
          </point>
          <point>
             <x>1.952562872</x>
@@ -7593,10 +7489,6 @@
             <x>1.952540998</x>
             <y>3.454394708</y>
          </point>
-         <point>
-            <x>1.952540998</x>
-            <y>3.454394708</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -7639,10 +7531,6 @@
          <point>
             <x>1.803751424</x>
             <y>3.396585063</y>
-         </point>
-         <point>
-            <x>1.834507961</x>
-            <y>3.361830125</y>
          </point>
          <point>
             <x>1.834507961</x>
@@ -7701,10 +7589,6 @@
             <x>1.952553291</x>
             <y>3.454379030</y>
          </point>
-         <point>
-            <x>1.952553291</x>
-            <y>3.454379030</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -7747,10 +7631,6 @@
          <point>
             <x>1.799928001</x>
             <y>3.406501732</y>
-         </point>
-         <point>
-            <x>1.834495669</x>
-            <y>3.361845803</y>
          </point>
          <point>
             <x>1.834495669</x>
@@ -7809,10 +7689,6 @@
             <x>2.070586580</x>
             <y>3.546943287</y>
          </point>
-         <point>
-            <x>2.070586580</x>
-            <y>3.546943287</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -7855,10 +7731,6 @@
          <point>
             <x>1.912766965</x>
             <y>3.495025700</y>
-         </point>
-         <point>
-            <x>1.952572200</x>
-            <y>3.454354917</y>
          </point>
          <point>
             <x>1.952572200</x>
@@ -11078,10 +10950,6 @@
             <x>3.931255705</x>
             <y>1.872101024</y>
          </point>
-         <point>
-            <x>3.931255705</x>
-            <y>1.872101024</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -11124,10 +10992,6 @@
          <point>
             <x>3.789422136</x>
             <y>1.773191933</y>
-         </point>
-         <point>
-            <x>3.859935074</x>
-            <y>1.740141304</y>
          </point>
          <point>
             <x>3.859935074</x>
@@ -11188,10 +11052,6 @@
             <x>3.859903681</x>
             <y>1.740158276</y>
          </point>
-         <point>
-            <x>3.859903681</x>
-            <y>1.740158276</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -11234,10 +11094,6 @@
          <point>
             <x>3.733314374</x>
             <y>1.634080758</y>
-         </point>
-         <point>
-            <x>3.788583052</x>
-            <y>1.608198555</y>
          </point>
          <point>
             <x>3.788583052</x>
@@ -11298,10 +11154,6 @@
             <x>3.859917947</x>
             <y>1.740150563</y>
          </point>
-         <point>
-            <x>3.859917947</x>
-            <y>1.740150563</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -11344,10 +11196,6 @@
          <point>
             <x>3.727739388</x>
             <y>1.640710981</y>
-         </point>
-         <point>
-            <x>3.788568786</x>
-            <y>1.608206268</y>
          </point>
          <point>
             <x>3.788568786</x>
@@ -11407,10 +11255,6 @@
             <x>3.931244387</x>
             <y>1.872107139</y>
          </point>
-         <point>
-            <x>3.931244387</x>
-            <y>1.872107139</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -11453,10 +11297,6 @@
          <point>
             <x>3.794010172</x>
             <y>1.767669602</y>
-         </point>
-         <point>
-            <x>3.859946392</x>
-            <y>1.740135188</y>
          </point>
          <point>
             <x>3.859946392</x>
@@ -11922,10 +11762,6 @@
             <x>2.429404091</x>
             <y>0.453068606</y>
          </point>
-         <point>
-            <x>2.429404091</x>
-            <y>0.453068606</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -11968,10 +11804,6 @@
          <point>
             <x>2.590146854</x>
             <y>0.497384636</y>
-         </point>
-         <point>
-            <x>2.547437128</x>
-            <y>0.545633190</y>
          </point>
          <point>
             <x>2.547437128</x>
@@ -12031,10 +11863,6 @@
             <x>2.547459002</x>
             <y>0.545605292</y>
          </point>
-         <point>
-            <x>2.547459002</x>
-            <y>0.545605292</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -12077,10 +11905,6 @@
          <point>
             <x>2.696248576</x>
             <y>0.603414937</y>
-         </point>
-         <point>
-            <x>2.665492039</x>
-            <y>0.638169875</y>
          </point>
          <point>
             <x>2.665492039</x>
@@ -12139,10 +11963,6 @@
             <x>2.547446709</x>
             <y>0.545620970</y>
          </point>
-         <point>
-            <x>2.547446709</x>
-            <y>0.545620970</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -12185,10 +12005,6 @@
          <point>
             <x>2.700071999</x>
             <y>0.593498268</y>
-         </point>
-         <point>
-            <x>2.665504331</x>
-            <y>0.638154197</y>
          </point>
          <point>
             <x>2.665504331</x>
@@ -12247,10 +12063,6 @@
             <x>2.429413420</x>
             <y>0.453056713</y>
          </point>
-         <point>
-            <x>2.429413420</x>
-            <y>0.453056713</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -12293,10 +12105,6 @@
          <point>
             <x>2.587233035</x>
             <y>0.504974300</y>
-         </point>
-         <point>
-            <x>2.547427800</x>
-            <y>0.545645083</y>
          </point>
          <point>
             <x>2.547427800</x>
@@ -15516,10 +15324,6 @@
             <x>1.450000000</x>
             <y>2.000000000</y>
          </point>
-         <point>
-            <x>1.450000000</x>
-            <y>2.000000000</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -15562,10 +15366,6 @@
          <point>
             <x>1.363774378</x>
             <y>1.849973010</y>
-         </point>
-         <point>
-            <x>1.450000000</x>
-            <y>1.850000000</y>
          </point>
          <point>
             <x>1.450000000</x>
@@ -15626,10 +15426,6 @@
             <x>1.450000000</x>
             <y>1.850000000</y>
          </point>
-         <point>
-            <x>1.450000000</x>
-            <y>1.850000000</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -15672,10 +15468,6 @@
          <point>
             <x>1.363940217</x>
             <y>1.699973101</y>
-         </point>
-         <point>
-            <x>1.450000000</x>
-            <y>1.700000000</y>
          </point>
          <point>
             <x>1.450000000</x>
@@ -15736,10 +15528,6 @@
             <x>1.449987135</x>
             <y>1.999999999</y>
          </point>
-         <point>
-            <x>1.449987135</x>
-            <y>1.999999999</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -15782,10 +15570,6 @@
          <point>
             <x>1.370095630</x>
             <y>1.846575816</y>
-         </point>
-         <point>
-            <x>1.450012865</x>
-            <y>1.850000001</y>
          </point>
          <point>
             <x>1.450012865</x>
@@ -15845,10 +15629,6 @@
             <x>1.450012864</x>
             <y>1.849999999</y>
          </point>
-         <point>
-            <x>1.450012864</x>
-            <y>1.849999999</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -15891,10 +15671,6 @@
          <point>
             <x>1.357588433</x>
             <y>1.703905888</y>
-         </point>
-         <point>
-            <x>1.449987136</x>
-            <y>1.700000001</y>
          </point>
          <point>
             <x>1.449987136</x>
@@ -16360,10 +16136,6 @@
             <x>1.346234264</x>
             <y>0.186090648</y>
          </point>
-         <point>
-            <x>1.346234264</x>
-            <y>0.186090648</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -16406,10 +16178,6 @@
          <point>
             <x>1.424762700</x>
             <y>0.333316342</y>
-         </point>
-         <point>
-            <x>1.353747236</x>
-            <y>0.335902381</y>
          </point>
          <point>
             <x>1.353747236</x>
@@ -16469,10 +16237,6 @@
             <x>1.353752913</x>
             <y>0.335902096</y>
          </point>
-         <point>
-            <x>1.353752913</x>
-            <y>0.335902096</y>
-         </point>
          <lineMarking>dashed</lineMarking>
       </leftBound>
       <rightBound>
@@ -16515,10 +16279,6 @@
          <point>
             <x>1.427507161</x>
             <y>0.483291233</y>
-         </point>
-         <point>
-            <x>1.361265886</x>
-            <y>0.485713829</y>
          </point>
          <point>
             <x>1.361265886</x>
@@ -16577,10 +16337,6 @@
             <x>1.346249360</x>
             <y>0.186089893</y>
          </point>
-         <point>
-            <x>1.346249360</x>
-            <y>0.186089893</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -16623,10 +16379,6 @@
          <point>
             <x>1.417396262</x>
             <y>0.336753048</y>
-         </point>
-         <point>
-            <x>1.353732140</x>
-            <y>0.335903136</y>
          </point>
          <point>
             <x>1.353732140</x>
@@ -16685,10 +16437,6 @@
             <x>1.353737209</x>
             <y>0.335902885</y>
          </point>
-         <point>
-            <x>1.353737209</x>
-            <y>0.335902885</y>
-         </point>
          <lineMarking>solid</lineMarking>
       </leftBound>
       <rightBound>
@@ -16731,10 +16479,6 @@
          <point>
             <x>1.435550217</x>
             <y>0.479032504</y>
-         </point>
-         <point>
-            <x>1.361281590</x>
-            <y>0.485713040</y>
          </point>
          <point>
             <x>1.361281590</x>

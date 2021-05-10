@@ -4,8 +4,7 @@
 # super user privileges (e.g. sudo)
 #
 # This script will download various files and therefor creates its own
-# directory 'tmp' relative to this scripts ablsoute path. It will also link it
-# to ~/dev for easier accessablity (if ~/dev is not already present).
+# directory 'tmp' relative to this scripts ablsoute path. 
 #
 # This script is compatible with Debian and RedHat based distirbutions but has
 # been tested specifically with Ubuntu 18.04.3 LTS and Fedora 31.
@@ -71,16 +70,7 @@ else
 fi
 
 ## 0.3 Link folder to '~/dev'
-if [ ! -d $RU_HOME/dev/software ]; then
-    echo "Creating a link to expected installation location ${RU_HOME}/dev/software"
-    sudo -u ${real_user} mkdir -p $RU_HOME/dev
-    sudo -u ${real_user} ln -s $PWD $RU_HOME/dev/software
-elif [ "${RU_HOME}/dev/software" == "${PWD}" ]; then
-    : # We are in the expected folder
-else
-    # TODO: Installation without relying on absolute location
-    echo "WARNING: Installing at another location than /home/user/dev/software is currently not supported. Prepare for compatibility issues."
-fi
+### Deprecated
 
 ### 0.4 Parse Command Line Arguments
 CI=0

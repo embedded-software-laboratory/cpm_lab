@@ -95,7 +95,7 @@
 // BASH FILES
 /**
  * \defgroup lcc_bash LCC Bash Files
- * \brief LCC file descriptions for files in ./bash (for local & remote deployment & vehicle reboot)
+ * \brief LCC file descriptions for files in ./bash (for local & distributed / remote deployment & vehicle reboot)
  * \ingroup lcc_further
  */
 
@@ -258,7 +258,7 @@
 
 /**
  * \page lcc_ui_upload_window ./ui/setup/upload_window.glade
- * \brief Layout for an upload window, shown after starting the remote deployment, which displays upload information
+ * \brief Layout for an upload window, shown after starting the distributed / remote deployment, which displays upload information
  */
 
 /**

@@ -5,6 +5,7 @@
 # sudo cp $HOME/dev/software/lab_control_center/lab-control-center.desktop /usr/share/applications/
 # sudo mkdir -p /usr/share/icons/LCC
 # sudo cp $HOME/dev/software/lab_control_center/icon.png /usr/share/icons/LCC/icon.png
+# ($HOME/dev should be replaced with your install path in case you installed it somewhere else)
 
 # Application, Links (URL), or Directory (sub-group for applications)
 Type=Application
@@ -14,7 +15,8 @@ Icon=TEMPLATE_LCC_DIR/icon.png
 Name=Lab Control Center
 GenericName=LCC
 Comment=Starts the LCC
-Exec=TEMPLATE_LCC_DIR/run.bash
+Exec=bash -c TEMPLATE_LCC_DIR/run.bash
+
 # To pass arguments use %u or %U
 # Exec=/thing/to/execute %u
 

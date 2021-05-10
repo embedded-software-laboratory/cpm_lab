@@ -54,33 +54,28 @@
 #include <cassert> //To make sure that the translation is performed on the right node types, which should haven been made sure by the programming (thus not an error, but an assertion is used)
 
 /**
- * \enum ObstacleTypeStatic
- * \brief Specifies static obstacle types, as in commonroad, NotInSpec for types that should not exist
- * 2018 and 2020 differ because in 2020, we have static and dynamic obstacles, whereas in 2018, we only have obstacles of type static or dynamic - Throw an error in case of wrong (dynamic) types if role was set to static
- * We do not need to store "role", as we already have two different classes for that
+ * \enum ObstacleTypeEnvironment
+ * \brief Specifies environment obstacle types, as in commonroad
  * \ingroup lcc_commonroad
  */
-enum class ObstacleTypeStatic {Unknown, ParkedVehicle, ConstructionZone, RoadBoundary};
+enum class ObstacleTypeEnvironment {Unknown, Building, Pillar, MedianStrip};
 
 /**
- * \class StaticObstacle
+ * \class EnvironmentObstacle
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
- * It is used to store / represent a StaticObstacle specified in an XML file
+ * It is used to store / represent a EnvironmentObstacle specified in an XML file
+ * 2020 only!
  * \ingroup lcc_commonroad
  */
-class StaticObstacle : public InterfaceTransform, public InterfaceTransformTime
+class EnvironmentObstacle : public InterfaceTransform
 {
 private:
     //! The obstacle type, e.g. a parked vehicle
-    ObstacleTypeStatic type;
+    ObstacleTypeEnvironment type;
     //! The obstacle type as string
     std::string obstacle_type_text;
     //! Shape of the object, must exist
     std::optional<Shape> shape = std::nullopt;
-    //! Initial state of the object, must exist
-    std::optional<State> initial_state = std::nullopt;
-
-    //Other 2018 obstacle-values should only be set for dynamic obstacles - nonetheless, we check for their existence in the constructor (and show warnings, if necessary)
 
     //! Transformation scale of transform_coordinate_system is remembered to draw text correctly scaled
     double transform_scale = 1.0;
@@ -93,11 +88,9 @@ public:
      * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
      * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
      * \param node A (static) obstacle node
-     * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      */
-    StaticObstacle(
-        const xmlpp::Node* node,
-        std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs
+    EnvironmentObstacle(
+        const xmlpp::Node* node
     );
 
     /**
@@ -111,12 +104,6 @@ public:
      */
     void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) override;
 
-    /**
-     * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
-     */
-    void transform_timing(double time_scale) override;
-
     //No draw function, obstacles are handled by LCC directly via simulation
 
     //Getter
@@ -129,7 +116,7 @@ public:
     /**
      * \brief Get the obstacle type
      */
-    ObstacleTypeStatic get_type();
+    ObstacleTypeEnvironment get_type();
     /**
      * \brief Get the obstacle type as string
      */
@@ -138,8 +125,4 @@ public:
      * \brief Get the obstacle shape, which must exist (optional due to no default constructor & potential translation issues)
      */
     const std::optional<Shape>& get_shape() const;
-    /**
-     * \brief Get the obstacle initial state, which must exist (optional due to no default constructor & potential translation issues)
-     */
-    const std::optional<State>& get_initial_state() const;
 };

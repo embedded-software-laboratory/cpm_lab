@@ -107,8 +107,8 @@ private:
     //! Switch to (de)activate diagnosis
     Gtk::Switch* switch_diagnosis = nullptr;
 
-    //! Switch to (de)activate remote deployment on HLCs (NUCs)
-    Gtk::Switch* switch_deploy_remote = nullptr;
+    //! Switch to (de)activate distributed / remote deployment on HLCs (NUCs) and locally
+    Gtk::Switch* switch_deploy_distributed = nullptr;
 
     //! Button to start simulation
     Gtk::Button* button_deploy = nullptr;
@@ -143,7 +143,7 @@ private:
 
     //! Class containing all functions that are relevant for deployment, local and remote
     std::shared_ptr<Deploy> deploy_functions;
-    //! Wait up to 30s until remote deployment is aborted if the upload was not finished until then (for each thread)
+    //! Wait up to 30s until distributed / remote deployment is aborted if the remote upload was not finished until then (for each thread)
     unsigned int remote_deploy_timeout = 30;
     //! Wait up to 2 seconds until a kill command is aborted if it was not finished until then
     unsigned int remote_kill_timeout = 2;
@@ -214,7 +214,7 @@ private:
     //! Dispatcher callback for the UI thread
     void ui_dispatch(); 
 
-    //! True if in remote deployment there were not sufficient HLCs for the selected vehicles. In that case, some scripts are deployed locally so that all vehicles have a running script.
+    //! True if in distributed / remote deployment there were not sufficient HLCs for the selected vehicles. In that case, some scripts are deployed locally so that all vehicles have a running script.
     std::atomic_bool both_local_and_remote_deploy;
 
     //! For loading window while HLC scripts are being updated. Also: Upload threads and GUI thread (to keep upload work separate from GUI).
@@ -315,6 +315,7 @@ public:
      * \param _on_simulation_start Callback that can be registered in e.g. main to perform changes on other modules when the simulation starts
      * \param _on_simulation_stop Callback that can be registered in e.g. main to perform changes on other modules when the simulation stops
      * \param _set_commonroad_tab_sensitive Set commonroad loading tab to (un)sensitive to hinder the user from creating invalid states during simulation
+     * \param _absolute_exec_path Path of the executable. Is required to construct default path for HLC script selection
      * \param argc Command line argument (from main())
      * \param argv Command line argument (from main())
      */
@@ -329,6 +330,7 @@ public:
         std::function<void()> _on_simulation_stop,
         std::function<void(bool)> _set_commonroad_tab_sensitive,
         std::function<void(std::vector<int32_t>)> _update_vehicle_ids_parameter,
+        std::string _absolute_exec_path,
         unsigned int argc, 
         char *argv[]
         );
@@ -354,7 +356,7 @@ public:
     /**
      * \brief This might be subject to change.
      * Returns: True if a simulation is running, and in that case a map with mappings from vehicle ID to HLC ID.
-     * (During remote deployment, each vehicle gets commands from its own HLC. Thus, each vehicle ID is associated to an HLC ID.)
+     * (During distributed / remote deployment, each vehicle gets commands from its own HLC. Thus, each vehicle ID is associated to an HLC ID.)
      */
     std::pair<bool, std::map<uint32_t, uint8_t>> get_vehicle_to_hlc_matching();
 

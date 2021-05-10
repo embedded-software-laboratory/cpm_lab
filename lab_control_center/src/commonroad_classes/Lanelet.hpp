@@ -55,7 +55,7 @@
  * \ingroup lcc_commonroad
  */
 enum class LaneletType {
-    Unspecified, Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, DriveWay, BusStop, Unknown
+    Urban, Interstate, Country, Highway, Sidewalk, Crosswalk, BusLane, BicycleLane, ExitRamp, MainCarriageWay, AccessRamp, Shoulder, DriveWay, BusStop, Unknown
 };
 
 /**
@@ -64,7 +64,7 @@ enum class LaneletType {
  * \ingroup lcc_commonroad
  */
 enum class VehicleType {
-    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train
+    Vehicle, Car, Truck, Bus, Motorcycle, Bicycle, Pedestrian, PriorityVehicle, Train, Taxi
 };
 
 /**
@@ -82,7 +82,7 @@ enum class DrivingDirection {
  * \ingroup lcc_commonroad
  */
 enum class LineMarking {
-    Dashed, Solid, BroadDashed, BroadSolid
+    Dashed, Solid, BroadDashed, BroadSolid, Unknown, NoMarking
 };
 
 /**
@@ -120,13 +120,13 @@ struct Bound
  */
 struct StopLine
 {
-    //! Position of the stop line. Must consist of exactly two points.
+    //! Position of the stop line. Must consist of up to two points.
     std::vector<Point> points;
     //! Line marking of the stop line, e.g. dashed
     LineMarking line_marking;
     //! References to traffic signs that might be next to the stop line
     std::vector<int> traffic_sign_refs;
-    //! References to traffic lights that might be next to the stop line; only one possible, but a vector easier to handle if nonexistent
+    //! References to traffic lights that might be next to the stop line
     std::vector<int> traffic_light_ref;
 };
 
@@ -147,14 +147,14 @@ private:
     std::vector<int> predecessors;
     //! Lanelet references to successors of the lanelet, multiple possible e.g. in case of a fork
     std::vector<int> successors;  
-    //! Adjacent lanelets on the left, optional
+    //! Adjacent lanelet on the left, optional
     std::optional<Adjacent> adjacent_left = std::nullopt; 
-    //! Adjacent lanelets on the right, optional
+    //! Adjacent lanelet on the right, optional
     std::optional<Adjacent> adjacent_right = std::nullopt;
     //! Stop line on the lanelet, optional
     std::optional<StopLine> stop_line = std::nullopt;
-    //! Type of the lanelet
-    LaneletType lanelet_type; 
+    //! Type(s) of the lanelet
+    std::vector<LaneletType> lanelet_type; 
     //! For which vehicles the lanelet is one-way
     std::vector<VehicleType> user_one_way; 
     //! For which vehicles the lanelet is bidirectional
@@ -168,6 +168,9 @@ private:
 
     //! Remember line in commonroad file for logging
     int commonroad_line = 0;
+
+    //! ID of the lanelet
+    int lanelet_id;
 
     //! Look up in draw if some parts should be drawn or not
     std::shared_ptr<CommonroadDrawConfiguration> draw_configuration;
@@ -195,6 +198,8 @@ private:
 
     /**
      * \brief This function translates a stopLine node to StopLine (2020 only)
+     * NOTE: Lanelet bounds need to be translated before calling this function! 
+     * (If no stop line points are defined, bound end points define the stop line)
      * \param node A stopLine node
      * \param name The name of the node
      */
@@ -205,7 +210,7 @@ private:
      * \param node A laneletType node
      * \param name The name of the node
      */
-    LaneletType translate_lanelet_type(const xmlpp::Node* node, std::string name);
+    std::vector<LaneletType> translate_lanelet_type(const xmlpp::Node* node, std::string name);
 
     /**
      * \brief This function translates a vehicleType node to VehicleType (2020 only)
@@ -305,7 +310,7 @@ public:
      */
     void to_dds_msg() {}
 
-    //TODO: Getter (no setter, bc we do not want to manipulate data except for transformation)
+    //Getter (no setter, bc we do not want to manipulate data except for transformation)
 
     /**
      * \brief Get center (positional value) of the shape, if one exists
@@ -326,6 +331,12 @@ public:
     std::optional<std::pair<double, double>> get_stopline_center();
 
     /**
+     * \brief Get the center of the end of the lanelet, e.g. useful for traffic lights
+     * \return Center of the end points of the bounds
+     */
+    std::pair<double, double> get_end_center();
+
+    /**
      * \brief Get min. and max. x and y value of all points of the lanelet, if such points exist
      * \return [[min_x, max_x], [min_y, max_y]]
      */
@@ -336,4 +347,30 @@ public:
      * \return Polygon of lanelet shape
      */
     std::vector<Point> get_shape();
+
+    //For table entries
+    /**
+     * \brief Get the lanelet speed limit or an empty string
+     */
+    std::string get_speed_limit();
+
+    /**
+     * \brief Get the lanelet type
+     */
+    std::string get_lanelet_type();
+
+    /**
+     * \brief Get the lanelet one way users (list in string)
+     */
+    std::string get_user_one_way();
+
+    /**
+     * \brief Get the lanelet bidirectional users (list in string)
+     */
+    std::string get_user_bidirectional();
+
+    /**
+     * \brief A lanelet should only appear in the table if its type or other information is more than just unspecified
+     */
+    bool has_relevant_table_info();
 };

@@ -163,7 +163,7 @@ public:
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
      */
     void transform_timing(double time_scale) override;
 
@@ -199,7 +199,6 @@ public:
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
      * Due to the different return types for each class, no interface was defined for this function.
      * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
-     * TODO: Change return type to whatever the name of the IDL type is
      */
     void to_dds_msg() {} 
 

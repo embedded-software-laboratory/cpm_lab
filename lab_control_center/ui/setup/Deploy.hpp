@@ -31,6 +31,7 @@
 #include <cassert>
 #include <chrono>       //For time measurements (timeout for remote deployment)
 #include <cstdio>       //For popen
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <functional>
 #include <fstream>
 #include <iomanip>      // put_time
@@ -65,12 +66,14 @@ public:
      * \param _cmd_dds_initial_peer dds initial peer set in the command line (when starting the LCC)
      * \param _stop_vehicle Callback function to make the vehicle stop immediately (given a vehicle ID)
      * \param _program_executor Class object that gives "safer" access to fork etc., to prevent memory leaks etc. that may occur in multi threaded programs
+     * \param _absolute_exec_path Path of the executable. Is required to construct paths to other important programs in the software repo
      */
     Deploy(
         unsigned int _cmd_domain_id, 
         std::string _cmd_dds_initial_peer, 
         std::function<void(uint8_t)> _stop_vehicle, 
-        std::shared_ptr<ProgramExecutor> _program_executor
+        std::shared_ptr<ProgramExecutor> _program_executor,
+        std::string _absolute_exec_path
     );
 
     /**
@@ -208,21 +211,29 @@ public:
     bool kill_remote_hlc(unsigned int hlc_id, unsigned int timeout_seconds);
 
     /**
-     * \brief Used to create the folder ~/dev/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
-     * \param name name of the log folder
+     * \brief Used to create the folder software_top_folder_path(value of variable)/name, in which logs of local tmux sessions started here are stored (for debugging purposes)
+     * \param folder_name Name of the log folder, default is lcc_script_logs (better change the default if you want to change the folder name)
      */
-    void create_log_folder(std::string name);
+    void create_log_folder(std::string folder_name = "lcc_script_logs");
+
+    /**
+     * \brief Delete logs in the log folder (as in create_log_folder) that are "outdated" (logs of script and middleware)
+     * because the simulation was stopped / a new one is started.
+     * If the log folder does not yet exist, it is created.
+     * \param folder_name Name of the log folder, default is lcc_script_logs (better change the default if you want to change the folder name)
+     */
+    void delete_old_logs(std::string folder_name = "lcc_script_logs");
 
     /**
      * \brief Function that can be used to check if all required scripts are still running (checks for existing tmux sessions)
      * \param script_started False if middleware+script are not running / should not be checked
-     * \param deploy_remote Set to true if remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
-     * \param has_local_hlc Special case for deploy remote, in which case existence of a local HLC will be checked 
+     * \param deploy_distributed Set to true if distributed / remote deploy of HLC chosen (will later check for hlc and middleware on remote hosts or be outsourced to other func)
+     * \param has_local_hlc Special case for distributed deploy, in which case existence of a local HLC will be checked 
      * \param lab_mode_on Set to true if lab mode is on (otherwise will not check for IPS)
      * \param check_for_recording Set to true if recording is on and you want crashes to be checked (otherwise will not check for recording)
      * \return Empty array if everything is fine, else: string of the crashed module
      */
-    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_remote, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
+    std::vector<std::string> check_for_crashes(bool script_started, bool deploy_distributed, bool has_local_hlc, bool lab_mode_on, bool check_for_recording);
 
 private:
     /**
@@ -230,6 +241,12 @@ private:
      * \brief Used for process forking, when spawning and managing spawned processes
      */
     enum PROCESS_STATE {DONE, RUNNING, ERROR};
+
+    //! Contains the path to the software folder of the repo, from which paths to all relevant contained programs can be constructed (e.g. to vehicles, IPS etc.)
+    std::string software_folder_path;
+
+    //! Path above software folder, for lcc_script_logs folder
+    std::string software_top_folder_path;
 
     //! DDS Domain ID. This value is set once at startup (as command line parameters).
     unsigned int cmd_domain_id; 
@@ -242,7 +259,7 @@ private:
     //! Provides safer access to deploying functions (uses a child process that was forked before creation of DDS threads etc.)
     std::shared_ptr<ProgramExecutor> program_executor;
     
-    //! In case of remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
+    //! In case of distributed / remote deployment, some vehicles might not be matched because not enough HLCs are available. The remaining HLCs are simulated on the local machine, their ID is stored here.
     std::vector<unsigned int> deployed_local_hlcs;
 
     //Helper functions
@@ -280,11 +297,19 @@ private:
     const std::string ips_session = "ips_pipeline";
     //! Tmux session name for the IPS Basler LED Detection
     const std::string basler_session = "ips_basler";
+    //! Tmux session name for the labcam
     const std::string labcam_session = "labcam";
     //! Tmux session name for the middleware
     const std::string middleware_session = "middleware";
     //! Tmux session name for the HLC
     const std::string hlc_session = "high_level_controller";
+    //! Tmux session name for the vehicle (followed by ID)
+    const std::string vehicle_session = "vehicle";
+
+    //! Log file name part for remote copy
+    const std::string remote_copy_log_name = "remote_copy_command";
+    //! Log file name part for remote kill
+    const std::string remote_kill_log_name = "remote_kill_command";
 
     //To reboot real vehicles
     //! Map to have access to vehicle IDs <-> reboot thread; threads are used to reboot vehicles s.t. the shell commands do not block the UI; they must be joined at some time

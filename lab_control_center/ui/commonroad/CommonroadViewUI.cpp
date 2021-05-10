@@ -56,14 +56,16 @@ CommonroadViewUI::CommonroadViewUI
     builder->get_widget("dynamic_obstacles_flowbox", dynamic_obstacles_flowbox);
     builder->get_widget("problem_treeview", problem_treeview);
     builder->get_widget("problem_scrolled_window", problem_scrolled_window);
+    builder->get_widget("lanelet_treeview", lanelet_treeview);
     builder->get_widget("button_load_profile", button_load_profile);
     builder->get_widget("button_save_profile", button_save_profile);
     builder->get_widget("button_reset_profile", button_reset_profile);
     builder->get_widget("button_preview", button_preview);
     builder->get_widget("check_traffic_signs", check_traffic_signs);
     builder->get_widget("check_traffic_lights", check_traffic_lights);
-    builder->get_widget("check_lanelet_types", check_lanelet_types);
+    builder->get_widget("check_lanelet_id", check_lanelet_id);
     builder->get_widget("check_lanelet_orientation", check_lanelet_orientation);
+    builder->get_widget("check_initial_state", check_initial_state);
     builder->get_widget("check_goal_description", check_goal_description);
     builder->get_widget("check_obstacle_description", check_obstacle_description);
 
@@ -82,14 +84,16 @@ CommonroadViewUI::CommonroadViewUI
     assert(dynamic_obstacles_flowbox);
     assert(problem_treeview);
     assert(problem_scrolled_window);
+    assert(lanelet_treeview);
     assert(button_load_profile);
     assert(button_save_profile);
     assert(button_reset_profile);
     assert(button_preview);
     assert(check_traffic_signs);
     assert(check_traffic_lights);
-    assert(check_lanelet_types);
+    assert(check_lanelet_id);
     assert(check_lanelet_orientation);
+    assert(check_initial_state);
     assert(check_goal_description);
     assert(check_obstacle_description);
 
@@ -138,13 +142,13 @@ CommonroadViewUI::CommonroadViewUI
             }
         }
     );
-    check_lanelet_types->property_active().signal_changed().connect(
+    check_lanelet_id->property_active().signal_changed().connect(
         [this] {
             if (commonroad_scenario)
             {
                 auto draw_configuration = commonroad_scenario->get_draw_configuration();
                 assert(draw_configuration);
-                draw_configuration->draw_lanelet_types.store(check_lanelet_types->get_active());
+                draw_configuration->draw_lanelet_id.store(check_lanelet_id->get_active());
             }
         }
     );
@@ -168,6 +172,16 @@ CommonroadViewUI::CommonroadViewUI
             }
         }
     );
+    check_initial_state->property_active().signal_changed().connect(
+        [this] {
+            if (commonroad_scenario)
+            {
+                auto draw_configuration = commonroad_scenario->get_draw_configuration();
+                assert(draw_configuration);
+                draw_configuration->draw_init_state.store(check_initial_state->get_active());
+            }
+        }
+    );
     check_obstacle_description->property_active().signal_changed().connect(
         [this] {
             if (commonroad_scenario)
@@ -187,30 +201,55 @@ CommonroadViewUI::CommonroadViewUI
     }
     entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
 
-    //Setup for planning problem treeview
+    //Setup for planning problem treeview ----------------------------------------------------------------------------------
     //Create model for view
     problem_list_store = Gtk::ListStore::create(problem_record);
-
     //Use model_record, add it to the view
     problem_treeview->append_column("Problem ID", problem_record.problem_id);
     problem_treeview->append_column("Goal Speed", problem_record.problem_goal_speed);
     problem_treeview->append_column("Goal Time (sec.)", problem_record.problem_goal_time);
     problem_treeview->set_model(problem_list_store);
 
-    problem_treeview->get_column(0)->set_resizable(true);
-    problem_treeview->get_column(0)->set_expand(true);
+    for (int i = 0; i < 3; ++i)
+    {
+        problem_treeview->get_column(i)->set_resizable(true);
+        problem_treeview->get_column(i)->set_expand(true);
+    }
+
+    //Set tooltip
+    problem_treeview->set_has_tooltip(true);
+    problem_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &CommonroadViewUI::problem_tooltip_callback));
+    //----------------------------------------------------------------------------------------------------------------------
+
+    //Setup for lanelets treeview ----------------------------------------------------------------------------------
+    //Create model for view
+    lanelet_list_store = Gtk::ListStore::create(lanelet_record);
+    //Use model_record, add it to the view
+    lanelet_treeview->append_column("Lanelet ID", lanelet_record.lanelet_id);
+    lanelet_treeview->append_column("Lanelet Type", lanelet_record.lanelet_type);
+    lanelet_treeview->append_column("User OneWay", lanelet_record.user_one_way);
+    lanelet_treeview->append_column("User Bidirectional", lanelet_record.user_bidirectional);
+    lanelet_treeview->append_column("Speed Limit (2018 specs)", lanelet_record.speed_2018);
+    lanelet_treeview->set_model(lanelet_list_store);
+
+    for (int i = 0; i < 5; ++i)
+    {
+        lanelet_treeview->get_column(i)->set_resizable(true);
+        lanelet_treeview->get_column(i)->set_expand(true);
+    }
+
+    //Set tooltip
+    lanelet_treeview->set_has_tooltip(true);
+    lanelet_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &CommonroadViewUI::lanelet_tooltip_callback));
+    //----------------------------------------------------------------------------------------------------------------------
 
     //Create UI thread and register dispatcher callback
     ui_dispatcher.connect(sigc::mem_fun(*this, &CommonroadViewUI::dispatcher_callback));
     run_thread.store(true);
     ui_thread = std::thread(&CommonroadViewUI::update_ui, this);
 
-    //Set tooltip
-    problem_treeview->set_has_tooltip(true);
-    problem_treeview->signal_query_tooltip().connect(sigc::mem_fun(*this, &CommonroadViewUI::tooltip_callback));
-
-    //Try to load planning problems from current translation, if they exist
-    reload_problems.store(true);
+    //Try to load planning problems and lanelets from current translation, if they exist
+    reload_tables.store(true);
     //Also load the obstacle list
     load_obstacle_list.store(true);
 
@@ -220,7 +259,7 @@ CommonroadViewUI::CommonroadViewUI
 
 using namespace std::placeholders;
 void CommonroadViewUI::dispatcher_callback() {
-    if (reload_problems.exchange(false))
+    if (reload_tables.exchange(false))
     {
         //Reset time step size
         std::stringstream current_time_step_size_stream;
@@ -228,15 +267,23 @@ void CommonroadViewUI::dispatcher_callback() {
         entry_time_step_size->set_text(current_time_step_size_stream.str().c_str());
 
         //Get current number of elements
-        size_t count = 0;
+        size_t problem_count = 0;
         for (auto iter = problem_list_store->children().begin(); iter != problem_list_store->children().end(); ++iter) {
-            ++count;
+            ++problem_count;
+        }
+        size_t lanelet_count = 0;
+        for (auto iter = lanelet_list_store->children().begin(); iter != lanelet_list_store->children().end(); ++iter) {
+            ++lanelet_count;
         }
 
         //Delete them all
-        for (size_t i = 0; i < count; ++i) { 
+        for (size_t i = 0; i < problem_count; ++i) { 
             auto iter = problem_list_store->children().begin();
             problem_list_store->erase(iter);
+        }
+        for (size_t i = 0; i < lanelet_count; ++i) { 
+            auto iter = lanelet_list_store->children().begin();
+            lanelet_list_store->erase(iter);
         }
 
         //Load current planning problems
@@ -249,70 +296,92 @@ void CommonroadViewUI::dispatcher_callback() {
                 break;
             }
 
-            std::stringstream id_stream; 
-            id_stream << planning_problem_id;
-            Glib::ustring id_ustring(id_stream.str());
-
-            for (auto planning_problem_element : planning_problem->get_planning_problems())
+            for (auto goal_state : planning_problem->get_goal_states())
             {
-                for (auto goal_state : planning_problem_element.goal_states)
+                //Get goal speed(s)
+                std::stringstream goal_stream; 
+
+                auto goal_velocity = goal_state.get_velocity();
+                if (goal_velocity.has_value())
                 {
-                    //Get goal speed(s)
-                    std::stringstream goal_stream; 
-
-                    auto goal_velocity = goal_state.get_velocity();
-                    if (goal_velocity.has_value())
-                    {
-                        for (auto it = goal_velocity.value().cbegin(); it != goal_velocity.value().cend(); ++it)
-                        {
-                            goal_stream << " [" << it->first << ", " << it->second << "] ";
-                        }
-                    }
-                    else
-                    {
-                        goal_stream << "Not specified";
-                    }
-
-                    Glib::ustring goal_speed_ustring(goal_stream.str());
-
-                    //Get goal time(s)
-                    goal_stream.str( std::string() );
-                    goal_stream.clear();
-                    auto time_step_size = commonroad_scenario->get_time_step_size();
-
-                    auto goal_time = goal_state.get_time();
-                    if (goal_time.has_value())
-                    {
-                        auto exact_value = goal_time->get_exact_value();
-                        if (exact_value.has_value())
-                        {
-                            goal_stream << exact_value.value() * time_step_size;
-                        }
-
-                        auto interval = goal_time->get_interval();
-                        if (interval.has_value())
-                        {
-                            for (auto it = interval->cbegin(); it != interval->cend(); ++it)
-                            {
-                                goal_stream << " [" << it->first * time_step_size << ", " << it->second * time_step_size << "] ";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        goal_stream << "Not specified";
-                    }
-
-                    Glib::ustring goal_time_ustring(goal_stream.str());
-
-                    Gtk::TreeModel::Row row;
-                    row = *(problem_list_store->append());
-                    
-                    row[problem_record.problem_id] = id_ustring;
-                    row[problem_record.problem_goal_speed] = goal_speed_ustring;
-                    row[problem_record.problem_goal_time] = goal_time_ustring;
+                    goal_stream << " [" << goal_velocity.value().get_start() << ", " << goal_velocity.value().get_end() << "] ";
                 }
+                else
+                {
+                    goal_stream << "Not specified";
+                }
+
+                Glib::ustring goal_speed_ustring(goal_stream.str());
+
+                //Get goal time(s)
+                goal_stream.str( std::string() );
+                goal_stream.clear();
+                auto time_step_size = commonroad_scenario->get_time_step_size();
+
+                auto goal_time = goal_state.get_time();
+                if (goal_time.has_value())
+                {
+                    auto exact_value = goal_time->get_exact_value();
+                    if (exact_value.has_value())
+                    {
+                        goal_stream << exact_value.value() * time_step_size;
+                    }
+
+                    auto interval = goal_time->get_interval();
+                    if (interval.has_value())
+                    {
+                        goal_stream << " [" << interval.value().get_start() * time_step_size << ", " << interval.value().get_end() * time_step_size << "] ";
+                    }
+                }
+                else
+                {
+                    goal_stream << "Not specified";
+                }
+
+                Glib::ustring goal_time_ustring(goal_stream.str());
+
+                Gtk::TreeModel::Row row;
+                row = *(problem_list_store->append());
+                
+                row[problem_record.problem_id] = Glib::ustring(goal_state.get_unique_id());
+                row[problem_record.problem_goal_speed] = goal_speed_ustring;
+                row[problem_record.problem_goal_time] = goal_time_ustring;
             }
+        }
+
+        //Load current lanelets
+        for (auto lanelet_id : commonroad_scenario->get_lanelet_ids())
+        {
+            //We still check for the existence of the lanelet, as the file may have been reloaded in between
+            auto lanelet = commonroad_scenario->get_lanelet(lanelet_id);
+            if (!lanelet.has_value())
+            {
+                break;
+            }
+
+            //Skip the lanelet if the information is not relevant
+            if (! lanelet->has_relevant_table_info())
+            {
+                continue;
+            }
+
+            //Create ustrings for all entries
+            std::stringstream id_stream;
+            id_stream << lanelet_id;
+            auto id_ustring = Glib::ustring(id_stream.str());
+            auto type_ustring = Glib::ustring(lanelet->get_lanelet_type());
+            auto one_way_ustring = Glib::ustring(lanelet->get_user_one_way());
+            auto bidirectional_ustring = Glib::ustring(lanelet->get_user_bidirectional());
+            auto speed_ustring = Glib::ustring(lanelet->get_speed_limit());
+
+            Gtk::TreeModel::Row row;
+            row = *(lanelet_list_store->append());
+            
+            row[lanelet_record.lanelet_id] = id_ustring;
+            row[lanelet_record.lanelet_type] = type_ustring;
+            row[lanelet_record.user_one_way] = one_way_ustring;
+            row[lanelet_record.user_bidirectional] = bidirectional_ustring;
+            row[lanelet_record.speed_2018] = speed_ustring;
         }
     }
     if (load_obstacle_list.exchange(false))
@@ -394,7 +463,7 @@ void CommonroadViewUI::update_ui() {
     }
 }
 
-bool CommonroadViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+bool CommonroadViewUI::problem_tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
     int cell_x, cell_y = 0;
     Gtk::TreeModel::Path path;
     Gtk::TreeViewColumn* column;
@@ -426,6 +495,55 @@ bool CommonroadViewUI::tooltip_callback(int x, int y, bool keyboard_tooltip, con
         }
         else if (column->get_title() == "Goal Time (sec.)") {
             content_ustring = Glib::ustring(row[problem_record.problem_goal_time]);
+        }
+
+        //Get text at iter
+        tooltip->set_text(content_ustring);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool CommonroadViewUI::lanelet_tooltip_callback(int x, int y, bool keyboard_tooltip, const Glib::RefPtr<Gtk::Tooltip>& tooltip) {
+    int cell_x, cell_y = 0;
+    Gtk::TreeModel::Path path;
+    Gtk::TreeViewColumn* column;
+    bool path_exists;
+
+    //Get the current path and column at the selected point
+    if (keyboard_tooltip) {
+        lanelet_treeview->get_cursor(path, column);
+        path_exists = column != nullptr;
+    }
+    else {
+        int window_x, window_y;
+        lanelet_treeview->convert_widget_to_bin_window_coords(x, y, window_x, window_y);
+        path_exists = lanelet_treeview->get_path_at_pos(window_x, window_y, path, column, cell_x, cell_y);
+    }
+
+    if (path_exists) {
+        //Get selected row
+        Gtk::TreeModel::iterator iter = lanelet_list_store->get_iter(path);
+        Gtk::TreeModel::Row row = *iter;
+
+        //Get tooltip text depending on current column
+        Glib::ustring content_ustring;
+        if (column->get_title() == "Lanelet ID") {
+            content_ustring = Glib::ustring(row[lanelet_record.lanelet_id]);
+        } 
+        else if (column->get_title() == "Lanelet Type") {
+            content_ustring = Glib::ustring(row[lanelet_record.lanelet_type]);
+        }
+        else if (column->get_title() == "User OneWay") {
+            content_ustring = Glib::ustring(row[lanelet_record.user_one_way]);
+        }
+        else if (column->get_title() == "User Bidirectional") {
+            content_ustring = Glib::ustring(row[lanelet_record.user_bidirectional]);
+        }
+        else if (column->get_title() == "Speed Limit (2018 specs)") {
+            content_ustring = Glib::ustring(row[lanelet_record.speed_2018]);
         }
 
         //Get text at iter
@@ -475,8 +593,8 @@ void CommonroadViewUI::file_explorer_callback(std::string file_string, bool has_
         //Load chosen file - this function is also used for a button callback and thus does not take the file path as a parameter
         load_chosen_file();
 
-        //Reload/reset shown planning problems
-        reload_problems.store(true);
+        //Reload/reset shown planning problems / lanelet tables
+        reload_tables.store(true);
         load_obstacle_list.store(true);
     }
 
@@ -522,6 +640,12 @@ void CommonroadViewUI::apply_transformation()
     //Re-enter vehicle selection for obstacle simulation manager
     apply_current_vehicle_selection();
 
+    if (lane_width > 0.0)
+    {
+        //Reload/reset shown planning problems / lanelet tables
+        reload_tables.store(true);
+    }
+
     entry_lane_width->set_text("");
     entry_translate_x->set_text("");
     entry_translate_y->set_text("");
@@ -547,7 +671,7 @@ bool CommonroadViewUI::apply_entry_time(GdkEventKey* event)
         apply_current_vehicle_selection();
 
         //Refresh values in planning problem list (e.g. goal speed)
-        reload_problems.store(true);
+        reload_tables.store(true);
 
         return true;
     }
@@ -573,6 +697,9 @@ bool CommonroadViewUI::apply_entry_scale(GdkEventKey* event)
         apply_current_vehicle_selection();
 
         entry_lane_width->set_text("");
+
+        //Reload/reset shown planning problems / lanelet tables
+        reload_tables.store(true);
 
         return true;
     }
@@ -660,8 +787,8 @@ void CommonroadViewUI::load_button_callback()
     //Load chosen file
     load_chosen_file();
 
-    //Reload/reset shown planning problems
-    reload_problems.store(true);
+    //Reload/reset shown planning problems / lanelet tables
+    reload_tables.store(true);
     load_obstacle_list.store(true);
 }
 
