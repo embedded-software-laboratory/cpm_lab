@@ -490,20 +490,20 @@ void SetupViewUI::deploy_applications() {
     bool lab_mode_on = switch_lab_mode->get_active();
     bool labcam_toggled = switch_record_labcam->get_active();
 
+
+    std::ostringstream recording_folder_ss;
+    recording_folder_ss << "/tmp/cpm_lab_recordings/";
+    auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
+    recording_folder_ss << std::put_time(std::localtime(&timenow), "%Y_%m_%d_%H_%M_%S");
+    std::string recording_folder = recording_folder_ss.str();
     // LabCam
 #ifndef SIMULATION
     if(labcam_toggled){
         std::cout << "RECORDING LABCAM" << std::endl;
-        // Use current time as file name of the recording
-        auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        std::string file_name = ctime(&timenow);
+        // Use current time as folder name of the recording
+        std::string file_name = "video_labcam";
 
-        // Replace unwanted characters
-        std::replace(file_name.begin(), file_name.end(), ' ', '_');
-        std::replace(file_name.begin(), file_name.end(), '\n', '_');
-        std::replace(file_name.begin(), file_name.end(), ':', '_');
-
-        deploy_functions->deploy_labcam("/tmp/", file_name);
+        deploy_functions->deploy_labcam(recording_folder, file_name);
     }else{
         std::cout << "NOT RECORDING LABCAM" << std::endl;
     }
@@ -511,7 +511,7 @@ void SetupViewUI::deploy_applications() {
 #endif
     
     // Recording
-    deploy_functions->deploy_recording();
+    deploy_functions->deploy_recording(recording_folder);
 
     //Make sure that the filepath exists. If it does not, warn the user about it, but proceed with deployment 
     //Reason: Some features might need to be used / tested where deploying anything but the script / middleware is sufficient
