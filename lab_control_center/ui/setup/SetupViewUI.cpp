@@ -501,6 +501,7 @@ void SetupViewUI::deploy_applications() {
         // Replace unwanted characters
         std::replace(file_name.begin(), file_name.end(), ' ', '_');
         std::replace(file_name.begin(), file_name.end(), '\n', '_');
+        std::replace(file_name.begin(), file_name.end(), ':', '_');
 
         deploy_functions->deploy_labcam("/tmp/", file_name);
     }else{
