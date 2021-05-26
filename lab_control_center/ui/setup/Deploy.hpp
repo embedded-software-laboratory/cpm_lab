@@ -182,8 +182,9 @@ public:
     //Deploy and kill the rtirecordingservice
     /**
      * \brief Start the RTI recording service
+     * \param recording_folder The folder in which the recording data is saved.
      */
-    void deploy_recording();
+    void deploy_recording(std::string recording_folder);
     /**
      * \brief Kill the RTI recording service
      */

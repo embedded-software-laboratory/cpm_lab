@@ -693,7 +693,7 @@ void Deploy::kill_labcam() {
 
 
 
-void Deploy::deploy_recording() 
+void Deploy::deploy_recording(std::string recording_folder) 
 {
     //if old session already exists, kill it
     kill_session(recording_session);
@@ -718,13 +718,11 @@ void Deploy::deploy_recording()
         std::regex("TEMPLATE_NDDSHOME"),
         std::getenv("NDDSHOME")
     );
-    auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
-    std::ostringstream timenow_ss;
-    timenow_ss << std::put_time(std::localtime(&timenow), "%Y_%m_%d_%H_%M_%S");
+    
     xml_config_str = std::regex_replace(
         xml_config_str,
         std::regex("TEMPLATE_RECORDING_FOLDER"),
-        timenow_ss.str()
+        recording_folder
     );
     xml_config_str = std::regex_replace(
         xml_config_str,
@@ -744,7 +742,8 @@ void Deploy::deploy_recording()
         ip_string
     );
 
-    std::string config_path_out = "/tmp/rti_recording_config.xml";
+    std::string config_path_out = software_folder_path;
+    config_path_out.append("/lab_control_center/build/rti_recording_config.xml");
     std::ofstream xml_config(config_path_out);
     xml_config << xml_config_str;
 
