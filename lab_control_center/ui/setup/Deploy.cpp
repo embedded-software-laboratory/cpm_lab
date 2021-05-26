@@ -845,7 +845,7 @@ void Deploy::kill_session(std::string session_id, float delay) // delay default 
         std::stringstream command;
 
         command
-            << "sleep " << delay << " ; " 
+            << "sleep " << delay << " && " 
             << "tmux kill-session -t \"" << session_id << "\""
             << " >" << software_top_folder_path << "/lcc_script_logs/stdout_tmux_kill.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_tmux_kill.txt";
 
