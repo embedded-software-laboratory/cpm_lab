@@ -62,7 +62,7 @@ void Upload::set_main_window_callback(std::function<Gtk::Window&()> _get_main_wi
     get_main_window = _get_main_window;
 }
 
-void Upload::deploy_remote(
+void Upload::deploy_distributed(
         bool simulated_time,
         std::string script_path,
         std::string script_params,
@@ -85,16 +85,17 @@ void Upload::deploy_remote(
     }
 
     //Do not deploy anything remotely if no HLCs are online or if no vehicles were selected
+    //Still, local deployment may be used instead if vehicles exist
     if (sorted_hlc_ids.size() == 0 || sorted_vehicle_ids.size() == 0)
     {
         //Waits a few seconds before the window is closed again 
         //Window still needs UI dispatcher (else: not shown because UI gets unresponsive), so do this by using a thread + atomic variable (upload_failed)
-        participants_available.store(false); //No HLCs available
+        participants_available.store(sorted_vehicle_ids.size() != 0); //Update: This variable undo-s the UI grey-out, but because we may deploy HLCs locally if none are available, it should here only depend on whether vehicles are available
         thread_count.store(1);
         std::lock_guard<std::mutex> lock(upload_threads_mutex);
         upload_threads.push_back(std::thread(
             [this] () {
-                usleep(1000000);
+                usleep(500000);
                 this->notify_upload_finished(0, true, true); //We do not want upload finished to be set here as well
             }
         ));

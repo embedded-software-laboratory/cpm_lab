@@ -17,6 +17,8 @@ parameters:
   string:
     {}
   ints:
-    {}
+    active_vehicle_ids:
+        value: []
+        info: "Currently active vehicle ids"
   doubles:
     {}

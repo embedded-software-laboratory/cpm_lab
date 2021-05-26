@@ -50,7 +50,7 @@ public:
     virtual void transform_coordinate_system(double scale, double angle, double translate_x, double translate_y) = 0;
 
     /**
-     * \brief This function is used to rotate a point (x, y) around the z axis, counterclockwise, w.r.t. the origin
+     * \brief This helper function is used to rotate a point (x, y) around the z axis, counterclockwise, w.r.t. the origin
      * \param x value of the point (x, y) in the x-axis
      * \param y value of the point (x, y) in the y-axis
      * \param angle rotation, in radians
@@ -69,7 +69,7 @@ public:
     }
 
     /**
-     * \brief This function is used to rotate an orientation value in radians around the z axis, counterclockwise, w.r.t. the origin
+     * \brief This helper function is used to rotate an orientation value in radians around the z axis, counterclockwise, w.r.t. the origin
      * \param orientation orientation, in radians
      * \param angle rotation, in radians
      * \return The transformed orientation

@@ -196,6 +196,20 @@ void ObstacleSimulationManager::setup()
         create_obstacle_simulation(obstacle_id, obstacle_data);
     }
 
+    auto environment_obstacle_ids = scenario->get_environment_obstacle_ids();
+    for (auto obstacle_id : environment_obstacle_ids)
+    {
+        auto obstacle = scenario->get_environment_obstacle(obstacle_id);
+        if (!obstacle.has_value())
+        {
+            //We encountered an error that should not have happened unless the commonroad object was changed during setup - this should never happen though
+            throw std::runtime_error("Could not set up obstacle simulation manager due to wrong ID or change of scenario during setup (which should not be possible)!");
+        }
+
+        auto obstacle_data = obstacle.value().get_obstacle_simulation_data();
+        create_obstacle_simulation(obstacle_id, obstacle_data);
+    }
+
     send_init_states();
 
     //TODO: Part for real participant: Send trajectory

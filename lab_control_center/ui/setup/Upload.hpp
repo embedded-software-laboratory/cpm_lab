@@ -82,7 +82,7 @@ private:
     std::vector<std::thread> upload_threads;
     //! Mutex for access to upload_threads
     std::mutex upload_threads_mutex;
-    //! Window shown during remote upload / kill, displays messages for the user
+    //! Window shown during distributed / remote upload / kill, displays messages for the user
     std::shared_ptr<UploadWindow> upload_window;
     /**
      * \brief Dispatcher callback for the UI thread. For managing the upload window for HLC scripts.
@@ -140,7 +140,7 @@ public:
      * \brief Constructor
      * \param _get_hlc_ids Function to get IDs of currently online HLCs
      * \param _deploy_functions Needed to call deploy / upload on NUCs
-     * \param _undo_ui_greyout Required to undo UI greyout in SetupViewUI if the upload and thus remote deployment fails
+     * \param _undo_ui_greyout Required to undo UI greyout in SetupViewUI if the upload and thus distributed / remote deployment fails
      * \param _undo_kill_button_greyout Required to undo the kill button greyout in SetupViewUI after a successful upload
      * \param _on_kill_finished_callback Callback that gets called when all kill threads for killing remote HLCs are done
      */
@@ -168,7 +168,7 @@ public:
      * \param sorted_hlc_ids HLC IDs (sorted) for HLCs to deploy on
      * \param sorted_vehicle_ids Vehicle IDs (sorted) for vehicle to deploy for (matched to sorted HLC IDs as good as possible)
      */
-    void deploy_remote(
+    void deploy_distributed(
         bool simulated_time,
         std::string script_path,
         std::string script_params,

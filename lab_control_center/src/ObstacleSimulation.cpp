@@ -73,6 +73,7 @@ CommonroadObstacle ObstacleSimulation::construct_obstacle(ObstacleSimulationSegm
     obstacle.pose_is_exact(point.is_exact);        
     obstacle.is_moving((trajectory.trajectory.size() > 1));
     obstacle.type(trajectory.obstacle_type);
+    obstacle.obstacle_class(trajectory.obstacle_class);
 
     return obstacle;
 }
@@ -234,7 +235,13 @@ void ObstacleSimulation::interpolate_between(ObstacleSimulationSegment& p1, Obst
 
 CommonroadObstacle ObstacleSimulation::get_state(uint64_t start_time, uint64_t t_now, uint64_t time_step_size)
 {
-    //We must be able to use time.value(), as it is a required field
+    //For non-dynamic obstacles: We can still use the initial state
+    if (trajectory.obstacle_class != ObstacleClass::Dynamic)
+    {
+        return get_init_state(t_now);
+    }
+
+    //For dynamic obstacles: We must be able to use time.value(), as it is a required field
     assert(trajectory.trajectory.at(current_trajectory).time.has_value());
 
     //Get to currently active index / trajectory point

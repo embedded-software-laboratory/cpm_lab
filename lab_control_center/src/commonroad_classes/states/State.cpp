@@ -107,7 +107,10 @@ std::optional<IntervalOrExact> State::get_interval(const xmlpp::Node* node, std:
 
 void State::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
-    //TODO: Check if that's all
+    if (orientation.has_value())
+    {
+        orientation->rotate_orientation(angle);
+    }
     
     if (position.has_value())
     {
@@ -148,6 +151,10 @@ void State::transform_coordinate_system(double scale, double angle, double trans
     {
         acceleration->transform_coordinate_system(scale, angle, 0, 0);
     }
+    if (jerk.has_value())
+    {
+        jerk->transform_coordinate_system(scale, angle, 0, 0);
+    }
     if (velocity_y.has_value())
     {
         velocity_y->transform_coordinate_system(scale, angle, 0, 0);
@@ -172,6 +179,36 @@ void State::transform_coordinate_system(double scale, double angle, double trans
     {
         velocity_z_rear->transform_coordinate_system(scale, angle, 0, 0);
     }
+    if (left_front_wheel_angular_speed.has_value())
+    {
+        left_front_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (right_front_wheel_angular_speed.has_value())
+    {
+        right_front_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (left_rear_wheel_angular_speed.has_value())
+    {
+        left_rear_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+    if (right_rear_wheel_angular_speed.has_value())
+    {
+        right_rear_wheel_angular_speed->transform_coordinate_system(scale, angle, 0, 0);
+    }
+
+    //Curvature: 1 / radius of oscilating circle -> New radius is r' = scale * r 
+    //-> new curvature = 1 / scale * 1/ radius
+    auto scale_inv = 1.0 / scale;
+    if (curvature.has_value())
+    {
+        curvature->transform_coordinate_system(scale_inv, angle, 0, 0);
+    }
+    if (curvature_change.has_value())
+    {
+        curvature_change->transform_coordinate_system(scale_inv, angle, 0, 0);
+    }
+
+    //...rate and ...angle values do not get transformed (rather describe vehicle properties than values that can easily be adapted)
 
     if (scale > 0)
     {
@@ -181,13 +218,21 @@ void State::transform_coordinate_system(double scale, double angle, double trans
 
 void State::transform_timing(double time_scale)
 {
+    //time_scale: t_step_size_prev / t_step_size_new
+    //Thus e.g. for velocity:
+    // v_old * time_scale = distance / (t * t_step_size_prev) * time_scale = distance / (t * t_step_size_new)
+
     if (velocity.has_value())
     {
         velocity->transform_coordinate_system(time_scale, 0, 0, 0);
     }
     if (acceleration.has_value())
     {
-        acceleration->transform_coordinate_system(time_scale, 0, 0, 0);
+        acceleration->transform_coordinate_system(time_scale * time_scale, 0, 0, 0);
+    }
+    if (jerk.has_value())
+    {
+        jerk->transform_coordinate_system(time_scale * time_scale * time_scale, 0, 0, 0);
     }
     if (velocity_y.has_value())
     {
@@ -233,8 +278,12 @@ void State::transform_timing(double time_scale)
     {
         yaw_rate->transform_coordinate_system(time_scale, 0, 0, 0);
     }
-    
-    //TODO: Scale curvature change as well?
+    if (curvature_change.has_value())
+    {
+        curvature_change->transform_coordinate_system(time_scale, 0, 0, 0);
+    }
+
+    //Other ...rate and ...angle values do not get transformed (rather describe vehicle properties than values that can easily be adapted)
 }
 
 void State::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
@@ -255,35 +304,33 @@ void State::draw(const DrawingContext& ctx, double scale, double global_orientat
     ctx->rotate(global_orientation);
     
     //Rotate, if necessary
-    //TODO: Find out what orientation exactly means, here it seems to apply to shapes as well (see scenario server (commonroad))
     if(orientation->is_exact())
     {
         position->draw(ctx, scale, 0, 0, 0, orientation->get_exact_value().value() + local_orientation);
     }
     else
     {
-        //Try to draw the position for every possible middle value of the orientation
+        //Try to draw the position for middle value of the orientation
         //TODO: Find out how to properly draw interval values
         if (orientation->get_interval().has_value())
         {
-            for (auto &middle : orientation->get_interval()->get_interval_avg())
-            {
-                //Draw position
-                ctx->save();
-                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
-                position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
-                ctx->restore();
+            auto middle = orientation->get_interval()->get_interval_avg();
+            
+            //Draw position
+            ctx->save();
+            ctx->set_source_rgba(.7,.2,.7,.8); //Color used for inexact values
+            position->draw(ctx, scale, 0, 0, 0, middle + local_orientation);
+            ctx->restore();
 
-                //Draw arrow with correct position / orientation
-                ctx->save();
-                position->transform_context(ctx, scale);
-                ctx->rotate(middle + local_orientation);
+            //Draw arrow with correct position / orientation
+            ctx->save();
+            position->transform_context(ctx, scale);
+            ctx->rotate(middle + local_orientation);
 
-                double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-                draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
+            double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
+            draw_arrow(ctx, 0.0, 0.0, 2.0 * arrow_scale, 0.0, 2.0 * arrow_scale);
 
-                ctx->restore();
-            }
+            ctx->restore();
         }
         else
         {
@@ -320,8 +367,10 @@ void State::transform_context(const DrawingContext& ctx, double scale)
         }
         else
         {
+            ctx->rotate(orientation->get_mean());
+
             std::stringstream error_stream;
-            error_stream << "Orientation from state for rotation of other objects ignored, as it is an interval value" << commonroad_line;
+            error_stream << "Orientation from state for rotation of other objects is an interval value, might lead to confusing drawing (mean used), line in Commonroad is: " << commonroad_line;
             LCCErrorLogger::Instance().log_error(error_stream.str());
         }
         

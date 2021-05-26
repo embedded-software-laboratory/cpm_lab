@@ -61,7 +61,8 @@ public:
 
     //Utility functions that can be used by each class
     /**
-     * \brief This function can be used to draw an arrow from (x_1, y_1) to (x_2, y_2) - within the currently set coordinate system - with a given scale
+     * \brief This function can be used to draw an arrow from (x_1, y_1) to (x_2, y_2) - within the currently set coordinate system - with a given scale.
+     * Important: An arrow is only drawn if (x_1, y_1) != (x_2, y_2) (up to 0.001 difference)!
      * \param ctx A DrawingContext, used to draw on
      * \param x_1 Arrow start x
      * \param y_1 Arrow start y
@@ -71,6 +72,9 @@ public:
      */
     void draw_arrow(const DrawingContext& ctx, double x_1, double y_1, double x_2, double y_2, double scale)
     {
+        //Only draw an arrow if the points are not the same
+        if (abs(x_1 - x_2) <= 0.001 && abs(y_1 - y_2) <= 0.001) return;
+
         ctx->save();
 
         //Calculate arrowhead orientation (part that is orthogonal to the line)
@@ -121,6 +125,21 @@ public:
 
         ctx->translate(x, y);
 
+        //Draw rectangle around text
+        //Move to first corner from center
+        ctx->save();
+        ctx->set_source_rgba(1, 1, 1, 0.5);
+        ctx->set_line_width(0);
+        ctx->move_to(- extents.width/2, - extents.height/2);
+        ctx->line_to(- extents.width/2,   extents.height/2);
+        ctx->line_to(  extents.width/2,   extents.height/2);
+        ctx->line_to(  extents.width/2, - extents.height/2);
+        ctx->line_to(- extents.width/2, - extents.height/2);
+        ctx->fill_preserve();
+        ctx->stroke();
+        ctx->restore();
+
+        //Draw text centered
         ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
         ctx->set_source_rgb(.2,.1,.1);
         ctx->show_text(text);

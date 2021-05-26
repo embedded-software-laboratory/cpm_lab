@@ -24,37 +24,34 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include <stdlib.h>
-#include <iostream>
-#include <string>
-#include "labcam/LabCam.hpp"
+#pragma once
 
-//Suppress warning for unused parameter of main
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <vector>
+#include <map>
+#include <set>
+#include <cstdint>
+#include <cassert>
 
-int main(int argc, char *argv[])
+class CouplingGraph
 {
-    LabCam labcam;
-
-    labcam.startRecording(".", "awesome_recording1");
-
-    std::cout << "." << std::endl;
-    std::cin.get();
-
-    std::cout << "stopping lab cam" << std::endl;
-    labcam.stopRecording();
-    std::cout << "Press enter to start recording again" << std::endl;
-
+    std::set<uint8_t> vehicleSet;
+    std::map<uint8_t,std::set<uint8_t>> couplingData;
     
-    std::cin.get();
-    labcam.startRecording(".", "awesome_recording2");
+    void setPreviousVehiclesToDefault(uint8_t vehicleId);
+    std::set<uint8_t> vectorToSet(std::vector<uint8_t> vector);
 
+    public:
+        CouplingGraph(){};
+        CouplingGraph(
+               std::vector<uint8_t> vehicleIds,
+               bool useDefaultOrder = 1);
+        // Alternative constructor, because nothing else uses uint8_t
+        CouplingGraph(
+               std::vector<int> vehicleIds,
+               bool useDefaultOrder = 1);
 
-    std::cin.get();
-    labcam.stopRecording();
-
-    while(1);
-}
-
-#pragma GCC diagnostic pop
+        void setPreviousVehicles(std::map<uint8_t, std::vector<uint8_t>> data);
+        void setPreviousVehicles(uint8_t vehicleId, std::vector<uint8_t> previousVehicles);
+        std::set<uint8_t> getPreviousVehicles(uint8_t vehicleId);
+        std::set<uint8_t> getVehicles();
+};

@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
     const std::string node_id = "basic_line";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
     for(auto i:vehicle_ids_int)

@@ -130,26 +130,31 @@ void TimeSeriesAggregator::create_vehicle_timeseries(uint8_t vehicle_id)
 }
 
 /**
- * \brief TODO
- * \param v TODO
+ * \brief return battery level based on voltage. Approximates remaining runtime
+          see tools/battery_level/main.m
+ * \param v battery voltage
  * \ingroup lcc
  */
 static inline double voltage_to_percent(const double& v)
 {
-    // approximate discharge curve with three linear segments,
-    // see tools/linear_discharge.m
-    if (v >= 7.55)
-    {
-        return std::min({72.83 * (v-7.55) + 52.66, 100.0});
+    double u1 = 8.17;
+    double l1 = 100;
+    double u2 = 7.38;
+    double l2 = 50;
+    double u3 = 7.3;
+    double l3 = 12;
+    double u4 = 6.3;
+    double l4 = 0;
+
+    double battery_level;
+    if (v >= u2) {
+        battery_level = std::min(100.0, l2 + (l1-l2)/(u1-u2) * (v-u2));
+    } else if (v > u3) {
+        battery_level = l3 + (l2-l3)/(u2-u3) * (v-u3);
+    } else {
+        battery_level = std::max(0.0, l4 + (l3-l4)/(u3-u4) * (v-u4));
     }
-    else if (v >= 7.22)
-    {
-        return (143.45 * (v-7.22) +  5.33);
-    }
-    else
-    {
-        return std::max({6.49 * (v-6.4 ), 0.0});
-    }
+    return battery_level;
 }
 
 

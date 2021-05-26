@@ -24,6 +24,16 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
+/**
+ * \file main.cpp
+ * 
+ * \brief Starts labcam recording. The command line parameters path and file_name can be used to
+ *        specify the folder and filename of the resulting recording. As soon as a SIGTERM or
+ *        SIGHUP signal is recognized, the recording is stopped.
+ * 
+ * \ingroup lcc_labcam
+ */
+
 #include <stdlib.h>
 #include <iostream>
 #include <csignal>
@@ -31,10 +41,20 @@
 #include "labcam/LabCamIface.hpp"
 #include "cpm/CommandLineReader.hpp"
 
+//! Variable containing the interface to the actual labcam.
 static LabCamIface labcam;
 
+/**
+ * \brief Handler, which stops labcam recording as soon as the program is to be closed externally.
+ * 
+ * In the current workflow, the labcam is started in an own tmux session. As soon as the tmux session
+ * is closed by another process, the labcam should stop recording. In order to allow a proper finish,
+ * this handler is necessary to let the camera stop properly.
+ * 
+ * \ingroup lcc_labcam
+ */
 void stop_signal_handler(int){
-    std::cout << "Stop-signal recognized" << std::endl;
+    std::cout << "Stop-signal received." << std::endl;
     labcam.stopRecording();
 };
 

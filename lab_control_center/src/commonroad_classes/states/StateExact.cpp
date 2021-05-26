@@ -103,6 +103,10 @@ StateExact::StateExact(const xmlpp::Node* node)
 
 void StateExact::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
+    //Change rotation itself as well; rotation is counter-clockwise
+    //It seems to be okay to just add to the rotation in local coordinates if the points have already been converted correctly
+    orientation = rotate_orientation_around_z(orientation, angle);
+
     if (position.has_value())
     {
         position->transform_coordinate_system(scale, angle, translate_x, translate_y);
@@ -124,13 +128,17 @@ void StateExact::transform_coordinate_system(double scale, double angle, double 
 
 void StateExact::transform_timing(double time_scale)
 {
+    //time_scale: t_step_size_prev / t_step_size_new
+    //Thus e.g. for velocity:
+    // v_old * time_scale = distance / (t * t_step_size_prev) * time_scale = distance / (t * t_step_size_new)
+
     if (time_scale > 0)
     {
         velocity *= time_scale;
 
         if (acceleration.has_value())
         {
-            auto new_acceleration = time_scale * acceleration.value();
+            auto new_acceleration = time_scale * time_scale * acceleration.value();
             acceleration = std::optional<double>(new_acceleration);
         }
 
@@ -147,7 +155,7 @@ void StateExact::draw(const DrawingContext& ctx, double scale, double global_ori
     ctx->translate(global_translate_x, global_translate_y);
     ctx->rotate(global_orientation);
 
-    position->draw(ctx, scale);
+    position->draw(ctx, scale, 0, 0, 0, orientation + local_orientation);
 
     //Draw arrow with correct position / rotation
     position->transform_context(ctx, scale);
