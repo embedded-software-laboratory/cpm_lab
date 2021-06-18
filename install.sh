@@ -42,32 +42,31 @@ else
 fi
 RU_HOME=$( getent passwd $real_user | cut -d: -f6 )
 
-## 0.2 Determine OS & Set Commands Accordinaly
-if [[ ! -z $(which yum) ]]; then
-    PM="yum"
-    if [[ ! -z $(which dnf) ]]; then
-        PM="dnf"
+## 0.2 Determine OS & Set Commands Accordingly
+if [[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" == '"Ubuntu"' ]]; then 
+    if [[ "$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release)" == '"18.04"' ]]; then 
+        if [[ ! -z $(which apt) ]]; then
+            PM="apt"
+            UPDATE="update && apt upgrade -y"
+            BUILD_ESSENTIALS="install build-essential -y"
+            BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
+            DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
+            OPENJDK="install openjdk-11-jdk -y"
+            PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
+        else
+            echo "Error: unsupported package manager, make sure your are using apt, dnf or yum"
+            exit 1;
+        fi
+    else
+        echo "You are useing the wrong version. Please switch to Ubuntu 18.04. Otherwise stability is not guaranteed.";        
     fi
-    echo "You aren't using Ubuntu. Watch out for further compatibility issues!"
-    UPDATE="--refresh update -y"
-    BUILD_ESSENTIALS="install gcc g++ glibc-devel libnsl2-devel make -y"
-    # BUILD_ESSENTIALS="groupinstall \"Development Tools\" \"Development Libraries\" -y && dnf install libnsl2-devel g++ -y"
-    # TODO Update if support for other OS is desired
-    BUILD_TOOLS="install ip expect apache2 git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
-    OPENJDK="install java-11-openjdk-devel -y"
-    PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
-elif [[ ! -z $(which apt) ]]; then
-    PM="apt"
-    UPDATE="update && apt upgrade -y"
-    BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
-    DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
-    OPENJDK="install openjdk-11-jdk -y"
-    PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
-else
-    echo "Error: unsupported package manager, make sure your are using apt, dnf or yum"
-    exit 1;
+ else
+ echo "You aren't using Ubuntu. Please use Ubuntu 18.04! "
+ exit 1;
 fi
+
+
+
 
 ## 0.3 Link folder to '~/dev'
 ### Deprecated
@@ -195,7 +194,7 @@ mkdir /opt/rti_connext_dds-6.0.0
 if [ $CI == 1 ]; then
     ${RTI_INSTALLER_AUTOMATION_PATH}
 else
-    echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
+    echo 'Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click "Forward", accecpt the license agreement and keep clicking "Forward" until you can click "Finsih" at the very last page).'
     ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0
 fi
 cp "$LICENSE_PATH" /opt/rti_connext_dds-6.0.0/rti_license.dat
@@ -266,8 +265,8 @@ fi
 rm -rf "${DIR}/tmp"
 
 ### 5. Inform user about success and next steps ################################
-echo "Success! Ready to build the cpm software suit."
+echo "Success! Ready to build the cpm software suite."
 echo "Reboot your PC or execute 'source /etc/profile.d/rti_connext_dds.sh'"
-echo "Then: './build_all.bash' or './build_all.bash --simulation'"
+echo "Then execute './build_all.bash' or './build_all.bash --simulation'"
 
 exit 0
