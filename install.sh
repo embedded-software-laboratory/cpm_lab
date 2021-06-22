@@ -43,39 +43,32 @@ fi
 RU_HOME=$( getent passwd $real_user | cut -d: -f6 )
 
 ## 0.2 Determine OS & Set Commands Accordingly
-if [[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" == '"Ubuntu"' ]]; then 
-    if [[ "$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release)" == '"18.04"' ]]; then 
-        if [[ ! -z $(which apt) ]]; then
-            PM="apt"
-            UPDATE="update && apt upgrade -y"
-            BUILD_ESSENTIALS="install build-essential -y"
-            BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
-            DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
-            OPENJDK="install openjdk-11-jdk -y"
-            PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
-        else
-            echo "Error: unsupported package manager, make sure your are using apt, dnf or yum"
-            exit 1;
-        fi
-    else
-        echo "You are useing the wrong version. Please switch to Ubuntu 18.04. Otherwise stability is not guaranteed.";        
+if [[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" != '"Ubuntu"' ]]; then
+    echo "You aren't using Ubuntu. Please use Ubuntu 18.04!"
+    exit 1;
+    if [[ "$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release)" != '"18.04"' ]]; then
+        echo "You are using the wrong version. Please switch to Ubuntu 18.04. Otherwise stability is not guaranteed.";
+        # exit 1;        
     fi
- else
- echo "You aren't using Ubuntu. Please use Ubuntu 18.04! "
- exit 1;
 fi
 
-
-
-
-## 0.3 Link folder to '~/dev'
-### Deprecated
+# warn users who still use SIMULATION=0
+if [ ! -z $SIMULATION ]; then
+    if [ $SIMULATION == 0 ]; then
+        echo -e "\e[31m WARNING: Deprecated ussage of shell variable SIMULATION detected. \e[0m"
+        echo -e "\e[31m          SIMULATION=0 does not work anymore. Please use: \e[0m"
+        echo -e "\e[31m          - SIMULATION=1 for simulation only builds \e[0m"
+        echo -e "\e[31m          - no SIMULATION variable ('unset SIMULATION') for standard builds \e[0m"
+        unset SIMULATION
+        echo -e "\e[32m SIMULATION=0 has been unset for you. \e[0m"
+    fi
+fi
 
 ### 0.4 Parse Command Line Arguments
 CI=0
 DOMAIN_ID="NONE"
 LICENSE_PATH=0
-SIMULATION=0
+# SIMULATION in not set and thus lab mode is the default
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]] ;
 do
     opt="$1";
@@ -133,7 +126,7 @@ echo "Simulation =" $SIMULATION
 
 
 ### 0.5 Create folders for nuc and raspberry packages
-if [[ $SIMULATION == 0 ]]; then
+if [ -z $SIMULATION ]; then
     sudo mkdir -p "/var/www/html/nuc"
     sudo chmod a+rwx "/var/www/html/nuc"
     sudo mkdir -p "/var/www/html/raspberry"
@@ -144,32 +137,16 @@ fi
 sudo -u ${real_user} mkdir tmp
 
 ### 1. Ubuntu & Packages #######################################################
-eval "${PM}" "${UPDATE}"
-eval "${PM}" "${BUILD_ESSENTIALS}"
-eval "${PM}" "${BUILD_TOOLS}"
-if [ $SIMULATION == 0 ]; then
-    eval "${PM}" "${DEP_NO_SIM}"
+apt update $$ apt upgrade -y
+apt install build-essential
+apt install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y
+if [ -z $SIMULATION ]; then
+    apt install install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
 fi
-
-
-
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
-    cd tmp
-    eval "${PM}" install libsigc++-devel gtkmm24-devel -y
-    sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
-    cd ./jstest-gtk/
-    # checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
-    # TODO consider updating jstest-gtk because more recent versions don't require 
-    # gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
-    sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
-    sudo -u $real_user mkdir ./build
-    cd ./build
-    sudo -u $real_user cmake ..
-    sudo -u $real_user make
-fi
+apt install jstest-gtk # TODO: if this a lab requirement only move up into the if [ -z $SIMULATION ] section
 
 
 ### 3. RTI DDS #################################################################
@@ -182,7 +159,7 @@ fi
 cd $DIR/tmp
 sudo -u $real_user wget https://s3.amazonaws.com/RTI/Bundles/6.0.0/Evaluation/rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
 sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
-if [ $SIMULATION == 0 ]; then
+if [ -z $SIMULATION ]; then
     sudo -u $real_user wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
     sudo -u $real_user tar xvzf ./raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
     cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
@@ -220,7 +197,7 @@ source /etc/profile.d/rti_connext_dds.sh
 
 ## 3.4 Install RTI ARM libraries
 # only needed in real lab mode
-if [ $SIMULATION == 0 ]; then
+if [ -z $SIMULATION ]; then
     yes | /opt/rti_connext_dds-6.0.0/bin/rtipkginstall rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
 fi
 
@@ -229,10 +206,9 @@ fi
 # on OpenCV 4.0.0.
 # https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Indoor+Positioning+System
 
-if [ $SIMULATION == 0 ]
-then
+if [ -z $SIMULATION ]; then
     ## 4.1 OpenCV 4.0.0
-    eval "${PM}" "${OPENJDK}"
+    apt install openjdk-11-jdk -y
     cd /tmp
     sudo -u $real_user git clone https://github.com/opencv/opencv.git
     cd ./opencv
@@ -251,15 +227,8 @@ then
 
     ## 4.2 Basler Pylon 5
     cd "$DIR/tmp"
-    sudo -u $real_user wget "${PYLON_URL}"
-    if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
-        sudo -u $real_user tar xvzf ./pylon*.tar.gz
-        cd ./pylon*x86_64
-        tar -C /opt -xzf pylonSDK*.tar.gz
-        yes | ./setup-usb.sh
-    elif [[ ! -z $(which apt) ]]; then
-        dpkg -i pylon*.deb
-    fi
+    sudo -u $real_user wget https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb
+    dpkg -i pylon*.deb
 fi
 
 rm -rf "${DIR}/tmp"
