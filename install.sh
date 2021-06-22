@@ -145,7 +145,7 @@ apt update && apt upgrade -y
 apt install build-essential -y
 apt install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y
 if [ -z $SIMULATION ]; then
-    apt install install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
+    apt install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
 fi
 
 ### 2. Joystick / Gamepad ######################################################
