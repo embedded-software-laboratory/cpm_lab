@@ -122,7 +122,11 @@ fi
 echo "CI =" $CI
 echo "Domain ID =" $DOMAIN_ID
 echo "License Path =" $LICENSE_PATH
-echo "Simulation =" $SIMULATION
+if [ -z $SIMULATION ]; then
+    echo "Simulation =" $SIMULATION
+else
+    echo "Simulation only mode is disabled"
+fi
 
 
 ### 0.5 Create folders for nuc and raspberry packages
@@ -137,8 +141,8 @@ fi
 sudo -u ${real_user} mkdir tmp
 
 ### 1. Ubuntu & Packages #######################################################
-apt update $$ apt upgrade -y
-apt install build-essential
+apt update && apt upgrade -y
+apt install build-essential -y
 apt install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y
 if [ -z $SIMULATION ]; then
     apt install install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
