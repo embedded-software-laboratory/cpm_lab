@@ -36,7 +36,7 @@
 #include "cpm/ReaderAbstract.hpp"
 
 #include "VehicleCommandTrajectory.hpp"
-#include "LaneGraphTrajectory.hpp"
+#include "HlcCommunication.hpp"
 
 #include "VehicleTrajectoryPlanningState.hpp"
 #include "CouplingGraph.hpp"
@@ -45,172 +45,165 @@ using std::vector;
 
 /**
  * \class VehicleTrajectoryPlanner
- * \brief TODO
+ * \brief Plans a random trajectory, while communicating planned trajectories with other vehicles.
  * \ingroup decentral_routing
  */
 class VehicleTrajectoryPlanner
 {
-    //! TODO
+    //! PlanningState plans a route, treating other vehicles as fixed obstacles.
     std::unique_ptr<VehicleTrajectoryPlanningState> trajectoryPlan;
-    //! TODO
+    //! The received trajectories of other vehicles get saved in here; overwritten each timestep
     std::map<uint8_t, std::map<size_t, std::pair<size_t, size_t>>> other_vehicles_buffer;
-    //! TODO
-    std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer_laneGraphTrajectory;
-    //! TODO
-    std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader_laneGraphTrajectory;
-    //! TODO
+    //! Writer to broadcast our own planned trajectory
+    std::unique_ptr< cpm::Writer<HlcCommunication> > writer_hlcCommunication;
+    //! Reader to receive other planned trajectories
+    std::unique_ptr< cpm::ReaderAbstract<HlcCommunication> > reader_hlcCommunication;
+    //! Is false on the first planning step and after the planner crashed
     bool started = false;
-    //! TODO
+    //! Is true, when we either couldn't find any trajectory, or we missed too many timesteps
     bool crashed = false;
-    //! TODO
+    //! Becomes true when we are supposed to stop planning a timestep early
     bool volatile stopFlag = false;
-    //! TODO
+    //! Becomes true, when we are currently not planning a timestep
     bool volatile isStopped = true;
-    //! TODO
+    //! Time in nanoseconds, when we first started planning
     uint64_t t_start = 0;
-    //! TODO
+    //! Time in nanoseconds of the current timestep
     uint64_t t_real_time = 0;
-    //! TODO
+    //! Time in nanoseconds of the previous timestep
     uint64_t t_prev = 0;
-    //! TODO
-    std::mutex mutex;
-    //! TODO
-    std::thread planning_thread;
-    //! TODO
+    //! Length of the current timestep in nanoseconds
     uint64_t dt_nanos;
-    //! TODO
-    const int planning_horizont = 5;
-    //! TODO
-    const uint64_t dt_keep_past_trajectories = 1000000000;
-    //! TODO
+    //! Saves trajectory commands we've previously received from PlanningState
     vector<TrajectoryPoint> trajectory_point_buffer;
-    //! TODO
+    //! Determines, which vehicles have priority; should be the same for all HLCs
     CouplingGraph coupling_graph;
-    //! TODO
-    std::set<uint8_t> messages_received; // Which vehicles have sent LaneGraphTrajs to us this timestep
-    //! TODO
+    //! A "list" of which vehicle_ids have already sent messages to us this timestep
+    std::set<uint8_t> all_received_messages; // Which vehicles have sent LaneGraphTrajs to us this timestep
+    //! Counter, of how often in a row we had to abort planning before we were done
     short no_trajectory_counter = 0;
  
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
-    //! TODO
-    static constexpr int msg_max_length = 100; // Maximum length of RTI DDS msg
-    //! TODO
-    static constexpr int edge_paths_per_edge = 25; // Constant from geometry.hpp
+    //! How many points we can send in one message; determined by maximum length of vector in DDS
+    static constexpr int msg_max_length = 100;
+    //! How many sub-divisions there are per edge on the LaneGraph; determined by geometry.hpp
+    static constexpr int edge_paths_per_edge = 25;
 
     /**
-     * \brief TODO
+     * \brief Read planned trajectories of vehicles that planned before us
      */
-    void read_other_vehicles();
-    /**
-     * \brief TODO
-     */
-    bool wait_for_other_vehicles();
-    /**
-     * \brief TODO
-     * \param trajectory
-     */
-    void write_trajectory( LaneGraphTrajectory trajectory );
+    void read_previous_vehicles();
 
     /**
-     * \brief TODO
-     * \param vehicle_id TODO
-     * \param buffer_index_1 TODO
-     * \param edge_1 TODO
-     * \param edge_index_1 TODO
-     * \param buffer_index_2 TODO
-     * \param edge_2 TODO
-     * \param edge_index_2 TODO
+     * \brief Read planned trajectories of vehicles that are planning at the same time as us
+     */
+    bool read_concurrent_vehicles();
+
+    /**
+     * \brief Read planned trajectories of vehicles that are planning after us
+     */
+    void wait_for_ignored_vehicles();
+
+    /**
+     * \brief Generalized method to read planned trajectories of other vehicles
+     * \param vehicle_ids Which vehicle ids should be read (blocks until all these are received)
+     * \param write_to_buffer When false, do not write messages to other_vehicles_buffer
+     * \param final_messages_only Only read messages with the "final" message attribute
+     */
+    bool read_vehicles(std::set<uint8_t> vehicle_ids, bool write_to_buffer=false, bool final_messages_only=true);
+
+    /**
+     * \brief Broadcast our planned trajectory to other HLCs
+     * \param is_final When false, message is iterative message, else final
+     * \param has_collisions Wether this planned trajectory contains collisions
+     */
+    void send_plan_to_hlcs( bool is_final=true, bool has_collisions=false );
+
+    /**
+     * \brief Interpolate between two received trajectory points using fixed velocity
+     * \param vehicle_id Which vehicle id these points came from
+     * \param buffer_index_1 Index of first point in other_vehicle_buffer (might be negative!)
+     * \param edge_1 Edge of first point
+     * \param edge_index_1 Edge index of first point
+     * \param buffer_index_2 Index of second point in other_vehicle_buffer
+     * \param edge_2 Edge of second point
+     * \param edge_index_2 Edge index of first point
      */
     void interpolate_other_vehicles_buffer(uint8_t vehicle_id,
             int buffer_index_1, int edge_1, int edge_index_1,
             int buffer_index_2, int edge_2, int edge_index_2);
 
     /**
-     * \brief TODO
+     * \brief Remove all points from the trajectory_point_buffer, that are now in the past
      */
     void clear_past_trajectory_point_buffer();
 
     /**
-     * \brief TODO
+     * \brief Create a trajectory command from the newest points in the trajectory_point_buffer
      * \param t_now
      */
     VehicleCommandTrajectory get_trajectory_command(uint64_t t_now);
 
     /**
-     * \brief TODO
+     * \brief Debugging method; writes other_vehicles_buffer to stdout
      */
-    void debug_writeOutReceivedTrajectories(); // Debugging method
+    void debug_writeOutReceivedTrajectories();
 
     /**
-     * \brief TODO
+     * \brief Debugging method; writes trajectory_point_buffer to stdout and spots some common issues
      */
-    void debug_analyzeTrajectoryPointBuffer(); // Debugging method
+    void debug_analyzeTrajectoryPointBuffer();
     
 public:
 
     /**
-     * \brief TODO
+     * \brief Create a VehicleTrajectoryPlanner
      */
     VehicleTrajectoryPlanner();
-    ~VehicleTrajectoryPlanner();
 
     /**
-     * \brief TODO
-     * \param t
-     */
-    void set_real_time(uint64_t t);
-
-    /**
-     * \brief TODO
-     * \param started TODO
+     * \brief Returns started
      */
     bool is_started() {return started;}
 
     /**
-     * \brief TODO
-     * \param crashed TODO
+     * \brief Returns crashed
      */
     bool is_crashed() {return crashed;}
 
     /**
-     * \brief TODO
-     * \param vehicle TODO
+     * \brief Sets the PlanningState of this Planner
+     * \param vehicle (cpp-pointer to) PlanningState object
      */
     void set_vehicle(std::unique_ptr<VehicleTrajectoryPlanningState> vehicle);
 
     /**
-     * \brief TODO
-     * \param graph TODO
+     * \brief Sets coupling graph of this Planner; should be identical for all HLCs
+     * \param graph CouplingGraph object
      */
     void set_coupling_graph(CouplingGraph graph) {coupling_graph = graph; };
 
     /**
-     * \brief TODO
-     * \param writer TODO
+     * \brief Set writer to send planned trajectories
+     * \param writer cpm::Writer object
      */
-    void set_writer(std::unique_ptr< cpm::Writer<LaneGraphTrajectory> > writer);
+    void set_writer(std::unique_ptr< cpm::Writer<HlcCommunication> > writer);
 
     /**
-     * \brief TODO
-     * \param reader TODO
+     * \brief Set reader to read planned trajectories
+     * \param reader cpm::ReaderAbstract object
      */
-    void set_reader(std::unique_ptr< cpm::ReaderAbstract<LaneGraphTrajectory> > reader);
+    void set_reader(std::unique_ptr< cpm::ReaderAbstract<HlcCommunication> > reader);
 
     /**
-     * \brief TODO
-     * \param t_real_time TODO
-     * \param dt TODO
+     * \brief Plan one timestep
+     * \param t_real_time Current time in nanoseconds
+     * \param dt Length of this timestep
      */
     std::unique_ptr<VehicleCommandTrajectory> plan(uint64_t t_real_time, uint64_t dt);
 
     /**
-     * \brief TODO
+     * \brief Stop planning of this timestep, even if we aren't finished
      */
     void stop();
-
-    /**
-     * \brief TODO
-     */
-    void start(){started = true;};
-
 };

@@ -26,8 +26,8 @@
 
 #include "Header.idl"
 
-#ifndef LANEGRAPHTRAJECTORY_IDL
-#define LANEGRAPHTRAJECTORY_IDL
+#ifndef HLCCOMMUNICATION_IDL
+#define HLCCOMMUNICATION_IDL
 
 /**
  * \struct LaneGraphPosition
@@ -44,17 +44,33 @@ struct LaneGraphPosition
     unsigned short edge_path_index;
 };
 
+
 /**
- * \struct LaneGraphTrajectory
+ * \enum MessageType
  * \brief TODO
  * \ingroup cpmlib_idl
  */
-struct LaneGraphTrajectory 
+enum MessageType
+{
+    Iterative,
+    Final
+};
+
+/**
+ * \struct HlcCommunication
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+struct HlcCommunication 
 {
     //! TODO
     octet vehicle_id; //@key
     //! TODO
     Header header;
+    //! TODO
+    MessageType type;
+    //! TODO
+    boolean has_collisions;
     //! TODO
     sequence<LaneGraphPosition> lane_graph_positions;
 };

@@ -84,16 +84,16 @@ using std::vector;
 
 /**
  * \page d_r_run run.bash
- * \brief Run script for decentral_routing
+ * \brief Default run script for decentral_routing, do not use.
  */
 
 /**
  * \page d_r_run_distr run_distributed.bash
- * \brief TODO
+ * \brief Run script to start one or more decentral HLCs with middlewares.
  */
 
 /**
- * \brief TODO
+ * \brief Main method to start a decentral HLC
  * \ingroup decentral_routing
  */
 int main(int argc, char *argv[]) {   
@@ -160,6 +160,8 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
+    const bool iterative_planning_enabled = false;
+
     // SystemTrigger value that means "stop" (as defined in SystemTrigger.idl)
     const uint64_t trigger_stop = std::numeric_limits<uint64_t>::max();
 
@@ -196,15 +198,6 @@ int main(int argc, char *argv[]) {
             true
     );
 
-    //dds::pub::DataWriter<ReadyStatus> writer_readyStatus(
-    //        local_comms_publisher,
-    //        cpm::get_topic<ReadyStatus>(local_comms_participant, "readyStatus"),
-    //        (local_comms_qos_provider.datawriter_qos()
-    //            << dds::core::policy::Reliability::Reliable()
-    //            << dds::core::policy::History::KeepAll()
-    //            << dds::core::policy::Durability::TransientLocal())
-    //);
-
     // systemTrigger Reader, QoS Settings taken from QOS_READY_TRIGGER.xml
     cpm::ReaderAbstract<SystemTrigger> reader_systemTrigger(
             local_comms_participant.get_participant(),
@@ -213,26 +206,11 @@ int main(int argc, char *argv[]) {
             true
     );
 
-    //dds::sub::DataReader<SystemTrigger> reader_systemTrigger(
-    //        local_comms_subscriber,
-    //        cpm::get_topic<SystemTrigger>(local_comms_participant, "systemTrigger"),
-    //        (dds::sub::qos::DataReaderQos()
-    //            << dds::core::policy::Reliability::Reliable()
-    //            << dds::core::policy::History::KeepAll())
-    //);
-
     // VehicleStateList is our timing signal from the middleware
     cpm::ReaderAbstract<VehicleStateList> reader_vehicleStateList(
             local_comms_participant.get_participant(),
             "vehicleStateList"
     );
-
-    //dds::sub::DataReader<VehicleStateList> reader_vehicleStateList(
-    //        local_comms_subscriber,
-    //        cpm::get_topic<VehicleStateList>(
-    //            local_comms_participant,
-    //            "vehicleStateList")
-    //);
      
     // Writer to send trajectory to middleware
     cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
@@ -240,31 +218,18 @@ int main(int argc, char *argv[]) {
             "vehicleCommandTrajectory"
     );
 
-    //dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-    //    local_comms_publisher,
-    //    cpm::get_topic<VehicleCommandTrajectory>(
-    //        local_comms_participant,
-    //        "vehicleCommandTrajectory")
-    //);
-
-    // Writer to send a StopRequest to LCC (in case of failure)
-    //dds::pub::DataWriter<StopRequest> writer_stopRequest(
-    //        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()), 
-    //        cpm::get_topic<StopRequest>("stopRequest")
-    //);
     cpm::Writer<StopRequest> writer_stopRequest("stopRequest");
 
     /* 
      * Reader/Writers for comms between vehicles directly
      */
     // Writer to communicate plans with other vehicles
-    cpm::Writer<LaneGraphTrajectory> writer_laneGraphTrajectory(
-            "laneGraphTrajectory");
+    cpm::Writer<HlcCommunication> writer_HlcCommunication(
+            "hlcCommunication");
 
     // Reader to receive planned trajectories of other vehicles
-    cpm::ReaderAbstract<LaneGraphTrajectory> reader_laneGraphTrajectory(
-            "laneGraphTrajectory");
-    
+    cpm::ReaderAbstract<HlcCommunication> reader_HlcCommunication(
+            "hlcCommunication");
     
     /* ---------------------------------------------------------------------------------
      * Create planner object
@@ -274,13 +239,13 @@ int main(int argc, char *argv[]) {
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
-    std::unique_ptr<cpm::Writer<LaneGraphTrajectory>>(
-        new cpm::Writer<LaneGraphTrajectory>("laneGraphTrajectory")
+    std::unique_ptr<cpm::Writer<HlcCommunication>>(
+        new cpm::Writer<HlcCommunication>("hlcCommunication")
         )
     );
     planner->set_reader(
-    std::unique_ptr<cpm::ReaderAbstract<LaneGraphTrajectory>>(
-        new cpm::ReaderAbstract<LaneGraphTrajectory>("laneGraphTrajectory")
+    std::unique_ptr<cpm::ReaderAbstract<HlcCommunication>>(
+        new cpm::ReaderAbstract<HlcCommunication>("hlcCommunication")
         )
     );
 
@@ -288,7 +253,8 @@ int main(int argc, char *argv[]) {
      * Compose and send Ready message
      * ---------------------------------------------------------------------------------
      */
-    // TODO: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
+    // FIXME: Why do we need this 5 seconds wait? We do, but why and what would be a better solution?
+    // We could replace this by checking for how many other DDS participants we found. But are we 100% sure how many we need to find?
     std::this_thread::sleep_for(std::chrono::seconds(5));
     // Create arbitrary timestamp as per ReadyStatus.idl
     TimeStamp timestamp(11111);
@@ -351,6 +317,11 @@ int main(int argc, char *argv[]) {
                         // Currently we only plan sequentially, with lower vehicle ids first
                         std::vector<int> vec(vehicleStateList.active_vehicle_ids());
                         CouplingGraph coupling_graph(vec);
+                        // For testing, make all planning one iterative block
+                        if( iterative_planning_enabled ) {
+                            coupling_graph.addIterativeBlock(std::vector<int>( vec.begin(), vec.end()));
+                        }
+
                         planner->set_coupling_graph(coupling_graph);
 
                         // Initialize PlanningState with starting position

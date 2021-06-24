@@ -326,11 +326,8 @@ vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(i
     return result;
 }
 
-/*
- * Write our planned path into a LaneGraphTrajectory object
- */
 void VehicleTrajectoryPlanningState::get_lane_graph_positions(
-        LaneGraphTrajectory *lane_graph_trajectory)
+        HlcCommunication *lane_graph_trajectory)
 {
 
     lane_graph_trajectory->vehicle_id(vehicle_id);
