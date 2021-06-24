@@ -121,7 +121,11 @@ function main_vehicle_ids(varargin)
                 % Call the programs to calculate the trajectories of all HLCs
                 if (size(vehicle_ids) > 0)
                     for i = 1 : length(vehicle_ids)
-                        msg_leader = leader(vehicle_ids{i}, sample.t_now);
+                        % Calculate trajectory for each 'slot' in the
+                        % platoon
+                        msg_leader = leader(i, sample.t_now);
+                        % Add corresponding vehicle id for this 'slot'
+                        msg_leader.vehicle_id = uint8(vehicle_ids{i});
                         trajectoryWriter.write(msg_leader);
                     end
                 end
