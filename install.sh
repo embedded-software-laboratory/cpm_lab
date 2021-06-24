@@ -52,23 +52,11 @@ if [[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" != '"Ubuntu"' ]]; then
     fi
 fi
 
-# warn users who still use SIMULATION=0
-if [ ! -z $SIMULATION ]; then
-    if [ $SIMULATION == 0 ]; then
-        echo -e "\e[31m WARNING: Deprecated ussage of shell variable SIMULATION detected. \e[0m"
-        echo -e "\e[31m          SIMULATION=0 does not work anymore. Please use: \e[0m"
-        echo -e "\e[31m          - SIMULATION=1 for simulation only builds \e[0m"
-        echo -e "\e[31m          - no SIMULATION variable ('unset SIMULATION') for standard builds \e[0m"
-        unset SIMULATION
-        echo -e "\e[32m SIMULATION=0 has been unset for you. \e[0m"
-    fi
-fi
-
 ### 0.4 Parse Command Line Arguments
 CI=0
 DOMAIN_ID="NONE"
 LICENSE_PATH=0
-# SIMULATION in not set and thus lab mode is the default
+# SIMULATION is not set and thus lab mode is the default
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]] ;
 do
     opt="$1";
@@ -150,7 +138,7 @@ fi
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-apt install jstest-gtk # TODO: if this a lab requirement only move up into the if [ -z $SIMULATION ] section
+apt install jstest-gtk 
 
 
 ### 3. RTI DDS #################################################################
