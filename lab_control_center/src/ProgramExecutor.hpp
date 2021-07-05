@@ -96,6 +96,8 @@ public:
      * but should finally be executed nonetheless.
      * 
      * If a timeout is set, the function also returns whether the executed command succeeded (= finished in time).
+     * It also returns false if the command could not be sent via the IPC msg queue, either due to an internal failure or if the 
+     * command string was too large.
      * \param command String command, like a command line command. Warning: the command length is limited, as a char array of 5000 chars is used in the message queue.
      * \param timeout Time after which the command should be cancelled, if it is not finished before that. If not set or -1, no timeout is used.
      * \return True if the timeout is > 0. Else true if the command worked, false if it could not be sent, failed or reached the given timeout before it finished.
