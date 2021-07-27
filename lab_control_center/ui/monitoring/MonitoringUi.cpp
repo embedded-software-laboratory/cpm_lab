@@ -452,7 +452,7 @@ void MonitoringUi::init_ui_thread()
                             }
 
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<1000000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {
