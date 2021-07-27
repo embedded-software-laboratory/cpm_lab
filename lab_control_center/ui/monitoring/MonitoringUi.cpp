@@ -420,7 +420,7 @@ void MonitoringUi::init_ui_thread()
 
                 auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
 
-                if(sensor_timeseries->has_new_data(0.5))
+                if(sensor_timeseries->has_new_data(0.75))
                 {
                     const auto value = sensor_timeseries->get_latest_value();
                     label->set_text(sensor_timeseries->format_value(value));
