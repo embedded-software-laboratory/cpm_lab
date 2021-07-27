@@ -79,6 +79,8 @@ function main(vehicleIDs)
     phaseTime = 40;
 
     %% create participants
+    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
+    %   in the workspace  (so it doesn't get gc'ed)
     matlabParticipant = DDS.DomainParticipant('MatlabLibrary::LocalCommunicationProfile', matlabDomainID);
 
     %% create reader and writer
