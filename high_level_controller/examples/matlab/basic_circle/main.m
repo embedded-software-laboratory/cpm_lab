@@ -37,6 +37,8 @@ function main(vehicle_id)
     addpath(common_cpm_functions_path);
     
     matlabDomainId = 1;
+    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
+    %   in the workspace  (so it doesn't get gc'ed)
     [matlabParticipant, reader_vehicleStateList, writer_vehicleCommandTrajectory, ~, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
     
     %% Sync start with infrastructure
