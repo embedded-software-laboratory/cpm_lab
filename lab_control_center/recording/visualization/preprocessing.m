@@ -34,12 +34,8 @@
 % original recording are kept as fieldnames.
 
 function [DataByVehicle] = preprocessing(dds_domain, recording_file)
-    %% Load dds sample if it exists, else call function dbConnection to fetch it.
-% if exist('dds_json_sample.mat', 'file') 
-%    load('dds_json_sample', 'ddsVehicleStateJsonSample', 'ddsVehiclePoseJsonSample')
-% else 
-%    [ddsVehicleStateJsonSample, ddsVehiclePoseJsonSample] = dbConnection(dds_domain, recording_file);
-% end
+
+% fetch samples
 ddsJsonSample = dbConnection(dds_domain, recording_file);
 
 t_start_list = [];
@@ -80,41 +76,40 @@ t_start_nanos = min(t_start_list);
 
 DataByVehicle = struct;
 
-for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
-    currentVehicle = ['vehicle_' int2str(iVehicles)]; % Create fieldname from current vehicle id.
+for iVeh = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
 
     % Read out and store nested data of vehicle observation filtered by
     % current vehicle id via logical table operation.
     try
-    currentRowsObservation = VehicleObservationTable.vehicle_id == iVehicles; 
+    currentRowsObservation = VehicleObservationTable.vehicle_id == iVeh; 
 
-    DataByVehicle.(currentVehicle).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]';
-    DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]';
-    DataByVehicle.(currentVehicle).observation.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).observation.create_stamp_nanos-t_start_nanos);
-    DataByVehicle.(currentVehicle).observation.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).observation.valid_after_stamp_nanos-t_start_nanos);
-    DataByVehicle.(currentVehicle).observation.x = [VehicleObservationTable.pose(currentRowsObservation).x]';
-    DataByVehicle.(currentVehicle).observation.y = [VehicleObservationTable.pose(currentRowsObservation).y]';
-    DataByVehicle.(currentVehicle).observation.yaw = [VehicleObservationTable.pose(currentRowsObservation).yaw]';
+    DataByVehicle(iVeh).observation.create_stamp_nanos = [HeaderObservation.create_stamp(currentRowsObservation).nanoseconds]';
+    DataByVehicle(iVeh).observation.valid_after_stamp_nanos = [HeaderObservation.valid_after_stamp(currentRowsObservation).nanoseconds]';
+    DataByVehicle(iVeh).observation.create_stamp = 1e-9 * (DataByVehicle(iVeh).observation.create_stamp_nanos-t_start_nanos);
+    DataByVehicle(iVeh).observation.valid_after_stamp = 1e-9 * (DataByVehicle(iVeh).observation.valid_after_stamp_nanos-t_start_nanos);
+    DataByVehicle(iVeh).observation.x = [VehicleObservationTable.pose(currentRowsObservation).x]';
+    DataByVehicle(iVeh).observation.y = [VehicleObservationTable.pose(currentRowsObservation).y]';
+    DataByVehicle(iVeh).observation.yaw = [VehicleObservationTable.pose(currentRowsObservation).yaw]';
     catch
     end
 
     % Read out and store nested data of vehicle state filtered by
     % current vehicle id via logical table operation.
     try
-    currentRowsState = VehicleStateTable.vehicle_id == iVehicles;
-    DataByVehicle.(currentVehicle).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]';
-    DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]';
-    DataByVehicle.(currentVehicle).state.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).state.create_stamp_nanos-t_start_nanos);
-    DataByVehicle.(currentVehicle).state.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).state.valid_after_stamp_nanos-t_start_nanos);
-    DataByVehicle.(currentVehicle).state.x = [VehicleStateTable.pose(currentRowsState).x]';
-    DataByVehicle.(currentVehicle).state.y = [VehicleStateTable.pose(currentRowsState).y]';
-    DataByVehicle.(currentVehicle).state.yaw = [VehicleStateTable.pose(currentRowsState).yaw]';
+    currentRowsState = VehicleStateTable.vehicle_id == iVeh;
+    DataByVehicle(iVeh).state.create_stamp_nanos = [HeaderState.create_stamp(currentRowsState).nanoseconds]';
+    DataByVehicle(iVeh).state.valid_after_stamp_nanos = [HeaderState.valid_after_stamp(currentRowsState).nanoseconds]';
+    DataByVehicle(iVeh).state.create_stamp = 1e-9 * (DataByVehicle(iVeh).state.create_stamp_nanos-t_start_nanos);
+    DataByVehicle(iVeh).state.valid_after_stamp = 1e-9 * (DataByVehicle(iVeh).state.valid_after_stamp_nanos-t_start_nanos);
+    DataByVehicle(iVeh).state.x = [VehicleStateTable.pose(currentRowsState).x]';
+    DataByVehicle(iVeh).state.y = [VehicleStateTable.pose(currentRowsState).y]';
+    DataByVehicle(iVeh).state.yaw = [VehicleStateTable.pose(currentRowsState).yaw]';
     
     % Read out and store directly accessible data of vehicle state filtered by
     % current vehicle id via logical table operation.
     for jFields = 4:width(VehicleStateTable)
         currentField = VehicleStateTable.Properties.VariableNames{jFields};
-        DataByVehicle.(currentVehicle).state.(currentField) = VehicleStateTable.(currentField)(currentRowsState);
+        DataByVehicle(iVeh).state.(currentField) = VehicleStateTable.(currentField)(currentRowsState);
     end
     catch
     end
@@ -122,11 +117,11 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     % Read out and store nested data of vehicle path tracking commands filtered by
     % current vehicle id via logical table operation.
     try
-    currentRowsPathTracking = VehicleCommandPathTrackingTable.vehicle_id == iVehicles;
-    DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos = [HeaderCommandPathTracking.create_stamp(currentRowsPathTracking).nanoseconds]';
-    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]';
-    DataByVehicle.(currentVehicle).pathtracking.create_stamp = 1e-9 * (DataByVehicle.(currentVehicle).pathtracking.create_stamp_nanos-t_start_nanos);
-    DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp = 1e-9 * (DataByVehicle.(currentVehicle).pathtracking.valid_after_stamp_nanos-t_start_nanos);
+    currentRowsPathTracking = VehicleCommandPathTrackingTable.vehicle_id == iVeh;
+    DataByVehicle(iVeh).pathtracking.create_stamp_nanos = [HeaderCommandPathTracking.create_stamp(currentRowsPathTracking).nanoseconds]';
+    DataByVehicle(iVeh).pathtracking.valid_after_stamp_nanos = [HeaderCommandPathTracking.valid_after_stamp(currentRowsPathTracking).nanoseconds]';
+    DataByVehicle(iVeh).pathtracking.create_stamp = 1e-9 * (DataByVehicle(iVeh).pathtracking.create_stamp_nanos-t_start_nanos);
+    DataByVehicle(iVeh).pathtracking.valid_after_stamp = 1e-9 * (DataByVehicle(iVeh).pathtracking.valid_after_stamp_nanos-t_start_nanos);
     
     % TODO: Array with path points
     allPTCommands = VehicleCommandPathTrackingTable.path(currentRowsPathTracking);
@@ -150,15 +145,12 @@ for iVehicles = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
         end
         path_table = [path_table; path_list];
     end
-    DataByVehicle.(currentVehicle).pathtracking.path = path_table;
-    DataByVehicle.(currentVehicle).pathtracking.speed = [VehicleCommandPathTrackingTable.speed(currentRowsPathTracking)]';
+    DataByVehicle(iVeh).pathtracking.path = path_table;
+    DataByVehicle(iVeh).pathtracking.speed = [VehicleCommandPathTrackingTable.speed(currentRowsPathTracking)]';
     catch
-        disp("no pt commands");
+        % continue
     end
 end
-
-save ('dds_record', 'DataByVehicle')
-
 end
 
 
