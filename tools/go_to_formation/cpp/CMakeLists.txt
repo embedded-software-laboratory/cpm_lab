@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.3)
 add_definitions(-Wall -Wextra -Werror=return-type)
 set (CMAKE_CXX_STANDARD 11)
+
+# MATLAB
+find_package(Matlab REQUIRED)
+message("-- found MATLAB in ${Matlab_ROOT_DIR}")
 
 # RTI DDS
 add_definitions(-DRTI_UNIX -DRTI_LINUX -DRTI_64BIT -DRTI_STATIC)
@@ -33,19 +37,16 @@ add_executable(
 target_include_directories(
     go_to_formation PRIVATE 
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-    /usr/local/MATLAB/R2020a/extern/include/
-    /usr/local/MATLAB/R2020a/extern/include/shared_autonomous
-    /usr/local/MATLAB/R2020a/extern/include/shared_robotics 
+    ${Matlab_ROOT_DIR}/extern/include/
+    ${Matlab_ROOT_DIR}/extern/include/shared_autonomous
+    ${Matlab_ROOT_DIR}/extern/include/shared_robotics 
 )
 
 target_link_libraries(
     go_to_formation
     ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a
+    ${Matlab_ROOT_DIR}/bin/glnxa64/libmwautonomouscodegen.so
+    ${Matlab_ROOT_DIR}/bin/glnxa64/libmwmorphop_binary_tbb.so
+    ${Matlab_ROOT_DIR}/sys/os/glnxa64/libiomp5.so
+    cpm
 )
-target_link_libraries(
-    go_to_formation
-    /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so
-    /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so
-    /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so
-)                                                                          
-target_link_libraries(go_to_formation cpm)
