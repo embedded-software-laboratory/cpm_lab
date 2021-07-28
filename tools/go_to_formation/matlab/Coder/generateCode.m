@@ -1,1 +1,2 @@
-codegen planTrajectory.prj
+example;
+codegen planTrajectory.prj;

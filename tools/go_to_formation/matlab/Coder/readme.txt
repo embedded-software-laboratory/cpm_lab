@@ -3,6 +3,13 @@ How to C++ Bibliothek für Go to formation aus Matlab Code generieren
 - Pfad zu Dateien: software/tools/go_to_formation/matlab/Coder
 - Benötigt Matlab Version R2020a oder neuer für Kompatibilität und DDS Blockset
 
+Option 1) automated
+```matlab
+generateCode
+```
+
+
+Option 2) adjust manually
 1.) example.m einmal laufen lassen, um Matlab Coder mit DDS Blockset bekannt zu machen
 2.) Klick auf planTrajectory.prj -> öffnet Matlab Coder GUI mit gespeicherten Einstellungen. 
     Diese können übernommen werden, wenn nicht anders gewünscht.
