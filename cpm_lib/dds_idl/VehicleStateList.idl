@@ -49,5 +49,6 @@ struct VehicleStateList {
 
     //!List of vehicle observation information for all vehicles
     sequence<VehicleObservation> vehicle_observation_list;
+    sequence<long> active_vehicle_ids;
 };
 #endif

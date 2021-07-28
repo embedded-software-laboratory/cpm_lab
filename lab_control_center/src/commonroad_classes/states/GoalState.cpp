@@ -33,12 +33,10 @@
 
 GoalState::GoalState(
     const xmlpp::Node* node,
-    int _planning_problem_id,
     std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
     std::function<std::pair<double, double> (int)> _get_lanelet_center,
     std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
     ) :
-    planning_problem_id(_planning_problem_id),
     draw_configuration(_draw_configuration)
 {
     //2018 and 2020 specs are the same
@@ -120,6 +118,11 @@ GoalState::GoalState(
 
 void GoalState::transform_coordinate_system(double scale, double angle, double translate_x, double translate_y)
 {
+    if (orientation.has_value())
+    {
+        orientation->rotate_orientation(angle);
+    }
+
     if (position.has_value())
     {
         position->transform_coordinate_system(scale, angle, translate_x, translate_y);
@@ -139,6 +142,10 @@ void GoalState::transform_coordinate_system(double scale, double angle, double t
 
 void GoalState::transform_timing(double time_scale)
 {
+    //time_scale: t_step_size_prev / t_step_size_new
+    //Thus e.g. for velocity:
+    // v_old * time_scale = distance / (t * t_step_size_prev) * time_scale = distance / (t * t_step_size_new)
+
     if (velocity.has_value())
     {
         velocity->transform_coordinate_system(time_scale, 0, 0, 0);
@@ -148,6 +155,7 @@ void GoalState::transform_timing(double time_scale)
 void GoalState::draw(const DrawingContext& ctx, double scale, double global_orientation, double global_translate_x, double global_translate_y, double local_orientation)
 {
     assert(draw_configuration);
+    assert(unique_id != "ERR");
 
     //Simple function that only draws the position (and orientation), but not the object itself
     ctx->save();
@@ -162,53 +170,40 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         position->draw(ctx, scale, 0, 0, 0, local_orientation);
     }
 
-    //Rotation is an interval - draw position for every possible orientation middle value
+    //Rotation is an interval - draw position for orientation middle value
     if(orientation.has_value())
     {
-        for (auto& middle : orientation->get_interval_avg())
+        auto middle = orientation->get_interval_avg();
+
+        ctx->save();
+        ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
+
+        if(position.has_value())
         {
-            ctx->save();
-            ctx->set_source_rgba(.9,.2,.7,.5); //Color used for inexact values
-
-            if(position.has_value())
-            {
-                //Try to draw in the middle of the shape of the goal
-                position->transform_context(ctx, scale);
-            }
-            ctx->rotate(middle + local_orientation);
-
-            //Draw arrow
-            double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
-            draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
-            
-            ctx->restore();
+            //Try to draw in the middle of the shape of the goal
+            position->transform_context(ctx, scale);
         }
+        ctx->rotate(middle + local_orientation);
+
+        //Draw arrow
+        double arrow_scale = scale * transform_scale; //To quickly change the scale to your liking
+        draw_arrow(ctx, 0.0, 0.0, 3.0 * arrow_scale, 0.0, 3.0 * arrow_scale);
+        
+        ctx->restore();
     }
 
     //Draw time, velocity description
     if (draw_configuration->draw_goal_description.load())
     {
         std::stringstream descr_stream;
-        descr_stream << "ID (" << planning_problem_id << "): ";
+        descr_stream << "ID (" << unique_id << "): ";
         if (time.has_value())
         {
             descr_stream << "t (mean): " << time.value().get_mean();
         }
         if (velocity.has_value())
         {
-            auto velocity_values = velocity.value().get_interval_avg();
-            double sum = 0.0;
-            double cnt = 0.0;
-            for (auto value : velocity_values)
-            {
-                sum += value;
-                cnt += 1;
-            }
-            double avg = 0.0;
-            if (cnt > 0)
-            {
-                avg = sum /cnt;
-            }
+            auto avg = velocity.value().get_interval_avg();
 
             if (time.has_value())
             {
@@ -223,7 +218,9 @@ void GoalState::draw(const DrawingContext& ctx, double scale, double global_orie
         if (position.has_value())
         {
             position->transform_context(ctx, scale);
-            draw_text_centered(ctx, 0, 0, 0, 8, descr_stream.str());
+
+            //Draw set text. Re-scale text based on current zoom factor
+            draw_text_centered(ctx, 0, 0, 0, 1200.0 / draw_configuration->zoom_factor.load(), descr_stream.str());
         }
     }
 
@@ -260,10 +257,6 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
         goal_state.time(time->to_dds_interval(time_step_size));
     }
 
-    std::vector<CommonroadDDSPositionInterval> positions;
-    std::vector<CommonroadDDSIntervals> orientations;
-    std::vector<CommonroadDDSIntervals> velocities; 
-
     if (position.has_value())
     {
         goal_state.has_exact_position(position->is_exact());
@@ -275,21 +268,27 @@ CommonroadDDSGoalState GoalState::to_dds_msg(double time_step_size)
         }
         else
         {
-            positions.push_back(position->to_dds_position_interval());
+            goal_state.position(position->to_dds_position_interval());
         }
     }
     if (orientation.has_value())
     {
-        orientations.push_back(orientation->to_dds_msg());
+        goal_state.orientation(orientation->to_dds_msg());
     }
     if (velocity.has_value())
     {
-        velocities.push_back(velocity->to_dds_msg());
+        goal_state.velocity(velocity->to_dds_msg());
     }
 
-    goal_state.positions(positions);
-    goal_state.orientations(orientations);
-    goal_state.velocities(velocities);
-
     return goal_state;
+}
+
+void GoalState::set_unique_id(std::string _unique_id)
+{
+    unique_id = _unique_id;
+}
+
+const std::string& GoalState::get_unique_id() const
+{
+    return unique_id;
 }

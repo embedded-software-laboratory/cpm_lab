@@ -203,6 +203,6 @@ void LabCam::stopRecording(){
 	if(pipeline == nullptr){
 		return;
 	}
-	std::cout << "sending stop event to pipeline" << std::endl;
+	std::cout << "Sending stop event to pipeline" << std::endl;
 	gst_element_send_event(pipeline, gst_event_new_eos());
 }

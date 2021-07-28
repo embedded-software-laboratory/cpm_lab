@@ -35,6 +35,7 @@
 * \subpage sw_launch_script <br>
 * \subpage sw_launch_test <br>
 * \subpage sw_update_nucs <br>
+* \subpage sw_get_bash_directory <br>
 * \subpage sw_readme <br>
 * \subpage sw_license <br>
 * \ingroup software_files
@@ -73,6 +74,11 @@
 /**
  * \page sw_update_nucs update_nucs.bash
  * \brief Outdated script to perform updates on the NUCs / HLCs
+ */
+
+/**
+ * \page sw_get_bash_directory get_bash_directory_test.bash
+ * \brief Shows how to get the directory of the currently running bash script (does not work with symlinks). This method is used in other scripts in the LCC.
  */
 
 /**

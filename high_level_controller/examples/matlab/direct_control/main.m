@@ -24,63 +24,23 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function main(vehicle_id)    
-    matlabDomainID = 1;
-    
-    % Import IDL files from cpm library
-    dds_idl_matlab = fullfile('../../../../cpm_lib/dds_idl_matlab/');
-    assert(isfolder(dds_idl_matlab),...
-        'Missing directory "%s".', dds_idl_matlab);
-    assert(~isempty(dir([dds_idl_matlab, '*.m'])),...
-        'No MATLAB IDL-files found in %s', dds_idl_matlab);
-    addpath(dds_idl_matlab)
+function main(vehicle_id)
+    % Get current path
+    clc
+    script_directoy = fileparts([mfilename('fullpath') '.m']);
 
-    % XML files for quality of service settings
-    middleware_local_qos_xml = '../../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
-    assert(isfile(middleware_local_qos_xml),...
-        'Missing middleware local QOS XML "%s"', middleware_local_qos_xml);
-    
-    ready_trigger_qos_xml = '../QOS_READY_TRIGGER.xml';
-    assert(isfile(ready_trigger_qos_xml),...
-        'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
-    
-    setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
-    
-    %% variables for DDS communication
-    % DDS Participant for local communication with middleware
-    matlabParticipant = DDS.DomainParticipant(...
-        'MatlabLibrary::LocalCommunicationProfile',...
-        matlabDomainID);
-    % Infrastructure
-    topic_readyStatus = 'readyStatus';
-    writer_readyStatus = DDS.DataWriter(...
-        DDS.Publisher(matlabParticipant),...
-        'ReadyStatus',...
-        topic_readyStatus,...
-        'TriggerLibrary::ReadyTrigger');
+    % Initialize data readers/writers...
+    common_cpm_functions_path = fullfile( ...
+        script_directoy, '/..' ...
+    );
+    assert(isfolder(common_cpm_functions_path), 'Missing folder "%s".', common_cpm_functions_path);
+    addpath(common_cpm_functions_path);
 
-    topic_systemTrigger = 'systemTrigger';
-    reader_systemTrigger = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'SystemTrigger',...
-        topic_systemTrigger,...
-        'TriggerLibrary::ReadyTrigger');
-    trigger_stop = uint64(18446744073709551615);
+    matlabDomainId = 1;
+    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
+    %   in the workspace  (so it doesn't get gc'ed)
+    [matlabParticipant, reader_vehicleStateList, ~, ~, reader_systemTrigger, writer_readyStatus, trigger_stop, writer_vehicleCommandDirect] = init_script(matlabDomainId);
 
-    % Control
-    topic_vehicleStateList = 'vehicleStateList';
-    reader_vehicleStateList = DDS.DataReader(...
-        DDS.Subscriber(matlabParticipant),...
-        'VehicleStateList',...
-        topic_vehicleStateList);
-
-    topic_vehicleCommandDirect = 'vehicleCommandDirect';
-    writer_vehicleCommandDirect = DDS.DataWriter(...
-        DDS.Publisher(matlabParticipant),...
-        'VehicleCommandDirect',...
-        topic_vehicleCommandDirect);
-    
-    
     %% Sync start with infrastructure
     % Send ready signal
     % Signal needs to be sent for all assigned vehicle ids

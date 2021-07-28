@@ -139,10 +139,10 @@ public:
     /**
      * \brief Start checking if the deployed applications are still running
      * \param script_used If a script + middleware was deployed (else only check for crashes of IPS etc) 
-     * \param use_middleware_without_hlc Self explanatory, ignored in case of remote deployment
+     * \param use_middleware_without_hlc Self explanatory, ignored in case of distributed / remote deployment
      * \param remote_hlc_ids If deployed remotely: IDs of HLCs on which the software was deployed
-     * \param has_local_hlc True if local HLCs are used on top of remote ones
-     * \param remote_deploy_toggled True if Deploy Remote is enabled in SetupViewUI
+     * \param has_local_hlc True if local HLCs are used on top of remote ones in distributed mode
+     * \param remote_deploy_toggled True if Deploy Remote / Distributed is enabled in SetupViewUI
      * \param lab_mode_on Whether the IPS etc. should be running
      * \param labcam_toggled If true, the labcam program should be running too
      */

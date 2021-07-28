@@ -42,11 +42,15 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
 {   
+    // Set seed for rand
+    srand(time(NULL)*vehicle_id);
+
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
-    speed_profile[0] = 0;
-    for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
+    // 10 minor timesteps of 0 velocity so the vehicles have time to start
+    speed_profile.fill(0);
+    for (size_t i = 100; i < N_STEPS_SPEED_PROFILE; ++i)
     {
         speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
     }
@@ -124,14 +128,19 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
     }
 }
 
-TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point()
+TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point(
+	        uint64_t time,	
+		size_t edge_index,
+		size_t edge_path_index,
+		double speed
+		)
 {
     TrajectoryPoint trajectory_point;
-    trajectory_point.t().nanoseconds(t_elapsed);
-    trajectory_point.px(laneGraphTools.edges_x.at(current_edge_index).at(current_edge_path_index));
-    trajectory_point.py(laneGraphTools.edges_y.at(current_edge_index).at(current_edge_path_index));
-    trajectory_point.vx(laneGraphTools.edges_cos.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
-    trajectory_point.vy(laneGraphTools.edges_sin.at(current_edge_index).at(current_edge_path_index) * speed_profile[0]);
+    trajectory_point.t().nanoseconds(time);
+    trajectory_point.px(laneGraphTools.edges_x.at(edge_index).at(edge_path_index));
+    trajectory_point.py(laneGraphTools.edges_y.at(edge_index).at(edge_path_index));
+    trajectory_point.vx(laneGraphTools.edges_cos.at(edge_index).at(edge_path_index) * speed);
+    trajectory_point.vy(laneGraphTools.edges_sin.at(edge_index).at(edge_path_index) * speed);
     return trajectory_point;
 }
 
@@ -149,6 +158,8 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
     {
         vector<std::pair<size_t, size_t>> self_path = get_planned_path();
 
+        //cpm::Logging::Instance().write(1,
+        //        "Loopy");
         // An index exceeding N_STEPS_SPEED_PROFILE indicates that there is no collision
         size_t earliest_collision__speed_profile_index = 1<<30;
         int colliding_vehicle_id = 0;
@@ -248,6 +259,7 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
 
     for (int i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
     {
+
         int i_forward = idx_speed_reduction + i;
         int i_reverse = idx_speed_reduction - i;
 
@@ -290,11 +302,32 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     return result;
 }
 
-/*
- * Write our planned path into a LaneGraphTrajectory object
- */
+vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length, uint64_t dt_nanos) {
+    vector<TrajectoryPoint> result;
+    int index = 0;
+    int n_steps = dt_nanos/dt_speed_profile_nanos; // Number of speed steps per dt_nanos
+    
+    for( auto point : get_planned_path() ) {
+        if(index >= n_steps*max_length) {
+            break;
+	}
+	if( index%n_steps == 0 ) {
+		result.push_back(
+		    get_trajectory_point(
+			    t_elapsed + index * dt_speed_profile_nanos,
+			    point.first,
+			    point.second,
+			    speed_profile[index])
+		    );
+	}
+	index++;
+    }
+    
+    return result;
+}
+
 void VehicleTrajectoryPlanningState::get_lane_graph_positions(
-        LaneGraphTrajectory *lane_graph_trajectory)
+        HlcCommunication *lane_graph_trajectory)
 {
 
     lane_graph_trajectory->vehicle_id(vehicle_id);
@@ -311,4 +344,15 @@ void VehicleTrajectoryPlanningState::get_lane_graph_positions(
     }
 
     lane_graph_trajectory->lane_graph_positions(lane_graph_positions);
+}
+
+void VehicleTrajectoryPlanningState::debug_writeOutOwnTrajectory() {
+    std::cout << "Vehicle " << static_cast<uint32_t>(vehicle_id) << std::endl;
+    int index = 0;
+    for(auto point : get_planned_path()) {
+        std::cout << index << ", "; 
+        std::cout << point.first << ", "; 
+        std::cout << point.second << std::endl; 
+        index++;
+    }
 }

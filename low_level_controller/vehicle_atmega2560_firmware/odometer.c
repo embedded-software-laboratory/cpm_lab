@@ -26,6 +26,12 @@
 
 /**
  * \file odometer.c
+ * 
+ * The odometer used at the vehicles consists of three hall sensors and one magnet.
+ * The magnet is mounted directly on top of the motor shaft and the sensors are placed
+ * within a distance of 1-2mm to the magnet, each roughly 120 degrees shifted. Consequently,
+ * when the motor moves the states of the hall sensors change accordingly. Each time a 
+ * state changes an interrupt service routine handles that.
  *
  * \author maczijewski
  * \date Created: 20.09.2018 21:34:20
@@ -40,62 +46,64 @@
 #include "odometer.h"
 
 /**
- * \brief TODO
+ * \brief Dependend on the last odometer state and the current one (represented with 3-bit
+ * 		  each) this array allows to determine in which direction the vehicle moved. The
+ * 		  relevant index is computed by concatenating both states.
  * \ingroup low_level_controller
  */
 static const int8_t direction_lookup[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /**
- * \brief TODO
+ * \brief Stores the last state of the odometer in the three least significant bits.
  * \ingroup low_level_controller
  */
 static volatile uint8_t hall_sensor_states_prev = 0;
 
 /**
- * \brief TODO
+ * \brief Stores the time which corresponds to the previous hall sensor states (\link hall_sensor_states_prev \endlink).
  * \ingroup low_level_controller
  */
 static volatile uint16_t timer1_prev = 0;
 
 /**
- * \brief TODO
+ * \brief 1 if the vehicle stands still according to the last odometer measurements. 0 otherwise.
  * \ingroup low_level_controller
  */
 static volatile uint8_t standstill_flag = 0;
 
 /**
- * \brief TODO
+ * \brief Accumulated steps of the odometer. (If we move in reverse direction it decreases.)
  * \ingroup low_level_controller
  */
 static volatile int32_t odometer_count = 0;
 
 /**
- * \brief TODO
+ * \brief Size of the buffers in which the last measurements are stored.
  * \ingroup low_level_controller
  */
 #define ODOMETER_BUFFER_SIZE 6
 
 /**
- * \brief TODO
+ * \brief Stores the time intervals between the last odometer measurements. Used to compute the average speed.
  * \ingroup low_level_controller
  */
 static volatile uint16_t odometer_time_interval_buffer[ODOMETER_BUFFER_SIZE];
 
 /**
- * \brief TODO
+ * \brief Stores the directions of the last odometer measurements. Used to compute the average speed.
  * \ingroup low_level_controller
  */
 static volatile int8_t odometer_direction_buffer[ODOMETER_BUFFER_SIZE];
 
 /**
- * \brief TODO
+ * \brief Points to the newest values in the buffers.
  * \ingroup low_level_controller
  */
 static volatile uint8_t odometer_buffer_index = 0;
 
 
 /**
- * \brief interrupt for hall sensor pin change
+ * \brief Interrupt for hall sensor pin change
  * \ingroup low_level_controller
  */
 ISR(PCINT2_vect) {

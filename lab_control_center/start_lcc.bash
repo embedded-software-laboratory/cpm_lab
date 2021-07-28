@@ -1,4 +1,6 @@
-cd ~/dev/software/LabControlCenter
+# Get and go to LCC Path
+LCC_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/"
+cd ${LCC_PATH}
 
 # Load environment Variables
 export IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')

@@ -32,6 +32,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <experimental/filesystem> //Used instead of std::filesystem, because some compilers still seem to be outdated
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -81,8 +82,9 @@ private:
      * \brief Init function, shared by the different constructors
      * \param parent Parent window to be set for this object, to have a reference to a top window when a dialog is created
      * \param filters Filters to be shown in the file chooser. Only files of that type can be selected
+     * \param opened_path Optional. Tells the file chooser where to start (if the path exists), else ignored
      */
-    void init(Gtk::Window& parent, std::vector<Filter> filters);
+    void init(Gtk::Window& parent, std::vector<Filter> filters, std::string opened_path);
 
     //! Callback function called on file chooser close (must always be called!)
     std::function<void(std::string, bool)> on_close_callback;
@@ -124,9 +126,10 @@ public:
      * \brief Constructor for a file chooser dialog 
      * \param parent Window parent of the current window, settings this prevents errors / warnings
      * \param on_close_callback Callback function to get the string of the chosen file and if a file was chosen
-     * \param config_name In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
+     * \param config_name Optional. In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
+     * \param opened_path Optional. Tells the file chooser where to start (if the path exists), else ignored
      */
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::string config_name = "default");
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::string config_name = "default", std::string opened_path = "");
 
     /**
      * \brief Constructor for a file chooser dialog that allows to set filters (bottom right, which items are shown besides folders)
@@ -134,9 +137,10 @@ public:
      * \param parent Window parent of the current window, settings this prevents errors / warnings
      * \param on_close_callback Callback function to get the string of the chosen file and if a file was chosen
      * \param filters Filters to set for choosing a file, e.g. only YAML files are shown
-     * \param config_name In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
+     * \param config_name Optional. In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
+     * \param opened_path Optional. Tells the file chooser where to start (if the path exists), else ignored
      */
-    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters, std::string config_name = "default");
+    FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::vector<Filter> filters, std::string config_name = "default", std::string opened_path = "");
 
     /**
      * \brief Returns the previously selected path of last program execution

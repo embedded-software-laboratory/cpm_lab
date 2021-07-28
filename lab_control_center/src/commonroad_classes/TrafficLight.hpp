@@ -55,7 +55,7 @@
  * \brief Specifies a traffic light color, as in commonroad
  * \ingroup lcc_commonroad
  */
-enum class TrafficLightColor {Red, RedYellow, Yellow, Green};
+enum class TrafficLightColor {Red, RedYellow, Yellow, Green, Inactive};
 
 /**
  * \enum Direction
@@ -91,24 +91,6 @@ struct TrafficLightCycle
 };
 
 /**
- * \struct TrafficLightElement
- * \brief Specifies a single traffic light; TrafficLight might contain more than one light according to specs
- * \ingroup lcc_commonroad
- */
-struct TrafficLightElement
-{
-    //Commonroad types
-    //! Traffic light cycle, defining when which color is shown
-    TrafficLightCycle cycle;
-    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
-    std::optional<Position> position = std::nullopt; //TODO: Position is specified as being always exact
-    //! Direction shown by the light
-    Direction direction;
-    //! Indicated if the traffic light is currently active. Is assumed to default to true
-    bool is_active; 
-};
-
-/**
  * \class TrafficLight
  * \brief This class, like all other classes in this folder, are heavily inspired by the current (2020) common road XML specification (https://gitlab.lrz.de/tum-cps/commonroad-scenarios/blob/master/documentation/XML_commonRoad_2020a.pdf)
  * It is used to store / represent a traffic light specified in an XML file
@@ -117,25 +99,14 @@ struct TrafficLightElement
 class TrafficLight : public InterfaceTransform, public InterfaceDraw
 {
 private:
-    //std::vector<TrafficLightElement> traffic_light_elements;
-
-    //TODO: Current structure (as, in my opinion, the specification does not allow for unique definitions)
-    //! Positions of the traffic lights
-    std::vector<Position> positions;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> position_lines;
-    //! Directions of the traffic lights
-    std::vector<Direction> directions;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> direction_lines;
-    //! Values if each traffic light is active
-    std::vector<bool> actives;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> active_lines;
-    //! Cycles of the traffic lights
-    std::vector<TrafficLightCycle> cycles;
-    //! Lines in the XML where the positions were defined - the specification does not allow for unique definitions (as the order of the occuring values is not fixed and some are optional)
-    std::vector<int> cycle_lines;
+    //! Traffic light cycle, defining when which color is shown
+    TrafficLightCycle cycle;
+    //! Specified as being always exact, gives the position of the light, might be undefined (in that case: Position is given within some lanelet in form of a reference)
+    std::optional<Position> position = std::nullopt;
+    //! Direction shown by the light, default is all
+    Direction direction = Direction::All;
+    //! Indicated if the traffic light is currently active. Is assumed to default to true
+    bool is_active = true; 
 
     //! ID of the traffic light(s)
     int id;
@@ -149,18 +120,6 @@ private:
      * \param scale To change the size of the drawn symbol
      */
     void draw_traffic_light_symbol(const DrawingContext& ctx, double scale);
-
-public:
-    /**
-     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
-     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
-     * \param node A trafficLight node
-     * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
-     */
-    TrafficLight(
-        const xmlpp::Node* node,
-        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
-    );
 
     //Helper functions for better readability
     /**
@@ -184,7 +143,17 @@ public:
      */
     TrafficLightCycle translate_cycle(const xmlpp::Node* cycle_node);
 
-    //TODO: Getter
+public:
+    /**
+     * \brief The constructor gets an XML node and parses it once, translating it to the C++ data structure
+     * An error is thrown in case the node is invalid / does not match the expected CommonRoad specs
+     * \param node A trafficLight node
+     * \param _get_position_from_lanelet A function that allows to obtain a position value defined for the sign by a lanelet reference, if it exists
+     */
+    TrafficLight(
+        const xmlpp::Node* node,
+        std::function<std::optional<std::pair<double, double>>(int)> _get_position_from_lanelet
+    );
 
     /**
      * \brief This function is used to fit the imported XML scenario to a given min. lane width

@@ -34,6 +34,19 @@
  * \author maczijewski
  * \date Created: 17.09.2018 13:43:43
  * 
+ * \brief This is the main loop of the low_level_controller.
+ * 
+ * The low_level_controller may have three internal states:
+ * 		  1. The "usual" one, in which it is regularily communicating with the
+ * 			mid_level_controller and working on its behalf.
+ * 		  2. The safe-mode, which is activated on startup until mid_level_controller has
+ * 			finished its boot process and additionally by
+ * 			\link watchdog.h \endlink in case that communication with mid_level_controller
+ * 			takes to long (e.g. because of a reboot of the mid_level_controller or a not
+ * 			working SPI-slave-select-line).
+ * 		  3. As long as the low_level_control is in safe-mode it is possible to enable
+ * 			\link tests.h \endlink by using a jumper on the main board of the vehicle.
+ * 
  * \ingroup low_level_controller
  */ 
 

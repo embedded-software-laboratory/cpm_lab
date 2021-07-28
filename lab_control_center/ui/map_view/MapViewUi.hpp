@@ -123,13 +123,20 @@ class MapViewUi
     //mouse_left_button is used to determine whether a vehicle trajectory should be drawn
     //mouse_right_button has now been added by me to allow for changing the view (by dragging) - this only works if the left button is not clicked as well!
     //! For scaling the view, values between 30 and 900 are allowed (not to be confused with commonroad map transformations)
-    double zoom = 175;
-    //! For translating the view in x direction, can e.g. be done with the keyboard (not to be confused with commonroad map transformations)
-    double pan_x = 100;
-    //! For translating the view in y direction, can e.g. be done with the keyboard (not to be confused with commonroad map transformations)
-    double pan_y = 730; 
+    double zoom = 125;
+    //! For translating the view in x direction, can e.g. be done with the keyboard (not to be confused with commonroad map transformations), set in constructor (or rather in signal_draw callback)
+    double pan_x = 0;
+    //! For translating the view in y direction, can e.g. be done with the keyboard (not to be confused with commonroad map transformations), set in constructor (or rather in signal_draw callback)
+    double pan_y = 0; 
     //! For rotating the view; rotation is done around the origin (rotation_fixpoint_x and rotation_fixpoint_y) (not to be confused with commonroad map transformations)
     double rotation = 0; //[rad]
+
+    //! It takes some time for the map scale to settle in, so monitor this a bit before initializing pan_x, pan_y and zoom
+    double map_width = 0;
+    //! It takes some time for the map scale to settle in, so monitor this a bit before initializing pan_x, pan_y and zoom
+    double map_height = 0;
+    //! Don't center the map within the first map_tick draw ticks unless its width and height value change before that (which means they settled to the final window setup)
+    int map_tick = 20;
 
     //! point, which doesn't change when rotating (corresponds to map center) -> origin to rotate around
     const double rotation_fixpoint_x = 2.25;
@@ -211,8 +218,9 @@ class MapViewUi
      * \brief Draw vehicles that were received in form of commonroad shape messages ('static' vehicles defined by the commonroad file)
      * \param ctx The drawing context, to draw on the map view
      * \param shape Commonroad shape to draw, e.g. a rectangle
+     * \param obstacle_class Decides draw style (different for dynamic <-> static, environment obstacle)
      */
-    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape);
+    void draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape, ObstacleClass obstacle_class);
 
     /**
      * \brief Get the center (x, y) of a commonroad shape, i.e. the mean value of its corner points etc.
@@ -250,6 +258,14 @@ class MapViewUi
      * \param ctx The drawing context, to draw on the map view
      */
     void draw_received_visualization_commands(const DrawingContext& ctx);
+
+    /**
+     * \brief Helper function to draw text surrounded by a small filled rectangle with white background and transparency
+     * to make the text more readable in case it is drawn on top of e.g. a black figure
+     * \param ctx The drawing context, to draw on the map view
+     * \param extents To compute the bounding box
+     */
+    void draw_text_bounding_box(const DrawingContext& ctx, Cairo::TextExtents extents);
 
     /**
      * \brief TODO! Deprecated? Never used or defined.

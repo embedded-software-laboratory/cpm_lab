@@ -120,17 +120,22 @@ void Polygon::draw(const DrawingContext& ctx, double scale, double global_orient
 
 std::pair<double, double> Polygon::get_center()
 {
-    //This is just the centroid, might not work for all shapes - TODO: Use a more complex algorithm? Might not really be worth the effort, also because it might take too long regarding the refresh time
-    double sum_x = 0;
-    double sum_y = 0;
+    //Take the mean of min and max value for x and y coordinates, might not work for all shapes
+    assert(std::numeric_limits<double>::has_infinity);
+    double min_x = std::numeric_limits<double>::infinity();
+    double min_y = std::numeric_limits<double>::infinity();
+    double max_x = - std::numeric_limits<double>::infinity();
+    double max_y = - std::numeric_limits<double>::infinity();
 
     for (auto point : points)
     {
-        sum_x += point.get_x();
-        sum_y += point.get_y();
+        min_x = std::min(min_x, point.get_x());
+        min_y = std::min(min_y, point.get_y());
+        max_x = std::max(max_x, point.get_x());
+        max_y = std::max(max_y, point.get_y());
     }
 
-    return std::pair<double, double>(sum_x / static_cast<double>(points.size()), sum_y / static_cast<double>(points.size()));
+    return std::pair<double, double>(0.5 * min_x + 0.5 * max_x, 0.5 * min_y + 0.5 * max_y);
 }
 
 const std::vector<Point>& Polygon::get_points() const

@@ -57,12 +57,10 @@ int xml_translation::get_node_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to int, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -78,13 +76,10 @@ unsigned long long xml_translation::get_node_uint(const xmlpp::Node* node)
     }
     catch(const SpecificationError& e)
     {
-        //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to unsigned long long, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -101,12 +96,10 @@ double xml_translation::get_node_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to double, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -171,12 +164,10 @@ int xml_translation::get_first_child_int(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to int, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -193,12 +184,10 @@ unsigned long long xml_translation::get_first_child_uint(const xmlpp::Node* node
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to unsigned long long, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -215,12 +204,10 @@ double xml_translation::get_first_child_double(const xmlpp::Node* node)
     catch(const SpecificationError& e)
     {
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
-        
         throw;
     }
     catch(...)
     {
-        //TODO: Catch error of get_node_text and check if former return values were used in other functions
         std::stringstream error_msg_stream;
         error_msg_stream << "Node " << node->get_name() << " could not be translated to double, line: " << node->get_line();
         throw SpecificationError(error_msg_stream.str());
@@ -575,7 +562,7 @@ std::optional<double> xml_translation::string_to_double(std::string text)
     }
 }
 
-void xml_translation::iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "")
+void xml_translation::iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name)
 {
     //Check if it is an element node
     const xmlpp::Element* node_element = dynamic_cast<const xmlpp::Element*>(node);

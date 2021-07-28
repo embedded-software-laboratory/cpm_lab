@@ -4,8 +4,7 @@
 # super user privileges (e.g. sudo)
 #
 # This script will download various files and therefor creates its own
-# directory 'tmp' relative to this scripts ablsoute path. It will also link it
-# to ~/dev for easier accessablity (if ~/dev is not already present).
+# directory 'tmp' relative to this scripts ablsoute path. 
 #
 # This script is compatible with Debian and RedHat based distirbutions but has
 # been tested specifically with Ubuntu 18.04.3 LTS and Fedora 31.
@@ -43,50 +42,21 @@ else
 fi
 RU_HOME=$( getent passwd $real_user | cut -d: -f6 )
 
-## 0.2 Determine OS & Set Commands Accordinaly
-if [[ ! -z $(which yum) ]]; then
-    PM="yum"
-    if [[ ! -z $(which dnf) ]]; then
-        PM="dnf"
-    fi
-    echo "You aren't using Ubuntu. Watch out for further compatibility issues!"
-    UPDATE="--refresh update -y"
-    BUILD_ESSENTIALS="install gcc g++ glibc-devel libnsl2-devel make -y"
-    # BUILD_ESSENTIALS="groupinstall \"Development Tools\" \"Development Libraries\" -y && dnf install libnsl2-devel g++ -y"
-    # TODO Update if support for other OS is desired
-    BUILD_TOOLS="install ip expect apache2 git tmux openssh-client openssh-server cmake gtkmm30-devel sshpass ntp -y"
-    OPENJDK="install java-11-openjdk-devel -y"
-    PYLON_URL="https://www.baslerweb.com/fp-1523350799/media/downloads/software/pylon_software/pylon-5.0.12.11829-x86_64.tar.gz"
-elif [[ ! -z $(which apt) ]]; then
-    PM="apt"
-    UPDATE="update && apt upgrade -y"
-    BUILD_ESSENTIALS="install build-essential -y"
-    BUILD_TOOLS="install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y"
-    DEP_NO_SIM="install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y"
-    OPENJDK="install openjdk-11-jdk -y"
-    PYLON_URL="https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb"
-else
-    echo "Error: unsupported package manager, make sure your are using apt, dnf or yum"
+## 0.2 Determine OS & Set Commands Accordingly
+if [[ "$(awk -F= '/^NAME/{print $2}' /etc/os-release)" != '"Ubuntu"' ]]; then
+    echo "You aren't using Ubuntu. Please use Ubuntu 18.04!"
     exit 1;
-fi
-
-## 0.3 Link folder to '~/dev'
-if [ ! -d $RU_HOME/dev/software ]; then
-    echo "Creating a link to expected installation location ${RU_HOME}/dev/software"
-    sudo -u ${real_user} mkdir -p $RU_HOME/dev
-    sudo -u ${real_user} ln -s $PWD $RU_HOME/dev/software
-elif [ "${RU_HOME}/dev/software" == "${PWD}" ]; then
-    : # We are in the expected folder
-else
-    # TODO: Installation without relying on absolute location
-    echo "WARNING: Installing at another location than /home/user/dev/software is currently not supported. Prepare for compatibility issues."
+    if [[ "$(awk -F= '/^VERSION_ID/{print $2}' /etc/os-release)" != '"18.04"' ]]; then
+        echo "You are using the wrong version. Please switch to Ubuntu 18.04. Otherwise stability is not guaranteed.";
+        # exit 1;        
+    fi
 fi
 
 ### 0.4 Parse Command Line Arguments
 CI=0
 DOMAIN_ID="NONE"
 LICENSE_PATH=0
-SIMULATION=0
+# SIMULATION is not set and thus lab mode is the default
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]] ;
 do
     opt="$1";
@@ -140,11 +110,15 @@ fi
 echo "CI =" $CI
 echo "Domain ID =" $DOMAIN_ID
 echo "License Path =" $LICENSE_PATH
-echo "Simulation =" $SIMULATION
+if [ -z $SIMULATION ]; then
+    echo "Simulation =" $SIMULATION
+else
+    echo "Simulation only mode is disabled"
+fi
 
 
 ### 0.5 Create folders for nuc and raspberry packages
-if [[ $SIMULATION == 0 ]]; then
+if [ -z $SIMULATION ]; then
     sudo mkdir -p "/var/www/html/nuc"
     sudo chmod a+rwx "/var/www/html/nuc"
     sudo mkdir -p "/var/www/html/raspberry"
@@ -155,32 +129,16 @@ fi
 sudo -u ${real_user} mkdir tmp
 
 ### 1. Ubuntu & Packages #######################################################
-eval "${PM}" "${UPDATE}"
-eval "${PM}" "${BUILD_ESSENTIALS}"
-eval "${PM}" "${BUILD_TOOLS}"
-if [ $SIMULATION == 0 ]; then
-    eval "${PM}" "${DEP_NO_SIM}"
+apt update && apt upgrade -y
+apt install build-essential -y
+apt install iproute2 git tmux cmake libgtkmm-3.0-dev libxml++2.6-dev ntp jstest-gtk openssh-client openssh-server sshpass -y
+if [ -z $SIMULATION ]; then
+    apt install apache2 libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
 fi
-
-
-
 
 ### 2. Joystick / Gamepad ######################################################
 #With a Joystick or a Gamepad you can drive vehicles manually in the Lab Control Center (LCC)
-if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
-    cd tmp
-    eval "${PM}" install libsigc++-devel gtkmm24-devel -y
-    sudo -u $real_user git clone https://gitlab.com/jstest-gtk/jstest-gtk.git
-    cd ./jstest-gtk/
-    # checkout commit from 25 Aug, 2016 to match what is present in Ubuntu 18.04.3 LTS
-    # TODO consider updating jstest-gtk because more recent versions don't require 
-    # gtkmm24-devel anymore but are based on gtkmm30-devel like LCC.
-    sudo -u $real_user git checkout c10e47cfa8d13516ce5234738857e796138aa3bd 
-    sudo -u $real_user mkdir ./build
-    cd ./build
-    sudo -u $real_user cmake ..
-    sudo -u $real_user make
-fi
+apt install jstest-gtk 
 
 
 ### 3. RTI DDS #################################################################
@@ -193,7 +151,7 @@ fi
 cd $DIR/tmp
 sudo -u $real_user wget https://s3.amazonaws.com/RTI/Bundles/6.0.0/Evaluation/rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
 sudo -u $real_user tar xvzf ./rti_connext_dds_secure-6.0.0-eval-x64Linux4gcc7.3.0.tar.gz
-if [ $SIMULATION == 0 ]; then
+if [ -z $SIMULATION ]; then
     sudo -u $real_user wget https://s3.amazonaws.com/RTI/Community/ports/toolchains/raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
     sudo -u $real_user tar xvzf ./raspbian-toolchain-gcc-4.7.2-linux64.tar.gz
     cp -R raspbian-toolchain-gcc-4.7.2-linux64 /opt
@@ -205,7 +163,7 @@ mkdir /opt/rti_connext_dds-6.0.0
 if [ $CI == 1 ]; then
     ${RTI_INSTALLER_AUTOMATION_PATH}
 else
-    echo "Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click Forward, accecpt the license agreement and keep clicking Forward until you can click Finsih at the very last page)."
+    echo 'Unattended mode is not supported in the evaluation bundle thus you have to manually click through (click "Forward", accecpt the license agreement and keep clicking "Forward" until you can click "Finsih" at the very last page).'
     ./rti_connext_dds-6.0.0-eval-x64Linux4gcc7.3.0.run --prefix /opt/rti_connext_dds-6.0.0
 fi
 cp "$LICENSE_PATH" /opt/rti_connext_dds-6.0.0/rti_license.dat
@@ -231,7 +189,7 @@ source /etc/profile.d/rti_connext_dds.sh
 
 ## 3.4 Install RTI ARM libraries
 # only needed in real lab mode
-if [ $SIMULATION == 0 ]; then
+if [ -z $SIMULATION ]; then
     yes | /opt/rti_connext_dds-6.0.0/bin/rtipkginstall rti_connext_dds-6.0.0-core-target-armv6vfphLinux3.xgcc4.7.2.rtipkg
 fi
 
@@ -240,10 +198,9 @@ fi
 # on OpenCV 4.0.0.
 # https://cpm.embedded.rwth-aachen.de/doc/display/CLD/Indoor+Positioning+System
 
-if [ $SIMULATION == 0 ]
-then
+if [ -z $SIMULATION ]; then
     ## 4.1 OpenCV 4.0.0
-    eval "${PM}" "${OPENJDK}"
+    apt install openjdk-11-jdk -y
     cd /tmp
     sudo -u $real_user git clone https://github.com/opencv/opencv.git
     cd ./opencv
@@ -262,22 +219,15 @@ then
 
     ## 4.2 Basler Pylon 5
     cd "$DIR/tmp"
-    sudo -u $real_user wget "${PYLON_URL}"
-    if [[ ! -z $(which yum) ]] || [[ ! -z $(which dnf) ]]; then
-        sudo -u $real_user tar xvzf ./pylon*.tar.gz
-        cd ./pylon*x86_64
-        tar -C /opt -xzf pylonSDK*.tar.gz
-        yes | ./setup-usb.sh
-    elif [[ ! -z $(which apt) ]]; then
-        dpkg -i pylon*.deb
-    fi
+    sudo -u $real_user wget https://www.baslerweb.com/fp-1523350893/media/downloads/software/pylon_software/pylon_5.0.12.11829-deb0_amd64.deb
+    dpkg -i pylon*.deb
 fi
 
 rm -rf "${DIR}/tmp"
 
 ### 5. Inform user about success and next steps ################################
-echo "Success! Ready to build the cpm software suit."
+echo "Success! Ready to build the cpm software suite."
 echo "Reboot your PC or execute 'source /etc/profile.d/rti_connext_dds.sh'"
-echo "Then: './build_all.bash' or './build_all.bash --simulation'"
+echo "Then execute './build_all.bash' or './build_all.bash --simulation'"
 
 exit 0
