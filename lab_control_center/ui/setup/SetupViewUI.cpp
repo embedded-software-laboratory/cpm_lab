@@ -84,6 +84,7 @@ SetupViewUI::SetupViewUI
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
+    builder->get_widget("button_go_to_formation", button_go_to_formation);
 
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
 
@@ -104,6 +105,7 @@ SetupViewUI::SetupViewUI
 
     assert(button_deploy);
     assert(button_kill);
+    assert(button_go_to_formation);
 
     assert(vehicle_flowbox);
 
@@ -130,6 +132,7 @@ SetupViewUI::SetupViewUI
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
+    button_go_to_formation->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::go_to_formation));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
@@ -620,6 +623,10 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
     return { simulation_running.load(), vehicle_to_hlc_map };
 }
 
+void SetupViewUI::go_to_formation() {
+    std::cout << "Going to formation..." << std::endl;
+    return;
+}
 void SetupViewUI::kill_deployed_applications() {
     //Make sure that this button cannot be "spammed"
     std::unique_lock<std::mutex> lock(kill_button_mutex);

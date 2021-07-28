@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkScrolledWindow" id="parent">
@@ -452,6 +452,19 @@ Lab Camera
               </packing>
             </child>
             <child>
+              <object class="GtkButton" id="button_go_to_formation">
+                <property name="label" translatable="yes">Go To Formation</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">16</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="button_deploy">
                 <property name="label" translatable="yes">Deploy</property>
                 <property name="visible">True</property>
@@ -461,7 +474,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">16</property>
+                <property name="position">17</property>
               </packing>
             </child>
           </object>

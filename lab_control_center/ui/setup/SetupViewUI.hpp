@@ -114,6 +114,8 @@ private:
     Gtk::Button* button_deploy = nullptr;
     //! Button to stop simulation
     Gtk::Button* button_kill = nullptr;
+    //! Button to go to formation
+    Gtk::Button* button_go_to_formation = nullptr;
 
     //! Box that shows vehicle toggles - these can be used to simulate vehicles, stop simulation or reboot real vehicles
     Gtk::FlowBox* vehicle_flowbox = nullptr;
@@ -296,6 +298,9 @@ private:
     std::mutex vehicle_to_hlc_mutex;
     //! For vehicle<->HLC mapping - which HLC (ID, uint8_t) simulates the script for which vehicle (ID, uint32_t)
     std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
+
+    //! Calls the function to go to formation
+    void go_to_formation();
 
 public:
 
