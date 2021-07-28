@@ -24,22 +24,28 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
 # Go to formation // Matlab libraries
-add_executable(go_to_formation 
-               src/main.cpp 
-               src/mgen_init.cpp
-               src/go_to_formation.cpp
+add_executable(
+    go_to_formation 
+    src/main.cpp 
+    src/mgen_init.cpp
+    src/go_to_formation.cpp
 )
-target_include_directories(go_to_formation PRIVATE 
-                           ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
-                           /usr/local/MATLAB/R2020a/extern/include/
-                           /usr/local/MATLAB/R2020a/extern/include/shared_autonomous
-                           /usr/local/MATLAB/R2020a/extern/include/shared_robotics 
+target_include_directories(
+    go_to_formation PRIVATE 
+    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory
+    /usr/local/MATLAB/R2020a/extern/include/
+    /usr/local/MATLAB/R2020a/extern/include/shared_autonomous
+    /usr/local/MATLAB/R2020a/extern/include/shared_robotics 
 )
 
-target_link_libraries(go_to_formation ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a)
-target_link_libraries(go_to_formation /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so 
-                                      /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so 
-                                      /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so
+target_link_libraries(
+    go_to_formation
+    ${CMAKE_SOURCE_DIR}/../matlab/Coder/codegen/lib/planTrajectory/planTrajectory.a
+)
+target_link_libraries(
+    go_to_formation
+    /usr/local/MATLAB/R2020a/bin/glnxa64/libmwautonomouscodegen.so
+    /usr/local/MATLAB/R2020a/bin/glnxa64/libmwmorphop_binary_tbb.so
+    /usr/local/MATLAB/R2020a/sys/os/glnxa64/libiomp5.so
 )                                                                          
 target_link_libraries(go_to_formation cpm)
-

@@ -68,7 +68,15 @@ using std::vector;
 
 int go_to_formation(int argc, char *argv[]);
 void set_home_poses(int n_vehicles,  vector<mgen::Pose2D> &home_poses);
-void set_goal_poses_from_argc(vector<mgen::Pose2D> &poses, vector<double> &x, vector<double> &y, vector<double> &yaw);
-void sample_to_matlab_type(std::map<uint8_t, VehicleObservation> &sample, 
-                          mgen::struct0_T (&vehiclePoses)[256], std::vector<uint8_t> &vehicle_ids);
+void set_goal_poses_from_argc(
+    vector<mgen::Pose2D> &poses,
+    vector<double> &x,
+    vector<double> &y,
+    vector<double> &yaw
+);
+void sample_to_matlab_type(
+    std::map<uint8_t, VehicleObservation> &sample,
+    mgen::struct0_T (&vehiclePoses)[256],
+    std::vector<uint8_t> &vehicle_ids
+);
 int find_veh_index(vector<uint8_t> &vehicle_ids, int ego_vehicle_id);
