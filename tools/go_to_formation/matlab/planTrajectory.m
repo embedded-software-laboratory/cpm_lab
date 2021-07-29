@@ -9,13 +9,29 @@ function [trajectory_points, isPathValid] = planTrajectory(vehicleIdList, vehicl
     end  
                 
     costmap = setCostmap(vehiclePoses, egoVehicleId);
-    [refPath, isPathValid] = PlanRRTPath(vehiclePoses(egoVehicleIndex).pose, goalPose, costmap);
+    startPose = vehiclePoses(egoVehicleIndex).pose;
+    %% Path Planning
+    startPoseVec = [startPose.x, startPose.y, startPose.yaw];
+    goalPoseVec = [goalPose.x, goalPose.y, goalPose.yaw];
+    a = goalPose.yaw;
+    helpPoseVec = goalPoseVec - 0.6*[cosd(a) sind(a) 0];
 
-    if isPathValid
-       trajectory_points = pathToTrajectory(refPath, speed);
-    else
+    planner = pathPlannerRRT(costmap,...
+        'GoalTolerance', [0.01 0.01 3],...
+        'MinTurningRadius', 0.5,...
+        'ConnectionMethod', 'Dubins', ...
+        'MaxIterations', 2000 ...
+    );
+
+    try % not supported by code generation
+        refPath1 = plan(planner,startPoseVec,helpPoseVec);
+        refPath2 = plan(planner,helpPoseVec,goalPoseVec);
+        refPath = [refPath1, refPath2]; % not supported by code generation
+        isPathValid = true;
+        trajectory_points = pathToTrajectory(refPath, speed);
+    catch
+        isPathValid = false;
         TrajectoryPoint = struct('t', uint64(0), 'px', 0, 'py', 0, 'vx', 0, 'vy', 0);
         trajectory_points = TrajectoryPoint;
     end
-
 end

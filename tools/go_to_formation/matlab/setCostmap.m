@@ -29,14 +29,8 @@ function [costmap] = setCostmap(vehiclePoses, egoVehicleId)
         % All vehicles not actually deployed are ignored.
         % Passing of all theoretically deployable vehicles necessary for
         % automatic code generation from matlab.
-        if vehiclePoses(nVehicles).pose.x == 0 &&...
-           vehiclePoses(nVehicles).pose.y == 0 &&...
-           vehiclePoses(nVehicles).pose.yaw == 0
-
-           isVehicleDeployed = false;
-        end
-
-        if vehiclePoses(nVehicles).vehicle_id == egoVehicleId || ~isVehicleDeployed
+        if (vehiclePoses(nVehicles).vehicle_id == egoVehicleId || ...
+            vehiclePoses(nVehicles).vehicle_id == 0)
             continue
         end
 

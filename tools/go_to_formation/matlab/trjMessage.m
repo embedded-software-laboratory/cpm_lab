@@ -24,12 +24,12 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now, dt_mw_nanos)
+function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now, dt_valid_after)
 
     trjMsg = VehicleCommandTrajectory;
     trjMsg.vehicle_id = uint8(vehicle_id);
     trjMsg.header.create_stamp.nanoseconds = t_now;
-    trjMsg.header.valid_after_stamp.nanoseconds = t_now + dt_mw_nanos;
+    trjMsg.header.valid_after_stamp.nanoseconds = t_now + dt_valid_after;
  
     for iPt = 1:length(trajectory_points)
         t = t_start + trajectory_points(iPt).t;
