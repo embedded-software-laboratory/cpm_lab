@@ -72,7 +72,7 @@ function main_go_to_formation(varargin)
     % Set reader properties
     reader_vehicleStateList.WaitSet = true;
     reader_vehicleStateList.WaitSetTimeout = 5;
-    speed = 0.6; % [m/s]
+    speed = 1; % [m/s]
     iPose = 1;
     vehicles_to_move = [vehicle_ids{:}];
     is_trajectory_planned = false;
@@ -88,7 +88,7 @@ function main_go_to_formation(varargin)
 
         % Read vehicle states
         sample = VehicleStateList; % Assign size, s.t. take() will only read one sample
-        [sample, ~, ~, ~] = reader_vehicleStateList.take();
+        [sample, ~, ~, ~] = reader_vehicleStateList.take(sample);
         fprintf('Received sample at time: %d\n',sample.t_now);
         
         %% If no trajectory planned, plan a new one
@@ -153,7 +153,7 @@ function main_go_to_formation(varargin)
             end
             if sample.t_now > t_end
                 % trajectory is finished
-                iPose = iPose + 2;
+                iPose = iPose + 1;
                 is_trajectory_planned = false;
             else
                 % send currently planned trajectory

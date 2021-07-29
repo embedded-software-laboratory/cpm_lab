@@ -11,10 +11,18 @@ Protoyp Go to formation in LCC integriert
 	- go_to_formation als Funktion zu Deploy class in lab_control_center/ui/setup hinzufügen
 	- Auruf go_to_formation in setupViewUi deploy_applications() einbauen
 
-Abweichung Fahrzeuge vom letzten Trajektorienpunkt
+- [x] Abweichung Fahrzeuge vom letzten Trajektorienpunkt
 	- Verdopplung Zeitinvall zwischen vorletztem und letztem Trajektorienpunkt führt nicht zu langsameren Fahrzeug, sondern schleifenförmigen Spline
 	- Setzen der Geschwindigkeiten auf (0,0) im letzten Punkt hilft nicht
 	- sieht bei Beobachtung des Abfahrens der Trajektorien in Simulation für mich eher nach einem Timing-Problem aus
+    - Anpassungen zur Loesung:
+        - Stuetzpunkt eingefuehrt, sodass Fahrzeuge kurze Strecke geradeaus fahren vor Ziel
+        - Abstand zwischen Trajektorienpunkten von 0.5 m auf 0.1 m reduziert
+        - Abbremsen mit konstanter Beschleunigung eingefuehrt
+
+code generation for c++ code needs either
+- compiled libraries from packngo, either downloadable or in git repo or
+- MATLAB installed with autonomous driving toolbox
 
 Generische CMakeLists.txt
 	- Soll Builden der go to formation Funktion in Abhängigkeit der generierten Bibliothek aus Matlab im Labor und bei verschiedenen Usern mit möglichst wenig händischen Anpassungen ermöglichen

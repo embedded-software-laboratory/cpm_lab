@@ -13,7 +13,7 @@ function homePoses = homePosesFixed()
     maxNoVehicles = 20;
     vehicleRows = 3;
     vehicleColumns = ceil(maxNoVehicles/vehicleRows);
-    clearance = vehicleHalfWidth; % safety distance vehicle to vehicle and vehicle to map edge [m]
+    clearance = 2*vehicleHalfWidth; % safety distance vehicle to vehicle and vehicle to map edge [m]
 
 
     for i = 1:length(homePoses)
