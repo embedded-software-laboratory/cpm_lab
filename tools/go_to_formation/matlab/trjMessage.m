@@ -24,26 +24,19 @@
 % 
 % Author: i11 - Embedded Software, RWTH Aachen University
 
-function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now)
+function trjMsg = trjMessage(trajectory_points, vehicle_id, t_start, t_now, dt_mw_nanos)
 
-    set(0,'DefaultFigureVisible','off');
-    %TODO: if t_start == t_now no new message has to be created.
-    
-    trajectory = VehicleCommandTrajectory;
-    trajectory.vehicle_id = uint8(vehicle_id);
-    trajectory.header.create_stamp.nanoseconds = t_now;
-    trajectory.header.valid_after_stamp.nanoseconds = t_now - 40000000;
+    trjMsg = VehicleCommandTrajectory;
+    trjMsg.vehicle_id = uint8(vehicle_id);
+    trjMsg.header.create_stamp.nanoseconds = t_now;
+    trjMsg.header.valid_after_stamp.nanoseconds = t_now + dt_mw_nanos;
  
-    for nPoints = 1:length(trajectory_points)
-        time = t_start + trajectory_points(nPoints).t;
+    for iPt = 1:length(trajectory_points)
+        t = t_start + trajectory_points(iPt).t;
         stamp = TimeStamp;
-        stamp.nanoseconds = uint64(time);
-        trajectory_points(nPoints).t = stamp;
-
+        stamp.nanoseconds = uint64(t);
+        trajectory_points(iPt).t = stamp;
     end
     
-    trajectory.trajectory_points = trajectory_points;
-    
-    % Return msg
-    trjMsg = trajectory;
+    trjMsg.trajectory_points = trajectory_points;
 end

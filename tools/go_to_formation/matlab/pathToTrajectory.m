@@ -41,7 +41,7 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
 
     %% Set trajectory points from transition and intermitting poses
     %TODO: smoothing of start and stop process.
-     trajectory_points = repmat(TrajectoryPoint, length(allSegmentLengths)+1, 1);
+    trajectory_points = repmat(TrajectoryPoint, length(allSegmentLengths)+1, 1);
     
     %First trajectory point 
     trajectory_points(1).px = intermittingPoses(1, 1);
