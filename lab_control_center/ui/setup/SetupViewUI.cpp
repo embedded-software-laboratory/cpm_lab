@@ -132,7 +132,7 @@ SetupViewUI::SetupViewUI
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
-    button_go_to_formation->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::go_to_formation));
+    button_go_to_formation->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::run_go_to_formation));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
@@ -623,8 +623,11 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
     return { simulation_running.load(), vehicle_to_hlc_map };
 }
 
-void SetupViewUI::go_to_formation() {
-    std::cout << "Going to formation..." << std::endl;
+void SetupViewUI::run_go_to_formation() {
+    std::vector<uint8_t> vehicle_ids;
+    std::vector<Pose2D> p_start;
+    std::vector<Pose2D> p_goal;
+    go_to_formation(vehicle_ids, p_start, p_goal);
     return;
 }
 void SetupViewUI::kill_deployed_applications() {

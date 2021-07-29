@@ -42,6 +42,7 @@
 #include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
 #include "ui/setup/VehicleToggle.hpp"
+#include "src/goToFormation.hpp"
 
 #ifndef SIMULATION
     #include "labcam/LabCamIface.hpp"
@@ -300,7 +301,7 @@ private:
     std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
 
     //! Calls the function to go to formation
-    void go_to_formation();
+    void run_go_to_formation();
 
 public:
 
