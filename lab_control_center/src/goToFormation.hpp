@@ -31,8 +31,7 @@
 #include "Pose2D.hpp"
 
 
-bool go_to_formation(
-      std::vector<uint8_t> vehicle_ids
-    , std::vector<Pose2D> p_start
-    , std::vector<Pose2D> p_end
+void go_to_formation(
+    std::vector<uint8_t> vehicle_ids
+    ,std::vector<Pose2D> p_goal
 );

@@ -624,10 +624,9 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 }
 
 void SetupViewUI::run_go_to_formation() {
-    std::vector<uint8_t> vehicle_ids;
-    std::vector<Pose2D> p_start;
+    std::vector<uint8_t> vehicle_ids {1,9};
     std::vector<Pose2D> p_goal;
-    go_to_formation(vehicle_ids, p_start, p_goal);
+    go_to_formation(vehicle_ids, p_goal);
     return;
 }
 void SetupViewUI::kill_deployed_applications() {

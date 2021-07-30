@@ -25,16 +25,44 @@
 // Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "goToFormation.hpp"
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "MatlabEngine.hpp"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#include "MatlabDataArray.hpp"
+#pragma GCC diagnostic pop
 #include <iostream>
 
-bool go_to_formation(
-      std::vector<uint8_t> vehicle_ids
-    , std::vector<Pose2D> p_start
-    , std::vector<Pose2D> p_end
+using namespace matlab::engine;
+
+void go_to_formation(
+    std::vector<uint8_t> vehicle_ids
+    ,std::vector<Pose2D> p_goal
 )
 {
     std::cout << "Going to formation ..." << std::endl;
-    bool result = true;
-    return result;
+    
+
+    // dummy inputs to test
+    std::vector<double> goal_poses {1,2,90, 2,2,90};
+
+    // Start MATLAB engine synchronously
+    std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
+
+    // Create MATLAB data array factory
+    matlab::data::ArrayFactory factory;
+
+    // Create args vector containing 2 arrays
+    std::vector<matlab::data::Array> args({
+        factory.createArray<uint8_t>({1, vehicle_ids.size()}, vehicle_ids.data(), vehicle_ids.data()+vehicle_ids.size()),
+        factory.createArray<double>({3, vehicle_ids.size()}, goal_poses.data(), goal_poses.data()+goal_poses.size())
+    });
+    // Call MATLAB function
+    // TODO use absolute_executable_path
+    matlabPtr->eval(u"addpath('../tools/go_to_formation/matlab/');");
+    FutureResult<std::vector<matlab::data::Array>> future = matlabPtr->fevalAsync(u"go_to_formation", 0, args);
+    // matlabPtr->feval(u"go_to_formation", 0, args);
+    // std::vector<matlab::data::Array> results = future.get();
+
+    return;
 }

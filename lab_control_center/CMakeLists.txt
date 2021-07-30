@@ -29,6 +29,12 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 find_package(PkgConfig)
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
+
+# MATLAB
+# TODO make optional, pass compiler option s.t. go_to_formation changes behavior
+find_package(Matlab REQUIRED)
+message("-- found MATLAB in ${Matlab_ROOT_DIR}")
+
 # CPM lib
 include_directories(SYSTEM ../cpm_lib/include/)
 include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
@@ -224,6 +230,15 @@ else()
 endif()
 
 target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})
+target_include_directories(
+    lab_control_center PRIVATE
+    ${Matlab_ROOT_DIR}/extern/include/
+)
+target_link_libraries(
+    lab_control_center
+    ${Matlab_ROOT_DIR}/extern/bin/glnxa64/libMatlabDataArray.so
+    ${Matlab_ROOT_DIR}/extern/bin/glnxa64/libMatlabEngine.so
+)
 target_compile_options(lab_control_center PUBLIC ${GTKMM_CFLAGS_OTHER})
 
 add_executable(TimerTestSimulated
