@@ -145,8 +145,8 @@ add_executable(lab_control_center
     src/HLCReadyAggregator.hpp
     src/VisualizationCommandsAggregator.cpp
     src/VisualizationCommandsAggregator.hpp
-    src/goToFormation.cpp
-    src/goToFormation.hpp
+    src/GoToPlanner.cpp
+    src/GoToPlanner.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
 

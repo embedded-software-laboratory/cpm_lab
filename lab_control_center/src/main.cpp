@@ -282,6 +282,8 @@ int main(int argc, char *argv[])
     unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 
+    auto goToPlanner = make_shared<GoToPlanner>(std::bind(commonroad_scenario.get_start_poses()));
+
     //Create deploy class
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
@@ -325,6 +327,7 @@ int main(int argc, char *argv[])
     //As it is transient local, we need to reset the writer before each simulation start
     auto writer_planning_problems = std::make_shared<cpm::Writer<CommonroadDDSGoalState>>("commonroad_dds_goal_states", true, true, true);
 
+    // TODO pass go to formation function
     setupViewUi = make_shared<SetupViewUI>(
         deploy_functions,
         vehicleAutomatedControl, 

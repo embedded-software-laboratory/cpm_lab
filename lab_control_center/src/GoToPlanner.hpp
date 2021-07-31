@@ -31,7 +31,19 @@
 #include "Pose2D.hpp"
 
 
-void go_to_formation(
-    std::vector<uint8_t> vehicle_ids
-    ,std::vector<Pose2D> p_goal
-);
+
+/**
+ * \class GoToPlanner
+ * \brief Class to control vehicles to poses 
+ * \ingroup lcc
+ */
+class GoToPlanner {
+public:
+    GoToPlanner();
+    GoToPlanner(std::function<std::vector<double>()> get_goal_poses);
+
+    void go_to_start_poses(std::vector<uint8_t> vehicle_ids);
+
+private:
+    std::function<std::vector<double>()> get_goal_poses;
+};

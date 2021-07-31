@@ -42,7 +42,7 @@
 #include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
 #include "ui/setup/VehicleToggle.hpp"
-#include "src/goToFormation.hpp"
+#include "src/GoToPlanner.hpp"
 
 #ifndef SIMULATION
     #include "labcam/LabCamIface.hpp"

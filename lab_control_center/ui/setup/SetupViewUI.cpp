@@ -624,11 +624,10 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 }
 
 void SetupViewUI::run_go_to_formation() {
-    std::vector<uint8_t> vehicle_ids {1,9};
-    std::vector<Pose2D> p_goal;
-    go_to_formation(vehicle_ids, p_goal);
+    go_to_formation(get_vehicle_ids_active());
     return;
 }
+
 void SetupViewUI::kill_deployed_applications() {
     //Make sure that this button cannot be "spammed"
     std::unique_lock<std::mutex> lock(kill_button_mutex);

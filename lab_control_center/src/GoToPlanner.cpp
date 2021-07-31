@@ -24,27 +24,34 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include "goToFormation.hpp"
+#include "GoToPlanner.hpp"
+
+#include <iostream>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "MatlabEngine.hpp"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "MatlabDataArray.hpp"
 #pragma GCC diagnostic pop
-#include <iostream>
 
 using namespace matlab::engine;
 
-void go_to_formation(
-    std::vector<uint8_t> vehicle_ids
-    ,std::vector<Pose2D> p_goal
-)
+
+GoToPlanner::GoToPlanner(){}
+
+GoToPlanner::GoToPlanner(std::function<std::vector<double>()> get_goal_poses)
+: get_goal_poses(get_goal_poses)
+{
+}
+
+void GoToPlanner::go_to_start_poses(std::vector<uint8_t> vehicle_ids)
 {
     std::cout << "Going to formation ..." << std::endl;
     
 
     // dummy inputs to test
-    std::vector<double> goal_poses {1,2,90, 2,2,90};
+    std::vector<double> goal_poses = get_goal_poses();
 
     // Start MATLAB engine synchronously
     std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
