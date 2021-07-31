@@ -45,7 +45,7 @@ GoToPlanner::GoToPlanner(std::function<std::vector<double>()> get_goal_poses)
 {
 }
 
-void GoToPlanner::go_to_start_poses(std::vector<uint8_t> vehicle_ids)
+void GoToPlanner::go_to_start_poses(std::vector<unsigned int> vehicle_ids)
 {
     std::cout << "Going to formation ..." << std::endl;
     
@@ -61,7 +61,7 @@ void GoToPlanner::go_to_start_poses(std::vector<uint8_t> vehicle_ids)
 
     // Create args vector containing 2 arrays
     std::vector<matlab::data::Array> args({
-        factory.createArray<uint8_t>({1, vehicle_ids.size()}, vehicle_ids.data(), vehicle_ids.data()+vehicle_ids.size()),
+        factory.createArray<unsigned int>({1, vehicle_ids.size()}, vehicle_ids.data(), vehicle_ids.data()+vehicle_ids.size()),
         factory.createArray<double>({3, vehicle_ids.size()}, goal_poses.data(), goal_poses.data()+goal_poses.size())
     });
     // Call MATLAB function

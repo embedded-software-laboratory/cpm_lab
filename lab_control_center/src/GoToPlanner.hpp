@@ -42,7 +42,7 @@ public:
     GoToPlanner();
     GoToPlanner(std::function<std::vector<double>()> get_goal_poses);
 
-    void go_to_start_poses(std::vector<uint8_t> vehicle_ids);
+    void go_to_start_poses(std::vector<unsigned int> vehicle_ids);
 
 private:
     std::function<std::vector<double>()> get_goal_poses;
