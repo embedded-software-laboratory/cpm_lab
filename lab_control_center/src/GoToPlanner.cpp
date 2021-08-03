@@ -30,12 +30,14 @@
 #include <cmath>    // M_PI
 #include <iostream>
 
+#ifdef MATLAB
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "MatlabEngine.hpp"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "MatlabDataArray.hpp"
 #pragma GCC diagnostic pop
+#endif
 
 using namespace matlab::engine;
 
@@ -64,14 +66,14 @@ void GoToPlanner::go_to_poses(
     std::vector<Pose2D> goal_poses
 )
 {
-    std::cout << "Going to poses ..." << std::endl;
-    
+#ifdef MATLAB
     if (planner_thread.joinable())
     {
         // end running thread
         planner_thread.join();
     }
 
+    std::cout << "Going to poses ..." << std::endl;
     planner_thread = std::thread([=]()
     {
 
@@ -189,4 +191,9 @@ void GoToPlanner::go_to_poses(
         std::cout   << "Going to poses done." << std::endl;
     }  // thread lambda function
     ); // thread call
+#endif
+#ifndef MATLAB
+    std::cerr   << "Needs MATLAB installed with Automated Driving Toolbox."
+                << std::endl;
+#endif
 }
