@@ -1,10 +1,8 @@
 function [trajectory_points] = pathToTrajectory (refPath, speed)
-
+    % trajectory_points: 5-by-nTrajPts double
     % refPath has two entries:
     % first one leads to the pose in front of goal pose,
     % second one is straight line to goal pose
-
-    TrajectoryPoint = struct('t', uint64(0), 'px', 0, 'py', 0, 'vx', 0, 'vy', 0); % single trajectory point
 
     %% Calculate path lengths for all poses allPathLenghts
     % interpolate intermitting poses for more exact translation into spline.
@@ -57,12 +55,13 @@ function [trajectory_points] = pathToTrajectory (refPath, speed)
     timestamps = uint64([0; cumsum(segmentDurations)*1e9]);
 
     %% Fill trajectory points
-    trajectory_points = repmat(TrajectoryPoint, numel(timestamps), 1);
-    for iPt = 1:numel(timestamps)
-        trajectory_points(iPt).px = allPoses(iPt, 1);
-        trajectory_points(iPt).py = allPoses(iPt, 2);
-        trajectory_points(iPt).vx = vx(iPt);
-        trajectory_points(iPt).vy = vy(iPt);
-        trajectory_points(iPt).t  = timestamps(iPt); %[ns]
+    nTrajPts = numel(timestamps);
+    trajectory_points = zeros(5,nTrajPts);
+    for iPt = 1:nTrajPts
+        trajectory_points(1,iPt) = allPoses(iPt, 1);
+        trajectory_points(2,iPt) = allPoses(iPt, 2);
+        trajectory_points(3,iPt) = vx(iPt);
+        trajectory_points(4,iPt) = vy(iPt);
+        trajectory_points(5,iPt) = timestamps(iPt); %[ns]
     end
 end

@@ -1,20 +1,15 @@
-function [trajectory_points, isPathValid] = planTrajectory(vehicleIdList, vehiclePoses, goalPose, egoVehicleId, speed)
-    
-    egoVehicleIndex = 0;
-    for nVehicles = 1:length(vehicleIdList)
-        if vehiclePoses(nVehicles).vehicle_id == egoVehicleId
-            egoVehicleIndex = nVehicles;
-            break
-        end
-    end  
-                
-    costmap = setCostmap(vehiclePoses, egoVehicleId);
-    startPose = vehiclePoses(egoVehicleIndex).pose;
+function [trajectory_points, isPathValid] = planTrajectory(vehiclePoses, iEgoVeh, goalPose, speed)
+    % vehiclePoses: 3-by-nVeh double
+    % iEgoVeh: 1-by-1 uint, index of vehicle to plan trajectory
+    % goalPose: 3-by-1 double
+    % speed: 1-by-1 double
+    % trajectory_points: 5-by-nTrajectoryPoints double
+    % isPathValid: bool
+
+    costmap = setCostmap(vehiclePoses, iEgoVeh);
     %% Path Planning
-    startPoseVec = [startPose.x, startPose.y, startPose.yaw];
-    goalPoseVec = [goalPose.x, goalPose.y, goalPose.yaw];
-    a = goalPose.yaw;
-    helpPoseVec = goalPoseVec - 0.6*[cosd(a) sind(a) 0];
+    startPose = vehiclePoses(:,iEgoVeh);
+    helpPose = goalPose - 0.6*[cosd(goalPose(3)); sind(goalPose(3)); 0];
 
     planner = pathPlannerRRT(costmap,...
         'GoalTolerance', [0.01 0.01 3],...
@@ -22,16 +17,15 @@ function [trajectory_points, isPathValid] = planTrajectory(vehicleIdList, vehicl
         'ConnectionMethod', 'Dubins', ...
         'MaxIterations', 2000 ...
     );
-
-    try % not supported by code generation
-        refPath1 = plan(planner,startPoseVec,helpPoseVec);
-        refPath2 = plan(planner,helpPoseVec,goalPoseVec);
-        refPath = [refPath1, refPath2]; % not supported by code generation
+    
+    try
+        refPath1 = plan(planner,startPose',helpPose');
+        refPath2 = plan(planner,helpPose',goalPose');
+        refPath = [refPath1, refPath2]; 
         isPathValid = true;
         trajectory_points = pathToTrajectory(refPath, speed);
     catch
         isPathValid = false;
-        TrajectoryPoint = struct('t', uint64(0), 'px', 0, 'py', 0, 'vx', 0, 'vy', 0);
-        trajectory_points = TrajectoryPoint;
+        trajectory_points = [];
     end
 end
