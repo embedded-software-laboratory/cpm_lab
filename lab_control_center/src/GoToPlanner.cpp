@@ -37,9 +37,9 @@
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "MatlabDataArray.hpp"
 #pragma GCC diagnostic pop
+using namespace matlab::engine;
 #endif
 
-using namespace matlab::engine;
 
 GoToPlanner::GoToPlanner(
     std::function<std::vector<Pose2D>()> get_goal_poses
