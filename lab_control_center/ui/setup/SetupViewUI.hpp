@@ -116,7 +116,7 @@ private:
     //! Button to stop simulation
     Gtk::Button* button_kill = nullptr;
     //! Button to go to formation
-    Gtk::Button* button_go_to_formation = nullptr;
+    Gtk::Button* button_go_to_start_poses = nullptr;
 
     //! Box that shows vehicle toggles - these can be used to simulate vehicles, stop simulation or reboot real vehicles
     Gtk::FlowBox* vehicle_flowbox = nullptr;

@@ -117,7 +117,6 @@ Script Path</property>
               <object class="GtkEntry" id="script_path">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="text" translatable="yes"></property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -439,8 +438,8 @@ Lab Camera
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button_kill">
-                <property name="label" translatable="yes">Kill</property>
+              <object class="GtkButton" id="button_go_to_start_poses">
+                <property name="label" translatable="yes">Go To Start Poses</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -452,8 +451,8 @@ Lab Camera
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button_go_to_formation">
-                <property name="label" translatable="yes">Go To Formation</property>
+              <object class="GtkButton" id="button_kill">
+                <property name="label" translatable="yes">Kill</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
