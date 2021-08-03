@@ -37,7 +37,6 @@
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #include "MatlabDataArray.hpp"
 #pragma GCC diagnostic pop
-using namespace matlab::engine;
 #endif
 
 
@@ -90,7 +89,7 @@ void GoToPlanner::go_to_poses(
     {
 
         // Start MATLAB engine synchronously
-        std::unique_ptr<MATLABEngine> matlabPtr = connectMATLAB();
+        std::unique_ptr<matlab::engine::MATLABEngine> matlabPtr = matlab::engine::connectMATLAB();
 
         // Create MATLAB data array factory
         matlab::data::ArrayFactory factory;
