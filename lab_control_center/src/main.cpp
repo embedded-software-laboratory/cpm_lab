@@ -285,7 +285,8 @@ int main(int argc, char *argv[])
     auto goToPlanner = make_shared<GoToPlanner>(
         std::bind(&CommonRoadScenario::get_start_poses, commonroad_scenario),
         [=](){return timeSeriesAggregator->get_vehicle_data();},
-        trajectoryCommand
+        trajectoryCommand,
+        absolute_executable_path
     );
 
     //Create deploy class

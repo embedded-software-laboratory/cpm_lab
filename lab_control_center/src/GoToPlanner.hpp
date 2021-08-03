@@ -45,6 +45,7 @@ public:
         std::function<std::vector<Pose2D>()> get_goal_poses
         ,std::function<VehicleData()> get_vehicle_data
         ,std::shared_ptr<TrajectoryCommand> trajectory_command
+        ,std::string absolute_executable_path
     );
 
     void go_to_start_poses();
@@ -55,4 +56,5 @@ private:
     std::function<VehicleData()> get_vehicle_data;
     std::shared_ptr<TrajectoryCommand> trajectory_command;
     std::thread planner_thread;
+    std::string matlab_functions_path;
 };

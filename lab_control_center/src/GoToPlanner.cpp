@@ -45,15 +45,27 @@ GoToPlanner::GoToPlanner(
     std::function<std::vector<Pose2D>()> get_goal_poses
     ,std::function<VehicleData()> get_vehicle_data
     ,std::shared_ptr<TrajectoryCommand> trajectory_command
+    ,std::string absolute_executable_path
 )
 :get_goal_poses(get_goal_poses)
 ,get_vehicle_data(get_vehicle_data)
 ,trajectory_command(trajectory_command)
 {
+    //Executable path: .../software/lab_control_center/build/lab_control_center
+    //-> Remove everything up to the third-last slash
+    matlab_functions_path = absolute_executable_path;
+    for (int i = 0; i < 3; ++i)
+    {
+        auto last_slash = matlab_functions_path.find_last_of('/');
+        if (last_slash != std::string::npos)
+        {
+            matlab_functions_path = matlab_functions_path.substr(0, last_slash);
+        }
+    }
+    matlab_functions_path.append("/tools/go_to_formation/");
 }
 
 
-// TODO remove vehicle_ids, get from timeseriesaggregator
 void GoToPlanner::go_to_start_poses()
 {
     // get start poses from CommonRoadScenario
@@ -83,9 +95,11 @@ void GoToPlanner::go_to_poses(
         // Create MATLAB data array factory
         matlab::data::ArrayFactory factory;
 
-        // TODO use absolute_executable_path
         // add matlab functions path
-        matlabPtr->eval(u"addpath('../tools/go_to_formation/');");
+        matlab::data::Array mfunpath(
+            factory.createCharArray(matlab_functions_path)
+        );
+        matlabPtr->feval(u"addpath", mfunpath);
 
         // locate all vehicles
         std::vector<double> vehicle_poses; // [m] [m] [deg]!
@@ -106,22 +120,17 @@ void GoToPlanner::go_to_poses(
             vehicle_ids.push_back(vehicle_id);
         }
         // Plan path for every vehicle
+        std::size_t nVeh_to_plan = std::min(vehicle_data.size(), goal_poses.size());
         std::size_t nVeh = vehicle_data.size();
-        // TODO go to poses that are available
-        if (goal_poses.size() != nVeh)
-        {
-            std::cerr   << "Number of goal poses " << goal_poses.size()
-                        << "!= number of vehicles " << nVeh << std::endl;
-            return;
-        }
-        std::vector<int> veh_at_goal(nVeh, 0);
+
+        std::vector<int> veh_at_goal(nVeh_to_plan, 0);
         bool is_vehicle_moveable = true;
         uint64_t planning_delay = 1000000000ull;
         uint64_t last_traj_duration = 0ull;
         while ( is_vehicle_moveable )
         {
             is_vehicle_moveable = false;
-            for (std::size_t iVeh = 0; iVeh < nVeh; ++iVeh)
+            for (std::size_t iVeh = 0; iVeh < nVeh_to_plan; ++iVeh)
             {
                 if (veh_at_goal[iVeh]) continue;
 
