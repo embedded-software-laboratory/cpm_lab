@@ -83,7 +83,7 @@ void GoToPlanner::go_to_poses(
 
         // TODO use absolute_executable_path
         // add matlab functions path
-        matlabPtr->eval(u"addpath('../tools/go_to_formation/matlab/');");
+        matlabPtr->eval(u"addpath('../tools/go_to_formation/');");
 
         // locate all vehicles
         std::vector<double> vehicle_poses; // [m] [m] [deg]!
