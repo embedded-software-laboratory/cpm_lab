@@ -282,7 +282,11 @@ int main(int argc, char *argv[])
     unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 
-    auto goToPlanner = make_shared<GoToPlanner>(std::bind(&CommonRoadScenario::get_start_poses, commonroad_scenario));
+    auto goToPlanner = make_shared<GoToPlanner>(
+        std::bind(&CommonRoadScenario::get_start_poses, commonroad_scenario),
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
+        trajectoryCommand
+    );
 
     //Create deploy class
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(

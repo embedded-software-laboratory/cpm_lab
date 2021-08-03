@@ -77,11 +77,20 @@ public:
     ~TrajectoryCommand();
 
     /**
-     * \brief Translate a path drawn in the LCC's MapView for a vehicle to a trajectory for the same vehicle and store it in vehicle_trajectories
+     * \brief Translate a path for a vehicle to a trajectory for the same vehicle and store it in vehicle_trajectories
      * \param vehicle_id The vehicle to create the trajectory points for
      * \param path The path drawn for the vehicle in the LCC's MapView
      */
     void set_path(uint8_t vehicle_id, std::vector<Pose2D> path);
+    
+    /**
+     * \brief Translate a path for a vehicle to a trajectory for the same vehicle and store it in vehicle_trajectories
+     * \param vehicle_id The vehicle to create the trajectory points for
+     * \param path A path consisting of poses
+     * \param delay_ns A delay in nanoseconds before the trajectory messsages are sent
+     * \return The duration of the trajectory in nanoseconds
+     */
+    uint64_t set_path(uint8_t vehicle_id, std::vector<Pose2D> path, uint64_t delay_ns);
 
     /**
      * \brief Erases all created vehicle trajectories in vehicle_trajectories for the given vehicle.

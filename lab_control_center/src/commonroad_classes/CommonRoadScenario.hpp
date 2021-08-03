@@ -463,9 +463,9 @@ public:
 
     /**
      * \brief Get start poses of all planning problems of the currently loaded scenario
-     * \return Vector of (x,y,orientation) per vehicle
+     * \return Vector of Pose2D (x,y,orientation) per vehicle
      */
-    std::vector<double> get_start_poses();
+    std::vector<Pose2D> get_start_poses();
 
     /**
      * \brief Get all lanelet IDs of the currently loaded scenario

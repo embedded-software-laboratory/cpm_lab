@@ -626,7 +626,7 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 }
 
 void SetupViewUI::go_to_start_poses() {
-    go_to_planner->go_to_start_poses(get_vehicle_ids_active());
+    go_to_planner->go_to_start_poses();
     return;
 }
 

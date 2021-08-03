@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <memory> // shared_ptr
+#include <thread>
 #include <vector>
 
 #include "Pose2D.hpp"
-
-
+#include "TimeSeriesAggregator.hpp"
+#include "TrajectoryCommand.hpp"
 
 /**
  * \class GoToPlanner
@@ -39,11 +41,18 @@
  */
 class GoToPlanner {
 public:
-    GoToPlanner();
-    GoToPlanner(std::function<std::vector<double>()> get_goal_poses);
+    GoToPlanner(
+        std::function<std::vector<Pose2D>()> get_goal_poses
+        ,std::function<VehicleData()> get_vehicle_data
+        ,std::shared_ptr<TrajectoryCommand> trajectory_command
+    );
 
-    void go_to_start_poses(std::vector<unsigned int> vehicle_ids);
+    void go_to_start_poses();
+    void go_to_poses(std::vector<Pose2D> goal_poses);
 
 private:
-    std::function<std::vector<double>()> get_goal_poses;
+    std::function<std::vector<Pose2D>()> get_goal_poses;
+    std::function<VehicleData()> get_vehicle_data;
+    std::shared_ptr<TrajectoryCommand> trajectory_command;
+    std::thread planner_thread;
 };
