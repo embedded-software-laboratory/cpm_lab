@@ -29,16 +29,9 @@
 % CAVE `matlabParticipant`must be stored for RTI DDS somewhere in the workspace  (so it doesn't get gc'ed)
 function [matlabParticipant, stateReader, trajectoryWriter,...
     pathTrackingWriter, systemTriggerReader, readyStatusWriter,...
-    trigger_stop, directWriter] = init_script(matlab_domain_id, enable_clc)
+    trigger_stop, directWriter] = init_script(matlab_domain_id)
     % Inputs
     %   matlab_domain_id (int):         domain ID to be used for DDS
-    %   enable_clc (bool, optional):    enable/disable clc'ing at start of
-    %                                   script
-    
-    % clc by default or if desired
-    if nargin < 2 || enable_clc
-        clc
-    end
 
     script_directoy = fileparts([mfilename('fullpath') '.m']);
     previous_folder = cd(script_directoy); % Remember folder of calling function
