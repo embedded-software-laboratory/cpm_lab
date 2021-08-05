@@ -125,7 +125,7 @@ void GoToPlanner::go_to_poses(
         std::vector<int> veh_at_goal(nVeh_to_plan, 0);
         bool is_vehicle_moveable = true;
         uint64_t planning_delay = 1000000000ull;
-        uint64_t last_traj_duration = 0ull;
+        uint64_t total_trajectory_duration = 0ull;
         while ( is_vehicle_moveable )
         {
             is_vehicle_moveable = false;
@@ -182,9 +182,9 @@ void GoToPlanner::go_to_poses(
                 uint64_t new_traj_duration = trajectory_command->set_path(
                     vehicle_ids[iVeh],
                     path_pts,
-                    std::max<uint64_t>(last_traj_duration, planning_delay)
+                    std::max<uint64_t>(total_trajectory_duration, planning_delay)
                 );
-                last_traj_duration = new_traj_duration;
+                total_trajectory_duration += new_traj_duration;
                 veh_at_goal[iVeh] = 1;
                 
                 // assume vehicle at goal pose
