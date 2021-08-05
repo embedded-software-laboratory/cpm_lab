@@ -262,6 +262,10 @@ void worker_grab_image()
 
         int frameCount = 0;
         uint64_t lastFrameReportTime = cpm::get_time_ns();
+        uint64_t lastFrameTimeStamp = cpm::get_time_ns();
+        uint64_t max_time_between_frames = 0;
+        uint64_t min_time_between_frames = 1000000000;
+        uint64_t max_retrieve_time = 0;
 
 
         // The camera counts time in nanoseconds, from an arbitrary starting point.
@@ -274,7 +278,10 @@ void worker_grab_image()
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
             // RetrieveResult calls the image event handler's OnImageGrabbed method.
+            
+            uint64_t time_before_retrieve = cpm::get_time_ns();
             camera.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
+            max_retrieve_time = max(max_retrieve_time, cpm::get_time_ns() - time_before_retrieve);
 
 
             if(ptrGrabResult->GrabSucceeded())
@@ -310,18 +317,37 @@ void worker_grab_image()
                 frame->image = (cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC1, pImageBuffer)).clone();
                 queue_frames.push(frame);
 
+
+                uint64_t now = cpm::get_time_ns();
+                max_time_between_frames = max(max_time_between_frames, now - lastFrameTimeStamp);
+                min_time_between_frames = min(min_time_between_frames, now - lastFrameTimeStamp);
+                lastFrameTimeStamp = now;
+
                 // report actual FPS
                 if(frameCount % 100 == 0)
                 {
                     uint64_t now = cpm::get_time_ns();
                     double fps = 100.0/((now - lastFrameReportTime)*1e-9);
-                    std::cout << "FPS " << fps << std::endl;
+
+                    if (fps < 49.5){
+                        std::cout << now << " max time between frames: " << max_time_between_frames << " min time between frames: " << min_time_between_frames << " FPS " << fps << " comparably low!" << std::endl;
+                    }
+                    else {
+                        std::cout << now << " max time between frames: " << max_time_between_frames << " min time between frames: " << min_time_between_frames << " FPS " << fps << std::endl;
+                    }
+                    cout << "Max. TTW: " << max_retrieve_time << endl;
+
+                    max_time_between_frames = 0;
+                    min_time_between_frames = 1000000000;
+                    max_retrieve_time = 0;
+
                     lastFrameReportTime = now;
                 }
             }
             else
             {
                 cerr << "Error, image grab failed." << endl;
+                cout << "Error, image grab failed." << endl;
             }
 
         }
