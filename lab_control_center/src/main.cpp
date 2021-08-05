@@ -168,6 +168,23 @@ void exit_handler() {
  */
 int main(int argc, char *argv[])
 {
+    //Do this even before creating the process-spawning child
+    //We need to get the path to the executable, and argv[0] is not
+    //reliable enough for that (and sometimes also only returns a relative path)
+    std::array<char, 128> buffer;
+    std::string absolute_executable_path;
+    ssize_t len = ::readlink("/proc/self/exe", buffer.data(), buffer.size()-1);
+    if (len >= 0) {
+      buffer[len] = '\0';
+      std::string temp(buffer.data());
+      absolute_executable_path = temp;
+    }
+    else
+    {
+        std::cerr << "ERROR: Could not obtain executable path, thus deploying functions would not work. Shutting down..." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     //-----------------------------------------------------------------------------------------------------
     //It is vital to call this function before any threads or objects have been set up that are not
     //required in child processes
@@ -228,14 +245,11 @@ int main(int argc, char *argv[])
     std::string config_file = cpm::cmd_parameter_string("config_file", "parameters.yaml", argc, argv);
 
     //Load commonroad scenario (TODO: Implement load by user, this is just a test load)
-    std::string filepath_2018 = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_2020 = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_parked_vehicles = "./ui/map_view/LabMapCommonRoad.xml";
-    std::string filepath_occupancy = "./ui/map_view/LabMapCommonRoad.xml";
+    std::string filepath_lab_map = "./ui/map_view/LabMapCommonRoad.xml";
     auto commonroad_scenario = std::make_shared<CommonRoadScenario>();
     try
     {
-        commonroad_scenario->load_file(filepath_2018);
+        commonroad_scenario->load_file(filepath_lab_map);
     }
     catch(const std::exception& e)
     {
@@ -267,13 +281,17 @@ int main(int argc, char *argv[])
     auto visualizationCommandsAggregator = make_shared<VisualizationCommandsAggregator>();
     unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
+
     //Create deploy class
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
         cmd_dds_initial_peer, 
         [&](uint8_t id){vehicleAutomatedControl->stop_vehicle(id);},
-        program_executor
+        program_executor,
+        absolute_executable_path
     );
+
+    //UI classes
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         commonroad_scenario,
@@ -366,6 +384,11 @@ int main(int argc, char *argv[])
             rtt_aggregator->restart_measurement();
         },
         [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
+        [&](std::vector<int32_t> active_vehicle_ids){
+            storage->set_parameter_ints("active_vehicle_ids", active_vehicle_ids, "Currently active vehicle ids");
+            paramViewUi->read_storage_data();
+        },
+        absolute_executable_path,
         argc, 
         argv
     );

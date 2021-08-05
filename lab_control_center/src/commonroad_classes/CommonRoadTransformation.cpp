@@ -159,7 +159,7 @@ void CommonRoadTransformation::add_change_to_transform_profile(double time_scale
 {
     std::lock_guard<std::mutex> lock(yaml_profile_mutex);
 
-    //TODO: Rotation values are currently being ignored, because it is harder to story them properly (they are non-linear when applied)
+    //TODO: Rotation values are currently being ignored, because it is harder to store them properly (they are non-linear when applied)
     rotation = 0.0;
 
     if (current_file_name != "")

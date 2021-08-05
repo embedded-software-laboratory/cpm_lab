@@ -64,7 +64,7 @@ class GoalState : public InterfaceTransform, public InterfaceDraw, public Interf
 {
 private:
     //Commonroad data
-    //! Time values should probably be within the range of unsigned doubles; Can only be defined as interval according to spec
+    //! Time values should probably be within the range of unsigned doubles; Can only be defined as interval according to spec. Is defined w.r.t. global time step size
     std::optional<IntervalOrExact> time = std::nullopt;
     //! Position of the goal state. Must not be defined
     std::optional<Position> position = std::nullopt; 
@@ -72,8 +72,8 @@ private:
     std::optional<Interval> orientation = std::nullopt;
     //! Allowed velocity range within the goal state. Must not be defined
     std::optional<Interval> velocity = std::nullopt;
-    //! ID of the planning problem, can be used when drawing the goal state
-    int planning_problem_id;
+    //! ID of the planning problem + unique ID for each goal state within, can be used when drawing the goal state
+    std::string unique_id = "ERR";
     
     //! Transformation scale of transform_coordinate_system is remembered to draw circles / arrows correctly scaled
     double transform_scale = 1.0;
@@ -85,14 +85,12 @@ public:
     /**
      * \brief Constructor, set up a goalstate object from a commonroad xml goalstate node
      * \param node Goal state node to translate
-     * \param planning_problem_id ID of the planning problem, to show the GoalState ID when drawing
      * \param _draw_lanelet_refs Function that, given an lanelet reference and the typical drawing arguments, draws a lanelet reference
      * \param _get_lanelet_center Function to get the center (x, y) of a lanelet, given its ID
      * \param _draw_configuration A shared pointer pointing to the configuration for the scenario that sets which optional parts should be drawn
      */
     GoalState(
         const xmlpp::Node* node,
-        int planning_problem_id,
         std::function<void (int, const DrawingContext&, double, double, double, double)> _draw_lanelet_refs,
         std::function<std::pair<double, double> (int)> _get_lanelet_center,
         std::shared_ptr<CommonroadDrawConfiguration> _draw_configuration
@@ -111,7 +109,7 @@ public:
 
     /**
      * \brief This function is used to change timing-related values, like velocity, where needed
-     * \param time_scale The factor with which time step size was changed (e.g. 0.5 to 1.0 results in a factor of 2.0)
+     * \param time_scale The factor with which time step size was changed (e.g. 1.0->2.0 results in a factor of 0.5)
      */
     void transform_timing(double time_scale) override;
 
@@ -136,6 +134,15 @@ public:
      */
     CommonroadDDSGoalState to_dds_msg(double time_step_size);
 
+    //Setter
+    /**
+     * \brief Set a unique ID for this goal state for drawing, to 
+     * be able to connect planning problem entries in the view with
+     * planning problems shown on the map.
+     * \param _unique_id Unique goal state ID, should be: Planning problem ID + planning problem pos. in vector + goal state pos. in vector
+     */
+    void set_unique_id(std::string _unique_id);
+
     //Getter
     /**
      * \brief Get the point or interval in time within which the goal state must be reached, or nullopt if not set
@@ -153,4 +160,8 @@ public:
      * \brief Get the allowed velocity within the goal state, or nullopt if not set
      */
     const std::optional<Interval>& get_velocity() const;
+    /**
+     * \brief Get the unique ID of the goal state (planning problem ID + unique goal state ID)
+     */
+    const std::string& get_unique_id() const;
 };

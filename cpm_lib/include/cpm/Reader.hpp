@@ -96,8 +96,6 @@ namespace cpm
          */
         void remove_old_msgs(const T& current_newest_sample)
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
             //Delete all messages that are older than the currently newest sample
             //Take a look at the create_stamp only for this
             //We do this because we do not need these messages anymore, and as they take up space
@@ -128,8 +126,6 @@ namespace cpm
          */
         void get_newest_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-
             sample_out = T();
             sample_out.header().create_stamp().nanoseconds(0);
             sample_age_out = t_now;
@@ -194,6 +190,9 @@ namespace cpm
          */
         void get_sample(const uint64_t t_now, T& sample_out, uint64_t& sample_age_out)
         {
+            //Lock mutex to make whole get_sample function thread safe
+            std::lock_guard<std::mutex> lock(m_mutex);
+
             flush_dds_reader();
 
             get_newest_sample(t_now, sample_out, sample_age_out);

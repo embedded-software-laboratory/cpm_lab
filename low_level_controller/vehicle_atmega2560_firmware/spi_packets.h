@@ -24,11 +24,13 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * spi_packets.h
+/**
+ * \file spi_packets.h
  *
- * Created: 24.09.2018 18:27:01
- *  Author: maczijewski
+ * \date Created: 24.09.2018 18:27:01
+ * \author: maczijewski
+ * 
+ * \ingroup low_level_controller
  */ 
 
 
@@ -46,70 +48,74 @@
 #define SPI_BUFFER_SIZE 27
 
 /**
- * \brief TODO
+ * \brief Struct for the SPI data sent from mid_level_controller to low_level_controller.
+ * 	      The struct contains 12 bytes overall.
  * 
  * \author maczijewski
  * \ingroup low_level_controller
  */
 typedef struct
-{ // 12 bytes
-	//! TODO
+{ 
+	//! Currently, no purpose?! TODO
 	uint32_t pi_tick;
-	//! TODO
+	//! Target PWM signal of motor
 	int16_t motor_pwm;
-	//! TODO
+	//! Target command for servo
 	int16_t servo_command;
-	//! TODO
+	//! CRC of this package
 	uint16_t CRC;
-	//! TODO
+	//! Motor mode (brake, forward, reverse)
 	uint8_t motor_mode;
-	//! TODO
+	//! ID of vehicle
 	uint8_t vehicle_id;
 } __attribute__((packed)) spi_mosi_data_t;
 
 /**
- * \brief TODO
+ * \brief Struct for the SPI data sent from low_level_controller to mid_level_controller.
+ * 	      The struct contains 27 bytes overall.
  * 
  * \author maczijewski
  * \ingroup low_level_controller
  */
 typedef struct
-{ // 27 bytes
-	//! TODO
+{
+	//! Currently, no purpose?! TODO
 	uint32_t tick;
-	//! TODO
+	//! Current steps of odometer
 	int32_t odometer_steps;
-	//! TODO
+	//! Accumulated yaw based on yaw rate relativ to initial orientation of vehicle
 	uint16_t imu_yaw;
-	//! TODO
+	//! Yaw rate provided by IMU
 	int16_t imu_yaw_rate;
-	//! TODO
+	//! Acceleration in forward direction provided by IMU
 	int16_t imu_acceleration_forward;
-	//! TODO
+	//! Acceleration to the left provided by IMU
 	int16_t imu_acceleration_left;
-	//! TODO
+	//! Upward acceleration provided by IMU
 	int16_t imu_acceleration_up;
-	//! TODO
+	//! Speed based on odometer
 	int16_t speed;
-	//! TODO
+	//! Current battery voltage
 	uint16_t battery_voltage;
-	//! TODO
+	//! Current motor current
 	uint16_t motor_current;
-	//! TODO
+	//! CRC of this package
 	uint16_t CRC;
-	//! TODO
-	uint8_t status_flags;
-	/*
-	 * status_flags:
-	 * Bit 7: reserved
-	 * Bit 6: reserved
-	 * Bit 5: reserved
-	 * Bit 4: reserved
-	 * Bit 3: reserved
-	 * Bit 2: reserved
-	 * Bit 1: SPI status, 0 -> previous mosi packet correctly received, 1 -> fault
+	/**
+	 * \brief Flags indicating the status of the vehicle and its electronic components.
+	 * 
+	 * Bit 7: reserved |
+	 * Bit 6: reserved |
+	 * Bit 5: reserved |
+	 * Bit 4: reserved |
+	 * Bit 3: reserved |
+	 * Bit 2: reserved |
+	 * Bit 1: SPI status, 0 -> previous mosi packet correctly received, 1 -> fault |
 	 * Bit 0: IMU status, 0 -> OK, 1 -> fault
+	 * 
+	 * Note: reserved=?currently not in use? TODO
 	*/
+	uint8_t status_flags;
 } __attribute__((packed)) spi_miso_data_t;
 
 

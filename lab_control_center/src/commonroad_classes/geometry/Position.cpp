@@ -94,6 +94,17 @@ Position::Position(const xmlpp::Node* node)
         throw;
     }
 
+    //According to the PDF Commonroad specs (not the actual XML .xsd specs), at least one of the entries should contain an element
+    //This makes sense - an empty position is meaningless
+    if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0 && lanelet_refs.size() == 0 && !(point.has_value()))
+    {
+        std::stringstream error_stream;
+        error_stream << "Error in Position: Is empty. Line: " << commonroad_line;
+        throw SpecificationError(error_stream.str());
+    }
+
+    //Also, point / rectangle etc. / lanelet ref are mutually exclusive, but the .xsd specs don't reflect this, thus this is not checked here
+
     //Test output
     // std::cout << "Position:" << std::endl;
     // std::cout << "\tPoint exists: " << point.has_value() << std::endl;
@@ -177,7 +188,6 @@ void Position::draw(const DrawingContext& ctx, double scale, double global_orien
     
     //Also draw "inexact" positional values, not only the point value
     {
-        //TODO?
         //Rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
         ctx->save();
 
@@ -250,31 +260,37 @@ std::pair<double, double> Position::get_center()
         return std::pair<double, double>(point->get_x(), point->get_y());
     }
 
-    double x, y = 0.0;
-    double center_count = 1.0;
+    assert(std::numeric_limits<double>::has_infinity);
+    double min_x = std::numeric_limits<double>::infinity();
+    double min_y = std::numeric_limits<double>::infinity();
+    double max_x = - std::numeric_limits<double>::infinity();
+    double max_y = - std::numeric_limits<double>::infinity();
 
     for (auto circle : circles)
     {
         auto center = circle.get_center();
-        x += (center.first - x) / center_count;
-        y += (center.second - y) / center_count;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto polygon : polygons)
     {
         auto center = polygon.get_center();
-        x += (center.first - x) / center_count;
-        y += (center.second - y) / center_count;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto rectangle : rectangles)
     {
         auto center = rectangle.get_center();
-        x += (center.first - x) / center_count;
-        y += (center.second - y) / center_count;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     if (get_lanelet_center)
@@ -282,9 +298,10 @@ std::pair<double, double> Position::get_center()
         for (auto lanelet_ref : lanelet_refs)
         {
             auto center = get_lanelet_center(lanelet_ref);
-            x += (center.first - x) / center_count;
-            y += (center.second - y) / center_count;
-            ++center_count;
+            min_x = std::min(min_x, center.first);
+            min_y = std::min(min_y, center.second);
+            max_x = std::max(max_x, center.first);
+            max_y = std::max(max_y, center.second);
         }
     }
     else if (lanelet_refs.size() > 0)
@@ -292,7 +309,7 @@ std::pair<double, double> Position::get_center()
         LCCErrorLogger::Instance().log_error("Cannot compute center properly without lanelet center function in Position, set function callback beforehand!");
     }
 
-    return std::pair<double, double>(x, y);
+    return std::pair<double, double>(0.5 * min_x + 0.5 * max_x, 0.5 * min_y + 0.5 * max_y);
 }
 
 std::optional<int> Position::get_lanelet_ref()

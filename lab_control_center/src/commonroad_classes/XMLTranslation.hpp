@@ -294,7 +294,7 @@ namespace xml_translation
      * \param child_name Expected name of the child node - optional, return all if not set
      * \ingroup lcc_commonroad
      */
-    void iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name);
+    void iterate_children(const xmlpp::Node* node, std::function<void (xmlpp::Node* node)> node_function, std::string child_name = "");
 
     /**
      * \brief Takes a node as input, assuming it is of type Element (which is tested within the function, so that the user does not have to do it, thus xmlpp::Node, not xmlpp::Element was chosen)

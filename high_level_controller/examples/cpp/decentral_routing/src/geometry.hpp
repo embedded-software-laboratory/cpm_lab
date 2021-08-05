@@ -30,8 +30,13 @@
 #include <cmath>
 using std::vector;
 
-#define VEHICLE_HALF_LENGTH (0.15)
-#define VEHICLE_HALF_WIDTH (0.06)
+const float VEHICLE_HALF_LENGTH = 0.15;
+const float VEHICLE_HALF_WIDTH = 0.06;
+
+/**
+ * \file geometry.hpp
+ * Defines helper functions for calculating distances between vehicles
+ */
 
 /**
  * \struct PathNode
@@ -39,35 +44,35 @@ using std::vector;
  */
 struct PathNode
 {
-    //! TODO
+    //! x-position, meters
     double x;
-    //! TODO
+    //! y-position, meters
     double y;
-    //! TODO
+    //! Cosine of angle of pose
     double cos_yaw;
-    //! TODO
+    //! Sine of angle of pose
     double sin_yaw;
     
-    //! TODO Constructor
+    //! Creates a PathNode
     PathNode(){}
 
     /**
-     * \brief TODO Constructor
-     * \param x TODO
-     * \param y TODO
-     * \param cos_yaw TODO
-     * \param sin_yaw TODO
+     * \brief Creates a PathNode
+     * \param x x-position, meters
+     * \param y y-position, meters
+     * \param cos_yaw Cosine of angle of pose
+     * \param sin_yaw Sine of angle of pose
      */
     PathNode(double x, double y, double cos_yaw, double sin_yaw)
     :x(x), y(y), cos_yaw(cos_yaw), sin_yaw(sin_yaw){}
 };
 
 /**
- * \brief TODO
+ * \brief Calculates the shortest distance between edges of a vehicle and a point
  * \ingroup decentral_routing
- * \param vehicle TODO
- * \param points_x TODO
- * \param points_y TODO
+ * \param vehicle Pose of the vehicle, as a PathNode
+ * \param points_x x-coordinate of point
+ * \param points_y y-coordinate of point
  */
 static inline double min_distance_vehicle_to_points
 (
@@ -94,10 +99,10 @@ static inline double min_distance_vehicle_to_points
 }
 
 /**
- * \brief TODO
+ * \brief Calculates the shortest distance between 2 vehicles
  * \ingroup decentral_routing
- * \param vehicleA TODO
- * \param vehicleB TODO
+ * \param vehicleA Pose of vehicle A as a PathNode
+ * \param vehicleB Pose of vehicle B as a PathNode
  */
 static inline double min_distance_vehicle_to_vehicle(PathNode vehicleA, PathNode vehicleB)
 {

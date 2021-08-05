@@ -52,10 +52,10 @@ set(COMMONROAD
     src/commonroad_classes/CommonroadDrawConfiguration.hpp
     src/commonroad_classes/CommonRoadTransformation.hpp
     src/commonroad_classes/CommonRoadTransformation.cpp
-    src/commonroad_classes/Crossing.hpp
-    src/commonroad_classes/Crossing.cpp
     src/commonroad_classes/DynamicObstacle.hpp
     src/commonroad_classes/DynamicObstacle.cpp
+    src/commonroad_classes/EnvironmentObstacle.hpp
+    src/commonroad_classes/EnvironmentObstacle.cpp
     src/commonroad_classes/Intersection.hpp
     src/commonroad_classes/Intersection.cpp
     src/commonroad_classes/Lanelet.hpp

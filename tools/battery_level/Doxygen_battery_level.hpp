@@ -27,24 +27,18 @@
 //Doxygen software group and file descriptions for camera calibration
 
 /**
- * \defgroup plot_battery_discharge Plot Battery Discharge
- * \brief Includes matlab files for these plots
+ * \defgroup battery_level Battery Level
+ * \brief Relation between battery level and voltage. Includes experiment data.
  * \ingroup tools
  */
 
 /**
-* \page pbd_files Plot Battery Discharge Files
-* \subpage pbd_lin <br>
-* \subpage pbd_main <br>
-* \ingroup plot_battery_discharge
+* \page bl_files Files
+* \subpage bl_main <br>
+* \ingroup battery_level
 */
 
 /**
- * \page pbd_lin linear_discharge.m
- * \brief TODO
- */
-
-/**
- * \page pbd_main main.m
+ * \page bl_main main.m
  * \brief TODO
  */

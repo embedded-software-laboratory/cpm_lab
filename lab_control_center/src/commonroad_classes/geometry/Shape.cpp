@@ -78,6 +78,15 @@ Shape::Shape(const xmlpp::Node* node)
         //Propagate error, if any subclass of CommonRoadScenario fails, then the whole translation should fail
         throw;
     }
+
+    //According to the PDF Commonroad specs (not the actual XML .xsd specs), at least one of the entries should contain an element
+    //This makes sense - an empty shape is meaningless
+    if (circles.size() == 0 && polygons.size() == 0 && rectangles.size() == 0)
+    {
+        std::stringstream error_stream;
+        error_stream << "Error in Shape: Is empty. Line: " << commonroad_line;
+        throw SpecificationError(error_stream.str());
+    }
     
 
     //Test output
@@ -115,7 +124,7 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
     ctx->set_line_width(0.005);
 
-    //TODO: Rotation of combined forms is more complex than just rotation of the parts
+    // Rotation of combined forms is more complex than just rotation of the parts, so this might need to be changed
     // for (auto circle : circles)
     // {
     //     circle.draw(ctx, scale, 0, 0, 0, local_orientation);
@@ -133,8 +142,8 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
     // if (circles.size() + polygons.size() + rectangles.size() > 1)
     // {
-    //     std::cerr << "TODO: Better warning // Local rotation of position made of more than one form currently not supported" << std::endl;
-    //     //TOOD: Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
+    //     ERROR
+    //     //Implementation idea: Transform to center of the form, then rotate, then draw_relative_to(center_x, center_y) for the forms
     // }
 
     //Alternative rotation implementation: Rotate around overall center of the shape, then translate back to original coordinate system (but rotated), then draw
@@ -161,63 +170,45 @@ void Shape::draw(const DrawingContext& ctx, double scale, double global_orientat
 
 std::pair<double, double> Shape::get_center()
 {
-    double x, y = 0.0;
-    double center_count = 0.0;
+    //Take the mean of min and max value for x and y coordinates, might not work for all shapes
+    assert(std::numeric_limits<double>::has_infinity);
+    double min_x = std::numeric_limits<double>::infinity();
+    double min_y = std::numeric_limits<double>::infinity();
+    double max_x = - std::numeric_limits<double>::infinity();
+    double max_y = - std::numeric_limits<double>::infinity();
 
     for (auto circle : circles)
     {
         auto center = circle.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto polygon : polygons)
     {
         auto center = polygon.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
     for (auto rectangle : rectangles)
     {
         auto center = rectangle.get_center();
-        x += center.first;
-        y += center.second;
-        ++center_count;
+        min_x = std::min(min_x, center.first);
+        min_y = std::min(min_y, center.second);
+        max_x = std::max(max_x, center.first);
+        max_y = std::max(max_y, center.second);
     }
 
-    if (center_count > 0)
-    {
-        x /= center_count;
-        y /= center_count;
-    }
-
-    return std::pair<double, double>(x, y);
+    return std::pair<double, double>(0.5 * min_x + 0.5 * max_x, 0.5 * min_y + 0.5 * max_y);
 }
 
 void Shape::transform_context(const DrawingContext& ctx, double scale)
 {
-    //Just move the coordinate system's center to one of the shape's centroids
-    //TODO: Find better point than just some random point within a part of the shape
-    // if (circles.size() > 0)
-    // {
-    //     auto center = circles.at(0).get_center();
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-    // else if (polygons.size() > 0)
-    // {
-    //     auto center = polygons.at(0).get_center();
-    //     //Center is computed from vertices, type is not std::optional and not const
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-    // else if (rectangles.size() > 0)
-    // {
-    //     auto center = rectangles.at(0).get_center();
-    //     ctx->translate(center.first * scale, center.second * scale);
-    // }
-
     //TODO: Is the center the best point to choose?
     auto center = get_center();
     ctx->translate(center.first * scale, center.second * scale);

@@ -57,7 +57,7 @@ class SignalState : public InterfaceDraw
 {
 private:
     //Commonroad data
-    //! Optional time of signal, in commonroad time representation (not nanoseconds)
+    //! Optional time of signal, in commonroad time representation (not nanoseconds), defined w.r.t. global time step size
     std::optional<IntervalOrExact> time = std::nullopt;
     //! Optional, tells if the horn is active
     std::optional<bool> horn = std::nullopt;
@@ -110,7 +110,6 @@ public:
      * \brief Returns a DDS message created from the current scenario that contains all information relevant to the HLC
      * Due to the different return types for each class, no interface was defined for this function.
      * Still, it is required for all classes that are to be communicated via DDS to other members after the translation from XML
-     * TODO: Change return type to whatever the name of the IDL type is
      */
     void to_dds_msg(); 
 

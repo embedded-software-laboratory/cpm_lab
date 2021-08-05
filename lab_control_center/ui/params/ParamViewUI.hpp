@@ -108,12 +108,6 @@ private:
     std::function<Gtk::Window&()> get_main_window;
 
     /**
-     * \brief First reset the currently shown list of parameters. 
-     * Then read all data from parameter storage and put it in the parameter Treeview / UI.
-     */
-    void read_storage_data();
-
-    /**
      * \brief Get the currently selected row, if one exists, else return false.
      * Store the name of the selected parameter in name.
      * The row is selected by the user in the UI.
@@ -226,6 +220,12 @@ public:
      * \brief Makes the UI insensitive / interaction with the user is not possible.
      */
     void make_insensitive();
+
+    /**
+     * \brief First reset the currently shown list of parameters. 
+     * Then read all data from parameter storage and put it in the parameter Treeview / UI.
+     */
+    void read_storage_data();
 
     /**
      * \brief Set the callback function that returns a reference to the application's main window

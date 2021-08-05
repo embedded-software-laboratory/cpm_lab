@@ -101,6 +101,14 @@ MapViewUi::MapViewUi(
 
     drawingArea->set_can_focus(true);
 
+    //Store initial zoom factor in the draw config. of commonroad
+    if (commonroad_scenario)
+    {
+        auto draw_configuration = commonroad_scenario->get_draw_configuration();
+        assert(draw_configuration);
+        draw_configuration->zoom_factor.store(zoom);
+    }
+
     drawingArea->signal_scroll_event().connect([&](GdkEventScroll* event){
 
         double zoom_speed = 1;
@@ -122,6 +130,13 @@ MapViewUi::MapViewUi(
             pan_x = event->x - zoom_speed * (event->x - pan_x);
             pan_y = event->y - zoom_speed * (event->y - pan_y);
             zoom *= zoom_speed;
+        }
+
+        if (commonroad_scenario)
+        {
+            auto draw_configuration = commonroad_scenario->get_draw_configuration();
+            assert(draw_configuration);
+            draw_configuration->zoom_factor.store(zoom);
         }
 
         //std::cout << pan_x << " " << pan_y << " " << zoom << std::endl;
@@ -285,9 +300,55 @@ MapViewUi::MapViewUi(
 
 
     drawingArea->signal_draw().connect([&](const DrawingContext& ctx)->bool {
+        //Center the view if this has not happened before
+        if (this->map_tick >= 0)
+        {
+            //Get current width and height of the map view
+            auto width = drawingArea->get_width();
+            auto height = drawingArea->get_height();
+
+            //Width and height need to "settle in", as the window elements are put together after creation, so look out for changes
+            bool values_final = false;
+            //Usually: Return 1 (not created) -> return value_1 (not final size) -> return value_2 (hopefully final and, due to added elements, smaller size)
+            if ((width < this->map_width || height < this->map_height) && this->map_width > 1 && this->map_height > 1)
+            {
+                values_final = true;
+            }
+            //Don't wait longer than 20 draw ticks
+            this->map_tick -= 1;
+            if (map_tick < 0)
+            {
+                values_final = true;
+            }
+
+            //Store new values
+            this->map_width = width;
+            this->map_height = height;
+
+            //Only center if the obtained values for width and height are final
+            if (values_final)
+            {
+                this->map_tick = -1; //Do not center again during program run
+                auto smaller_dim = std::min(width, height);
+
+                //Adapt the zoom to the window size w.r.t. the lab map height (use a bit more so that the map does not take up the full screen)
+                zoom = static_cast<double>(smaller_dim) / 6.0;
+
+                //Using 1/2 does not give us useful values for the standard map due to the position of the origin
+                pan_x = (static_cast<double>(width)) / 3.0; 
+                pan_y = (static_cast<double>(height)) - (0.5 * zoom); //LCC Map starts at origin, add a bit of offset though
+            }
+        }
+
         this->draw(ctx); 
         return true;
     });
+
+    //Rotate the map view by 90 degrees counterclockwise, to match the camera view
+    rotate_by(90);
+
+    //Center the view
+    //This is done in signal_draw(), because in the constructor the width and height value of the drawing area are not yet set to their final value
 }
 
 int MapViewUi::find_vehicle_id_in_focus()
@@ -410,7 +471,10 @@ void MapViewUi::draw_lab_boundaries(const DrawingContext& ctx)
     //Flip font
     Cairo::Matrix font_matrix(0.1, 0.0, 0.0, -0.1, 0.0, 0.0);
     ctx->set_font_matrix(font_matrix);
-    //Draw text
+    //Draw text w. bounding box for better readability
+    Cairo::TextExtents extents;
+    ctx->get_text_extents("IPS boundary", extents);
+    draw_text_bounding_box(ctx, extents);
     ctx->show_text("IPS boundary");
 
     ctx->restore();
@@ -711,7 +775,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             double text_offset_y = (sin(-rotation)*text_offset_left + cos(-rotation)*text_offset_right);
 
             // Move to the correct position and rotate so that text is shown horizontally
-            ctx->move_to(entry.points().at(0).x() + text_offset_x, 
+            ctx->translate(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
             ctx->rotate(-rotation);
 
@@ -722,9 +786,29 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             //Draw text
             ctx->show_text(entry.string_message().c_str());
 
+            //Draw bounding box around text
+            draw_text_bounding_box(ctx, ext);
+
             ctx->restore();
         }
     }
+}
+
+void MapViewUi::draw_text_bounding_box(const DrawingContext& ctx, Cairo::TextExtents extents)
+{
+    //Draw rectangle around text
+    //Move to first corner from center
+    ctx->save();
+    ctx->set_source_rgba(1, 1, 1, 0.5);
+    ctx->set_line_width(0);
+    ctx->move_to(0, 0);
+    ctx->line_to(0, extents.height * 1.05);
+    ctx->line_to(extents.width * 1.05, extents.height * 1.05);
+    ctx->line_to(extents.width * 1.05, 0);
+    ctx->line_to(0, 0);
+    ctx->fill_preserve();
+    ctx->stroke();
+    ctx->restore();
 }
 
 /**
@@ -978,7 +1062,7 @@ void MapViewUi::draw_vehicle_body(const DrawingContext& ctx, const map<string, s
     ctx->restore();
 }
 
-void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape)
+void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape& shape, ObstacleClass obstacle_class)
 {
     ctx->save();
     ctx->set_line_width(0.005);
@@ -992,8 +1076,15 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
 
         //Draw circle
         ctx->arc(circle.center().x(), circle.center().y(), circle.radius(), 0.0, 2 * M_PI);
-        ctx->stroke();
 
+        //Only fill shapes of dynamic obstacles
+        if (obstacle_class == ObstacleClass::Dynamic)
+        {
+            ctx->fill_preserve();
+        }
+
+        //Draw created circle
+        ctx->stroke();
         ctx->restore();
     }
 
@@ -1018,9 +1109,15 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
             }
             //Finish polygon by drawing a line to the starting point
             ctx->line_to(polygon.points().at(0).x(), polygon.points().at(0).y());
-            ctx->fill_preserve();
-            ctx->stroke();
+            
+            //Only fill shapes of dynamic obstacles
+            if (obstacle_class == ObstacleClass::Dynamic)
+            {
+                ctx->fill_preserve();
+            }
 
+            //Draw created lines
+            ctx->stroke();
             ctx->restore();
         }
     }
@@ -1041,19 +1138,22 @@ void MapViewUi::draw_vehicle_shape(const DrawingContext& ctx, CommonroadDDSShape
         //Move to first corner from center
         ctx->move_to((- (length/2)), (- (width/2)));
 
-        //Draw lines
+        //Create lines
         ctx->line_to((- (length/2)), (  (width/2)));
         ctx->line_to((  (length/2)), (  (width/2)));
         ctx->line_to((  (length/2)), (- (width/2)));
         ctx->line_to((- (length/2)), (- (width/2)));
-        ctx->fill_preserve();
-        ctx->stroke();
 
+        //Only fill shapes of dynamic obstacles
+        if (obstacle_class == ObstacleClass::Dynamic)
+        {
+            ctx->fill_preserve();
+        }
+
+        //Draw lines
+        ctx->stroke();
         ctx->restore();
     }
-
-    //TODO: Improve shape drawing
-    //For example: Color coding instead of longer names (e.g. for (non-)moving objects)
 
     ctx->restore();
 }
@@ -1123,26 +1223,17 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
         ctx->translate(x,y);
         ctx->rotate(yaw);
 
-        // const double LF = 0.115;
-        // const double LR = 0.102;
-        //const double WH = 0.054;
-
-        // Draw car image (TODO: Change this later, e.g. to shape)
+        // Draw shape of the obstacle
         ctx->save();
         {
-            // const double scale = 0.224/image_object->get_width();
-            // ctx->translate( (LF+LR)/2-LR ,0);
-            // ctx->scale(scale, scale);
-            // ctx->translate(-image_object->get_width()/2, -image_object->get_height()/2);
-            // ctx->set_source(image_object,0,0);
-            // ctx->paint();
             //Make vehicle a bit transparent if the position is not exact
-            if (! entry.pose_is_exact())
+            //Don't do this for environment obstacles, which do not have a pose definition
+            if (!(entry.pose_is_exact()) && entry.obstacle_class().underlying() != ObstacleClass::Environment)
             {
-                ctx->set_source_rgba(.7,.2,.7,.2); //Color used for inexact values
+                ctx->set_source_rgba(.7,.2,.7,.8); //Color used for inexact values
             }
 
-            draw_vehicle_shape(ctx, entry.shape());
+            draw_vehicle_shape(ctx, entry.shape(), entry.obstacle_class().underlying());
         }
         ctx->restore();
 
@@ -1201,6 +1292,9 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::Train:
                     description_stream << "Train: ";
                     break;
+                case ObstacleType::Taxi:
+                    description_stream << "Taxi: ";
+                    break;
                 case ObstacleType::ConstructionZone:
                     description_stream << "Constr: ";
                     break;
@@ -1210,26 +1304,37 @@ void MapViewUi::draw_commonroad_obstacles(const DrawingContext& ctx)
                 case ObstacleType::RoadBoundary:
                     description_stream << "Boundary: ";
                     break;
+                case ObstacleType::Building:
+                    description_stream << "Building: ";
+                    break;
+                case ObstacleType::Pillar:
+                    description_stream << "Pillar: ";
+                    break;
+                case ObstacleType::MedianStrip:
+                    description_stream << "Median: ";
+                    break;
                 default:
-                    description_stream << "TODO: ";
+                    throw std::runtime_error("Programming Error in MapViewUI: Unsupported Obstacle Type");
                     break;
             }
             description_stream << static_cast<int>(entry.vehicle_id()); //CO for CommonroadObstacle
 
             ctx->translate(-0.03, 0);
-            const double scale = 0.01;
+            const double scale = 1.8 / zoom;
             ctx->rotate(-yaw - rotation);
             ctx->scale(scale, -scale);
             ctx->move_to(0,0);
             Cairo::TextExtents extents;
             ctx->get_text_extents(description_stream.str(), extents);
 
+            //Draw bounding box for better readability
+            ctx->save();
+            ctx->translate(-extents.width/2 - extents.x_bearing, extents.height/2 + extents.y_bearing);
+            draw_text_bounding_box(ctx, extents);
+            ctx->restore();
+
             ctx->move_to(-extents.width/2 - extents.x_bearing, -extents.height/2 - extents.y_bearing);
             ctx->set_source_rgb(.1,.1,.1);
-            ctx->show_text(description_stream.str());
-
-            ctx->move_to(-extents.width/2 - extents.x_bearing - 0.6, -extents.height/2 - extents.y_bearing - 0.4);
-            ctx->set_source_rgb(.1,.9,.1);
             ctx->show_text(description_stream.str());
         }
 

@@ -46,6 +46,15 @@ DynamicObstacle::DynamicObstacle(
 
     commonroad_line = node->get_line();
 
+    //Print warning if ID is not within allowed uint8_t range [0, 255]
+    auto id = xml_translation::get_attribute_int(node, "id", true).value();
+    if (id > 255 || id < 0)
+    {
+        std::stringstream err_stream;
+        err_stream << "Dynamic obstacle - ID is not within desired bounds ([0, 255]) - will be taken modulo 256 in simulation, line: " << commonroad_line;
+        LCCErrorLogger::Instance().log_error(err_stream.str());
+    }
+
     try
     {
         obstacle_type_text = xml_translation::get_child_child_text(node, "type", true).value(); //Must exist, so an error is thrown anyway -> just use .value()
@@ -84,6 +93,10 @@ DynamicObstacle::DynamicObstacle(
         else if (obstacle_type_text.compare("train") == 0)
         {
             type = ObstacleTypeDynamic::Train;
+        }
+        else if (obstacle_type_text.compare("taxi") == 0)
+        {
+            type = ObstacleTypeDynamic::Taxi;
         }
         else if (obstacle_type_text.compare("parkedVehicle") == 0 || 
             obstacle_type_text.compare("constructionZone") == 0 || 
@@ -208,7 +221,7 @@ void DynamicObstacle::transform_coordinate_system(double scale, double angle, do
     
     if (shape.has_value())
     {
-        shape->transform_coordinate_system(scale, angle, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
+        shape->transform_coordinate_system(scale, 0.0, 0.0, 0.0); //Shape does not need to be modified as well, because we already transform state/occupancy and initial state position values
     }
 
     if (initial_state.has_value())
@@ -398,6 +411,9 @@ ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
         case ObstacleTypeDynamic::PriorityVehicle:
             commonroad_trajectory.obstacle_type = ObstacleType::PriorityVehicle;
             break;
+        case ObstacleTypeDynamic::Taxi:
+            commonroad_trajectory.obstacle_type = ObstacleType::Taxi;
+            break;
         case ObstacleTypeDynamic::Train:
             commonroad_trajectory.obstacle_type = ObstacleType::Train;
             break;
@@ -407,7 +423,13 @@ ObstacleSimulationData DynamicObstacle::get_obstacle_simulation_data()
         case ObstacleTypeDynamic::Unknown:
             commonroad_trajectory.obstacle_type = ObstacleType::Unknown;
             break;
+        default:
+            throw std::runtime_error("Translation to DDS type failed, unsupported type (-> programming error, add this type!)");
+            break;
     }
+
+    //Add class type
+    commonroad_trajectory.obstacle_class = ObstacleClass::Dynamic;
     
     return commonroad_trajectory;
 }

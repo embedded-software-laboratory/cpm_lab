@@ -24,37 +24,54 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-#include <stdlib.h>
-#include <iostream>
-#include <string>
-#include "labcam/LabCam.hpp"
+#include "Header.idl"
 
-//Suppress warning for unused parameter of main
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#ifndef HLCCOMMUNICATION_IDL
+#define HLCCOMMUNICATION_IDL
 
-int main(int argc, char *argv[])
+/**
+ * \struct LaneGraphPosition
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+struct LaneGraphPosition 
 {
-    LabCam labcam;
-
-    labcam.startRecording(".", "awesome_recording1");
-
-    std::cout << "." << std::endl;
-    std::cin.get();
-
-    std::cout << "stopping lab cam" << std::endl;
-    labcam.stopRecording();
-    std::cout << "Press enter to start recording again" << std::endl;
-
-    
-    std::cin.get();
-    labcam.startRecording(".", "awesome_recording2");
+    //! TODO
+    TimeStamp estimated_arrival_time;
+    //! TODO
+    unsigned short edge_index;
+    //! TODO
+    unsigned short edge_path_index;
+};
 
 
-    std::cin.get();
-    labcam.stopRecording();
+/**
+ * \enum MessageType
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+enum MessageType
+{
+    Iterative,
+    Final
+};
 
-    while(1);
-}
-
-#pragma GCC diagnostic pop
+/**
+ * \struct HlcCommunication
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+struct HlcCommunication 
+{
+    //! TODO
+    octet vehicle_id; //@key
+    //! TODO
+    Header header;
+    //! TODO
+    MessageType type;
+    //! TODO
+    boolean has_collisions;
+    //! TODO
+    sequence<LaneGraphPosition> lane_graph_positions;
+};
+#endif

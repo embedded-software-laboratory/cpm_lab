@@ -30,24 +30,24 @@
  * \file FileChooserUI.cpp
  * \ingroup lcc_ui
  */
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::string _config_name) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::string _config_name, std::string opened_path) :
     on_close_callback(_on_close_callback),
     config_name(_config_name)
 {
     FileChooserUI::Filter yaml_filter;
     yaml_filter.name = "YAML files";
     yaml_filter.mime_filter_types = std::vector<std::string> {{"text/yaml"}};
-    init(parent, std::vector<FileChooserUI::Filter> {{yaml_filter}});
+    init(parent, std::vector<FileChooserUI::Filter> {{yaml_filter}}, opened_path);
 }
 
-FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string _config_name) :
+FileChooserUI::FileChooserUI(Gtk::Window& parent, std::function<void(std::string, bool)> _on_close_callback, std::vector<FileChooserUI::Filter> filters, std::string _config_name, std::string opened_path) :
     on_close_callback(_on_close_callback),
     config_name(_config_name)
 {
-    init(parent, filters);
+    init(parent, filters, opened_path);
 }
 
-void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter> filters)
+void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter> filters, std::string opened_path)
 {
     params_create_builder = Gtk::Builder::create_from_file("ui/file_chooser/FileChooserDialog.glade");
 
@@ -96,9 +96,22 @@ void FileChooserUI::init(Gtk::Window& parent, std::vector<FileChooserUI::Filter>
     file_chooser_dialog->signal_button_press_event().connect(sigc::mem_fun(this, &FileChooserUI::handle_double_click));
     file_chooser_dialog->add_events(Gdk::KEY_RELEASE_MASK);
 
-    //Load filename from previous program execution 
+    //Load filename from previous program execution or set file
+    bool load_config_path = true;
+    if (opened_path.size() >= 1)
+    {
+        //Check if path actually exists
+        load_config_path = ! (std::experimental::filesystem::exists(opened_path.c_str()));
+    }
     //Open default or recently opened file / folder (not recommended by gtkmm documentation, because they want the user to use the "Recent"-Tab instead)
-    file_chooser_dialog->set_filename(get_last_execution_path(config_name));
+    if (load_config_path)
+    {
+        file_chooser_dialog->set_filename(get_last_execution_path(config_name));
+    }
+    else
+    {
+        file_chooser_dialog->set_filename(opened_path);
+    }
 
     //Listen for delete event - so that callback function is always called properly
     window->signal_delete_event().connect(sigc::mem_fun(this, &FileChooserUI::on_delete));

@@ -90,7 +90,7 @@ RTI Connext user manual.
                     <accept_unknown_peers>false</accept_unknown_peers>
                     <initial_peers>
                         <element>localhost</element>
-                        <element>TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
+                        <element>30@TEMPLATE_IP</element> <!-- This needs to be the IP Adress of the current machine -->
                     </initial_peers>   
                 </discovery>
             </participant_qos>

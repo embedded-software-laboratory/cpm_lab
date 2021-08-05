@@ -24,11 +24,14 @@
 // 
 // Author: i11 - Embedded Software, RWTH Aachen University
 
-/*
- * servo_timer.h
+/**
+ * \file servo_timer.h
  *
- * Created: 24.09.2018 16:18:47
- *  Author: maczijewski
+ * \date 24.09.2018 16:18:47
+ * \author: maczijewski
+ * 
+ * \brief This module provides an interface for setting up and controlling the servo via PWM,
+ *        where the servo PWM signal runs at 50 Hz
  */ 
 
 
@@ -39,18 +42,16 @@
 #include <stdint.h>
 
 
-// The servo PWM signal runs at 50Hz
-
 /**
- * \brief TODO
+ * \brief Returns the time since chip startup, in 20 msec increments.
  * 
  * \author maczijewski
  * \ingroup low_level_controller
  */
-uint32_t get_tick(); // time since chip startup, in 20 msec increments
+uint32_t get_tick();
 
 /**
- * \brief TODO
+ * \brief Sets up all relevant registers such that the pwm for the servo works properly.
  * 
  * \author maczijewski
  * \ingroup low_level_controller
@@ -58,13 +59,14 @@ uint32_t get_tick(); // time since chip startup, in 20 msec increments
 void servo_timer_setup();
 
 /**
- * \brief TODO
+ * \brief Sets the position of the servo by providing a PWM value in the range [1800,4200]
+ *        where 3000 is the middle value where the vehicle drives straight.
  * \param pwm
  * 
  * \author maczijewski
  * \ingroup low_level_controller
  */
-void set_servo_pwm(uint16_t pwm); // values from 2000 to 4000. center at 3000
+void set_servo_pwm(uint16_t pwm);
 
 
 #endif /* SERVO_TIMER_H_ */

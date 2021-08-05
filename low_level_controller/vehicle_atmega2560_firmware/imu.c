@@ -30,137 +30,141 @@
  * \author maczijewski
  * \date Created: 27.09.2018 10:54:21
  * 
+ * \brief This module provides an interface for setting up and reading values of the inertial measurement unit (IMU).
+ * 
+ * The vehicles use the BNO055 as IMU. This IMU provides several operating modes which can be separated into two general
+ * ones: fusion modes and non-fusion modes. In non-fusion modes just the raw signals of the sensors are provided while in
+ * fusion modes the internal chip combines these readings for information on relative and absolute orientation. Furthermore,
+ * the chip tries to improve the sensor data, for example, it uses the magnetometer to compensate a possible drift of the
+ * gyroscope. Since the magnetometer is comparably slow especially in the beginning, this compensation leads to negative
+ * side effects on our current implementation. Consequently, we use the non-fusion mode ACCGYRO where only accelerometer
+ * and gyroscope are activated.
+ * 
+ * NOTE: The IMU provides two pages. Dependend on which page is selected, the same address provides access to different registers!
+ * 
+ * 
  * \ingroup low_level_controller
  */ 
 
 /**
- * \brief TODO
+ * \brief TWI address of IMU
  * \ingroup low_level_controller
  */
 #define BNO055_ADDRESS (0x28)
 
 /**
- * \brief TODO
+ * \brief Register address of the identification code of the IMU
  * \ingroup low_level_controller
  */
 #define BNO055_CHIP_ID_ADDR  0x00
 
 /**
- * \brief TODO
+ * \brief Identification code of the IMU
  * \ingroup low_level_controller
  */
 #define BNO055_CHIP_ID      (0xA0)
 
 /**
- * \brief TODO
+ * \brief Address of the configuration register in which either page 0 or page 1 can be selected.
  * \ingroup low_level_controller
  */
 #define BNO055_REGISTER_PAGE_ADDR (0x07)
 
 /**
- * \brief TODO
+ * \brief On page 1, this is the address of the accelerometer configuration register. This register allows to specify the power
+ * 			mode, the bandwidth, and the range of the accelerometer.
  * \ingroup low_level_controller
  */
-#define BNO055_ACC_CONFIG_ADDR (0x08) // On page 1 !
+#define BNO055_ACC_CONFIG_ADDR (0x08)
 
 /**
- * \brief TODO
+ * \brief On page 1, this is the address of the first gyroscope configuration register. This register allows to specify the bandwidth
+ * 			and the range of the gyroscope.
  * \ingroup low_level_controller
  */
-#define BNO055_GYRO_CONFIG0_ADDR (0x0A) // On page 1 !
+#define BNO055_GYRO_CONFIG0_ADDR (0x0A)
 
 /**
- * \brief TODO
+ * \brief On page 1, this is the address of the second gyroscope configuration register. This register allows to specify the power
+ * 			mode of the gyroscope.
  * \ingroup low_level_controller
  */
-#define BNO055_GYRO_CONFIG1_ADDR (0x0B) // On page 1 !
+#define BNO055_GYRO_CONFIG1_ADDR (0x0B)
 
 /**
- * \brief TODO
- * \ingroup low_level_controller
- */
-#define BNO055_EULER_H_LSB_ADDR (0x1A)
-
-/**
- * \brief TODO
- * \ingroup low_level_controller
- */
-#define BNO055_EULER_H_MSB_ADDR (0x1B)
-
-/**
- * \brief TODO
+ * \brief On page 0, this is the address of the configuration register, where the operation mode can be selected.
  * \ingroup low_level_controller
  */
 #define BNO055_OPR_MODE_ADDR     0X3D
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the configuration register, where the power mode can be selected.
  * \ingroup low_level_controller
  */
 #define BNO055_PWR_MODE_ADDR     0X3E
 
 /**
- * \brief TODO
+ * \brief This is the value of the normal power mode.
  * \ingroup low_level_controller
  */
 #define BNO055_POWER_MODE_NORMAL        0X00
 
 /**
- * \brief TODO
+ * \brief This is the value of the fusion operation mode which provides absolute orientation and activates all sensors.
  * \ingroup low_level_controller
  */
 #define BNO055_OPERATION_MODE_NDOF      0X0C
 
 /**
- * \brief TODO
+ * \brief This is the value of the fusion operation mode which provides relative orientation and activates the accelerometer and gyroscope.
  * \ingroup low_level_controller
  */
 #define BNO055_OPERATION_MODE_IMU      0b00001000
 
 /**
- * \brief TODO
+ * \brief This is the value of the non-fusion operation mode which just activates the accelerometer and gyroscope.
  * \ingroup low_level_controller
  */
 #define BNO055_OPERATION_MODE_ACCGYRO      0b00000101
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register in which the lower byte of the x-axis linear acceleration data is provided.
  * \ingroup low_level_controller
  */
 #define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR  0X28
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register in which the lower byte of the x-axis acceleration data is provided.
  * \ingroup low_level_controller
  */
 #define BNO055_ACCEL_DATA_X_LSB_ADDR         0X08
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register in which the lower byte of the x-axis gyroscope data is provided.
  * \ingroup low_level_controller
  */
 #define BNO055_GYRO_DATA_X_LSB_ADDR         0X14
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register in which the lower byte of the y-axis gyroscope data is provided.
  * \ingroup low_level_controller
  */
 #define BNO055_GYRO_DATA_Y_LSB_ADDR         0X16
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register in which the lower byte of the z-axis gyroscope data is provided.
  * \ingroup low_level_controller
  */
 #define BNO055_GYRO_DATA_Z_LSB_ADDR         0X18
 
 /**
- * \brief TODO
+ * \brief On page 0, this is the address of the register with which system calls can be triggered, e.g., to reset the system.
  * \ingroup low_level_controller
  */
 #define BNO055_SYS_TRIGGER_ADDR              0X3F
 
 /**
- * \brief TODO
+ * \brief This is the value which stimulates a system reset of the IMU.
  * \ingroup low_level_controller
  */
 #define BNO055_SYS_TRIGGER_RESET_SYSTEM  0b00100000
@@ -252,7 +256,7 @@ bool imu_setup() {
 }
 
 /**
- * \brief TODO
+ * \brief Variable to accumulate the yaw_rate of the IMU in order to get the yaw.
  * \author maczijewski
  * \ingroup low_level_controller
  */
@@ -269,16 +273,6 @@ bool imu_read(
 {	
 	bool success_flag = true;
 	uint8_t buffer[10];
-	
-	/*
-	// read yaw
-	buffer[0] = BNO055_EULER_H_LSB_ADDR;
-	if(twi_writeTo(BNO055_ADDRESS, buffer, 1, true, false) != 0) success_flag = false;
-	if(twi_readFrom(BNO055_ADDRESS, buffer, 2, true) != 2) success_flag = false;
-	*imu_yaw = *((uint16_t*)(buffer));
-	
-	_delay_us(50);
-	*/
 	
 	// read yaw rate
 	buffer[0] = BNO055_GYRO_DATA_Z_LSB_ADDR;
