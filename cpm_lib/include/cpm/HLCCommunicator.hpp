@@ -33,6 +33,7 @@
 #include <future>                           // So we can use std::async, std::future etc
 #include <sstream>                          // For std::stringstream
 #include <cstdlib>                          // For getenv("HOME"), so get the default QOS path
+#include <unistd.h>                         // For usleep; Change to sleep_for is possible as soon as the ARM Build supports C++11
 
 // cpm_lib
 #include "cpm/get_topic.hpp"

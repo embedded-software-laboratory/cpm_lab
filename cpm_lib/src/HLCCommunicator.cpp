@@ -78,7 +78,7 @@ void HLCCommunicator::start(){
         stop = stopSignalReceived();
 
         // Slow down the loop a bit
-        rti::util::sleep(dds::core::Duration::from_millisecs(static_cast<uint64_t>(10)));
+        usleep(10);
     }
  
     // If on_stop is defined, call it now before we finish
