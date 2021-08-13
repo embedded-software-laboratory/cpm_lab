@@ -48,10 +48,15 @@ set(SOURCE_CPM
     src/RTTTool.cpp
     include/cpm/TimeMeasurement.hpp
     src/TimeMeasurement.cpp
-    include/cpm/HLCCommunicator.hpp
-    src/HLCCommunicator.cpp
 )
-
+if(NOT BUILD_ARM) 
+    # With RTIs ARM toolchain this leads to linker errors
+    set(SOURCE_CPM
+        ${SOURCE_CPM}
+        include/cpm/HLCCommunicator.hpp
+        src/HLCCommunicator.cpp
+    )
+endif()
 
 
 # Configuration for RTI Connext
@@ -102,4 +107,8 @@ if(NOT BUILD_ARM)
     )
 
     target_link_libraries(unittest cpm)
+endif()
+
+if($ENV{TIMING-ANALYSIS})
+    add_definitions( -DTIMINGANALYSIS )
 endif()
