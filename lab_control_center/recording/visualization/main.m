@@ -59,7 +59,7 @@ function main(recording_file, dds_domain)
         plot(DataByVehicle(iVeh).observation.x, DataByVehicle(iVeh).observation.y,'Linewidth',1)
         xlabel('$x$ [m]','Interpreter','LaTex')
         ylabel('$y$ [m]','Interpreter','LaTex')
-        title('Pose','Interpreter','LaTex')
+        title('Position','Interpreter','LaTex')
         axis equal
         xlim([0 4.5])
         ylim([0 4])
