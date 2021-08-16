@@ -51,8 +51,6 @@ ddsJsonSample.VehicleState = robustFetch(conn,getVehicleStateJsonSample);
 ddsJsonSample.VehiclePose = robustFetch(conn,getVehiclePoseJsonSample);
 ddsJsonSample.VehicleCommandPathTracking = robustFetch(conn,getVehicleCommandPathTrackingJsonSample);
 
-save ('dds_json_sample', 'ddsJsonSample')
-
 end
 
 function result = robustFetch(conn, sqlquery)
