@@ -92,6 +92,7 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     //! Calls update_dispatcher every 20ms for smooth map updates
     std::thread draw_loop_thread;
+    std::atomic_bool run_draw_thread;
     //! Image object for the car
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
     //! Image object for an object, currently not in use
@@ -303,6 +304,10 @@ public:
 
     ~MapViewUi() {
         std::cout << "!!! --- MapViewUi destructor" << std::endl;
+
+        run_draw_thread.store(false);
+        if (draw_loop_thread.joinable())
+            draw_loop_thread.join();
     }
 
     /**

@@ -298,6 +298,12 @@ public:
 
     ~CommonroadViewUI() {
         std::cout << "!!! --- CommonroadViewUI destructor" << std::endl;
+
+        run_thread.store(false);
+        if (ui_thread.joinable())
+            ui_thread.join();
+        
+        
     }
 
     /**
