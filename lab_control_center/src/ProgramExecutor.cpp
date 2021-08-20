@@ -33,6 +33,8 @@
 
 ProgramExecutor::~ProgramExecutor()
 {
+    std::cout << "!!! --- ProgramExecutor destructor" << std::endl;
+
     //Do something if not the child
     if (child_process_id != 0)
     {

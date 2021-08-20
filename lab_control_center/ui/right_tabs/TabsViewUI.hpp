@@ -87,6 +87,10 @@ public:
         std::shared_ptr<CommonroadViewUI> commonroadViewUi
     );
 
+    ~TabsViewUI() {
+        std::cout << "!!! --- TabsViewUI destructor" << std::endl;
+    }
+
     /**
      * \brief Provides access to the param tab. Used by the main window, where buttons to load / save / ... parameters from / to files are positioned
      * in the top bar.

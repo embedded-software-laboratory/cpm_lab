@@ -65,6 +65,8 @@ Deploy::Deploy(
 
 Deploy::~Deploy()
 {
+    std::cout << "!!! --- Deploy destructor" << std::endl;
+
     std::lock_guard<std::mutex> lock(vehicle_reboot_threads_mutex);
     for (auto& thread : vehicle_reboot_threads)
     {
@@ -78,6 +80,8 @@ Deploy::~Deploy()
         }
     }
     vehicle_reboot_threads.clear();
+
+    std::cout << "!!! --- Deploy destructor done" << std::endl;
 }
 
 void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int> active_vehicle_ids, std::string script_path, std::string script_params) 

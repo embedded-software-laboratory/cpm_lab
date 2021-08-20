@@ -33,6 +33,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 /**
  * \brief This window shows a message during the upload process to the HLCs
  * Important: This window is also shown when no upload is taking place, to tell the user that the upload failed because their vehicle choice / the HLC count was zero
@@ -55,6 +57,10 @@ public:
      * \param hlc_ids HLC IDs, to display matching between vehicle and HLC IDs (first entry matched to first entry etc.)
      */
     UploadWindow(Gtk::Window& parent, std::vector<unsigned int> vehicle_ids, std::vector<uint8_t> hlc_ids);
+
+    ~UploadWindow() {
+        std::cout << "!!! --- UploadWindow destructor" << std::endl;
+    }
 
     /**
      * \brief If an upload failed, then show an according message to the user

@@ -70,6 +70,10 @@ public:
      */
     VehicleManualControlUi(shared_ptr<VehicleManualControl> vehicleManualControl);
 
+    ~VehicleManualControlUi() {
+        std::cout << "!!! --- VehicleManualControlUi destructor" << std::endl;
+    }
+
     /**
      * \brief Function to get the parent widget, so that this UI element can be placed within another UI element
      */

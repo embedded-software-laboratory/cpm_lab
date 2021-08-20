@@ -72,6 +72,10 @@ public:
      */
     ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scenario);
 
+    ~ObstacleAggregator() {
+        std::cout << "!!! --- ObstacleAggregator destructor" << std::endl;
+    }
+
     /**
      * \brief Get all current obstacle data, e.g. for drawing them
      */

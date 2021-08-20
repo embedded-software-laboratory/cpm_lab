@@ -44,6 +44,8 @@ LogStorage::~LogStorage()
 {
     //Close the file in the destructor
     file.close();
+
+    std::cout << "!!! --- LogStorage destructor" << std::endl;
 }
 
 void LogStorage::log_callback(std::vector<Log>& samples) { 

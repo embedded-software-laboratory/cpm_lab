@@ -145,6 +145,10 @@ public:
      */
     TimeSeriesAggregator(uint8_t max_vehicle_id);
 
+    ~TimeSeriesAggregator() {
+        std::cout << "!!! --- TimeSeriesAggregator destructor" << std::endl;
+    }
+
     /**
      * \brief Get current received vehicle data
      */

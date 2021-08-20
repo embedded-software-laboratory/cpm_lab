@@ -54,7 +54,11 @@ Upload::Upload(
 
 Upload::~Upload()
 {
+    std::cout << "!!! --- Upload destructor" << std::endl;
+
     join_upload_threads();
+
+    std::cout << "!!! --- Upload destructor done" << std::endl;
 }
 
 void Upload::set_main_window_callback(std::function<Gtk::Window&()> _get_main_window)

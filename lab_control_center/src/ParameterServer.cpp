@@ -49,6 +49,7 @@ ParameterServer::ParameterServer(std::shared_ptr<ParameterStorage> _storage):
 }
 
 ParameterServer::~ParameterServer() {
+    std::cout << "!!! --- ParameterServer destructor" << std::endl;
     if(delayed_init_param_thread.joinable()) {
         delayed_init_param_thread.join();
     }

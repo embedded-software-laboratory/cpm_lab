@@ -49,6 +49,10 @@ public:
      */
     ObstacleToggle(unsigned int _id);
 
+    ~ObstacleToggle() {
+        std::cout << "!!! --- ObstacleToggle destructor" << std::endl;
+    }
+
     /**
      * \enum ToggleState
      * \brief The possible states of an object: Simulated (shown as object in the MapView) or On (Trajectory that is sent to a vehicle with the same ID)

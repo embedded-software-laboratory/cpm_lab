@@ -69,6 +69,10 @@ private:
      */
     LCCErrorLogger() {};
 
+    ~LCCErrorLogger() {
+        std::cout << "!!! --- LCCErrorLogger destructor" << std::endl;
+    }
+
     /**
      * \brief A simple function relying on std::chrono to get the current time in Hours:Minutes:Seconds
      */

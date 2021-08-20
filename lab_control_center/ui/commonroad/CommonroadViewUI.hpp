@@ -296,6 +296,10 @@ public:
         std::shared_ptr<ObstacleSimulationManager> obstacle_sim_manager
     );
 
+    ~CommonroadViewUI() {
+        std::cout << "!!! --- CommonroadViewUI destructor" << std::endl;
+    }
+
     /**
      * \brief Set the callback function that returns a reference to the application's main window
      * \param _get_main_window Returns reference to the main window, which is "needed" for window creation (works without it, but not without Gtk complaining in the terminal)

@@ -276,6 +276,8 @@ SetupViewUI::SetupViewUI
 }
 
 SetupViewUI::~SetupViewUI() {
+    std::cout << "!!! --- SetupViewUI destructor" << std::endl;
+
     //Kill real vehicle data thread
     vehicle_data_thread_running.store(false);
     if(check_real_vehicle_data_thread.joinable())
@@ -289,6 +291,8 @@ SetupViewUI::~SetupViewUI() {
     {
         kill_grey_out_thread.join();
     }
+
+    std::cout << "!!! --- SetupViewUI done" << std::endl;
 }
 
 void SetupViewUI::vehicle_toggle_callback(unsigned int vehicle_id, VehicleToggle::ToggleState state)

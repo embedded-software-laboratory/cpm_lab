@@ -65,6 +65,10 @@ public:
         std::vector<std::string> pattern_filter_types;
     };
 
+    ~FileChooserUI() {
+        std::cout << "!!! --- FileChooserUI destructor" << std::endl;
+    }
+
 private:
     //! GTK UI Builder for the file chooser
     Glib::RefPtr<Gtk::Builder> params_create_builder;

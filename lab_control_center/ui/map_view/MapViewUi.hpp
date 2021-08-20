@@ -301,6 +301,10 @@ public:
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
 
+    ~MapViewUi() {
+        std::cout << "!!! --- MapViewUi destructor" << std::endl;
+    }
+
     /**
      * \brief Function to get the parent widget, so that this UI element can be placed within another UI element
      */

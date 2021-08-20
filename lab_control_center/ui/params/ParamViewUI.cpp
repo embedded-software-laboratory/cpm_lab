@@ -42,7 +42,7 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     catch(const Gtk::BuilderError &e)
     {
         std::cerr << "Gtk::BuilderError: " << e.what() << std::endl;
-        exit(1);
+        // exit(1);
     }
 
     params_builder->get_widget("parameters_box", parent);

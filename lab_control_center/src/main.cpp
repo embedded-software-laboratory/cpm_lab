@@ -118,42 +118,6 @@ void kill_all_tmux_sessions() {
     if (program_executor) program_executor->execute_command(command.c_str());
 }
 
-//Suppress warning for unused parameter (s)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
-/**
- * \brief Interrup handler of the LCC
- * \ingroup lcc
- */
-void interrupt_handler(int s) {
-    kill_cloud_discovery();
-
-    //Kill remaining programs opened by setup view ui
-    if (setupViewUi)
-    {
-        setupViewUi->on_lcc_close();
-    }
-
-    exit(1);
-}
-
-#pragma GCC diagnostic pop
-
-/**
- * \brief Exit handler of the LCC
- * \ingroup lcc
- */
-void exit_handler() {
-    kill_cloud_discovery();
-
-    //Kill remaining programs opened by setup view ui
-    if (setupViewUi)
-    {
-        setupViewUi->on_lcc_close();
-    }
-}
-
 /**
  * \brief Main function of the LCC.
  * Command line arguments:
@@ -227,15 +191,6 @@ int main(int argc, char *argv[])
     //To receive logs as early as possible, and for Logging in main
     auto logStorage = make_shared<LogStorage>();
 
-    //Create regular and irregular (interrupt) exit handlers for IPS and Cloud Discovery Service
-    struct sigaction interruptHandler;
-    interruptHandler.sa_handler = interrupt_handler;
-    sigemptyset(&interruptHandler.sa_mask);
-    interruptHandler.sa_flags = 0;
-    sigaction(SIGINT, &interruptHandler, NULL);
-
-    std::atexit(exit_handler);
-
     //Start IPS and Cloud Discovery Service which are always required to communicate with real vehicles
     deploy_cloud_discovery();
 
@@ -295,24 +250,24 @@ int main(int argc, char *argv[])
     auto mapViewUi = make_shared<MapViewUi>(
         trajectoryCommand, 
         commonroad_scenario,
-        [=](){return timeSeriesAggregator->get_vehicle_data();},
-        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->get_vehicle_path_tracking_commands();},
-        [=](){return obstacleAggregator->get_obstacle_data();}, 
-        [=](){return visualizationCommandsAggregator->get_all_visualization_messages();}
+        [&](){return timeSeriesAggregator->get_vehicle_data();},
+        [&](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [&](){return timeSeriesAggregator->get_vehicle_path_tracking_commands();},
+        [&](){return obstacleAggregator->get_obstacle_data();}, 
+        [&](){return visualizationCommandsAggregator->get_all_visualization_messages();}
     );
     auto rtt_aggregator = make_shared<RTTAggregator>();
     auto monitoringUi = make_shared<MonitoringUi>(
         deploy_functions, 
-        [=](){return timeSeriesAggregator->get_vehicle_data();}, 
-        [=](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
-        [=](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
-        [=](){return timeSeriesAggregator->reset_all_data();},
-        [=](std::string id, uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt, double& missed_msgs)
+        [&](){return timeSeriesAggregator->get_vehicle_data();}, 
+        [&](){return hlcReadyAggregator->get_hlc_ids_uint8_t();},
+        [&](){return timeSeriesAggregator->get_vehicle_trajectory_commands();},
+        [&](){return timeSeriesAggregator->reset_all_data();},
+        [&](std::string id, uint64_t& c_best_rtt, uint64_t&  c_worst_rtt, uint64_t&  a_worst_rtt, double& missed_msgs)
             {
                 return rtt_aggregator->get_rtt(id, c_best_rtt, c_worst_rtt, a_worst_rtt, missed_msgs);
             },
-        [=](){return setupViewUi->kill_deployed_applications();}
+        [&](){return setupViewUi->kill_deployed_applications();}
     );
     auto vehicleManualControlUi = make_shared<VehicleManualControlUi>(vehicleManualControl);
     auto paramViewUi = make_shared<ParamViewUI>(storage, 5);
@@ -329,9 +284,9 @@ int main(int argc, char *argv[])
         deploy_functions,
         vehicleAutomatedControl, 
         hlcReadyAggregator, 
-        [=](){return timeSeriesAggregator->get_vehicle_data();},
-        [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
-        [=](){return monitoringUi->reset_vehicle_view();},
+        [&](){return timeSeriesAggregator->get_vehicle_data();},
+        [&](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
+        [&](){return monitoringUi->reset_vehicle_view();},
         [&](){
             //Things to do when the simulation is started
 
@@ -365,7 +320,7 @@ int main(int argc, char *argv[])
             obstacle_simulation_manager->start();
 
         }, 
-        [=](){
+        [&](){
             //Things to do when the simulation is stopped
 
             //Stop obstacle simulation
@@ -383,7 +338,7 @@ int main(int argc, char *argv[])
             //Restart RTT measurement
             rtt_aggregator->restart_measurement();
         },
-        [=](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
+        [&](bool set_sensitive){return commonroadViewUi->set_sensitive(set_sensitive);}, 
         [&](std::vector<int32_t> active_vehicle_ids){
             storage->set_parameter_ints("active_vehicle_ids", active_vehicle_ids, "Currently active vehicle ids");
             paramViewUi->read_storage_data();
@@ -393,7 +348,7 @@ int main(int argc, char *argv[])
         argv
     );
     monitoringUi->register_vehicle_to_hlc_mapping(
-        [=](){return setupViewUi->get_vehicle_to_hlc_matching();}
+        [&](){return setupViewUi->get_vehicle_to_hlc_matching();}
     );
     monitoringUi->register_crash_checker(setupViewUi->get_crash_checker());
     timerViewUi->register_crash_checker(setupViewUi->get_crash_checker());

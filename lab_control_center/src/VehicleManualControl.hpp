@@ -75,6 +75,10 @@ public:
      */
     VehicleManualControl();
 
+    ~VehicleManualControl() {
+        std::cout << "!!! --- VehicleManualControl destructor" << std::endl;
+    }
+
     /**
      * \brief TODO
      * \param vehicleId TODO

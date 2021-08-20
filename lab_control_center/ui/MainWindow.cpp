@@ -97,7 +97,7 @@ MainWindow::MainWindow(
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
-        exit(0);
+        // exit(0);
         return false;
     });
 

@@ -63,6 +63,10 @@ public:
      */
     _TimeSeries(string _name, string _format, string _unit);
 
+    ~_TimeSeries() {
+        std::cout << "!!! --- _TimeSeries destructor" << std::endl;
+    }
+
     /**
      * \brief TODO
      * \param time TODO

@@ -94,6 +94,8 @@ TimerTrigger::TimerTrigger(bool simulated_time) :
 }
 
 TimerTrigger::~TimerTrigger() {
+    std::cout << "!!! --- TimerTrigger destructor" << std::endl;
+
     timer_running.store(false);
     if(next_signal_thread.joinable()) {
         next_signal_thread.join();

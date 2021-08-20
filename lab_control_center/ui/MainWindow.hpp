@@ -153,4 +153,8 @@ public:
         std::shared_ptr<MonitoringUi> monitoringUi,
         std::shared_ptr<MapViewUi> mapViewUi
     );
+
+    ~MainWindow() {
+        std::cout << "!!! --- MainWindow destructor" << std::endl;
+    }
 };

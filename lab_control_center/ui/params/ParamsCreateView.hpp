@@ -213,4 +213,8 @@ public:
      * \param float_precision Precision of floats
      */
     ParamsCreateView(Gtk::Window& main_window, std::function<void(ParameterWithDescription, bool)> on_close_callback, std::function<bool(std::string)> check_param_exists, ParameterWithDescription param, int float_precision);
+
+    ~ParamsCreateView() {
+        std::cout << "!!! --- ParamsCreateView destructor" << std::endl;
+    }
 };

@@ -67,6 +67,10 @@ public:
      */
     VisualizationCommandsAggregator();
 
+    ~VisualizationCommandsAggregator() {
+        std::cout << "!!! --- VisualizationCommandsAggregator destructor" << std::endl;
+    }
+
     /**
      * \brief Returns all viz messages that have been received
      */
