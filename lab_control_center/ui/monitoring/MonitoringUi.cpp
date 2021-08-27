@@ -155,7 +155,7 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
-void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+void MonitoringUi::register_crash_checker(std::weak_ptr<CrashChecker> _crash_checker)
 {
     crash_checker = _crash_checker;
 }
@@ -345,8 +345,15 @@ void MonitoringUi::init_ui_thread()
                                 auto hlc_id = current_mapping.second.at(vehicle_id);
 
                                 //Find out if the programs are still running on the NUC
-                                assert(crash_checker);
-                                bool program_crashed = crash_checker->check_if_crashed(hlc_id);
+                                bool program_crashed = false;
+                                if (auto crash_checker_shared = crash_checker.lock())
+                                {
+                                    program_crashed = crash_checker_shared->check_if_crashed(hlc_id);
+                                }
+                                else
+                                {
+                                    throw std::runtime_error("Crash checker not properly registered in MonitoringUi or expired!");
+                                }
 
                                 bool nuc_crashed = std::find(hlc_data.begin(), hlc_data.end(), hlc_id) == hlc_data.end();
 

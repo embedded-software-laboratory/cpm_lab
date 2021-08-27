@@ -361,7 +361,7 @@ int main(int argc, char *argv[])
         lccErrorViewUi,
         loggerViewUi, 
         commonroadViewUi);
-    auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi);
+    auto mainWindow = make_shared<MainWindow>(tabsViewUi, monitoringUi, mapViewUi, paramViewUi);
 
     //To create a window without Gtk complaining that no parent has been set, we need to pass the main window after mainWindow has been created
     //(Wherever we want to create windows)

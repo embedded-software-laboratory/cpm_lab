@@ -48,20 +48,6 @@ class TabsViewUI {
 private:
     //! GTK UI builder
     Glib::RefPtr<Gtk::Builder> tabs_builder;
-    //! Shared pointer to the object for the Setup Tab
-    std::shared_ptr<SetupViewUI> setup_view_ui;
-    //! Shared pointer to the object for the Vehicle Manual Control Tab
-    std::shared_ptr<VehicleManualControlUi> vehicle_manual_control_ui;
-    //! Shared pointer to the object for the Param View/Edit/Create Tab
-    std::shared_ptr<ParamViewUI> param_view_ui;
-    //! Shared pointer to the object for the Timer Tab
-    std::shared_ptr<TimerViewUI> timer_view_ui;
-    //! Shared pointer to the object for the LCC Error Tab
-    std::shared_ptr<LCCErrorViewUI> lcc_error_view_ui;
-    //! Shared pointer to the object for the Log Tab
-    std::shared_ptr<LoggerViewUI> logger_view_ui;
-    //! Shared pointer to the object for the Commonroad Tab
-    std::shared_ptr<CommonroadViewUI> commonroad_view_ui;
     //! GTK notebook, contains all tabs shown in the UI
     Gtk::Notebook* right_notebook;
 
@@ -90,12 +76,6 @@ public:
     ~TabsViewUI() {
         std::cout << "!!! --- TabsViewUI destructor" << std::endl;
     }
-
-    /**
-     * \brief Provides access to the param tab. Used by the main window, where buttons to load / save / ... parameters from / to files are positioned
-     * in the top bar.
-     */
-    std::shared_ptr<ParamViewUI> get_param_view();
 
     /**
      * \brief Returns the parent widget of this UI element, to be able to put it within another UI element.

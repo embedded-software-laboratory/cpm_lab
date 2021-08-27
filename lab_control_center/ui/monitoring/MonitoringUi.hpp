@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -96,7 +97,7 @@ public:
     //! Provides a reference to deploy functions, for rebooting the vehicles
     std::shared_ptr<Deploy> deploy_functions;
     //! To check if a NUC crashed
-    std::shared_ptr<CrashChecker> crash_checker;
+    std::weak_ptr<CrashChecker> crash_checker;
     //! To show data of all currently active vehicles in grid_vehicle_monitoring
     std::function<VehicleData()> get_vehicle_data;
     //! To get currently online HLC IDs
@@ -212,10 +213,11 @@ public:
     void register_vehicle_to_hlc_mapping(std::function<std::pair<bool, std::map<uint32_t, uint8_t>>()> get_vehicle_to_hlc_mapping);
 
     /**
-     * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction
+     * \brief Checker needs to be set up in SetupView, and SetupView requires access to monitoring, so we have to do this after construction.
+     * A weak_ptr must be used in order to avoid cyclic dependencies (the destructor was not called when using a shared_ptr).
      * \param _crash_checker Reference to a crash checker object, required to see if a HLC crashed
      */
-    void register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker);
+    void register_crash_checker(std::weak_ptr<CrashChecker> _crash_checker);
 
     /**
      * \brief Function to call when the simulation starts, to reset data structures, start timers etc
