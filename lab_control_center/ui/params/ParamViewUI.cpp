@@ -41,8 +41,10 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     }
     catch(const Gtk::BuilderError &e)
     {
-        std::cerr << "Gtk::BuilderError: " << e.what() << std::endl;
-        // exit(1);
+        std::stringstream str;
+        str << "Gtk::BuilderError: " << e.what() << std::endl;
+        // exit(1); Exit statements cause problems as destructors are not being called
+        throw std::runtime_error(str.str()); //This should ideally be catched
     }
 
     params_builder->get_widget("parameters_box", parent);

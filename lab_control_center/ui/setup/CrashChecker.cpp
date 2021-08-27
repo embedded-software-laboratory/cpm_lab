@@ -48,8 +48,6 @@ CrashChecker::CrashChecker(
 
 CrashChecker::~CrashChecker()
 {
-    std::cout << "!!! --- CrashChecker destructor" << std::endl;
-
     kill_crash_check_thread();
 }
 

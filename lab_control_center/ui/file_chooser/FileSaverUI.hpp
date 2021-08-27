@@ -97,8 +97,4 @@ public:
      * \param config_name In a configuration file, previous file locations are stored, for the convenience of the user. The config name, if not default, can be used to remember the last file for this specific use-case (e.g. for parameters).
      */
     FileSaverUI(Gtk::Window& parent, std::function<void(std::string, bool)> on_close_callback, std::string config_name = "default");
-
-    ~FileSaverUI() {
-        std::cout << "!!! --- FileSaverUI destructor" << std::endl;
-    }
 };

@@ -62,8 +62,6 @@ VehicleToggle::VehicleToggle(unsigned int _id) :
 
 VehicleToggle::~VehicleToggle()
 {
-    std::cout << "!!! --- VehicleToggle destructor" << std::endl;
-
     //Tell thread to abort early
     signal_thread_stop.store(true);
 
@@ -71,8 +69,6 @@ VehicleToggle::~VehicleToggle()
     {
         set_insensitive_thread.join();
     }
-
-    std::cout << "!!! --- VehicleToggle destructor done" << std::endl;
 }
 
 void VehicleToggle::on_state_changed()

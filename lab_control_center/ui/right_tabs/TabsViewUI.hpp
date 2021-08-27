@@ -73,10 +73,6 @@ public:
         std::shared_ptr<CommonroadViewUI> commonroadViewUi
     );
 
-    ~TabsViewUI() {
-        std::cout << "!!! --- TabsViewUI destructor" << std::endl;
-    }
-
     /**
      * \brief Returns the parent widget of this UI element, to be able to put it within another UI element.
      */

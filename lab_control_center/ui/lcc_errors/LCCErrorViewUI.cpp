@@ -85,8 +85,6 @@ LCCErrorViewUI::LCCErrorViewUI() :
 }
 
 LCCErrorViewUI::~LCCErrorViewUI() {
-    std::cout << "!!! --- LCCErrorViewUI destructor" << std::endl;
-
     run_thread.store(false);
 
     if(ui_thread.joinable()) {

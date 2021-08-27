@@ -140,8 +140,6 @@ LoggerViewUI::LoggerViewUI(std::shared_ptr<LogStorage> logStorage) :
 }
 
 LoggerViewUI::~LoggerViewUI() {
-    std::cout << "!!! --- LoggerViewUI destructor" << std::endl;
-
     run_thread.store(false);
 
     if(ui_thread.joinable()) {
@@ -153,8 +151,6 @@ LoggerViewUI::~LoggerViewUI() {
     if (search_thread.joinable()) {
         search_thread.join();
     }
-
-    std::cout << "!!! --- LoggerViewUI destructor done" << std::endl;
 }
 
 void LoggerViewUI::on_log_level_changed()

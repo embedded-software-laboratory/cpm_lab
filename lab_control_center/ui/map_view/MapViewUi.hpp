@@ -303,8 +303,6 @@ public:
     );
 
     ~MapViewUi() {
-        std::cout << "!!! --- MapViewUi destructor" << std::endl;
-
         run_draw_thread.store(false);
         if (draw_loop_thread.joinable())
             draw_loop_thread.join();

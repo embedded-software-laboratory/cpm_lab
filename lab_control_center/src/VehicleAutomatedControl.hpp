@@ -68,10 +68,6 @@ public:
      */
     VehicleAutomatedControl();
 
-    ~VehicleAutomatedControl() {
-        std::cout << "!!! --- VehicleAutomatedControl destructor" << std::endl;
-    }
-
     /**
      * \brief This function is used to send an immediate stop signal to all vehicles
      * \param id_list List of vehicle ids of the vehicles that should be stopped

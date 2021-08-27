@@ -146,7 +146,6 @@ MonitoringUi::MonitoringUi(
 
 MonitoringUi::~MonitoringUi()
 {
-    std::cout << "!!! --- MonitoringUi destructor" << std::endl;
     stop_ui_thread();
 }
 

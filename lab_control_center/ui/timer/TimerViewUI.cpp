@@ -85,11 +85,7 @@ TimerViewUI::TimerViewUI(
 }
 
 TimerViewUI::~TimerViewUI() {
-    std::cout << "!!! --- TimerViewUI destructor" << std::endl;
-
     stop_ui_thread();
-
-    std::cout << "!!! --- TimerViewUI destructor done" << std::endl;
 }
 
 void TimerViewUI::button_reset_callback() {

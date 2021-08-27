@@ -54,7 +54,6 @@ TrajectoryCommand::TrajectoryCommand()
 
 TrajectoryCommand::~TrajectoryCommand()
 {
-    std::cout << "!!! --- TrajectoryCommand destructor" << std::endl;
     timer->stop();
 }
 

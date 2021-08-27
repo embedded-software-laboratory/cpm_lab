@@ -88,5 +88,4 @@ int16_t Joystick::getAxis(uint8_t id) {
 
 Joystick::~Joystick() {
     close(js_fd);
-    std::cout << "!!! --- JoyStick destructor" << std::endl;
 }

@@ -119,10 +119,6 @@ public:
      */
     ObstacleSimulation(ObstacleSimulationData _trajectory, int _id);
 
-    ~ObstacleSimulation() {
-        std::cout << "!!! --- ObstacleSimulation destructor" << std::endl;
-    }
-
     /**
      * \brief Get the initial state of the obstacles periodically until the simulation is started
      * \param t_now Current time, used for timestamp of msg

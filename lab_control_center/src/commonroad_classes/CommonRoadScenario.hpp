@@ -333,10 +333,6 @@ public:
      */
     CommonRoadScenario();
 
-    ~CommonRoadScenario() {
-        std::cout << "!!! --- CommonRoadScenario destructor" << std::endl;
-    }
-
     /**
      * \brief The scenario and the obstacle simulation are tightly connected: If a new scenario gets loaded, the obstacle simulation must be reset and set up again as well
      * \param _setup Set up the obstacle simulation manager with the newly translated scenario

@@ -159,8 +159,4 @@ public:
         std::shared_ptr<MapViewUi> mapViewUi,
         std::shared_ptr<ParamViewUI> paramViewUI
     );
-
-    ~MainWindow() {
-        std::cout << "!!! --- MainWindow destructor" << std::endl;
-    }
 };

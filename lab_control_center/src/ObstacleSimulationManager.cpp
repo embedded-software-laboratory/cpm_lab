@@ -61,7 +61,6 @@ writer_vehicle_trajectory("vehicleCommandTrajectory")
 
 ObstacleSimulationManager::~ObstacleSimulationManager()
 {
-    std::cout << "!!! --- ObstacleSimulationManager destructor" << std::endl;
     stop_timers();
 }
 

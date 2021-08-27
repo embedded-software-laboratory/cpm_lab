@@ -54,10 +54,6 @@ public:
      */
     ParameterStorage(std::string _filename, int precision);
 
-    ~ParameterStorage() {
-        std::cout << "!!! --- ParameterStorage destructor" << std::endl;
-    }
-
     //Delete move and copy op
     ParameterStorage(ParameterStorage const&) = delete;
     ParameterStorage(ParameterStorage&&) = delete; 

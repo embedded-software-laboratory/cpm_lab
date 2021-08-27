@@ -64,10 +64,6 @@ public:
      * \return The LogLevelSetter instance
      */
     static LogLevelSetter& Instance();
-    
-    ~LogLevelSetter() {
-        std::cout << "!!! --- LogLevelSetter destructor" << std::endl;
-    }
 
     /**
      * \brief This function is used to set the log level for the whole domain (of the cpm library participant Singleton)

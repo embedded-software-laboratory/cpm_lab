@@ -173,10 +173,6 @@ public:
      */
     ParamViewUI(std::shared_ptr<ParameterStorage> parameter_storage, int float_precision);
 
-    ~ParamViewUI() {
-        std::cout << "!!! --- ParamViewUI destructor" << std::endl;
-    }
-
     /**
      * \brief Returns the parent widget of the ParamViewUI object, which can be used to put the UI in another UI element
      */

@@ -38,8 +38,6 @@ RTTAggregator::RTTAggregator()
 
 RTTAggregator::~RTTAggregator()
 {
-    std::cout << "!!! --- RTTAggregator destructor" << std::endl;
-
     destroy_rtt_thread();
 }
 
