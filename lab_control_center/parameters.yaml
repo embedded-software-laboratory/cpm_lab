@@ -3,7 +3,7 @@ parameters:
     {}
   uint64_t:
     middleware_period_ms:
-      value: 100
+      value: 400
       info: "The period with which the middleware calls the HLC, in nanoseconds"
   int:
     {}
