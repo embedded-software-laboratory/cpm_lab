@@ -683,17 +683,17 @@ void Deploy::deploy_labcam(std::string path, std::string file_name){
         << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << labcam_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << labcam_session << ".txt\"";
     
     //Execute command
-    program_executor->execute_command(command.str().c_str());
+    program_executor->execute_command(command.str());
 }
 
 
 void Deploy::kill_labcam() {
-    kill_session(labcam_session);
+    kill_session(labcam_session, 2.0);
 }
 
 
 
-void Deploy::deploy_recording() 
+void Deploy::deploy_recording(std::string recording_folder) 
 {
     //if old session already exists, kill it
     kill_session(recording_session);
@@ -718,13 +718,11 @@ void Deploy::deploy_recording()
         std::regex("TEMPLATE_NDDSHOME"),
         std::getenv("NDDSHOME")
     );
-    auto timenow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); 
-    std::ostringstream timenow_ss;
-    timenow_ss << std::put_time(std::localtime(&timenow), "%Y_%m_%d_%H_%M_%S");
+    
     xml_config_str = std::regex_replace(
         xml_config_str,
         std::regex("TEMPLATE_RECORDING_FOLDER"),
-        timenow_ss.str()
+        recording_folder
     );
     xml_config_str = std::regex_replace(
         xml_config_str,
@@ -744,7 +742,8 @@ void Deploy::deploy_recording()
         ip_string
     );
 
-    std::string config_path_out = "/tmp/rti_recording_config.xml";
+    std::string config_path_out = software_folder_path;
+    config_path_out.append("/lab_control_center/build/rti_recording_config.xml");
     std::ofstream xml_config(config_path_out);
     xml_config << xml_config_str;
 
@@ -839,12 +838,14 @@ std::vector<std::string> Deploy::check_for_crashes(bool script_started,bool depl
     return crashed_participants;
 }
 
-void Deploy::kill_session(std::string session_id)
+void Deploy::kill_session(std::string session_id, float delay) // delay default is 0 (see Deploy.hpp)
 {
     if (session_exists(session_id))
     {
         std::stringstream command;
-        command 
+
+        command
+            << "sleep " << delay << " && " 
             << "tmux kill-session -t \"" << session_id << "\""
             << " >" << software_top_folder_path << "/lcc_script_logs/stdout_tmux_kill.txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_tmux_kill.txt";
 

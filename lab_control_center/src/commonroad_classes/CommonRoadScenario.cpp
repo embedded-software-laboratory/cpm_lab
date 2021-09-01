@@ -1168,6 +1168,32 @@ std::optional<PlanningProblem> CommonRoadScenario::get_planning_problem(int id)
     return std::nullopt;
 }
 
+std::vector<Pose2D> CommonRoadScenario::get_start_poses()
+{
+    //Need to acquire shared mutex to prevent from writing changes and reloading during get
+    //RAII, so no need to call unlock
+    std::shared_lock<std::shared_mutex> load_lock(load_file_mutex);
+    std::shared_lock<std::shared_mutex> read_lock(write_changes_mutex);
+
+    std::vector<Pose2D> result;
+
+    for (const auto& pb : planning_problems)
+    {
+        std::optional<StateExact> initial_state = pb.second.get_initial_state();
+        if (!initial_state.has_value()) continue;
+        std::optional<Position> initial_position = initial_state->get_position();
+        if (!initial_position.has_value()) continue;
+
+        std::pair<double, double> xy = initial_position->get_center();
+        Pose2D start_pose;
+        start_pose.x(xy.first);
+        start_pose.y(xy.second);
+        start_pose.yaw(initial_state->get_orientation());
+        result.push_back(start_pose);
+    }
+    return result;
+}
+
 std::vector<int> CommonRoadScenario::get_lanelet_ids()
 {
     //Need to acquire shared mutex to prevent from writing changes and reloading during get

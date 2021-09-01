@@ -42,6 +42,7 @@
 #include "ui/setup/Upload.hpp"
 #include "ui/setup/UploadWindow.hpp"
 #include "ui/setup/VehicleToggle.hpp"
+#include "src/GoToPlanner.hpp"
 
 #ifndef SIMULATION
     #include "labcam/LabCamIface.hpp"
@@ -114,6 +115,8 @@ private:
     Gtk::Button* button_deploy = nullptr;
     //! Button to stop simulation
     Gtk::Button* button_kill = nullptr;
+    //! Button to go to formation
+    Gtk::Button* button_go_to_start_poses = nullptr;
 
     //! Box that shows vehicle toggles - these can be used to simulate vehicles, stop simulation or reboot real vehicles
     Gtk::FlowBox* vehicle_flowbox = nullptr;
@@ -167,6 +170,9 @@ private:
 
     //! Class to get a list of all currently online HLCs and if script / middleware are running on them
     std::shared_ptr<HLCReadyAggregator> hlc_ready_aggregator;
+
+    //! Planner to control vehicle to desired poses
+    std::shared_ptr<GoToPlanner> go_to_planner;
 
     //! Function to get IDs of real vehicles (and simulated ones) which are currently active
     std::function<VehicleData()> get_vehicle_data;
@@ -297,6 +303,9 @@ private:
     //! For vehicle<->HLC mapping - which HLC (ID, uint8_t) simulates the script for which vehicle (ID, uint32_t)
     std::map<uint32_t, uint8_t> vehicle_to_hlc_map;
 
+    //! Calls the function to go to formation
+    void go_to_start_poses();
+
 public:
 
     /**
@@ -323,6 +332,7 @@ public:
         std::shared_ptr<Deploy> _deploy_functions, 
         std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
         std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
+        std::shared_ptr<GoToPlanner> go_to_planner, 
         std::function<VehicleData()> _get_vehicle_data,
         std::function<void(bool, bool)> _reset_timer,
         std::function<void()> _reset_vehicle_view,

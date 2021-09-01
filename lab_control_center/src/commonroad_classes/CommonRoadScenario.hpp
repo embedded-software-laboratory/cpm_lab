@@ -462,6 +462,12 @@ public:
     std::optional<PlanningProblem> get_planning_problem(int id);
 
     /**
+     * \brief Get start poses of all planning problems of the currently loaded scenario
+     * \return Vector of Pose2D (x,y,orientation) per vehicle
+     */
+    std::vector<Pose2D> get_start_poses();
+
+    /**
      * \brief Get all lanelet IDs of the currently loaded scenario
      */
     std::vector<int> get_lanelet_ids();

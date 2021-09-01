@@ -34,15 +34,20 @@
  * \ingroup lcc_labcam
  */
 
-#include <stdlib.h>
-#include <iostream>
+#include <chrono>
 #include <csignal>
+#include <iostream>
 #include <string>
+#include <stdlib.h>
+#include <thread>
 #include "labcam/LabCamIface.hpp"
 #include "cpm/CommandLineReader.hpp"
 
 //! Variable containing the interface to the actual labcam.
 static LabCamIface labcam;
+
+
+sig_atomic_t volatile is_stopped = false;
 
 /**
  * \brief Handler, which stops labcam recording as soon as the program is to be closed externally.
@@ -53,14 +58,17 @@ static LabCamIface labcam;
  * 
  * \ingroup lcc_labcam
  */
-void sigterm_handler(int){
+void stop_signal_handler(int){
+    std::cout << "Stop-signal received." << std::endl;
     labcam.stopRecording();
+    is_stopped = true;
 };
 
 int main(int argc, char *argv[])
 {
     // Connect signal handler for termination signal
-    signal(SIGTERM, sigterm_handler);
+    signal(SIGTERM, stop_signal_handler);
+    signal(SIGHUP, stop_signal_handler);
 
     // Read command line input
     // If no path is given, the default location is software/lab_control_center/build/labcam (due to "." and creation of tmux session)
@@ -70,5 +78,7 @@ int main(int argc, char *argv[])
     // Start recording by using the given input parameters
     labcam.startRecording(path, file_name);
 
-    while(1);
+    std::chrono::milliseconds dt_sleep(500);
+    while(~is_stopped) std::this_thread::sleep_for(dt_sleep);
+    return 0;
 }

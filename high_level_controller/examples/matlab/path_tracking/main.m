@@ -25,21 +25,17 @@
 % Author: i11 - Embedded Software, RWTH Aachen University
 
 function main(vehicle_id)
-    % Get current path
-    clc
-    script_directoy = fileparts([mfilename('fullpath') '.m']);
-
     % Initialize data readers/writers...
     common_cpm_functions_path = fullfile( ...
-        script_directoy, '/..' ...
+        getenv('HOME'), 'dev/software/high_level_controller/examples/matlab' ...
     );
     assert(isfolder(common_cpm_functions_path), 'Missing folder "%s".', common_cpm_functions_path);
     addpath(common_cpm_functions_path);
-
+    
     matlabDomainId = 1;
-    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
-    %   in the workspace  (so it doesn't get gc'ed)
-    [matlabParticipant, reader_vehicleStateList, ~, ~, reader_systemTrigger, writer_readyStatus, trigger_stop, writer_vehicleCommandDirect] = init_script(matlabDomainId);
+    % matlabParticipant implicitly needed
+    [matlabParticipant, reader_vehicleStateList, ~, writer_vehicleCommandPathTracking, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
+
 
     %% Sync start with infrastructure
     % Send ready signal
@@ -62,43 +58,39 @@ function main(vehicle_id)
         [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
     end
     
+
     %% Run the HLC
     % Set reader properties
     reader_vehicleStateList.WaitSet = true;
-    reader_vehicleStateList.WaitSetTimeout = 60;
+    reader_vehicleStateList.WaitSetTimeout = 5; % [s]
+
+    % Reference path generation
+    path_points = get_path_points('circle');
     
+    % Middleware period for valid_after stamp
+    dt_period_nanos = 250e6;
+
+    % Main control loop
     while (~got_stop)
         % Read vehicle states
         [sample, ~, sample_count, ~] = reader_vehicleStateList.take();
-        assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
+        if (sample_count > 1)
+            warning('Received %d samples, expected 1. Correct middleware period? Missed deadline?', sample_count);
+            sample = sample(end); % Use latest sample
+        end
         fprintf('Received sample at time: %d\n',sample.t_now);
         
-        % Determine control inputs for the vehicle
-        % right curve with moderate forward speed
-        vehicle_command_direct = VehicleCommandDirect;
-        vehicle_command_direct.header.create_stamp.nanoseconds = uint64(sample.t_now);
-        vehicle_command_direct.header.valid_after_stamp.nanoseconds = uint64(sample.t_now);
-        vehicle_command_direct.vehicle_id = uint8(vehicle_id);
-        vehicle_command_direct.motor_throttle =  0.3;
-        vehicle_command_direct.steering_servo = -0.45;
+        vehicle_command_path_tracking = VehicleCommandPathTracking;
+        vehicle_command_path_tracking.vehicle_id = uint8(vehicle_id);
+        vehicle_command_path_tracking.path = path_points;
+        vehicle_command_path_tracking.speed = 1.0;
+        vehicle_command_path_tracking.header.create_stamp.nanoseconds = ...
+            uint64(sample(end).t_now);
+        vehicle_command_path_tracking.header.valid_after_stamp.nanoseconds = ...
+            uint64(sample(end).t_now + dt_period_nanos);
+        writer_vehicleCommandPathTracking.write(vehicle_command_path_tracking);
         
-        writer_vehicleCommandDirect.write(vehicle_command_direct);
-                
         % Check for stop signal
         [~, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
-    end
-end
-
-function [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop)
-    [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
-    got_stop = false;
-    got_start = false;
-    if sample_count > 0
-        % look at most recent signal with (end)
-        if trigger(end).next_start().nanoseconds() == trigger_stop
-            got_stop = true;
-        else
-            got_start = true;
-        end
     end
 end

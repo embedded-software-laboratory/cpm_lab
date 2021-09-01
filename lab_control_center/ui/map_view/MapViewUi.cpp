@@ -775,7 +775,7 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             double text_offset_y = (sin(-rotation)*text_offset_left + cos(-rotation)*text_offset_right);
 
             // Move to the correct position and rotate so that text is shown horizontally
-            ctx->move_to(entry.points().at(0).x() + text_offset_x, 
+            ctx->translate(entry.points().at(0).x() + text_offset_x, 
                          entry.points().at(0).y() + text_offset_y );
             ctx->rotate(-rotation);
 
@@ -783,11 +783,11 @@ void MapViewUi::draw_received_visualization_commands(const DrawingContext& ctx) 
             Cairo::Matrix font_matrix(entry.size(), 0.0, 0.0, -1.0 * entry.size(), 0.0, 0.0);
             ctx->set_font_matrix(font_matrix);
 
-            //Draw bounding box around text
-            draw_text_bounding_box(ctx, ext);
-
             //Draw text
             ctx->show_text(entry.string_message().c_str());
+
+            //Draw bounding box around text
+            draw_text_bounding_box(ctx, ext);
 
             ctx->restore();
         }

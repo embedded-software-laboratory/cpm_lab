@@ -29,6 +29,14 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 find_package(PkgConfig)
 pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
+
+# MATLAB
+find_package(Matlab)
+if(Matlab_FOUND)
+    message("-- found MATLAB in ${Matlab_ROOT_DIR}")
+    add_definitions(-DMATLAB)
+endif()
+
 # CPM lib
 include_directories(SYSTEM ../cpm_lib/include/)
 include_directories(SYSTEM ../cpm_lib/include/cpm/dds/)
@@ -139,6 +147,8 @@ add_executable(lab_control_center
     src/HLCReadyAggregator.hpp
     src/VisualizationCommandsAggregator.cpp
     src/VisualizationCommandsAggregator.hpp
+    src/GoToPlanner.cpp
+    src/GoToPlanner.hpp
     src/VehicleManualControl.cpp
     src/VehicleManualControl.hpp
 
@@ -222,6 +232,17 @@ else()
 endif()
 
 target_include_directories(lab_control_center PUBLIC ${GTKMM_INCLUDE_DIRS})
+if(Matlab_FOUND)
+    target_include_directories(
+        lab_control_center PRIVATE
+        ${Matlab_ROOT_DIR}/extern/include/
+    )
+target_link_libraries(
+    lab_control_center
+    ${Matlab_ROOT_DIR}/extern/bin/glnxa64/libMatlabDataArray.so
+    ${Matlab_ROOT_DIR}/extern/bin/glnxa64/libMatlabEngine.so
+)
+endif()
 target_compile_options(lab_control_center PUBLIC ${GTKMM_CFLAGS_OTHER})
 
 add_executable(TimerTestSimulated

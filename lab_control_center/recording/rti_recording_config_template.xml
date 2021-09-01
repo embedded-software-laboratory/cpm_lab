@@ -12,9 +12,9 @@
                 <!-- highest performance for recording, but need conversion before viewing, is default -->
                 <!-- <storage_format>XCDR_AUTO</storage_format> -->
                 <fileset>
-                    <workspace_dir>/tmp/rti_recordings</workspace_dir>
+                    <workspace_dir>TEMPLATE_RECORDING_FOLDER</workspace_dir>
                     <execution_dir_expression>
-                        TEMPLATE_RECORDING_FOLDER
+                    <!-- empty -->
                     </execution_dir_expression>
                     <filename_expression>recording.dat</filename_expression>
                 </fileset>

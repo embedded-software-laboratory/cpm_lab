@@ -420,7 +420,7 @@ void MonitoringUi::init_ui_thread()
 
                 auto sensor_timeseries = vehicle_sensor_timeseries.at(rows_restricted[i]);
 
-                if(sensor_timeseries->has_new_data(0.5))
+                if(sensor_timeseries->has_new_data(0.75))
                 {
                     const auto value = sensor_timeseries->get_latest_value();
                     label->set_text(sensor_timeseries->format_value(value));
@@ -452,7 +452,7 @@ void MonitoringUi::init_ui_thread()
                             }
 
                             // an error occured before - do nothing if the error is not older than a threshold
-                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<500000000) continue;
+                            if(cpm::get_time_ns()-error_timestamps[i][vehicle_id]<1000000000) continue;
                             
                             if(!error_triggered[i][vehicle_id])
                             {

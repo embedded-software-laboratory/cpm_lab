@@ -282,6 +282,13 @@ int main(int argc, char *argv[])
     unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
     std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 
+    auto goToPlanner = make_shared<GoToPlanner>(
+        std::bind(&CommonRoadScenario::get_start_poses, commonroad_scenario),
+        [=](){return timeSeriesAggregator->get_vehicle_data();},
+        trajectoryCommand,
+        absolute_executable_path
+    );
+
     //Create deploy class
     std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
         cmd_domain_id, 
@@ -329,6 +336,7 @@ int main(int argc, char *argv[])
         deploy_functions,
         vehicleAutomatedControl, 
         hlcReadyAggregator, 
+        goToPlanner,
         [=](){return timeSeriesAggregator->get_vehicle_data();},
         [=](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
         [=](){return monitoringUi->reset_vehicle_view();},

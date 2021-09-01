@@ -68,10 +68,23 @@ inline double vector_length(double x, double y)
     return sqrt(x*x+y*y);
 }
 
-void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
+void TrajectoryCommand::set_path(
+    uint8_t vehicle_id,
+    std::vector<Pose2D> path
+)
 {
-    if(path.size() < 3) return;
-    if(timer == nullptr) return;
+    (void) set_path(vehicle_id, path, 500000000ull);
+    return;
+}
+
+uint64_t TrajectoryCommand::set_path(
+    uint8_t vehicle_id,
+    std::vector<Pose2D> path,
+    uint64_t delay_ns
+)
+{
+    if(path.size() < 3) return 0;
+    if(timer == nullptr) return 0;
 
     /** Generate trajectory from given path **/
     std::vector<double> arc_length(path.size(), 0.0);
@@ -113,7 +126,7 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
     const double cruise_time = cruise_distance / max_speed;
     const double total_time = standstill_time + acceleration_time + cruise_time + deceleration_time + standstill_time;
 
-    const uint64_t t_start = timer->get_time() + 1000000000ull;
+    const uint64_t t_start = timer->get_time() + delay_ns;
 
     vector<TrajectoryPoint> trajectory;
     for (uint64_t t_nanos = 0; (t_nanos * 1e-9) < total_time; t_nanos += dt_nanos)
@@ -182,6 +195,8 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
 
     std::lock_guard<std::mutex> lock(_mutex);
     this->vehicle_trajectories[vehicle_id] = trajectory;
+
+    return uint64_t(1e9*total_time);
 }
 
 

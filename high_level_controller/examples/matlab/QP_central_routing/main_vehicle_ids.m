@@ -40,6 +40,8 @@ function main_vehicle_ids(varargin)
     init_script_path = fullfile('../', '/init_script.m');
     assert(isfile(init_script_path), 'Missing file "%s".', init_script_path);
     addpath(fileparts(init_script_path));
+    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
+    %   in the workspace  (so it doesn't get gc'ed)
     [matlabParticipant, stateReader, trajectoryWriter, ~, systemTriggerReader, readyStatusWriter, trigger_stop] = init_script(matlabDomainID);
     cd(script_directory)
 
