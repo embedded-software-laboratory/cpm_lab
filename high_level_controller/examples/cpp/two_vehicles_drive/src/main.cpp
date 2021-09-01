@@ -172,6 +172,7 @@ int main(int argc, char *argv[])
         if( vehicle_state_list.period_ms()*1000000ull != dt_nanos ){
             cpm::Logging::Instance().write(1,
                     "Please set middleware_period_ms to 200ms");
+            return;
         }
 
         t_now = vehicle_state_list.t_now();
