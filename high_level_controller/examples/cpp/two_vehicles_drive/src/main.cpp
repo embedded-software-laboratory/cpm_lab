@@ -163,17 +163,17 @@ int main(int argc, char *argv[])
     {
         // Initial time used for trajectory generation
         reference_trajectory_time = vehicle_state_list.t_now() + 1000000000ull;
-
-        // Check if middleware_period_ms was set correctly, as described above
-        // If not, write a message to log
-        if( vehicle_state_list.period_ms()*1000000ull != dt_nanos ){
-            cpm::Logging::Instance().write(1,
-                    "middleware_period_ms needs to be set to 200ms");
-        }
     });
 
     hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list)
     {
+        // Check if middleware_period_ms was set correctly, as described above
+        // If not, write a message to log
+        if( vehicle_state_list.period_ms()*1000000ull != dt_nanos ){
+            cpm::Logging::Instance().write(1,
+                    "Please set middleware_period_ms to 200ms");
+        }
+
         t_now = vehicle_state_list.t_now();
 
         vector<TrajectoryPoint> trajectory_points;

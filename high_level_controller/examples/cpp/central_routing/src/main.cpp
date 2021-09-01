@@ -122,13 +122,6 @@ int main(int argc, char *argv[])
             planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
             planner->set_real_time(vehicle_state_list.t_now());
 
-            if(vehicle_state_list.period_ms()*1000000 != dt_nanos) {
-                cpm::Logging::Instance().write(
-                    1,
-                    "Error: Cannot start planning, middleware_period_ms needs to be 400ms"
-                );
-                throw std::runtime_error("middleware_period_ms needs to be set to 400ms");
-            }
             //check for vehicles if online
             bool all_vehicles_online = true;
             std::set<uint8_t> vehicle_checklist(vehicle_ids.begin(), vehicle_ids.end());
@@ -196,6 +189,15 @@ int main(int argc, char *argv[])
             }
     });
     hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list) {
+            // Do not start if middleware period is not 400ms
+            // because it's required by this planner
+            if(vehicle_state_list.period_ms()*1000000 != dt_nanos) {
+                cpm::Logging::Instance().write(1,
+                    "Please set middleware_period_ms to 400ms"
+                );
+                return;
+            }
+
             uint64_t t_now = vehicle_state_list.t_now();
             planner->set_real_time(t_now);
 

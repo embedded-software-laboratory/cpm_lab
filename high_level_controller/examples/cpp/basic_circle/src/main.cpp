@@ -163,6 +163,14 @@ int main(int argc, char *argv[])
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
     hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list)
     {
+        // Check if middleware_period_ms was set correctly, as described above
+        // If not, write a message to log
+        if( vehicle_state_list.period_ms() != 200 ) {
+            cpm::Logging::Instance().write(1,
+                    "Please set middleware_period_ms to 200ms");
+            return;
+        }
+
         uint64_t t_now = vehicle_state_list.t_now();
         // Initial time used for trajectory generation
         if (reference_trajectory_time == 0) reference_trajectory_time = t_now + 1000000000ull;
