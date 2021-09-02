@@ -1,6 +1,5 @@
 function main(vehicle_id)
     % Get current path
-    clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
 
     % Initialize data readers/writers...
@@ -15,6 +14,7 @@ function main(vehicle_id)
     %   in the workspace  (so it doesn't get gc'ed)
     [matlabParticipant, reader_vehicleStateList, ~, ~, reader_systemTrigger, writer_readyStatus, trigger_stop, writer_vehicleCommandDirect] = init_script(matlabDomainId);
 
+    
     %% Sync start with infrastructure
     % Send ready signal
     % Signal needs to be sent for all assigned vehicle ids
@@ -47,11 +47,22 @@ function main(vehicle_id)
         assert(sample_count == 1, 'Received %d samples, expected 1', sample_count);
         fprintf('Received sample at time: %d\n',sample.t_now);
         
+        % Middleware period and maximum communication delay estimation for valid_after stamp
+        dt_period_nanos = uint64(sample.period_ms*1e6);
+        dt_max_comm_delay = uint64(100e6);
+        if dt_period_nanos >= dt_max_comm_delay
+            dt_valid_after = dt_period_nanos;
+        else
+            dt_valid_after = dt_max_comm_delay;
+        end
+        
         % Determine control inputs for the vehicle
         % right curve with moderate forward speed
         vehicle_command_direct = VehicleCommandDirect;
-        vehicle_command_direct.header.create_stamp.nanoseconds = uint64(sample.t_now);
-        vehicle_command_direct.header.valid_after_stamp.nanoseconds = uint64(sample.t_now);
+        vehicle_command_direct.header.create_stamp.nanoseconds = ...
+            uint64(sample.t_now);
+        vehicle_command_direct.header.valid_after_stamp.nanoseconds = ...
+            uint64(sample.t_now+dt_valid_after);
         vehicle_command_direct.vehicle_id = uint8(vehicle_id);
         vehicle_command_direct.motor_throttle =  0.3;
         vehicle_command_direct.steering_servo = -0.45;
@@ -60,19 +71,5 @@ function main(vehicle_id)
                 
         % Check for stop signal
         [~, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop);
-    end
-end
-
-function [got_start, got_stop] = read_system_trigger(reader_systemTrigger, trigger_stop)
-    [trigger, ~, sample_count, ~] = reader_systemTrigger.take();
-    got_stop = false;
-    got_start = false;
-    if sample_count > 0
-        % look at most recent signal with (end)
-        if trigger(end).next_start().nanoseconds() == trigger_stop
-            got_stop = true;
-        else
-            got_start = true;
-        end
     end
 end

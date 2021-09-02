@@ -39,11 +39,21 @@ function main(vehicle_id)
     reader_vehicleStateList.WaitSetTimeout = 5; % [s]
 
     % Reference path generation
-    path_points = get_path_points('circle');
+    map_center_x = 2.25;    % [m]
+    map_center_y = 2.0;     % [m]
+    x     = [     1,      0,     -1,      0,      1] + map_center_x;   % [m]
+    y     = [     0,      1,      0,     -1,      0] + map_center_y;   % [m]
+    yaw   = [1*pi/2, 2*pi/2, 3*pi/2,      0, 1*pi/2];                  % [rad]
+    s     = [     0, 1*pi/2, 2*pi/2, 3*pi/2, 4*pi/2];                  % [m]
     
-    % Middleware period for valid_after stamp
-    dt_period_nanos = 250e6;
-
+    path_points = struct;
+    for i = 1:numel(s)
+        path_points(i).pose.x = x(i);
+        path_points(i).pose.y = y(i);
+        path_points(i).pose.yaw = yaw(i);
+        path_points(i).s = s(i);
+    end
+    
     % Main control loop
     while (~got_stop)
         % Read vehicle states
@@ -53,6 +63,10 @@ function main(vehicle_id)
             sample = sample(end); % Use latest sample
         end
         fprintf('Received sample at time: %d\n',sample.t_now);
+        
+        % Middleware period for valid_after stamp
+        dt_period_nanos = sample.period_ms*1e3;
+        dt_max_comm_delay = 100e6;
         
         vehicle_command_path_tracking = VehicleCommandPathTracking;
         vehicle_command_path_tracking.vehicle_id = uint8(vehicle_id);
