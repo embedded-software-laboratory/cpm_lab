@@ -1,42 +1,20 @@
-% MIT License
-% 
-% Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-% 
-% Permission is hereby granted, free of charge, to any person obtaining a copy
-% of this software and associated documentation files (the "Software"), to deal
-% in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-% copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
-% 
-% The above copyright notice and this permission notice shall be included in all
-% copies or substantial portions of the Software.
-% 
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-% SOFTWARE.
-% 
-% This file is part of cpm_lab.
-% 
-% Author: i11 - Embedded Software, RWTH Aachen University
-
 function main(vehicle_id)
+    % Get current path
+    script_directoy = fileparts([mfilename('fullpath') '.m']);
+
     % Initialize data readers/writers...
     common_cpm_functions_path = fullfile( ...
-        getenv('HOME'), 'dev/software/high_level_controller/examples/matlab' ...
+        script_directoy, '/..' ...
     );
     assert(isfolder(common_cpm_functions_path), 'Missing folder "%s".', common_cpm_functions_path);
     addpath(common_cpm_functions_path);
     
     matlabDomainId = 1;
-    % matlabParticipant implicitly needed
+    % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
+    %   in the workspace  (so it doesn't get gc'ed)
     [matlabParticipant, reader_vehicleStateList, ~, writer_vehicleCommandPathTracking, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
 
-
+    
     %% Sync start with infrastructure
     % Send ready signal
     % Signal needs to be sent for all assigned vehicle ids
@@ -65,11 +43,21 @@ function main(vehicle_id)
     reader_vehicleStateList.WaitSetTimeout = 5; % [s]
 
     % Reference path generation
-    path_points = get_path_points('circle');
+    map_center_x = 2.25;    % [m]
+    map_center_y = 2.0;     % [m]
+    x     = [     1,      0,     -1,      0,      1] + map_center_x;   % [m]
+    y     = [     0,      1,      0,     -1,      0] + map_center_y;   % [m]
+    yaw   = [1*pi/2, 2*pi/2, 3*pi/2,      0, 1*pi/2];                  % [rad]
+    s     = [     0, 1*pi/2, 2*pi/2, 3*pi/2, 4*pi/2];                  % [m]
     
-    % Middleware period for valid_after stamp
-    dt_period_nanos = 250e6;
-
+    path_points = struct;
+    for i = 1:numel(s)
+        path_points(i).pose.x = x(i);
+        path_points(i).pose.y = y(i);
+        path_points(i).pose.yaw = yaw(i);
+        path_points(i).s = s(i);
+    end
+    
     % Main control loop
     while (~got_stop)
         % Read vehicle states
@@ -80,6 +68,14 @@ function main(vehicle_id)
         end
         fprintf('Received sample at time: %d\n',sample.t_now);
         
+        % Middleware period and maximum communication delay estimation for valid_after stamp
+        dt_period_nanos = uint64(sample.period_ms*1e6);
+        dt_max_comm_delay = uint64(100e6);
+        if dt_period_nanos >= dt_max_comm_delay
+            dt_valid_after = dt_period_nanos;
+        else
+            dt_valid_after = dt_max_comm_delay;
+        end        
         vehicle_command_path_tracking = VehicleCommandPathTracking;
         vehicle_command_path_tracking.vehicle_id = uint8(vehicle_id);
         vehicle_command_path_tracking.path = path_points;
@@ -87,7 +83,7 @@ function main(vehicle_id)
         vehicle_command_path_tracking.header.create_stamp.nanoseconds = ...
             uint64(sample(end).t_now);
         vehicle_command_path_tracking.header.valid_after_stamp.nanoseconds = ...
-            uint64(sample(end).t_now + dt_period_nanos);
+            uint64(sample(end).t_now + dt_valid_after);
         writer_vehicleCommandPathTracking.write(vehicle_command_path_tracking);
         
         % Check for stop signal

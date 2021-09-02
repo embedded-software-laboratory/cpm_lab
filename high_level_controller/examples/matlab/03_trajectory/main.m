@@ -1,32 +1,5 @@
-% MIT License
-% 
-% Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-% 
-% Permission is hereby granted, free of charge, to any person obtaining a copy
-% of this software and associated documentation files (the "Software"), to deal
-% in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-% copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
-% 
-% The above copyright notice and this permission notice shall be included in all
-% copies or substantial portions of the Software.
-% 
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-% SOFTWARE.
-% 
-% This file is part of cpm_lab.
-% 
-% Author: i11 - Embedded Software, RWTH Aachen University
-
 function main(vehicle_id)
     % Get current path
-    clc
     script_directoy = fileparts([mfilename('fullpath') '.m']);
 
     % Initialize data readers/writers...
@@ -40,6 +13,7 @@ function main(vehicle_id)
     % CAVE `matlabParticipant`must be stored for RTI DDS somewhere
     %   in the workspace  (so it doesn't get gc'ed)
     [matlabParticipant, reader_vehicleStateList, writer_vehicleCommandTrajectory, ~, reader_systemTrigger, writer_readyStatus, trigger_stop] = init_script(matlabDomainId);
+    
     
     %% Sync start with infrastructure
     % Send ready signal
@@ -107,15 +81,22 @@ function main(vehicle_id)
             i_traj_index = mod(i_traj_index, length(segment_duration)) + 1;
         end
             
+        % Middleware period and maximum communication delay estimation for valid_after stamp
+        dt_period_nanos = uint64(sample.period_ms*1e6);
+        dt_max_comm_delay = uint64(100e6);
+        if dt_period_nanos >= dt_max_comm_delay
+            dt_valid_after = dt_period_nanos;
+        else
+            dt_valid_after = dt_max_comm_delay;
+        end
         % Send the current trajectory point to the vehicle
-        max_delay_time_nanos = 200e6;
         vehicle_command_trajectory = VehicleCommandTrajectory;
         vehicle_command_trajectory.vehicle_id = uint8(vehicle_id);
         vehicle_command_trajectory.trajectory_points = trajectory_points;
         vehicle_command_trajectory.header.create_stamp.nanoseconds = ...
             uint64(sample.t_now);
         vehicle_command_trajectory.header.valid_after_stamp.nanoseconds = ...
-            uint64(sample.t_now + max_delay_time_nanos);
+            uint64(sample.t_now + dt_valid_after);
         writer_vehicleCommandTrajectory.write(vehicle_command_trajectory);
 
         % The vehicle always needs a trajectory point at or before the current time,
