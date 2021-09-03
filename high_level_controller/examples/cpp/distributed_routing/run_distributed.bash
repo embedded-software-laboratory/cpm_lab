@@ -60,7 +60,7 @@ cleanup(){
 
     for vehicle_id in "${vehicle_array[@]}"
     do
-        tmux kill-session -t decentral_routing_${vehicle_id}
+        tmux kill-session -t distributed_routing_${vehicle_id}
         tmux kill-session -t middleware_${vehicle_id}
     done
 
@@ -80,10 +80,10 @@ do
     # This is useful, when the HLC is crashing before we have time to attach a debugger
     if [  $debug ]; then
         # This starts every HLC with a debugger attached and in separate tmux sessions
-        # Use e.g. 'tmux attach-session -t decentral_routing_2' to start debugging
+        # Use e.g. 'tmux attach-session -t distributed_routing_2' to start debugging
         # HLC 2
-        tmux new-session -d -s "decentral_routing_${vehicle_id}" ". ${ABSOLUTE_SOFTWARE_FOLDER_DIR}/lab_control_center/bash/environment_variables_local.bash;cd ${ABSOLUTE_SOFTWARE_FOLDER_DIR}/high_level_controller/examples/cpp/decentral_routing/build/;\
-            gdb -ex=r --args ./decentral_routing \
+        tmux new-session -d -s "distributed_routing_${vehicle_id}" ". ~/dev/software/lab_control_center/bash/environment_variables_local.bash;cd /home/dev/dev/software/high_level_controller/examples/cpp/distributed_routing/build/;\
+            gdb -ex=r --args ./distributed_routing \
             --node_id=high_level_controller${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \
@@ -106,7 +106,7 @@ do
     printf "\tStarting middleware_${vehicle_id} ...\n"
     else
         # This starts the high level controller
-        ./decentral_routing \
+        ./distributed_routing \
             --node_id=high_level_controller_${vehicle_id} \
             --simulated_time=false \
             --vehicle_ids=${vehicle_id} \

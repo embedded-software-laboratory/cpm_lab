@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <exception>
 #include "cpm/Logging.hpp"
 #include "cpm/Writer.hpp"
 #include "cpm/ReaderAbstract.hpp"

@@ -26,6 +26,12 @@ fi
 
 mkdir -p $DIR/build
 
+# Copy local communication QoS, use correct IP
+IP_SELF=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+sed -e "s/TEMPLATE_IP/${IP_SELF}/g" \
+<$DIR/QOS_LOCAL_COMMUNICATION.xml.template \
+>$DIR/build/QOS_LOCAL_COMMUNICATION.xml
+
 cd $DIR/build
 cmake ..
 make -C $DIR/build -j$(nproc) && $DIR/build/unittest
@@ -38,6 +44,7 @@ if [ -z $SIMULATION ]; then
         sudo chmod a+rwx "/var/www/html/nuc"
     fi
     cp $DIR/build/libcpm.so $DIR/cpm_library_package
+    cp ${DIR}/QOS_LOCAL_COMMUNICATION.xml.template ./cpm_library_package
     tar -czf cpm_library_package.tar.gz -C $DIR/ cpm_library_package
     rm -f /var/www/html/nuc/cpm_library_package.tar.gz
     mv $DIR/cpm_library_package.tar.gz /var/www/html/nuc

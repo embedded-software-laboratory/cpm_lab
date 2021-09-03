@@ -14,7 +14,7 @@ const float VEHICLE_HALF_WIDTH = 0.06;
 
 /**
  * \struct PathNode
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 struct PathNode
 {

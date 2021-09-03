@@ -1,8 +1,7 @@
 #include "cpm/Logging.hpp"
 #include "cpm/CommandLineReader.hpp"
 #include "cpm/init.hpp"
-#include "cpm/ParticipantSingleton.hpp"
-#include "cpm/Timer.hpp"
+#include "cpm/HLCCommunicator.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include <dds/pub/ddspub.hpp>
 #include <iostream>
@@ -46,7 +45,6 @@ int main(int argc, char *argv[])
     const std::string node_id = "two_vehicles_drive";
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id(node_id);
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv);
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
     for (auto i : vehicle_ids_int)
@@ -61,11 +59,16 @@ int main(int argc, char *argv[])
     //(The vehicle does not consider 'mixed' trajectories as before, when trajectories were sent e.g. by both the LCC and the program)
     sleep(10);
 
+    HLCCommunicator hlc_communicator(
+            vehicle_ids
+    );
+
     // Writer for sending trajectory commands, Writer writes the trajectory commands in the DDS "Cloud" so other programs can access them.
+    // Instead of creating a new participant, we can just use the one created by the HLCCommunicator
     //For more information see our documentation about RTI DDS
-    dds::pub::DataWriter<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
-        dds::pub::Publisher(cpm::ParticipantSingleton::Instance()),
-        cpm::get_topic<VehicleCommandTrajectory>("vehicleCommandTrajectory"));
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+            hlc_communicator.getLocalParticipant()->get_participant(),
+            "vehicleCommandTrajectory");
 
     // Circle trajectory data
     //In this section the points on the x and y axis (independently from the map!) are set.
@@ -120,17 +123,33 @@ int main(int argc, char *argv[])
     // they are incremented as time passes.
     int reference_trajectory_index = 0;
     uint64_t reference_trajectory_time = 0;
+    uint64_t t_now = 0;
 
-    // The code inside the cpm::Timer is executed every 200 milliseconds.
+    // The code inside the onEachTimestep method is executed each timestep.
+    // Here we assume that we send trajectories every 200ms
+    // This means we need to manually set the middleware_period_ms parameter in the LCC to 200ms.
     // Commands must be sent to the vehicle regularly, more than 2x per second.
     // Otherwise it is assumed that the connection is lost and the vehicle stops.
     const uint64_t dt_nanos = 200000000ull; // 200 milliseconds == 200000000 nanoseconds
-    auto timer = cpm::Timer::create(node_id, dt_nanos, 0, false, true, enable_simulated_time);
-    timer->start([&](uint64_t t_now)
+
+    // This code will get executed only once at the beginning of the first timestep
+    hlc_communicator.onFirstTimestep([&](VehicleStateList vehicle_state_list)
     {
         // Initial time used for trajectory generation
-        if (reference_trajectory_time == 0)
-            reference_trajectory_time = t_now + 1000000000ull;
+        reference_trajectory_time = vehicle_state_list.t_now() + 1000000000ull;
+    });
+
+    hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list)
+    {
+        // Check if middleware_period_ms was set correctly, as described above
+        // If not, write a message to log
+        if( vehicle_state_list.period_ms()*1000000ull != dt_nanos ){
+            cpm::Logging::Instance().write(1,
+                    "Please set middleware_period_ms to 200ms");
+            return;
+        }
+
+        t_now = vehicle_state_list.t_now();
 
         vector<TrajectoryPoint> trajectory_points;
         vector<TrajectoryPoint> trajectory_points2;
@@ -186,5 +205,7 @@ int main(int argc, char *argv[])
         reference_trajectory_time += segment_duration[reference_trajectory_index];
         reference_trajectory_index = (reference_trajectory_index + 1) % segment_duration.size();
         }
-});
+    });
+
+    hlc_communicator.start();
 }

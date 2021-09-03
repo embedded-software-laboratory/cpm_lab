@@ -97,6 +97,10 @@ my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 cp -rf /tmp/software/middleware_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/middleware/build/QOS_LOCAL_COMMUNICATION.xml
 
+# Do the same for cpm_libs QoS
+cp /tmp/software/cpm_library_package/QOS_LOCAL_COMMUNICATION.xml.template ./software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml
+sed -i -e "s/TEMPLATE_IP/${my_ip}/g" ./software/cpm_lib/build/QOS_LOCAL_COMMUNICATION.xml
+
 # Get Matlab init scripts
 cd /tmp/software
 out=$(wget http://192.168.1.249/nuc/matlab_package.tar.gz)

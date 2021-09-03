@@ -5,7 +5,7 @@
 
 /**
  * \file VehicleTrajectoryPlanner.cpp
- * \ingroup decentral_routing
+ * \ingroup distributed_routing
  */
 
 VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(){}
@@ -74,7 +74,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         crashed = true;
         started = false; // end planning
         isStopped = true;
-        return std::unique_ptr<VehicleCommandTrajectory>(nullptr);
+        throw std::runtime_error("Found unavoidable collision");
     }
 
     if( !stopFlag ) {
@@ -106,7 +106,9 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
             trajectory_point_buffer.erase(trajectory_point_buffer.begin());
         }
     }
-    
+
+    debug_analyzeTrajectoryPointBuffer();
+
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
     //debug_writeOutReceivedTrajectories();
@@ -132,6 +134,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
                     "Planner missed too many timesteps");
             crashed = true;
             started = false; // end planning
+            throw std::runtime_error("Planner missed too many timesteps");
         }
         isStopped = true;
         return std::unique_ptr<VehicleCommandTrajectory>(nullptr);

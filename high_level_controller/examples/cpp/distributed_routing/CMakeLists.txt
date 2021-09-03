@@ -22,7 +22,7 @@ link_directories(../../../../cpm_lib/build/)
 include_directories(src)
 link_libraries(dl nsl m pthread rt)
 
-add_executable(decentral_routing
+add_executable(distributed_routing
     src/main.cpp
     include/lane_graph_one_lane/lane_graph.hpp
     src/lane_graph_tools.hpp
@@ -34,9 +34,9 @@ add_executable(decentral_routing
     src/CouplingGraph.cpp
     src/CouplingGraph.hpp
 )
-target_include_directories(decentral_routing PUBLIC
+target_include_directories(distributed_routing PUBLIC
     include/lane_graph_full)
-target_link_libraries(decentral_routing cpm)
+target_link_libraries(distributed_routing cpm)
 
 add_executable(tests
     src/tests.cpp

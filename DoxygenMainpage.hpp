@@ -250,9 +250,9 @@
  */
 
 /**
- * \defgroup decentral_routing Decentral Routing Example
+ * \defgroup distributed_routing Distributed Routing Example
  * \ingroup cpp_examples
- * \brief In this scenario, multiple vehicles drive on the Lab map following trajectories by a decentral routing mechanism that makes sure that the vehicles don't crash.
+ * \brief In this scenario, multiple vehicles drive on the Lab map following trajectories by a distributed routing mechanism that makes sure that the vehicles don't crash.
  */
 
 /**
