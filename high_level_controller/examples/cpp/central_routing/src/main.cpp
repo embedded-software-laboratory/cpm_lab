@@ -1,39 +1,12 @@
-// MIT License
-// 
-// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-// 
-// This file is part of cpm_lab.
-// 
-// Author: i11 - Embedded Software, RWTH Aachen University
-
 
 #include "lane_graph.hpp"                       //sw-folder central routing->include
 #include "cpm/Logging.hpp"                      //->cpm_lib->include->cpm
 #include "cpm/CommandLineReader.hpp"            //->cpm_lib->include->cpm
 #include "cpm/init.hpp"                         //->cpm_lib->include->cpm
-#include "cpm/MultiVehicleReader.hpp"           //->cpm_lib->include->cpm
-#include "cpm/ParticipantSingleton.hpp"         //->cpm_lib->include->cpm
-#include "cpm/Timer.hpp"                        //->cpm_lib->include->cpm
 #include "cpm/Writer.hpp"
-#include "VehicleObservation.hpp" 
+#include "cpm/Participant.hpp"
+#include "cpm/HLCCommunicator.hpp"
+#include "VehicleStateList.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "VehicleTrajectoryPlanningState.hpp"   //sw-folder central routing
 #include "lane_graph_tools.hpp"                 //sw-folder central routing
@@ -42,6 +15,8 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <set>
+#include <stdexcept>
 #include "MultiVehicleTrajectoryPlanner.hpp"    //sw-folder central routing
 
 using std::vector;
@@ -78,7 +53,6 @@ int main(int argc, char *argv[])
 {   //////////////////Set logging details///////////////////////////////////////////////////////////
     cpm::init(argc, argv);
     cpm::Logging::Instance().set_id("central_routing");
-    const bool enable_simulated_time = cpm::cmd_parameter_bool("simulated_time", false, argc, argv); //variable is set to false 
     ////////////////Set vehicle IDs for the vehicles selected in the command line or the LCC////////
     const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
     std::vector<uint8_t> vehicle_ids;
@@ -107,66 +81,48 @@ int main(int argc, char *argv[])
     std::unique_ptr<MultiVehicleTrajectoryPlanner> planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
 
 
+    HLCCommunicator hlc_communicator(vehicle_ids);
+
+
     ///////////// writer and reader for sending trajectory commands////////////////////////
     //the writer will write data for the trajectory for the position of the vehicle (x,y) and the speed for each direction vecotr (vx,vy) and the vehicle ID
-    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory("vehicleCommandTrajectory");
-    //the reader will read the pose of a vehicle given by its vehicle ID
-    cpm::MultiVehicleReader<VehicleObservation> ips_reader(
-        cpm::get_topic<VehicleObservation>("vehicleObservation"),
-        vehicle_ids
-    );
+    cpm::Writer<VehicleCommandTrajectory> writer_vehicleCommandTrajectory(
+            hlc_communicator.getLocalParticipant()->get_participant(), 
+            "vehicleCommandTrajectory");
 
     /////////////////////////////////Trajectory planner//////////////////////////////////////////
-    //create(node_id, period in nanoseconds, offset in nanoseconds, bool wait_for_start, bool simulated_time_allowed, bool simulated_time (set in line 27))
-    auto timer = cpm::Timer::create("central_routing", dt_nanos, 0, false, true, enable_simulated_time); 
-    timer->start([&](uint64_t t_now)
-    {
-        planner->set_real_time(t_now);
-
-        if(planner->is_started())//will be set to true after fist activation
-        {
-            //get trajectory commands from MultiVehicleTrajectoryPlanner with new points for each vehicle ID
-            auto commands = planner->get_trajectory_commands(t_now);
-            
-            for(auto& command:commands)
-            {
-                writer_vehicleCommandTrajectory.write(command);
-            }
-        }
-        else //prepare to start planner
-        {
+    hlc_communicator.onFirstTimestep([&](VehicleStateList vehicle_state_list) {
             // reset planner object
             planner = std::unique_ptr<MultiVehicleTrajectoryPlanner>(new MultiVehicleTrajectoryPlanner(dt_nanos));
-            planner->set_real_time(t_now);
+            planner->set_real_time(vehicle_state_list.t_now());
 
-            std::map<uint8_t, VehicleObservation> ips_sample;
-            std::map<uint8_t, uint64_t> ips_sample_age;
-            ips_reader.get_samples(t_now, ips_sample, ips_sample_age);
             //check for vehicles if online
             bool all_vehicles_online = true;
-            for(auto e:ips_sample_age)
+            std::set<uint8_t> vehicle_checklist(vehicle_ids.begin(), vehicle_ids.end());
+            for(auto vehicle_state:vehicle_state_list.state_list())
             {
-                if(e.second > 1000000000ull) all_vehicles_online = false;
+                if(vehicle_checklist.find(vehicle_state.vehicle_id()) != vehicle_checklist.end()) {
+                    vehicle_checklist.erase(vehicle_state.vehicle_id());
+                }
             }
+
+            all_vehicles_online = (vehicle_checklist.size() == 0);
 
             if(!all_vehicles_online)
             {
-                // FIXME Use %s, else we get a warning that this is no string literal (we do not want unnecessary warnings to show up)
                 cpm::Logging::Instance().write(
-                    3,
-                    "Waiting for %s ...",
-                    "vehicles"
+                    1,
+                    "Error: Cannot start planning, can't find all vehicles in VehicleStateList from middleware"
                 );
-                return;
+                throw std::runtime_error("Can't find all vehicles in VehicleStateList");
             }
 
             bool all_vehicles_matched = true;
             //match pose of vehicles with pose on map
-            for(auto e:ips_sample)
+            for(auto vehicle_state:vehicle_state_list.state_list())
             {
-                auto data = e.second;
-                auto new_id = data.vehicle_id();
-                auto new_pose = data.pose();
+                auto new_id = vehicle_state.vehicle_id();
+                auto new_pose = vehicle_state.pose();
                 int out_edge_index = -1;
                 int out_edge_path_index = -1;
                 bool matched = laneGraphTools.map_match_pose(new_pose, out_edge_index, out_edge_path_index);
@@ -185,9 +141,10 @@ int main(int argc, char *argv[])
                     all_vehicles_matched = false;
                     cpm::Logging::Instance().write(
                         1,
-                        "Error: Vehicle %d not matched.",
+                        "Error: Cannot start planning, vehicle %d not matched.",
                         int(new_id)
                     );
+                    throw std::runtime_error("Couldn't match vehicle, see logs for details");
                 }
             }
 
@@ -197,6 +154,42 @@ int main(int argc, char *argv[])
                 //with the consequence of speed reduction for the lower prioritized vehicle (here: Priority based on descending vehicle ID of the neighbours.)
                 planner->start();
             }
-        }
+            else {
+                cpm::Logging::Instance().write(
+                    1,
+                    "Error: Cannot start planning, couldn't find all vehicles' positions"
+                );
+                throw std::runtime_error("Couldn't find all vehicles' positions");
+            }
     });
+    hlc_communicator.onEachTimestep([&](VehicleStateList vehicle_state_list) {
+            // Do not start if middleware period is not 400ms
+            // because it's required by this planner
+            if(vehicle_state_list.period_ms()*1000000 != dt_nanos) {
+                cpm::Logging::Instance().write(1,
+                    "Please set middleware_period_ms to 400ms"
+                );
+                return;
+            }
+
+            uint64_t t_now = vehicle_state_list.t_now();
+            planner->set_real_time(t_now);
+
+            if(planner->is_started())//will be set to true after fist activation
+            {
+                //get trajectory commands from MultiVehicleTrajectoryPlanner with new points for each vehicle ID
+                auto commands = planner->get_trajectory_commands(t_now);
+                
+                for(auto& command:commands)
+                {
+                    writer_vehicleCommandTrajectory.write(command);
+                }
+            }
+            else //prepare to start planner
+            {
+                //Something went wrong
+            }
+    });
+
+    hlc_communicator.start();
 }

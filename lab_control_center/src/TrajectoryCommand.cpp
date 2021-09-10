@@ -1,29 +1,3 @@
-// MIT License
-// 
-// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-// 
-// This file is part of cpm_lab.
-// 
-// Author: i11 - Embedded Software, RWTH Aachen University
-
 #include "TrajectoryCommand.hpp"
 
 /**
@@ -68,10 +42,23 @@ inline double vector_length(double x, double y)
     return sqrt(x*x+y*y);
 }
 
-void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
+void TrajectoryCommand::set_path(
+    uint8_t vehicle_id,
+    std::vector<Pose2D> path
+)
 {
-    if(path.size() < 3) return;
-    if(timer == nullptr) return;
+    (void) set_path(vehicle_id, path, 500000000ull);
+    return;
+}
+
+uint64_t TrajectoryCommand::set_path(
+    uint8_t vehicle_id,
+    std::vector<Pose2D> path,
+    uint64_t delay_ns
+)
+{
+    if(path.size() < 3) return 0;
+    if(timer == nullptr) return 0;
 
     /** Generate trajectory from given path **/
     std::vector<double> arc_length(path.size(), 0.0);
@@ -113,7 +100,7 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
     const double cruise_time = cruise_distance / max_speed;
     const double total_time = standstill_time + acceleration_time + cruise_time + deceleration_time + standstill_time;
 
-    const uint64_t t_start = timer->get_time() + 1000000000ull;
+    const uint64_t t_start = timer->get_time() + delay_ns;
 
     vector<TrajectoryPoint> trajectory;
     for (uint64_t t_nanos = 0; (t_nanos * 1e-9) < total_time; t_nanos += dt_nanos)
@@ -182,6 +169,8 @@ void TrajectoryCommand::set_path(uint8_t vehicle_id, std::vector<Pose2D> path)
 
     std::lock_guard<std::mutex> lock(_mutex);
     this->vehicle_trajectories[vehicle_id] = trajectory;
+
+    return uint64_t(1e9*total_time);
 }
 
 

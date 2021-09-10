@@ -1,29 +1,3 @@
-// MIT License
-// 
-// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-// 
-// This file is part of cpm_lab.
-// 
-// Author: i11 - Embedded Software, RWTH Aachen University
-
 #include "SetupViewUI.hpp"
 #include <cstdlib>
 #include <chrono>
@@ -40,6 +14,7 @@ SetupViewUI::SetupViewUI
     std::shared_ptr<Deploy> _deploy_functions, 
     std::shared_ptr<VehicleAutomatedControl> _vehicle_control, 
     std::shared_ptr<HLCReadyAggregator> _hlc_ready_aggregator, 
+    std::shared_ptr<GoToPlanner> go_to_planner, 
     std::function<VehicleData()> _get_vehicle_data,
     std::function<void(bool, bool)> _reset_timer,
     std::function<void()> _reset_vehicle_view,
@@ -55,6 +30,7 @@ SetupViewUI::SetupViewUI
     deploy_functions(_deploy_functions),
     vehicle_control(_vehicle_control),
     hlc_ready_aggregator(_hlc_ready_aggregator),
+    go_to_planner(go_to_planner),
     get_vehicle_data(_get_vehicle_data),
     reset_timer(_reset_timer),
     reset_vehicle_view(_reset_vehicle_view),
@@ -84,6 +60,7 @@ SetupViewUI::SetupViewUI
 
     builder->get_widget("button_deploy", button_deploy);
     builder->get_widget("button_kill", button_kill);
+    builder->get_widget("button_go_to_start_poses", button_go_to_start_poses);
 
     builder->get_widget("vehicle_flowbox", vehicle_flowbox);
 
@@ -104,6 +81,7 @@ SetupViewUI::SetupViewUI
 
     assert(button_deploy);
     assert(button_kill);
+    assert(button_go_to_start_poses);
 
     assert(vehicle_flowbox);
 
@@ -130,6 +108,7 @@ SetupViewUI::SetupViewUI
     //Register button callbacks
     button_deploy->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::deploy_applications));
     button_kill->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::kill_deployed_applications));
+    button_go_to_start_poses->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::go_to_start_poses));
     button_choose_script->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::open_file_explorer));
     button_select_all_simulated->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_all_vehicles_sim));
     button_select_none->signal_clicked().connect(sigc::mem_fun(this, &SetupViewUI::select_no_vehicles));
@@ -623,6 +602,11 @@ std::pair<bool, std::map<uint32_t, uint8_t>> SetupViewUI::get_vehicle_to_hlc_mat
 {
     std::lock_guard<std::mutex> lock_map(vehicle_to_hlc_mutex);
     return { simulation_running.load(), vehicle_to_hlc_map };
+}
+
+void SetupViewUI::go_to_start_poses() {
+    go_to_planner->go_to_start_poses();
+    return;
 }
 
 void SetupViewUI::kill_deployed_applications() {

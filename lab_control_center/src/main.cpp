@@ -1,29 +1,3 @@
-// MIT License
-// 
-// Copyright (c) 2020 Lehrstuhl Informatik 11 - RWTH Aachen University
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-// 
-// This file is part of cpm_lab.
-// 
-// Author: i11 - Embedded Software, RWTH Aachen University
-
 #include "defaults.hpp"
 #include "stdio.h"
 #include <unistd.h>
@@ -290,6 +264,13 @@ int main(int argc, char *argv[])
         unsigned int cmd_domain_id = cpm::cmd_parameter_int("dds_domain", 0, argc, argv);
         std::string cmd_dds_initial_peer = cpm::cmd_parameter_string("dds_initial_peer", "", argc, argv);
 
+        auto goToPlanner = make_shared<GoToPlanner>(
+            std::bind(&CommonRoadScenario::get_start_poses, commonroad_scenario),
+            [=](){return timeSeriesAggregator->get_vehicle_data();},
+            trajectoryCommand,
+            absolute_executable_path
+        );
+
         //Create deploy class
         std::shared_ptr<Deploy> deploy_functions = std::make_shared<Deploy>(
             cmd_domain_id, 
@@ -337,6 +318,7 @@ int main(int argc, char *argv[])
             deploy_functions,
             vehicleAutomatedControl, 
             hlcReadyAggregator, 
+            goToPlanner,
             [&](){return timeSeriesAggregator->get_vehicle_data();},
             [&](bool simulated_time, bool reset_timer){return timerViewUi->reset(simulated_time, reset_timer);}, 
             [&](){return monitoringUi->reset_vehicle_view();},

@@ -5,6 +5,7 @@
 *.gz
 *.log
 *.mat
+*.asv
 *.md.html
 build/
 build_arm/

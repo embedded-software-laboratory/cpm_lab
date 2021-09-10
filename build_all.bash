@@ -62,7 +62,7 @@ pushd high_level_controller
     pushd examples/cpp/central_routing
         bash build.bash
     popd
-    pushd examples/cpp/decentral_routing
+    pushd examples/cpp/distributed_routing
         bash build.bash
     popd
     pushd examples/cpp/basic_circle

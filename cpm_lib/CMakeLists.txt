@@ -49,7 +49,14 @@ set(SOURCE_CPM
     include/cpm/TimeMeasurement.hpp
     src/TimeMeasurement.cpp
 )
-
+if(NOT BUILD_ARM) 
+    # With RTIs ARM toolchain this leads to linker errors
+    set(SOURCE_CPM
+        ${SOURCE_CPM}
+        include/cpm/HLCCommunicator.hpp
+        src/HLCCommunicator.cpp
+    )
+endif()
 
 
 # Configuration for RTI Connext
@@ -69,11 +76,10 @@ else()
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m64 -Wl,--no-as-needed")
 endif()
 
-
 add_library(cpm SHARED
     ${SOURCE_DDS}
     ${SOURCE_CPM}
-)
+    )
 
 
 if(NOT BUILD_ARM)
@@ -101,4 +107,8 @@ if(NOT BUILD_ARM)
     )
 
     target_link_libraries(unittest cpm)
+endif()
+
+if($ENV{TIMING-ANALYSIS})
+    add_definitions( -DTIMINGANALYSIS )
 endif()

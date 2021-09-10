@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkScrolledWindow" id="parent">
@@ -117,7 +117,6 @@ Script Path</property>
               <object class="GtkEntry" id="script_path">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="text" translatable="yes"></property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -439,6 +438,19 @@ Lab Camera
               </packing>
             </child>
             <child>
+              <object class="GtkButton" id="button_go_to_start_poses">
+                <property name="label" translatable="yes">Go To Start Poses</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">15</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="button_kill">
                 <property name="label" translatable="yes">Kill</property>
                 <property name="visible">True</property>
@@ -448,7 +460,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">15</property>
+                <property name="position">16</property>
               </packing>
             </child>
             <child>
@@ -461,7 +473,7 @@ Lab Camera
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">16</property>
+                <property name="position">17</property>
               </packing>
             </child>
           </object>
