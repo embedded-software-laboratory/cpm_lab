@@ -130,6 +130,12 @@ public:
     vector<vector<bool> > error_triggered{vector<vector<bool> > (rows_restricted.size(), vector<bool>(30,false))};
     
     /**
+     * \brief Init the UI dispatcher callback. Must only be called once! init_ui_thread then can be used to recreate the thread that calls the dispatcher,
+     * which then uses the function registered here. If the function gets registered multiple times, it also gets called multiple times!
+     */
+    void init_ui_dispatcher();
+
+    /**
      * \brief Init is also called when the object is constructed. It initializes the ui thread, callbacks etc to update the ui regularly when a new vehicle connects
      */
     void init_ui_thread();
