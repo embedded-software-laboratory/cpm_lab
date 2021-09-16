@@ -201,7 +201,7 @@ void ParamViewUI::open_param_create_window() {
         get_main_window().set_sensitive(false);
         
         create_window_open = true;
-        create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
+        create_window = std::unique_ptr<ParamsCreateView>(new ParamsCreateView(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision));
     } 
     else if (!get_main_window)
     {
@@ -229,7 +229,7 @@ void ParamViewUI::open_param_edit_window() {
                 //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
                 get_main_window().set_sensitive(false);
 
-                create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
+                create_window = std::unique_ptr<ParamsCreateView>(new ParamsCreateView(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision));
             }
             else if (!get_main_window)
             {

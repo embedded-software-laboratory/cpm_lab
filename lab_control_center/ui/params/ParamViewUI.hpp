@@ -72,7 +72,7 @@ private:
     Glib::RefPtr<Gtk::ListStore> parameter_list_storage;
 
     //! Edit / create window that is created whenever a parameter is edited or created
-    std::shared_ptr<ParamsCreateView> create_window;
+    std::unique_ptr<ParamsCreateView> create_window;
     //! If true, another window is opened that might modify parameters, thus other modification is not allowed / the parameter view cannot be used
     std::atomic<bool> parameter_view_unchangeable;
     //! To check whether a new parameter was added or if a selected parameter was modified when the result of the create window needs to be stored
