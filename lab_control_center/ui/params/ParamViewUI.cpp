@@ -283,7 +283,6 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     }
 
     //Reset variables so that new windows can be opened etc
-    //create_window.reset(); //No one manages the shared pointer, delete the object
     parameter_view_unchangeable.store(false);
     create_window_open = false;
     make_sensitive();
