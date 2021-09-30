@@ -256,6 +256,8 @@ void ParamsCreateView::on_add() {
     }
 
     if (value_conversion_valid && !param_exists) {
+        // Setting called_callback means that window->close won't automatically call
+        // on_close_callback when on_delete is called
         called_callback = true;
         window->close();
         on_close_callback(param, true);
