@@ -248,44 +248,45 @@ void Deploy::deploy_middleware(std::string sim_time_string, std::stringstream& v
     //Check if old session already exists - if so, kill it
     kill_session(middleware_session);
 
-    // Update middleware QOS
-    std::string qos_path_in = std::getenv("HOME");
-    qos_path_in.append("/dev/software/middleware/QOS_LOCAL_COMMUNICATION.xml.template");
-    std::ifstream xml_qos_template(qos_path_in);
-    assert(xml_qos_template.good());
-    
+    // Read middleware QOS template
     std::string xml_qos_str;
     {
+        std::string qos_path_in = software_folder_path;
+        qos_path_in.append("/middleware/QOS_LOCAL_COMMUNICATION.xml.template");
+        std::ifstream xml_qos_template(qos_path_in);
         std::stringstream buffer;
         if (xml_qos_template.is_open()) {
             buffer << xml_qos_template.rdbuf();
         }
-        xml_qos_template.close();
+        else
+        {
+            throw std::runtime_error("Could not find QOS template for middleware.");
+        }
         xml_qos_str = buffer.str();
     }
-    assert(xml_qos_template.good());
 
     // extract IP of current machine from cmd_dds_initial_peer
     std::smatch ip_matched;
     std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     std::string ip_string;
     bool is_ip_contained = std::regex_search (cmd_dds_initial_peer,ip_matched,ip_regex);
-    assert(is_ip_contained);
+    if (!is_ip_contained)
+    {
+        throw std::runtime_error("Could not extract IP address.");
+    }
     ip_string = ip_matched.str(0);
     xml_qos_str = std::regex_replace(
         xml_qos_str,
         std::regex("TEMPLATE_IP"),
         ip_string
     );
-
-    std::string qos_path_out = std::getenv("HOME");
-    qos_path_out.append("/dev/software/middleware/build/QOS_LOCAL_COMMUNICATION.xml");
-    std::ofstream xml_qos(qos_path_out);
-    assert(xml_qos.good());
-    xml_qos << xml_qos_str;
-    assert(xml_qos.good());
-
-    xml_qos.close();
+    // Write middleware QOS
+    {
+        std::string qos_path_out = software_folder_path;
+        qos_path_out.append("/middleware/build/QOS_LOCAL_COMMUNICATION.xml");
+        std::ofstream xml_qos(qos_path_out);
+        xml_qos << xml_qos_str;
+    }
 
     //Generate command
     std::stringstream middleware_command;
@@ -708,7 +709,10 @@ void Deploy::deploy_recording(std::string recording_folder)
     std::regex ip_regex ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     std::string ip_string;
     bool is_ip_contained = std::regex_search (cmd_dds_initial_peer,ip_matched,ip_regex);
-    assert(is_ip_contained);
+    if (!is_ip_contained)
+    {
+        throw std::runtime_error("Could not extract IP address.");
+    }
     ip_string = ip_matched.str(0);
     xml_config_str = std::regex_replace(
         xml_config_str,
