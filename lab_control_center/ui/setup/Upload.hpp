@@ -9,7 +9,6 @@
 #include <atomic>
 #include <array>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
