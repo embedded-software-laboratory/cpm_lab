@@ -92,10 +92,11 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 command 
                 << "tmux new-session -d "
                 << "-s \"" << hlc_session << "\" "
-                << "'. " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;"
-                << "matlab -logfile matlab.log"
+                << "sh -c '. " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;"
+                << "/home/dev/bin/matlab -logfile matlab.log"
                 << " -sd \"" << script_path_string
                 << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << vehicle_ids_stream.str() << ")\""
+                //<< "'";
                 << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ".txt'";
             }
             else if (script_name_string.find(".") == std::string::npos)
@@ -128,7 +129,7 @@ void Deploy::deploy_local_hlc(bool use_simulated_time, std::vector<unsigned int>
                 return;
             }
 
-            //std::cout << command.str() << std::endl;
+            std::cout << command.str() << std::endl;
 
             //Execute command
             program_executor->execute_command(command.str());
