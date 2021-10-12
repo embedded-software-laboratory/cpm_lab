@@ -111,24 +111,6 @@ void interrupt_handler(int s) {
 
 #pragma GCC diagnostic pop
 
-// Caused too much trouble
-// /**
-//  * \brief Exit handler of the LCC. Calling this should be safe (destructors should be called) due to the use of std::atexit.
-//  * \ingroup lcc
-//  */
-// void exit_handler() {
-//     kill_cloud_discovery();
-
-//     // //Kill remaining programs opened by setup view ui
-//     // if (setupViewUi)
-//     // {
-//     //     setupViewUi->on_lcc_close();
-//     // }
-
-//     // The version above is too error-prone, this is just simpler
-//     kill_all_tmux_sessions();
-// }
-
 
 /**
  * \brief Main function of the LCC.
