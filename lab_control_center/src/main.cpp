@@ -51,13 +51,6 @@ using namespace std::placeholders;
 
 /**
  * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
- * (call on_lcc_close)
- * \ingroup lcc
- */
-// std::shared_ptr<SetupViewUI> setupViewUi;
-
-/**
- * \brief We need this to be a global variable, or else it cannot be used in the interrupt or exit handlers
  * to execute command line commands
  * \ingroup lcc
  */
