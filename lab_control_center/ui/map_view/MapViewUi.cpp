@@ -59,8 +59,9 @@ MapViewUi::MapViewUi(
         drawingArea->queue_draw(); 
     });
 
+    run_draw_thread.store(true);
     draw_loop_thread = std::thread([&](){
-        while(1) {
+        while(run_draw_thread.load()) {
             usleep(20000);
             update_dispatcher.emit();
         }

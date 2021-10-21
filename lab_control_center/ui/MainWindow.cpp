@@ -10,11 +10,13 @@ using namespace std::placeholders;
 MainWindow::MainWindow(
     std::shared_ptr<TabsViewUI> tabsViewUI,
     std::shared_ptr<MonitoringUi> monitoringUi,
-    std::shared_ptr<MapViewUi> mapViewUi
+    std::shared_ptr<MapViewUi> mapViewUi,
+    std::shared_ptr<ParamViewUI> paramViewUI
 ) :
     tabs_view_ui(tabsViewUI),
     monitoring_ui(monitoringUi),
-    map_view_ui(mapViewUi)
+    map_view_ui(mapViewUi),
+    param_view_ui(paramViewUI)
 {
     std::cout << "Builder started" << std::endl;
     builder_master_layout = Gtk::Builder::create_from_file("ui/master_layout.glade");
@@ -71,7 +73,7 @@ MainWindow::MainWindow(
     pane2->pack1(*(mapViewUi->get_parent()),true,true);
 
     window_LCC->signal_delete_event().connect([&](GdkEventAny*)->bool{
-        exit(0);
+        // exit(0); Exit statements prevent destructor calls
         return false;
     });
 
@@ -104,11 +106,25 @@ MainWindow::MainWindow(
 }
 
 void MainWindow::on_menu_params_reload_pressed() {
-    tabs_view_ui->get_param_view()->params_reload_handler();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->params_reload_handler();
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
+    }
 }
 
 void MainWindow::on_menu_params_save_pressed() {
-    tabs_view_ui->get_param_view()->params_save_handler();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->params_save_handler();
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
+    }
 }
 
 void MainWindow::on_menu_params_save_as_pressed() {
@@ -119,7 +135,14 @@ void MainWindow::on_menu_params_save_as_pressed() {
     menu_bar_params_load_file->set_sensitive(false);
     // menu_bar_params_load_multiple_files->set_sensitive(false);
     // menu_bar_params_load_params->set_sensitive(false);
-    tabs_view_ui->get_param_view()->make_insensitive();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->make_insensitive();
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
+    }
 
     file_saver_window = make_shared<FileSaverUI>(get_window(), std::bind(&MainWindow::file_saver_callback, this, _1, _2), "parameters");
 }
@@ -132,17 +155,24 @@ void MainWindow::on_menu_params_load_file_pressed() {
     menu_bar_params_load_file->set_sensitive(false);
     // menu_bar_params_load_multiple_files->set_sensitive(false);
     // menu_bar_params_load_params->set_sensitive(false);
-    tabs_view_ui->get_param_view()->make_insensitive();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->make_insensitive();
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
+    }
 
     file_chooser_window = make_shared<FileChooserUI>(get_window(), std::bind(&MainWindow::file_chooser_callback, this, _1, _2), "parameters");
 }
 
 // void MainWindow::on_menu_params_load_multiple_files_pressed() {
-//     tabs_view_ui->get_param_view()->params_load_multiple_files_handler();
+//     param_view_ui->params_load_multiple_files_handler();
 // }
 
 // void MainWindow::on_menu_params_load_params_pressed() {
-//     tabs_view_ui->get_param_view()->params_load_params_handler();
+//     param_view_ui->params_load_params_handler();
 // }
 
 void MainWindow::on_menu_mapview_rotate_left_pressed(){
@@ -162,11 +192,18 @@ void MainWindow::file_chooser_callback(std::string file_string, bool has_file) {
     menu_bar_params_load_file->set_sensitive(true);
     // menu_bar_params_load_multiple_files->set_sensitive(true);
     // menu_bar_params_load_params->set_sensitive(true);
-    tabs_view_ui->get_param_view()->make_sensitive();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->make_sensitive();
 
-    //Call Param UI to process changes
-    if (has_file && (file_string.rfind(".yaml") == file_string.size() - 5)) {
-        tabs_view_ui->get_param_view()->params_load_file_handler(file_string);
+        //Call Param UI to process changes
+        if (has_file && (file_string.rfind(".yaml") == file_string.size() - 5)) {
+            param_view_shared->params_load_file_handler(file_string);
+        }
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
     }
 }
 
@@ -178,11 +215,18 @@ void MainWindow::file_saver_callback(std::string file_string, bool has_file) {
     menu_bar_params_load_file->set_sensitive(true);
     // menu_bar_params_load_multiple_files->set_sensitive(true);
     // menu_bar_params_load_params->set_sensitive(true);
-    tabs_view_ui->get_param_view()->make_sensitive();
+    if (auto param_view_shared = param_view_ui.lock())
+    {
+        param_view_shared->make_sensitive();
 
-    //Call Param UI to process changes
-    if (has_file) {
-        tabs_view_ui->get_param_view()->params_save_as_handler(file_string);
+        //Call Param UI to process changes
+        if (has_file) {
+            param_view_shared->params_save_as_handler(file_string);
+        }
+    }
+    else
+    {
+        std::runtime_error("Param View UI not available, not passed or no longer valid");
     }
 }
 

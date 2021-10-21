@@ -14,7 +14,7 @@ ObstacleAggregator::ObstacleAggregator(std::shared_ptr<CommonRoadScenario> scena
     )
 {
     scenario->register_obstacle_aggregator(
-        [=] ()
+        [&] ()
         {
             reset_all_data();
         }

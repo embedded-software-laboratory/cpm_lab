@@ -102,7 +102,7 @@ bool ProgramExecutor::setup_child_process(std::string filepath_1, std::string fi
 
         std::cout << "Child is stopping execution..." << std::endl;
 
-        exit(EXIT_SUCCESS);
+        exit(EXIT_SUCCESS); //Should be okay, as this is only called in the child process
     }
     else if (child_process_id > 0)
     {
@@ -361,7 +361,7 @@ int ProgramExecutor::create_msg_queue(std::string filepath)
     {
         log("ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!");
         std::cerr << "THE LCC WILL NOW SHUT DOWN" << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("ERROR: Could not create IPC Key (ftok) which is required for communicating commands to start external programs!");
     }
 
     int queue_id = msgget(key, IPC_CREAT | 0666); //Permissions: rw-rw-rw-
@@ -370,7 +370,7 @@ int ProgramExecutor::create_msg_queue(std::string filepath)
     {
         log("ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!");
         std::cerr << "THE LCC WILL NOW SHUT DOWN" << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("ERROR: Could not create IPC Message Queue (msgget) which is required for communicating commands to start external programs!");
     }
 
     return queue_id;

@@ -14,14 +14,7 @@ TabsViewUI::TabsViewUI
     std::shared_ptr<LCCErrorViewUI> lccErrorViewUi,
     std::shared_ptr<LoggerViewUI> loggerViewUi,
     std::shared_ptr<CommonroadViewUI> commonroadViewUi
-) :
-    setup_view_ui(setupViewUi),
-    vehicle_manual_control_ui(vehicleManualControlUi),
-    param_view_ui(paramViewUI),
-    timer_view_ui(timerViewUi),
-    lcc_error_view_ui(lccErrorViewUi),
-    logger_view_ui(loggerViewUi),
-    commonroad_view_ui(commonroadViewUi)
+) 
  {
     tabs_builder = Gtk::Builder::create_from_file("ui/right_tabs/right_tabs.glade");
 
@@ -44,10 +37,6 @@ TabsViewUI::TabsViewUI
     right_notebook->insert_page(*(timerViewUi->get_parent()), timer_label, -1);
     right_notebook->insert_page(*(loggerViewUi->get_parent()), logger_label, -1);
     right_notebook->insert_page(*(lccErrorViewUi->get_parent()), lcc_error_label, -1);
-}
-
-std::shared_ptr<ParamViewUI> TabsViewUI::get_param_view() {
-    return param_view_ui;
 }
 
 Gtk::Widget* TabsViewUI::get_parent() {
