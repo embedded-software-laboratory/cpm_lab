@@ -57,7 +57,10 @@ MonitoringUi::MonitoringUi(
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
+    //Initialize the UI dispatcher / register its callback function. Only do that once!
+    init_ui_dispatcher();
     //Initialize the UI thread that updates the view on connected / online vehicles as well as connected / online hlcs
+    //by calling the UI dispatcher via the emit function
     init_ui_thread();
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
@@ -144,7 +147,7 @@ int MonitoringUi::get_column_id(uint8_t vehicle_id)
     return pos + 1;
 }
 
-void MonitoringUi::init_ui_thread()
+void MonitoringUi::init_ui_dispatcher()
 {
     //Set UI dispatcher function, create UI update thread
     update_dispatcher.connect([&](){
@@ -838,7 +841,10 @@ void MonitoringUi::init_ui_thread()
         }
         
     });
+}
 
+void MonitoringUi::init_ui_thread()
+{
     run_thread.store(true);
     ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }
