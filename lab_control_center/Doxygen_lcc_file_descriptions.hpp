@@ -11,7 +11,6 @@
 * \subpage lcc_f_build <br>
 * \subpage lcc_f_gdb <br>
 * \subpage lcc_f_run <br>
-* \subpage lcc_f_start <br>
 * \subpage lcc_f_valgrind <br>
 * \subpage lcc_f_commonroad <br>
 * \subpage lcc_f_parameters <br>
@@ -33,11 +32,6 @@
 /**
  * \page lcc_f_run run.bash
  * \brief Runs the LCC with a pre-defined number of vehicles set for the vehicle selection in the UI
- */
-
-/**
- * \page lcc_f_start start_lcc.bash
- * \brief Runs the LCC without the pre-defined number of vehicles
  */
 
 /**
