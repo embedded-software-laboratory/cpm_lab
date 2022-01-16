@@ -80,6 +80,9 @@ pushd high_level_controller
     pushd examples/cpp/eight_zero
         bash build.bash
     popd
+    pushd examples/cpp/dynamic_priorities
+        bash build.bash
+    popd
 popd
 
 pushd middleware
