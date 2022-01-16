@@ -1,0 +1,52 @@
+#include "Header.idl"
+
+#ifndef TRAJECTORY_IDL
+#define TRAJECTORY_IDL
+
+/**
+ * \struct LaneGraphPosition
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+struct LaneGraphPosition 
+{
+    //! TODO
+    TimeStamp estimated_arrival_time;
+    //! TODO
+    unsigned short edge_index;
+    //! TODO
+    unsigned short edge_path_index;
+};
+
+
+/**
+ * \enum MessageType
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+enum MessageType
+{
+    Iterative,
+    Final, 
+    Optimal
+};
+
+/**
+ * \struct HlcCommunication
+ * \brief TODO
+ * \ingroup cpmlib_idl
+ */
+struct Trajectory 
+{
+    //! TODO
+    octet vehicle_id; //@key
+    //! TODO
+    Header header;
+    //! TODO
+    MessageType type;
+    //! TODO
+    boolean has_collisions;
+    //! TODO
+    sequence<LaneGraphPosition, 1000> lane_graph_positions;
+};
+#endif
