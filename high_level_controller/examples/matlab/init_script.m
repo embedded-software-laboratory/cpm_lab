@@ -7,8 +7,8 @@ function [matlabParticipant, stateReader, trajectoryWriter,...
     % Inputs
     %   matlab_domain_id (int):         domain ID to be used for DDS
 
-    script_directoy = fileparts([mfilename('fullpath') '.m']);
-    previous_folder = cd(script_directoy); % Remember folder of calling function
+    script_directory = fileparts([mfilename('fullpath') '.m']);
+    previous_folder = cd(script_directory); % Remember folder of calling function
 
     % Import IDL files from cpm library
     dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
@@ -27,7 +27,7 @@ function [matlabParticipant, stateReader, trajectoryWriter,...
     assert(isfile(ready_trigger_qos_xml),...
         'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
     
-    setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
+    setenv("NDDS_QOS_PROFILES", ['file://' fullfile(script_directory, ready_trigger_qos_xml) ';file://' fullfile(script_directory, middleware_local_qos_xml)]);
     
     %% variables for the communication
     matlabStateTopicName = 'vehicleStateList';
