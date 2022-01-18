@@ -211,7 +211,7 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             return;
         }
 
-        //std::cout << command.str() << std::endl;
+        std::cout << command.str() << std::endl;
 
         // Debugging only
         //std::string test_string = command.str();
