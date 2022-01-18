@@ -22,11 +22,11 @@ writer_vehicle_trajectory("vehicleCommandTrajectory")
     //Register at scenario to get reset when a new scenario is loaded
     //This makes sure that all data structures can be used if reset() was not called, and are reset in the right order otherwise
     scenario->register_obstacle_sim(
-        [=] ()
+        [&] ()
         {
             setup();
         },
-        [=] ()
+        [&] ()
         {
             reset();
         }

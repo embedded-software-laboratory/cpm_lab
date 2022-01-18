@@ -15,8 +15,10 @@ ParamViewUI::ParamViewUI(std::shared_ptr<ParameterStorage> _parameter_storage, i
     }
     catch(const Gtk::BuilderError &e)
     {
-        std::cerr << "Gtk::BuilderError: " << e.what() << std::endl;
-        exit(1);
+        std::stringstream str;
+        str << "Gtk::BuilderError: " << e.what() << std::endl;
+        // exit(1); Exit statements cause problems as destructors are not being called
+        throw std::runtime_error(str.str()); //This should ideally be catched
     }
 
     params_builder->get_widget("parameters_box", parent);
@@ -201,7 +203,7 @@ void ParamViewUI::open_param_create_window() {
         get_main_window().set_sensitive(false);
         
         create_window_open = true;
-        create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision);
+        create_window = std::unique_ptr<ParamsCreateView>(new ParamsCreateView(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), float_precision));
     } 
     else if (!get_main_window)
     {
@@ -229,7 +231,7 @@ void ParamViewUI::open_param_edit_window() {
                 //Make the main window insensitive as well (because we do not want the user to be able to reload params etc. during edit)
                 get_main_window().set_sensitive(false);
 
-                create_window = make_shared<ParamsCreateView>(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision);
+                create_window = std::unique_ptr<ParamsCreateView>(new ParamsCreateView(get_main_window(), std::bind(&ParamViewUI::window_on_close_callback, this, _1, _2), std::bind(&ParamViewUI::check_param_exists_callback, this, _1), param, float_precision));
             }
             else if (!get_main_window)
             {
@@ -283,7 +285,6 @@ void ParamViewUI::window_on_close_callback(ParameterWithDescription param, bool 
     }
 
     //Reset variables so that new windows can be opened etc
-    create_window.reset(); //No one manages the shared pointer, delete the object
     parameter_view_unchangeable.store(false);
     create_window_open = false;
     make_sensitive();

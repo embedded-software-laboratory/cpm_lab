@@ -66,6 +66,7 @@ class MapViewUi
     Glib::Dispatcher update_dispatcher;
     //! Calls update_dispatcher every 20ms for smooth map updates
     std::thread draw_loop_thread;
+    std::atomic_bool run_draw_thread;
     //! Image object for the car
     Cairo::RefPtr<Cairo::ImageSurface> image_car;
     //! Image object for an object, currently not in use
@@ -274,6 +275,12 @@ public:
         std::function<std::vector<CommonroadObstacle>()> _get_obstacle_data,
         std::function<std::vector<Visualization>()> _get_visualization_msgs_callback
     );
+
+    ~MapViewUi() {
+        run_draw_thread.store(false);
+        if (draw_loop_thread.joinable())
+            draw_loop_thread.join();
+    }
 
     /**
      * \brief Function to get the parent widget, so that this UI element can be placed within another UI element
