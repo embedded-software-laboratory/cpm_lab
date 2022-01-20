@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << vehicle_id_string << std::endl;
 
-    const bool iterative_planning_enabled = false;
+    const bool iterative_planning_enabled = true;
 
     // FIXME: Dirty hack to get our QOS settings
     // On the NUC we only have the QOS File for the middleware
