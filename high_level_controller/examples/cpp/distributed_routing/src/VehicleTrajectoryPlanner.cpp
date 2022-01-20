@@ -107,7 +107,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         }
     }
 
-    debug_analyzeTrajectoryPointBuffer();
+    //debug_analyzeTrajectoryPointBuffer();
 
     // Useful debugging tool if you suspect that trajectories aren't in sync between vehicles
     //std::cout << "Time " << t_real_time << std::endl;
