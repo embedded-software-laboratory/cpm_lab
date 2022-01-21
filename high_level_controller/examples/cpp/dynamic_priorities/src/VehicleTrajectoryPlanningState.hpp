@@ -38,7 +38,7 @@ using std::vector;
 using std::array;
 
 //TODO: Replace this with a proper variable
-#define N_STEPS_SPEED_PROFILE (1000)
+#define N_STEPS_SPEED_PROFILE (200)
 
 
 /**

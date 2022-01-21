@@ -74,6 +74,7 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
     cpm::Logging::Instance().write(1,
             "setting vehicle");
     trajectoryPlan = std::move(vehicle);
+    std::cout << "Priority assignment strategy: " << mode << std::endl;
     if (mode == 1)
     {
         std::srand(trajectoryPlan->get_vehicle_id());
@@ -90,7 +91,7 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
 
     if (evaluation_stream.is_open())
     {
-        std::cout << "opened eval file";
+        std::cout << "opened eval file" << std::endl;
     }
     evaluation_stream << "id:" << (int)vehicle_id << std::endl;
     evaluation_stream << "time;speed_profile;fca;new_old_fallback_prio;priority_vector;trajectory" << std::endl;
@@ -98,6 +99,8 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
 
 std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_t t, uint64_t dt)
 {
+
+    trajectoryPlan->print_speed_profile();
     auto start_time = std::chrono::steady_clock::now();
     isStopped = false;
     t_real_time = t;
@@ -116,8 +119,9 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     t_prev = t_real_time;
     started = true;
 
-    std::cout << "STEP: " << t_real_time << "t:" << (int)t << "dt:" << (int)dt << std::endl;
+    std::cout << "STEP: " << t_real_time << "; t:" << t << "; dt:" << dt << std::endl;
     evaluation_stream << t_real_time << "; "; 
+    // TODO ps this is "fixed" speed profile?
     trajectoryPlan->write_current_speed_profile(evaluation_stream, dt_nanos);
     
     if (mode == 2)
@@ -129,9 +133,11 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         new_prios_feasible = new_prios_feasible && other_feasible;
         std::cout << "synchronised" << std::endl;
 
+
         if (!new_prios_feasible) // if prio change not feasible try if old prios work
         {
             std::cout << "Using old prios " << std::endl;
+            // TODO ps extended speed profile ends with "double" stop?
             trajectoryPlan->revert_speed_profile(); // get old speed_profile for faster avoid_collision()
             bool prios_feasible = plan_static_priorities();
             
@@ -153,12 +159,11 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         }
         
     } else if (mode == 1){
-        std::cout << "mode 1" << std::endl;
-        std::cout << "vehicle id: " << (int)vehicle_id << std::endl;
         plan_random_priorities();
         
     } else if (mode == 0){
         trajectoryPlan->save_speed_profile();
+        // TODO ps reset should not be necessary, but is due to apply_timestep bug.
         trajectoryPlan->reset_speed_profile();
         bool feasible = plan_static_priorities();
         evaluation_stream << 0 << ";";
@@ -182,7 +187,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     {
         std::cout << "we still have: " << coll_left << " collisions" << std::endl;
     }
-    //trajectoryPlan->print_speed_profile();
+    trajectoryPlan->print_speed_profile();
     //trajectoryPlan->debug_writeOutOwnTrajectory();
 
     for (auto  prio : prio_vec)
@@ -204,7 +209,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         }
 
         // Get new points from PlanningState
-        std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(35, dt_nanos);
+        uint n_trajectory_points = 6;
+        std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(n_trajectory_points-1, dt_nanos);
         for (auto &point : new_trajectory_points)
         {
             point.t().nanoseconds(point.t().nanoseconds() + t_start + T_START_DELAY_NANOS);
@@ -218,8 +224,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
             new_trajectory_points.begin(),
             new_trajectory_points.end());
 
-        // Limit size of trajectory buffer; delete oldest points first
-        while (trajectory_point_buffer.size() > 50)
+        // Limit size of trajectory buffer; delete oldest points first;
+        while (trajectory_point_buffer.size() > n_trajectory_points)
         {
             trajectory_point_buffer.erase(trajectory_point_buffer.begin());
         }
@@ -249,6 +255,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     }
     else
     {
+        // TODO ps this can never occur, right?
         cpm::Logging::Instance().write(2,
                                        "%lu: Not returning trajectory", t_real_time);
         no_trajectory_counter++;
@@ -314,6 +321,7 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
 
 bool VehicleTrajectoryPlanner::plan_static_priorities(){
     bool prios_feasible = true;
+    // TODO ps all_received_messages not used? 
     all_received_messages.clear(); // Messages_received gets reset
     other_vehicles_buffer.clear();
 
@@ -352,6 +360,7 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
 
     send_plan_to_hlcs(true, false);                                                 // send own optimal trajectory
     read_optimal_trajectories();                                                    // read all optimal trajectories
+    // TODO ps why graph_based_priorities here?
     trajectoryPlan->compute_graph_based_priorities(vehicles_buffer);
     uint16_t own_fca = trajectoryPlan->potential_collisions(vehicles_buffer, true); // compute fca based on optimal trajectories
     evaluation_stream << (int)own_fca << ";";
@@ -398,6 +407,7 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
         prio_vec = new_prio_vec; // update prios
         debug_write_prio_vec();
     }
+
     std::cout << "New fca prios feasible: " << new_prios_feasible << std::endl;
     return new_prios_feasible;
 }
@@ -516,7 +526,7 @@ uint8_t VehicleTrajectoryPlanner::get_largest_fca(uint16_t own_fca){
         auto samples = reader_fca->take();
         
         for( auto sample : samples){
-            std::cout << "vid: " << (int)vehicle_id << ":fcaid"<< (int)sample.vehicle_id(); 
+            std::cout << "vid: " << (int)vehicle_id << ", fcaid: "<< (int)sample.vehicle_id() << std::endl; 
             if (t_real_time == sample.header().create_stamp().nanoseconds())
             {
                 received_fcas.insert(sample.vehicle_id());
@@ -701,7 +711,7 @@ void VehicleTrajectoryPlanner::stop() {
  * Publish the planned trajectory to DDS
  */
 void VehicleTrajectoryPlanner::send_plan_to_hlcs(bool optimal, bool is_final, bool has_collisions) {
-
+    // TODO ps what is this created for?
     std::unique_ptr<VehicleCommandTrajectory>(
             new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
 
@@ -784,6 +794,7 @@ void VehicleTrajectoryPlanner::interpolate_vehicles_buffer(
  * This deletes all points that are in the past from the trajectory point buffer
  * After that, we can just append the new points
  */
+// TODO ps naming clear_future_trajectory_point_buffer ?
 void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
     // Delete all trajectory points that are in the future
     // These will be replaced by new points later

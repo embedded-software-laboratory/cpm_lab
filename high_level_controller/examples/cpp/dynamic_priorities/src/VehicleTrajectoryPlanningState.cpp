@@ -132,23 +132,26 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos, bool exte
         // shift and extend speed profile
         for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
         {
+            // TODO ps Does reusing speed profile even make sense with forced stop at end? i daut it
+            // TODO ps actually should only include max_speed/delta_v_step before end
             if (i + n_steps < N_STEPS_SPEED_PROFILE)
             {
+                // TODO ps stop is included here, but does not need to be
                 // Shift the current speed profile by n_steps if possible
                 speed_profile[i] = speed_profile[i + n_steps];
             }
             else
             {
+                // TODO ps this should not be done, because we stop at horizon
                 // else, accelerate up to max_speed
                 speed_profile[i] = fmin(speed_profile[i - 1] + delta_v_step, max_speed);
             }
         }
         // Each planning horizon ends with a full stop
         int spd_prof_sz = speed_profile.size() - 1;
-        int it = spd_prof_sz;
-        for (it = spd_prof_sz; (spd_prof_sz - it) * delta_v_step < speed_profile[it]; it--)
+        for (int i = spd_prof_sz; (spd_prof_sz - i) * delta_v_step < speed_profile[i]; i--)
         {
-            speed_profile[it] = (spd_prof_sz - it) * delta_v_step;
+            speed_profile[i] = (spd_prof_sz - i) * delta_v_step;
         }
     }
     invariant();
@@ -365,6 +368,9 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         // If we already are almost at min_speed at the planned index for
         // speed reduction we cannot slow down much more,
         // so we try reducing the speed 10 steps earlier
+        // TODO ps why 15? should be related to ceil(diff/delta_v_step)
+        // TODO ps which is currently ceil(0.3/0.04)=8
+        // TODO ps why not idx_speed_reduction >= 25, does not seem to help much
         while(idx_speed_reduction > 0
             && speed_profile[idx_speed_reduction] < min_speed + 0.12)
         {
@@ -404,7 +410,7 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
 // sets the speed value at the index and then propagates the change
 void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double speed_value)
 {
-
+    // TODO ps idx_speed_reduction cannot be <15?
     assert(idx_speed_reduction >= 0);
     assert(idx_speed_reduction < N_STEPS_SPEED_PROFILE);
 
@@ -412,6 +418,7 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
     speed_profile[idx_speed_reduction] = speed_value;
     int steps = ceil(diff/delta_v_step);
 
+    // TODO ps idx_speed_reduction cannot be <15, so never true
     if (idx_speed_reduction - steps < 0)
     {
         for (int i = 1; i <= steps; i++)
@@ -423,6 +430,8 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
     else
     {
     
+    // TODO ps no need to iterate over the whole profile? is this profile always smooth?
+    // TODO ps I can break if fmin is the actual profile
     for (int i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
     {
 
@@ -450,9 +459,11 @@ void VehicleTrajectoryPlanningState::save_speed_profile()
 void VehicleTrajectoryPlanningState::reset_speed_profile()
 {
     save_speed_profile();
+    // TODO ps i = dt_major/dt_minor = 8
+    // TODO ps warum i=15?
     for (int i = 15; i < N_STEPS_SPEED_PROFILE; ++i) // i since previous speed is already in use; this can be optimised 
     {
-        speed_profile[i] = fmin(speed_profile[i-1]  + i * delta_v_step, max_speed);
+        speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
     }
 
     // Each planning horizon ends with a full stop
@@ -468,6 +479,7 @@ void VehicleTrajectoryPlanningState::revert_speed_profile()
     speed_profile = old_speed_profile;
 }
 
+// TODO ps unused?
 void VehicleTrajectoryPlanningState::extend_stop(){
     for (int i = speed_profile.size(); speed_profile[i] != 0; i--)
     {
@@ -476,8 +488,9 @@ void VehicleTrajectoryPlanningState::extend_stop(){
 }
 
 void VehicleTrajectoryPlanningState::print_speed_profile(){
+    std::cout << "Speed profile: " << std::endl;
     for (auto spd:speed_profile){std::cout << spd << ",";}
-        std::cout << std::endl;
+    std::cout << std::endl;
 }
 
 /**
@@ -495,6 +508,7 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     {
         if (optimal)
         {
+            // TODO ps if we are currently traveling at v=0, this gives an unrealistic estimation
             delta_s += max_speed * dt_speed_profile;
         } else
         {

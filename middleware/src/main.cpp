@@ -70,11 +70,12 @@ int main (int argc, char *argv[]) {
     const std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
 
     std::cout << "DEBUG: - configuration" << std::endl
-        << "Node ID: " << node_id << std::endl
-        << "Domain ID: " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv) << std::endl
+        << "Node ID:        " << node_id << std::endl
+        << "Domain ID Lab:  " << cpm::cmd_parameter_int("dds_domain", 0, argc, argv) << std::endl
+        << "Domain ID HLC:  " << hlcDomainNumber << std::endl
         << "Simulated time: " << simulated_time << std::endl
         << "Wait for start: " << wait_for_start << std::endl
-        << "Period (ns): " << period_nanoseconds << std::endl;
+        << "Period (ns):    " << period_nanoseconds << std::endl;
 
 
     //Get unsigned vehicle ids only if vehicle_amount was not correctly set
