@@ -77,10 +77,7 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
             "setting vehicle");
     trajectoryPlan = std::move(vehicle);
     std::cout << "Priority assignment strategy: " << static_cast<int>(mode) << std::endl;
-    if (mode == PriorityMode::random)
-    {
-        std::srand(trajectoryPlan->get_vehicle_id());
-    }
+    
     vehicle_id = trajectoryPlan->get_vehicle_id();
 
     for (auto vehicle_id : coupling_graph.getVehicles())

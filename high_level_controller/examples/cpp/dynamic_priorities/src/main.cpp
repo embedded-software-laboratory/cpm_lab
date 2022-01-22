@@ -154,6 +154,8 @@ int main(int argc, char *argv[]) {
     }
     cpm::Logging::Instance().set_id("dynamic_priorities_"+std::to_string(vehicle_id));
 
+    std::srand(vehicle_id);
+
     cpm::Logging::Instance().write(3,
             "dynamic_priorities_%d coming online",
             static_cast<int>(vehicle_id)
