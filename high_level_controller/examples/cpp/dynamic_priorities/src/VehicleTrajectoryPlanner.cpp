@@ -40,12 +40,14 @@
 #include <iostream>
 #include <sstream>
 
+
+
 /**
  * \file VehicleTrajectoryPlanner.cpp
  * \ingroup distributed_routing
  */
 
-VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(int _mode){
+VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(PriorityMode _mode){
     writer_sync = std::unique_ptr<cpm::Writer<FallbackSync>>(
         new cpm::Writer<FallbackSync>("fallbacksync")
         );
@@ -74,8 +76,8 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
     cpm::Logging::Instance().write(1,
             "setting vehicle");
     trajectoryPlan = std::move(vehicle);
-    std::cout << "Priority assignment strategy: " << mode << std::endl;
-    if (mode == 1)
+    std::cout << "Priority assignment strategy: " << static_cast<int>(mode) << std::endl;
+    if (mode == PriorityMode::random)
     {
         std::srand(trajectoryPlan->get_vehicle_id());
     }
@@ -124,7 +126,9 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // TODO ps this is "fixed" speed profile?
     trajectoryPlan->write_current_speed_profile(evaluation_stream, dt_nanos);
     
-    if (mode == 2)
+    switch(mode)
+    {
+    case PriorityMode::fca :
     {
         trajectoryPlan->save_speed_profile();
         // updates prios and plans based on fca only if its feasible
@@ -132,7 +136,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         bool other_feasible = synchronise(coupling_graph.getVehicles(), new_prios_feasible, 1);
         new_prios_feasible = new_prios_feasible && other_feasible;
         std::cout << "synchronised" << std::endl;
-
 
         if (!new_prios_feasible) // if prio change not feasible try if old prios work
         {
@@ -157,11 +160,19 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         {
             evaluation_stream << 0 << ";";
         }
-        
-    } else if (mode == 1){
+        break;
+    }
+
+
+    case PriorityMode::random :
+    {
         plan_random_priorities();
-        
-    } else if (mode == 0){
+        break;
+    }
+
+
+    case PriorityMode::id :
+    {
         trajectoryPlan->save_speed_profile();
         // TODO ps reset should not be necessary, but is due to apply_timestep bug.
         trajectoryPlan->reset_speed_profile();
@@ -177,8 +188,15 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         {
             evaluation_stream << 1 << ";";
         }
-    } else if (mode == 3){
+        break;
+    }
+
+
+    case PriorityMode::vertex_ordering :
+    {
         plan_vertex_ordering_priorities();
+        break;
+    }
     }
     
     int coll_left = trajectoryPlan->potential_collisions(other_vehicles_buffer, false);
@@ -255,7 +273,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     }
     else
     {
-        // TODO ps this can never occur, right?
+        // middleware set stopFlag
         cpm::Logging::Instance().write(2,
                                        "%lu: Not returning trajectory", t_real_time);
         no_trajectory_counter++;
@@ -321,7 +339,7 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
 
 bool VehicleTrajectoryPlanner::plan_static_priorities(){
     bool prios_feasible = true;
-    // TODO ps all_received_messages not used? 
+    // TODO ps all_received_messages not used? kann weg
     all_received_messages.clear(); // Messages_received gets reset
     other_vehicles_buffer.clear();
 
@@ -360,7 +378,7 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
 
     send_plan_to_hlcs(true, false);                                                 // send own optimal trajectory
     read_optimal_trajectories();                                                    // read all optimal trajectories
-    // TODO ps why graph_based_priorities here?
+    // TODO ps why graph_based_priorities here? kann weg
     trajectoryPlan->compute_graph_based_priorities(vehicles_buffer);
     uint16_t own_fca = trajectoryPlan->potential_collisions(vehicles_buffer, true); // compute fca based on optimal trajectories
     evaluation_stream << (int)own_fca << ";";
@@ -711,7 +729,7 @@ void VehicleTrajectoryPlanner::stop() {
  * Publish the planned trajectory to DDS
  */
 void VehicleTrajectoryPlanner::send_plan_to_hlcs(bool optimal, bool is_final, bool has_collisions) {
-    // TODO ps what is this created for?
+    // TODO ps what is this created for? kann weg
     std::unique_ptr<VehicleCommandTrajectory>(
             new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
 

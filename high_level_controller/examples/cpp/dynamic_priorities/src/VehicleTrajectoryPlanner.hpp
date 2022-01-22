@@ -51,6 +51,15 @@
 
 //using std::vector;
 
+
+enum class PriorityMode
+{
+    id,
+    random,
+    fca,
+    vertex_ordering
+};
+
 /**
  * \class VehicleTrajectoryPlanner
  * \brief Plans a random trajectory, while communicating planned trajectories with other vehicles.
@@ -132,8 +141,8 @@ class VehicleTrajectoryPlanner
     std::set<uint8_t> active_vehicles;
     //! vehicle id
     uint8_t vehicle_id;
-    //! HLC mode: 0: static prios, 1: random prios, 2: dynamic fca based
-    int mode;
+    //! HLC mode: 0: static prios, 1: random prios, 2: dynamic fca based, 3: vertex ordering
+    PriorityMode mode;
     //! extend stop: if we cannot find a feasible trajectory we come to a safe stop
     bool extend_stop = false;
 
@@ -304,7 +313,7 @@ public:
     /**
      * \brief Create a VehicleTrajectoryPlanner
      */
-    VehicleTrajectoryPlanner(const int _mode);
+    VehicleTrajectoryPlanner(const PriorityMode _mode);
 
     /**
      * \brief Returns started

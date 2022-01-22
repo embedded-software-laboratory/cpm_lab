@@ -68,11 +68,14 @@ void simulate(std::shared_ptr<VehicleTrajectoryPlanner> planner){
 */
 int main(int argc, char* argv[])
 {
-    int mode;
     std::vector<std::string> arguments = {"dds_domain=21", "dds_initial_peer=rtps@udpv4://192.168.1.249:25598"};
 
     n_vehicles = cpm::cmd_parameter_int("n", 5, argc, argv);
-    mode = cpm::cmd_parameter_int("mode", 2, argc, argv);
+    const PriorityMode mode = static_cast<PriorityMode>(
+        cpm::cmd_parameter_int(
+            "hlc_mode", static_cast<int>(PriorityMode::fca), argc, argv
+        )
+    );
     n_steps = cpm::cmd_parameter_int("steps", 450, argc, argv);
 
     // create vehicle planners

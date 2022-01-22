@@ -128,8 +128,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Read command line arguments
-    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints("vehicle_ids", {4}, argc, argv);
-    const int mode = cpm::cmd_parameter_int("hlc_mode", 2, argc, argv);
+    const std::vector<int> vehicle_ids_int = cpm::cmd_parameter_ints(
+        "vehicle_ids", {4}, argc, argv
+    );
+    const PriorityMode mode = static_cast<PriorityMode>(
+        cpm::cmd_parameter_int(
+            "hlc_mode", static_cast<int>(PriorityMode::fca), argc, argv
+        )
+    );
 
     cpm::init(argc, argv);
 
