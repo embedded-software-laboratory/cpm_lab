@@ -429,7 +429,6 @@ void VehicleTrajectoryPlanningState::save_speed_profile()
 
 void VehicleTrajectoryPlanningState::reset_speed_profile()
 {
-    save_speed_profile();
     // TODO ps i = dt_major/dt_minor = 8
     // TODO ps warum i=15? nochmal nachdenken mit Timestep delay etc.
     for (int i = 15; i < N_STEPS_SPEED_PROFILE; ++i) // i since previous speed is already in use; this can be optimised 

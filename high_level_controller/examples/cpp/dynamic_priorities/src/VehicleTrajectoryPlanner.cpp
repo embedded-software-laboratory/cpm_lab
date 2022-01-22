@@ -122,51 +122,32 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     std::cout << "STEP: " << t_real_time << "; t:" << t << "; dt:" << dt << std::endl;
     evaluation_stream << t_real_time << "; "; 
-    // TODO ps this is "fixed" speed profile?
+    // TODO ps this is "fixed" speed profile? check time
     trajectoryPlan->write_current_speed_profile(evaluation_stream, dt_nanos);
 
 
+    trajectoryPlan->save_speed_profile();
     trajectoryPlan->reset_speed_profile();
     
+    bool new_prios_feasible = false;
+    bool old_prios_feasible = false;
+
     switch(mode)
     {
     case PriorityMode::fca :
     {
         // updates prios and plans based on fca only if its feasible
-        bool new_prios_feasible = plan_fca_priorities();
+        new_prios_feasible = plan_fca_priorities();
         bool other_feasible = synchronise(coupling_graph.getVehicles(), new_prios_feasible, 1);
         new_prios_feasible = new_prios_feasible && other_feasible;
         std::cout << "synchronised" << std::endl;
-
-        if (!new_prios_feasible) // if prio change not feasible try if old prios work
-        {
-            std::cout << "Using old prios " << std::endl;
-            // TODO ps extended speed profile ends with "double" stop?
-            trajectoryPlan->revert_speed_profile(); // get old speed_profile for faster avoid_collision()
-            bool prios_feasible = plan_static_priorities();
-            
-            if (!prios_feasible) // if old prios don't work with the extended path just extend the halt at the end of the horizon
-            {
-                std::cout << "Old prios infeasible: " << std::endl;
-                evaluation_stream << 2 << ";";
-                trajectoryPlan->revert_speed_profile();
-            }
-            else
-            {
-                evaluation_stream << 1 << ";";
-            }
-        } 
-        else 
-        {
-            evaluation_stream << 0 << ";";
-        }
         break;
     }
 
 
     case PriorityMode::random :
     {
-        plan_random_priorities();
+        new_prios_feasible = plan_random_priorities();
         break;
     }
 
@@ -174,18 +155,9 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     case PriorityMode::id :
     {
         // TODO ps reset_speed_profile can be avoided if no collisions in the
-        // final timestep are avoided.
-        bool feasible = plan_static_priorities();
-        evaluation_stream << 0 << ";";
-        if (!feasible)
-        {
-            trajectoryPlan->revert_speed_profile();
-            evaluation_stream << 2 << ";";
-        } 
-        else
-        {
-            evaluation_stream << 1 << ";";
-        }
+        //         final timestep are avoided.
+        old_prios_feasible = plan_static_priorities();
+        evaluation_stream << 0 << ";"; // fca value
         break;
     }
 
@@ -196,6 +168,36 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         break;
     }
     }
+
+    // Check result
+    if (new_prios_feasible)
+    {
+        evaluation_stream << 0 << ";";
+    } 
+    // if dynamic prio, but change not feasible, try if old prios work
+    else
+    {
+        if (mode != PriorityMode::id)
+        {
+            std::cout << "Using old prios " << std::endl;
+            trajectoryPlan->reset_speed_profile();
+            // plan with old priorities
+            old_prios_feasible = plan_static_priorities();
+        }
+        
+        // if old prios don't work just extend the halt at the end of the horizon
+        if (!old_prios_feasible)
+        {
+            std::cout << "Old prios infeasible: " << std::endl;
+            evaluation_stream << 2 << ";";
+            trajectoryPlan->revert_speed_profile();
+        }
+        else
+        {
+            evaluation_stream << 1 << ";";
+        }
+    }
+
     
     int coll_left = trajectoryPlan->potential_collisions(other_vehicles_buffer, false);
     evaluation_stream << "col_left " << coll_left << ";";
@@ -298,37 +300,19 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
     write_fca(vehicle_id, rand_fca);
     evaluation_stream << (int)rand_fca << ";";
     std::cout << "trying new prios" << std::endl;
-    std::vector<uint8_t> old_prio_vec = prio_vec;
-    prio_vec = fca_prio_vec(rand_fca);
+    new_prio_vec = fca_prio_vec(rand_fca);
 
     bool feasible = plan_static_priorities();
     std::cout << "new prios fasible: " << feasible << std::endl;
     bool other_feasible = synchronise(coupling_graph.getVehicles(), feasible, 3);
     feasible = feasible && other_feasible;
     std::cout << "other vehicles fasible: " << feasible << std::endl;
-    if (!feasible)
+    if (feasible)
     {
-        std::cout << "using old prios" << std::endl;
-        prio_vec = old_prio_vec;
-        trajectoryPlan->revert_speed_profile();
-        bool old_prio_feasible = plan_static_priorities();
-        other_feasible = synchronise(coupling_graph.getVehicles(), old_prio_feasible, 4);
-        old_prio_feasible = old_prio_feasible && other_feasible;
-        if (!old_prio_feasible)
-        {
-            std::cout << "stopping" << std::endl;
-            trajectoryPlan->revert_speed_profile();
-            evaluation_stream << 2 << ";";
-        }
-        else
-        {
-            evaluation_stream << 1 << ";";
-        }
-    } else 
-    {
-        evaluation_stream << 0 << ";";
+        prio_vec = new_prio_vec;
     }
-    return true;
+
+    return feasible;
 }
 
 bool VehicleTrajectoryPlanner::plan_static_priorities(){
