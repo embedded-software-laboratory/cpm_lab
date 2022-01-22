@@ -77,7 +77,7 @@ void VehicleTrajectoryPlanningState::invariant()
     assert(delta_s_path_node_offset >= 0);
 }
 
-void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos, bool extend_stop)
+void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
 {
     uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
@@ -110,48 +110,19 @@ void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos, bool exte
 
     extend_random_route(500);
 
-    if (extend_stop)
+    assert(speed_profile[N_STEPS_SPEED_PROFILE-1]==min_speed);
+    // shift and extend speed profile
+    for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
     {
-        // shift and extend speed profile
-        for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
+        if (i + n_steps < N_STEPS_SPEED_PROFILE)
         {
-            if (i + n_steps < N_STEPS_SPEED_PROFILE)
-            {
-                // Shift the current speed profile by n_steps if possible
-                speed_profile[i] = speed_profile[i + n_steps];
-            }
-            else
-            {
-                // else, stop
-                speed_profile[i] = min_speed;
-            }
+            // Shift the current speed profile by n_steps if possible
+            speed_profile[i] = speed_profile[i + n_steps];
         }
-    }
-    else
-    {
-        // shift and extend speed profile
-        for (int i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
+        else
         {
-            // TODO ps Does reusing speed profile even make sense with forced stop at end? i daut it
-            // TODO ps actually should only include max_speed/delta_v_step before end
-            if (i + n_steps < N_STEPS_SPEED_PROFILE)
-            {
-                // TODO ps stop is included here, but does not need to be
-                // Shift the current speed profile by n_steps if possible
-                speed_profile[i] = speed_profile[i + n_steps];
-            }
-            else
-            {
-                // TODO ps this should not be done, because we stop at horizon
-                // else, accelerate up to max_speed
-                speed_profile[i] = fmin(speed_profile[i - 1] + delta_v_step, max_speed);
-            }
-        }
-        // Each planning horizon ends with a full stop
-        int spd_prof_sz = speed_profile.size() - 1;
-        for (int i = spd_prof_sz; (spd_prof_sz - i) * delta_v_step < speed_profile[i]; i--)
-        {
-            speed_profile[i] = (spd_prof_sz - i) * delta_v_step;
+            // else, stop
+            speed_profile[i] = min_speed;
         }
     }
     invariant();
@@ -479,13 +450,6 @@ void VehicleTrajectoryPlanningState::revert_speed_profile()
     speed_profile = old_speed_profile;
 }
 
-// TODO ps unused?
-void VehicleTrajectoryPlanningState::extend_stop(){
-    for (int i = speed_profile.size(); speed_profile[i] != 0; i--)
-    {
-        speed_profile[i] = 0;
-    }
-}
 
 void VehicleTrajectoryPlanningState::print_speed_profile(){
     std::cout << "Speed profile: " << std::endl;

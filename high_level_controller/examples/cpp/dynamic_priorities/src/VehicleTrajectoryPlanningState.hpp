@@ -153,7 +153,7 @@ public:
      * \brief Advance the planning by a timestep
      * \param dt_nanos Length of timestep in ns
      */
-    void apply_timestep(uint64_t dt_nanos, bool extend_stop);
+    void apply_timestep(uint64_t dt_nanos);
 
     /**
      * \brief Return length of one speed profile step
@@ -208,11 +208,6 @@ public:
      * \brief The speed profile gets reverted to the one saved by the last save_speed_profile() call
      **/
     void revert_speed_profile();
-
-    /**
-     * \brief The end of the speedprofile is continued with 0 speed
-     **/
-    void extend_stop();
 
     /**
      * 

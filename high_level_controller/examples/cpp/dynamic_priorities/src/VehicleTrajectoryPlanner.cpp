@@ -107,7 +107,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     isStopped = false;
     t_real_time = t;
     dt_nanos = dt;
-    extend_stop = false;
 
     // Timesteps should come in a logical order
     assert(t_prev < t_real_time);
@@ -115,7 +114,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // Catch up planningState if we missed a timestep
     while (t_real_time - t_prev > dt && t_prev != 0)
     {
-        trajectoryPlan->apply_timestep(dt_nanos, extend_stop);
+        trajectoryPlan->apply_timestep(dt_nanos);
         t_prev += dt_nanos;
     }
     t_prev = t_real_time;
@@ -125,12 +124,14 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     evaluation_stream << t_real_time << "; "; 
     // TODO ps this is "fixed" speed profile?
     trajectoryPlan->write_current_speed_profile(evaluation_stream, dt_nanos);
+
+
+    trajectoryPlan->reset_speed_profile();
     
     switch(mode)
     {
     case PriorityMode::fca :
     {
-        trajectoryPlan->save_speed_profile();
         // updates prios and plans based on fca only if its feasible
         bool new_prios_feasible = plan_fca_priorities();
         bool other_feasible = synchronise(coupling_graph.getVehicles(), new_prios_feasible, 1);
@@ -149,7 +150,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
                 std::cout << "Old prios infeasible: " << std::endl;
                 evaluation_stream << 2 << ";";
                 trajectoryPlan->revert_speed_profile();
-                extend_stop = true;
             }
             else
             {
@@ -173,15 +173,13 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     case PriorityMode::id :
     {
-        trajectoryPlan->save_speed_profile();
-        // TODO ps reset should not be necessary, but is due to apply_timestep bug.
-        trajectoryPlan->reset_speed_profile();
+        // TODO ps reset_speed_profile can be avoided if no collisions in the
+        // final timestep are avoided.
         bool feasible = plan_static_priorities();
         evaluation_stream << 0 << ";";
         if (!feasible)
         {
             trajectoryPlan->revert_speed_profile();
-            extend_stop = true;
             evaluation_stream << 2 << ";";
         } 
         else
@@ -252,7 +250,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     //debug_analyzeTrajectoryPointBuffer();
 
     // Advance trajectoryPlanningState by 1 timestep
-    trajectoryPlan->apply_timestep(dt_nanos, extend_stop);
+    trajectoryPlan->apply_timestep(dt_nanos);
     auto end_time = std::chrono::steady_clock::now();
     auto diff = end_time - start_time;
     std::cout << "TIMING: plan step ";
@@ -296,9 +294,6 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
     new_prio_vec.clear();          // save new priorities until we know they are feasible and update prio_vec
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
-    trajectoryPlan->save_speed_profile();
-    trajectoryPlan->reset_speed_profile(); // Speed profile is reset since every time step is planned from 0 
-
     uint16_t rand_fca = std::rand() % 500;
     write_fca(vehicle_id, rand_fca);
     evaluation_stream << (int)rand_fca << ";";
@@ -323,7 +318,6 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
         {
             std::cout << "stopping" << std::endl;
             trajectoryPlan->revert_speed_profile();
-            extend_stop = true;
             evaluation_stream << 2 << ";";
         }
         else
@@ -374,7 +368,6 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
     
-    trajectoryPlan->reset_speed_profile(); // Speed profile is reset since every time step is planned from 0
 
     send_plan_to_hlcs(true, false);                                                 // send own optimal trajectory
     read_optimal_trajectories();                                                    // read all optimal trajectories
@@ -435,9 +428,6 @@ bool VehicleTrajectoryPlanner::plan_vertex_ordering_priorities()
     new_prio_vec.clear();          // save new priorities until we know they are feasible and update prio_vec
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
-    trajectoryPlan->save_speed_profile();
-    trajectoryPlan->reset_speed_profile(); // Speed profile is reset since every time step is planned from 0 
-
     send_plan_to_hlcs(true, false);                                                 // send own optimal trajectory
     read_optimal_trajectories();                                                    // read all optimal trajectories
     
@@ -463,7 +453,6 @@ bool VehicleTrajectoryPlanner::plan_vertex_ordering_priorities()
         {
             std::cout << "stopping" << std::endl;
             trajectoryPlan->revert_speed_profile();
-            extend_stop = true;
             evaluation_stream << 2 << ";";
         }
         else

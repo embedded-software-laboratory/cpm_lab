@@ -143,8 +143,6 @@ class VehicleTrajectoryPlanner
     uint8_t vehicle_id;
     //! HLC mode: 0: static prios, 1: random prios, 2: dynamic fca based, 3: vertex ordering
     PriorityMode mode;
-    //! extend stop: if we cannot find a feasible trajectory we come to a safe stop
-    bool extend_stop = false;
 
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     //! How many points we can send in one message; determined by maximum length of vector in DDS
