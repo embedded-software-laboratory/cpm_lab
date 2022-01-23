@@ -5,12 +5,7 @@
 * \subpage v_f_start <br>
 * \subpage v_f_bootloader <br>
 * \subpage v_f_build <br>
-* \subpage v_f_deploy <br>
-* \subpage v_f_login <br>
-* \subpage v_f_monitor <br>
 * \subpage v_f_reboot_all <br>
-* \subpage v_f_reboot <br>
-* \subpage v_f_run_fl <br>
 * \subpage v_f_run <br>
 * \subpage v_f_readme <br>
 * \ingroup vehicle_files
@@ -32,33 +27,8 @@
  */
 
 /**
- * \page v_f_deploy deploy.bash
- * \brief Deprecated script to deploy vehicle software on the vehicle / raspberry from the master PC
- */
-
-/**
- * \page v_f_login login_raspberry.bash
- * \brief Deprecated script to log into the vehicle / raspberry (password outdated)
- */
-
-/**
- * \page v_f_monitor monitor_log_raspberry.bash
- * \brief Deprecated script to get logs from the vehicle / raspberry (password outdated)
- */
-
-/**
  * \page v_f_reboot_all reboot_all_raspberry.bash
- * \brief Deprecated script to reboot vehicles / raspberry (password outdated)
- */
-
-/**
- * \page v_f_reboot reboot_raspberry.bash
- * \brief Deprecated script to reboot one vehicle (password outdated)
- */
-
-/**
- * \page v_f_run_fl run_w_flexible_domain.bash
- * \brief Run script for the simulated vehicle where the DDS domain can be changed
+ * \brief Script to reboot vehicles / raspberry
  */
 
 /**

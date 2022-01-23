@@ -3,13 +3,6 @@
 
 # But not these files...
 !.gitignore
-!apache_start.bash
-!Doxygen_hlc_bash_descriptions.hpp
-!environment_variables.bash
-!hlc_start_local.bash
-!hlc_start.bash
-!start.bash
-!stop.bash
 
 # and not these folders
 !autostart/
