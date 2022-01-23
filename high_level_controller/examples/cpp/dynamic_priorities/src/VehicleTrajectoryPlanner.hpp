@@ -117,8 +117,6 @@ class VehicleTrajectoryPlanner
     std::vector<TrajectoryPoint> trajectory_point_buffer;
     //! Determines, which vehicles have priority; should be the same for all HLCs
     CouplingGraph coupling_graph;
-    //! A "list" of which vehicle_ids have already sent messages to us this timestep
-    std::set<uint8_t> all_received_messages; // Which vehicles have sent LaneGraphTrajs to us this timestep
     //! Counter, of how often in a row we had to abort planning before we were done
     short no_trajectory_counter = 0;
     //! Becomes true when new fcas are present

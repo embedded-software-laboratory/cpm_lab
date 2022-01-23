@@ -290,13 +290,14 @@ int main(int argc, char *argv[]) {
                         "setting vehicle for planner");
                         // Initialize PlanningState with starting position
                         planner->set_vehicle(
-                                std::unique_ptr<VehicleTrajectoryPlanningState>(
-                                    new VehicleTrajectoryPlanningState(
-                                        vehicle_id,
-                                        out_edge_index,
-                                        out_edge_path_index
-                                        )
+                            std::unique_ptr<VehicleTrajectoryPlanningState>(
+                                new VehicleTrajectoryPlanningState(
+                                    vehicle_id,
+                                    out_edge_index,
+                                    out_edge_path_index,
+                                    vehicle_state_list.period_ms()*1e6
                                 )
+                            )
                         );
                         cpm::Logging::Instance().write(
                                 2,

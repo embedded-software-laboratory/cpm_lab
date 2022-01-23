@@ -124,8 +124,9 @@ public:
     VehicleTrajectoryPlanningState(
         uint8_t _vehicle_id,
         size_t _edge_index,
-        size_t _edge_path_index
-        );
+        size_t _edge_path_index,
+        uint64_t dt_nanos
+    );
 
     /**
      * \brief Write out planned trajectory into a HlcCommunication object
@@ -147,13 +148,12 @@ public:
      * \param max_length Maximum length of trajectory that should be returned
      * \param dt_nanos How much time each point should be from the next
      */
-    vector<TrajectoryPoint> get_planned_trajectory(int max_length, uint64_t dt_nanos);
+    vector<TrajectoryPoint> get_planned_trajectory(int max_length);
 
     /**
      * \brief Advance the planning by a timestep
-     * \param dt_nanos Length of timestep in ns
      */
-    void apply_timestep(uint64_t dt_nanos);
+    void apply_timestep();
 
     /**
      * \brief Return length of one speed profile step
@@ -188,8 +188,7 @@ public:
      * \return True if successful and False otherwise.
      */
     bool avoid_collisions(
-        std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles,
-        uint64_t dt_nanos
+        std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles
     );
 
     /**
@@ -206,6 +205,17 @@ public:
      * \brief Speed back up and reset planned braking (except for the safety stop)
      **/
     void reset_speed_profile();
+    /**
+     * \brief Speed back up and reset planned braking (except for the safety stop)
+     **/
+    void reset_speed_profile(array<double, N_STEPS_SPEED_PROFILE> &speed_profile_in_out);
+    /**
+     * \brief Speed back up and reset planned braking (except for the safety stop)
+     **/
+    void reset_speed_profile(
+        array<double, N_STEPS_SPEED_PROFILE> &speed_profile_in_out,
+        size_t i_start
+    );
 
     /**
      * \brief The speed profile gets reverted to the one saved by the last save_speed_profile() call
@@ -220,7 +230,7 @@ public:
     
     /*
     */
-   void write_current_speed_profile(std::ofstream &stream, uint64_t dt_nanos);
+   void write_current_speed_profile(std::ofstream &stream);
 
     /**
     * \brief compute the subgraph induced by the paths of the vehicles
@@ -234,4 +244,10 @@ public:
      * \return ^
      **/
     std::vector<uint8_t> compute_graph_based_priorities(std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> &vehicles_buffer);
+
+    //! Length of the current timestep in nanoseconds
+    uint64_t const dt_nanos;
+
+    //! Number of speed_profile steps whose duration sum up to dt_nanos
+    size_t const n_steps;
 };

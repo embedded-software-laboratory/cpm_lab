@@ -32,7 +32,6 @@
  * It is also able to plan using static priorities. 
  * \ingroup dynamic_priorities
  */
-#define T_START_DELAY_NANOS 1000000000ull
 
 #include "VehicleTrajectoryPlanner.hpp"
 #include <cstdlib>
@@ -65,7 +64,7 @@ VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64
             rti::core::vector<TrajectoryPoint>(trajectory_point_buffer)
     );
     vehicleCommandTrajectory.header().create_stamp().nanoseconds(t_now); //You just need to set t_now here, as it was created at t_now
-    vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + T_START_DELAY_NANOS); //Hardcoded value from the planner (t_start), should be correct (this value should correlate with the trajectory point that should be valid at t_now)
+    vehicleCommandTrajectory.header().valid_after_stamp().nanoseconds(t_now + dt_nanos);
 
     return vehicleCommandTrajectory;
 }
@@ -111,7 +110,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     // Catch up planningState if we missed a timestep
     while (t_real_time - t_prev > dt && t_prev != 0)
     {
-        trajectoryPlan->apply_timestep(dt_nanos);
+        trajectoryPlan->apply_timestep();
         t_prev += dt_nanos;
     }
     t_prev = t_real_time;
@@ -119,8 +118,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     std::cout << "STEP: " << t_real_time << "; t:" << t << "; dt:" << dt << std::endl;
     evaluation_stream << t_real_time << "; "; 
-    // TODO ps this is "fixed" speed profile? check time
-    trajectoryPlan->write_current_speed_profile(evaluation_stream, dt_nanos);
+    
+    trajectoryPlan->write_current_speed_profile(evaluation_stream);
 
 
     trajectoryPlan->save_speed_profile();
@@ -151,8 +150,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
     case PriorityMode::id :
     {
-        // TODO ps reset_speed_profile can be avoided if no collisions in the
-        //         final timestep are avoided.
+        // reset_speed_profile could be avoided if no collisions in the
+        // final timestep are present.
         old_prios_feasible = plan_static_priorities();
         evaluation_stream << 0 << ";"; // fca value
         break;
@@ -225,10 +224,10 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 
         // Get new points from PlanningState
         uint n_trajectory_points = 6;
-        std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(n_trajectory_points-1, dt_nanos);
+        std::vector<TrajectoryPoint> new_trajectory_points = trajectoryPlan->get_planned_trajectory(n_trajectory_points-1);
         for (auto &point : new_trajectory_points)
         {
-            point.t().nanoseconds(point.t().nanoseconds() + t_start + T_START_DELAY_NANOS);
+            point.t().nanoseconds(point.t().nanoseconds() + t_start);
             evaluation_stream << "x" <<point.px() << ",y" << point.py() << ",vx" << point.vx() << ",vy" << point.vy() <<",";
         }
         //evaluation_stream << ";";
@@ -237,7 +236,8 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         trajectory_point_buffer.insert(
             trajectory_point_buffer.end(),
             new_trajectory_points.begin(),
-            new_trajectory_points.end());
+            new_trajectory_points.end()
+        );
 
         // Limit size of trajectory buffer; delete oldest points first;
         while (trajectory_point_buffer.size() > n_trajectory_points)
@@ -249,7 +249,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     //debug_analyzeTrajectoryPointBuffer();
 
     // Advance trajectoryPlanningState by 1 timestep
-    trajectoryPlan->apply_timestep(dt_nanos);
+    trajectoryPlan->apply_timestep();
     auto end_time = std::chrono::steady_clock::now();
     auto diff = end_time - start_time;
     std::cout << "TIMING: plan step ";
@@ -314,8 +314,7 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
 
 bool VehicleTrajectoryPlanner::plan_static_priorities(){
     bool prios_feasible = true;
-    // TODO ps all_received_messages not used? kann weg
-    all_received_messages.clear(); // Messages_received gets reset
+    
     other_vehicles_buffer.clear();
 
     bool other_feasible = !read_vehicles(prev_vehicles(), other_vehicles_buffer, true);
@@ -324,8 +323,7 @@ bool VehicleTrajectoryPlanner::plan_static_priorities(){
     if (prios_feasible)
     {
         bool avoid_successful = trajectoryPlan->avoid_collisions(
-            other_vehicles_buffer,
-            dt_nanos
+            other_vehicles_buffer
         );
         bool has_collisions = !avoid_successful;
         prios_feasible = prios_feasible && avoid_successful;
@@ -355,8 +353,6 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
 
     send_plan_to_hlcs(true, false);                                                 // send own optimal trajectory
     read_optimal_trajectories();                                                    // read all optimal trajectories
-    // TODO ps why graph_based_priorities here? kann weg
-    trajectoryPlan->compute_graph_based_priorities(vehicles_buffer);
     uint16_t own_fca = trajectoryPlan->potential_collisions(vehicles_buffer, true); // compute fca based on optimal trajectories
     evaluation_stream << (int)own_fca << ";";
     // all vehicles become active
@@ -371,8 +367,7 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
         if (winner_id == vehicle_id) // if winner plan; send trajectory;
         {
             avoid_successful = trajectoryPlan->avoid_collisions(
-                other_vehicles_buffer,
-                dt_nanos
+                other_vehicles_buffer
             ); // plan own trajectory
             new_prios_feasible = new_prios_feasible && avoid_successful;
             has_collisions = !avoid_successful;
@@ -784,7 +779,6 @@ void VehicleTrajectoryPlanner::interpolate_vehicles_buffer(
  * This deletes all points that are in the past from the trajectory point buffer
  * After that, we can just append the new points
  */
-// TODO ps naming clear_future_trajectory_point_buffer ?
 void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
     // Delete all trajectory points that are in the future
     // These will be replaced by new points later
@@ -792,7 +786,7 @@ void VehicleTrajectoryPlanner::clear_past_trajectory_point_buffer() {
     for (std::vector<TrajectoryPoint>::iterator tp_it = trajectory_point_buffer.begin() + 1;
             tp_it != trajectory_point_buffer.end();
             ++tp_it) {
-        if (tp_it->t().nanoseconds() > t_real_time + T_START_DELAY_NANOS
+        if (tp_it->t().nanoseconds() > t_real_time
                 && it_t_now == trajectory_point_buffer.end()) {
             it_t_now = tp_it-1;
         }

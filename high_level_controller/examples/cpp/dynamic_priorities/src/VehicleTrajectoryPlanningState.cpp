@@ -40,12 +40,20 @@
 VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     uint8_t _vehicle_id,
     size_t _edge_index,
-    size_t _edge_path_index)
+    size_t _edge_path_index,
+    uint64_t dt_nanos
+)
 :vehicle_id(_vehicle_id)
 ,current_edge_index(_edge_index)
 ,current_edge_path_index(_edge_path_index)
 ,current_route_edge_indices({_edge_index})
+,dt_nanos(dt_nanos)
+,n_steps(dt_nanos / dt_speed_profile_nanos)
 {   
+
+    assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
+    assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
+    assert(n_steps >= 1);
     // Set seed for rand; for reproducibility; is used to generate paths
     // srand(time(NULL)*vehicle_id);
     srand(vehicle_id);
@@ -53,19 +61,8 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
     extend_random_route(500);
 
-    // speed up (taken from central routing)
-    speed_profile[0] = 0;
-    for (size_t i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
-    {
-        speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
-    }
-    // Each planning horizon ends with a full stop (recursive feasibility)
-    int spd_prof_sz = speed_profile.size() - 1;
-    int it = spd_prof_sz;
-    for (it = spd_prof_sz; (spd_prof_sz - it) * delta_v_step < speed_profile[it]; it--)
-    {
-        speed_profile[it] = (spd_prof_sz - it) * delta_v_step;
-    }
+    // stand still
+    speed_profile.fill(0);
 }
 
 void VehicleTrajectoryPlanningState::invariant()
@@ -77,12 +74,8 @@ void VehicleTrajectoryPlanningState::invariant()
     assert(delta_s_path_node_offset >= 0);
 }
 
-void VehicleTrajectoryPlanningState::apply_timestep(uint64_t dt_nanos)
+void VehicleTrajectoryPlanningState::apply_timestep()
 {
-    uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
-    assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
-    assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
-    assert(n_steps >= 1);
 
     // calculate driving distance of this time step
     for (size_t i = 0; i < n_steps; ++i)
@@ -268,11 +261,9 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
 // Change the own speed profile so as not to collide with the other_vehicles.
 // other_vehicles may only contain vehicles with a higher priority
 bool VehicleTrajectoryPlanningState::avoid_collisions(
-    std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles,
-    uint64_t dt_nanos
+    std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles
 )
 {
-    uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
     int min_idx_zero_speed = std::max<int>(
         n_steps,
         static_cast<int>(n_steps-1 + ceil(speed_profile[n_steps-1] / delta_v_step))
@@ -402,8 +393,7 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
 
     speed_profile[idx_speed_reduction] = speed_value;
     
-    // TODO ps no need to iterate over the whole profile? is this profile always smooth?
-    // TODO ps I can break if fmin is the actual profile
+    // TODO could break earliear if fmin is the actual profile
     for (int i = 1; i < N_STEPS_SPEED_PROFILE; ++i)
     {
 
@@ -429,18 +419,29 @@ void VehicleTrajectoryPlanningState::save_speed_profile()
 
 void VehicleTrajectoryPlanningState::reset_speed_profile()
 {
-    // TODO ps i = dt_major/dt_minor = 8
-    // TODO ps warum i=15? nochmal nachdenken mit Timestep delay etc.
-    for (int i = 15; i < N_STEPS_SPEED_PROFILE; ++i) // i since previous speed is already in use; this can be optimised 
+    reset_speed_profile(speed_profile);
+}
+void VehicleTrajectoryPlanningState::reset_speed_profile(
+    array<double, N_STEPS_SPEED_PROFILE> &speed_profile_in_out
+)
+{
+    reset_speed_profile(speed_profile_in_out, n_steps);
+}
+
+void VehicleTrajectoryPlanningState::reset_speed_profile(
+    array<double, N_STEPS_SPEED_PROFILE> &speed_profile_in_out,
+    size_t i_start
+)
+{
+    for (; i_start < N_STEPS_SPEED_PROFILE; ++i_start)
     {
-        speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, max_speed);
+        speed_profile_in_out[i_start] = fmin(speed_profile_in_out[i_start-1] + delta_v_step, max_speed);
     }
 
     // Each planning horizon ends with a full stop
-    int spd_prof_sz = speed_profile.size() - 1;
-    int it = spd_prof_sz;
-    for(it = spd_prof_sz; (spd_prof_sz - it) * delta_v_step < speed_profile[it]; it--){
-        speed_profile[it] = (spd_prof_sz - it) * delta_v_step;
+    int spd_prof_sz = speed_profile_in_out.size() - 1;
+    for(int i = spd_prof_sz; (spd_prof_sz - i) * delta_v_step < speed_profile_in_out[i]; i--){
+        speed_profile_in_out[i] = (spd_prof_sz - i) * delta_v_step;
     }
 }
 
@@ -467,16 +468,12 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     size_t future_edge_path_index = current_edge_path_index;
     size_t route_index = 0;
     double delta_s = delta_s_path_node_offset;
+    array<double, N_STEPS_SPEED_PROFILE> cur_speed_profile = speed_profile;
+    if (optimal) {reset_speed_profile(cur_speed_profile);};
+
     for (size_t i = 0; i < N_STEPS_SPEED_PROFILE; ++i)
     {
-        if (optimal)
-        {
-            // TODO ps if we are currently traveling at v=0, this gives an unrealistic estimation
-            delta_s += max_speed * dt_speed_profile;
-        } else
-        {
-            delta_s += speed_profile[i] * dt_speed_profile;
-        }
+        delta_s += cur_speed_profile[i] * dt_speed_profile;
 
         laneGraphTools.move_along_route
         (
@@ -493,10 +490,9 @@ vector<std::pair<size_t, size_t>> VehicleTrajectoryPlanningState::get_planned_pa
     return result;
 }
 
-vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length, uint64_t dt_nanos) {
+vector<TrajectoryPoint> VehicleTrajectoryPlanningState::get_planned_trajectory(int max_length) {
     vector<TrajectoryPoint> result;
-    int index = 0;
-    int n_steps = dt_nanos/dt_speed_profile_nanos; // Number of speed steps per dt_nanos
+    uint index = 0;
     
     for( auto point : get_planned_path(false) ) {
         if(index >= n_steps*max_length) {
@@ -556,8 +552,7 @@ void VehicleTrajectoryPlanningState::debug_writeOutOwnTrajectory() {
     std::cout << std::endl;
 }
 
-void VehicleTrajectoryPlanningState::write_current_speed_profile(std::ofstream &stream, uint64_t dt_nanos){
-    uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
+void VehicleTrajectoryPlanningState::write_current_speed_profile(std::ofstream &stream){
     for (size_t i = 0; i < n_steps - 1; i++)
     {
         stream << speed_profile[i] << ",";

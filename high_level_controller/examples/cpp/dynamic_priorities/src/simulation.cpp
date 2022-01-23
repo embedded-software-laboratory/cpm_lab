@@ -144,7 +144,11 @@ int main(int argc, char* argv[])
                     new VehicleTrajectoryPlanningState(
                         vehicle_id,
                         out_edge_index,
-                        out_edge_path_index)));
+                        out_edge_path_index,
+                        dt
+                    )
+                )
+            );
         }
     }
 
