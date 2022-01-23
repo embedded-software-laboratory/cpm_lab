@@ -187,7 +187,10 @@ public:
      * \param other_vehicles
      * \return True if successful and False otherwise.
      */
-    bool avoid_collisions(std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles);
+    bool avoid_collisions(
+        std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles,
+        uint64_t dt_nanos
+    );
 
     /**
      * \brief Returns the corresponding vehicle id

@@ -268,13 +268,20 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
 // Change the own speed profile so as not to collide with the other_vehicles.
 // other_vehicles may only contain vehicles with a higher priority
 bool VehicleTrajectoryPlanningState::avoid_collisions(
-    std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles
+    std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> other_vehicles,
+    uint64_t dt_nanos
 )
 {
-    //reset_speed_profile();
-    // TODO termination condition
-    // for now: if this gets stuck the vehicles will stop, because they wont get a new command
-    while(1)
+    uint64_t n_steps = dt_nanos / dt_speed_profile_nanos;
+    int min_idx_zero_speed = std::max<int>(
+        n_steps,
+        static_cast<int>(n_steps-1 + ceil(speed_profile[n_steps-1] / delta_v_step))
+    );
+    std::cout << "min idx for zero speed: " << min_idx_zero_speed << std::endl;
+
+    bool are_collisions_avoidable = true;
+    bool is_collision_free = false;
+    while(!is_collision_free && are_collisions_avoidable)
     {
         vector<std::pair<size_t, size_t>> self_path = get_planned_path(false);
 
@@ -324,44 +331,51 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
 
         // stop if there is no collision
         if(earliest_collision__speed_profile_index >= N_STEPS_SPEED_PROFILE) {
-            return true;
+            is_collision_free = true;
+            break;
         }
 
 
         cpm::Logging::Instance().write(2,
-                "Detected potential collision; avoiding");
+                "Detected potential collision; avoiding"
+        );
 
         // fix speed profile to avoid collision,
         // beginning from 10 steps before the collision
         // TODO: Change magic numbers to named parameters/constants
-         int idx_speed_reduction = earliest_collision__speed_profile_index;//- 10;
+        int idx_speed_reduction = earliest_collision__speed_profile_index - 10;
 
         // If we already are almost at min_speed at the planned index for
         // speed reduction we cannot slow down much more,
         // so we try reducing the speed 10 steps earlier
-        // TODO ps why 15? should be related to ceil(diff/delta_v_step)
-        // TODO ps which is currently ceil(0.3/0.04)=8
-        // TODO ps why not idx_speed_reduction >= 25, does not seem to help much
-        while(idx_speed_reduction > 0
-            && speed_profile[idx_speed_reduction] < min_speed + 0.12)
+        while(idx_speed_reduction >= min_idx_zero_speed
+            && speed_profile[idx_speed_reduction] < min_speed + 0.05)
         {
             idx_speed_reduction -= 10;
-            if (idx_speed_reduction < 15 && speed_profile[15] > min_speed)
-            {
-                idx_speed_reduction = 15;
-                break;
-            }
+        }
+        if (idx_speed_reduction < min_idx_zero_speed 
+            && speed_profile[min_idx_zero_speed] > min_speed + 0.05)
+        {
+            std::cout << "trying to reduce speed at beginning, idx: " << idx_speed_reduction << std::endl;
+            std::cout << "speed at minidx: " << std::setw(4) << speed_profile[min_idx_zero_speed]
+            << " larger than min speed " << min_speed + 0.05 <<std::endl;
+            std::cout << "setting idx to " << min_idx_zero_speed <<std::endl;
+            idx_speed_reduction = min_idx_zero_speed;
         }
 
-        const double reduced_speed = fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed);
-        std::cout << 
-            "Collision detected t:" << earliest_collision__speed_profile_index << 
-            "  self id: " << int(vehicle_id) << 
-            "  other id: " << colliding_vehicle_id << 
-            "  Speed reduction,  t: " << idx_speed_reduction  << 
-            "  spd: " << reduced_speed << std::endl;
-
-        if(idx_speed_reduction < 15)
+        if(idx_speed_reduction >= min_idx_zero_speed)
+        {
+            const double reduced_speed = fmax(speed_profile[idx_speed_reduction] - 0.3, min_speed);
+            std::cout << 
+                "Collision detected t: " << std::setw(4) << earliest_collision__speed_profile_index << 
+                "  self id: " << std::setw(2)  << int(vehicle_id) << 
+                "  other id: " << std::setw(2)  << colliding_vehicle_id << 
+                "  Speed reduction,  t: " << std::setw(4) << idx_speed_reduction  << 
+                "  cur spd: " << std::setw(4) << speed_profile[idx_speed_reduction]  << 
+                "  red spd: " << reduced_speed << std::endl;
+            set_speed(idx_speed_reduction, reduced_speed);
+        }
+        else
         {
             cpm::Logging::Instance().write(
                 1,
@@ -369,37 +383,24 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
                 int(vehicle_id), colliding_vehicle_id, time_of_collision
             );
             std::cout << "Collision unavoidable" << std::endl;
-            
-            return false;
+            are_collisions_avoidable = false;
         }
-
-        set_speed(idx_speed_reduction, reduced_speed);
     }
-    return true;
+    // assert we haven't changed current timestep
+    for (size_t i = 0; i < n_steps; i++)
+    {
+        assert(old_speed_profile[i]==speed_profile[i]);
+    }
+    return is_collision_free;
 }
 
 // sets the speed value at the index and then propagates the change
 void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double speed_value)
 {
-    // TODO ps idx_speed_reduction cannot be <15?
     assert(idx_speed_reduction >= 0);
     assert(idx_speed_reduction < N_STEPS_SPEED_PROFILE);
 
-    double diff = speed_profile[idx_speed_reduction] - speed_value;
     speed_profile[idx_speed_reduction] = speed_value;
-    int steps = ceil(diff/delta_v_step);
-
-    // TODO ps idx_speed_reduction cannot be <15, so never true
-    if (idx_speed_reduction - steps < 0)
-    {
-        for (int i = 1; i <= steps; i++)
-        {
-            speed_profile[i] = fmin(speed_profile[i-1] + delta_v_step, speed_profile[i]);
-        }
-        
-    }
-    else
-    {
     
     // TODO ps no need to iterate over the whole profile? is this profile always smooth?
     // TODO ps I can break if fmin is the actual profile
@@ -418,7 +419,6 @@ void VehicleTrajectoryPlanningState::set_speed(int idx_speed_reduction, double s
         {
             speed_profile[i_reverse] = fmin(speed_value + i * delta_v_step, speed_profile[i_reverse]);
         }
-    }
     }
 }
 
@@ -535,7 +535,9 @@ void VehicleTrajectoryPlanningState::get_lane_graph_positions(
         lane_graph_positions.push_back(lane_graph_pos);
     }
 
-    lane_graph_trajectory.lane_graph_positions(lane_graph_positions);
+    lane_graph_trajectory.lane_graph_positions(
+            rti::core::vector<LaneGraphPosition>(lane_graph_positions)
+    );
 }
 
 std::pair<double, double> VehicleTrajectoryPlanningState::get_position(){

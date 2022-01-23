@@ -323,7 +323,10 @@ bool VehicleTrajectoryPlanner::plan_static_priorities(){
 
     if (prios_feasible)
     {
-        bool avoid_successful = trajectoryPlan->avoid_collisions(other_vehicles_buffer);
+        bool avoid_successful = trajectoryPlan->avoid_collisions(
+            other_vehicles_buffer,
+            dt_nanos
+        );
         bool has_collisions = !avoid_successful;
         prios_feasible = prios_feasible && avoid_successful;
         send_plan_to_hlcs(false, true, has_collisions);
@@ -367,7 +370,10 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
         uint8_t winner_id = get_largest_fca(own_fca); // read fca -> winner plans
         if (winner_id == vehicle_id) // if winner plan; send trajectory;
         {
-            avoid_successful = trajectoryPlan->avoid_collisions(other_vehicles_buffer); // plan own trajectory
+            avoid_successful = trajectoryPlan->avoid_collisions(
+                other_vehicles_buffer,
+                dt_nanos
+            ); // plan own trajectory
             new_prios_feasible = new_prios_feasible && avoid_successful;
             has_collisions = !avoid_successful;
             send_plan_to_hlcs(false, true, has_collisions); // send out plan
@@ -699,10 +705,6 @@ void VehicleTrajectoryPlanner::stop() {
  * Publish the planned trajectory to DDS
  */
 void VehicleTrajectoryPlanner::send_plan_to_hlcs(bool optimal, bool is_final, bool has_collisions) {
-    // TODO ps what is this created for? kann weg
-    std::unique_ptr<VehicleCommandTrajectory>(
-            new VehicleCommandTrajectory(get_trajectory_command(t_real_time)));
-
     Trajectory hlc_comms;
     trajectoryPlan->get_lane_graph_positions(hlc_comms, optimal);
     // Add TimeStamp to each point
@@ -728,7 +730,7 @@ void VehicleTrajectoryPlanner::send_plan_to_hlcs(bool optimal, bool is_final, bo
     hlc_comms.has_collisions(has_collisions); 
     hlc_comms.vehicle_id(trajectoryPlan->get_vehicle_id());
     hlc_comms.header().create_stamp().nanoseconds(t_real_time);
-    hlc_comms.header().valid_after_stamp().nanoseconds(t_real_time + 5000000000ull);
+    hlc_comms.header().valid_after_stamp().nanoseconds(0); //unused
 
     writer_trajectory->write(hlc_comms);
 }
