@@ -398,21 +398,31 @@ def boxplot_data(n_veh, horizon, mode):
 
 
 def plot_feasibility_boxplot():
-    case = 3
     n_veh = 16
     horizon = 200
     horizon_s = (horizon * 50)/1000 # h * minor_step / (ms/s)
     fca_data = boxplot_data(n_veh, horizon, 2)    
     random_data = boxplot_data(n_veh, horizon, 1)
 
-    data = [fca_data[case], random_data[case]]
-    print(data)
+    case_f = 0 # proposed prios worked
+    data_feasible = [fca_data[case_f], random_data[case_f]]
 
-    fig1, ax1 = plt.subplots()
+    case_inf = 3 # fallback or safe stop is used
+    data_infeasible = [fca_data[case_inf], random_data[case_inf]]
+
+    #fig1, ax1 = plt.subplots()
+    # continuous proposed feasible and continuos infeasible 2 subplots:
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle(r'$'+ str(n_veh) + r'$ vehicles, $h=\SI{' + str(horizon_s)+ r'}{\second}$')
+
     labels = ["FCA", "Random"]
-    ax1.set_title(r'$'+ str(n_veh) + r'$ vehicles, $h=\SI{' + str(horizon_s)+ r'}{\second}$')
+    ax1.set_title(r'Feasible Intervals')
     ax1.set_ylabel(r'interval duration $(\unit{\second})$')
-    ax1.boxplot(data, labels=labels)
+    ax1.boxplot(data_feasible, labels=labels)
+    
+    ax2.set_title(r'Infeasible Intervals')
+    #ax2.set_ylabel(r'interval duration $(\unit{\second})$')
+    ax2.boxplot(data_infeasible, labels=labels)
 
     plt.show()
 
@@ -522,7 +532,7 @@ def latex_export():
         ]),
     })
 
-#latex_export()
+latex_export()
 #plot_avg_speed()
 #plt.savefig('avg_speed.pgf')
 
@@ -537,7 +547,7 @@ def latex_export():
 #plot_stop()
 #plt.savefig('veh_until_infeasible.pgf')
 plot_feasibility_boxplot()
-#plt.savefig('consecutive_fail_boxplot.pgf')
+plt.savefig('consecutive_boxplot.pgf')
 #plot_plan_time()
 #plt.savefig('plan_step_duration.pgf')
 #plt.savefig("plan_step_duration.svg")
