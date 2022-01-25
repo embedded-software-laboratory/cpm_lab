@@ -92,7 +92,7 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
         std::cout << "opened eval file" << std::endl;
     }
     evaluation_stream << "id:" << (int)vehicle_id << std::endl;
-    evaluation_stream << "time;speed_profile;fca;new_old_fallback_prio;priority_vector;trajectory" << std::endl;
+    evaluation_stream << "time;speed_profile;fca;new_old_fallback_prio;priority_vector;trajectory;plan_timing" << std::endl;
 }
 
 std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_t t, uint64_t dt)
