@@ -247,10 +247,14 @@ def safe_stop(path, vehicles, horizon_t):
         consecutively_stop = 0
 
         for case in new_old_fallback[0]:  
-            if case == 2 and speed_profile[0][i] == [0,0,0,0,0,0,0,0]:
-                stopped_after.append(i)
-                stopped = True
-                break
+            if case == 2: 
+                all_stopped = True
+                for id in range(0, n_veh):
+                    all_stopped = all_stopped and (speed_profile[id][i] == [0,0,0,0,0,0,0,0])
+                if all_stopped:
+                    stopped_after.append(i)
+                    stopped = True
+                    break
             i+=1
         if not stopped:
             stopped_after.append(-1)
@@ -559,9 +563,9 @@ latex_export()
 #plot_speed_comparison_h()
 #plt.savefig('avg_speed_10s.pgf')
 
-#plot_stop()
-#plt.savefig('veh_until_infeasible.pgf')
-plot_feasibility_boxplot() # figure is saved in method
+plot_stop()
+plt.savefig('veh_until_infeasible.pgf')
+#plot_feasibility_boxplot() # figure is saved in method
 
 #plot_plan_time()
 #plt.savefig('plan_step_duration.pgf')
