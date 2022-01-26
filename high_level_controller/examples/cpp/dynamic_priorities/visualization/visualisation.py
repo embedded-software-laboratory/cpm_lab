@@ -260,12 +260,19 @@ def safe_stop(path, vehicles, horizon_t):
             stopped_after.append(-1)
     print(stopped_after)
     i = 0
+    first_stop = 0
     for stopped in stopped_after:
         #print(i)
         if stopped >=0:
-            return i
+            if first_stop == 0:
+                first_stop = i
+        if first_stop != 0 and stopped < 0:
+            print("######################################################################")
+            print("Infeasible with " + str(first_stop) + "vehicles but feasible again with " + str(i) + "vehicles.")
+            print("######################################################################")
+            
         i +=1
-    return i
+    return first_stop
 
 # Plots at how many vehicles the respective mode becomes infeasible
 def plot_stop():
