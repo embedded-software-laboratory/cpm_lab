@@ -220,7 +220,7 @@ def plot_average_speed_zoomed():
     # Figure Title
     plt.show()
 
-def safe_stop(path, vehicles):
+def safe_stop(path, vehicles, horizon_t):
     stopped_after = []
     for n_veh in vehicles:
         # create variables to load the data into
@@ -240,8 +240,12 @@ def safe_stop(path, vehicles):
             new_old_fallback.append(tmp)
         #print(speed_profile)
         #print(new_old_fallback)
+        #  May lead to wrong detections, v1 may stop coincidentally when no feasible solution. Ideas:
+        #  `case == 2` consecutively for t_h/dt steps
         i = 0
         stopped = False
+        consecutively_stop = 0
+
         for case in new_old_fallback[0]:  
             if case == 2 and speed_profile[0][i] == [0,0,0,0,0,0,0,0]:
                 stopped_after.append(i)
@@ -259,6 +263,7 @@ def safe_stop(path, vehicles):
         i +=1
     return i
 
+# Plots at how many vehicles the respective mode becomes infeasible
 def plot_stop():
     path = "./data/200steps/0"
 
@@ -277,9 +282,9 @@ def plot_stop():
     for steps in hsteps:
         print(steps)
         # fca
-        f = safe_stop("./data/"+ steps+"steps/2", vehicles)
-        r = safe_stop("./data/"+ steps+"steps/1", vehicles)
-        s = safe_stop("./data/"+ steps+"steps/0", vehicles)
+        f = safe_stop("./data/"+ steps+"steps/2", vehicles, int(steps, 10))
+        r = safe_stop("./data/"+ steps+"steps/1", vehicles, int(steps, 10))
+        s = safe_stop("./data/"+ steps+"steps/0", vehicles, int(steps, 10))
         fca.append(f)
         random.append(r)
         static.append(s)
@@ -424,7 +429,17 @@ def plot_feasibility_boxplot():
     #ax2.set_ylabel(r'interval duration $(\unit{\second})$')
     ax2.boxplot(data_infeasible, labels=labels)
 
+    # save two subplots:
+    # Save just the portion _inside_ the second axis's boundaries
+    # plus pad the saved area by 10% in the x-direction and 20% in the y-direction
+    extent = ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig('feasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
+    extent = ax2.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig('infeasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
+
     plt.show()
+    #combined
+    fig.savefig('feasib_infeasib_boxplot_combined.pgf')
 
 def plot_speed_comparison_h():
     fig, ax = plt.subplots()
@@ -546,8 +561,8 @@ latex_export()
 
 #plot_stop()
 #plt.savefig('veh_until_infeasible.pgf')
-plot_feasibility_boxplot()
-plt.savefig('consecutive_boxplot.pgf')
+plot_feasibility_boxplot() # figure is saved in method
+
 #plot_plan_time()
 #plt.savefig('plan_step_duration.pgf')
 #plt.savefig("plan_step_duration.svg")
