@@ -22,7 +22,7 @@
 void simulate(std::shared_ptr<VehicleTrajectoryPlanner> planner);
 
 // allows for syncing the hlcs that will run multithreaded
-std::atomic<int> iterations;
+std::atomic<int> iterations = 0;
 
 int n_vehicles;
 int n_steps;
@@ -47,7 +47,7 @@ std::vector<Pose2D>  start_poses( {Pose2D(3.15802,3.88862,-0.0507011), Pose2D(3.
 */
 void simulate(std::shared_ptr<VehicleTrajectoryPlanner> planner){
     uint64_t t = 10; // initial time !=0
-    while(iterations < n_vehicles * n_steps)
+    while(iterations <= n_vehicles * n_steps)
     {
         if (iterations % n_vehicles == 0)
         {
