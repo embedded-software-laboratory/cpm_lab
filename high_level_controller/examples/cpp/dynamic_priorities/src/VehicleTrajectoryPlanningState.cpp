@@ -41,7 +41,8 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     uint8_t _vehicle_id,
     size_t _edge_index,
     size_t _edge_path_index,
-    uint64_t dt_nanos
+    uint64_t dt_nanos,
+    int _seed
 )
 :vehicle_id(_vehicle_id)
 ,current_edge_index(_edge_index)
@@ -54,11 +55,10 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     assert(n_steps * dt_speed_profile_nanos == dt_nanos); // major timestep is multiple of minor timestep
     assert(n_steps * 2 < N_STEPS_SPEED_PROFILE);
     assert(n_steps >= 1);
-    // Set seed for rand; for reproducibility; is used to generate paths
-    // srand(time(NULL)*vehicle_id);
-    srand(vehicle_id);
+    // Set seed for rand; for reproducibility; is used to generate paths; 
+    random_gen.seed((uint8_t)_seed);
 
-    //finds the next n indizes of the edges of the graph for the trajectory for each vehicle 
+    //finds the next n indizes of the edges of the graph for the trajectory for each vehicle; important: done after seed initialisation
     extend_random_route(500);
 
     // stand still
@@ -127,6 +127,7 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
 {
     invariant();
     vector<uint32_t> new_edge_indices;
+    auto distrib = std::uniform_int_distribution<>(0,3);
 
     while(current_route_edge_indices.size() < n)
     {   //find next indizes for edges
@@ -143,7 +144,11 @@ void VehicleTrajectoryPlanningState::extend_random_route(size_t n)
         
         auto next_edges = laneGraphTools.follow_predefined_trajectory(current_route_edge_indices.back(), oval);**/
         assert(next_edges.size() > 0);
-        current_route_edge_indices.push_back(next_edges.at(rand() % next_edges.size()));
+
+        if(distrib.b() != (int)next_edges.size()-1) {
+            distrib = std::uniform_int_distribution<>(0,next_edges.size()-1);  // generate random integers in [0, next_edges.size()+1]
+        }
+        current_route_edge_indices.push_back(next_edges.at(distrib(random_gen)));
         new_edge_indices.push_back(current_route_edge_indices.back());
     }
 }

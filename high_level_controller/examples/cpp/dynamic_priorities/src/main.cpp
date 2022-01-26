@@ -159,6 +159,17 @@ int main(int argc, char *argv[]) {
             static_cast<int>(vehicle_id)
     );
 
+    // read optional extra seed for the pseudorandomgenerator (std::mt19937)  and set it at the appropriate places TODO gd
+    // combine seed for random with id; when no seed is supplied it is just the vehicle_id
+    // (1) path generation
+    const int path_seed = cpm::cmd_parameter_int(
+        "path_seed", {0}, argc, argv
+    ) + vehicle_id;
+
+    // (2) random priorities
+    const int prio_seed = cpm::cmd_parameter_int(
+        "prio_seed", {0}, argc, argv
+    ) + vehicle_id;
 
     // Outstream in shell which vehicles were selected
     std::stringstream vehicle_id_stream;
@@ -214,7 +225,7 @@ int main(int argc, char *argv[]) {
      * Create planner object
      * ---------------------------------------------------------------------------------
      */
-    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(mode));
+    auto planner = std::unique_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(mode, prio_seed));
 
     // Set reader/writers of planner so it can communicate with other planners
     planner->set_writer(
@@ -295,7 +306,8 @@ int main(int argc, char *argv[]) {
                                     vehicle_id,
                                     out_edge_index,
                                     out_edge_path_index,
-                                    vehicle_state_list.period_ms()*1e6
+                                    vehicle_state_list.period_ms()*1e6,
+                                    path_seed
                                 )
                             )
                         );

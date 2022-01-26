@@ -9,6 +9,8 @@ The `dynamic_priorities` executable takes the following options:
 - `--hlc_mode=` defaults to 2. Sets the mode with which the priorities of the vehicles are determined (0 = static; 1 = random; 2 = fca; 3 = vertex ordering).
 - `--vehicle_ids=` defaults to 4. Sets the ID of the HLC that is being started (e.g. usefully in an terminal or for debugging). Only one should be supplied.
 - `--middleware_domain=` defaults to 1. Usually should not be used.
+- `--path_seed=` defaults to 0. Supply an optional seed for the pseudorandom generator used to extend the vehicles paths. Also used for mode 1 = random.
+- `--prio_seed=` defaults to 0. Supply an optional seed for the pseudorandom generator used to generate random priorities when `hlc_mode=1`.
 
 ## Simulation
 The `simulation` program enables users to run the HLC without using the LCC software. Since in it's current state the actual positions of the vehicles are not used in the `dynamic_priorities` HLC, the simulation results are equal to the results that can be obtained when running the HLC in the LCC.

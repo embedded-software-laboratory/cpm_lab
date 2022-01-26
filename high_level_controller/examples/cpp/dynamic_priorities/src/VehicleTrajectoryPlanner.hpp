@@ -141,6 +141,12 @@ class VehicleTrajectoryPlanner
     uint8_t vehicle_id;
     //! HLC mode: 0: static prios, 1: random prios, 2: dynamic fca based, 3: vertex ordering
     PriorityMode mode;
+    //! Seed for random path generation and random priorities when mode=random
+    int seed;
+    //! Pseudorandom sequence generator for random priorities
+    std::mt19937 random_gen;
+    //! Uniform pseudorandom distribution 
+    std::uniform_int_distribution<> uniform_distrib;
 
     // Constants, should be adjusted depending on VehicleTrajectoryPlanningState
     //! How many points we can send in one message; determined by maximum length of vector in DDS
@@ -309,7 +315,7 @@ public:
     /**
      * \brief Create a VehicleTrajectoryPlanner
      */
-    VehicleTrajectoryPlanner(const PriorityMode _mode);
+    VehicleTrajectoryPlanner(const PriorityMode _mode, const int _seed);
 
     /**
      * \brief Returns started

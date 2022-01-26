@@ -30,6 +30,7 @@
 #include <array>
 #include <utility>
 #include <cstdint>
+#include <random>
 #include "cpm/Logging.hpp"
 #include "VehicleCommandTrajectory.hpp"
 #include "Trajectory.hpp"
@@ -85,6 +86,11 @@ class VehicleTrajectoryPlanningState
     //! Save collisions with other vehicles optimal trajectories for efficient fca update when the winner planned
     std::vector<std::pair<uint8_t, uint16_t>> collisions_with_opt_traj;
 
+    //! Pseudorandom sequence generator for random priorities
+    std::mt19937 random_gen;
+    //! Uniform distribution
+    std::uniform_int_distribution<> uniform_distrib;
+
     /**
      * \brief Sanity check, if we are in a valid state
      */
@@ -125,7 +131,8 @@ public:
         uint8_t _vehicle_id,
         size_t _edge_index,
         size_t _edge_path_index,
-        uint64_t dt_nanos
+        uint64_t dt_nanos,
+        int _seed
     );
 
     /**

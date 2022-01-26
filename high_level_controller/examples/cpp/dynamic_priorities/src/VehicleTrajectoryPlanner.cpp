@@ -46,7 +46,7 @@
  * \ingroup distributed_routing
  */
 
-VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(PriorityMode _mode){
+VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(PriorityMode _mode, int _seed){
     writer_sync = std::unique_ptr<cpm::Writer<FallbackSync>>(
         new cpm::Writer<FallbackSync>("fallbacksync")
         );
@@ -54,6 +54,12 @@ VehicleTrajectoryPlanner::VehicleTrajectoryPlanner(PriorityMode _mode){
         new cpm::ReaderAbstract<FallbackSync>("fallbacksync")
         );
     mode = _mode;
+    
+    if (mode == PriorityMode::random){
+        seed = _seed; // for random priorities and path generation
+        uniform_distrib = std::uniform_int_distribution<>(0,500); // for random fca 
+        random_gen.seed(seed);
+    }
 }
 
 VehicleCommandTrajectory VehicleTrajectoryPlanner::get_trajectory_command(uint64_t t_now)
@@ -293,7 +299,7 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
     new_prio_vec.clear();          // save new priorities until we know they are feasible and update prio_vec
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
-    uint16_t rand_fca = std::rand() % 500;
+    uint16_t rand_fca = uniform_distrib(random_gen); // generate random fca in [0,500]
     write_fca(vehicle_id, rand_fca);
     evaluation_stream << (int)rand_fca << ";";
     std::cout << "trying new prios" << std::endl;
