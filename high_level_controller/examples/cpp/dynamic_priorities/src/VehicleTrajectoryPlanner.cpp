@@ -236,7 +236,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
             point.t().nanoseconds(point.t().nanoseconds() + t_start);
             evaluation_stream << "x" <<point.px() << ",y" << point.py() << ",vx" << point.vx() << ",vy" << point.vy() <<",";
         }
-        //evaluation_stream << ";";
+        evaluation_stream << ";";
 
         // Append points to trajectory_point_buffer
         trajectory_point_buffer.insert(
@@ -264,7 +264,7 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
         << std::chrono::duration<double, std::milli>(diff).count()
         << " ms"
         << std::endl;
-
+    evaluation_stream <<  std::chrono::duration<double, std::milli>(diff).count() << ";";
     // flush evaluation buffer line
     evaluation_stream  << std::endl;
     if (!stopFlag)
