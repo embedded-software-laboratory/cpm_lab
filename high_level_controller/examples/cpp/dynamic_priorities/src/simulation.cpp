@@ -78,7 +78,9 @@ int main(int argc, char* argv[])
     );
     n_steps = cpm::cmd_parameter_int("steps", 450, argc, argv);
 
-    int seed = cpm::cmd_parameter_int("seed", 0, argc, argv);
+    int prio_seed = cpm::cmd_parameter_int("prio_seed", 0, argc, argv);
+    int path_seed = cpm::cmd_parameter_int("path_seed", 0, argc, argv);
+    std::cout << "seed base: " << prio_seed << std::endl;
     // create vehicle planners
     std::vector<std::shared_ptr<VehicleTrajectoryPlanner>> vehicles;
     std::vector<uint8_t> vec;
@@ -87,7 +89,7 @@ int main(int argc, char* argv[])
     {
         id ++;
         vec.push_back(id);
-        vehicles.push_back(std::move(std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(mode, seed + id))));
+        vehicles.push_back(std::move(std::shared_ptr<VehicleTrajectoryPlanner>(new VehicleTrajectoryPlanner(mode, prio_seed + id))));
         cpm::Logging::Instance().set_id("dynamic_priorities");
     }
 
@@ -147,7 +149,7 @@ int main(int argc, char* argv[])
                         out_edge_index,
                         out_edge_path_index,
                         dt,
-                        seed + vehicle_id
+                        path_seed + vehicle_id
                     )
                 )
             );
