@@ -57,6 +57,7 @@ VehicleTrajectoryPlanningState::VehicleTrajectoryPlanningState(
     assert(n_steps >= 1);
     // Set seed for rand; for reproducibility; is used to generate paths; 
     random_gen.seed((uint8_t)_seed);
+    std::cout << "seed: " << _seed << std::endl;
 
     //finds the next n indizes of the edges of the graph for the trajectory for each vehicle; important: done after seed initialisation
     extend_random_route(500);
@@ -204,13 +205,14 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
     uint16_t collisions_with_vehicle = 0;
 
     // remember if we had a collision with the same vehicle last time step so that we don't count parallel trajectories as multiple collisions
-    bool last_step_collison = false;
+    size_t last_collision = 0;
+    size_t damping_window = 8; // window in which successive collisions will be counted as one
 
     std::cout << "potential collisions: ";
     // Find the earliest collision
     for( auto iter = other_vehicles.begin(); iter != other_vehicles.end(); ++iter ){
         std::vector<std::pair<size_t, std::pair<size_t, size_t>>> other_path = iter->second;
-        last_step_collison = false;
+        last_collision = 0;
 
         if (iter->first == vehicle_id) { continue; }
         
@@ -238,15 +240,16 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
                 [other_path[i].second.second])
             {
                 // check wether it's still the "same" collision
-                if (!last_step_collison)
+                if (last_collision == 0 || last_collision + damping_window < i)
                 {
                      ++collisions_with_vehicle;
                      std::cout << "t:" << i << "v:" << (int) iter->first << ";";
+                    
+                } else {
+                    std::cout << "same collision" << std::endl;
                 }
-            } else
-            {
-                last_step_collison = false;
-            }
+                last_collision = i;
+            } 
         }
         sum_collisions += collisions_with_vehicle;
         collisions_with_vehicle = 0;

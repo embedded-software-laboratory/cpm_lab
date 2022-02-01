@@ -367,7 +367,7 @@ public:
      * \brief Creates a FutureCollisionAssessment message and publishes it.
      * \param 
      */
-    void write_fca(uint8_t id, uint16_t fca);
+    void write_fca(uint8_t id, uint16_t fca, uint8_t iteration);
 
     /**
      * \brief Sets the visualisation writer

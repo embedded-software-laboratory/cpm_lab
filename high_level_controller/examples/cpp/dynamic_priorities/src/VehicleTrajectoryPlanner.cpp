@@ -300,7 +300,7 @@ bool VehicleTrajectoryPlanner::plan_random_priorities(){
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
     uint16_t rand_fca = uniform_distrib(random_gen); // generate random fca in [0,500]
-    write_fca(vehicle_id, rand_fca);
+    write_fca(vehicle_id, rand_fca, 1);
     evaluation_stream << (int)rand_fca << ";";
     std::cout << "trying new prios" << std::endl;
     new_prio_vec = fca_prio_vec(rand_fca);
@@ -364,11 +364,12 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
     // all vehicles become active
     active_vehicles = coupling_graph.getVehicles();
     is_active = true;
+    uint8_t iteration = 1;
 
     while (is_active && new_prios_feasible)
     {
         synchronise(active_vehicles, true, 5);
-        write_fca(vehicle_id, own_fca);
+        write_fca(vehicle_id, own_fca, iteration);
         uint8_t winner_id = get_largest_fca(own_fca); // read fca -> winner plans
         if (winner_id == vehicle_id) // if winner plan; send trajectory;
         {
@@ -392,6 +393,7 @@ bool VehicleTrajectoryPlanner::plan_fca_priorities()
         }
         active_vehicles.erase(winner_id);  // winner is not active anymore -> remove from set
         new_prio_vec.push_back(winner_id); // the position in the vector corresponds to the prio
+        iteration = iteration + 1;
     }
 
     if (new_prios_feasible)
@@ -856,12 +858,12 @@ void VehicleTrajectoryPlanner::display_infos(uint8_t id, std::string info){
 /**
  * 
  */
-void VehicleTrajectoryPlanner::write_fca(uint8_t id, uint16_t fca){
+void VehicleTrajectoryPlanner::write_fca(uint8_t id, uint16_t fca, uint8_t iteration){
     FutureCollisionAssessment fca_message;
     fca_message.vehicle_id(id);
     fca_message.fca(fca);
     fca_message.header().create_stamp().nanoseconds(t_real_time);
-    fca_message.header().valid_after_stamp().nanoseconds(t_real_time + 10000ull);
+    fca_message.header().valid_after_stamp().nanoseconds(t_real_time + (iteration*10000000)); // enables evaluation of the iterations
     writer_fca->write(fca_message);
 }
 
