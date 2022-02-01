@@ -175,10 +175,8 @@ uint16_t VehicleTrajectoryPlanningState::update_potential_collisions(std::map<ui
 {
     std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> m={{winner, other_vehicles[winner]}};
     uint16_t prev_collisions = 0;
-    std::cout << "fca values: ";
     for (auto pair : collisions_with_opt_traj)
     {
-        std::cout << "id: " << static_cast<uint32_t>(pair.first) << ", " << pair.second << "; ";
         if (pair.first == winner)
         {
             prev_collisions = pair.second;
@@ -186,11 +184,7 @@ uint16_t VehicleTrajectoryPlanningState::update_potential_collisions(std::map<ui
     }
 
     uint16_t collisions_with_winner = potential_collisions(m, true);
-    std::cout << " now with winner: " << collisions_with_winner << " updated fca: " << old_fca + (collisions_with_winner - prev_collisions) << std::endl;
     return old_fca + (collisions_with_winner - prev_collisions);
-    
-    std::cout << "hmmmm";
-    return 0; 
 }
 
 /**
