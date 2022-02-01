@@ -41,8 +41,7 @@ function [matlabParticipant, stateReader, trajectoryWriter,...
         if qos_profiles(1) == ';'
             qos_profiles = qos_profiles(2:end);
         end
-        setenv("NDDS_QOS_PROFILES", qos_profiles)
-        qos_profiles
+        setenv( qos_env_var , qos_profiles );
     end
     
     %% variables for the communication
