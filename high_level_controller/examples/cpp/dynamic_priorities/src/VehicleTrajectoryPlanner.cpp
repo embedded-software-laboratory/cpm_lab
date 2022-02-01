@@ -293,23 +293,23 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
 }
 
 bool VehicleTrajectoryPlanner::plan_random_priorities(){
-    new_prio_vec.clear();          // save new priorities until we know they are feasible and update prio_vec
     other_vehicles_buffer.clear(); // received trajectories are cleared
 
     uint16_t rand_fca = uniform_distrib(random_gen); // generate random fca in [0,500]
     write_fca(vehicle_id, rand_fca, 1);
     evaluation_stream << (int)rand_fca << ";";
-    std::cout << "trying new prios" << std::endl;
-    new_prio_vec = fca_prio_vec(rand_fca);
+
+    std::vector<uint8_t> old_prio_vec = prio_vec;
+    prio_vec = fca_prio_vec(rand_fca);
 
     bool feasible = plan_static_priorities();
     std::cout << "new prios fasible: " << feasible << std::endl;
     bool other_feasible = synchronise(coupling_graph.getVehicles(), feasible, 3);
     feasible = feasible && other_feasible;
     std::cout << "other vehicles fasible: " << feasible << std::endl;
-    if (feasible)
+    if (!feasible)
     {
-        prio_vec = new_prio_vec;
+        prio_vec = old_prio_vec;
     }
 
     return feasible;
@@ -970,12 +970,10 @@ std::vector<uint8_t> VehicleTrajectoryPlanner::fca_prio_vec(uint16_t &own_fca) {
                 received_fcas.insert(sample.vehicle_id());
                 if (sample.fca() > own_fca || (sample.fca() == own_fca && sample.vehicle_id() < vehicle_id))
                 {
-                    std::cout << "inserte before";
                     prio_vec.insert(prio_vec.begin(), sample.vehicle_id());
                 } 
                 else
                 {
-                    std::cout << "inserted after";
                     prio_vec.push_back(sample.vehicle_id());
                 }
             }
