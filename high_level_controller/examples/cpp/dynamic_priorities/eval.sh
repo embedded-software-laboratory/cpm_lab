@@ -4,11 +4,11 @@
 
 HORIZON="200"
 SEEDSTART=101
-SEEDEND=110
+SEEDEND=105
 
 for ((SEED=SEEDSTART;SEED<=SEEDEND;SEED++))
 do
-    mkdir data_seed_${SEED}
+    mkdir -p data_seed_${SEED}
     cd ./data_seed_${SEED}
     mkdir -p 200 # horizon in timesteps 
     cd 200
@@ -18,6 +18,10 @@ do
         cd $MODE
         for N in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
         do
+            if [[ -d "$N" ]]
+            then
+                continue
+            fi
             mkdir $N
             cd ./$N
             ../../../../build/simulation --n=$N --hlc_mode=$MODE --path_seed=$SEED --prio_seed=$SEED >> /dev/null
