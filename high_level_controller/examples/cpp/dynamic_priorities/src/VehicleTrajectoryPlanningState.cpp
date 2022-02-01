@@ -245,8 +245,6 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
                      ++collisions_with_vehicle;
                      std::cout << "t:" << i << "v:" << (int) iter->first << ";";
                     
-                } else {
-                    std::cout << "same collision" << std::endl;
                 }
                 last_collision = i;
             } 
@@ -276,7 +274,6 @@ bool VehicleTrajectoryPlanningState::avoid_collisions(
         n_steps,
         static_cast<int>(n_steps-1 + ceil(speed_profile[n_steps-1] / delta_v_step))
     );
-    std::cout << "min idx for zero speed: " << min_idx_zero_speed << std::endl;
 
     bool are_collisions_avoidable = true;
     bool is_collision_free = false;

@@ -103,8 +103,6 @@ void VehicleTrajectoryPlanner::set_vehicle(std::unique_ptr<VehicleTrajectoryPlan
 
 std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_t t, uint64_t dt)
 {
-
-    trajectoryPlan->print_speed_profile();
     auto start_time = std::chrono::steady_clock::now();
     isStopped = false;
     t_real_time = t;
@@ -207,7 +205,6 @@ std::unique_ptr<VehicleCommandTrajectory> VehicleTrajectoryPlanner::plan(uint64_
     {
         std::cout << "we still have: " << coll_left << " collisions" << std::endl;
     }
-    trajectoryPlan->print_speed_profile();
     //trajectoryPlan->debug_writeOutOwnTrajectory();
 
     for (auto  prio : prio_vec)
@@ -488,7 +485,6 @@ bool VehicleTrajectoryPlanner::synchronise(std::set<uint8_t> vehicle_ids, bool f
     sync_message.header().valid_after_stamp().nanoseconds(t_real_time + 15000000000ull);
     writer_sync->write(sync_message);
 
-    std::cout << "synced with: ";
     bool other_feasible = true;
     std::set<uint8_t> received_ids;
     while (     !std::includes(received_ids.begin(), received_ids.end(), vehicle_ids.begin(), vehicle_ids.end()) 
@@ -505,7 +501,6 @@ bool VehicleTrajectoryPlanner::synchronise(std::set<uint8_t> vehicle_ids, bool f
             }
         }
     }
-    std::cout << std::endl;
     return other_feasible;
 }
 
@@ -523,7 +518,6 @@ uint8_t VehicleTrajectoryPlanner::get_largest_fca(uint16_t own_fca){
         auto samples = reader_fca->take();
         
         for( auto sample : samples){
-            std::cout << "vid: " << (int)vehicle_id << ", fcaid: "<< (int)sample.vehicle_id() << std::endl; 
             if (t_real_time == sample.header().create_stamp().nanoseconds())
             {
                 received_fcas.insert(sample.vehicle_id());
@@ -619,7 +613,6 @@ bool VehicleTrajectoryPlanner::read_vehicles(
                 }
 
                 received_collisions = received_collisions || sample.has_collisions();
-                std::cout << "veh " << (int)sample.vehicle_id() << " hascoll: " << sample.has_collisions() << ", ";
                 if (sample.has_collisions())
                 {
                     return true;
@@ -634,7 +627,7 @@ bool VehicleTrajectoryPlanner::read_vehicles(
                 // Especially important for iterative planning vehicles
                 vehicles_buffer[sample.vehicle_id()].clear();
                 vehicles_buffer[sample.vehicle_id()].reserve(1000);
-                std::cout << "receiving: " << (int)sample.vehicle_id();
+
                 // Save all received positions that are not in the past already
                 for ( LaneGraphPosition position : sample.lane_graph_positions() ) {
 
@@ -664,7 +657,6 @@ bool VehicleTrajectoryPlanner::read_vehicles(
                     }
                 }
             }
-            std::cout << std::endl;
         }
 
         // Slow down loop a little
