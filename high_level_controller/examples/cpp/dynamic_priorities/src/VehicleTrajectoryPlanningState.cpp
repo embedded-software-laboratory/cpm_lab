@@ -174,14 +174,21 @@ TrajectoryPoint VehicleTrajectoryPlanningState::get_trajectory_point(
 uint16_t VehicleTrajectoryPlanningState::update_potential_collisions(std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> &other_vehicles, uint8_t winner, uint16_t old_fca)
 {
     std::map<uint8_t, std::vector<std::pair<size_t, std::pair<size_t, size_t>>>> m={{winner, other_vehicles[winner]}};
-    uint16_t collisions_with_winner = potential_collisions(m, true);
+    uint16_t prev_collisions = 0;
+    std::cout << "fca values: ";
     for (auto pair : collisions_with_opt_traj)
     {
+        std::cout << "id: " << static_cast<uint32_t>(pair.first) << ", " << pair.second << "; ";
         if (pair.first == winner)
         {
-            return old_fca + (collisions_with_winner - pair.second);
+            prev_collisions = pair.second;
         }
     }
+
+    uint16_t collisions_with_winner = potential_collisions(m, true);
+    std::cout << " now with winner: " << collisions_with_winner << " updated fca: " << old_fca + (collisions_with_winner - prev_collisions) << std::endl;
+    return old_fca + (collisions_with_winner - prev_collisions);
+    
     std::cout << "hmmmm";
     return 0; 
 }
@@ -198,7 +205,6 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
     }
     else
     {
-        collisions_with_opt_traj.clear();
         self_path = get_planned_path(true);
     }
     uint16_t sum_collisions = 0;
@@ -252,12 +258,12 @@ uint16_t VehicleTrajectoryPlanningState::potential_collisions(std::map<uint8_t, 
             } 
         }
         sum_collisions += collisions_with_vehicle;
-        collisions_with_vehicle = 0;
+        
         if (optimal)
         {
             collisions_with_opt_traj.push_back(std::make_pair(iter->first, collisions_with_vehicle));
         }
-        
+        collisions_with_vehicle = 0;
     }
     std::cout << std::endl;
 
