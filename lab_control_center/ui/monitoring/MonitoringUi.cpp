@@ -57,7 +57,10 @@ MonitoringUi::MonitoringUi(
 
     //Warning: Most style options are set in Glade (style classes etc) and style.css
 
+    //Initialize the UI dispatcher / register its callback function. Only do that once!
+    init_ui_dispatcher();
     //Initialize the UI thread that updates the view on connected / online vehicles as well as connected / online hlcs
+    //by calling the UI dispatcher via the emit function
     init_ui_thread();
 
     //Register the button callback for resetting the vehicle monitoring view (allows to delete old entries)
@@ -128,7 +131,7 @@ void MonitoringUi::register_vehicle_to_hlc_mapping(std::function<std::pair<bool,
     this->get_vehicle_to_hlc_mapping = _get_vehicle_to_hlc_mapping;
 }
 
-void MonitoringUi::register_crash_checker(std::shared_ptr<CrashChecker> _crash_checker)
+void MonitoringUi::register_crash_checker(std::weak_ptr<CrashChecker> _crash_checker)
 {
     crash_checker = _crash_checker;
 }
@@ -144,7 +147,7 @@ int MonitoringUi::get_column_id(uint8_t vehicle_id)
     return pos + 1;
 }
 
-void MonitoringUi::init_ui_thread()
+void MonitoringUi::init_ui_dispatcher()
 {
     //Set UI dispatcher function, create UI update thread
     update_dispatcher.connect([&](){
@@ -318,8 +321,15 @@ void MonitoringUi::init_ui_thread()
                                 auto hlc_id = current_mapping.second.at(vehicle_id);
 
                                 //Find out if the programs are still running on the NUC
-                                assert(crash_checker);
-                                bool program_crashed = crash_checker->check_if_crashed(hlc_id);
+                                bool program_crashed = false;
+                                if (auto crash_checker_shared = crash_checker.lock())
+                                {
+                                    program_crashed = crash_checker_shared->check_if_crashed(hlc_id);
+                                }
+                                else
+                                {
+                                    throw std::runtime_error("Crash checker not properly registered in MonitoringUi or expired!");
+                                }
 
                                 bool nuc_crashed = std::find(hlc_data.begin(), hlc_data.end(), hlc_id) == hlc_data.end();
 
@@ -831,7 +841,10 @@ void MonitoringUi::init_ui_thread()
         }
         
     });
+}
 
+void MonitoringUi::init_ui_thread()
+{
     run_thread.store(true);
     ui_thread = std::thread(&MonitoringUi::ui_update_loop, this);
 }

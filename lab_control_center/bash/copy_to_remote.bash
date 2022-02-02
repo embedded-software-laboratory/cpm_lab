@@ -40,13 +40,16 @@ ssh guest@${IP} << 'EOF'
     mkdir scripts
 EOF
 
-# Create .tar that contains all relevant files and copy to host
-#Omit /home/username and script name
-PATH_TO_SCRIPT="${SCRIPT_PATH#*home/}"
-PATH_TO_SCRIPT="${PATH_TO_SCRIPT#*/}"
-PATH_TO_SCRIPT="${PATH_TO_SCRIPT%/*}" #Get string before last / (omit name of script)
-cd ~
-tar czvf - ./${PATH_TO_SCRIPT} | ssh guest@${IP} "cd ~;tar xzvf -"
+#Omit ../software and the script name to get the path relative to the software directory
+[[ $SCRIPT_PATH =~ (.*)(^|/)(software/)(.*) ]];
+RELATIVE_SCRIPT_PATH="${BASH_REMATCH[4]}"
+RELATIVE_PATH="/${RELATIVE_SCRIPT_PATH%/*}" #Get string before last / (omit name of script)
+PARENT_PATH="${BASH_REMATCH[1]}${BASH_REMATCH[2]}${BASH_REMATCH[3]}"
+echo "${PARENT_PATH}"
+echo "${RELATIVE_PATH}"
+
+cd ${PARENT_PATH}
+tar czvf - ./${RELATIVE_PATH} | ssh guest@${IP} "cd ~/dev/software/;tar xzvf -"
 
 # Copy further file modification orders to the NUC
 scp ${LCC_BASH_DIR}remote_start.bash guest@${IP}:/tmp/scripts
@@ -55,4 +58,4 @@ scp ${LCC_BASH_DIR}tmux_middleware.bash guest@${IP}:/tmp/scripts
 scp ${LCC_BASH_DIR}tmux_script.bash guest@${IP}:/tmp/scripts
 
 # Let the NUC handle the rest
-sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=${SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"
+sshpass ssh -t guest@${IP} 'bash /tmp/scripts/remote_start.bash' "--script_path=~/dev/software/${RELATIVE_SCRIPT_PATH} --script_arguments='${SCRIPT_ARGS}' --middleware_arguments='${MIDDLEWARE_ARGS}'"

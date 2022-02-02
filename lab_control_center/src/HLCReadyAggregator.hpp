@@ -41,6 +41,7 @@ private:
 
 public:
     HLCReadyAggregator();
+
     /**
      * \brief Gets currently online NUCs and checks if a NUC has crashed based on currently stored HLC entries and time to live
      * \return NUC IDs as strings

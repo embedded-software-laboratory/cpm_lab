@@ -51,7 +51,9 @@ TimerViewUI::TimerViewUI(
     button_stop->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_stop_callback));
     button_reset->signal_clicked().connect(sigc::mem_fun(this, &TimerViewUI::button_reset_callback));
 
-    //Create thread and register dispatcher callback
+    //Register dispatcher callback (only do that ONCE!!)
+    ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
+    //Create UI thread to trigger the dispatcher
     start_ui_thread();
 
     //Boolean variable to find out if the timer has been started
@@ -103,7 +105,6 @@ void TimerViewUI::reset(bool use_simulated_time, bool send_stop_signal) {
 }
 
 void TimerViewUI::start_ui_thread() {
-    ui_dispatcher.connect(sigc::mem_fun(*this, &TimerViewUI::dispatcher_callback));
     run_thread.store(true);
     ui_thread = std::thread(&TimerViewUI::update_ui, this);
 }

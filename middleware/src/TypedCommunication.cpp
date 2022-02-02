@@ -21,7 +21,7 @@ template<> void TypedCommunication<VehicleCommandTrajectory>::type_specific_msg_
 
     //2. Check how many of the set trajectory points lie in the past / future
     size_t num_past_trajectories = 0;
-    auto current_time = cpm::get_time_ns();
+    uint64_t current_time = msg.header().valid_after_stamp().nanoseconds();
     for (auto point : msg.trajectory_points())
     {
         if (point.t().nanoseconds() < current_time)

@@ -1,12 +1,14 @@
 #pragma once
 
 #include "defaults.hpp"
+#include <memory>
 #include <gtkmm/builder.h>
 #include <gtkmm.h>
 #include "ui/manual_control/VehicleManualControlUi.hpp"
 #include "ui/right_tabs/TabsViewUI.hpp"
 #include "ui/monitoring/MonitoringUi.hpp"
 #include "ui/map_view/MapViewUi.hpp"
+#include "ui/params/ParamViewUI.hpp"
 #include "ui/file_chooser/FileChooserUI.hpp"
 #include "ui/file_chooser/FileSaverUI.hpp"
 
@@ -108,6 +110,8 @@ private:
     std::shared_ptr<MonitoringUi> monitoring_ui;
     //! Map view on the left / center, which shows the map and vehicles, obstacles, ...
     std::shared_ptr<MapViewUi> map_view_ui;
+    //! Weak pointer to the object for the Param View/Edit/Create Tab. Shared ptr lead to destructors not being called.
+    std::weak_ptr<ParamViewUI> param_view_ui;
 
 public:
     /**
@@ -121,10 +125,12 @@ public:
      * \param tabsViewUI UI element for the tabs shown on the right, that e.g. contain the setup, parameter and timer view
      * \param monitoringUi UI element for the monitoring view on the bottom, that e.g. contains vehicle information
      * \param mapViewUi UI element for the map view, which e.g. shows the currently loaded map and vehicles
+     * \param paramViewUI Shared pointer to the object for the Param View/Edit/Create Tab
      */
     MainWindow(
         std::shared_ptr<TabsViewUI> tabsViewUI,
         std::shared_ptr<MonitoringUi> monitoringUi,
-        std::shared_ptr<MapViewUi> mapViewUi
+        std::shared_ptr<MapViewUi> mapViewUi,
+        std::shared_ptr<ParamViewUI> paramViewUI
     );
 };

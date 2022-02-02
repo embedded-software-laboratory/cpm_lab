@@ -200,11 +200,16 @@ SetupViewUI::SetupViewUI
                 for (auto vehicle_entry : get_vehicle_data())
                 {
                     auto id = vehicle_entry.first;
+                    auto entry_real = vehicle_entry.second.at("is_real");
+                    auto entry_pose_x = vehicle_entry.second.at("pose_x");
+
+                    //Continue if the entry is no longer valid (can happen e.g. during destruction)
+                    if (!entry_real || !entry_pose_x) continue;
 
                     //Only consider data of non-simulated vehicles that is not older than 500ms (else: probably turned off)
                     //See if a signal of a real vehicle is among the past 25 signals (due to 50Hz -> 500ms); real is more important than simulated
                     bool is_real_vehicle = false;
-                    for (bool const is_real : vehicle_entry.second.at("is_real")->get_last_n_values(25))
+                    for (bool const is_real : entry_real->get_last_n_values(25))
                     {
                         if (is_real) {
                             is_real_vehicle = true;
@@ -212,7 +217,7 @@ SetupViewUI::SetupViewUI
                         }
                     }
 
-                    if (vehicle_entry.second.at("pose_x")->has_new_data(0.5) && is_real_vehicle)
+                    if (entry_pose_x->has_new_data(0.5) && is_real_vehicle)
                     {
                         active_real_vehicles.push_back(id);
 
