@@ -143,6 +143,15 @@ int main (int argc, char *argv[]) {
             );
         }
 
+        if (!file_exists("/home/guest/dev/software/high_level_controller/read_system_trigger.m"))
+        {
+            cpm::Logging::Instance().write(
+                1,
+                "%s", 
+                "The matlab read_system_trigger file is missing on NUC %s", hlc_id.c_str()
+            );
+        }
+
         if (!file_exists("/home/guest/dev/software/high_level_controller/QOS_READY_TRIGGER.xml"))
         {
             cpm::Logging::Instance().write(
