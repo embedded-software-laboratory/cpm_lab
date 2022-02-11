@@ -160,19 +160,23 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         get_path_name(script_path, script_path_string, script_name_string);
         std::stringstream command;
 
+        // We always need this part of the command
+        command 
+        << "tmux new-session -d "
+        << "-s \"high_level_controller_"
+        << std::to_string(vehicle_id) 
+        << "\" "
+        << "'. " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;";
+
         auto matlab_type_pos = script_name_string.rfind(".m");
         if (matlab_type_pos != std::string::npos)
         {
             script_name_string = script_name_string.substr(0, matlab_type_pos);
 
             //Case: Matlab script
-            command 
-            << "tmux new-session -d "
-            << "-s \"high_level_controller_"
-            << std::to_string(vehicle_id) 
-            << "\" "
-            << "'. " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;"
-            << "matlab -logfile matlab.log"
+            command
+            << "matlab"
+            //<< " -logfile matlab.log"
             << " -sd \"" << script_path_string
             << "\" -batch \"" << script_name_string << "(" << script_params << (script_params.size() > 0 ? "," : "") << std::to_string(vehicle_id) << ")\"";
         }
@@ -180,28 +184,20 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
         {
             //Case: Any executable 
             command 
-            << "tmux new-session -d "
-            << "-s \"high_level_controller_"
-            << std::to_string(vehicle_id) << "\" "
-            << "\". " << software_folder_path << "/lab_control_center/bash/environment_variables_local.bash;"
             << "cd " << script_path_string << ";./" << script_name_string
             << " --node_id=high_level_controller_"
             << std::to_string(vehicle_id) 
             << " --simulated_time=" << sim_time_string
             << " --vehicle_ids=" << std::to_string(vehicle_id)
             << " --dds_domain=" << cmd_domain_id;
-        if (cmd_dds_initial_peer.size() > 0) {
+            if (cmd_dds_initial_peer.size() > 0) {
+                command 
+                    << " --dds_initial_peer=" << cmd_dds_initial_peer;
+            }
             command 
-                << " --dds_initial_peer=" << cmd_dds_initial_peer;
+            << " " << script_params;
         }
-        command 
-            << " " << script_params << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ""
-            << std::to_string(vehicle_id) 
-            << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ""
-            << std::to_string(vehicle_id) 
-            << ".txt\"";
-        }
-        else 
+        else
         {
             cpm::Logging::Instance().write(
                 1, 
@@ -210,6 +206,15 @@ void Deploy::deploy_separate_local_hlcs(bool use_simulated_time, std::vector<uns
             );
             return;
         }
+
+        // Append path to output log
+        command
+            << " >" << software_top_folder_path << "/lcc_script_logs/stdout_" << hlc_session << ""
+            << std::to_string(vehicle_id) 
+            << ".txt 2>" << software_top_folder_path << "/lcc_script_logs/stderr_" << hlc_session << ""
+            << std::to_string(vehicle_id) 
+            << ".txt"
+            << "'"; // End tmux command string
 
         std::cout << command.str() << std::endl;
 
