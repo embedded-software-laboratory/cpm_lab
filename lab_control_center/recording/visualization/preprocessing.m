@@ -41,6 +41,13 @@ try
 [VehicleCommandPathTrackingTable, HeaderCommandPathTracking, t_start_pathtracking_nanos] = jsonDeconstruct(ddsJsonSample.VehicleCommandPathTracking);
 t_start_list = [t_start_list, t_start_pathtracking_nanos];
 catch
+    
+end
+    
+try
+SystemTriggerArray = cell2mat(ddsJsonSample.SystemTrigger);
+t_start_list = [t_start_list, cast(min(SystemTriggerArray),'double')];
+catch
 
 end
 
@@ -121,6 +128,16 @@ for iVeh = 1:max([VehicleStateTable.vehicle_id]) % Loop over vehicle ids.
     end
     DataByVehicle(iVeh).pathtracking.path = path_table;
     DataByVehicle(iVeh).pathtracking.speed = [VehicleCommandPathTrackingTable.speed(currentRowsPathTracking)]';
+    catch
+        % continue
+    end
+    
+    % Read out and store rti source time stamps of system trigger messages used as
+    % start/stop time stamps of experiment (same for every vehicle)
+    try
+    DataByVehicle(iVeh).systemtrigger = struct();
+    DataByVehicle(iVeh).systemtrigger.systemtrigger_stamp_nanos = SystemTriggerArray;
+    DataByVehicle(iVeh).systemtrigger.systemtrigger_stamp = 1e-9 * (SystemTriggerArray - t_start_nanos);
     catch
         % continue
     end

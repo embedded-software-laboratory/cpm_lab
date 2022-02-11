@@ -17,6 +17,9 @@ getVehiclePoseJsonSample = ['SELECT rti_json_sample FROM "vehicleObservation@', 
                             '"'];
 getVehicleCommandPathTrackingJsonSample = ['SELECT rti_json_sample FROM "vehicleCommandPathTracking@', ...
                             num2str(dds_domain), ...
+                            '"'];                        
+getSystemTriggerSampleInfoSourceTimeStamp = ['SELECT SampleInfo_source_timestamp FROM "systemTrigger@', ...
+                            num2str(dds_domain), ...
                             '"'];
 
 % Apply SQLite queries to database and fetch corresponding data.
@@ -24,6 +27,8 @@ ddsJsonSample = struct;
 ddsJsonSample.VehicleState = robustFetch(conn,getVehicleStateJsonSample);
 ddsJsonSample.VehiclePose = robustFetch(conn,getVehiclePoseJsonSample);
 ddsJsonSample.VehicleCommandPathTracking = robustFetch(conn,getVehicleCommandPathTrackingJsonSample);
+% Actually this is not a ddsJsonSample, for cleaner code use only one return struct
+ddsJsonSample.SystemTrigger = robustFetch(conn,getSystemTriggerSampleInfoSourceTimeStamp);
 
 end
 
