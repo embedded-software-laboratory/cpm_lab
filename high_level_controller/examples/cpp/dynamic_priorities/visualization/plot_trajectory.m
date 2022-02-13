@@ -50,11 +50,11 @@ end
 filename = 'testAnimated.gif';
 
 % vehicles to draw
-vehicle_ids = [1,2,3,4,5,6,7,8,9,10];
+vehicle_ids = [1,2,3,4,5,6];%,7,8,9,10];
 
 % marker settings
-mark_vehicles = [1 2 3 4];
-markers = ['o' '+' '>' 'h' '*'];
+mark_vehicles = [5 3 2 1 4 6];
+markers = ['o' '+' '>' 'h' '*' 's'];
 
 active_vehicles = vehicle_ids;
 % draw: optimal/actual
@@ -68,16 +68,24 @@ set (plot.ax,'NextPlot', 'add');
 plot.surfaces = [];     %// create an empty "surface" object
 plot.fcas = [];
 plot.ids = [];
+plot.markers = [];
+
+set (plot.fig, 'position', [10,10,1300,1300]);
+view(0,90);
 
 for i=1:length(vehicle_ids)
     plot.surfaces = [ plot.surfaces  handle( surf( NaN(2) ) )];
+    plot.markers = [ plot.markers  handle( surf( NaN(2) ) )];
     plot.fcas = [plot.fcas handle( text(0,0,''))];
     plot.ids = [plot.ids handle( text(0,0,''))];
 end
 
 hold on
-time_step = DataTraj(1).header.create_stamp.nanoseconds%+ (428*400000000);%+168800000000;% + 90000000000;
-
+% step 1: 1644749954800000001; fca working
+% step 2: 1644749955200000001; fca not working
+videoprefix="_s2"
+time_step = 1644749955200000001; %DataTraj(1).header.create_stamp.nanoseconds%+ (428*400000000);%+168800000000;% + 90000000000;
+s = [];
 f_i = 1;
 fcas = zeros(length(vehicle_ids), 2);
 finals = [];
@@ -91,38 +99,69 @@ for iteration=1:length(vehicle_ids)+1
         m_i = search_m_i(DataTraj, time_step, 'Optimal', k);
         
         % plot surfaces
-        surface = plot_m_i(DataTraj, lane_graph, plot.surfaces(v_id_index), m_i, mark_vehicles, markers);
+        surface = plot_m_i(DataTraj, lane_graph, plot.surfaces(v_id_index), plot.markers(v_id_index), m_i, mark_vehicles, markers);
     
         [x, y, z] = get_start_pos(DataTraj, lane_graph, m_i);
-        % annotate fca
+
+        % annotate fca and ids
         valid_stamp = int64(int64(iteration)*int64(10000000));
         valid_stamp = int64(int64(time_step) + int64(valid_stamp));
         f_i_tmp = search_f_i(DataFCA, time_step, k, valid_stamp);
 
-        % annotate ids
-        set(plot.ids(v_id_index), 'Position', [x(1) y(1) 0], 'String', strcat('id=', int2str(DataTraj(m_i).vehicle_id), '; fca=', int2str(DataFCA(f_i_tmp).fca)));% TODO toggle 3D mode and then supply z coordinate
+        set(plot.ids(v_id_index), 'Position', [x(1)+0.05 y(1)+0.05 10], 'String', strcat('id=', int2str(DataTraj(m_i).vehicle_id), '; fca=', int2str(DataFCA(f_i_tmp).fca)),'BackgroundColor', 'white');% TODO toggle 3D mode and then supply z coordinate
         
-        %text(x(1)+0.2, y(1)+0.2, strcat('fca=', int2str(DataFCA(f_i_tmp).fca))) % TODO toggle 3D mode and then supply z coordinate
         
         % save fca (fca, id)
         fcas(i,:) = [DataFCA(f_i_tmp).fca k]; 
         i = i + 1;
     end
     
+    % colorbar
+    cbar = colorbar;
+    cbar.Label.String = 'Time [s]'
+    xlabel('x [m]')
+    ylabel('y [m]')
     % plot finals 
     for k = finals
+        delete(s);
         v_id_index = find(vehicle_ids==k);
         
+        t1 = get (plot.surfaces(v_id_index), {'XData', 'YData', 'ZData'});
+        X = [];
+        Y = [];
+        Z = [];
+        % plot colls
+        for l = active_vehicles
+            t2 = get (plot.surfaces(find(vehicle_ids==l)), {'XData', 'YData', 'ZData'});
+
+            for t = 1:200
+                if pdist([t1{1}(t) t1{2}(t); t2{1}(t) t2{2}(t)]) < 0.25
+                    % disp(["p1" p1 "p2" p2 "x: " t1{1}(p1) " y:" t1{2}(p1)])
+                    X = [X t1{1}(t)];
+                    Y = [Y t1{2}(t)];
+                    Z = [Z t1{3}(t)];
+                    
+                    %col_p = [col_p; t1{1}(t) t1{2}(t) t1{3}(t)]
+                end
+            end
+        end
+        
+        %s = scatter3(X, Y, Z, 70, 'red');
+        %pause();
+
         % message index m_i
         m_i = search_m_i(DataTraj, time_step, 'Final', k);
-        plot_m_i(DataTraj, lane_graph, plot.surfaces(v_id_index), m_i, mark_vehicles, markers);
+        plot_m_i(DataTraj, lane_graph, plot.surfaces(v_id_index), plot.markers(v_id_index), m_i, mark_vehicles, markers);
         % update annotation
         [x, y, z] = get_start_pos(DataTraj, lane_graph, m_i);
-        set(plot.ids(v_id_index), 'Position', [x(1) y(1) 0], 'String', strcat('id=', int2str(DataTraj(m_i).vehicle_id), '; Final'));% TODO toggle 3D mode and then supply z coordinate
+        set(plot.ids(v_id_index), 'Position', [x(1)+0.05 y(1)+0.05 10], 'String', strcat('id=', int2str(DataTraj(m_i).vehicle_id), '; Final'));% TODO toggle 3D mode and then supply z coordinate
         % remove fca annotation
          set(plot.fcas(find(vehicle_ids==k)), 'String', '');
+         finals = finals(finals~=k)
     end
-    % and remaining new fcas TODO
+    
+    d = get (plot.surfaces(v_id_index), {'XData', 'YData', 'ZData'});
+    
     
     % update winner of this iteration
     f_i = f_i + length(vehicle_ids) - length(finals) % TODO check
@@ -133,8 +172,24 @@ for iteration=1:length(vehicle_ids)+1
     % remove from active
     active_vehicles = active_vehicles(active_vehicles~=fcas(1,2));
     
-    pause()
-    % Capture the plot as an image 
+
+    % table with current state
+    %uitable()
+    if(iteration==1)
+        h = zeros(length(vehicle_ids), 1);
+        i=1;
+        labels = {};
+        for id = vehicle_ids
+            h(i) = scatter(NaN,NaN, strcat(markers(find(mark_vehicles==id)), 'k'));
+            labels = [labels {strcat("Vehicle ", int2str(id))}];
+            i=i+1;
+        end
+        legend(h, labels{:}, 'Position',[0.6 0.67 0.07 0.1]);
+    end
+    %save for video
+    save_imgs(plot, iteration, videoprefix);
+
+    % Capture the plot as an image for gif 
     frame = getframe(plot.fig); 
     im = frame2im(frame); 
     [imind,cm] = rgb2ind(im,256); 
@@ -144,6 +199,8 @@ for iteration=1:length(vehicle_ids)+1
     else 
         imwrite(imind,cm,filename,'gif','WriteMode','append'); 
     end 
+    
+    pause()
 end
 
 %view(2);   % Default 2-D view
@@ -151,6 +208,19 @@ colorbar;  % Add a colorbar
 axis equal;xlim([0,4.5]); ylim([0,4]);
 %plot_collisions(plot.surfaces);
 hold off
+
+%save plots for video
+function save_imgs(plot, iteration, prefix)
+    mkdir("video")
+    view(0,90);
+    exportgraphics(plot.fig, strcat('./video/view', prefix,'_i', int2str(iteration), '_0_90.png'),'BackgroundColor','none', 'ContentType', 'vector');
+    %view(0,0);
+    %exportgraphics(plot.fig, strcat('./video/view', prefix,'_i', int2str(iteration), '_0_0.png'), 'BackgroundColor','none', 'ContentType', 'vector');
+    %view(90,0);
+    %exportgraphics(plot.fig, strcat('./video/view', prefix,'_i', int2str(iteration), '_90_0.png'), 'BackgroundColor','none', 'ContentType', 'vector');
+    %view(45,30);
+    %exportgraphics(plot.fig, strcat('./video/view', prefix,'_i', int2str(iteration), '_45_30.png'), 'BackgroundColor','none', 'ContentType', 'vector');
+end
 
 % searches trajectory message
 function m_i = search_m_i(DataTraj, time, type, vehicle_id) % type='Optimal' or type='Final'
@@ -191,11 +261,8 @@ function f_i = search_f_i(DataFCA, time, vehicle_id, valid_stamp)
         ' valid_stamp: ' int2str(valid_stamp)])
 end
 
-function update_traj(DataRaw)
-end
 
-function surface = plot_m_i(DataRaw, lane_graph, s, m_i, mark_v, markers)
-
+function surface = plot_m_i(DataRaw, lane_graph, s, marker, m_i, mark_v, markers)
     n_lgp = numel(DataRaw(m_i).lane_graph_positions);
     t_start = DataRaw(m_i).lane_graph_positions(1).estimated_arrival_time.nanoseconds;
 
@@ -216,7 +283,6 @@ function surface = plot_m_i(DataRaw, lane_graph, s, m_i, mark_v, markers)
         x(i) = lane_graph.edges(edge_index).path(edge_path_index,1);
         y(i) = lane_graph.edges(edge_index).path(edge_path_index,2);
         t(i) = DataRaw(m_i).lane_graph_positions(i).estimated_arrival_time.nanoseconds;
-        
     end
     t = 1e-9*(t-t_start);
     
@@ -225,7 +291,17 @@ function surface = plot_m_i(DataRaw, lane_graph, s, m_i, mark_v, markers)
          'EdgeColor' 'interp', ...  % Use interpolated color for edges
          'LineWidth' 2};
     if any(mark_v(:) == DataRaw(m_i).vehicle_id)
-        surface = [surface {'Marker' markers(find(mark_v==DataRaw(m_i).vehicle_id))}]
+        %surface = [surface {'Marker' markers(find(mark_v==DataRaw(m_i).vehicle_id)), ...
+        %                    'DisplayName', strcat('vehicle id ', int2str(DataRaw(m_i).vehicle_id))}]
+        mark = { 'XData'  [x(1:8:end) x(1:8:end)]  'YData' [y(1:8:end) y(1:8:end)]  'ZData',[t(1:8:end) t(1:8:end)] ... 
+         'FaceColor' 'none', ...    % Don't bother filling faces with color
+         'EdgeColor' 'interp', ...  % Use interpolated color for edges
+         'LineStyle' 'none', ...
+         'LineWidth' 1, ...
+         'Marker' markers(find(mark_v==DataRaw(m_i).vehicle_id)), ...
+         'MarkerSize' 11, ...
+         'DisplayName', strcat('vehicle id ', int2str(DataRaw(m_i).vehicle_id))};
+        set (marker, mark{:});
     end
     set ( s, surface{:});
     %     surf([x(:) x(:)], [y(:) y(:)], [t(:) t(:)], ...  % Reshape and replicate data
@@ -243,16 +319,3 @@ function [x, y, t] = get_start_pos(DataTraj, lane_graph, m_i)
         y = lane_graph.edges(edge_index).path(edge_path_index,2);
         t = DataTraj(m_i).lane_graph_positions(1).estimated_arrival_time.nanoseconds;
 end
-
-
-function plot_collisions(surfaces)
-    for i = 1:length(surfaces)
-        for j = i:length(surfaces)
-            intersections(surfaces(i).XData,surfaces(i).YData, surfaces(j).XData, surfaces(j).YData )
-        end
-    end
-end
-% 
-% figure;
-% scatter(x,y,[],t,'fill')
-% axis equal;xlim([0,4.5]); ylim([0,4]);
