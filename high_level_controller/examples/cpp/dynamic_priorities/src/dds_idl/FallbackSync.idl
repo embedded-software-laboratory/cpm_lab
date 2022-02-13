@@ -1,0 +1,17 @@
+#include "Header.idl"
+
+#ifndef FALLBACKSYNC_IDL
+#define FALLBACKSYNC_IDL
+
+/**
+ *  
+ * \ingroup cpmlib_idl
+ */
+struct FallbackSync {    
+    Header header;
+
+    octet vehicle_id; //@key
+    octet syncid;
+    boolean feasible;
+};
+#endif

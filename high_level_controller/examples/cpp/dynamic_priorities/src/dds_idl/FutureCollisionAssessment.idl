@@ -1,0 +1,16 @@
+#include "Header.idl"
+
+#ifndef FUTURECOLLISIONASSESSMENT_IDL
+#define FUTURECOLLISIONASSESSMENT_IDL
+
+/**
+ *  
+ * \ingroup cpmlib_idl
+ */
+struct FutureCollisionAssessment {    
+    Header header;
+
+    octet vehicle_id; //@key
+    int16 fca;
+};
+#endif
