@@ -48,6 +48,7 @@ int main (int argc, char *argv[]) {
 
     std::cout << "Waiting for parameter 'active_vehicle_ids' set by LCC ..." << std::endl;
     std::vector<int32_t> active_vehicle_ids = cpm::parameter_ints("active_vehicle_ids");
+    std::vector<uint8_t> unsigned_active_vehicle_ids( active_vehicle_ids.begin(), active_vehicle_ids.end() );
 
     std::cout << std::endl;
     //Communication parameters
@@ -138,7 +139,8 @@ int main (int argc, char *argv[]) {
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,
-        unsigned_vehicle_ids
+        unsigned_vehicle_ids,
+        unsigned_active_vehicle_ids
     );
     std::cout << "...done." << std::endl;
 
