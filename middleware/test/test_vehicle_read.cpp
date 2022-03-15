@@ -71,7 +71,6 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     using namespace std::placeholders;
     timer->start_async([&](uint64_t t_now) {
         std::vector<VehicleState> state_list = communication->getLatestVehicleMessages(t_now);
-        std::cout << state_list.size() << std::endl;
         received_timestamps_vehicle_0.push_back(state_list.at(0).header().create_stamp().nanoseconds());
         received_timestamps_vehicle_1.push_back(state_list.at(1).header().create_stamp().nanoseconds());
         received_timestamps_vehicle_3.push_back(state_list.at(2).header().create_stamp().nanoseconds());
