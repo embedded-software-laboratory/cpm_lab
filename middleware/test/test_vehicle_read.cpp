@@ -71,7 +71,6 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     using namespace std::placeholders;
     timer->start_async([&](uint64_t t_now) {
         std::vector<VehicleState> state_list = communication->getLatestVehicleMessages(t_now);
-        std::cout << state_list.size() << std::endl;
         received_timestamps_vehicle_0.push_back(state_list.at(0).header().create_stamp().nanoseconds());
         received_timestamps_vehicle_1.push_back(state_list.at(1).header().create_stamp().nanoseconds());
         received_timestamps_vehicle_3.push_back(state_list.at(2).header().create_stamp().nanoseconds());
@@ -115,23 +114,14 @@ TEST_CASE( "VehicleCommunication_Read" ) {
     timer->stop();
 
     //Perform tests - check that no more than one stamp was missed
-    std::cout << "---------------------" << std::endl;
-    std::cout << received_timestamps_vehicle_0.at(0) << std::endl;
     for (size_t i = 1; i < received_timestamps_vehicle_0.size(); ++i) {
         CHECK(received_timestamps_vehicle_0.at(i) - received_timestamps_vehicle_0.at(i - 1) <= 2);
-        std::cout << received_timestamps_vehicle_0.at(i) << std::endl;
     }
-    std::cout << "---------------------" << std::endl;
-    std::cout << received_timestamps_vehicle_1.at(0) << std::endl;
     for (size_t i = 1; i < received_timestamps_vehicle_1.size(); ++i) {
         CHECK(received_timestamps_vehicle_1.at(i) - received_timestamps_vehicle_1.at(i - 1) <= 2);
-        std::cout << received_timestamps_vehicle_1.at(i) << std::endl;
     }
-    std::cout << "---------------------" << std::endl;
-    std::cout << received_timestamps_vehicle_3.at(0) << std::endl;
     for (size_t i = 1; i < received_timestamps_vehicle_3.size(); ++i) {
         CHECK(received_timestamps_vehicle_3.at(i) - received_timestamps_vehicle_3.at(i - 1) <= 2);
-        std::cout << received_timestamps_vehicle_3.at(i) << std::endl;
     }
     //Check that the last message (-> newest message in the last step) was received
     CHECK(received_timestamps_vehicle_0.at(received_timestamps_vehicle_0.size() - 1) == testMessagesAmount);
