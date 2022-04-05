@@ -4,6 +4,19 @@ The CPM Lab provides a simulation environment and 20 model-scale vehicles for ex
 The CPM Lab lets researchers as well as students from different disciplines see their ideas develop into reality.
 More information is provided in our publication [1], which we kindly ask you to consider citing if you find the CPM Lab helpful for your work.
 
+## Switching between the RTI and FastDDS Versions
+
+The ``install.sh`` script in both RTI and FastDDS versions of the CPM Lab set
+some required, but different environment variables in a source file.
+When switching back from FastDDS to RTI this can lead to unexpected and hard to debug errors.
+Running ``sudo install.sh`` would fix this, but each install takes quite a bit of time.
+
+Contained is a ``quick_install.sh`` script, that sets these variables,
+but does not repeat long-running steps of the installer.
+Thus, when the CPM Lab is not building properly after switching back from FastDDS,
+it is recommended to run ``sudo bash quick_install.sh``, specify the RTI license file,
+specify domain ID (usually 21), reboot the computer and then run ``bash build_all.bash``.
+
 ## Documentation
 The [documentation](https://cpm-lab.embedded.rwth-aachen.de/doc/) describes how to set up the simulation environment of the lab and how to set up the complete lab hardware. It also explains its usage with tutorials and documents its components.
 
