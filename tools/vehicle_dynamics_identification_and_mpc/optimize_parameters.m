@@ -12,7 +12,7 @@ function optimize_parameters(file_name, n_delay_steps_IPS, n_delay_steps_local, 
     %sequences = sequences(1:20);
     
     % optimal delay (1,1,8,0), chosen delay (1,1,8,1)
-    init_parameters = [1.00200223280075;-0.120981375817052;0.210836071655533;3.55505337083871;-1.4236956738529;6.90424987304674;1.33501029339947;0.0319884021481027;--0.0100];
+    init_parameters = [1.00200223280075;-0.120981375817052;0.210836071655533;3.55505337083871;-1.4236956738529;6.90424987304674;1.33501029339947;0.0319884021481027;-0.0100];
     
     %% Emulate delays by shifting data
     n_delay_max = 10;
