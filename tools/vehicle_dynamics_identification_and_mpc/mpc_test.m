@@ -41,9 +41,8 @@ function mpc_test(is_slow)
     plot_ref_trajectory = plot(0,0,'b','LineWidth',3);
     plot_pred_trajectory = plot(0,0,'r','LineWidth',3);
     axis equal
-    axis padded
-%     xlim([-1 5])
-%     ylim([-1 5])
+    xlim([0 4.5])
+    ylim([0 4])
     
     
     dt = 1/50;

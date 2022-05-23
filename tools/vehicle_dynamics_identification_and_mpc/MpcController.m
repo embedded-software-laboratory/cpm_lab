@@ -51,13 +51,13 @@ classdef MpcController
             
             n_ref = numel(trajectory_x);
             reference_weight = ones(n_ref,1);
-            reference_weight(ceil(n_ref/2)) = 3;
+            reference_weight(ceil(n_ref/2)) = 2;
             reference_weight(end) = 3;
                         
             objective = sumsqr(reference_weight.*(trajectory_x - var_reference_trajectory_x)) ...
                       + sumsqr(reference_weight.*(trajectory_y - var_reference_trajectory_y)) ...
-                      + 0.05 * sumsqr(var_u(:,1) - [var_u0(1);var_u(1:end-1,1)]) ...
-                      + 0.001 * sumsqr(var_u(:,2) - [var_u0(2);var_u(1:end-1,2)]);
+                      + 0.50 * sumsqr(var_u(:,1) - [var_u0(1);var_u(1:end-1,1)]) ...
+                      + 0.01 * sumsqr(var_u(:,2) - [var_u0(2);var_u(1:end-1,2)]);
             
             opt_vars = var_u(:,1:2);            
             opt_vars = reshape(opt_vars, Hu*2, 1);
@@ -125,7 +125,7 @@ classdef MpcController
                 objective_prev = objective;
             end
             toc
-            fprintf('%.7f\n',full(objective));
+            fprintf('objective = %.7f\n',full(objective));
             
             trajectory_pred_x = full(trajectory_x);
             trajectory_pred_y = full(trajectory_y);
@@ -133,7 +133,6 @@ classdef MpcController
             u = obj.u_soln(1,:);
             
             obj.u_prev = u(1,1:2);
-        
         end
     end
 end

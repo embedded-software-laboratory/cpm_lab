@@ -253,7 +253,7 @@ void MpcController::optimize_control_inputs(
     //cpm::Logging::Instance().write("objective value %f ",casadi_vars["objective"][0]);
 
     cpm::TimeMeasurement::Instance().start("mpc_opt_vis");
-    if(casadi_vars["objective"][0] < 0.7)
+    if(casadi_vars["objective"][0] < 1.5)
     {
         out_motor_throttle = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][0]));
         out_steering_servo = fmin(1.0,fmax(-1.0,casadi_vars["var_u_next"][MPC_control_steps]));
