@@ -245,7 +245,7 @@ void MpcController::optimize_control_inputs(
         casadi_mpc_fn(
             (const casadi_real**)(casadi_arguments.data()), 
             casadi_results.data(), 
-            nullptr, nullptr, nullptr);
+            nullptr, nullptr, 0);
 
     }
     cpm::TimeMeasurement::Instance().stop("mpc_casadi");
