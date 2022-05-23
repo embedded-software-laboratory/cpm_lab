@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 /* How to prefix internal symbols */
-#ifdef CODEGEN_PREFIX
-  #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
-  #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
-  #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
+#ifdef CASADI_CODEGEN_PREFIX
+  #define CASADI_NAMESPACE_CONCAT(NS, ID) _CASADI_NAMESPACE_CONCAT(NS, ID)
+  #define _CASADI_NAMESPACE_CONCAT(NS, ID) NS ## ID
+  #define CASADI_PREFIX(ID) CASADI_NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
   #define CASADI_PREFIX(ID) casadi_mpc_fn_ ## ID
 #endif
@@ -54,6 +54,10 @@ extern "C" {
   #endif
 #endif
 
+casadi_real casadi_sq(casadi_real x) { return x*x;}
+
+casadi_real casadi_sign(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
+
 static const casadi_int casadi_s0[11] = {1, 4, 0, 1, 2, 3, 4, 0, 0, 0, 0};
 static const casadi_int casadi_s1[7] = {1, 2, 0, 1, 2, 0, 0};
 static const casadi_int casadi_s2[15] = {3, 3, 0, 3, 6, 9, 0, 1, 2, 0, 1, 2, 0, 1, 2};
@@ -61,54 +65,50 @@ static const casadi_int casadi_s3[14] = {10, 1, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8
 static const casadi_int casadi_s4[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 static const casadi_int casadi_s5[5] = {1, 1, 0, 1, 0};
 
-casadi_real casadi_sq(casadi_real x) { return x*x;}
-
-casadi_real casadi_sign(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
-
 //Suppress warning for unused parameters (iw, w, mem)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /* casadi_mpc_fn:(var_x0[1x4],var_u0[1x2],var_u[3x3],var_momentum[3x3],var_params[10],var_reference_trajectory_x[6],var_reference_trajectory_y[6],var_learning_rate,var_momentum_rate)->(trajectory_x[6],trajectory_y[6],objective,var_momentum_next[3x3],var_u_next[3x3]) */
-static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a10, a100, a101, a102, a103, a104, a105, a106, a107, a108, a109, a11, a110, a111, a112, a113, a114, a115, a116, a117, a118, a119, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a4, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a5, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a6, a60, a61, a62, a63, a64, a65, a66, a67, a68, a69, a7, a70, a71, a72, a73, a74, a75, a76, a77, a78, a79, a8, a80, a81, a82, a83, a84, a85, a86, a87, a88, a89, a9, a90, a91, a92, a93, a94, a95, a96, a97, a98, a99;
-  a0=arg[0] ? arg[0][0] : 0;
+static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
+  casadi_real a0, a1, a10, a100, a101, a102, a103, a104, a105, a106, a107, a108, a109, a11, a110, a111, a112, a113, a114, a115, a116, a117, a118, a119, a12, a120, a121, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a4, a40, a41, a42, a43, a44, a45, a46, a47, a48, a49, a5, a50, a51, a52, a53, a54, a55, a56, a57, a58, a59, a6, a60, a61, a62, a63, a64, a65, a66, a67, a68, a69, a7, a70, a71, a72, a73, a74, a75, a76, a77, a78, a79, a8, a80, a81, a82, a83, a84, a85, a86, a87, a88, a89, a9, a90, a91, a92, a93, a94, a95, a96, a97, a98, a99;
+  a0=arg[0]? arg[0][0] : 0;
   a1=5.0000000000000003e-02;
-  a2=arg[4] ? arg[4][0] : 0;
-  a3=arg[0] ? arg[0][3] : 0;
+  a2=arg[4]? arg[4][0] : 0;
+  a3=arg[0]? arg[0][3] : 0;
   a4=(a2*a3);
   a5=1.;
-  a6=arg[4] ? arg[4][1] : 0;
-  a7=arg[2] ? arg[2][3] : 0;
-  a8=arg[4] ? arg[4][8] : 0;
+  a6=arg[4]? arg[4][1] : 0;
+  a7=arg[2]? arg[2][3] : 0;
+  a8=arg[4]? arg[4][8] : 0;
   a9=(a7+a8);
   a10=casadi_sq(a9);
   a10=(a6*a10);
   a10=(a5+a10);
   a10=(a4*a10);
-  a11=arg[0] ? arg[0][2] : 0;
-  a12=arg[4] ? arg[4][2] : 0;
+  a11=arg[0]? arg[0][2] : 0;
+  a12=arg[4]? arg[4][2] : 0;
   a13=(a12*a9);
   a13=(a11+a13);
-  a14=arg[4] ? arg[4][9] : 0;
+  a14=arg[4]? arg[4][9] : 0;
   a13=(a13+a14);
   a15=cos(a13);
   a16=(a10*a15);
   a16=(a1*a16);
   a0=(a0+a16);
   if (res[0]!=0) res[0][0]=a0;
-  a16=arg[4] ? arg[4][4] : 0;
+  a16=arg[4]? arg[4][4] : 0;
   a17=(a16*a3);
-  a18=arg[4] ? arg[4][5] : 0;
-  a19=arg[4] ? arg[4][6] : 0;
-  a20=arg[2] ? arg[2][6] : 0;
+  a18=arg[4]? arg[4][5] : 0;
+  a19=arg[4]? arg[4][6] : 0;
+  a20=arg[2]? arg[2][6] : 0;
   a21=(a19*a20);
   a21=(a18+a21);
-  a22=arg[2] ? arg[2][0] : 0;
+  a22=arg[2]? arg[2][0] : 0;
   a23=casadi_sign(a22);
   a21=(a21*a23);
   a23=fabs(a22);
-  a24=arg[4] ? arg[4][7] : 0;
+  a24=arg[4]? arg[4][7] : 0;
   a25=pow(a23,a24);
   a25=(a21*a25);
   a17=(a17+a25);
@@ -120,7 +120,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a27=(a6*a27);
   a27=(a5+a27);
   a28=(a25*a27);
-  a29=arg[4] ? arg[4][3] : 0;
+  a29=arg[4]? arg[4][3] : 0;
   a30=(a29*a3);
   a31=(a30*a9);
   a31=(a1*a31);
@@ -145,7 +145,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a35=(a1*a35);
   a35=(a17+a35);
   a38=(a2*a35);
-  a39=arg[2] ? arg[2][4] : 0;
+  a39=arg[2]? arg[2][4] : 0;
   a40=(a39+a8);
   a41=casadi_sq(a40);
   a41=(a6*a41);
@@ -164,10 +164,10 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a47=(a34+a47);
   if (res[0]!=0) res[0][2]=a47;
   a48=(a16*a35);
-  a49=arg[2] ? arg[2][7] : 0;
+  a49=arg[2]? arg[2][7] : 0;
   a50=(a19*a49);
   a50=(a18+a50);
-  a51=arg[2] ? arg[2][1] : 0;
+  a51=arg[2]? arg[2][1] : 0;
   a52=casadi_sign(a51);
   a50=(a50*a52);
   a52=fabs(a51);
@@ -206,7 +206,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a62=(a1*a62);
   a62=(a48+a62);
   a65=(a2*a62);
-  a66=arg[2] ? arg[2][5] : 0;
+  a66=arg[2]? arg[2][5] : 0;
   a67=(a66+a8);
   a68=casadi_sq(a67);
   a68=(a6*a68);
@@ -225,10 +225,10 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a74=(a61+a74);
   if (res[0]!=0) res[0][4]=a74;
   a75=(a16*a62);
-  a76=arg[2] ? arg[2][8] : 0;
+  a76=arg[2]? arg[2][8] : 0;
   a19=(a19*a76);
   a18=(a18+a19);
-  a19=arg[2] ? arg[2][2] : 0;
+  a19=arg[2]? arg[2][2] : 0;
   a77=casadi_sign(a19);
   a18=(a18*a77);
   a77=fabs(a19);
@@ -255,7 +255,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a85=(a1*a85);
   a85=(a74+a85);
   if (res[0]!=0) res[0][5]=a85;
-  a86=arg[0] ? arg[0][1] : 0;
+  a86=arg[0]? arg[0][1] : 0;
   a3=(a2*a3);
   a87=casadi_sq(a9);
   a87=(a6*a87);
@@ -334,99 +334,107 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a107=(a1*a107);
   a107=(a104+a107);
   if (res[1]!=0) res[1][5]=a107;
-  a108=arg[5] ? arg[5][0] : 0;
+  a108=arg[5]? arg[5][0] : 0;
   a0=(a0-a108);
   a108=casadi_sq(a0);
-  a109=arg[5] ? arg[5][1] : 0;
+  a109=arg[5]? arg[5][1] : 0;
   a34=(a34-a109);
   a109=casadi_sq(a34);
   a108=(a108+a109);
-  a109=arg[5] ? arg[5][2] : 0;
-  a47=(a47-a109);
-  a109=casadi_sq(a47);
-  a108=(a108+a109);
-  a109=arg[5] ? arg[5][3] : 0;
-  a61=(a61-a109);
-  a109=casadi_sq(a61);
-  a108=(a108+a109);
-  a109=arg[5] ? arg[5][4] : 0;
-  a74=(a74-a109);
-  a109=casadi_sq(a74);
-  a108=(a108+a109);
-  a109=arg[5] ? arg[5][5] : 0;
-  a85=(a85-a109);
-  a109=casadi_sq(a85);
-  a108=(a108+a109);
-  a109=arg[6] ? arg[6][0] : 0;
-  a86=(a86-a109);
-  a109=casadi_sq(a86);
-  a110=arg[6] ? arg[6][1] : 0;
-  a92=(a92-a110);
-  a110=casadi_sq(a92);
-  a109=(a109+a110);
-  a110=arg[6] ? arg[6][2] : 0;
-  a96=(a96-a110);
-  a110=casadi_sq(a96);
-  a109=(a109+a110);
-  a110=arg[6] ? arg[6][3] : 0;
-  a100=(a100-a110);
-  a110=casadi_sq(a100);
-  a109=(a109+a110);
-  a110=arg[6] ? arg[6][4] : 0;
-  a104=(a104-a110);
-  a110=casadi_sq(a104);
-  a109=(a109+a110);
-  a110=arg[6] ? arg[6][5] : 0;
-  a107=(a107-a110);
-  a110=casadi_sq(a107);
-  a109=(a109+a110);
-  a108=(a108+a109);
-  a109=5.0000000000000000e-01;
-  a110=arg[1] ? arg[1][0] : 0;
-  a110=(a22-a110);
-  a111=casadi_sq(a110);
-  a112=(a51-a22);
-  a113=casadi_sq(a112);
-  a111=(a111+a113);
-  a113=(a19-a51);
-  a114=casadi_sq(a113);
-  a111=(a111+a114);
-  a111=(a109*a111);
+  a109=2.;
+  a110=arg[5]? arg[5][2] : 0;
+  a47=(a47-a110);
+  a47=(a109*a47);
+  a110=casadi_sq(a47);
+  a108=(a108+a110);
+  a110=arg[5]? arg[5][3] : 0;
+  a61=(a61-a110);
+  a110=casadi_sq(a61);
+  a108=(a108+a110);
+  a110=arg[5]? arg[5][4] : 0;
+  a74=(a74-a110);
+  a110=casadi_sq(a74);
+  a108=(a108+a110);
+  a110=3.;
+  a111=arg[5]? arg[5][5] : 0;
+  a85=(a85-a111);
+  a85=(a110*a85);
+  a111=casadi_sq(a85);
   a108=(a108+a111);
-  a111=1.0000000000000000e-02;
-  a114=arg[1] ? arg[1][1] : 0;
-  a114=(a7-a114);
+  a111=arg[6]? arg[6][0] : 0;
+  a86=(a86-a111);
+  a111=casadi_sq(a86);
+  a112=arg[6]? arg[6][1] : 0;
+  a92=(a92-a112);
+  a112=casadi_sq(a92);
+  a111=(a111+a112);
+  a112=arg[6]? arg[6][2] : 0;
+  a96=(a96-a112);
+  a96=(a109*a96);
+  a112=casadi_sq(a96);
+  a111=(a111+a112);
+  a112=arg[6]? arg[6][3] : 0;
+  a100=(a100-a112);
+  a112=casadi_sq(a100);
+  a111=(a111+a112);
+  a112=arg[6]? arg[6][4] : 0;
+  a104=(a104-a112);
+  a112=casadi_sq(a104);
+  a111=(a111+a112);
+  a112=arg[6]? arg[6][5] : 0;
+  a107=(a107-a112);
+  a107=(a110*a107);
+  a112=casadi_sq(a107);
+  a111=(a111+a112);
+  a108=(a108+a111);
+  a111=5.0000000000000000e-01;
+  a112=arg[1]? arg[1][0] : 0;
+  a112=(a22-a112);
+  a113=casadi_sq(a112);
+  a114=(a51-a22);
   a115=casadi_sq(a114);
-  a116=(a39-a7);
+  a113=(a113+a115);
+  a115=(a19-a51);
+  a116=casadi_sq(a115);
+  a113=(a113+a116);
+  a113=(a111*a113);
+  a108=(a108+a113);
+  a113=1.0000000000000000e-02;
+  a116=arg[1]? arg[1][1] : 0;
+  a116=(a7-a116);
   a117=casadi_sq(a116);
-  a115=(a115+a117);
-  a117=(a66-a39);
-  a118=casadi_sq(a117);
-  a115=(a115+a118);
-  a115=(a111*a115);
-  a108=(a108+a115);
+  a118=(a39-a7);
+  a119=casadi_sq(a118);
+  a117=(a117+a119);
+  a119=(a66-a39);
+  a120=casadi_sq(a119);
+  a117=(a117+a120);
+  a117=(a113*a117);
+  a108=(a108+a117);
   if (res[2]!=0) res[2][0]=a108;
-  a108=arg[8] ? arg[8][0] : 0;
-  a115=arg[3] ? arg[3][0] : 0;
-  a115=(a108*a115);
-  a110=(a110+a110);
-  a110=(a109*a110);
+  a108=arg[8]? arg[8][0] : 0;
+  a117=arg[3]? arg[3][0] : 0;
+  a117=(a108*a117);
   a112=(a112+a112);
-  a112=(a109*a112);
-  a110=(a110-a112);
-  a118=casadi_sign(a22);
-  a119=(a24-a5);
-  a37=pow(a37,a119);
+  a112=(a111*a112);
+  a114=(a114+a114);
+  a114=(a111*a114);
+  a112=(a112-a114);
+  a120=casadi_sign(a22);
+  a121=(a24-a5);
+  a37=pow(a37,a121);
   a37=(a24*a37);
   a107=(a107+a107);
+  a107=(a110*a107);
   a104=(a104+a104);
   a104=(a107+a104);
   a100=(a100+a100);
   a100=(a104+a100);
   a96=(a96+a96);
+  a96=(a109*a96);
   a96=(a100+a96);
-  a119=(a1*a96);
-  a95=(a95*a119);
+  a121=(a1*a96);
+  a95=(a95*a121);
   a93=(a93*a95);
   a93=(a2*a93);
   a58=cos(a58);
@@ -443,35 +451,36 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a82=(a82*a106);
   a83=sin(a83);
   a85=(a85+a85);
-  a106=(a1*a85);
-  a80=(a80*a106);
+  a110=(a110*a85);
+  a85=(a1*a110);
+  a80=(a80*a85);
   a83=(a83*a80);
   a80=(a82-a83);
-  a102=(a71+a80);
+  a106=(a71+a80);
   a72=sin(a72);
   a74=(a74+a74);
-  a85=(a85+a74);
-  a74=(a1*a85);
+  a110=(a110+a74);
+  a74=(a1*a110);
   a69=(a69*a74);
   a72=(a72*a69);
-  a102=(a102-a72);
-  a69=(a58+a102);
+  a106=(a106-a72);
+  a69=(a58+a106);
   a59=sin(a59);
   a61=(a61+a61);
-  a85=(a85+a61);
-  a61=(a1*a85);
+  a110=(a110+a61);
+  a61=(a1*a110);
   a56=(a56*a61);
   a59=(a59*a56);
   a69=(a69-a59);
   a56=(a1*a69);
-  a98=(a40*a56);
-  a98=(a29*a98);
-  a93=(a93+a98);
+  a102=(a40*a56);
+  a102=(a29*a102);
+  a93=(a93+a102);
   a99=(a99*a100);
   a97=(a97*a99);
   a97=(a2*a97);
-  a102=(a1*a102);
-  a100=(a54*a102);
+  a106=(a1*a106);
+  a100=(a54*a106);
   a100=(a29*a100);
   a97=(a97+a100);
   a103=(a103*a104);
@@ -484,7 +493,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a14=(a14*a107);
   a105=(a105*a14);
   a105=(a2*a105);
-  a84=(a84*a106);
+  a84=(a84*a85);
   a79=(a79*a84);
   a79=(a2*a79);
   a105=(a105+a79);
@@ -509,18 +518,19 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a55=(a16*a97);
   a93=(a93+a55);
   a47=(a47+a47);
-  a85=(a85+a47);
-  a47=(a1*a85);
-  a46=(a46*a47);
+  a109=(a109*a47);
+  a110=(a110+a109);
+  a109=(a1*a110);
+  a46=(a46*a109);
   a41=(a41*a46);
   a41=(a2*a41);
   a93=(a93+a41);
   a41=(a1*a93);
   a36=(a36*a41);
   a37=(a37*a36);
-  a118=(a118*a37);
-  a110=(a110+a118);
-  a118=casadi_sign(a22);
+  a120=(a120*a37);
+  a112=(a112+a120);
+  a120=casadi_sign(a22);
   a37=(a24-a5);
   a23=pow(a23,a37);
   a23=(a24*a23);
@@ -531,23 +541,23 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a89=(a89*a91);
   a89=(a2*a89);
   a44=cos(a44);
-  a94=(a94*a119);
+  a94=(a94*a121);
   a44=(a44*a94);
   a69=(a44+a69);
   a45=sin(a45);
-  a42=(a42*a47);
+  a42=(a42*a109);
   a45=(a45*a42);
   a69=(a69-a45);
   a42=(a1*a69);
-  a47=(a26*a42);
-  a29=(a29*a47);
+  a109=(a26*a42);
+  a29=(a29*a109);
   a89=(a89+a29);
   a89=(a89+a93);
   a16=(a16*a41);
   a89=(a89+a16);
   a34=(a34+a34);
-  a85=(a85+a34);
-  a34=(a1*a85);
+  a110=(a110+a34);
+  a34=(a1*a110);
   a33=(a33*a34);
   a27=(a27*a33);
   a2=(a2*a27);
@@ -555,52 +565,52 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a89=(a1*a89);
   a21=(a21*a89);
   a23=(a23*a21);
-  a118=(a118*a23);
-  a110=(a110+a118);
-  a115=(a115-a110);
-  if (res[3]!=0) res[3][0]=a115;
-  a110=arg[3] ? arg[3][1] : 0;
-  a110=(a108*a110);
-  a113=(a113+a113);
-  a109=(a109*a113);
-  a112=(a112-a109);
-  a113=casadi_sign(a51);
-  a118=(a24-a5);
-  a64=pow(a64,a118);
+  a120=(a120*a23);
+  a112=(a112+a120);
+  a117=(a117-a112);
+  if (res[3]!=0) res[3][0]=a117;
+  a112=arg[3]? arg[3][1] : 0;
+  a112=(a108*a112);
+  a115=(a115+a115);
+  a111=(a111*a115);
+  a114=(a114-a111);
+  a115=casadi_sign(a51);
+  a120=(a24-a5);
+  a64=pow(a64,a120);
   a64=(a24*a64);
   a63=(a63*a101);
   a64=(a64*a63);
-  a113=(a113*a64);
-  a112=(a112+a113);
-  a113=casadi_sign(a51);
+  a115=(a115*a64);
+  a114=(a114+a115);
+  a115=casadi_sign(a51);
   a64=(a24-a5);
   a52=pow(a52,a64);
   a52=(a24*a52);
   a50=(a50*a97);
   a52=(a52*a50);
-  a113=(a113*a52);
-  a112=(a112+a113);
-  a110=(a110-a112);
-  if (res[3]!=0) res[3][1]=a110;
-  a112=arg[3] ? arg[3][2] : 0;
-  a112=(a108*a112);
-  a113=casadi_sign(a19);
+  a115=(a115*a52);
+  a114=(a114+a115);
+  a112=(a112-a114);
+  if (res[3]!=0) res[3][1]=a112;
+  a114=arg[3]? arg[3][2] : 0;
+  a114=(a108*a114);
+  a115=casadi_sign(a19);
   a5=(a24-a5);
   a77=pow(a77,a5);
   a24=(a24*a77);
   a18=(a18*a105);
   a24=(a24*a18);
-  a113=(a113*a24);
-  a109=(a109+a113);
-  a112=(a112-a109);
-  if (res[3]!=0) res[3][2]=a112;
-  a109=arg[3] ? arg[3][3] : 0;
-  a109=(a108*a109);
-  a114=(a114+a114);
-  a114=(a111*a114);
+  a115=(a115*a24);
+  a111=(a111+a115);
+  a114=(a114-a111);
+  if (res[3]!=0) res[3][2]=a114;
+  a111=arg[3]? arg[3][3] : 0;
+  a111=(a108*a111);
   a116=(a116+a116);
-  a116=(a111*a116);
-  a114=(a114-a116);
+  a116=(a113*a116);
+  a118=(a118+a118);
+  a118=(a113*a118);
+  a116=(a116-a118);
   a31=cos(a31);
   a90=(a90*a92);
   a31=(a31*a90);
@@ -622,7 +632,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a25=(a6*a25);
   a26=(a26*a25);
   a90=(a90+a26);
-  a114=(a114+a90);
+  a116=(a116+a90);
   a11=cos(a11);
   a86=(a86+a86);
   a96=(a96+a86);
@@ -643,8 +653,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a11=(a11+a30);
   a13=sin(a13);
   a0=(a0+a0);
-  a85=(a85+a0);
-  a1=(a1*a85);
+  a110=(a110+a0);
+  a1=(a1*a110);
   a10=(a10*a1);
   a13=(a13*a10);
   a13=(a12*a13);
@@ -655,21 +665,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a4=(a6*a4);
   a9=(a9*a4);
   a11=(a11+a9);
-  a114=(a114+a11);
-  a109=(a109-a114);
-  if (res[3]!=0) res[3][3]=a109;
-  a114=arg[3] ? arg[3][4] : 0;
-  a114=(a108*a114);
-  a117=(a117+a117);
-  a111=(a111*a117);
-  a116=(a116-a111);
+  a116=(a116+a11);
+  a111=(a111-a116);
+  if (res[3]!=0) res[3][3]=a111;
+  a116=arg[3]? arg[3][4] : 0;
+  a116=(a108*a116);
+  a119=(a119+a119);
+  a113=(a113*a119);
+  a118=(a118-a113);
   a58=(a12*a58);
-  a117=(a54+a54);
+  a119=(a54+a54);
   a48=(a48*a99);
   a48=(a6*a48);
-  a117=(a117*a48);
-  a58=(a58+a117);
-  a70=(a70*a102);
+  a119=(a119*a48);
+  a58=(a58+a119);
+  a70=(a70*a106);
   a58=(a58+a70);
   a59=(a12*a59);
   a58=(a58-a59);
@@ -678,7 +688,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a53=(a6*a53);
   a54=(a54*a53);
   a58=(a58+a54);
-  a116=(a116+a58);
+  a118=(a118+a58);
   a44=(a12*a44);
   a58=(a40+a40);
   a35=(a35*a95);
@@ -694,11 +704,11 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a38=(a6*a38);
   a40=(a40*a38);
   a44=(a44+a40);
-  a116=(a116+a44);
-  a114=(a114-a116);
-  if (res[3]!=0) res[3][4]=a114;
-  a116=arg[3] ? arg[3][5] : 0;
-  a116=(a108*a116);
+  a118=(a118+a44);
+  a116=(a116-a118);
+  if (res[3]!=0) res[3][4]=a116;
+  a118=arg[3]? arg[3][5] : 0;
+  a118=(a108*a118);
   a82=(a12*a82);
   a44=(a8+a8);
   a75=(a75*a14);
@@ -712,7 +722,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a78=(a6*a78);
   a8=(a8*a78);
   a82=(a82+a8);
-  a111=(a111+a82);
+  a113=(a113+a82);
   a71=(a12*a71);
   a82=(a67+a67);
   a62=(a62*a103);
@@ -728,39 +738,39 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a6=(a6*a65);
   a67=(a67*a6);
   a71=(a71+a67);
-  a111=(a111+a71);
-  a116=(a116-a111);
-  if (res[3]!=0) res[3][5]=a116;
-  a111=arg[3] ? arg[3][6] : 0;
-  a111=(a108*a111);
-  if (res[3]!=0) res[3][6]=a111;
-  a71=arg[3] ? arg[3][7] : 0;
+  a113=(a113+a71);
+  a118=(a118-a113);
+  if (res[3]!=0) res[3][5]=a118;
+  a113=arg[3]? arg[3][6] : 0;
+  a113=(a108*a113);
+  if (res[3]!=0) res[3][6]=a113;
+  a71=arg[3]? arg[3][7] : 0;
   a71=(a108*a71);
   if (res[3]!=0) res[3][7]=a71;
-  a67=arg[3] ? arg[3][8] : 0;
+  a67=arg[3]? arg[3][8] : 0;
   a108=(a108*a67);
   if (res[3]!=0) res[3][8]=a108;
-  a67=arg[7] ? arg[7][0] : 0;
-  a115=(a67*a115);
-  a22=(a22+a115);
+  a67=arg[7]? arg[7][0] : 0;
+  a117=(a67*a117);
+  a22=(a22+a117);
   if (res[4]!=0) res[4][0]=a22;
-  a110=(a67*a110);
-  a51=(a51+a110);
-  if (res[4]!=0) res[4][1]=a51;
   a112=(a67*a112);
-  a19=(a19+a112);
-  if (res[4]!=0) res[4][2]=a19;
-  a109=(a67*a109);
-  a7=(a7+a109);
-  if (res[4]!=0) res[4][3]=a7;
+  a51=(a51+a112);
+  if (res[4]!=0) res[4][1]=a51;
   a114=(a67*a114);
-  a39=(a39+a114);
-  if (res[4]!=0) res[4][4]=a39;
-  a116=(a67*a116);
-  a66=(a66+a116);
-  if (res[4]!=0) res[4][5]=a66;
+  a19=(a19+a114);
+  if (res[4]!=0) res[4][2]=a19;
   a111=(a67*a111);
-  a20=(a20+a111);
+  a7=(a7+a111);
+  if (res[4]!=0) res[4][3]=a7;
+  a116=(a67*a116);
+  a39=(a39+a116);
+  if (res[4]!=0) res[4][4]=a39;
+  a118=(a67*a118);
+  a66=(a66+a118);
+  if (res[4]!=0) res[4][5]=a66;
+  a113=(a67*a113);
+  a20=(a20+a113);
   if (res[4]!=0) res[4][6]=a20;
   a71=(a67*a71);
   a49=(a49+a71);
@@ -771,11 +781,29 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-#pragma GCC diagnostic pop
-
-CASADI_SYMBOL_EXPORT int casadi_mpc_fn(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int casadi_mpc_fn(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
+
+CASADI_SYMBOL_EXPORT int casadi_mpc_fn_alloc_mem(void) {
+  return 0;
+}
+
+CASADI_SYMBOL_EXPORT int casadi_mpc_fn_init_mem(int mem) {
+  return 0;
+}
+
+CASADI_SYMBOL_EXPORT void casadi_mpc_fn_free_mem(int mem) {
+}
+
+CASADI_SYMBOL_EXPORT int casadi_mpc_fn_checkout(void) {
+  return 0;
+}
+
+CASADI_SYMBOL_EXPORT void casadi_mpc_fn_release(int mem) {
+}
+
+#pragma GCC diagnostic pop
 
 CASADI_SYMBOL_EXPORT void casadi_mpc_fn_incref(void) {
 }
@@ -786,6 +814,12 @@ CASADI_SYMBOL_EXPORT void casadi_mpc_fn_decref(void) {
 CASADI_SYMBOL_EXPORT casadi_int casadi_mpc_fn_n_in(void) { return 9;}
 
 CASADI_SYMBOL_EXPORT casadi_int casadi_mpc_fn_n_out(void) { return 5;}
+
+CASADI_SYMBOL_EXPORT casadi_real casadi_mpc_fn_default_in(casadi_int i){
+  switch (i) {
+    default: return 0;
+  }
+}
 
 CASADI_SYMBOL_EXPORT const char* casadi_mpc_fn_name_in(casadi_int i){
   switch (i) {

@@ -25,9 +25,8 @@ classdef MpcController
             u_idx = ceil((1:Hp)/Hp*Hu);
             
 
-            
-            % setenv('PATH', [getenv('PATH') ':/home/janis/casadi-linux-matlabR2014b-v3.4.5'])
-            addpath('~/casadi-linux-matlabR2014b-v3.4.5')
+            % Casadi version 3.5.5
+            addpath('~/casadi-355')
             import casadi.*
             
             var_x0 = SX.sym('x', 1, 4);
@@ -49,10 +48,15 @@ classdef MpcController
             
             trajectory_x = X(:,1);
             trajectory_y = X(:,2);
+            
+            n_ref = numel(trajectory_x);
+            reference_weight = ones(n_ref,1);
+            reference_weight(ceil(n_ref/2)) = 2;
+            reference_weight(end) = 3;
                         
-            objective = sumsqr((trajectory_x - var_reference_trajectory_x)) ...
-                      + sumsqr((trajectory_y - var_reference_trajectory_y)) ...
-                      + 0.5 * sumsqr(var_u(:,1) - [var_u0(1);var_u(1:end-1,1)]) ...
+            objective = sumsqr(reference_weight.*(trajectory_x - var_reference_trajectory_x)) ...
+                      + sumsqr(reference_weight.*(trajectory_y - var_reference_trajectory_y)) ...
+                      + 0.50 * sumsqr(var_u(:,1) - [var_u0(1);var_u(1:end-1,1)]) ...
                       + 0.01 * sumsqr(var_u(:,2) - [var_u0(2);var_u(1:end-1,2)]);
             
             opt_vars = var_u(:,1:2);            
@@ -121,7 +125,7 @@ classdef MpcController
                 objective_prev = objective;
             end
             toc
-            fprintf('%.7f\n',full(objective));
+            fprintf('objective = %.7f\n',full(objective));
             
             trajectory_pred_x = full(trajectory_x);
             trajectory_pred_y = full(trajectory_y);
@@ -129,7 +133,6 @@ classdef MpcController
             u = obj.u_soln(1,:);
             
             obj.u_prev = u(1,1:2);
-        
         end
     end
 end

@@ -1,34 +1,52 @@
-function mpc_test
-% TODO: NEEDS UPDATE; SWITCH TO RTI 6 AND REMOVED BATTERY VOLTAGE IN MODEL
-    
-    test_trajectory_tmp = read_rti_csv('test_trajectory.csv');
-    for i=1:length(test_trajectory_tmp.px)
-        test_trajectory(i).t = test_trajectory_tmp.t(i);
-        test_trajectory(i).px = test_trajectory_tmp.px(i);
-        test_trajectory(i).py = test_trajectory_tmp.py(i);
-        test_trajectory(i).vx = test_trajectory_tmp.vx(i);
-        test_trajectory(i).vy = test_trajectory_tmp.vy(i);
+function mpc_test(is_slow)
+
+    if (is_slow)
+        n_pts = 1000;
+        dt = 0.25e9;
+        v = 0.3;
+        r = 1;
+        c_x = 2;
+        c_y = 2.25;
+        t_full = 2e9*pi*r/v;
+        t = 0:dt:n_pts*dt;
+        test_trajectory = struct('t',num2cell(t)...
+            ,'px',num2cell(c_x + r*cos(t/t_full * 2*pi))...
+            ,'py',num2cell(c_y + r*sin(t/t_full * 2*pi))...
+            ,'vx',num2cell(-sin(t/t_full * 2*pi))...
+            ,'vy',num2cell( cos(t/t_full * 2*pi))...
+        );
+        
+        state = [c_x+r, c_y, pi/2, 0];
+    else
+        test_trajectory_tmp = read_rti_csv('test_trajectory.csv');
+        for i=1:length(test_trajectory_tmp.px)
+            test_trajectory(i).t = test_trajectory_tmp.t(i);
+            test_trajectory(i).px = test_trajectory_tmp.px(i);
+            test_trajectory(i).py = test_trajectory_tmp.py(i);
+            test_trajectory(i).vx = test_trajectory_tmp.vx(i);
+            test_trajectory(i).vy = test_trajectory_tmp.vy(i);
+        end
+        
+        state = [2.26, 3.75, 0, 0];
     end
+    
     
     
     
     clf
     hold on
     
-    scatter(test_trajectory_tmp.px, test_trajectory_tmp.py);    
+    scatter([test_trajectory.px], [test_trajectory.py],1);
     vehicle_patch = patch(0,0,0,'FaceColor','blue','FaceAlpha',.3);
-    plot_ref_trajectory = plot(0,0,'b');
-    plot_pred_trajectory = plot(0,0,'r');
+    plot_ref_trajectory = plot(0,0,'b','LineWidth',3);
+    plot_pred_trajectory = plot(0,0,'r','LineWidth',3);
     axis equal
-    xlim([-1 5])
-    ylim([-1 5])
+    xlim([0 4.5])
+    ylim([0 4])
     
     
     dt = 1/50;
     dt_MPC = 1/20;
-    
-    state = [1.5, 3.4, 0, 0];
-    
     parameters = [ 1.004582, -0.142938, 0.195236, 3.560576, -2.190728, -9.726828, 2.515565, 1.321199, 0.032208, -0.012863 ]';
     
     Hp = 6;

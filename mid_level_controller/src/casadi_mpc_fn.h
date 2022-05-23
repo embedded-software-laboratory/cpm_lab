@@ -19,11 +19,17 @@ extern "C" {
 #define casadi_int long long int
 #endif
 
-int casadi_mpc_fn(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
+int casadi_mpc_fn(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
+int casadi_mpc_fn_alloc_mem(void);
+int casadi_mpc_fn_init_mem(int mem);
+void casadi_mpc_fn_free_mem(int mem);
+int casadi_mpc_fn_checkout(void);
+void casadi_mpc_fn_release(int mem);
 void casadi_mpc_fn_incref(void);
 void casadi_mpc_fn_decref(void);
 casadi_int casadi_mpc_fn_n_out(void);
 casadi_int casadi_mpc_fn_n_in(void);
+casadi_real casadi_mpc_fn_default_in(casadi_int i);
 const char* casadi_mpc_fn_name_in(casadi_int i);
 const char* casadi_mpc_fn_name_out(casadi_int i);
 const casadi_int* casadi_mpc_fn_sparsity_in(casadi_int i);
