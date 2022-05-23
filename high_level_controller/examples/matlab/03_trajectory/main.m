@@ -47,11 +47,12 @@ function main(vehicle_id)
     reference_trajectory_time = 0;
     map_center_x = 2.25;
     map_center_y = 2.0;
+    speed = 1.0;
     trajectory_px    = [       1,        0,       -1,        0] + map_center_x;
     trajectory_py    = [       0,        1,        0,       -1] + map_center_y;
-    trajectory_vx    = [       0,       -1,        0,        1];
-    trajectory_vy    = [       1,        0,       -1,        0];
-    segment_duration = [pi/2*1e9, pi/2*1e9, pi/2*1e9, pi/2*1e9];
+    trajectory_vx    = [       0,       -1,        0,        1] * speed;
+    trajectory_vy    = [       1,        0,       -1,        0] * speed;
+    segment_duration = [pi/2*1e9, pi/2*1e9, pi/2*1e9, pi/2*1e9] / speed;
     
     while (~got_stop)
         % Read vehicle states
@@ -68,7 +69,7 @@ function main(vehicle_id)
         i_traj_index = reference_trajectory_index;
 
         trajectory_points = [];
-        plan_ahead_time_nanos = 7000e6;
+        plan_ahead_time_nanos = 5000e6/speed;
         while (t_ahead_nanos < plan_ahead_time_nanos)
             the_trajectory_point = TrajectoryPoint;
             the_trajectory_point.t.nanoseconds = uint64(reference_trajectory_time + t_ahead_nanos);
