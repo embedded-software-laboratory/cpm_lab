@@ -21,29 +21,29 @@ void VisualizationCommandsAggregator::handle_new_viz_msgs(std::vector<Visualizat
         //Add new message or replace old one using the id
         received_viz_map[data.id()] = data;
 
-        //Change time stamp from time to live to point in time when msg is invalid
-        received_viz_map[data.id()].time_to_live(received_viz_map[data.id()].time_to_live() + cpm::get_time_ns());
+        //Set time_to_live to when msg is invalid
+        received_viz_map[data.id()].time_to_live(
+            cpm::get_time_ns() + data.time_to_live()
+        );
     }
 }
 
 std::vector<Visualization> VisualizationCommandsAggregator::get_all_visualization_messages() {
-    std::vector<Visualization> viz_vector;
-    uint64_t time_now = cpm::get_time_ns();
     
     std::lock_guard<std::mutex> lock(received_viz_map_mutex);
-
+    uint64_t time_now = cpm::get_time_ns();
     //Delete old viz messages depending on time stamp
-    std::vector<uint64_t> delete_ids;
-    for (std::map<uint64_t, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
+    for (std::map<uint64_t, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ) {
         if (it->second.time_to_live() < time_now) {
-            delete_ids.push_back(it->first);
+            it = received_viz_map.erase(it);
+        }
+        else {
+            ++it;
         }
     }
-    for (uint64_t id : delete_ids) {
-        received_viz_map.erase(id);
-    }
-    
+
     //Get current viz messages
+    std::vector<Visualization> viz_vector;
     for (std::map<uint64_t, Visualization>::iterator it = received_viz_map.begin(); it != received_viz_map.end(); ++it) {
         viz_vector.push_back(it->second);
     }
