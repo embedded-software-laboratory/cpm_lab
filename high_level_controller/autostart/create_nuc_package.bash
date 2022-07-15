@@ -14,6 +14,7 @@ BASH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd /${BASH_DIR}
 rm -rf matlab_package
 mkdir matlab_package
+cp ${BASH_DIR}/../examples/matlab/read_system_trigger.m ./matlab_package
 cp ${BASH_DIR}/../examples/matlab/init_script.m ./matlab_package
 cp ${BASH_DIR}/../examples/matlab/QOS_READY_TRIGGER.xml ./matlab_package
 tar -czf matlab_package.tar.gz matlab_package

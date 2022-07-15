@@ -96,7 +96,8 @@ class Communication {
          * \param vehicleSpeedCurvatureTopicName Topic name for speed curvature messages
          * \param vehicleDirectTopicName Topic name for vehicle direct messages
          * \param _timer Required for current real or simulated timing information to check if answers of the HLC / script are received in time
-         * \param vehicle_ids List of vehicle IDs for setup of the readers (ignore other data)
+         * \param assigned_vehicle_ids List of vehicle IDs for setup of the readers (ignore other data)
+         * \param active_vehicle_ids List of vehicle IDs for setup of the VehicleState/VehicleObservation readers (ignore other data). Necessary, because we want to receive VehicleState of all active vehicles, not just the ones the middleware was assigned.
          */
         Communication(
             int hlcDomainNumber,
@@ -106,7 +107,8 @@ class Communication {
             std::string vehicleSpeedCurvatureTopicName,
             std::string vehicleDirectTopicName,
             std::shared_ptr<cpm::Timer> _timer,
-            std::vector<uint8_t> vehicle_ids
+            std::vector<uint8_t> assigned_vehicle_ids,
+            std::vector<uint8_t> active_vehicle_ids
         ) 
         :hlcParticipant(hlcDomainNumber, "QOS_LOCAL_COMMUNICATION.xml", "MatlabLibrary::LocalCommunicationProfile")
         ,hlcStateWriter(hlcParticipant.get_participant(), vehicleStateListTopicName)
@@ -124,14 +126,14 @@ class Communication {
             "commonroad_dds_goal_states",
             true, true)
 
-        ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), vehicle_ids)
+        ,vehicleReader(cpm::get_topic<VehicleState>("vehicleState"), active_vehicle_ids)
 
-        ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), vehicle_ids)
+        ,vehicleObservationReader(cpm::get_topic<VehicleObservation>("vehicleObservation"), active_vehicle_ids)
 
-        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, vehicle_ids)
-        ,pathTrackingCommunication(hlcParticipant, vehiclePathTrackingTopicName, _timer, vehicle_ids)
-        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, vehicle_ids)
-        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, vehicle_ids)
+        ,trajectoryCommunication(hlcParticipant, vehicleTrajectoryTopicName, _timer, assigned_vehicle_ids)
+        ,pathTrackingCommunication(hlcParticipant, vehiclePathTrackingTopicName, _timer, assigned_vehicle_ids)
+        ,speedCurvatureCommunication(hlcParticipant, vehicleSpeedCurvatureTopicName, _timer, assigned_vehicle_ids)
+        ,directCommunication(hlcParticipant, vehicleDirectTopicName, _timer, assigned_vehicle_ids)
         {
         }
 

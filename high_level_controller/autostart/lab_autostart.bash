@@ -120,6 +120,7 @@ mkdir examples
 cd ./examples
 mkdir matlab
 cd ./matlab
+cp /tmp/software/matlab_package/read_system_trigger.m ./
 cp /tmp/software/matlab_package/init_script.m ./
 cp /tmp/software/matlab_package/QOS_READY_TRIGGER.xml ./
 

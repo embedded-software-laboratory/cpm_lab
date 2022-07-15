@@ -7,8 +7,8 @@ function [matlabParticipant, stateReader, trajectoryWriter,...
     % Inputs
     %   matlab_domain_id (int):         domain ID to be used for DDS
 
-    script_directoy = fileparts([mfilename('fullpath') '.m']);
-    previous_folder = cd(script_directoy); % Remember folder of calling function
+    script_directory = fileparts([mfilename('fullpath') '.m']);
+    previous_folder = cd(script_directory); % Remember folder of calling function
 
     % Import IDL files from cpm library
     dds_idl_matlab = fullfile('../../../cpm_lib/dds_idl_matlab/');
@@ -19,15 +19,30 @@ function [matlabParticipant, stateReader, trajectoryWriter,...
     addpath(dds_idl_matlab)
 
     % XML files for quality of service settings
-    middleware_local_qos_xml = '../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml';
+    middleware_local_qos_xml = fullfile(...
+                    script_directory, ...
+                    '../../../middleware/build/QOS_LOCAL_COMMUNICATION.xml');
     assert(isfile(middleware_local_qos_xml),...
         'Missing middleware local QOS XML "%s"', middleware_local_qos_xml);
     
-    ready_trigger_qos_xml = './QOS_READY_TRIGGER.xml';
+    ready_trigger_qos_xml = fullfile(...
+                    script_directory,...
+                    './QOS_READY_TRIGGER.xml');
     assert(isfile(ready_trigger_qos_xml),...
         'Missing ready trigger QOS XML "%s"', ready_trigger_qos_xml);
     
-    setenv("NDDS_QOS_PROFILES", ['file://' ready_trigger_qos_xml ';file://' middleware_local_qos_xml]);
+    qos_env_var = "NDDS_QOS_PROFILES";
+    qos_profiles = getenv( qos_env_var );
+    % Quick and dirty check wether these profiles are already part of the environment variable
+    if ~( contains( qos_profiles, middleware_local_qos_xml )...
+        || contains( qos_profiles, ready_trigger_qos_xml ) )
+        qos_profiles = [qos_profiles, ';file://' , ready_trigger_qos_xml , ';file://' , middleware_local_qos_xml];
+        % If qos_profiles begins with a semicolon now, removed the semicolon
+        if qos_profiles(1) == ';'
+            qos_profiles = qos_profiles(2:end);
+        end
+        setenv( qos_env_var , qos_profiles );
+    end
     
     %% variables for the communication
     matlabStateTopicName = 'vehicleStateList';

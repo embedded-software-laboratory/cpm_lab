@@ -41,7 +41,8 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
-        std::vector<uint8_t> vehicle_ids = { 0 };
+        std::vector<uint8_t> assigned_vehicle_ids = { 0 };
+        std::vector<uint8_t> active_vehicle_ids = { 0, 1 };
 
         //Timer parameters
         std::string node_id = "middleware";
@@ -62,7 +63,8 @@ TEST_CASE( "VehicleToMiddlewareCommunication" ) {
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
             timer,
-            vehicle_ids
+            assigned_vehicle_ids,
+            active_vehicle_ids
         );
 
         //Sleep for some milliseconds just to make sure that the readers have been initialized properly

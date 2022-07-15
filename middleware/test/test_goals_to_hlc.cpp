@@ -50,7 +50,8 @@ TEST_CASE( "GoalToHLCCommunication" ) {
     
     #pragma GCC diagnostic pop
     
-    std::vector<uint8_t> vehicle_ids = { 0 };
+    std::vector<uint8_t> assigned_vehicle_ids = { 0 };
+    std::vector<uint8_t> active_vehicle_ids = { 0, 1 };
 
     //Timer parameters
     std::string node_id = "middleware_test";
@@ -71,7 +72,8 @@ TEST_CASE( "GoalToHLCCommunication" ) {
         vehicleSpeedCurvatureTopicName,
         vehicleDirectTopicName,
         timer,
-        vehicle_ids
+        assigned_vehicle_ids,
+        active_vehicle_ids
     );
 
     //Initialize readers and writers to simulate HLC (ready messages) and LCC (goal state writer)

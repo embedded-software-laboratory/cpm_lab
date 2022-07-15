@@ -61,7 +61,8 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
         std::string vehicleSpeedCurvatureTopicName = "vehicleCommandSpeedCurvature"; 
         std::string vehicleDirectTopicName = "vehicleCommandDirect"; 
         int vehicleID = 0; 
-        std::vector<uint8_t> vehicle_ids = { 0 };
+        std::vector<uint8_t> assigned_vehicle_ids = { 0 };
+        std::vector<uint8_t> active_vehicle_ids = { 0, 1 };
 
         //Timer parameters
         std::string node_id = "middleware";
@@ -88,7 +89,8 @@ TEST_CASE( "HLCToVehicleCommunication" ) {
             vehicleSpeedCurvatureTopicName,
             vehicleDirectTopicName,
             timer,
-            vehicle_ids
+            assigned_vehicle_ids,
+            active_vehicle_ids
         );
 
         //Thread that simulates the vehicle (only a reader is created). A waitset is attached to the reader and a callback function is created. 
