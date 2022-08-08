@@ -24,8 +24,8 @@ The [documentation](https://cpm-lab.embedded.rwth-aachen.de/doc/) describes how 
 This research is supported by the Deutsche Forschungsgemeinschaft (German Research Foundation) within the Priority Program SPP 1835 "Cooperative Interacting Automobiles" (grant number: KO 1430/17-1), the Post Graduate Program GRK 1856 "Integrated Energy Supply Modules for Roadbound E-Mobility", the project "CiTi – Center for integrative Traffic investigation", the fund “digital teaching and learning infrastructure” of the state NRW, and the quality improvement funds at RWTH Aachen University.
 
 ## References
-* [1] M. Kloock, J. Maczijewski, P. Scheffe, A. Kampmann, A. Mokhtarian, S. Kowalewski and B. Alrifaee. "Cyber-Physical Mobility Lab An Open-Source Platform for Networked and Autonomous Vehicles". arXiv preprint 2004.10063. \
-  https://www.youtube.com/watch?v=VXvZj6gBsYo
+* [1] M. Kloock, P. Scheffe, J. Maczijewski, A. Kampmann, A. Mokhtarian, S. Kowalewski and B. Alrifaee. "Cyber-physical mobility lab: An open-source platform for networked and autonomous vehicles". 2021 European Control Conference (ECC). IEEE, 2021. \
+  https://www.youtube.com/watch?v=PfM0qdzorCc  
 * [2] M. Kloock, P. Scheffe, I. Tülleners, J. Maczijewski, S. Kowalewski and B. Alrifaee. "Vision-Based Real-Time Indoor Positioning System for Multiple Vehicles". IFAC World Congress 2020. \
   https://www.youtube.com/watch?v=k6aD5G9DW4o
 * [3] P. Scheffe, J. Maczijewski, M. Kloock, A. Derks, S. Kowalewski, B. Alrifaee. "Networked and Autonomous Model-scale Vehicles for Experiments in Research and Education". IFAC World Congress 2020. \
