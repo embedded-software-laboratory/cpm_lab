@@ -4,7 +4,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
+import matplotlib.font_manager
 from numpy.core.shape_base import block
+from scipy.signal import hilbert, chirp
+from scipy.interpolate import interp1d
 
 def average_timestep_speed(profile):
     average_speed_profile = []
@@ -144,19 +147,20 @@ def plot_avg_speed():
     #ax1.xaxis.set_ticks(np.arange(0, 19, 1))
     vehicles = list(range(1,19))
 
-    hsteps = ["100", "200", "300", "400"]
+    hsteps = "200" #["100", "200", "300", "400"]
+    seed = 0
     i = 0
 
     for x in ax.flat:
         print(hsteps[i])
         # fca
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/2", vehicles)
+        av_speed = read_speed("./data/"+ hsteps+"/2", vehicles)
         x.plot(vehicles, av_speed, "x", label="FCA")
         # random
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/1", vehicles)
+        av_speed = read_speed("./data/"+ hsteps[i]+"/1", vehicles)
         x.plot(vehicles, av_speed, "+", label="Random")
         # static
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/0", vehicles)
+        av_speed = read_speed("./data/"+ hsteps[i]+"/0", vehicles)
         x.plot(vehicles, av_speed, ".", label="Static")
         i+=1
 
@@ -179,43 +183,54 @@ def plot_avg_speed():
     plt.show()
 
 def plot_average_speed_zoomed():
-    fig, ax = plt.subplots(2,2)
+    fig, ax = plt.subplots(1)
     
     #ax.set_xlim([0,19])
     #ax1.xaxis.set_ticks(np.arange(0, 19, 1))
-    vehicles = list(range(1,17))
+    vehicles = list(range(1,20))
 
-    hsteps = ["100", "200", "300", "400"]
-    i = 0
+    hsteps = "200"#, "200", "300", "400"]
+    colors = ['b', 'g', 'r', 'c']
+    seeds = ["0", "1", "2", "3"]
+    symbols = ['x', '+', '.', '|']
 
-    for x in ax.flat:
-        print(hsteps[i])
+    i=0
+    for seed in seeds:
         # fca
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/2", vehicles)
-        x.plot(vehicles, av_speed, "x", label="FCA")
+        av_speed = read_speed("./data_seed_" + seed  + "/" + hsteps+"/2", vehicles)
+        ax.plot(vehicles, av_speed, "x", label="FCA", color=colors[i])
+
+        #f = interp1d(vehicles, av_speed)
+        #x_new = np.linspace(1, 19, num=1000, endpoint=True)
+        #analytic_signal = hilbert(f(x_new))
+        #amplitude_envelope = np.abs(analytic_signal)
+        #ax.plot(x_new, amplitude_envelope, label="envelope")
+        
         # random
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/1", vehicles)
-        x.plot(vehicles, av_speed, "+", label="Random")
+        av_speed = read_speed("./data_seed_" + seed  + "/" + hsteps+"/1", vehicles)
+        ax.plot(vehicles, av_speed, "+", label="Random", color=colors[i])
         # static
-        av_speed = read_speed("./data/"+ hsteps[i]+"steps/0", vehicles)
-        x.plot(vehicles, av_speed, ".", label="Static")
+        av_speed = read_speed("./data_seed_" + seed  + "/" + hsteps+"/0", vehicles)
+        ax.plot(vehicles, av_speed, ".", label="Static", color=colors[i])
         i+=1
 
-    ax[0,0].set(title=r'$h=5s$')
-    ax[0,1].set(title=r'$h=10s$')
-    ax[1,0].set(title=r'$h=15s$')
-    ax[1,1].set(title=r'$h=20s$')
     
-    for x in ax.flat:
-        x.set_ylim([1.0, 1.4])
-        x.set(xlabel=r'$n$ vehicles', ylabel=r'Speed $(m/s)$')
+    
+    #ax[0,0].set(title=r'$h=5s$')
+    #ax[0,1].set(title=r'$h=10s$')
+    #ax[1,0].set(title=r'$h=15s$')
+    #ax[1,1].set(title=r'$h=20s$')
+    
+    #for x in ax.flat:
+        #x.set_ylim([1.0, 1.4])
+    ax.set(xlabel=r'$n$ vehicles', ylabel=r'Speed $(m/s)$')
 
     # Hide x labels and tick labels for top plots and y ticks for right plots.
-    for x in ax.flat:
-        x.label_outer()
+    #for x in ax.flat:
+    ax.label_outer()
     # create one legend for the whole thingy    
-    handles, labels = ax[1,1].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper left')
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels)
 
     # Figure Title
     plt.show()
@@ -274,6 +289,8 @@ def safe_stop(path, vehicles, horizon_t):
         i +=1
     return first_stop
 
+
+
 # Plots at how many vehicles the respective mode becomes infeasible
 def plot_stop():
     path = "./data/200steps/0"
@@ -284,7 +301,103 @@ def plot_stop():
     #ax1.xaxis.set_ticks(np.arange(0, 19, 1))
     vehicles = list(range(1,19))
 
-    hsteps = ["100", "200", "300", "400"]
+    steps = "200" # ["100", "200", "300", "400"]
+    seeds = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "100", "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114", "115", "116", "117", "119", "120"]#, "2", "3", "4"]
+    i = 0
+    data = []
+    fca = []
+    random = []
+    static = []
+    for seed in seeds:
+        print(steps)
+        # fca
+        f = safe_stop("./data_seed_" + seed  + "/"+ steps + "/2", vehicles, int(steps, 10))
+        r = safe_stop("./data_seed_" + seed  + "/"+ steps + "/1", vehicles, int(steps, 10))
+        s = safe_stop("./data_seed_" + seed  + "/"+ steps + "/0", vehicles, int(steps, 10))
+        fca.append(f)
+        random.append(r)
+        static.append(s)
+    
+    labels = ["FCA", "Random", "Static"]
+    print(fca)
+    #x_pos = [i for i, _ in enumerate(modes)]
+
+    width = 0.15
+    x = np.arange(len(seeds))  # the label locations
+    rects1 = ax.bar(x - width, fca, width, label='FCA')
+    rects2 = ax.bar(x , random, width, label='Random')
+    rects3 = ax.bar(x + width, static, width, label='Static')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    plt.ylabel(r'Successfull planning of $n$ vehicles over $\SI{180}{\second}$')
+    
+    plt.xticks(x, seeds)
+    #plt.xticks(x, [r'$h=\SI{10}{\second}$'])
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.bar_label(rects1, padding=3)
+    ax.bar_label(rects2, padding=3)
+    ax.bar_label(rects3, padding=3)
+    
+
+    ax.legend()
+    
+    fig.tight_layout()
+    plt.show()
+
+def plot_stop_boxplot():
+    
+    plt.rcParams["figure.figsize"] = (3.5,1.8)
+    fig, ax = plt.subplots()
+    
+    # set height
+    #fig.set_figheight(3)
+    
+    vehicles = list(range(1,19))
+
+    steps = "200" # ["100", "200", "300", "400"]
+    seeds = ["0", "1", "2", "3", "4", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "100", "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114", "115", "116", "117", "119", "120",]#, "2", "3", "4"]
+    #seeds = ["100", "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114", "115", "116", "117", "118", "119", "120",]#, "2", "3", "4"]
+    i = 0
+    data = []
+    fca = []
+    random = []
+    static = []
+    for seed in seeds:
+        print(seed)
+        # fca
+        f = safe_stop("./data_seed_" + seed  + "/"+ steps + "/2", vehicles, int(steps, 10))
+        r = safe_stop("./data_seed_" + seed  + "/"+ steps + "/1", vehicles, int(steps, 10))
+        s = safe_stop("./data_seed_" + seed  + "/"+ steps + "/0", vehicles, int(steps, 10))
+        fca.append(f)
+        random.append(r)
+        static.append(s)
+    
+    labels = [r'$p_{\text{FCA}}$', r'$p_{r}$', r'$p_{s}$']
+    
+    plt.yticks([0,0.3,0.6])
+    #plt.yticks(np.arange(min(x), max(x)+1, 1.0))
+    #plt.tick_params(axis='y', pad=0.1) 
+    ax.boxplot([fca, random, static], positions=[0,0.3,0.6], widths=[0.2,0.2,0.2], labels=labels, vert=False)
+    #ax.set_title(r'Number of vehicles feasible for $\SI{180}{\second}$')
+    ax.set_xlabel(r'Number of vehicles $N_A$')
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    plt.ylim([-0.2, 0.8])
+    plt.tight_layout()
+
+
+
+# Plots at how many vehicles the respective mode becomes infeasible
+def plot_stop_mult_h():
+    path = "./data/200steps/0"
+
+    fig, ax = plt.subplots()
+    
+    #ax.set_xlim([0,19])
+    #ax1.xaxis.set_ticks(np.arange(0, 19, 1))
+    vehicles = list(range(1,19))
+
+    hsteps = ["200"] # ["100", "200", "300", "400"]
     i = 0
     data = []
     fca = []
@@ -313,7 +426,8 @@ def plot_stop():
     # Add some text for labels, title and custom x-axis tick labels, etc.
     plt.ylabel(r'Successfull planning of $n$ vehicles over $\SI{180}{\second}$')
     
-    plt.xticks(x, [r'$h=\SI{5}{\second}$', r'$h=\SI{10}{\second}$', r'$h=\SI{15}{\second}$', r'$h=\SI{20}{\second}$'])
+    #plt.xticks(x, [r'$h=\SI{5}{\second}$', r'$h=\SI{10}{\second}$', r'$h=\SI{15}{\second}$', r'$h=\SI{20}{\second}$'])
+    plt.xticks(x, [r'$t_H=\SI{10}{\second}$'])
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.bar_label(rects1, padding=3)
     ax.bar_label(rects2, padding=3)
@@ -325,8 +439,16 @@ def plot_stop():
     fig.tight_layout()
     plt.show()
 
+def interval_unit(steps, plan_step_ms, unit):
+    if unit == "steps":
+        return steps
+    else:
+        (steps * plan_step_ms) / 1000
+
 # []
 def consecutive_new_old_fallback(cases):
+    unit = "steps" # other option seconds
+
     plan_step_ms = 400
     proposed = []
     fallback = []
@@ -341,12 +463,12 @@ def consecutive_new_old_fallback(cases):
             if last_case == case:
                 cons_occ += 1
             else:
-                not_proposed.append((prop_inf * plan_step_ms) / 1000)
+                not_proposed.append(interval_unit(prop_inf, plan_step_ms, unit))
                 prop_inf = 0
                 if last_case == 1:
-                    fallback.append((cons_occ* plan_step_ms) / 1000)
+                    fallback.append(interval_unit(cons_occ, plan_step_ms, unit))
                 elif last_case == 2:
-                    stop.append((cons_occ* plan_step_ms) / 1000)
+                    stop.append(interval_unit(cons_occ, plan_step_ms, unit))
                 cons_occ = 1
                 last_case = 0
         elif case == 1:
@@ -355,9 +477,9 @@ def consecutive_new_old_fallback(cases):
                 cons_occ += 1
             else:
                 if last_case == 0:
-                    proposed.append((cons_occ* plan_step_ms) / 1000)
+                    proposed.append(interval_unit(cons_occ, plan_step_ms, unit))
                 elif last_case == 2:
-                    stop.append((cons_occ* plan_step_ms) / 1000)
+                    stop.append(interval_unit(cons_occ, plan_step_ms, unit))
                 cons_occ = 1
                 last_case = 1
         elif case == 2:
@@ -366,34 +488,34 @@ def consecutive_new_old_fallback(cases):
                 cons_occ += 1
             else:
                 if last_case == 0:
-                    proposed.append((cons_occ* plan_step_ms) / 1000)
+                    proposed.append(interval_unit(cons_occ, plan_step_ms, unit))
                 elif last_case == 1:
-                    fallback.append((cons_occ* plan_step_ms) / 1000)
+                    fallback.append(interval_unit(cons_occ, plan_step_ms, unit))
                 cons_occ = 1
                 last_case = 2
     if last_case == 0:
-        proposed.append((cons_occ* plan_step_ms) / 1000)
+        proposed.append(interval_unit(cons_occ, plan_step_ms, unit))
         if prop_inf > 0:
-            not_proposed.append((prop_inf* plan_step_ms) / 1000)
+            not_proposed.append(interval_unit(prop_inf, plan_step_ms, unit))
     elif last_case == 1:
-        fallback.append((cons_occ* plan_step_ms) / 1000)
-        not_proposed.append((prop_inf* plan_step_ms) / 1000)
+        fallback.append(interval_unit(cons_occ, plan_step_ms, unit))
+        not_proposed.append(interval_unit(prop_inf, plan_step_ms, unit))
     elif last_case == 2:
-        not_proposed.append((prop_inf* plan_step_ms) / 1000)
-        stop.append((cons_occ* plan_step_ms) / 1000)       
+        not_proposed.append(interval_unit(prop_inf, plan_step_ms, unit))
+        stop.append(interval_unit(cons_occ, plan_step_ms, unit))       
     return [proposed, fallback, stop, not_proposed]
 
 # returns the interval duration of 
 # [[proposed prios worked], [fallback worked], [stopping], [fallback or stopping]]
 # in seconds
-def boxplot_data(n_veh, horizon, mode):
-    path = "./data/" + str(horizon) + "steps/" + str(mode)
+def boxplot_data(n_veh, horizon, mode, seed):
+    path = "./data_seed_"+ seed + "/" + str(horizon) + "/" + str(mode) +"/"
    
     # create variables to load the data into
     new_old_fallback = []
     for id in range(1,n_veh+1):
         tmp = []
-        with open(path + "/" + str(n_veh)+ "/evaluation_" + str(id) + ".csv") as csvfile:
+        with open(path + str(n_veh)+ "/evaluation_" + str(id) + ".csv") as csvfile:
             eval_reader = csv.reader(csvfile, delimiter = ';', )
             next(eval_reader, None) #skip header
             next(eval_reader, None)
@@ -412,13 +534,46 @@ def boxplot_data(n_veh, horizon, mode):
     #data = consecutive_new_old_fallback(new_old_fallback[0])
     return data
 
+def cases_percentage(fca_data, random_data):
+    count_f = 0
+    count_inf = 0
+    count_stop = 0
 
-def plot_feasibility_boxplot():
-    n_veh = 16
+    fca_feasible = sum(fca_data[0])
+    fca_fallback = sum(fca_data[1])
+    fca_infeasible = sum(fca_data[3])
+    fca_stop = sum(fca_data[2])
+
+
+    random_feasible = sum(random_data[0])
+    random_fallback = sum(random_data[1])
+    random_infeasible = sum(random_data[3])
+    random_stop = sum(random_data[2])
+
+    total_steps = fca_feasible + fca_fallback + fca_stop
+    print("total steps: " + str(total_steps))
+    print("FCA #####################")
+    print("percent feasible: " + str(fca_feasible/total_steps))
+    print("percent infeasible: " + str(fca_infeasible/total_steps))
+    print("percent stopping: " + str(fca_stop/total_steps))
+    print("percent fallback worked: " + str(fca_fallback/total_steps))
+    print("Random #####################")
+    print("percent feasible: " + str(random_feasible/total_steps))
+    print("percent infeasible: " + str(random_infeasible/total_steps))
+    print("percent stopping: " + str(random_stop/total_steps))
+    print("percent fallback worked: " + str(random_fallback/total_steps))
+
+
+def plot_case_boxplot():
+    
+
+    plt.rcParams["figure.figsize"] = (3.5,2.25)
+    seed = "4"
+    n_veh = 17
     horizon = 200
     horizon_s = (horizon * 50)/1000 # h * minor_step / (ms/s)
-    fca_data = boxplot_data(n_veh, horizon, 2)    
-    random_data = boxplot_data(n_veh, horizon, 1)
+    fca_data = boxplot_data(n_veh, horizon, 2, seed)    
+    random_data = boxplot_data(n_veh, horizon, 1, seed)
 
     case_f = 0 # proposed prios worked
     data_feasible = [fca_data[case_f], random_data[case_f]]
@@ -426,31 +581,77 @@ def plot_feasibility_boxplot():
     case_inf = 3 # fallback or safe stop is used
     data_infeasible = [fca_data[case_inf], random_data[case_inf]]
 
+    case_stop = 2
+    data_stop = [fca_data[case_stop], random_data[case_stop]]
+
     #fig1, ax1 = plt.subplots()
     # continuous proposed feasible and continuos infeasible 2 subplots:
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle(r'$'+ str(n_veh) + r'$ vehicles, $h=\SI{' + str(horizon_s)+ r'}{\second}$')
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    #fig.suptitle(r'$'+ str(n_veh) + r'$ vehicles, $t_H=\SI{' + str(horizon_s)+ r'}{\second}$')
 
-    labels = ["FCA", "Random"]
-    ax1.set_title(r'Feasible Intervals')
-    ax1.set_ylabel(r'interval duration $(\unit{\second})$')
+    labels = [r'$p_{\text{FCA}}$', r'$p_{r}$']
+    #ax1.set_title(r'Feasible Intervals')
+    ax1.set_ylabel(r'Consecutive Timesteps')
+    ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax1.boxplot(data_feasible, labels=labels)
     
-    ax2.set_title(r'Infeasible Intervals')
+    #ax2.set_title(r'Infeasible Intervals')
+    ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
     #ax2.set_ylabel(r'interval duration $(\unit{\second})$')
     ax2.boxplot(data_infeasible, labels=labels)
 
+    #ax3.set_title(r'Stopping Intervals')
+    ax3.yaxis.set_major_locator(MaxNLocator(integer=True))
+    #ax3.set_ylabel(r'interval duration $(\unit{\second})$')
+    ax3.boxplot(data_stop, labels=labels)
+
+    
     # save two subplots:
     # Save just the portion _inside_ the second axis's boundaries
-    # plus pad the saved area by 10% in the x-direction and 20% in the y-direction
-    extent = ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    fig.savefig('feasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
-    extent = ax2.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    fig.savefig('infeasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
+    # plus pad the saved area by 20% in the x-direction and 15% in the y-direction
+    # extent = ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    # fig.savefig('feasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
+    # extent = ax2.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    # fig.savefig('infeasible_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
+    # extent = ax3.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    # fig.savefig('stopping_boxplot.pgf', bbox_inches=extent.expanded(1.2, 1.15))
 
     plt.show()
+    cases_percentage(fca_data, random_data)
     #combined
     fig.savefig('feasib_infeasib_boxplot_combined.pgf')
+
+    # ------------------------------------------------------ sperate plots
+    size = (1.29,2.25)
+    size2 = (1.1, 2.25)
+    plt.cla()
+    plt.rcParams["figure.figsize"] = size
+    fig, ax = plt.subplots()
+    ax.set_ylabel(r'Consecutive Timesteps')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.boxplot(data_feasible, widths=[0.4,0.4], labels=labels)
+    fig.tight_layout()
+    fig.savefig('feasible_boxplot.pgf')
+
+    plt.cla()
+    plt.rcParams["figure.figsize"] = size2
+    fig, ax = plt.subplots()
+    #ax.set_ylabel(r'Consecutive Timesteps')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.boxplot(data_infeasible, widths=[0.4,0.4], labels=labels)
+    fig.tight_layout()
+    fig.savefig('infeasible_boxplot.pgf')
+
+    plt.cla()
+    plt.rcParams["figure.figsize"] = size2
+    fig, ax = plt.subplots()
+    #ax.set_ylabel(r'Consecutive Timesteps')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.boxplot(data_stop, widths=[0.4,0.4], labels=labels)
+    fig.tight_layout()
+    fig.savefig('stopping_boxplot.pgf')
+
+
 
 def plot_speed_comparison_h():
     fig, ax = plt.subplots()
@@ -512,34 +713,36 @@ def read_max_avg_plan_time(path, n_veh):
     return [max_plan_time, avg_plan_time]
 
 def plot_plan_time():
-    n_veh = 16
+    plt.rcParams["figure.figsize"] = (3.5, 3.5)
+    seed ="4"
+    n_veh = 17
     mode = 1
     horizon = 200
     horizon_s = (horizon * 50)/1000 # h * minor_step / (ms/s)
 
-    path = "./data/" + str(horizon) + "steps/" + str(2)
+    path = "./data_seed_" + seed +"/" + str(horizon) + "/" + str(2)
     fca_data = read_max_avg_plan_time(path, n_veh)
-    path = "./data/" + str(horizon) + "steps/" + str(1)
+    path = "./data_seed_" + seed +"/" + str(horizon) + "/" + str(1)
     random_data = read_max_avg_plan_time(path, n_veh)
-    path = "./data/" + str(horizon) + "steps/" + str(0)
+    path = "./data_seed_" + seed +"/" + str(horizon) + "/" + str(0)
     static_data = read_max_avg_plan_time(path, 11)
 
     fig1, ax1 = plt.subplots()
-    labels = ["FCA", "Random"]
 
-    ax1.set_xlabel(r'$n$ vehicles')
+    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax1.set_xlabel(r'Number of vehicles $N_A$')
     ax1.set_ylabel(r'Duration of plan step $(\unit{\ms})$')
-    ax1.plot(np.arange(1, n_veh+1) ,fca_data[0], '-C0s', fillstyle='none', label = "max: FCA")
-    ax1.plot(np.arange(1, n_veh+1) ,fca_data[1], '-C0d', fillstyle='none',label = "median: FCA")
+    ax1.plot(np.arange(1, n_veh+1) ,fca_data[0], '-C0s', fillstyle='none', label = r'max: $p_{\text{FCA}}$', linewidth=1, mew=1)
+    ax1.plot(np.arange(1, n_veh+1) ,fca_data[1], '-C0d', fillstyle='none',label = r'median: $p_{\text{FCA}}$', linewidth=1)
 
-    ax1.plot(np.arange(1, n_veh+1) ,random_data[0], '-C1s', fillstyle='none', label="max: Random")
-    ax1.plot(np.arange(1, n_veh+1) ,random_data[1], '-C1d', fillstyle='none', label="median: Random")
+    ax1.plot(np.arange(1, n_veh+1) ,random_data[0], '-C1s', fillstyle='none', label=r'max: $p_{r}$', linewidth=1)
+    ax1.plot(np.arange(1, n_veh+1) ,random_data[1], '-C1d', fillstyle='none', label=r'median: $p_{r}$', linewidth=1)
 
-    ax1.plot(np.arange(1, 11+1) ,static_data[0], '-C2s', fillstyle='none', label="max: Static")
-    ax1.plot(np.arange(1, 11+1) ,static_data[1], '-C2d', fillstyle='none', label="median: Static")
+    ax1.plot(np.arange(1, 11+1) ,static_data[0], '-C2s', fillstyle='none', label=r'max: $p_{s}$', linewidth=1)
+    ax1.plot(np.arange(1, 11+1) ,static_data[1], '-C2d', fillstyle='none', label=r'median: $p_{s}$', linewidth=1)
 
     ax1.legend()
-    
+    plt.tight_layout()
 
     plt.show()
 
@@ -559,6 +762,15 @@ def latex_export():
     })
 
 latex_export()
+#print(str(matplotlib.get_cachedir()))
+#matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
+
+font = {#'family' : 'serif',
+        #'serif'  : 'Times',
+        'size'   : 8}
+
+matplotlib.rc('font', **font)
+
 #plot_avg_speed()
 #plt.savefig('avg_speed.pgf')
 
@@ -567,13 +779,19 @@ latex_export()
 #plot_average_speed_zoomed()
 #plt.savefig('avg_speed_zoomed.pgf')
 
+#plot_avg_speed()
+#plt.savefig('avg_speed.pgf')
+
+
 #plot_speed_comparison_h()
 #plt.savefig('avg_speed_10s.pgf')
 
-plot_stop()
-plt.savefig('veh_until_infeasible.pgf')
-#plot_feasibility_boxplot() # figure is saved in method
+#plot_stop()
+#plt.savefig('veh_until_infeasible.pgf')
+plot_case_boxplot() # figure is saved in method
 
-#plot_plan_time()
-#plt.savefig('plan_step_duration.pgf')
-#plt.savefig("plan_step_duration.svg")
+plot_stop_boxplot()
+plt.savefig('veh_until_infeasible_boxplot.pgf')
+
+plot_plan_time()
+plt.savefig('plan_step_duration.pgf')
