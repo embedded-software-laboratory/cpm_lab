@@ -30,3 +30,5 @@ This research is supported by the Deutsche Forschungsgemeinschaft (German Resear
   https://www.youtube.com/watch?v=k6aD5G9DW4o
 * [3] P. Scheffe, J. Maczijewski, M. Kloock, A. Derks, S. Kowalewski, B. Alrifaee. "Networked and Autonomous Model-scale Vehicles for Experiments in Research and Education". IFAC World Congress 2020. \
   https://www.youtube.com/watch?v=84R28cSxWQU
+* [4] M. Kloock, P. Scheffe, O. Greß, and B. Alrifaee, “An Architecture for Experiments in Connected and Automated Vehicles,” IEEE Open Journal of Intelligent Transportation Systems, pp. 1–1, 2023, doi: 10.1109/OJITS.2023.3250951.
+* [5] M. Kloock, P. Scheffe, and B. Alrifaee, “Testing Distributed Trajectory Planning in the Cyber-Physical Mobility Lab.” Accepted in at - Automatisierungstechnik, 2023.
