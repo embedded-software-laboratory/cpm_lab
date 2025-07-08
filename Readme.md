@@ -1,3 +1,7 @@
+# ⚠️ This repository is no longer maintained.
+
+Please note that this repository is archived and will not receive further updates. For the latest developments, please refer to https://github.com/bassamlab/CPM-Lab.
+
 # CPM Lab
 This repository contains source code for the [CPM Lab](https://cpm-lab.embedded.rwth-aachen.de), an open source platform for networked and autonomous vehicles. 
 The CPM Lab provides a simulation environment and 20 model-scale vehicles for experiments. The software architecture enables the seamless transfer of algorithms tested in simulation to real experiments without any adaptions. Experiments with the 20 vehicles can be extended by unlimited additional simulated vehicles. A Data Distribution Service (DDS) based middleware is responsible for synchronizing all entities and establishes a logical execution time approach. It further allows to change the number of vehicles during experiments. \
